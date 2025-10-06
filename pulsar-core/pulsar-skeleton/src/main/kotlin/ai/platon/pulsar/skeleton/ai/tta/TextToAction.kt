@@ -102,47 +102,6 @@ open class TextToAction(val conf: ImmutableConfig) {
     // Tool-use helpers -------------------------------------------------------------------------
     internal data class ToolCall(val name: String, val args: Map<String, Any?>)
 
-//    protected fun buildToolUsePrompt() = """
-//你现在以工具调用模式工作。给定用户指令, 只返回可执行的工具调用 JSON。
-//$TOOL_CALL_LIST
-//
-//返回格式严格为(不要多余文字):
-//{
-//  "tool_calls":[
-//    {"name":"click","args":{"selector":"#submit-btn"}},
-//    {"name":"fill","args":{"selector":"#search-input","text":"Hello"}}
-//  ]
-//}
-//
-//规则:
-//1. 仅返回 JSON
-//2. 若无法确定操作, 返回 {"tool_calls":[]}
-//3. 参数缺失时不要臆造 selector
-//4. 不返回注释/Markdown/代码块
-//
-//    """.trimIndent()
-
-    protected fun buildToolUsePrompt(
-        systemPrompt: String,
-        interactiveElements: List<InteractiveElement>,
-        toolCallLimit: Int = 100,
-    ): String {
-        val prompt = buildString {
-            append(systemPrompt)
-
-            appendLine("每次最多调用 $toolCallLimit 个工具")
-
-            if (interactiveElements.isNotEmpty()) {
-                appendLine("可交互元素列表: ")
-                interactiveElements.forEach { e -> appendLine(e.toString()) }
-            }
-
-            appendLine()
-        }
-
-        return prompt
-    }
-
     init {
         Files.createDirectories(baseDir)
 
@@ -157,19 +116,19 @@ open class TextToAction(val conf: ImmutableConfig) {
     /**
      * Generate EXACT ONE WebDriver action with interactive elements.
      *
-     * @param command The action description with plain text
+     * @param instruction The instruction
      * @param driver The driver to use to collect the context, such as interactive elements
      * @return The action description
      * */
     open fun generateWebDriverAction(
-        command: String,
+        instruction: String,
         driver: WebDriver,
         screenshotB64: String? = null,
     ): ActionDescription {
         try {
             val interactiveElements = extractInteractiveElements(driver)
 
-            return generateWebDriverAction(command, interactiveElements, screenshotB64)
+            return generateWebDriverAction(instruction, interactiveElements, screenshotB64)
         } catch (e: Exception) {
             val errorResponse = ModelResponse("""
                 suspend fun llmGeneratedFunction(driver: WebDriver) {
@@ -235,6 +194,27 @@ open class TextToAction(val conf: ImmutableConfig) {
         }
 
         return model?.call(prompt) ?: ModelResponse.LLM_NOT_AVAILABLE
+    }
+
+    fun buildToolUsePrompt(
+        systemPrompt: String,
+        interactiveElements: List<InteractiveElement>,
+        toolCallLimit: Int = 100,
+    ): String {
+        val prompt = buildString {
+            append(systemPrompt)
+
+            appendLine("每次最多调用 $toolCallLimit 个工具")
+
+            if (interactiveElements.isNotEmpty()) {
+                appendLine("可交互元素列表: ")
+                interactiveElements.forEach { e -> appendLine(e.toString()) }
+            }
+
+            appendLine()
+        }
+
+        return prompt
     }
 
     fun buildOperatorSystemPrompt(goal: String): String {
