@@ -46,7 +46,7 @@ proxy89.myvpn.network:443
         )
 
         proxies.forEach {
-            println(it)
+            // println(it)
             assertTrue { it.host.isNotBlank() }
         }
     }
@@ -82,7 +82,7 @@ proxy89.myvpn.network:443
 
         // assertTrue { proxies.isEmpty() }
         proxies.forEach {
-            println(it)
+            // println(it)
         }
     }
 }
