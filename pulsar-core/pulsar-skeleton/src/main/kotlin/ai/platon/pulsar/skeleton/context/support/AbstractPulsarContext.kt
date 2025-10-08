@@ -557,8 +557,13 @@ abstract class AbstractPulsarContext(
     }
     
     protected open fun doClose0() {
-        logger.info("Closing context #{} with {} sessions | {}", id, sessions.size, this::class.java.simpleName)
-        
+        logger.info("Closing context #{} with {} sessions, {} additional closables | {}",
+            id,
+            sessions.size,
+            closableObjects.size,
+            this::class.java.simpleName
+        )
+
         val sessions1 = sessions.values.toList()
         sessions.clear()
         val closableObjects1 = closableObjects.toList()

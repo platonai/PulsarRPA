@@ -559,9 +559,28 @@ interface PulsarSession : AutoCloseable {
      * val url = driver.currentUrl()
      * val page = session.attach(url, driver)
      * ```
+     *
+     * @param url The URL of the webpage to attach.
+     * @param driver The WebDriver instance to associate with the alive webpage.
+     * @return The WebPage object representing the attached alive webpage.
+     * @throws Exception if the attachment process fails.
      */
     suspend fun attach(url: String, driver: WebDriver): WebPage
 
+    /**
+     * Attach a webpage to the given webdriver. This method is very like open(), but no url navigation.
+     *
+     * ```kotlin
+     * val url = driver.currentUrl()
+     * val page = session.attach(url, driver)
+     * ```
+     *
+     * @param url The URL of the webpage to attach.
+     * @param driver The WebDriver instance to associate with the alive webpage.
+     * @param eventHandlers The event handlers used during the WebPage lifecycle.
+     * @return The WebPage object representing the attached alive webpage.
+     * @throws Exception if the attachment process fails.
+     */
     suspend fun attach(url: String, driver: WebDriver, eventHandlers: PageEventHandlers): WebPage
 
     /**
@@ -1114,6 +1133,7 @@ interface PulsarSession : AutoCloseable {
      * ```
      *
      * @param urls The normal urls to load
+     * @param args The load arguments
      * @return The completable futures of webpages
      */
     fun loadAllAsync(urls: Collection<UrlAware>, args: String): List<CompletableFuture<WebPage>>
@@ -1131,6 +1151,7 @@ interface PulsarSession : AutoCloseable {
      * ```
      *
      * @param urls The normal urls to load
+     * @param options The load options
      * @return The completable futures of webpages
      */
     fun loadAllAsync(urls: Collection<UrlAware>, options: LoadOptions): List<CompletableFuture<WebPage>>
@@ -1405,6 +1426,7 @@ interface PulsarSession : AutoCloseable {
      * ```
      *
      * @param urls The urls to submit
+     * @param args The load arguments
      * @return The [PulsarSession] itself to enabled chained operations
      *
      * @see submit(UrlAware) to learn more.
@@ -1731,8 +1753,14 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage containing the resource
      */
     suspend fun loadResourceDeferred(url: String, referrer: String, options: LoadOptions): WebPage
+
     /**
-     * Parse a webpage into an HTML document.
+     * Parses the given [page] into an in-memory HTML document.
+     *
+     * The [parse] method operates within the Kotlin process, not inside a real browser.
+     * It parses the page content into an in-memory lightweight Document Object Model (DOM),
+     * making it very fast to analyze within the Kotlin process.
+     * To interact with a live DOM in a real browser, use [WebDriver].
      *
      * ```kotlin
      * val page = session.load("http://example.com")
@@ -1743,8 +1771,14 @@ interface PulsarSession : AutoCloseable {
      * @return The parsed HTML document
      */
     fun parse(page: WebPage): FeaturedDocument
+
     /**
-     * Parse a webpage into an HTML document.
+     * Parses the given [page] into an in-memory HTML document.
+     *
+     * The [parse] method operates within the Kotlin process, not inside a real browser.
+     * It parses the page content into an in-memory lightweight Document Object Model (DOM),
+     * making it very fast to analyze within the Kotlin process.
+     * To interact with a live DOM in a real browser, use [WebDriver].
      *
      * ```kotlin
      * val page = session.load("http://example.com")
@@ -1756,6 +1790,7 @@ interface PulsarSession : AutoCloseable {
      * @return The parsed HTML document
      */
     fun parse(page: WebPage, noCache: Boolean): FeaturedDocument
+
     /**
      * Load or fetch a webpage and parse it into an HTML document
      *

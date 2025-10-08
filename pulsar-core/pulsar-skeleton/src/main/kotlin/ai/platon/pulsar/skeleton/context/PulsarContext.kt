@@ -300,7 +300,8 @@ interface PulsarContext: java.lang.AutoCloseable {
      * Attach a webpage to the given webdriver. This method is very like open(), but no url navigation.
      *
      * ```kotlin
-     * val page = session.attach(driver)
+     * val url = context.normalize(driver.currentUrl())
+     * val page = context.attach(url, driver)
      * ```
      *
      * @param normURL The NormURL of the page.

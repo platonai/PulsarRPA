@@ -269,6 +269,10 @@ class PulsarAgent(
 
     // Enhanced helper methods for improved functionality
 
+    override fun toString(): String {
+        return history.lastOrNull() ?: "(no history)"
+    }
+
     /**
      * Classifies errors for appropriate retry strategies
      */
@@ -706,160 +710,6 @@ $interactiveSummary
         e.isJsonObject -> e.asJsonObject.entrySet().associate { it.key to jsonElementToKotlin(it.value) }
         else -> null
     }
-
-    private suspend fun executeToolCall(tc: ToolCall): String {
-        return when (tc.name) {
-            // Navigation
-            "navigateTo", "goto" -> {
-                val url = tc.args["url"]?.toString()?.trim().orEmpty()
-                if (url.isBlank()) return "skip navigateTo (blank url)"
-                val old = runCatching { driver.currentUrl() }.getOrNull()
-                driver.navigateTo(url)
-                runCatching { driver.waitForNavigation(old ?: "") }
-                "navigateTo -> $url"
-            }
-
-            // Wait
-            "waitForSelector" -> {
-                val selector = tc.args["selector"]?.toString()?.trim().orEmpty()
-                val timeout = (tc.args["timeoutMillis"] as? Number)?.toLong() ?: 5000L
-                if (selector.isBlank()) return "skip waitForSelector (blank selector)"
-                driver.waitForSelector(selector, timeout)
-                "waitForSelector -> $selector (${timeout}ms)"
-            }
-
-            // Basic interactions
-            "click" -> {
-                val selector = tc.args["selector"]?.toString()?.trim().orEmpty()
-                if (selector.isBlank()) return "skip click (blank selector)"
-                val count = (tc.args["count"] as? Number)?.toInt() ?: 1
-                driver.click(selector, count)
-                "click -> $selector x$count"
-            }
-            overrideName("fill") -> {
-                val selector = tc.args["selector"]?.toString()?.trim().orEmpty()
-                val text = tc.args["text"]?.toString() ?: ""
-                if (selector.isBlank()) return "skip fill (blank selector)"
-                driver.fill(selector, text)
-                "fill -> $selector text(${text.take(20)})"
-            }
-            "press" -> {
-                val selector = tc.args["selector"]?.toString()?.trim().orEmpty()
-                val key = tc.args["key"]?.toString()?.trim().orEmpty()
-                if (selector.isBlank() || key.isBlank()) return "skip press (blank args)"
-                driver.press(selector, key)
-                "press -> $selector key=$key"
-            }
-            "check" -> {
-                val selector = tc.args["selector"]?.toString()?.trim().orEmpty()
-                if (selector.isBlank()) return "skip check (blank selector)"
-                driver.check(selector)
-                "check -> $selector"
-            }
-            "uncheck" -> {
-                val selector = tc.args["selector"]?.toString()?.trim().orEmpty()
-                if (selector.isBlank()) return "skip uncheck (blank selector)"
-                driver.uncheck(selector)
-                "uncheck -> $selector"
-            }
-
-            // Scrolling
-            "scrollDown" -> { val c = (tc.args["count"] as? Number)?.toInt() ?: 1; driver.scrollDown(c); "scrollDown -> $c" }
-            "scrollUp" -> { val c = (tc.args["count"] as? Number)?.toInt() ?: 1; driver.scrollUp(c); "scrollUp -> $c" }
-            "scrollToTop" -> { driver.scrollToTop(); "scrollToTop" }
-            "scrollToBottom" -> { driver.scrollToBottom(); "scrollToBottom" }
-            "scrollToMiddle" -> { val r = (tc.args["ratio"] as? Number)?.toDouble() ?: 0.5; driver.scrollToMiddle(r); "scrollToMiddle -> $r" }
-            "scrollToScreen" -> { val n = (tc.args["screenNumber"] as? Number)?.toDouble() ?: 0.0; driver.scrollToScreen(n); "scrollToScreen -> $n" }
-
-            // Advanced clicks
-            "clickTextMatches" -> {
-                val selector = tc.args["selector"]?.toString()?.trim().orEmpty()
-                val pattern = tc.args["pattern"]?.toString()?.trim().orEmpty()
-                val count = (tc.args["count"] as? Number)?.toInt() ?: 1
-                if (selector.isBlank() || pattern.isBlank()) return "skip clickTextMatches (blank args)"
-                driver.clickTextMatches(selector, pattern, count)
-                "clickTextMatches -> $selector / $pattern ($count)"
-            }
-            "clickMatches" -> {
-                val selector = tc.args["selector"]?.toString()?.trim().orEmpty()
-                val attr = tc.args["attrName"]?.toString()?.trim().orEmpty()
-                val pattern = tc.args["pattern"]?.toString()?.trim().orEmpty()
-                val count = (tc.args["count"] as? Number)?.toInt() ?: 1
-                if (selector.isBlank() || attr.isBlank() || pattern.isBlank()) return "skip clickMatches (blank args)"
-                driver.clickMatches(selector, attr, pattern, count)
-                "clickMatches -> $selector @$attr~$pattern ($count)"
-            }
-            "clickNthAnchor" -> {
-                val n = (tc.args["n"] as? Number)?.toInt() ?: 0
-                val root = tc.args["rootSelector"]?.toString() ?: "body"
-                val href = driver.clickNthAnchor(n, root)
-                "clickNthAnchor -> #$n in $root => $href"
-            }
-
-            // Screenshots
-            "captureScreenshot" -> {
-                val sel = tc.args["selector"]?.toString()?.trim().orEmpty()
-                val b64 = if (sel.isBlank()) driver.captureScreenshot() else driver.captureScreenshot(sel)
-                if (b64 != null) saveStepScreenshot(b64)
-                val target = sel.ifBlank { "page" }
-                "captureScreenshot -> $target"
-            }
-
-            // Status checking (first batch of new tools)
-            "exists" -> {
-                val selector = tc.args["selector"]?.toString()?.trim().orEmpty()
-                if (selector.isBlank()) return "skip exists (blank selector)"
-                val result = driver.exists(selector)
-                "exists -> $selector = $result"
-            }
-            "isVisible" -> {
-                val selector = tc.args["selector"]?.toString()?.trim().orEmpty()
-                if (selector.isBlank()) return "skip isVisible (blank selector)"
-                val result = driver.isVisible(selector)
-                "isVisible -> $selector = $result"
-            }
-            "focus" -> {
-                val selector = tc.args["selector"]?.toString()?.trim().orEmpty()
-                if (selector.isBlank()) return "skip focus (blank selector)"
-                driver.focus(selector)
-                "focus -> $selector"
-            }
-            "scrollTo" -> {
-                val selector = tc.args["selector"]?.toString()?.trim().orEmpty()
-                if (selector.isBlank()) return "skip scrollTo (blank selector)"
-                driver.scrollTo(selector)
-                "scrollTo -> $selector"
-            }
-
-            // Enhanced navigation
-            "waitForNavigation" -> {
-                val oldUrl = tc.args["oldUrl"]?.toString() ?: ""
-                val timeout = (tc.args["timeoutMillis"] as? Number)?.toLong() ?: 5000L
-                val remainingTime = driver.waitForNavigation(oldUrl, timeout)
-                "waitForNavigation -> oldUrl='$oldUrl' remaining=${remainingTime}ms"
-            }
-            "goBack" -> {
-                driver.goBack()
-                "goBack"
-            }
-            "goForward" -> {
-                driver.goForward()
-                "goForward"
-            }
-
-            // Timing
-            "delay" -> {
-                val ms = (tc.args["millis"] as? Number)?.toLong() ?: 1000L
-                delay(ms)
-                "delay -> $ms ms"
-            }
-
-            // Graceful unknowns
-            else -> "skip unknown tool '${tc.name}'"
-        }
-    }
-
-    private fun overrideName(name: String) = name // placeholder for future alias handling
 
     /**
      * Enhanced URL validation with comprehensive safety checks

@@ -156,6 +156,8 @@ class SessionAct {
         logger.info("Final extracted fields keys: ${fields?.keys}")
         logger.info("Sample page content snippet: ${content?.take(120)}")
         logger.info("Last action result: ${actResult}")
+
+        context.close()
     }
 }
 

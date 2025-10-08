@@ -278,5 +278,6 @@
     <logger name="io.netty" level="WARN"/>
     <logger name="org.apache.hadoop.mapreduce.Job" level="WARN"/>
     <logger name="io.netty.handler.logging" level="INFO"/>
+    <logger name="dev.langchain4j.http.client.log" level="WARN" />
 
 </configuration>
