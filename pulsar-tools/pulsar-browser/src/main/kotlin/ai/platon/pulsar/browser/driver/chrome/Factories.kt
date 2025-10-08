@@ -29,7 +29,6 @@ class DefaultWebSocketContainerFactory : WebSocketContainerFactory {
     override val wsContainer: WebSocketContainer = createWebSocketContainer()
 
     private fun createWebSocketContainer(): ClientManager {
-        // TODO: consider ktor instead of tyrus, which supports kotlin coroutines
         val client = ClientManager.createClient(GrizzlyClientContainer::class.java.name)
         client.properties[INCOMING_BUFFER_SIZE_PROPERTY] = INCOMING_BUFFER_SIZE
         return client
