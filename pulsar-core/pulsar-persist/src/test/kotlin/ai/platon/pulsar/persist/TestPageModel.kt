@@ -9,7 +9,7 @@ import kotlin.test.assertTrue
 
 class TestPageModel {
     
-    private val baseUrl = "https://www.amazon.com/dp/B0FFTT2J6N"
+    private val baseUrl = "https://www.amazon.com/dp/B08PP5MSVB"
     private val conf = VolatileConfig()
     private val webDb = WebDb(conf)
     private val groupId = 43853791

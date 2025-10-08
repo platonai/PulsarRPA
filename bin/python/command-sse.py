@@ -142,7 +142,7 @@ def main():
     """Main function"""
     # Natural language command content
     command = """
-    Go to https://www.amazon.com/dp/B0FFTT2J6N
+    Go to https://www.amazon.com/dp/B08PP5MSVB
 
     After browser launch: clear browser cookies.
     After page load: scroll to the middle.

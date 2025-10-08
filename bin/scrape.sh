@@ -11,4 +11,4 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
       dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
       dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
       str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-  from load_and_select('https://www.amazon.com/dp/B0FFTT2J6N -i 20s -njr 3', 'body');"
+  from load_and_select('https://www.amazon.com/dp/B08PP5MSVB -i 20s -njr 3', 'body');"

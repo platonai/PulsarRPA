@@ -24,7 +24,7 @@
 通过简单文本实现大规模浏览器自动化和数据提取。
 
 ```text
-访问 https://www.amazon.com/dp/B0FFTT2J6N
+访问 https://www.amazon.com/dp/B08PP5MSVB
 
 浏览器启动后: 清除浏览器cookies。
 页面加载后: 滚动到页面中间。
@@ -121,7 +121,7 @@ docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/b
 #### 📄 纯文本版本:
 ```shell
 curl -X POST "http://localhost:8182/api/commands/plain" -H "Content-Type: text/plain" -d '
-    访问 https://www.amazon.com/dp/B0FFTT2J6N
+    访问 https://www.amazon.com/dp/B08PP5MSVB
 
     浏览器启动后: 清除浏览器cookies。
     页面加载后: 滚动到页面中间。
@@ -136,7 +136,7 @@ curl -X POST "http://localhost:8182/api/commands/plain" -H "Content-Type: text/p
 
 ```shell
 curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/json" -d '{
-    "url": "https://www.amazon.com/dp/B0FFTT2J6N",
+    "url": "https://www.amazon.com/dp/B08PP5MSVB",
     "onBrowserLaunchedActions": ["清除浏览器cookies"],
     "onPageReadyActions": ["滚动到页面中间"],
     "pageSummaryPrompt": "简要介绍这个产品。",
@@ -160,7 +160,7 @@ curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/
     dom_base_uri(dom) as url,
     dom_first_text(dom, '#productTitle') as title,
     dom_first_slim_html(dom, 'img:expr(width > 400)') as img
-  from load_and_select('https://www.amazon.com/dp/B0FFTT2J6N', 'body');
+  from load_and_select('https://www.amazon.com/dp/B08PP5MSVB', 'body');
   "
   ```
 
@@ -173,7 +173,7 @@ curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/
     "价格": "$1,199.00",
     "评分": "4.5 out of 5 stars"
   },
-  "url": "https://www.amazon.com/dp/B0FFTT2J6N",
+  "url": "https://www.amazon.com/dp/B08PP5MSVB",
   "title": "Apple iPhone 15 Pro Max",
   "img": "<img src=\"https://example.com/image.jpg\" />"
 }
@@ -276,7 +276,7 @@ select
     dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
     dom_first_text(dom, '#acrCustomerReviewText') as ratings,
     str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-from load_and_select('https://www.amazon.com/dp/B0FFTT2J6N  -i 1s -njr 3', 'body');
+from load_and_select('https://www.amazon.com/dp/B08PP5MSVB  -i 1s -njr 3', 'body');
 ```
 
 📚 示例代码:

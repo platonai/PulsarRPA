@@ -116,7 +116,7 @@ class PrintFlowEventHandlers: DefaultPageEventHandlers() {
 fun main() {
     PulsarSettings().withDefaultBrowser()
 
-    val url = "https://www.amazon.com/dp/B0FFTT2J6N"
+    val url = "https://www.amazon.com/dp/B08PP5MSVB"
     val session = PulsarContexts.createSession()
     val link = ListenableHyperlink(url, "", args = "-refresh -parse", eventHandlers = PrintFlowEventHandlers())
 

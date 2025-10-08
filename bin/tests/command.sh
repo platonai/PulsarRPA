@@ -1,7 +1,7 @@
 #!/bin/bash
 
 curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/json" -d '{
-  "url": "https://www.amazon.com/dp/B0FFTT2J6N",
+  "url": "https://www.amazon.com/dp/B08PP5MSVB",
   "onBrowserLaunchedActions": [
   "clear browser cookies",
   "navigate to the home page",
@@ -19,5 +19,5 @@ select
   dom_base_uri(dom) as url,
   dom_first_text(dom, '#productTitle') as title,
   dom_first_slim_html(dom, 'img:expr(width > 400)') as img
-from load_and_select('https://www.amazon.com/dp/B0FFTT2J6N', 'body');
+from load_and_select('https://www.amazon.com/dp/B08PP5MSVB', 'body');
 "

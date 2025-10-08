@@ -15,7 +15,7 @@ fun main() {
     PulsarSettings().withDefaultBrowser().withSPA()
 
     val session = PulsarContexts.createSession()
-    val url = "https://www.amazon.com/dp/B0FFTT2J6N"
+    val url = "https://www.amazon.com/dp/B08PP5MSVB"
 
     val prompts = """
 move cursor to the element with id 'title' and click it

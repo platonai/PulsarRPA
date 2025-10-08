@@ -60,7 +60,7 @@ Browser4 实现**网络即数据库**范式，像对待内部数据库一样对�
 
 ```kotlin
 val session = PulsarContexts.createSession()
-val url = "https://www.amazon.com/dp/B0FFTT2J6N"
+val url = "https://www.amazon.com/dp/B08PP5MSVB"
 ```
 
 最基本的思想和方法是 load()，它先尝试从本地存储加载网页，如果需要的页面不存在，或已过期，或者不满足其他要求，则从 Internet 获取该页面：

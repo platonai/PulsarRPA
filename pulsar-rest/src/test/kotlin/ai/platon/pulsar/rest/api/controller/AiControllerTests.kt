@@ -30,7 +30,7 @@ class AiControllerTests : IntegrationTestBase() {
     }
 
     val indexUrl = "https://www.amazon.com/b?node=1292115011"
-    val productUrl = "https://www.amazon.com/dp/B0FFTT2J6N"
+    val productUrl = "https://www.amazon.com/dp/B08PP5MSVB"
 
     @BeforeEach
     fun setUp() {

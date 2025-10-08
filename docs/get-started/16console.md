@@ -143,7 +143,7 @@ Examples:
     java -jar exotic-standalone*.jar harvest https://www.amazon.com/Best-Sellers-Automotive/zgbs/automotive/  -outLink a[href~=/dp/] -component "#centerCol" -component "#buybox"
 
 # scrape specified fields in a single page
-    java -jar exotic-standalone*.jar scrape https://www.amazon.com/dp/B0FFTT2J6N  -field "#productTitle" -field "#acrPopover" -field "#acrCustomerReviewText" -field "#askATFLink"
+    java -jar exotic-standalone*.jar scrape https://www.amazon.com/dp/B08PP5MSVB  -field "#productTitle" -field "#acrPopover" -field "#acrCustomerReviewText" -field "#askATFLink"
 
 # scrape specified fields from out pages
     java -jar exotic-standalone*.jar scrape https://www.amazon.com/Best-Sellers-Automotive/zgbs/automotive/  -outLink a[href~=/dp/] -field "#productTitle" -field "#acrPopover" -field "#acrCustomerReviewText" -field "#askATFLink"
