@@ -32,6 +32,8 @@ class SessionAct {
     val session = context.createSession()
 
     suspend fun run() {
+        check(session.isActive) { "Session is not active" }
+
         // Use local mock site instead of external site so actions are deterministic.
         val url = "http://localhost:18080/generated/tta/act/act-demo.html"
         // one more short wait after potential start (shorter, less verbose)
@@ -46,30 +48,30 @@ class SessionAct {
         var page = session.open(url)
         result("page", page)
 
-        step("Parse opened page")
+        step("Parse the page into a lightweight local DOM")
         var document = session.parse(page)
         result("document", document)
 
-        step("Extract initial fields (title)")
+        step("Extract fields (title) with CSS selector (no LLM required)")
         var fields = session.extract(document, mapOf("title" to "#title"))
         result("fields", fields)
 
         // Basic action examples (natural language instructions) - now operate on local mock page
         step("Action: search for 'browser'")
         var actOptions = ActionOptions("search for 'browser'")
-        var actResult = session.act(actOptions)
-        result("action result", actResult)
+        var agent = session.act(actOptions)
+        result("action result", agent)
 
-        step("Capture body text after search (snippet)")
+        step("Capture body text in the live DOM after search (snippet)")
         var content = driver.selectFirstTextOrNull("body")
         result("body snippet", content?.take(160))
 
         step("Action: click the 3rd link")
         actOptions = ActionOptions("click the 3rd link")
-        actResult = session.act(actOptions)
-        result("action result", actResult)
+        agent = session.act(actOptions)
+        result("action result", agent)
 
-        step("Capture body text after clicking 3rd link (snippet)")
+        step("Capture body text in the live DOM after clicking 3rd link (snippet)")
         content = driver.selectFirstTextOrNull("body")
         result("body snippet", content?.take(160))
 
@@ -78,8 +80,8 @@ class SessionAct {
         // 1) Use the page's search box (enter text and submit)
         step("Action: find the search box, type 'web scraping' and submit the form")
         actOptions = ActionOptions("find the search box, type 'web scraping' and submit the form")
-        actResult = session.act(actOptions)
-        result("action result", actResult)
+        agent = session.act(actOptions)
+        result("action result", agent)
 
         step("Re-attach current URL and parse after search form submission")
         page = session.attach(driver.currentUrl(), driver)
@@ -94,8 +96,8 @@ class SessionAct {
         // 2) Click a link by visible text (Show/Ask HN like titles in mock page)
         step("Action: click the first link that contains 'Show HN' or 'Ask HN'")
         actOptions = ActionOptions("click the first link that contains 'Show HN' or 'Ask HN'")
-        actResult = session.act(actOptions)
-        result("action result", actResult)
+        agent = session.act(actOptions)
+        result("action result", agent)
 
         step("Capture body text after clicking Show/Ask HN link (snippet)")
         content = driver.selectFirstTextOrNull("body")
@@ -104,38 +106,38 @@ class SessionAct {
         // 3) Scroll to bottom (triggers infinite scroll loading extra items on mock page)
         step("Action: scroll to the bottom of the page and wait for new content to load")
         actOptions = ActionOptions("scroll to the bottom of the page and wait for new content to load")
-        actResult = session.act(actOptions)
-        result("action result", actResult)
+        agent = session.act(actOptions)
+        result("action result", agent)
 
         // 4) Open the first comment thread
         step("Action: open the first comment thread on the page")
         actOptions = ActionOptions("open the first comment thread on the page")
-        actResult = session.act(actOptions)
-        result("action result", actResult)
+        agent = session.act(actOptions)
+        result("action result", agent)
 
         // 5) Navigate back
         step("Action: navigate back")
         actOptions = ActionOptions("navigate back")
-        actResult = session.act(actOptions)
-        result("action result", actResult)
+        agent = session.act(actOptions)
+        result("action result", agent)
 
         // 5b) Navigate forward
         step("Action: navigate forward")
         actOptions = ActionOptions("navigate forward")
-        actResult = session.act(actOptions)
-        result("action result", actResult)
+        agent = session.act(actOptions)
+        result("action result", agent)
 
         // 6) Take a screenshot
         step("Action: take a full-page screenshot and save it")
         actOptions = ActionOptions("take a full-page screenshot and save it")
-        actResult = session.act(actOptions)
-        result("action result", actResult)
+        agent = session.act(actOptions)
+        result("action result", agent)
 
         // 7) Extract specific data after interactions
         step("Action: extract article titles and their hrefs from the main list")
         actOptions = ActionOptions("extract article titles and their hrefs from the main list")
-        actResult = session.act(actOptions)
-        result("action result", actResult)
+        agent = session.act(actOptions)
+        result("action result", agent)
 
         step("Fallback: attach current URL and parse for titles")
         page = session.attach(driver.currentUrl(), driver)
@@ -146,6 +148,7 @@ class SessionAct {
         // add more action examples here
 
         step("Re-attach original URL and re-parse")
+        driver.navigateTo(url)
         page = session.attach(url, driver)
         document = session.parse(page)
         fields = session.extract(document, mapOf("title" to "#title"))
@@ -155,7 +158,7 @@ class SessionAct {
         step("Summary outputs")
         logger.info("Final extracted fields keys: ${fields?.keys}")
         logger.info("Sample page content snippet: ${content?.take(120)}")
-        logger.info("Last action result: ${actResult}")
+        logger.info("Last action result: ${agent}")
 
         context.close()
     }

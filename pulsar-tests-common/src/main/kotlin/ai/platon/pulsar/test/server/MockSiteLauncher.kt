@@ -69,8 +69,15 @@ object MockSiteLauncher : Closeable {
         try {
             // Keep only non-port defaults here; port will be injected as a command-line arg to guarantee precedence.
             val defaultProps = (properties + mapOf(
-                "logging.level.root" to (properties["logging.level.root"] ?: "INFO")
+                "logging.level.root" to (properties["logging.level.root"] ?: "INFO"),
+                // Disable DevTools restart and its default property post-processor for programmatic launch
+                "spring.devtools.restart.enabled" to "false",
+                "spring.devtools.add-properties" to "false",
             )).toMutableMap()
+
+            // Also set JVM system properties to ensure DevTools restart is disabled as early as possible
+            System.setProperty("spring.devtools.restart.enabled", "false")
+            System.setProperty("spring.devtools.add-properties", "false")
 
             val builder = SpringApplicationBuilder(MockSiteApplication::class.java)
                 .properties(defaultProps)

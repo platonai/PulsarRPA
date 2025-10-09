@@ -1,5 +1,6 @@
 package ai.platon.pulsar.test.server
 
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
 import java.net.HttpURLConnection
 import java.net.URI
@@ -37,6 +38,7 @@ class DemoSiteStarter: AutoCloseable {
     fun start(url: String) {
         logger.info("Ensure mock site is running (autoStart always enabled)")
         var ok = wait(url)
+
         if (!ok) {
             try {
                 val u = URI(url).toURL()

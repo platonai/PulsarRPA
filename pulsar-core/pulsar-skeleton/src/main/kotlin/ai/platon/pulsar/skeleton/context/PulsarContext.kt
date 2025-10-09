@@ -104,25 +104,25 @@ interface PulsarContext: java.lang.AutoCloseable {
      * Launch the system default browser, the system default browser is your daily used browser.
      * */
     @Throws(BrowserLaunchException::class)
-    fun launchSystemDefaultBrowser(): Browser = browserFactory.launchSystemDefaultBrowser()
+    fun launchSystemDefaultBrowser(): Browser = browserFactory.launchSystemDefaultBrowser().also { registerClosable(it) }
 
     /**
      * Launch the default browser, notice, the default browser is not the one you used daily.
      * */
     @Throws(BrowserLaunchException::class)
-    fun launchDefaultBrowser(): Browser = browserFactory.launchDefaultBrowser()
+    fun launchDefaultBrowser(): Browser = browserFactory.launchDefaultBrowser().also { registerClosable(it) }
 
     /**
      * Launch the prototype browser, the prototype browser is a browser instance with default settings.
      * */
     @Throws(BrowserLaunchException::class)
-    fun launchPrototypeBrowser(): Browser = browserFactory.launchPrototypeBrowser()
+    fun launchPrototypeBrowser(): Browser = browserFactory.launchPrototypeBrowser().also { registerClosable(it) }
 
     /**
      * Launch a random temporary browser, the browser's user data dir is a random temporary dir.
      * */
     @Throws(BrowserLaunchException::class)
-    fun launchRandomTempBrowser(): Browser = browserFactory.launchRandomTempBrowser()
+    fun launchRandomTempBrowser(): Browser = browserFactory.launchRandomTempBrowser().also { registerClosable(it) }
 
     /**
      * Normalize a url, the url can be in one of the following forms:
