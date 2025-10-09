@@ -3,8 +3,9 @@
 
     <parent>
         <groupId>ai.platon.pulsar</groupId>
-        <artifactId>pulsar</artifactId>
+        <artifactId>pulsar-tools</artifactId>
         <version>4.0.0-SNAPSHOT</version>
+        <relativePath>../pom.xml</relativePath>
     </parent>
 
     <name>Pulsar Browser</name>
