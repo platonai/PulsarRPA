@@ -15,7 +15,7 @@ import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
-import ai.platon.pulsar.skeleton.ai.PulsarAgent
+import ai.platon.pulsar.skeleton.ai.PulsarActAgent
 import ai.platon.pulsar.skeleton.ai.tta.ActionDescription
 import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
 import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
@@ -537,13 +537,13 @@ abstract class AbstractPulsarSession(
                 "\n\nThere is the text content of the selected element:\n\n\n" + element.text()
     )
 
-    override suspend fun act(action: String): PulsarAgent {
+    override suspend fun act(action: String): PulsarActAgent {
         return act(ActionOptions(action = action))
     }
 
-    override suspend fun act(action: ActionOptions): PulsarAgent {
+    override suspend fun act(action: ActionOptions): PulsarActAgent {
         val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`: session.bind(driver)" }
-        val agent = PulsarAgent(driver)
+        val agent = PulsarActAgent(driver)
 
         agent.execute(action)
 

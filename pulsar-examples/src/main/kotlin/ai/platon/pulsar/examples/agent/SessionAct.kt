@@ -2,7 +2,7 @@ package ai.platon.pulsar.examples.agent
 
 import ai.platon.pulsar.agentic.context.AgenticContexts
 import ai.platon.pulsar.skeleton.PulsarSettings
-import ai.platon.pulsar.skeleton.ai.PulsarAgent
+import ai.platon.pulsar.skeleton.ai.PulsarActAgent
 import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
 import ai.platon.pulsar.test.server.DemoSiteStarter
 import kotlinx.coroutines.runBlocking
@@ -19,7 +19,7 @@ class SessionAct {
     private var stepNo = 0
     private fun step(label: String) { logger.info("[STEP ${++stepNo}] $label") }
     private fun result(label: String, value: Any?) {
-        val text = if (value is PulsarAgent) {
+        val text = if (value is PulsarActAgent) {
             value.history.lastOrNull()?.replace("\n", " ")?.take(240)
         } else {
             value?.toString()?.replace("\n", " ")?.take(240)

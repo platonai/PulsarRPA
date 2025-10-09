@@ -5,8 +5,8 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.tta.ActionDescription
 import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
-import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.ai.tta.InteractiveElement
+import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.google.gson.JsonObject
@@ -79,7 +79,7 @@ data class ExecutionContext(
     val additionalContext: Map<String, Any> = emptyMap()
 )
 
-class PulsarAgent(
+class PulsarActAgent(
     val driver: WebDriver,
     val maxSteps: Int = 100,
     val config: WebDriverAgentConfig = WebDriverAgentConfig(maxSteps = maxSteps)

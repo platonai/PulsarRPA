@@ -12,7 +12,7 @@ Before starting development, ensure you understand:
 
 ## 🎯 Overview
 
-[PulsarAgent.kt](PulsarAgent.kt) is an **enterprise-grade multi-round planning executor** that enables AI models to perform
+[PulsarAgent.kt](PulsarActAgent.kt) is an **enterprise-grade multi-round planning executor** that enables AI models to perform
 web automation through screenshot observation and historical action analysis. It plans and executes atomic
 actions step-by-step until the target is achieved.
 

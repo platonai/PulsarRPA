@@ -8,7 +8,7 @@ import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.dom.nodes.GeoAnchor
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.ai.PulsarAgent
+import ai.platon.pulsar.skeleton.ai.PulsarActAgent
 import ai.platon.pulsar.skeleton.ai.tta.ActionDescription
 import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
 import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
@@ -414,14 +414,14 @@ interface WebDriver : Closeable {
      */
     @Throws(WebDriverException::class)
     @Beta
-    suspend fun act(action: String): PulsarAgent
+    suspend fun act(action: String): PulsarActAgent
 
     /**
      * Create an AI agent to resolve the action requirement.
      */
     @Throws(WebDriverException::class)
     @Beta
-    suspend fun act(action: ActionOptions): PulsarAgent
+    suspend fun act(action: ActionOptions): PulsarActAgent
 
     /**
      * Perform a model-generated action described by [action]. Executes (possibly multiple) low-level driver operations
