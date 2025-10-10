@@ -55,7 +55,7 @@ class SessionActMethodTest : TextToActionTestBase() {
      */
     @Test
     fun testOpenAndParseDemoPage() = runBlocking {
-        val page = session.attach(demoUrl, driver)
+        val page = session.capture(driver, demoUrl)
         val document = session.parse(page)
         val title = document.selectFirstTextOrNull("#title")
         assertEquals("Session Instructions Demo", title, "Initial #title text should match")
@@ -80,7 +80,7 @@ class SessionActMethodTest : TextToActionTestBase() {
         val remainingTime = driver.waitUntil { driver.currentUrl().endsWith("pageC.html") }
         // val navigated = waitUntil { driver.currentUrl().endsWith("pageC.html") }
         assertTrue(remainingTime.seconds > 0, "Should navigate to pageC.html after clicking 3rd link")
-        val page = session.attach(driver.currentUrl(), driver)
+        val page = session.capture(driver)
         val doc = session.parse(page)
         assertEquals("Page C (Third Link Target)", doc.selectFirstTextOrNull("#title"))
     }
@@ -93,7 +93,7 @@ class SessionActMethodTest : TextToActionTestBase() {
         session.act(ActionOptions("click the first link that contains 'Show HN' or 'Ask HN'"))
         val navigated = waitUntil { driver.currentUrl().endsWith("page2.html") }
         assertTrue(navigated, "Should navigate to page2.html (Show HN: Demo Project)")
-        val page = session.attach(driver.currentUrl(), driver)
+        val page = session.capture(driver)
         val doc = session.parse(page)
         assertEquals("Show HN: Demo Project", doc.selectFirstTextOrNull("#title"))
     }

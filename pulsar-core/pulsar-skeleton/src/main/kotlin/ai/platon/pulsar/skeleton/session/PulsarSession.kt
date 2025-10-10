@@ -553,35 +553,25 @@ interface PulsarSession : AutoCloseable {
     suspend fun open(url: String, driver: WebDriver, eventHandlers: PageEventHandlers): WebPage
 
     /**
-     * Attach a webpage to the given webdriver. This method is very like open(), but no url navigation.
+     * Captures the live page currently controlled by the given [WebDriver] and
+     * produces a local static [WebPage] instance representing its current state.
      *
      * ```kotlin
      * val url = driver.currentUrl()
-     * val page = session.attach(url, driver)
+     * val page = session.capture(url, driver)
      * ```
      *
-     * @param url The URL of the webpage to attach.
-     * @param driver The WebDriver instance to associate with the alive webpage.
-     * @return The WebPage object representing the attached alive webpage.
-     * @throws Exception if the attachment process fails.
+     * If [url] is not provided, set [WebPage]'s url to `driver.currentUrl()`.
+     *
+     * @param driver The [WebDriver] instance controlling the live browser page.
+     * @param url Optional URL to navigate to before capturing. If `null`, uses the active page.
+     * @return A [WebPage] object containing the static representation of the live page,
+     *         including DOM structure and referenced resources.
      */
-    suspend fun attach(url: String, driver: WebDriver): WebPage
+    suspend fun capture(driver: WebDriver, url: String? = null, eventHandlers: PageEventHandlers? = null): WebPage
 
-    /**
-     * Attach a webpage to the given webdriver. This method is very like open(), but no url navigation.
-     *
-     * ```kotlin
-     * val url = driver.currentUrl()
-     * val page = session.attach(url, driver)
-     * ```
-     *
-     * @param url The URL of the webpage to attach.
-     * @param driver The WebDriver instance to associate with the alive webpage.
-     * @param eventHandlers The event handlers used during the WebPage lifecycle.
-     * @return The WebPage object representing the attached alive webpage.
-     * @throws Exception if the attachment process fails.
-     */
-    suspend fun attach(url: String, driver: WebDriver, eventHandlers: PageEventHandlers): WebPage
+    @Deprecated("Use capture(WebDriver, String) instead", ReplaceWith("capture(driver, url)"))
+    suspend fun capture(url: String, driver: WebDriver): WebPage
 
     /**
      * Bind a webdriver to the session.

@@ -83,8 +83,8 @@ class SessionAct {
         agent = session.act(actOptions)
         result("action result", agent)
 
-        step("Re-attach current URL and parse after search form submission")
-        page = session.attach(driver.currentUrl(), driver)
+        step("Captures the live page and parse after search form submission")
+        page = session.capture(driver)
         result("page", page)
         document = session.parse(page)
         result("document", document)
@@ -139,17 +139,17 @@ class SessionAct {
         agent = session.act(actOptions)
         result("action result", agent)
 
-        step("Fallback: attach current URL and parse for titles")
-        page = session.attach(driver.currentUrl(), driver)
+        step("Fallback: captures the live page as a local copy and parse for titles")
+        page = session.capture(driver)
         document = session.parse(page)
         fields = session.extract(document, mapOf("titles" to ".athing .title a"))
         result("fields", fields)
 
         // add more action examples here
 
-        step("Re-attach original URL and re-parse")
+        step("Navigate to original URL, captures the live page as a local copy and re-parse")
         driver.navigateTo(url)
-        page = session.attach(url, driver)
+        page = session.capture(driver, url)
         document = session.parse(page)
         fields = session.extract(document, mapOf("title" to "#title"))
         result("fields", fields)

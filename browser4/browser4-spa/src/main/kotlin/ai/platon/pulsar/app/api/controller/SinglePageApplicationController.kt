@@ -8,9 +8,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.H2SQLContext
 import ai.platon.pulsar.rest.api.entities.*
 import ai.platon.pulsar.rest.api.service.CommandService
-import ai.platon.pulsar.rest.api.service.ConversationService
 import ai.platon.pulsar.skeleton.PulsarSettings
-import ai.platon.pulsar.skeleton.crawl.event.impl.PageEventHandlersFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.session.PulsarSession
@@ -232,8 +230,7 @@ class SinglePageApplicationController(
         val status = CommandStatus()
 
         runBlocking {
-            val url = driver.currentUrl()
-            val page: WebPage = session.attach(url, driver)
+            val page: WebPage = session.capture(driver)
             val document = session.parse(page)
             val command = CommandRequest(
                 url = page.url,
