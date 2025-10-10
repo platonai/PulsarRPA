@@ -20,7 +20,7 @@ import java.time.ZoneId
 import java.util.function.Function
 
 /**
- * Represents a web page in the Browser4 system. This interface provides methods to access and manipulate
+ * Represents a static web page in the Browser4 system. This interface provides methods to access and manipulate
  * various properties and metadata associated with a web page, such as its content, headers, fetch status,
  * and more. It also includes methods for managing beans, and other page-related data.
  *

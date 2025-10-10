@@ -561,17 +561,16 @@ interface PulsarSession : AutoCloseable {
      * val page = session.capture(url, driver)
      * ```
      *
-     * If [url] is not provided, set [WebPage]'s url to `driver.currentUrl()`.
+     * An optional URL can be provided to identify the webpage, If [url] is not provided, set [WebPage]'s url to
+     * `driver.currentUrl()`. The url will be normalized to identify the webpage and can differ from the active
+     * page's URI since the active page may goto or redirect to another page.
      *
      * @param driver The [WebDriver] instance controlling the live browser page.
-     * @param url Optional URL to navigate to before capturing. If `null`, uses the active page.
+     * @param url Optional URL to identify the webpage. If null, set [WebPage]'s url to `driver.currentUrl()`.
      * @return A [WebPage] object containing the static representation of the live page,
      *         including DOM structure and referenced resources.
      */
     suspend fun capture(driver: WebDriver, url: String? = null, eventHandlers: PageEventHandlers? = null): WebPage
-
-    @Deprecated("Use capture(WebDriver, String) instead", ReplaceWith("capture(driver, url)"))
-    suspend fun capture(url: String, driver: WebDriver): WebPage
 
     /**
      * Bind a webdriver to the session.

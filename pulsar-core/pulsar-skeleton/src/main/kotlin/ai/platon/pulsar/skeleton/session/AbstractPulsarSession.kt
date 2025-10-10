@@ -208,9 +208,6 @@ abstract class AbstractPulsarSession(
         return context.attach(normURL, driver)
     }
 
-    @Deprecated("Use capture(WebDriver, String) instead", replaceWith = ReplaceWith("capture(driver, url)"))
-    override suspend fun capture(url: String, driver: WebDriver): WebPage = capture(driver, url)
-
     override fun bindDriver(driver: WebDriver) {
         sessionConfig.putBean(driver)
         bindBrowser(driver.browser)
