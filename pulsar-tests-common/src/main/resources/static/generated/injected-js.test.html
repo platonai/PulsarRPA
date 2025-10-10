@@ -1,249 +1,863 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>Interactive Showroom</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Content Test</title>
     <style>
         :root {
-            --bg: #f4f6f9;
-            --text: #333;
-            --card: white;
-            --header: linear-gradient(to right, #4facfe, #00f2fe);
-            --shadow: rgba(0, 0, 0, 0.05);
-        }
-
-        body.dark {
-            --bg: #121212;
-            --text: #ddd;
-            --card: #1e1e1e;
-            --header: linear-gradient(to right, #222, #444);
-            --shadow: rgba(255, 255, 255, 0.05);
+            --primary: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --gray: #6b7280;
         }
 
         body {
-            font-family: 'Segoe UI', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
-            padding: 0;
-            background: var(--bg);
-            color: var(--text);
-            transition: background 0.3s, color 0.3s;
+            padding: 20px;
+            background: #f8fafc;
+            line-height: 1.6;
         }
 
-        header {
-            background: var(--header);
-            color: white;
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section {
+            background: white;
             padding: 2rem;
-            text-align: center;
+            margin-bottom: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        section {
-            padding: 2rem;
-            margin: 1rem auto;
-            max-width: 800px;
-            background: var(--card);
-            border-radius: 10px;
-            box-shadow: 0 4px 12px var(--shadow);
+        .section h2 {
+            margin-top: 0;
+            color: #1f2937;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 0.5rem;
         }
 
-        h2 { margin-top: 0; }
-
-        .fade-in-up {
-            opacity: 0;
-            transform: translateY(20px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
-        }
-
-        .fade-in-up.visible {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        input, select, textarea {
-            padding: 0.5rem;
-            margin: 0.5rem 0;
-            width: 100%;
-            border: 1px solid #ccc;
-            border-radius: 6px;
-            transition: box-shadow 0.3s, border 0.3s;
-            background: var(--card);
-            color: var(--text);
-        }
-
-        input:focus, select:focus, textarea:focus {
-            outline: none;
-            border-color: #007BFF;
-            box-shadow: 0 0 8px rgba(0,123,255,0.2);
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
         }
 
         button {
-            padding: 0.6rem 1.2rem;
-            background-color: #007BFF;
+            background: var(--primary);
             color: white;
             border: none;
+            padding: 0.75rem 1.5rem;
             border-radius: 6px;
             cursor: pointer;
-            transition: transform 0.2s ease;
+            font-size: 1rem;
+            transition: all 0.2s;
         }
 
-        button:active { transform: scale(0.95); }
+        button:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
 
-        label { display: block; margin-top: 1rem; }
+        button:disabled {
+            background: var(--gray);
+            cursor: not-allowed;
+            transform: none;
+        }
 
-        .toggle {
+        button.success {
+            background: var(--success);
+        }
+
+        button.warning {
+            background: var(--warning);
+        }
+
+        button.error {
+            background: var(--error);
+        }
+
+        /* Async Loading Section */
+        .loading-container {
+            min-height: 200px;
+            border: 2px dashed #d1d5db;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             position: relative;
-            display: inline-block;
-            width: 50px;
-            height: 26px;
+            transition: all 0.3s;
         }
 
-        .toggle input { opacity: 0; width: 0; height: 0; }
-
-        .slider {
-            position: absolute;
-            cursor: pointer;
-            top: 0; left: 0;
-            right: 0; bottom: 0;
-            background-color: #ccc;
-            border-radius: 26px;
-            transition: background-color 0.3s;
+        .loading-container.loading {
+            border-color: var(--primary);
+            background: #f0f9ff;
         }
 
-        .slider::before {
-            content: "";
-            position: absolute;
-            height: 22px; width: 22px;
-            left: 2px; bottom: 2px;
-            background-color: white;
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid var(--primary);
             border-radius: 50%;
-            transition: transform 0.3s;
+            animation: spin 1s linear infinite;
+            display: none;
         }
 
-        .toggle input:checked + .slider {
-            background-color: #4caf50;
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        .toggle input:checked + .slider::before {
-            transform: translateX(24px);
+        .dynamic-content {
+            display: none;
+            width: 100%;
+            padding: 1.5rem;
         }
 
-        .draggable-list {
+        .dynamic-content.loaded {
+            display: block;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* List Management */
+        .item-list {
             list-style: none;
             padding: 0;
+            margin: 0;
         }
 
-        .draggable-list li {
-            background: #e0e0e0;
-            padding: 10px 15px;
-            margin: 8px 0;
-            border-radius: 6px;
-            cursor: move;
-            user-select: none;
-            transition: background 0.2s;
-        }
-
-        .draggable-list li.dragging {
-            opacity: 0.5;
-        }
-
-        footer {
-            text-align: center;
+        .list-item {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
             padding: 1rem;
-            font-size: 0.9rem;
-            color: #777;
+            margin-bottom: 0.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s;
+        }
+
+        .list-item:hover {
+            background: #f1f5f9;
+            border-color: var(--primary);
+        }
+
+        .list-item.new-item {
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .list-item.removing {
+            animation: slideOut 0.3s ease-out forwards;
+        }
+
+        @keyframes slideOut {
+            to { opacity: 0; transform: translateX(20px); }
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .item-actions button {
+            padding: 0.5rem 1rem;
+            font-size: 0.875rem;
+        }
+
+        .item-actions button.edit {
+            background: var(--warning);
+        }
+
+        .item-actions button.delete {
+            background: var(--error);
+        }
+
+        /* Lazy Loading Images */
+        .image-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .image-container {
+            position: relative;
+            background: #f1f5f9;
+            border-radius: 8px;
+            overflow: hidden;
+            aspect-ratio: 1;
+        }
+
+        .lazy-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .lazy-image.loaded {
+            opacity: 1;
+        }
+
+        .image-placeholder {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: var(--gray);
+            font-size: 3rem;
+        }
+
+        /* Virtual Scrolling */
+        .virtual-scroll-container {
+            height: 400px;
+            overflow-y: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .virtual-scroll-content {
+            position: relative;
+        }
+
+        .virtual-item {
+            position: absolute;
+            width: 100%;
+            height: 60px;
+            padding: 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            background: white;
+            box-sizing: border-box;
+        }
+
+        .virtual-item:nth-child(even) {
+            background: #f8fafc;
+        }
+
+        /* Status Indicators */
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-indicator.loading {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .status-indicator.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .status-indicator.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        /* Loading States */
+        .skeleton {
+            background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+            background-size: 200% 100%;
+            animation: loading 1.5s infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .skeleton-text {
+            height: 20px;
+            margin-bottom: 10px;
+        }
+
+        .skeleton-button {
+            height: 40px;
+            width: 100px;
+        }
+
+        /* Error Boundary */
+        .error-boundary {
+            background: #fee2e2;
+            border: 1px solid #fca5a5;
+            color: #991b1b;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            display: none;
+        }
+
+        .error-boundary.show {
+            display: block;
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+
+        /* Data attributes for testing */
+        [data-dynamic="true"] {
+            transition: all 0.3s ease;
+        }
+
+        [data-testid^="tta-"] {
+            position: relative;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .controls {
+                flex-direction: column;
+            }
+
+            .image-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+
+            .virtual-scroll-container {
+                height: 300px;
+            }
         }
     </style>
 </head>
 <body>
+<div class="container">
+    <h1>Dynamic Content Test Page</h1>
 
-<header>
-    <h1>🎨 Interactive Showroom</h1>
-    <p>Now with Drag & Drop and Dark Mode</p>
-</header>
+    <!-- Async Loading Section -->
+    <div class="section">
+        <h2>Asynchronous Content Loading</h2>
+        <p>Test scenarios for content that loads after initial page load</p>
 
-<section class="fade-in-up">
-    <h2>📝 User Information</h2>
-    <label>Name: <input type="text" placeholder="Enter your name" /></label>
-    <label>Email: <input type="email" placeholder="Enter your email" /></label>
-    <label>Comment: <textarea placeholder="Leave your message"></textarea></label>
-    <button onclick="alert('Form Submitted!')">Submit</button>
-</section>
+        <div class="controls">
+            <button onclick="loadContent('users')" data-testid="tta-load-users">Load Users (2s delay)</button>
+            <button onclick="loadContent('products')" data-testid="tta-load-products">Load Products (3s delay)</button>
+            <button onclick="loadContent('error')" data-testid="tta-load-error">Trigger Loading Error</button>
+            <button onclick="clearContent()" data-testid="tta-clear-content">Clear Content</button>
+        </div>
 
-<section class="fade-in-up">
-    <h2>🌓 Appearance</h2>
-    <label>
-        Dark Mode:
-        <span class="toggle">
-        <input type="checkbox" id="darkToggle">
-        <span class="slider"></span>
-      </span>
-    </label>
-</section>
+        <div id="loadingContainer" class="loading-container">
+            <div class="spinner" id="spinner"></div>
+            <div id="dynamicContent" class="dynamic-content">
+                <p style="text-align: center; color: var(--gray);">Click a button to load content</p>
+            </div>
+        </div>
 
-<section class="fade-in-up">
-    <h2>📋 Drag & Drop List</h2>
-    <p>Reorder the items below:</p>
-    <ul class="draggable-list" id="sortableList">
-        <li draggable="true">🟢 Task A</li>
-        <li draggable="true">🔵 Task B</li>
-        <li draggable="true">🟣 Task C</li>
-        <li draggable="true">🟠 Task D</li>
-    </ul>
-</section>
+        <div class="status-indicator" id="loadingStatus">
+            <span>Ready</span>
+        </div>
+    </div>
 
-<footer>© 2025 Interactive Showroom by ChatGPT</footer>
+    <!-- Dynamic List Management -->
+    <div class="section">
+        <h2>Dynamic List Management</h2>
+        <p>Test adding, editing, and removing list items</p>
+
+        <div class="controls">
+            <input type="text" id="newItemInput" placeholder="Enter new item..."
+                   data-testid="tta-new-item-input">
+            <button onclick="addItem()" data-testid="tta-add-item">Add Item</button>
+            <button onclick="addMultipleItems()" data-testid="tta-add-multiple">Add 5 Items</button>
+            <button onclick="clearAllItems()" data-testid="tta-clear-all">Clear All</button>
+        </div>
+
+        <ul id="itemList" class="item-list">
+            <li class="list-item" data-id="1" data-testid="tta-item-1">
+                <span>Sample Item 1</span>
+                <div class="item-actions">
+                    <button class="edit" onclick="editItem(1)"
+                            data-testid="tta-edit-1">Edit</button>
+                    <button class="delete" onclick="removeItem(1)"
+                            data-testid="tta-delete-1">Delete</button>
+                </div>
+            </li>
+            <li class="list-item" data-id="2" data-testid="tta-item-2">
+                <span>Sample Item 2</span>
+                <div class="item-actions">
+                    <button class="edit" onclick="editItem(2)"
+                            data-testid="tta-edit-2">Edit</button>
+                    <button class="delete" onclick="removeItem(2)"
+                            data-testid="tta-delete-2">Delete</button>
+                </div>
+            </li>
+        </ul>
+
+        <div class="status-indicator" id="listStatus">
+            <span>2 items in list</span>
+        </div>
+    </div>
+
+    <!-- Lazy Loading Images -->
+    <div class="section">
+        <h2>Lazy Loading Images</h2>
+        <p>Images load as they come into view</p>
+
+        <div class="controls">
+            <button onclick="addImages(6)" data-testid="tta-add-images">Add More Images</button>
+            <button onclick="clearImages()" data-testid="tta-clear-images">Clear Images</button>
+        </div>
+
+        <div id="imageGrid" class="image-grid">
+            <!-- Images will be dynamically added here -->
+        </div>
+    </div>
+
+    <!-- Virtual Scrolling -->
+    <div class="section">
+        <h2>Virtual Scrolling</h2>
+        <p>Efficiently handle large lists with virtual scrolling</p>
+
+        <div class="controls">
+            <button onclick="generateLargeList(100)" data-testid="tta-generate-100">Generate 100 Items</button>
+            <button onclick="generateLargeList(1000)" data-testid="tta-generate-1000">Generate 1000 Items</button>
+            <button onclick="clearVirtualList()" data-testid="tta-clear-virtual">Clear List</button>
+        </div>
+
+        <div class="virtual-scroll-container" id="virtualScrollContainer">
+            <div class="virtual-scroll-content" id="virtualScrollContent">
+                <p style="text-align: center; color: var(--gray); padding: 2rem;">Click a button to generate items</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Boundary Testing -->
+    <div class="section">
+        <h2>Error Handling</h2>
+        <p>Test error states and recovery</p>
+
+        <div class="controls">
+            <button onclick="triggerError()" data-testid="tta-trigger-error">Trigger Error</button>
+            <button onclick="simulateNetworkError()" data-testid="tta-network-error">Network Error</button>
+            <button onclick="clearError()" data-testid="tta-clear-error">Clear Error</button>
+        </div>
+
+        <div class="error-boundary" id="errorBoundary">
+            <strong>Error:</strong> <span id="errorMessage"></span>
+        </div>
+    </div>
+
+    <!-- Status Display -->
+    <div class="section">
+        <h2>Test Status</h2>
+        <div id="testStatus" class="status-indicator success">
+            <span>All tests ready</span>
+        </div>
+    </div>
+</div>
 
 <script>
-    // Animate on scroll
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) entry.target.classList.add('visible');
+    // Global state
+    let itemCounter = 2;
+    let imageCounter = 0;
+    let virtualItems = [];
+    let virtualItemHeight = 60;
+    let virtualContainerHeight = 400;
+
+    // Utility functions
+    function updateStatus(elementId, message, type = 'success') {
+        const element = document.getElementById(elementId);
+        element.className = `status-indicator ${type}`;
+        element.querySelector('span').textContent = message;
+    }
+
+    function showError(message) {
+        const errorBoundary = document.getElementById('errorBoundary');
+        const errorMessage = document.getElementById('errorMessage');
+        errorMessage.textContent = message;
+        errorBoundary.classList.add('show');
+        updateStatus('testStatus', 'Error occurred', 'error');
+    }
+
+    function clearError() {
+        const errorBoundary = document.getElementById('errorBoundary');
+        errorBoundary.classList.remove('show');
+        updateStatus('testStatus', 'All tests ready', 'success');
+    }
+
+    // Async Loading Functions
+    async function loadContent(type) {
+        const container = document.getElementById('loadingContainer');
+        const spinner = document.getElementById('spinner');
+        const content = document.getElementById('dynamicContent');
+        const status = document.getElementById('loadingStatus');
+
+        // Show loading state
+        container.classList.add('loading');
+        spinner.style.display = 'block';
+        content.classList.remove('loaded');
+        updateStatus('loadingStatus', 'Loading...', 'loading');
+
+        try {
+            // Simulate API delay
+            const delay = type === 'users' ? 2000 : type === 'products' ? 3000 : 1000;
+            await new Promise(resolve => setTimeout(resolve, delay));
+
+            if (type === 'error') {
+                throw new Error('Failed to load content from server');
+            }
+
+            // Generate content based on type
+            let html = '';
+            if (type === 'users') {
+                html = generateUsersList();
+            } else if (type === 'products') {
+                html = generateProductsList();
+            }
+
+            content.innerHTML = html;
+            content.classList.add('loaded');
+            updateStatus('loadingStatus', `${type} loaded successfully`, 'success');
+
+        } catch (error) {
+            content.innerHTML = `
+                    <div style="text-align: center; color: var(--error);">
+                        <h3>Error Loading Content</h3>
+                        <p>${error.message}</p>
+                        <button onclick="loadContent('${type}')" class="error">Retry</button>
+                    </div>`;
+            content.classList.add('loaded');
+            updateStatus('loadingStatus', 'Loading failed', 'error');
+        } finally {
+            container.classList.remove('loading');
+            spinner.style.display = 'none';
+        }
+    }
+
+    function generateUsersList() {
+        const users = [
+            { id: 1, name: 'John Doe', email: 'john@example.com', role: 'Admin' },
+            { id: 2, name: 'Jane Smith', email: 'jane@example.com', role: 'User' },
+            { id: 3, name: 'Bob Johnson', email: 'bob@example.com', role: 'Manager' }
+        ];
+
+        return `
+                <div data-dynamic="true">
+                    <h3>Users List</h3>
+                    ${users.map(user => `
+                        <div class="list-item" data-testid="tta-user-${user.id}">
+                            <div>
+                                <strong>${user.name}</strong>
+                                <div style="color: var(--gray); font-size: 0.875rem;">${user.email}</div>
+                            </div>
+                            <span style="background: var(--primary); color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem;">${user.role}</span>
+                        </div>
+                    `).join('')}
+                </div>`;
+    }
+
+    function generateProductsList() {
+        const products = [
+            { id: 1, name: 'Laptop', price: '$999', stock: 15 },
+            { id: 2, name: 'Mouse', price: '$29', stock: 50 },
+            { id: 3, name: 'Keyboard', price: '$79', stock: 25 }
+        ];
+
+        return `
+                <div data-dynamic="true">
+                    <h3>Products List</h3>
+                    ${products.map(product => `
+                        <div class="list-item" data-testid="tta-product-${product.id}">
+                            <div>
+                                <strong>${product.name}</strong>
+                                <div style="color: var(--gray); font-size: 0.875rem;">Stock: ${product.stock}</div>
+                            </div>
+                            <div style="font-weight: 600; color: var(--success);">${product.price}</div>
+                        </div>
+                    `).join('')}
+                </div>`;
+    }
+
+    function clearContent() {
+        const content = document.getElementById('dynamicContent');
+        content.innerHTML = '<p style="text-align: center; color: var(--gray);">Click a button to load content</p>';
+        content.classList.remove('loaded');
+        updateStatus('loadingStatus', 'Ready', 'success');
+    }
+
+    // List Management Functions
+    function addItem() {
+        const input = document.getElementById('newItemInput');
+        const text = input.value.trim();
+
+        if (!text) {
+            showError('Please enter item text');
+            return;
+        }
+
+        itemCounter++;
+        const itemList = document.getElementById('itemList');
+        const newItem = document.createElement('li');
+
+        newItem.className = 'list-item new-item';
+        newItem.setAttribute('data-id', itemCounter);
+        newItem.setAttribute('data-testid', `tta-item-${itemCounter}`);
+        newItem.innerHTML = `
+                <span>${text}</span>
+                <div class="item-actions">
+                    <button class="edit" onclick="editItem(${itemCounter})"
+                            data-testid="tta-edit-${itemCounter}">Edit</button>
+                    <button class="delete" onclick="removeItem(${itemCounter})"
+                            data-testid="tta-delete-${itemCounter}">Delete</button>
+                </div>
+            `;
+
+        itemList.appendChild(newItem);
+        input.value = '';
+
+        updateListStatus();
+        clearError();
+    }
+
+    function addMultipleItems() {
+        for (let i = 0; i < 5; i++) {
+            setTimeout(() => {
+                const input = document.getElementById('newItemInput');
+                input.value = `Dynamic Item ${itemCounter + 1}`;
+                addItem();
+            }, i * 200);
+        }
+    }
+
+    function editItem(id) {
+        const item = document.querySelector(`[data-id="${id}"]`);
+        const span = item.querySelector('span');
+        const currentText = span.textContent;
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = currentText;
+        input.style.cssText = 'flex: 1; margin-right: 1rem;';
+
+        span.replaceWith(input);
+        input.focus();
+        input.select();
+
+        function saveEdit() {
+            const newText = input.value.trim() || currentText;
+            const newSpan = document.createElement('span');
+            newSpan.textContent = newText;
+            input.replaceWith(newSpan);
+        }
+
+        input.addEventListener('blur', saveEdit);
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                saveEdit();
+            }
         });
-    }, { threshold: 0.1 });
+    }
 
-    document.querySelectorAll('.fade-in-up').forEach(el => observer.observe(el));
+    function removeItem(id) {
+        const item = document.querySelector(`[data-id="${id}"]`);
+        item.classList.add('removing');
 
-    // Dark mode toggle
-    document.getElementById('darkToggle').addEventListener('change', (e) => {
-        document.body.classList.toggle('dark', e.target.checked);
-    });
+        setTimeout(() => {
+            item.remove();
+            updateListStatus();
+        }, 300);
+    }
 
-    // Drag and drop
-    const list = document.getElementById('sortableList');
-    let draggingEl;
+    function clearAllItems() {
+        const itemList = document.getElementById('itemList');
+        const items = itemList.querySelectorAll('.list-item');
 
-    list.addEventListener('dragstart', (e) => {
-        draggingEl = e.target;
-        e.target.classList.add('dragging');
-    });
+        items.forEach((item, index) => {
+            setTimeout(() => {
+                item.classList.add('removing');
+                setTimeout(() => item.remove(), 300);
+            }, index * 50);
+        });
 
-    list.addEventListener('dragend', (e) => {
-        e.target.classList.remove('dragging');
-        draggingEl = null;
-    });
+        setTimeout(() => {
+            itemCounter = 0;
+            updateListStatus();
+        }, items.length * 50 + 300);
+    }
 
-    list.addEventListener('dragover', (e) => {
-        e.preventDefault();
-        const afterEl = getDragAfterElement(list, e.clientY);
-        if (afterEl == null) {
-            list.appendChild(draggingEl);
-        } else {
-            list.insertBefore(draggingEl, afterEl);
+    function updateListStatus() {
+        const count = document.querySelectorAll('#itemList .list-item').length;
+        updateStatus('listStatus', `${count} items in list`, count > 0 ? 'success' : 'warning');
+    }
+
+    // Lazy Loading Images
+    function addImages(count) {
+        const grid = document.getElementById('imageGrid');
+
+        for (let i = 0; i < count; i++) {
+            imageCounter++;
+            const container = document.createElement('div');
+            container.className = 'image-container';
+            container.innerHTML = `
+                    <div class="image-placeholder">📷</div>
+                    <img class="lazy-image"
+                         data-src="https://picsum.photos/200/200?random=${imageCounter}"
+                         alt="Random image ${imageCounter}"
+                         data-testid="tta-image-${imageCounter}">
+                `;
+            grid.appendChild(container);
+        }
+
+        // Trigger lazy loading
+        lazyLoadImages();
+    }
+
+    function lazyLoadImages() {
+        const images = document.querySelectorAll('.lazy-image:not(.loaded)');
+
+        const imageObserver = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const img = entry.target;
+                    const src = img.getAttribute('data-src');
+
+                    if (src) {
+                        img.src = src;
+                        img.onload = () => {
+                            img.classList.add('loaded');
+                            img.previousElementSibling.style.display = 'none';
+                        };
+
+                        img.onerror = () => {
+                            img.previousElementSibling.textContent = '❌';
+                        };
+
+                        observer.unobserve(img);
+                    }
+                }
+            });
+        });
+
+        images.forEach(img => imageObserver.observe(img));
+    }
+
+    function clearImages() {
+        document.getElementById('imageGrid').innerHTML = '';
+        imageCounter = 0;
+    }
+
+    // Virtual Scrolling
+    function generateLargeList(count) {
+        virtualItems = [];
+        for (let i = 0; i < count; i++) {
+            virtualItems.push({
+                id: i + 1,
+                text: `Virtual Item ${i + 1}`,
+                description: `This is item number ${i + 1} in the virtual list`
+            });
+        }
+
+        renderVirtualList();
+    }
+
+    function renderVirtualList() {
+        const container = document.getElementById('virtualScrollContainer');
+        const content = document.getElementById('virtualScrollContent');
+
+        const totalHeight = virtualItems.length * virtualItemHeight;
+        content.style.height = `${totalHeight}px`;
+
+        function updateVisibleItems() {
+            const scrollTop = container.scrollTop;
+            const startIndex = Math.floor(scrollTop / virtualItemHeight);
+            const endIndex = Math.min(
+                startIndex + Math.ceil(virtualContainerHeight / virtualItemHeight) + 1,
+                virtualItems.length
+            );
+
+            // Clear existing items
+            content.innerHTML = '';
+
+            // Render visible items
+            for (let i = startIndex; i < endIndex; i++) {
+                const item = virtualItems[i];
+                const div = document.createElement('div');
+                div.className = 'virtual-item';
+                div.style.top = `${i * virtualItemHeight}px`;
+                div.setAttribute('data-testid', `tta-virtual-${item.id}`);
+                div.innerHTML = `
+                        <div style="flex: 1;">
+                            <strong>${item.text}</strong>
+                            <div style="color: var(--gray); font-size: 0.875rem;">${item.description}</div>
+                        </div>
+                        <button onclick="handleVirtualItem(${item.id})"
+                                data-testid="tta-virtual-btn-${item.id}">Action</button>
+                    `;
+                content.appendChild(div);
+            }
+        }
+
+        // Initial render
+        updateVisibleItems();
+
+        // Update on scroll
+        container.onscroll = updateVisibleItems;
+    }
+
+    function handleVirtualItem(id) {
+        updateStatus('testStatus', `Virtual item ${id} clicked`, 'success');
+    }
+
+    function clearVirtualList() {
+        virtualItems = [];
+        document.getElementById('virtualScrollContent').innerHTML =
+            '<p style="text-align: center; color: var(--gray); padding: 2rem;">Click a button to generate items</p>';
+    }
+
+    // Error Handling
+    function triggerError() {
+        showError('This is a simulated error for testing error handling');
+    }
+
+    function simulateNetworkError() {
+        updateStatus('testStatus', 'Simulating network error...', 'loading');
+
+        setTimeout(() => {
+            showError('Network request failed: Connection timeout');
+            updateStatus('testStatus', 'Network error occurred', 'error');
+        }, 1500);
+    }
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+        // Add initial images
+        addImages(3);
+
+        // Set up intersection observer for lazy loading
+        if ('IntersectionObserver' in window) {
+            lazyLoadImages();
         }
     });
-
-    function getDragAfterElement(container, y) {
-        const els = [...container.querySelectorAll('li:not(.dragging)')];
-        return els.reduce((closest, child) => {
-            const box = child.getBoundingClientRect();
-            const offset = y - box.top - box.height / 2;
-            if (offset < 0 && offset > closest.offset) {
-                return { offset: offset, element: child };
-            } else {
-                return closest;
-            }
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
-    }
 </script>
 </body>
 </html>

@@ -30,7 +30,7 @@ class PageHandler(
     private val pageAPI get() = devTools.page.takeIf { isActive }
     private val domAPI get() = devTools.dom.takeIf { isActive }
     private val cssAPI get() = devTools.css.takeIf { isActive }
-    private val runtime get() = devTools.runtime.takeIf { isActive }
+    private val runtimeAPI get() = devTools.runtime.takeIf { isActive }
     
     val mouse = Mouse(devTools)
     val keyboard = Keyboard(devTools)
@@ -198,7 +198,7 @@ class PageHandler(
     fun evaluateDetail(expression: String): Evaluate? {
 //        val iife = JsUtils.toIIFE(confuser.confuse(expression))
 //        return runtime?.evaluate(iife)
-        val evaluate = runtime?.evaluate(confuser.confuse(expression))
+        val evaluate = runtimeAPI?.evaluate(confuser.confuse(expression))
 
         return evaluate
     }
@@ -215,7 +215,7 @@ class PageHandler(
 
         val exception = evaluate?.exceptionDetails?.exception
         if (exception != null) {
-            logger.info(exception.description + "\n>>>$expression<<<")
+            logger.warn(exception.description + "\n>>>$expression<<<")
         }
 
         val result = evaluate?.result
@@ -294,7 +294,7 @@ class PageHandler(
         @Experimental uniqueContextId: String? = null,
         @Experimental serializationOptions: SerializationOptions? = null,
     ): Evaluate? {
-        return runtime?.evaluate(
+        return runtimeAPI?.evaluate(
             expression,
             objectGroup,
             includeCommandLineAPI,

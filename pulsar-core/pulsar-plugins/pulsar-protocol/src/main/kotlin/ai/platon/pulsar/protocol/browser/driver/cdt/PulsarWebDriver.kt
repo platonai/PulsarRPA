@@ -70,7 +70,7 @@ class PulsarWebDriver(
     private val page = PageHandler(devTools, settings.confuser)
     private val mouse get() = page.mouse.takeIf { isActive }
     private val keyboard get() = page.keyboard.takeIf { isActive }
-    private val screenshot = Screenshot(page, devTools)
+    private val screenshot = ScreenshotHandler(page, devTools)
 
     private val networkManager by lazy { NetworkManager(this, rpc) }
     private val messageWriter = MiscMessageWriter()

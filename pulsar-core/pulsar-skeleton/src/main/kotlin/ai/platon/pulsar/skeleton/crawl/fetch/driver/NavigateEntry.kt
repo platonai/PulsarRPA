@@ -21,7 +21,7 @@ data class NavigateEntry(
     /**
      * The page id, 0 means there is no WebPage.
      * */
-    val pageId: Int = 0,
+    val pageId: Long = 0,
     /**
      * The page url which can be used to retrieve the WebPage from database.
      * An empty string means there is no WebPage.

@@ -1,5 +1,6 @@
 package ai.platon.pulsar
 
+import ai.platon.pulsar.browser.FastWebDriverService
 import ai.platon.pulsar.browser.WebDriverService
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.SimpleScriptConfuser
@@ -42,7 +43,9 @@ class WebDriverTestBase : TestWebSiteAccess() {
 
     val browserFactory get() = context.getBeanOrNull(BrowserFactory::class) ?: DefaultBrowserFactory(session.configuration)
 
-    open val webDriverService get() = WebDriverService(browserFactory)
+//    open val webDriverService get() = WebDriverService(browserFactory)
+
+    open val webDriverService get() = FastWebDriverService(browserFactory)
 
     val settings get() = BrowserSettings(session.sessionConfig)
     val confuser get() = settings.confuser as SimpleScriptConfuser

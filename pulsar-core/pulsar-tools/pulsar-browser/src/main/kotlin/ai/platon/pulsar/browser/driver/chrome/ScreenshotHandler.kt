@@ -13,7 +13,7 @@ import com.github.kklisura.cdt.protocol.v2023.types.page.Viewport
 import com.google.gson.Gson
 import kotlin.math.roundToInt
 
-class Screenshot(
+class ScreenshotHandler(
     private val pageHandler: PageHandler,
     private val devTools: RemoteDevTools,
 ) {

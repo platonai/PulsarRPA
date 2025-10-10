@@ -85,8 +85,8 @@ class PageLoadStatusFormatter(
         else -> "Unknown"
     }
     private val pageStatus: String get() = when {
-        page.id < verboseCount && page.id % 10 == 0 -> "$pageStatusText $pageStatusSymbol"
-        page.id > verboseCount && page.id % verboseCount == 0 -> "$pageStatusText $pageStatusSymbol"
+        page.id < verboseCount && page.id % 10 == 0L -> "$pageStatusText $pageStatusSymbol"
+        page.id > verboseCount && page.id % verboseCount == 0L -> "$pageStatusText $pageStatusSymbol"
         else -> pageStatusSymbol.toString()
     }
     private val loadMessagePrefix get() = prefix.takeIf { it.isNotEmpty() } ?: pageStatus
@@ -104,7 +104,7 @@ class PageLoadStatusFormatter(
         get() {
             val (ni, na, nnm, nst, w, h) = activeDOMStatTrace["lastStat"]?: ActiveDOMStat()
             val divisor = if (page.id < verboseCount) 10 else verboseCount
-            val prefix = if (page.id % divisor == 0) {
+            val prefix = if (page.id % divisor == 0L) {
                 "i/a/nm/st/h:"
             } else ""
             return if (ni + na + nnm + nst + h != 0) {

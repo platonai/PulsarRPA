@@ -1,6 +1,7 @@
 package ai.platon.pulsar.browser.js
 
 import ai.platon.pulsar.WebDriverTestBase
+import ai.platon.pulsar.browser.FastWebDriverService
 import ai.platon.pulsar.browser.common.ScriptLoader
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
@@ -11,6 +12,8 @@ import kotlin.test.*
  * Test injected JS
  * */
 class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
+
+    override val webDriverService get() = FastWebDriverService(browserFactory)
 
     val testURL get() = "$generatedAssetsBaseURL/injected-js.test.html"
 
