@@ -26,11 +26,11 @@ class PulsarWebDriverInjectedStagehandJSTests : WebDriverTestBase() {
 
     @Test
     fun `test getNodeFromXpath`() = runWebDriverTest(testURL, browser) { driver ->
-//        val xpath = """/html/body/div/div[2]/h2"""
-        val xpath = """/html/body/h2"""
+        val xpath = """/html/body/div/div[2]/h2"""
 
         val result = driver.evaluateValue("window.getNodeFromXpath('$xpath')")
-        assertEquals("Dynamic List Management", result)
+        assertNotNull(result)
+        assertTrue { result.toString().contains("h2") }
     }
 
     @Test

@@ -69,109 +69,23 @@
     }
 
     async function generateXPathsForElement(element) {
-        if (!element)
-            return [];
-        const [complexXPath, standardXPath, idBasedXPath] = await Promise.all([
-            generateComplexXPath(element),
-            generateStandardXPath(element),
-            generatedIdBasedXPath(element)
-        ]);
-        return [standardXPath, ...idBasedXPath ? [idBasedXPath] : [], complexXPath];
+        // Delegate to sync implementation for single source of truth
+        return Promise.resolve(generateXPathsForElementSync(element));
     }
 
     async function generateComplexXPath(element) {
-        const parts = [];
-        let currentElement = element;
-        while (currentElement && (isTextNode(currentElement) || isElementNode(currentElement))) {
-            if (isElementNode(currentElement)) {
-                const el = currentElement;
-                let selector = el.tagName.toLowerCase();
-                const attributePriority = [
-                    "data-qa",
-                    "data-component",
-                    "data-role",
-                    "role",
-                    "aria-role",
-                    "type",
-                    "name",
-                    "aria-label",
-                    "placeholder",
-                    "title",
-                    "alt"
-                ];
-                const attributes = attributePriority.map((attr) => {
-                    let value = el.getAttribute(attr);
-                    if (attr === "href-full" && value) {
-                        value = el.getAttribute("href");
-                    }
-                    return value ? {attr: attr === "href-full" ? "href" : attr, value} : null;
-                }).filter((attr) => attr !== null);
-                let uniqueSelector = "";
-                for (let i = 1; i <= attributes.length; i++) {
-                    const combinations = getCombinations(attributes, i);
-                    for (const combo of combinations) {
-                        const conditions = combo.map((a) => `@${a.attr}=${escapeXPathString(a.value)}`).join(" and ");
-                        const xpath2 = `//${selector}[${conditions}]`;
-                        if (isXPathFirstResultElement(xpath2, el)) {
-                            uniqueSelector = xpath2;
-                            break;
-                        }
-                    }
-                    if (uniqueSelector)
-                        break;
-                }
-                if (uniqueSelector) {
-                    parts.unshift(uniqueSelector.replace("//", ""));
-                    break;
-                } else {
-                    const parent = getParentElement(el);
-                    if (parent) {
-                        const siblings = Array.from(parent.children).filter(
-                            (sibling) => sibling.tagName === el.tagName
-                        );
-                        const index = siblings.indexOf(el) + 1;
-                        selector += siblings.length > 1 ? `[${index}]` : "";
-                    }
-                    parts.unshift(selector);
-                }
-            }
-            currentElement = getParentElement(currentElement);
-        }
-        const xpath = "//" + parts.join("/");
-        return xpath;
+        // Delegate to sync implementation for single source of truth
+        return Promise.resolve(generateComplexXPathSync(element));
     }
 
     async function generateStandardXPath(element) {
-        const parts = [];
-        while (element && (isTextNode(element) || isElementNode(element))) {
-            let index = 0;
-            let hasSameTypeSiblings = false;
-            const siblings = element.parentElement ? Array.from(element.parentElement.childNodes) : [];
-            for (let i = 0; i < siblings.length; i++) {
-                const sibling = siblings[i];
-                if (sibling.nodeType === element.nodeType && sibling.nodeName === element.nodeName) {
-                    index = index + 1;
-                    hasSameTypeSiblings = true;
-                    if (sibling.isSameNode(element)) {
-                        break;
-                    }
-                }
-            }
-            if (element.nodeName !== "#text") {
-                const tagName = element.nodeName.toLowerCase();
-                const pathIndex = hasSameTypeSiblings ? `[${index}]` : "";
-                parts.unshift(`${tagName}${pathIndex}`);
-            }
-            element = element.parentElement;
-        }
-        return parts.length ? `/${parts.join("/")}` : "";
+        // Delegate to sync implementation for single source of truth
+        return Promise.resolve(generateStandardXPathSync(element));
     }
 
     async function generatedIdBasedXPath(element) {
-        if (isElementNode(element) && element.id) {
-            return `//*[@id='${element.id}']`;
-        }
-        return null;
+        // Delegate to sync implementation for single source of truth
+        return Promise.resolve(generatedIdBasedXPathSync(element));
     }
 
   // BEGIN: Synchronous counterparts
@@ -261,12 +175,14 @@
     }
     return parts.length ? `/${parts.join("/")}` : "";
   }
+
   function generatedIdBasedXPathSync(element) {
     if (isElementNode(element) && element.id) {
       return `//*[@id='${element.id}']`;
     }
     return null;
   }
+
   function generateXPathsForElementSync(element) {
     if (!element) return [];
     const complexXPath = generateComplexXPathSync(element);
@@ -274,6 +190,7 @@
     const idBasedXPath = generatedIdBasedXPathSync(element);
     return [standardXPath, ...(idBasedXPath ? [idBasedXPath] : []), complexXPath];
   }
+
   function getScrollableElementXpathsSync(topN) {
     const scrollableElems = getScrollableElements(topN);
     const xpaths = [];
@@ -313,15 +230,22 @@
       return false;
     }
   }
+
   function getNodeFromXpath(xpath) {
-    return document.evaluate(
+    const node = document.evaluate(
       xpath,
       document.documentElement,
       null,
       XPathResult.FIRST_ORDERED_NODE_TYPE,
       null
     ).singleNodeValue;
+
+    if (!node) return null;
+
+    const allXPaths = generateXPathsForElementSync(node);
+    return allXPaths?.[0] || null;
   }
+
   function waitForElementScrollEnd(element, idleMs = 100) {
     return new Promise((resolve) => {
       let scrollEndTimer;
