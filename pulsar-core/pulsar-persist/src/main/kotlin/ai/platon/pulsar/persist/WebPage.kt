@@ -30,7 +30,7 @@ interface WebPage : Comparable<WebPage> {
     /**
      * The unique, in-process identifier of the web page.
      */
-    val id: Int
+    val id: Long
 
     /**
      * The url is the permanent internal address, and it's also the storage key (reserved).

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.persist
 
+import ai.platon.pulsar.common.InProcessIdGenerator
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.common.urls.URLUtils.mergeUrlArgs
@@ -31,7 +32,7 @@ abstract class AbstractWebPage(
 ) : WebPage {
     companion object {
         // The ID_SEQUENCER is an AtomicInteger initialized to 10 to avoid conflicts with the default ID of 0.
-        private val ID_SEQUENCER = AtomicInteger(10)
+        private val ID_SEQUENCER = InProcessIdGenerator()
 
         /**
          * Returns the URL based on whether it should be reversed or not.
@@ -51,7 +52,7 @@ abstract class AbstractWebPage(
     /**
      * The page id which is unique in process scope.
      */
-    override var id: Int = ID_SEQUENCER.incrementAndGet()
+    override var id: Long = ID_SEQUENCER.nextId()
         protected set
 
     val reversedUrl get() = reverseUrlOrEmpty(url)

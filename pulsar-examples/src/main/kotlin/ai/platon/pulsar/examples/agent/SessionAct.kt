@@ -147,9 +147,8 @@ class SessionAct {
 
         // add more action examples here
 
-        step("Navigate to original URL, captures the live page as a local copy and re-parse")
-        driver.navigateTo(url)
-        page = session.capture(driver, url)
+        step("Re-open the original URL and re-parse")
+        page = session.open(url)
         document = session.parse(page)
         fields = session.extract(document, mapOf("title" to "#title"))
         result("fields", fields)
