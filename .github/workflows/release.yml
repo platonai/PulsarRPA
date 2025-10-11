@@ -139,16 +139,37 @@ jobs:
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
-      - name: Run Integration Tests
-        id: integration-tests
-        if: success() && github.event.inputs.skip_tests != 'true'
-        uses: ./.github/actions/run-integration-tests
-        with:
-          script_path: './bin/tests/run-integration-test.sh'
-          application_url: 'http://localhost:8182'
-          network_name: ${{ env.NETWORK_NAME }}
-          container_name: ${{ env.CONTAINER_NAME }}
-          timeout_seconds: '600'
+      - name: Run End to End Tests
+        id: end-to-end-tests
+        shell: bash
+        run: |
+          echo "::group::🧪 End to End Tests"
+          
+          if [ -f "./bin/tests/run-e2e-test.sh" ]; then
+            echo "✅ Found E2E test script"
+            chmod +x ./bin/tests/run-e2e-test.sh
+          
+            echo "🚀 Running E2E tests..."
+            date
+            echo "Application URL: http://localhost:8182"
+            echo "Network: ${{ env.NETWORK_NAME }}"
+            echo "Container: ${{ env.CONTAINER_NAME }}"
+
+            if timeout 1200 ./bin/tests/run-e2e-test.sh; then
+              echo "✅ E2E tests passed"
+              echo "E2E_status=success" >> $GITHUB_OUTPUT
+            else
+              echo "❌ E2E tests failed"
+              echo "integration_status=failed" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+          else
+            echo "⚠️ E2E test script not found: ./bin/tests/run-E2E-test.sh"
+            echo "Skipping E2E tests..."
+            echo "E2E_status=skipped" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "::endgroup::"
 
       - name: Build Browser4 JAR
         if: success()
@@ -169,4 +190,125 @@ jobs:
           fi
           echo "✅ $JAR_NAME built successfully"
 
+      - name: Find and Validate JAR
+        id: get_uberjar
+        if: success()
+        run: |
+          JAR_PATH=${{ env.PRODUCTION_JAR_PATH }}
+          JAR_NAME=${{ env.PRODUCTION_JAR_NAME }}
 
+          echo "::group::📦 JAR Discovery and Validation"
+
+          if [ ! -f "$JAR_PATH" ]; then
+            echo "❌ JAR file not found: $JAR_PATH"
+            exit 1
+          fi
+
+          JAR_SIZE=$(stat -c%s "$JAR_PATH" 2>/dev/null || echo 0)
+          UBERJAR_FILE=$(basename "$JAR_PATH")
+          
+          echo "✅ Selected JAR: $UBERJAR_FILE"
+          echo "📍 Path: $JAR_PATH"
+          echo "📏 Size: $JAR_SIZE bytes ($(numfmt --to=iec --suffix=B $JAR_SIZE))"
+
+          # Validate JAR is not empty
+          if [ "$JAR_SIZE" -lt 1000000 ]; then
+            echo "❌ JAR file seems too small (< 1MB): $JAR_SIZE bytes"
+            exit 1
+          fi
+
+          echo "uberjar_file=$UBERJAR_FILE" >> $GITHUB_OUTPUT
+          echo "uberjar_path=$JAR_PATH" >> $GITHUB_OUTPUT
+          
+          echo "::endgroup::"
+
+      - name: Create Release Notes
+        uses: ./.github/actions/create-release-notes
+        id: release-notes
+        with:
+          version: ${{ env.VERSION }}
+          jar_name: ${{ steps.get_uberjar.outputs.uberjar_file }}
+          jar_path: ${{ steps.get_uberjar.outputs.uberjar_path }}
+          java_version: ${{ env.JAVA_VERSION }}+
+          output_file: release_notes.md
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ steps.get_uberjar.outputs.uberjar_path }}
+          name: "🚀 Browser4 ${{ env.VERSION }}"
+          body_path: release_notes.md
+          tag_name: ${{ env.TAG }}
+          draft: false
+          prerelease: ${{ env.IS_PRERELEASE }}
+          generate_release_notes: true
+          make_latest: ${{ env.IS_PRERELEASE == 'false' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Verify Release
+        run: |
+          echo "::group::✅ Release Verification"
+          
+          JAR_SIZE=$(stat -c%s "${{ steps.get_uberjar.outputs.uberjar_path }}" 2>/dev/null || echo 0)
+          
+          echo "🎉 Release ${{ env.VERSION }} created successfully!"
+          echo ""
+          echo "📦 Release Details:"
+          echo "  - Tag: ${{ env.TAG }}"
+          echo "  - JAR: ${{ steps.get_uberjar.outputs.uberjar_file }}"
+          echo "  - Size: $(numfmt --to=iec --suffix=B $JAR_SIZE)"
+          echo "  - Prerelease: ${{ env.IS_PRERELEASE }}"
+          echo ""
+          echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ env.TAG }}"
+          echo ""
+          echo "📥 Download Command:"
+          echo "wget https://github.com/${{ github.repository }}/releases/download/${{ env.TAG }}/${{ steps.get_uberjar.outputs.uberjar_file }}"
+          
+          echo "::endgroup::"
+
+      - name: Push Docker Images to Docker Hub
+        if: success()
+        run: |
+          echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+          docker push ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+          docker push ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+
+      - name: Push Docker Images to GitHub Container Registry
+        if: success()
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          
+          # Tag images for GitHub Container Registry
+          docker tag ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }} ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+          docker tag ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }} ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+          
+          # Push images
+          docker push ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+          docker push ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
+
+#      - name: Set up JDK ${{ env.JAVA_VERSION }} For Deployment
+#        uses: actions/setup-java@v4
+#        with:
+#          distribution: 'temurin'
+#          java-version: ${{ env.JAVA_VERSION }}
+#          cache: maven
+#          server-id: 'ossrh'                        # Matches <id> in your pom.xml for OSSRH
+#          server-username: MAVEN_USERNAME
+#          server-password: MAVEN_PASSWORD
+#          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}   # ASCII-armored (exported with --armor)
+#          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+#
+#      - name: Deploy to Sonatype OSSRH
+#        if: success()
+#        run: |
+#          echo "=== Deploying to Maven Central ==="
+#          ./mvnw --batch-mode deploy -P deploy,release -DskipTests \
+#            -Dgpg.passphrase="$GPG_PASSPHRASE" \
+#            -Dgpg.batch=true \
+#            -Dgpg.pinentry-mode=loopback \
+#            --show-version --errors
+#        env:
+#          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+#          MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+#          MAVEN_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
