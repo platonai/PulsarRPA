@@ -20,6 +20,7 @@
     </parent>
 
     <artifactId>pulsar-plugins</artifactId>
+    <version>4.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Pulsar Plugins</name>
