@@ -38,7 +38,7 @@ fun main() {
     // ...
 
     // Chat with the page
-    val response = session.chat("Tell me something about the page", document)
+    val response = runBlocking { session.chat("Tell me something about the page", document) }
     println(response)
 
     // Load the portal page and then load all links specified by `-outLink`.
