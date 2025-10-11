@@ -9,7 +9,7 @@ Browser4 使用简单的加载参数来精确描述一个采集任务，譬如�
 // Create a pulsar session
 val session = PulsarContexts.createSession()
 // The main url we are playing with
-val url = "https://www.amazon.com/dp/B0C1H26C46"
+val url = "https://www.amazon.com/dp/B08PP5MSVB"
 ```
 
 最常见的需求是指定页面过期时间，如果需要的页面已在本地存储中并且未过期，则返回本地版本。

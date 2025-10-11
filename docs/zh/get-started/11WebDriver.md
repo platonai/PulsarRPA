@@ -33,11 +33,11 @@ class WebDriverDemo(private val session: PulsarSession) {
 
         val be = options.eventHandlers.browseEventHandlers
 
-        be.onDocumentActuallyReady.addLast { page, driver ->
+        be.onDocumentFullyLoaded.addLast { page, driver ->
             fieldSelectors.values.forEach { interact1(it, driver) }
         }
 
-        be.onDocumentActuallyReady.addLast { page, driver ->
+        be.onDocumentFullyLoaded.addLast { page, driver ->
             interact2(driver)
         }
 

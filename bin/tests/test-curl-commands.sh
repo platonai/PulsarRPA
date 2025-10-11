@@ -44,6 +44,7 @@ TOTAL_TESTS=0
 PASSED_TESTS=0
 FAILED_TESTS=0
 SKIPPED_TESTS=0
+TIMED_OUT_TESTS=0
 
 # Ensure results directory exists
 mkdir -p "$TEST_RESULTS_DIR"
@@ -161,6 +162,31 @@ process_error_response() {
   fi
 }
 
+# Process command execution timeout (curl exit code 28)
+process_timeout_response() {
+  local response_file="$1"
+  local error_file="$2"
+  local test_number="$3"
+  local timeout="$4"
+
+  local out_file="${TEST_RESULTS_DIR}/test_${test_number}_timeout_response.part"
+  local err_file="${TEST_RESULTS_DIR}/test_${test_number}_timeout_stderr.txt"
+
+  cp "$response_file" "$out_file" 2>/dev/null || true
+  cp "$error_file" "$err_file" 2>/dev/null || true
+
+  log "${YELLOW}[TIMEOUT]${NC} Command exceeded ${timeout}s and was aborted (curl exit 28)."
+  if [[ -s "$response_file" ]]; then
+    local preview=$(head -c 500 "$response_file" 2>/dev/null)
+    [[ -n "$preview" ]] && log "${CYAN}[PARTIAL RESPONSE]${NC} $preview..."
+  fi
+  if [[ -s "$error_file" ]]; then
+    local curl_error=$(head -c 1000 "$error_file" 2>/dev/null | tr -d '\n\r')
+    log "${YELLOW}[CURL STDERR]${NC} $curl_error"
+  fi
+  log "${CYAN}[HINT]${NC} You can increase timeout via '-t <seconds>' or run with --fast to reduce delays."
+}
+
 # Process command execution errors
 process_execution_error() {
   local error_file="$1"
@@ -206,7 +232,10 @@ run_curl_test() {
 
   # Execute the command
   local start_time=$(date +%s)
-  if execute_curl_command "$curl_command" "$TIMEOUT_SECONDS" "$response_file" "$error_file"; then
+  execute_curl_command "$curl_command" "$TIMEOUT_SECONDS" "$response_file" "$error_file"
+  local exit_code=$?
+
+  if [[ $exit_code -eq 0 ]]; then
     local end_time=$(date +%s)
     local duration=$((end_time - start_time))
     local http_status=$(sed -n '1p' "${response_file}.meta" 2>/dev/null || echo "000")
@@ -227,8 +256,12 @@ run_curl_test() {
       FAILED_TESTS=$((FAILED_TESTS + 1))
       process_error_response "$response_file" "$error_file" "$test_number" "$http_status" "$content_type" "$size_download"
     fi
+  elif [[ $exit_code -eq 28 ]]; then
+    # Curl operation timed out
+    TIMED_OUT_TESTS=$((TIMED_OUT_TESTS + 1))
+    process_timeout_response "$response_file" "$error_file" "$test_number" "$TIMEOUT_SECONDS"
   else
-    log "${RED}[FAIL]${NC} ❌ Command execution failed"
+    log "${RED}[FAIL]${NC} ❌ Command execution failed (exit $exit_code)"
     FAILED_TESTS=$((FAILED_TESTS + 1))
     process_execution_error "$error_file" "$test_number" "$(substitute_urls "$curl_command")"
   fi
@@ -254,7 +287,11 @@ run_all_tests() {
 }
 
 print_summary() {
-  local success_rate=$(( PASSED_TESTS * 100 / TOTAL_TESTS ))
+  local effective_total=$(( TOTAL_TESTS - TIMED_OUT_TESTS ))
+  local success_rate=0
+  if [[ $effective_total -gt 0 ]]; then
+    success_rate=$(( PASSED_TESTS * 100 / effective_total ))
+  fi
 
   log ""
   log "=============================================="
@@ -268,8 +305,9 @@ print_summary() {
   log "${GREEN}Passed:${NC} $PASSED_TESTS"
   log "${RED}Failed:${NC} $FAILED_TESTS"
   log "${YELLOW}Skipped:${NC} $SKIPPED_TESTS"
-  if [[ $TOTAL_TESTS -gt 0 ]]; then
-    log "${BLUE}Success Rate:${NC} $success_rate%"
+  log "${YELLOW}Timed Out:${NC} $TIMED_OUT_TESTS"
+  if [[ $effective_total -gt 0 ]]; then
+    log "${BLUE}Success Rate (excl. timeouts):${NC} $success_rate%"
   fi
   log "${BLUE}Log File:${NC} $LOG_FILE"
   log "${BLUE}Results Directory:${NC} $TEST_RESULTS_DIR"
@@ -278,13 +316,13 @@ print_summary() {
     log "${YELLOW}[INFO]${NC} No tests were executed"
     exit 0
   elif [[ $FAILED_TESTS -eq 0 ]]; then
-    log "${GREEN}[SUCCESS]${NC} All tests passed! 🎉"
+    log "${GREEN}[SUCCESS]${NC} All non-timeout tests passed! 🎉"
     exit 0
   else
     log "${YELLOW}[PARTIAL SUCCESS]${NC} Some tests failed. Check logs for details."
 
-    if [[ $success_rate -lt 80 ]]; then
-      log "${RED}[FAILURE]${NC} Success rate below 80%. Exiting with failure."
+    if [[ $success_rate -lt 80 && $FAILED_TESTS -gt 0 ]]; then
+      log "${RED}[FAILURE]${NC} Success rate below 80% (timeouts ignored). Exiting with failure."
       exit 1
     else
       log "${YELLOW}[PARTIAL SUCCESS]${NC} Some tests failed. Check logs for details."
@@ -316,6 +354,9 @@ $0 --skip-server --verbose      # Skip server check with verbose output
 REQUIREMENTS:
 - curl command available
 - Browser4 server running (unless --skip-server)
+
+NOTES:
+- Each request is limited by --timeout; timeouts are reported as [TIMEOUT] and do not count as failures.
 
 UPDATING COMMANDS:
 Edit the CURL_COMMANDS array to add/modify tests.

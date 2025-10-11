@@ -48,11 +48,10 @@ jobs:
 
       - name: Run Tests
         id: run-tests
-        if: success() && inputs.skip_tests != true
+        if: inputs.skip_tests != true
         uses: ./.github/actions/run-tests
         with:
-          maven_profiles: 'all-modules'
-          test_excludes: '**integration**'
+          test_excludes: '**integration**,**e2e**'
           timeout_minutes: '35'
 
       - name: Check Test Status
@@ -63,10 +62,12 @@ jobs:
             echo "📊 Test Results:"
             echo "  - Total Tests: ${{ steps.run-tests.outputs.test_count }}"
             echo "  - Failed Tests: ${{ steps.run-tests.outputs.failed_count }}"
+            echo "  - Passed Tests: ${{ steps.run-tests.outputs.passed_count }}"
+            echo "  - Skipped Tests: ${{ steps.run-tests.outputs.skipped_count }}"
             exit 1
           else
             echo "✅ All tests passed successfully"
-            echo "📊 Test Results: ${{ steps.run-tests.outputs.test_count }} tests passed"
+            echo "📊 Test Results: ${{ steps.run-tests.outputs.passed_count }} tests passed"
           fi
 
       - name: Build Docker Image
@@ -99,16 +100,37 @@ jobs:
           timeout_minutes: '5'
           container_name: ${{ env.CONTAINER_NAME }}
 
-      - name: Run Integration Tests
-        id: integration-tests
-        if: success()
-        uses: ./.github/actions/run-integration-tests
-        with:
-          script_path: './bin/tests/run-integration-test.sh'
-          application_url: 'http://localhost:8182'
-          network_name: ${{ env.NETWORK_NAME }}
-          container_name: ${{ env.CONTAINER_NAME }}
-          timeout_seconds: '1200'
+      - name: Run End to End Tests
+        id: end-to-end-tests
+        shell: bash
+        run: |
+          echo "::group::🧪 End to End Tests"
+          
+          if [ -f "./bin/tests/run-e2e-test.sh" ]; then
+            echo "✅ Found E2E test script"
+            chmod +x ./bin/tests/run-e2e-test.sh
+          
+            echo "🚀 Running E2E tests..."
+            date
+            echo "Application URL: http://localhost:8182"
+            echo "Network: ${{ env.NETWORK_NAME }}"
+            echo "Container: ${{ env.CONTAINER_NAME }}"
+
+            if timeout 1200 ./bin/tests/run-e2e-test.sh; then
+              echo "✅ E2E tests passed"
+              echo "E2E_status=success" >> $GITHUB_OUTPUT
+            else
+              echo "❌ E2E tests failed"
+              echo "integration_status=failed" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+          else
+            echo "⚠️ E2E test script not found: ./bin/tests/run-E2E-test.sh"
+            echo "Skipping E2E tests..."
+            echo "E2E_status=skipped" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "::endgroup::"
 
       - name: Pipeline Summary
         if: always()

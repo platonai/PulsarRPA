@@ -9,7 +9,6 @@ import ai.platon.pulsar.external.impl.ChatModelImpl
 import dev.langchain4j.model.openai.OpenAiChatModel
 import dev.langchain4j.model.zhipu.ZhipuAiChatModel
 import java.time.Duration
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -24,7 +23,7 @@ object ChatModelFactory {
     private val llmGuideReported = AtomicBoolean(false)
     const val DOCUMENT_PATH = "https://github.com/platonai/browser4/blob/master/docs/config/llm/llm-config.md"
     const val LLM_GUIDE =
-"""
+        """
 The LLM is not configured, the LLM feature is disabled.
 
 Simple guide to configure LLM:
@@ -51,6 +50,13 @@ docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${'$'}{DEEPSEEK_API_KEY} galaxyey
 
 For more details, please refer to the [LLM configuration documentation]($DOCUMENT_PATH)
 """
+
+    // 按顺序检查所有可能的API密钥配置
+    val SUPPORTED_API_KEY_NAMES = listOf(
+        "DEEPSEEK_API_KEY",
+        "VOLCENGINE_API_KEY",
+        "OPENAI_API_KEY"
+    )
 
     /**
      * Check if the model is configured.
@@ -170,15 +176,8 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
     private fun isModelConfigured0(conf: ImmutableConfig): Boolean {
         val minKeyLen = 5
 
-        // 按顺序检查所有可能的API密钥配置
-        val apiKeyConfigs = listOf(
-            "DEEPSEEK_API_KEY",
-            "VOLCENGINE_API_KEY",
-            "OPENAI_API_KEY"
-        )
-
         // 如果任何一个主流API密钥配置有效，直接返回true
-        apiKeyConfigs.forEach { keyName ->
+        SUPPORTED_API_KEY_NAMES.forEach { keyName ->
             val apiKey = conf[keyName] ?: ""
             if (apiKey.length > minKeyLen) {
                 return true

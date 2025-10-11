@@ -87,20 +87,20 @@ class ChromeLauncher constructor(
     }
 
     /**
-     * Launch a chrome
+     * Launch chrome
      * */
     @Throws(ChromeLaunchException::class)
     fun launch(options: ChromeOptions) = launch(Browsers.searchChromeBinary(), options)
 
     /**
-     * Launch a chrome
+     * Launch chrome
      * */
     @Throws(ChromeLaunchException::class)
     fun launch(headless: Boolean) =
         launch(Browsers.searchChromeBinary(), ChromeOptions().also { it.headless = headless })
 
     /**
-     * Launch a chrome
+     * Launch chrome
      * */
     @Throws(ChromeLaunchException::class)
     fun launch() = launch(true)
@@ -227,7 +227,7 @@ class ChromeLauncher constructor(
 
             val p = process ?: throw ChromeLaunchException("Failed to start chrome process")
 
-            // write pid file to indicate the process is alive
+            // write a pid file to indicate the process is alive
             Files.writeString(pidPath, p.pid().toString(), StandardOpenOption.CREATE)
 
             val port = waitForDevToolsServer(p)
@@ -253,11 +253,11 @@ class ChromeLauncher constructor(
     }
 
     /**
-     * Waits for DevTools server is up on chrome process.
+     * Waits for DevTools server is upon chrome process.
      *
      * @param process Chrome process.
      * @return DevTools listening port.
-     * @throws ChromeLaunchTimeoutException If timeout expired while waiting for chrome process.
+     * @throws ChromeLaunchTimeoutException If timeout expired while waiting for a chrome process.
      */
     @Throws(ChromeLaunchTimeoutException::class)
     private fun waitForDevToolsServer(process: Process): Int {

@@ -71,8 +71,8 @@ class PrintFlowEventHandlers: DefaultPageEventHandlers() {
             onWillCheckDocumentState.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. browse - onWillCheckDocumentState")
             }
-            onDocumentActuallyReady.addLast { page: WebPage, driver: WebDriver ->
-                println("$seq. browse - onDocumentActuallyReady")
+            onDocumentFullyLoaded.addLast { page: WebPage, driver: WebDriver ->
+                println("$seq. browse - onDocumentFullyLoaded")
             }
             onWillScroll.addLast { page: WebPage, driver: WebDriver ->
                 println("$seq. browse - onWillScroll")
@@ -122,7 +122,7 @@ The entry point for the call is as follows:
 fun main() {
     BrowserSettings.withSystemDefaultBrowser()
     
-    val url = "https://www.amazon.com/dp/B0C1H26C46"
+    val url = "https://www.amazon.com/dp/B08PP5MSVB"
     val session = PulsarContexts.createSession()
     val link = ListenableHyperlink(url, "", args = "-refresh -parse", event = PrintFlowEventHandlers())
     
@@ -148,7 +148,7 @@ The example program outputs the following:
 8. browse - onNavigated
 9. browse - onWillNavigate
 10. browse - onWillCheckDocumentState
-11. browse - onDocumentActuallyReady
+11. browse - onDocumentFullyLoaded
 12. browse - onWillScroll
 13. browse - onDidScroll
 14. browse - onDocumentSteady

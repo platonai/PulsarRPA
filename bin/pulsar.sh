@@ -2,12 +2,18 @@
 
 set -e
 
-# Find the first parent directory that contains a VERSION file
+echo "This script is deprecated, please use 'browser4.sh' command instead."
+
+# Find the first parent directory that contains a pom.xml file
 APP_HOME=$(cd "$(dirname "$0")">/dev/null || exit; pwd)
-while [[ ! -f "$APP_HOME/VERSION" && "$APP_HOME" != "/" ]]; do
+while [[ "$APP_HOME" != "/" ]]; do
+  if [[ -f "$APP_HOME/pom.xml" ]]; then
+    break
+  fi
   APP_HOME=$(dirname "$APP_HOME")
 done
-[[ -f "$APP_HOME/VERSION" ]] && cd "$APP_HOME" || exit
+
+cd "$APP_HOME" || exit
 
 # find out chrome version
 CHROME_VERSION="$(google-chrome -version | head -n1 | awk -F '[. ]' '{print $3}')"

@@ -57,18 +57,17 @@ class ChatModelLogger {
 
         private fun writeToFile(pair: RequestResponsePair) {
             try {
-                val pairString = buildString {
-                    appendLine("--------------------------------------------------------------------")
-                    append("REQUEST ID: ${pair.id}\n")
-                    append("TIMESTAMP: ${pair.timestamp}\n")
-                    append("USER MESSAGE:\n${pair.userMessage}\n")
-                    append("SYSTEM MESSAGE:\n${pair.systemMessage}\n")
-                    append("RESPONSE TIMESTAMP: ${pair.responseTimestamp}\n")
-                    append("RESPONSE STATE: ${pair.response?.state}\n")
-                    append("TOKEN USAGE: ${pair.response?.tokenUsage?.totalTokenCount ?: "N/A"}\n")
-                    append("RESPONSE CONTENT:\n${pair.response?.content ?: "No response"}")
-                }
-                writer.write(pairString)
+                val sb = StringBuilder()
+                sb.appendLine("--------------------------------------------------------------------")
+                sb.append("REQUEST ID: ${pair.id}\n")
+                sb.append("TIMESTAMP: ${pair.timestamp}\n")
+                sb.append("USER MESSAGE:\n${pair.userMessage}\n")
+                sb.append("SYSTEM MESSAGE:\n${pair.systemMessage}\n")
+                sb.append("RESPONSE TIMESTAMP: ${pair.responseTimestamp}\n")
+                sb.append("RESPONSE STATE: ${pair.response?.state}\n")
+                sb.append("TOKEN USAGE: ${pair.response?.tokenUsage?.totalTokenCount ?: "N/A"}\n")
+                sb.append("RESPONSE CONTENT:\n${pair.response?.content ?: "No response"}")
+                writer.write(sb.toString())
             } catch (e: Exception) {
                 logger.error("Failed to write chat log to file", e)
             }

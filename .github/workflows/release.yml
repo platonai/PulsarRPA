@@ -139,16 +139,37 @@ jobs:
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
-      - name: Run Integration Tests
-        id: integration-tests
-        if: success() && github.event.inputs.skip_tests != 'true'
-        uses: ./.github/actions/run-integration-tests
-        with:
-          script_path: './bin/tests/run-integration-test.sh'
-          application_url: 'http://localhost:8182'
-          network_name: ${{ env.NETWORK_NAME }}
-          container_name: ${{ env.CONTAINER_NAME }}
-          timeout_seconds: '600'
+      - name: Run End to End Tests
+        id: end-to-end-tests
+        shell: bash
+        run: |
+          echo "::group::🧪 End to End Tests"
+          
+          if [ -f "./bin/tests/run-e2e-test.sh" ]; then
+            echo "✅ Found E2E test script"
+            chmod +x ./bin/tests/run-e2e-test.sh
+          
+            echo "🚀 Running E2E tests..."
+            date
+            echo "Application URL: http://localhost:8182"
+            echo "Network: ${{ env.NETWORK_NAME }}"
+            echo "Container: ${{ env.CONTAINER_NAME }}"
+
+            if timeout 1200 ./bin/tests/run-e2e-test.sh; then
+              echo "✅ E2E tests passed"
+              echo "E2E_status=success" >> $GITHUB_OUTPUT
+            else
+              echo "❌ E2E tests failed"
+              echo "integration_status=failed" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+          else
+            echo "⚠️ E2E test script not found: ./bin/tests/run-E2E-test.sh"
+            echo "Skipping E2E tests..."
+            echo "E2E_status=skipped" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "::endgroup::"
 
       - name: Build Browser4 JAR
         if: success()
@@ -266,28 +287,28 @@ jobs:
           docker push ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
           docker push ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }} For Deployment
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: ${{ env.JAVA_VERSION }}
-          cache: maven
-          server-id: 'ossrh'                        # Matches <id> in your pom.xml for OSSRH
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}   # ASCII-armored (exported with --armor)
-          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
-
-      - name: Deploy to Sonatype OSSRH
-        if: success()
-        run: |
-          echo "=== Deploying to Maven Central ==="
-          ./mvnw --batch-mode deploy -P deploy,release -DskipTests \
-            -Dgpg.passphrase="$GPG_PASSPHRASE" \
-            -Dgpg.batch=true \
-            -Dgpg.pinentry-mode=loopback \
-            --show-version --errors
-        env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+#      - name: Set up JDK ${{ env.JAVA_VERSION }} For Deployment
+#        uses: actions/setup-java@v4
+#        with:
+#          distribution: 'temurin'
+#          java-version: ${{ env.JAVA_VERSION }}
+#          cache: maven
+#          server-id: 'ossrh'                        # Matches <id> in your pom.xml for OSSRH
+#          server-username: MAVEN_USERNAME
+#          server-password: MAVEN_PASSWORD
+#          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}   # ASCII-armored (exported with --armor)
+#          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+#
+#      - name: Deploy to Sonatype OSSRH
+#        if: success()
+#        run: |
+#          echo "=== Deploying to Maven Central ==="
+#          ./mvnw --batch-mode deploy -P deploy,release -DskipTests \
+#            -Dgpg.passphrase="$GPG_PASSPHRASE" \
+#            -Dgpg.batch=true \
+#            -Dgpg.pinentry-mode=loopback \
+#            --show-version --errors
+#        env:
+#          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+#          MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+#          MAVEN_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}

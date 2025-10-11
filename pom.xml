@@ -21,7 +21,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>4.0.0-SNAPSHOT</version>
+    <version>4.0.1-SNAPSHOT</version>
 
     <name>Browser4</name>
     <description>A lightning-fast, coroutine-safe browser for your AI.</description>
@@ -89,67 +89,20 @@
     <!-- Default active modules. The main goal is to allow the user to run PulsarApplication
      with a single click in the IDE right after opening the project. -->
     <modules>
-        <module>pulsar-resources</module>
-        <module>pulsar-common</module>
-        <module>pulsar-persist</module>
-        <module>pulsar-dom</module>
+        <module>pulsar-core</module>
         <module>pulsar-third</module>
         <module>pulsar-tools</module>
-        <module>pulsar-skeleton</module>
 
-        <module>pulsar-ql-common</module>
-        <module>pulsar-ql</module>
-
-        <module>pulsar-plugins</module>
-
-        <module>pulsar-spring-support</module>
         <module>pulsar-rest</module>
 
         <module>pulsar-client</module>
         <module>pulsar-tests</module>
 
-        <module>pulsar-app</module>
+        <module>pulsar-examples</module>
+        <module>pulsar-browser4</module>
     </modules>
 
     <profiles>
-
-        <profile>
-            <!-- Deprecated, keep it just for backward compatibility, we will remove this profile in the further -->
-            <id>all-modules</id>
-            <modules>
-                <module>pulsar-common</module>
-                <module>pulsar-persist</module>
-                <module>pulsar-third</module>
-                <module>pulsar-skeleton</module>
-                <module>pulsar-resources</module>
-                <module>pulsar-dom</module>
-                <module>pulsar-plugins</module>
-
-                <module>pulsar-tools</module>
-                <module>pulsar-ql-common</module>
-                <module>pulsar-ql</module>
-
-                <module>pulsar-spring-support</module>
-                <module>pulsar-rest</module>
-
-                <module>pulsar-tests</module>
-                <module>pulsar-all</module>
-
-                <module>pulsar-client</module>
-                <module>pulsar-app</module>
-
-                <module>pulsar-bom</module>
-            </modules>
-        </profile>
-
-        <profile>
-            <id>dev-plugins</id>
-
-            <modules>
-                <module>pulsar-skeleton</module>
-                <module>pulsar-plugins</module>
-            </modules>
-        </profile>
 
         <!-- Development profile -->
         <profile>
@@ -172,8 +125,8 @@
             </properties>
             <build>
                 <plugins>
-                    <!--用于�?Maven 项目中收集和生成 Java 代码的测试覆盖率报告 -->
-                    <!-- instructions covered ratio is expected minimum is 0.70 -->
+                    <!--用于 Maven 项目中收集和生成 Java 代码的测试覆盖率报告 -->
+                    <!-- instruction covered ratio is expected minimum is 0.70 -->
                     <plugin>
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
@@ -232,28 +185,21 @@
                 <deploy-active>true</deploy-active>
             </properties>
             <modules>
-                <module>pulsar-common</module>
-                <module>pulsar-persist</module>
+                <module>pulsar-core</module>
                 <module>pulsar-third</module>
-                <module>pulsar-skeleton</module>
-                <module>pulsar-resources</module>
-                <module>pulsar-dom</module>
-                <module>pulsar-plugins</module>
 
                 <module>pulsar-tools</module>
-                <module>pulsar-ql-common</module>
-                <module>pulsar-ql</module>
-
-                <module>pulsar-spring-support</module>
                 <module>pulsar-rest</module>
 
                 <module>pulsar-tests</module>
                 <module>pulsar-all</module>
 
                 <module>pulsar-client</module>
-                <module>pulsar-app</module>
 
                 <module>pulsar-bom</module>
+
+                <module>pulsar-examples</module>
+                <module>pulsar-browser4</module>
             </modules>
 
             <build>
@@ -307,10 +253,10 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <!-- Set to true to skip dokka task, default: false -->
+                            <!-- Set to true to skip a dokka task, default: false -->
                             <skip>false</skip>
 
-                            <!-- Use default or set to custom path to cache directory to enable package-list caching. -->
+                            <!-- Use default or set to a custom path to cache directory to enable package-list caching. -->
                             <!-- When set to default, caches stored in $USER_HOME/.cache/dokka -->
                             <cacheRoot>default</cacheRoot>
 
@@ -350,35 +296,6 @@
                             </perPackageOptions>
                         </configuration>
                     </plugin>
-
-<!--                    &lt;!&ndash; Generate Kotlin documentation &ndash;&gt;-->
-<!--                    <plugin>-->
-<!--                        <groupId>org.jetbrains.dokka</groupId>-->
-<!--                        <artifactId>dokka-maven-plugin</artifactId>-->
-<!--                        <version>${dokka.version}</version>-->
-<!--                        <executions>-->
-<!--                            <execution>-->
-<!--                                <phase>prepare-package</phase>-->
-<!--                                <goals>-->
-<!--                                    <goal>javadocJar</goal>-->
-<!--                                </goals>-->
-<!--                            </execution>-->
-<!--                        </executions>-->
-<!--                        <configuration>-->
-<!--                            <sourceDirectories>-->
-<!--                                <dir>${project.basedir}/src/main/kotlin</dir>-->
-<!--                                <dir>${project.basedir}/src/main/java</dir>-->
-<!--                            </sourceDirectories>-->
-<!--                            <documentedVisibilities>-->
-<!--                                <visibility>PUBLIC</visibility>-->
-<!--                                <visibility>PROTECTED</visibility>-->
-<!--                            </documentedVisibilities>-->
-<!--                            <skipEmptyPackages>true</skipEmptyPackages>-->
-<!--                            <reportUndocumented>false</reportUndocumented>-->
-<!--                            <platform>jvm</platform>-->
-<!--                            <jdkVersion>11</jdkVersion>-->
-<!--                        </configuration>-->
-<!--                    </plugin>-->
 
                     <!-- GPG signing -->
                     <plugin>
@@ -654,7 +571,7 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${surefire.version}</version>
                 <configuration>
-                    <excludedGroups>TimeConsumingTest,ExternalServiceTest</excludedGroups>
+                    <excludedGroups>TimeConsumingTest,ExternalServiceTest,IntegrationTest,E2ETest,HeavyTest,TestInfraCheck,SkippableLowerLevelTest</excludedGroups>
                     <!-- All tests are in the same JVM process -->
                     <forkCount>1</forkCount>
                     <reuseForks>true</reuseForks>
@@ -745,30 +662,9 @@
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-filter</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-parse</artifactId>
                 <version>${project.version}</version>
             </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-scoring</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-schedule</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-index</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-browser</artifactId>
@@ -892,20 +788,23 @@
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-stdlib</artifactId>
+            <version>${kotlin.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
             <artifactId>kotlin-reflect</artifactId>
+            <version>${kotlin.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-test-junit5</artifactId>
+            <version>${kotlin.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-core-jvm</artifactId>
             <version>${kotlin.coroutine.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.jetbrains.kotlin</groupId>
-            <artifactId>kotlin-test-junit5</artifactId>
-            <scope>test</scope>
         </dependency>
 
         <dependency>
@@ -941,6 +840,11 @@
         <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
         <license-maven-plugin.version>4.3</license-maven-plugin.version>
         <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
+
+        <!-- Overrides ai.platon:platon -->
+<!--        <kotlin.version>2.2.20</kotlin.version>-->
+<!--        <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>-->
+<!--        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>-->
     </properties>
 
 </project>
