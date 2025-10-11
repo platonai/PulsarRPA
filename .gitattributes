@@ -1,3 +1,70 @@
+# Normalize line endings and handle OS differences consistently
+
+# Default: auto-detect text files and normalize to LF in the repo
+* text=auto
+
+# Scripts
+*.sh      text eol=lf
+*.bash    text eol=lf
+*.zsh     text eol=lf
+*.cmd     text eol=crlf
+*.bat     text eol=crlf
+# PowerShell works cross-platform; CRLF preferred on Windows
+*.ps1     text eol=crlf
+
+# Source code, configs, and docs: prefer LF universally
+*.java    text eol=lf
+*.kt      text eol=lf
+*.kts     text eol=lf
+*.groovy  text eol=lf
+*.gradle  text eol=lf
+*.xml     text eol=lf
+*.xsd     text eol=lf
+*.xsl     text eol=lf
+*.properties text eol=lf
+*.yml     text eol=lf
+*.yaml    text eol=lf
+*.json    text eol=lf
+*.md      text eol=lf
+*.adoc    text eol=lf
+*.csv     text eol=lf
+*.ts      text eol=lf
+*.tsx     text eol=lf
+*.js      text eol=lf
+*.jsx     text eol=lf
+*.css     text eol=lf
+*.scss    text eol=lf
+*.sql     text eol=lf
+*.env     text eol=lf
+
+# Treat these as binary to avoid EOL conversions and diffs
+*.png     binary
+*.jpg     binary
+*.jpeg    binary
+*.gif     binary
+*.ico     binary
+*.pdf     binary
+*.zip     binary
+*.gz      binary
+*.7z      binary
+*.jar     binary
+*.war     binary
+*.ear     binary
+*.class   binary
+*.exe     binary
+*.dll     binary
+*.so      binary
+*.dylib   binary
+*.ttf     binary
+*.otf     binary
+*.woff    binary
+*.woff2   binary
+
+# Notes:
+# - .gitattributes cannot set the executable bit. Ensure scripts that need
+#   to be executable on Unix are committed with +x from a Unix environment.
+# - After adding/updating this file, run `git add --renormalize .` once to
+#   re-write the working tree with the correct EOLs, then commit.
 *.html linguist-detectable=false
 *.htm linguist-detectable=false
 *.xml linguist-detectable=false
