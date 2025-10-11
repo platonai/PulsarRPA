@@ -68,8 +68,7 @@ jobs:
         if: inputs.skip_tests != true
         uses: ./.github/actions/run-tests
         with:
-          maven_profiles: 'all-modules'
-          test_excludes: '**integration**'
+          test_excludes: '**integration**,**e2e**'
           timeout_minutes: '35'
 
       - name: Check Test Status
@@ -115,34 +114,34 @@ jobs:
           timeout_minutes: '5'
           container_name: ${{ env.CONTAINER_NAME }}
 
-      - name: Run Integration Tests
-        id: integration-tests
+      - name: Run End to End Tests
+        id: end-to-end-tests
         shell: bash
         run: |
-          echo "::group::🧪 Integration Tests"
+          echo "::group::🧪 End to End Tests"
           
-          if [ -f "./bin/tests/run-integration-test.sh" ]; then
-            echo "✅ Found integration test script"
-            chmod +x ./bin/tests/run-integration-test.sh
+          if [ -f "./bin/tests/run-e2e-test.sh" ]; then
+            echo "✅ Found E2E test script"
+            chmod +x ./bin/tests/run-e2e-test.sh
           
-            echo "🚀 Running integration tests..."
+            echo "🚀 Running E2E tests..."
             date
             echo "Application URL: http://localhost:8182"
             echo "Network: ${{ env.NETWORK_NAME }}"
             echo "Container: ${{ env.CONTAINER_NAME }}"
 
-            if timeout 600 ./bin/tests/run-integration-test.sh; then
-              echo "✅ Integration tests passed"
-              echo "integration_status=success" >> $GITHUB_OUTPUT
+            if timeout 600 ./bin/tests/run-e2e-test.sh; then
+              echo "✅ E2E tests passed"
+              echo "E2E_status=success" >> $GITHUB_OUTPUT
             else
-              echo "❌ Integration tests failed"
+              echo "❌ E2E tests failed"
               echo "integration_status=failed" >> $GITHUB_OUTPUT
               exit 1
             fi
           else
-            echo "⚠️ Integration test script not found: ./bin/tests/run-integration-test.sh"
-            echo "Skipping integration tests..."
-            echo "integration_status=skipped" >> $GITHUB_OUTPUT
+            echo "⚠️ E2E test script not found: ./bin/tests/run-E2E-test.sh"
+            echo "Skipping E2E tests..."
+            echo "E2E_status=skipped" >> $GITHUB_OUTPUT
           fi
           
           echo "::endgroup::"

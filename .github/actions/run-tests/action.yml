@@ -18,6 +18,10 @@ inputs:
     description: 'Test patterns to include (Surefire format)'
     required: false
     default: ''
+  excluded_groups:
+    description: 'JUnit groups/tags to exclude (comma-separated)'
+    required: false
+    default: ''
   timeout_minutes:
     description: 'Test timeout in minutes (default: 35)'
     required: false
@@ -88,6 +92,7 @@ runs:
         echo "  - Profiles: ${{ inputs.maven_profiles }}"
         echo "  - Excludes: ${{ inputs.test_excludes }}"
         echo "  - Includes: ${{ inputs.test_includes }}"
+        echo "  - Excluded Groups: ${{ inputs.excluded_groups }}"
         echo "  - Timeout: ${{ inputs.timeout_minutes }} minutes"
         echo "  - Fail Fast: ${{ inputs.fail_fast }}"
         echo "  - Parallel: ${{ inputs.parallel_tests }}"
@@ -109,6 +114,11 @@ runs:
         # Add test includes
         if [ -n "${{ inputs.test_includes }}" ]; then
           test_cmd="$test_cmd -Dsurefire.includes=${{ inputs.test_includes }}"
+        fi
+        
+        # Add excluded groups/tags
+        if [ -n "${{ inputs.excluded_groups }}" ]; then
+          test_cmd="$test_cmd -DexcludedGroups=${{ inputs.excluded_groups }}"
         fi
         
         # Add fail fast

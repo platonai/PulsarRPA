@@ -12,7 +12,21 @@ set -e
 # Flag to control whether to run scrape-async.sh test (default: 0 = disabled)
 RUN_SCRAPE_ASYNC="${RUN_SCRAPE_ASYNC:-0}"
 
+# Minimum success rate for overall pass (percentage, integer)
+INTEGRATION_MIN_SUCCESS_RATE="${INTEGRATION_MIN_SUCCESS_RATE:-80}"
+
+# Counters
+TOTAL_TESTS=4
+EXECUTED_TESTS=0
+PASSED_TESTS=0
+FAILED_TESTS=0
+SKIPPED_TESTS=0
+
 echo "===================================================================="
+echo "Integration test suite starting at $(date)"
+echo "Minimum success rate to pass: ${INTEGRATION_MIN_SUCCESS_RATE}%"
+echo "--------------------------------------------------------------------"
+
 echo "[TEST 1/4] Running command-sse.sh integration test..."
 echo "--------------------------------------------------------------------"
 # Start time for TEST 1
@@ -28,12 +42,13 @@ set -e
 end_time="$(date '+%Y-%m-%d %H:%M:%S %Z')"
 end_epoch=$(date +%s)
 duration=$((end_epoch - start_epoch))
+EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
 if [ $exit_code -eq 0 ]; then
   echo "[PASS] Integration test command-sse.sh completed successfully"
+  PASSED_TESTS=$((PASSED_TESTS + 1))
 else
   echo "[FAIL] Integration test command-sse.sh failed with exit code $exit_code"
-  echo "End time: $end_time (Duration: ${duration}s)"
-  exit 1
+  FAILED_TESTS=$((FAILED_TESTS + 1))
 fi
 echo "End time: $end_time (Duration: ${duration}s)"
 echo "===================================================================="
@@ -53,12 +68,13 @@ set -e
 end_time="$(date '+%Y-%m-%d %H:%M:%S %Z')"
 end_epoch=$(date +%s)
 duration=$((end_epoch - start_epoch))
+EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
 if [ $exit_code -eq 0 ]; then
   echo "[PASS] Integration test scrape.sh completed successfully"
+  PASSED_TESTS=$((PASSED_TESTS + 1))
 else
   echo "[FAIL] Integration test scrape.sh failed with exit code $exit_code"
-  echo "End time: $end_time (Duration: ${duration}s)"
-  exit 1
+  FAILED_TESTS=$((FAILED_TESTS + 1))
 fi
 echo "End time: $end_time (Duration: ${duration}s)"
 echo "===================================================================="
@@ -69,6 +85,7 @@ echo "      - Max concurrent tasks: 10"
 echo "--------------------------------------------------------------------"
 if [ "$RUN_SCRAPE_ASYNC" != "1" ]; then
   echo "[SKIP] scrape-async.sh test is disabled. Set RUN_SCRAPE_ASYNC=1 to enable."
+  SKIPPED_TESTS=$((SKIPPED_TESTS + 1))
 else
   # Start time for TEST 3
   start_time="$(date '+%Y-%m-%d %H:%M:%S %Z')"
@@ -83,12 +100,13 @@ else
   end_time="$(date '+%Y-%m-%d %H:%M:%S %Z')"
   end_epoch=$(date +%s)
   duration=$((end_epoch - start_epoch))
+  EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
   if [ $exit_code -eq 0 ]; then
     echo "[PASS] Integration test scrape-async.sh completed successfully"
+    PASSED_TESTS=$((PASSED_TESTS + 1))
   else
     echo "[FAIL] Integration test scrape-async.sh failed with exit code $exit_code"
-    echo "End time: $end_time (Duration: ${duration}s)"
-    exit 1
+    FAILED_TESTS=$((FAILED_TESTS + 1))
   fi
   echo "End time: $end_time (Duration: ${duration}s)"
 fi
@@ -109,19 +127,43 @@ set -e
 end_time="$(date '+%Y-%m-%d %H:%M:%S %Z')"
 end_epoch=$(date +%s)
 duration=$((end_epoch - start_epoch))
+EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
 if [ $exit_code -eq 0 ]; then
   echo "[PASS] Integration test test-curl-commands.sh completed successfully"
+  PASSED_TESTS=$((PASSED_TESTS + 1))
 else
   echo "[FAIL] Integration test test-curl-commands.sh failed with exit code $exit_code"
-  echo "End time: $end_time (Duration: ${duration}s)"
-  exit 1
+  FAILED_TESTS=$((FAILED_TESTS + 1))
 fi
 
 echo "End time: $end_time (Duration: ${duration}s)"
 
 echo "===================================================================="
-echo "All integration tests passed successfully!"
+# Final summary and pass/fail decision
+SUCCESS_RATE=0
+if [ "$EXECUTED_TESTS" -gt 0 ]; then
+  SUCCESS_RATE=$(( PASSED_TESTS * 100 / EXECUTED_TESTS ))
+fi
 
-echo "===================================================================="
 echo "Integration tests completed at $(date)"
+echo "--------------------------------------------------------------------"
+echo "Planned tests:   $TOTAL_TESTS"
+echo "Executed tests:  $EXECUTED_TESTS"
+echo "Passed:          $PASSED_TESTS"
+echo "Failed:          $FAILED_TESTS"
+echo "Skipped:         $SKIPPED_TESTS"
+echo "Success rate:    ${SUCCESS_RATE}% (minimum required: ${INTEGRATION_MIN_SUCCESS_RATE}%)"
 echo "===================================================================="
+
+if [ "$EXECUTED_TESTS" -eq 0 ]; then
+  echo "No integration tests were executed. Failing the build to avoid false positives."
+  exit 1
+fi
+
+if [ "$SUCCESS_RATE" -lt "$INTEGRATION_MIN_SUCCESS_RATE" ]; then
+  echo "Overall result: FAIL (success rate below threshold)"
+  exit 1
+else
+  echo "Overall result: PASS"
+  exit 0
+fi
