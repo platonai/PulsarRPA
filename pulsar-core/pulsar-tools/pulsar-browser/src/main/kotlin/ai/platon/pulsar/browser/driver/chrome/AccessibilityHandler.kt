@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.AppContext
 import com.github.kklisura.cdt.protocol.v2023.types.accessibility.AXNode
 import com.github.kklisura.cdt.protocol.v2023.types.page.FrameTree
 import java.util.LinkedHashMap
+import kotlin.collections.ArrayDeque
 
 class AccessibilityHandler(
     private val devTools: RemoteDevTools,
@@ -11,9 +12,6 @@ class AccessibilityHandler(
 ) {
     private val isActive get() = AppContext.isActive && devTools.isOpen
     private val pageAPI get() = devTools.page.takeIf { isActive }
-    private val domAPI get() = devTools.dom.takeIf { isActive }
-    private val cssAPI get() = devTools.css.takeIf { isActive }
-    private val runtimeAPI get() = devTools.runtime.takeIf { isActive }
     private val accessibilityAPI get() = devTools.accessibility.takeIf { isActive }
 
     fun getAccessibilityTree(selector: String? = null, targetFrameId: String? = null) {
@@ -55,16 +53,19 @@ class AccessibilityHandler(
      * AX information with DOM/backend nodes across frames.
      */
     fun getFullAXTreeRecursive(targetFrameId: String? = null, depth: Int? = null): AccessibilityTreeResult {
-    val frameTree = pageAPI?.frameTree ?: return AccessibilityTreeResult.EMPTY
-    val accessibility = accessibilityAPI ?: return AccessibilityTreeResult.EMPTY
-        val idToTree = linkedMapOf<String, FrameTree>()
-        collectFrameTree(frameTree, idToTree)
+        val page = pageAPI ?: return AccessibilityTreeResult.EMPTY
+        val accessibility = accessibilityAPI ?: return AccessibilityTreeResult.EMPTY
+        val frameTree = page.frameTree ?: return AccessibilityTreeResult.EMPTY
 
-        val frameIds = when {
-            targetFrameId != null && idToTree.containsKey(targetFrameId) -> listOf(targetFrameId)
-            targetFrameId != null -> emptyList()
-            else -> idToTree.keys.toList()
+        val frameById = linkedMapOf<String, FrameTree>()
+        collectFrameTree(frameTree, frameById)
+
+        val frameIds: List<String> = when {
+            targetFrameId == null -> frameById.keys.toList()
+            frameById.containsKey(targetFrameId) -> listOf(targetFrameId)
+            else -> emptyList()
         }
+
         if (frameIds.isEmpty()) {
             if (targetFrameId != null) {
                 val nodes = accessibility.getFullAXTree(depth, targetFrameId)
@@ -73,46 +74,56 @@ class AccessibilityHandler(
             return AccessibilityTreeResult.EMPTY
         }
 
+        val seenPairs = mutableSetOf<Pair<String?, String>>()
         val allNodes = mutableListOf<AXNode>()
         val byFrame = LinkedHashMap<String, MutableList<AXNode>>(frameIds.size)
-        val seenPairs = mutableSetOf<Pair<String?, String>>()
+        val byBackend = LinkedHashMap<Int, MutableList<AXNode>>()
 
         frameIds.forEach { frameId ->
             val nodes = accessibility.getFullAXTree(depth, frameId)
-            val targetList = byFrame.getOrPut(frameId) { mutableListOf() }
+            val frameBucket = byFrame.getOrPut(frameId) { mutableListOf() }
             nodes.forEach { node ->
                 val stamped = stampFrameId(node, frameId)
                 val key = stamped.frameId to stamped.nodeId
                 if (seenPairs.add(key)) {
-                    targetList += stamped
+                    frameBucket += stamped
                     allNodes += stamped
+                    val backendId = stamped.backendDOMNodeId
+                    if (backendId != null) {
+                        byBackend.getOrPut(backendId) { mutableListOf() } += stamped
+                    }
                 }
             }
         }
 
         return AccessibilityTreeResult(
             nodes = allNodes,
-            nodesByFrameId = byFrame.mapValues { it.value.toList() }
+            nodesByFrameId = byFrame.mapValues { it.value.toList() },
+            nodesByBackendNodeId = byBackend.mapValues { it.value.toList() }
         )
     }
 
     data class AccessibilityTreeResult(
         val nodes: List<AXNode>,
         val nodesByFrameId: Map<String, List<AXNode>>,
+        val nodesByBackendNodeId: Map<Int, List<AXNode>>,
     ) {
         companion object {
-            val EMPTY = AccessibilityTreeResult(emptyList(), emptyMap())
+            val EMPTY = AccessibilityTreeResult(emptyList(), emptyMap(), emptyMap())
         }
     }
 
     private fun collectFrameTree(tree: FrameTree, acc: MutableMap<String, FrameTree>) {
-        val frame = tree.frame
-        val frameId = frame?.id
-        if (!frameId.isNullOrBlank()) {
-            acc.putIfAbsent(frameId, tree)
-        }
-        tree.childFrames?.forEach { child ->
-            collectFrameTree(child, acc)
+        val queue = ArrayDeque<FrameTree>()
+        queue.add(tree)
+        while (queue.isNotEmpty()) {
+            val current = queue.removeFirst()
+            val frame = current.frame
+            val frameId = frame?.id
+            if (!frameId.isNullOrBlank()) {
+                acc.putIfAbsent(frameId, current)
+            }
+            current.childFrames?.forEach { queue.add(it) }
         }
     }
 
@@ -125,9 +136,15 @@ class AccessibilityHandler(
 
     private fun singleFrameResult(nodes: List<AXNode>, frameId: String): AccessibilityTreeResult {
         val stamped = nodes.map { stampFrameId(it, frameId) }
+        val backendBuckets = mutableMapOf<Int, MutableList<AXNode>>()
+        stamped.forEach { node ->
+            val backendId = node.backendDOMNodeId ?: return@forEach
+            backendBuckets.getOrPut(backendId) { mutableListOf() } += node
+        }
         return AccessibilityTreeResult(
             nodes = stamped,
-            nodesByFrameId = mapOf(frameId to stamped)
+            nodesByFrameId = mapOf(frameId to stamped),
+            nodesByBackendNodeId = backendBuckets.mapValues { it.value.toList() }
         )
     }
 

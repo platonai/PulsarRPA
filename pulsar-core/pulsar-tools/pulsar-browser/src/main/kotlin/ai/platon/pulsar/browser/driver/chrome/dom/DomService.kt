@@ -72,7 +72,12 @@ data class SimplifiedNode(
     val tag: String,
     val id: String? = null,
     val classes: List<String> = emptyList(),
+    val attributes: Map<String, String> = emptyMap(),
+    val text: String? = null,
+    val interactiveIndex: Int? = null,
+    val shouldDisplay: Boolean = true,
     val children: List<SimplifiedNode> = emptyList(),
+    val shadowRoots: List<SimplifiedNode> = emptyList(),
 )
 
 data class TargetAllTrees(

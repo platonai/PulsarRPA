@@ -3,6 +3,7 @@ package ai.platon.pulsar.browser.driver.chrome.dom
 import ai.platon.pulsar.browser.driver.chrome.AccessibilityHandler
 import ai.platon.pulsar.browser.driver.chrome.AccessibilityHandler.AccessibilityTreeResult
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
+import com.github.kklisura.cdt.protocol.v2023.types.accessibility.AXNode
 
 /**
  * CDP-backed implementation of DomService using existing RemoteDevTools wiring.
@@ -26,31 +27,17 @@ class ChromeCdpDomService(
         val snap = if (options.includeSnapshot) snapshot.capture(options.includeStyles) else emptyList()
         val snapshotByBackendId = if (options.includeSnapshot) snapshot.captureByBackendNodeId(options.includeStyles) else emptyMap()
 
-        val enhancedAx = axResult.nodes.map { node ->
-            EnhancedAXNode(
-                axNodeId = node.nodeId,
-                role = node.role?.value?.toString(),
-                name = node.name?.value?.toString(),
-                frameId = node.frameId,
-                backendNodeId = node.backendDOMNodeId
-            )
+        val enhancedAx = axResult.nodes.map { it.toEnhanced() }
+
+        val axByBackendId: Map<Int, EnhancedAXNode> = buildMap {
+            axResult.nodesByBackendNodeId.forEach { (backendId, nodes) ->
+                val first = nodes.firstOrNull() ?: return@forEach
+                put(backendId, first.toEnhanced())
+            }
         }
 
-        val axByBackendId: Map<Int, EnhancedAXNode> = enhancedAx.mapNotNull { node ->
-            val backend = node.backendNodeId ?: return@mapNotNull null
-            backend to node
-        }.toMap()
-
         val axTreeByFrame: Map<String, List<EnhancedAXNode>> = axResult.nodesByFrameId.mapValues { (_, list) ->
-            list.map { node ->
-                EnhancedAXNode(
-                    axNodeId = node.nodeId,
-                    role = node.role?.value?.toString(),
-                    name = node.name?.value?.toString(),
-                    frameId = node.frameId,
-                    backendNodeId = node.backendDOMNodeId
-                )
-            }
+            list.map { it.toEnhanced() }
         }
 
         return TargetAllTrees(
@@ -152,3 +139,11 @@ class ChromeCdpDomService(
         return DOMInteractedElement(elementHash = hash, xPath = xpath, bounds = boundsStr)
     }
 }
+
+private fun AXNode.toEnhanced(): EnhancedAXNode = EnhancedAXNode(
+    axNodeId = nodeId,
+    role = role?.value?.toString(),
+    name = name?.value?.toString(),
+    frameId = frameId,
+    backendNodeId = backendDOMNodeId
+)
