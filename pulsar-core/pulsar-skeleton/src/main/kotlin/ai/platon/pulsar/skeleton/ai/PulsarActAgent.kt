@@ -185,7 +185,7 @@ class PulsarActAgent(
                 val stepContext = context.copy(stepNumber = step, actionType = "step")
 
                 // Extract interactive elements each step (could be optimized via diffing later)
-                val interactiveElements = runCatching { tta.extractInteractiveElements(driver) }.getOrElse { emptyList() }
+                val interactiveElements = tta.extractInteractiveElementsDeferred(driver)
 
                 logStructured("Executing step", stepContext, mapOf(
                     "step" to step,
@@ -376,10 +376,8 @@ class PulsarActAgent(
         message: String, context: ExecutionContext, interactiveElements: List<InteractiveElement>, screenshotB64: String?
     ): ActionDescription? {
         return try {
-            withContext(Dispatchers.IO) {
-                // Use overload supplying extracted elements to avoid re-extraction
-                tta.generateWebDriverAction(message, interactiveElements, screenshotB64)
-            }
+            // Use overload supplying extracted elements to avoid re-extraction
+            tta.generateWebDriverActionDeffered(message, interactiveElements, screenshotB64)
         } catch (e: Exception) {
             logError("Action generation failed", e, context.sessionId)
             consecutiveFailureCounter.incrementAndGet()
@@ -407,7 +405,7 @@ class PulsarActAgent(
                 "toolArgs" to toolCall.args
             ))
 
-            driver.act(action)
+            driver.execute(action)
             consecutiveFailureCounter.set(0) // Reset on success
 
             // Extract summary from InstructionResult

@@ -428,7 +428,7 @@ interface WebDriver : Closeable {
      * and returns an [InstructionResult] containing both tool calls and their outcomes.
      */
     @Throws(WebDriverException::class)
-    suspend fun act(action: ActionDescription): InstructionResult
+    suspend fun execute(action: ActionDescription): InstructionResult
 
     /**
      * Instructs the webdriver to perform a series of actions based on the given prompt.
