@@ -144,12 +144,6 @@
 - 输出细微差异影响上层
   - 提供兼容映射与灰度开关；金丝雀比对。
 
-## 九、时间排期（建议）
-- 第1周：M0-M2（调研、依赖落地、CDP 采集）
-- 第2周：M3-M4（数据整合、滚动逻辑、哈希/XPath）
-- 第3周：M5-M6（序列化、兼容层、实现切换）
-- 第4周：M7-M8（性能/鲁棒性、黄金样本对齐、上线）
-
 ## 十、产出物清单
 - 接口与实现
   - ai/platon/pulsar/browser/driver/chrome/dom/DomService.kt
@@ -184,3 +178,39 @@
 
 ## 附录 C：验收标准（Definition of Done）
 - 功能覆盖：M0-M8 全部完成，开关可切换且默认 Kotlin。
+
+---
+
+## 下一步开发计划（2025/10/11）
+
+1. **补全 Handler 层功能**
+  - 完善 `AccessibilityHandler`，支持 frameId 过滤和 AX 树与 DOM/backendNodeId 关联。
+  - 完善 `DomSnapshotHandler`，实现 backendNodeId 到 EnhancedSnapshotNode 的高效映射。
+
+2. **树合并与数据整合**
+  - 实现 DOM/AX/Snapshot 三棵树的合并逻辑，确保节点、frame、shadow/iframe 关联准确。
+  - 支持通过 SnapshotOptions 控制昂贵字段采集。
+
+3. **XPath 与哈希**
+  - 完善 XPath 生成，支持 shadow/iframe 边界、兄弟节点索引等，严格对齐 Python 行为。
+  - elementHash 支持 parent-branch 路径与 STATIC_ATTRIBUTES，预留 backendNodeId+sessionId 切换。
+
+4. **序列化与 LLM 支持**
+  - 完善 `DomLLMSerializer`，实现 includeAttributes 过滤、children_nodes/shadow_roots 去重。
+  - 构建 DOMSelectorMap（element_hash → node）。
+
+5. **滚动与交互增强**
+  - 对齐 Python 的 is_actually_scrollable、get_scroll_info_text 逻辑，完善嵌套滚动、iframe/body/html 特判。
+
+6. **兼容层与配置**
+  - 实现 application.properties 配置项，支持 dom.impl=kotlin|python 切换。
+  - 实现回退机制，异常时自动降级到 Python 实现。
+
+7. **测试与基线对齐**
+  - 固化 Python 采集的黄金样本，开发字段级 diff 工具。
+  - 增加单元、集成、端到端测试，覆盖复杂页面、iframe、shadow DOM、滚动等场景。
+  - 对齐输出 JSON 字段，确保兼容性。
+
+8. **文档与风险收尾**
+  - 完善开发文档、接口说明、迁移差异清单。
+  - 梳理已知风险与缓解措施，准备上线灰度方案。
