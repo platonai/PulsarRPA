@@ -412,7 +412,7 @@ interface PulsarContext: java.lang.AutoCloseable {
      *
      * @param prompt The prompt to chat
      */
-    fun chat(prompt: String): ModelResponse
+    suspend fun chat(prompt: String): ModelResponse
 
     /**
      * Chat with the AI model.
@@ -420,7 +420,7 @@ interface PulsarContext: java.lang.AutoCloseable {
      * @param userMessage The user message to chat
      * @param systemMessage The system message to chat
      * */
-    fun chat(userMessage: String, systemMessage: String): ModelResponse
+    suspend fun chat(userMessage: String, systemMessage: String): ModelResponse
 
     /**
      * Persist the webpage into the storage immediately.

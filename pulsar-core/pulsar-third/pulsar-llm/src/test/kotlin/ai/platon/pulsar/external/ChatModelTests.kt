@@ -3,6 +3,7 @@ package ai.platon.pulsar.external
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.dom.Documents
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Tag
@@ -45,7 +46,7 @@ class ChatModelTests {
     @Test
     fun `introduce model`() {
         val prompt = "introduce yourself, what can you do for me?"
-        val response = model.call(prompt)
+        val response = runBlocking { model.call(prompt) }
         println(response.content)
 
         assertTrue { response.tokenUsage.inputTokenCount > 0 }
@@ -96,7 +97,7 @@ class ChatModelTests {
     
     @Test
     fun `When ask LLM to analyze cluster then it responses with json`() {
-        val response = model.call(clusterAnalysisPrompt)
+        val response = runBlocking { model.call(clusterAnalysisPrompt) }
         println(response.content)
         
         assertTrue { response.tokenUsage.inputTokenCount > 0 }

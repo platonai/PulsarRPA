@@ -3,6 +3,7 @@ package ai.platon.pulsar.external
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.impl.BrowserChatModelImpl
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertNotNull
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
@@ -39,7 +40,7 @@ class ChatModelFactoryTest {
 
         try {
             // This is a fake API key so you must fail
-            val response = model.call("Give me the answer only for 100+1=?")
+            val response = runBlocking { model.call("Give me the answer only for 100+1=?") }
             assertFalse(prettyPulsarObjectMapper().writeValueAsString(response)) {
                 response.content.contains("101")
             }

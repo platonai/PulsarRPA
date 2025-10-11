@@ -444,11 +444,11 @@ abstract class AbstractPulsarContext(
         return parser?.parse(page, noLinkFilter = true)?.document
     }
 
-    override fun chat(prompt: String): ModelResponse {
+    override suspend fun chat(prompt: String): ModelResponse {
         return ChatModelFactory.getOrCreateOrNull(configuration)?.call(prompt) ?: ModelResponse.LLM_NOT_AVAILABLE
     }
 
-    override fun chat(userMessage: String, systemMessage: String): ModelResponse {
+    override suspend fun chat(userMessage: String, systemMessage: String): ModelResponse {
         return ChatModelFactory.getOrCreateOrNull(configuration)?.call(userMessage, systemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
     }
 
