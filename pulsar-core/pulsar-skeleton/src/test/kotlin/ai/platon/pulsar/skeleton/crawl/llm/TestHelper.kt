@@ -5,6 +5,7 @@ import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.session.PulsarSession
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
 import kotlin.test.assertTrue
 
@@ -20,10 +21,10 @@ object TestHelper {
             println("> Please set the API key in the properties file or environment variable")
             println("> You can copy application.properties to " + AppPaths.CONFIG_ENABLED_DIR)
         } else {
-            var response = session.chat("这是一个测试，来测试你是否工作正常。计算11的平方，仅返回数字。")
+            var response = runBlocking { session.chat("这是一个测试，来测试你是否工作正常。计算11的平方，仅返回数字。") }
             Assumptions.assumeTrue(response.content.contains("121"))
             
-            response = session.chat("Who are you?")
+            response = runBlocking { session.chat("Who are you?") }
             println("##########\n" + response.content + "\n##########")
         }
         
