@@ -12,6 +12,9 @@ BASE_URL="http://localhost:8182/api/x/s"
 STATUS_URL_TEMPLATE="http://localhost:8182/api/x/%s/status"
 MAX_POLLING_TASKS=10
 
+# Helper to format timestamps consistently
+_ts() { date +%Y%m%dT%H%M%S; }
+
 SQL_TEMPLATE="select
   dom_base_uri(dom) as url,
   dom_first_text(dom, '#productTitle') as title,
@@ -54,14 +57,17 @@ extract_urls() {
 submit_task() {
   local url="$1"
   local sql="${SQL_TEMPLATE//\{url\}/$url}"
-  curl -s -X POST -H "Content-Type: text/plain" --data "$sql" "$BASE_URL"
+  # Avoid exiting the script on curl network errors due to set -e
+  curl -s -X POST -H "Content-Type: text/plain" --data "$sql" "$BASE_URL" || true
 }
 
 poll_tasks() {
   local ids=("${@}")
-  echo "First id: ${ids[0]}, Total ids: ${#ids[@]}"
-  echo "${ids[1]}"
-  echo "${ids[2]}"
+  # Remove noisy debugging and guard against empty input
+  if [[ ${#ids[@]} -eq 0 ]]; then
+    echo "[WARN] No task IDs to poll. Skipping."
+    return 0
+  fi
 
   declare -A TASK_MAP
   declare -a PENDING_TASKS=("${ids[@]}")
@@ -72,40 +78,60 @@ poll_tasks() {
 
   for ((attempt=0; attempt<MAX_ATTEMPTS; attempt++)); do
     sleep "$DELAY_SECONDS"
-    local batch_ids=("${PENDING_TASKS[@]:0:$MAX_POLLING_TASKS}")
+
     local new_pending=()
-    for id in "${batch_ids[@]}"; do
-      echo "[INFO] ${date +%Y%m%dT%H%M%S} Polling for task $id..."
 
-      local status_url
-      status_url=$(printf "$STATUS_URL_TEMPLATE" "$id")
-      local response
-      response=$(curl -s --max-time 10 "$status_url" || echo "error")
-
-      if [[ "$attempt" -eq $((MAX_ATTEMPTS - 1)) ]]; then
-        echo "[DEBUG] Final attempt raw response for task $id: '$response'"
+    # Process all pending tasks this attempt, but in chunks of MAX_POLLING_TASKS
+    local total_pending=${#PENDING_TASKS[@]}
+    local offset=0
+    while (( offset < total_pending )); do
+      local chunk_size=$(( total_pending - offset ))
+      if (( chunk_size > MAX_POLLING_TASKS )); then
+        chunk_size=$MAX_POLLING_TASKS
       fi
+      # slice: from offset take chunk_size
+      local batch_ids=("${PENDING_TASKS[@]:offset:chunk_size}")
 
-      # if there is a line contains "isDone" and "true", then the task is completed
-      if [[ "$response" =~ isDone.*true ]]; then
-        TASK_MAP["$id"]=0
-        echo "[SUCCESS] Task $id completed."
-      else
-        TASK_MAP["$id"]=$((TASK_MAP["$id"]+1))
-        echo "[PENDING] ${date +%Y%m%dT%H%M%S} Task $id still in progress (Attempt ${TASK_MAP["$id"]})."
-        new_pending+=("$id")
-      fi
+      for id in "${batch_ids[@]}"; do
+        # skip empty IDs defensively
+        if [[ -z "$id" ]]; then
+          continue
+        fi
+        echo "[INFO] $(_ts) Polling for task $id..."
+
+        local status_url
+        status_url=$(printf "$STATUS_URL_TEMPLATE" "$id")
+        local response
+        response=$(curl -s --max-time 10 "$status_url" || echo "error")
+
+        if [[ "$attempt" -eq $((MAX_ATTEMPTS - 1)) ]]; then
+          echo "[DEBUG] Final attempt raw response for task $id: '$response'"
+        fi
+
+        # if there is a line contains "isDone" and "true", then the task is completed
+        if [[ "$response" =~ isDone.*true ]]; then
+          TASK_MAP["$id"]=0
+          echo "[SUCCESS] Task $id completed."
+        else
+          TASK_MAP["$id"]=$((TASK_MAP["$id"]+1))
+          echo "[PENDING] $(_ts) Task $id still in progress (Attempt ${TASK_MAP["$id"]})."
+          new_pending+=("$id")
+        fi
+      done
+
+      offset=$(( offset + chunk_size ))
     done
+
     PENDING_TASKS=("${new_pending[@]}")
     if [[ ${#PENDING_TASKS[@]} -eq 0 ]]; then
       echo "[INFO] All tasks in this batch completed."
       break
     fi
-    echo "[INFO] ${date +%Y%m%dT%H%M%S} Still waiting on ${#PENDING_TASKS[@]} tasks in this batch..."
+    echo "[INFO] $(_ts) Still waiting on ${#PENDING_TASKS[@]} tasks in this batch..."
   done
 
   if [[ ${#PENDING_TASKS[@]} -gt 0 ]]; then
-    echo "[WARNING] ${date +%Y%m%dT%H%M%S} Timeout reached. The following tasks are still pending:"
+    echo "[WARNING] $(_ts) Timeout reached. The following tasks are still pending:"
     for id in "${PENDING_TASKS[@]}"; do
       echo "$id"
     done
@@ -122,9 +148,20 @@ process_batch() {
     fi
     local id
     id=$(submit_task "$url")
+    # Trim whitespace
+    id="${id//$'\r'/}"
+    id="${id//$'\n'/}"
+    if [[ -z "$id" ]]; then
+      echo "[ERROR] Failed to submit task for: $url"
+      continue
+    fi
     echo "Submitted: $url -> Task ID: $id"
     ids+=("$id")
   done
+  if [[ ${#ids[@]} -eq 0 ]]; then
+    echo "[WARN] No tasks were submitted for this batch. Skipping polling."
+    return 0
+  fi
   echo "[INFO] Started polling for ${#ids[@]} tasks..."
   poll_tasks "${ids[@]}"
 }
@@ -142,3 +179,4 @@ main() {
 }
 
 main "$@"
+
