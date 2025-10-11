@@ -14,7 +14,8 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>4.0.0-ds</version>
+        <version>4.0.0.ds-SNAPSHOT</version>
+        <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>pulsar-tools</artifactId>
