@@ -96,6 +96,8 @@ class PageHandler(
     /**
      * TODO: too many requests, need to optimize
      * RobustRPC - Too many RPC failures: selectAttributeAll (6/5) | DOM Error while querying
+     * 
+     * getAttributeAll performs a query + RPC per node (N+1). Batched attribute fetch via DOM.getAttributes or DOM.collectClassNamesFromSubtree-style calls would dramatically cut traffic.
      * */
     @Throws(ChromeDriverException::class)
     fun getAttributeAll(selector: String, attrName: String, start: Int, limit: Int): List<String> {
