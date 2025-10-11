@@ -2236,7 +2236,7 @@ interface PulsarSession : AutoCloseable {
       * @param prompt The prompt or query to be sent to the AI model.
       * @return The response from the AI model encapsulated in a [ModelResponse] object.
       */
-     fun chat(prompt: String): ModelResponse
+    suspend fun chat(prompt: String): ModelResponse
 
      /**
       * Initiates a chat with the AI model about a specific webpage.
@@ -2246,7 +2246,7 @@ interface PulsarSession : AutoCloseable {
       * @param page The [WebPage] object containing the webpage's content to provide context for the chat.
       * @return The response from the AI model encapsulated in a [ModelResponse] object.
       */
-     fun chat(prompt: String, page: WebPage): ModelResponse
+     suspend fun chat(prompt: String, page: WebPage): ModelResponse
 
      /**
       * Initiates a chat with the AI model about a specific document.
@@ -2256,7 +2256,7 @@ interface PulsarSession : AutoCloseable {
       * @param document The [FeaturedDocument] object containing the document's text content to provide context for the chat.
       * @return The response from the AI model encapsulated in a [ModelResponse] object.
       */
-     fun chat(prompt: String, document: FeaturedDocument): ModelResponse
+     suspend fun chat(prompt: String, document: FeaturedDocument): ModelResponse
 
      /**
       * Initiates a chat with the AI model about a specific HTML element.
@@ -2266,7 +2266,7 @@ interface PulsarSession : AutoCloseable {
       * @param element The [Element] object containing the HTML element's text content to provide context for the chat.
       * @return The response from the AI model encapsulated in a [ModelResponse] object.
       */
-     fun chat(prompt: String, element: Element): ModelResponse
+     suspend fun chat(prompt: String, element: Element): ModelResponse
     /**
      * Executes an action described by the given string.
      * An agent will be created to analyze the action and generate a step-by-step plan to perform it.

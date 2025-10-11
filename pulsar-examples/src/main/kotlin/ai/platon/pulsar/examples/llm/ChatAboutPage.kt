@@ -6,7 +6,7 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
 /**
  * Demonstrates chat with a webpage.
  * */
-fun main() {
+suspend fun main() {
     // Use the default browser which has an isolated profile
     PulsarSettings.withDefaultBrowser()
     // Create a pulsar session

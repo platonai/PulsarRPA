@@ -113,6 +113,14 @@ open class TextToAction(val conf: ImmutableConfig) {
             .render(mapOf("webDriverSourceCode" to webDriverSourceCode))
     }
 
+    open fun generateWebDriverAction(
+        instruction: String,
+        driver: WebDriver,
+        screenshotB64: String? = null,
+    ): ActionDescription {
+        return runBlocking { generateWebDriverActionDeferred(instruction, driver, screenshotB64) }
+    }
+
     /**
      * Generate EXACT ONE WebDriver action with interactive elements.
      *
@@ -120,7 +128,7 @@ open class TextToAction(val conf: ImmutableConfig) {
      * @param driver The driver to use to collect the context, such as interactive elements
      * @return The action description
      * */
-    open fun generateWebDriverAction(
+    open suspend fun generateWebDriverActionDeferred(
         instruction: String,
         driver: WebDriver,
         screenshotB64: String? = null,
@@ -128,13 +136,15 @@ open class TextToAction(val conf: ImmutableConfig) {
         try {
             val interactiveElements = extractInteractiveElements(driver)
 
-            return generateWebDriverAction(instruction, interactiveElements, screenshotB64)
+            return generateWebDriverActionDeffered(instruction, interactiveElements, screenshotB64)
         } catch (e: Exception) {
-            val errorResponse = ModelResponse("""
+            val errorResponse = ModelResponse(
+                """
                 suspend fun llmGeneratedFunction(driver: WebDriver) {
                     // Error occurred during optimization: ${e.message}
                 }
-            """.trimIndent(), ResponseState.OTHER)
+            """.trimIndent(), ResponseState.OTHER
+            )
             return ActionDescription(emptyList(), null, errorResponse)
         }
     }
@@ -151,10 +161,29 @@ open class TextToAction(val conf: ImmutableConfig) {
         interactiveElements: List<InteractiveElement> = listOf(),
         screenshotB64: String? = null
     ): ActionDescription {
-        return generateWebDriverActionsWithToolCallSpecs(instruction, interactiveElements, screenshotB64, 1)
+        return runBlocking {
+            generateWebDriverActionsWithToolCallSpecsDeferred(instruction, interactiveElements, screenshotB64, 1)
+        }
+    }
+
+    open suspend fun generateWebDriverActionDeffered(
+        instruction: String,
+        interactiveElements: List<InteractiveElement> = listOf(),
+        screenshotB64: String? = null
+    ): ActionDescription {
+        return generateWebDriverActionsWithToolCallSpecsDeferred(instruction, interactiveElements, screenshotB64, 1)
     }
 
     open fun generateWebDriverActionsWithToolCallSpecs(
+        instruction: String,
+        interactiveElements: List<InteractiveElement> = listOf(),
+        screenshotB64: String? = null,
+        toolCallLimit: Int = 100,
+    ): ActionDescription {
+        return runBlocking { generateWebDriverActionsWithToolCallSpecsDeferred(instruction, interactiveElements, screenshotB64, toolCallLimit) }
+    }
+
+    open suspend fun generateWebDriverActionsWithToolCallSpecsDeferred(
         instruction: String,
         interactiveElements: List<InteractiveElement> = listOf(),
         screenshotB64: String? = null,
@@ -179,6 +208,13 @@ open class TextToAction(val conf: ImmutableConfig) {
     }
 
     open fun generateWebDriverActionsWithSourceCode(
+        command: String,
+        interactiveElements: List<InteractiveElement> = listOf()
+    ): ModelResponse {
+        return runBlocking { generateWebDriverActionsWithSourceCodeDeferred(command, interactiveElements) }
+    }
+
+    open suspend fun generateWebDriverActionsWithSourceCodeDeferred(
         command: String,
         interactiveElements: List<InteractiveElement> = listOf()
     ): ModelResponse {
@@ -561,7 +597,12 @@ $AGENT_SYSTEM_PROMPT
 
     // Newly reintroduced helpers --------------------------------------------------------------
     fun extractInteractiveElements(driver: WebDriver): List<InteractiveElement> {
-        return runBlocking {
+        return runBlocking { extractInteractiveElementsDeferred(driver) }
+    }
+
+    // Newly reintroduced helpers --------------------------------------------------------------
+    suspend fun extractInteractiveElementsDeferred(driver: WebDriver): List<InteractiveElement> {
+        try {
             // If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression).
             val result = driver.evaluateDetail(EXTRACT_INTERACTIVE_ELEMENTS_EXPRESSION)
 
@@ -570,12 +611,15 @@ $AGENT_SYSTEM_PROMPT
             // Kotlin-side safety filter: only visible interactive controls
             val filtered = elements.filter { e ->
                 val tag = e.tagName.lowercase()
-                e.isVisible && (
-                    tag == "input" || tag == "select" || tag == "textarea" || tag == "button" || (tag == "a" && !e.href.isNullOrBlank())
-                )
+                e.isVisible &&
+                        (tag == "input" || tag == "select" || tag == "textarea" || tag == "button"
+                                || (tag == "a" && !e.href.isNullOrBlank()))
             }
+
             // Deduplicate by selector to avoid duplicates from complex pages
-            filtered.distinctBy { it.selector }
+            return filtered.distinctBy { it.selector }
+        } catch (e: Exception) {
+            return emptyList()
         }
     }
 

@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.ai.llm.PromptTemplateLoader
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.rest.api.common.*
 import ai.platon.pulsar.rest.api.service.ConversationService
+import kotlinx.coroutines.runBlocking
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.*
 
@@ -25,7 +26,8 @@ class CommandRevisionController(
             urls = setOf(AppConstants.EXAMPLE_URL)
         }
 
-        val json = conversationService.convertPlainCommandToJSON(prompt, urls.first()) ?: return prompt
+        val json = runBlocking { conversationService.convertPlainCommandToJSON(prompt, urls.first()) }
+            ?: return prompt
 
         val resource = "prompts/api/request/command/command_revision_template.md"
         val message = PromptTemplateLoader(
@@ -38,6 +40,6 @@ class CommandRevisionController(
             )
         ).load().render()
 
-        return conversationService.chat(message)
+        return runBlocking { conversationService.chat(message) }
     }
 }

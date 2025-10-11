@@ -292,7 +292,7 @@ abstract class AbstractWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun act(action: ActionDescription): InstructionResult {
+    override suspend fun execute(action: ActionDescription): InstructionResult {
         if (action.functionCalls.isEmpty()) {
             return InstructionResult(listOf(), listOf(), action.modelResponse)
         }
@@ -305,7 +305,7 @@ abstract class AbstractWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun instruct(prompt: String): InstructionResult {
         val tta = TextToAction(config)
-        val actions = tta.generateWebDriverActionsWithToolCallSpecs(prompt)
+        val actions = tta.generateWebDriverActionsWithToolCallSpecsDeferred(prompt)
         val dispatcher = SimpleCommandDispatcher()
         val functionResults = actions.functionCalls.map { fc -> dispatcher.execute(fc, this) }
         return InstructionResult(actions.functionCalls, functionResults, actions.modelResponse)

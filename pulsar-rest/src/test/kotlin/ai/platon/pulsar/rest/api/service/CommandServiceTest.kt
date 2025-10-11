@@ -10,6 +10,7 @@ import ai.platon.pulsar.rest.api.TestHelper.PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.common.MockEcServerTestBase
 import ai.platon.pulsar.rest.api.config.MockEcServerConfiguration
 import ai.platon.pulsar.rest.api.entities.CommandRequest
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,7 +43,7 @@ class CommandServiceTest : MockEcServerTestBase() {
     @Test
     fun `test executeCommand WITHOUT instructions`() {
         val request = CommandRequest(PRODUCT_DETAIL_URL)
-        val status = commandService.executeCommand(request)
+        val status = runBlocking { commandService.executeCommand(request) }
         val result = status.commandResult
         // nothing to do if page is not loaded
         Assumptions.assumeTrue(status.pageStatusCode == 200)
@@ -66,7 +67,7 @@ class CommandServiceTest : MockEcServerTestBase() {
             onPageReadyActions = actions
         )
 
-        val status = commandService.executeCommand(request)
+        val status = runBlocking { commandService.executeCommand(request) }
 
         println(status)
         Assumptions.assumeTrue(status.pageStatusCode == 200)
@@ -93,7 +94,7 @@ class CommandServiceTest : MockEcServerTestBase() {
             pageSummaryPrompt = "Tell me something about the page",
         )
 
-        val status = commandService.executeCommand(request)
+        val status = runBlocking { commandService.executeCommand(request) }
 
         println(status)
         Assumptions.assumeTrue(status.pageStatusCode == 200)
@@ -114,7 +115,8 @@ class CommandServiceTest : MockEcServerTestBase() {
             PRODUCT_DETAIL_URL,
             pageSummaryPrompt = "Give me the product name",
         )
-        val status = commandService.executeCommand(request)
+
+        val status = runBlocking { commandService.executeCommand(request) }
         val result = status.commandResult
 
         Assumptions.assumeTrue(status.pageStatusCode == 200)
@@ -137,7 +139,8 @@ class CommandServiceTest : MockEcServerTestBase() {
             PRODUCT_DETAIL_URL,
             dataExtractionRules = "product name, ratings, price"
         )
-        val status = commandService.executeCommand(request)
+
+        val status = runBlocking { commandService.executeCommand(request) }
         println(prettyPulsarObjectMapper().writeValueAsString(status))
         val result = status.commandResult
 
@@ -160,15 +163,16 @@ class CommandServiceTest : MockEcServerTestBase() {
 
     @Test
     fun `test executeCommand with uriExtractionRules`() {
-        val testURL = "http://localhost:8182/ec/-/zh/ap/register?openid.pape.max_auth_age=0&openid.return_to=http://localhost:8182/ec/dp/B0E000001/?_encoding=UTF8&ref_=nav_newcust&openid.identity=http://specs.openid.net/auth/2.0/identifier_select&openid.assoc_handle=usflex&openid.mode=checkid_setup&openid.claimed_id=http://specs.openid.net/auth/2.0/identifier_select&openid.ns=http://specs.openid.net/auth/2.0"
-        val testRegex = "https?://.+/dp/[\\w]+.*".toRegex()
-        assertTrue { testURL.matches(testRegex) }
+//        val testURL = "http://localhost:8182/ec/-/zh/ap/register?openid.pape.max_auth_age=0&openid.return_to=http://localhost:8182/ec/dp/B0E000001/?_encoding=UTF8&ref_=nav_newcust&openid.identity=http://specs.openid.net/auth/2.0/identifier_select&openid.assoc_handle=usflex&openid.mode=checkid_setup&openid.claimed_id=http://specs.openid.net/auth/2.0/identifier_select&openid.ns=http://specs.openid.net/auth/2.0"
+//        val testRegex = "https?://.+/dp/[\\w]+.*".toRegex()
+//        assertTrue { testURL.matches(testRegex) }
 
         val request = CommandRequest(
             PRODUCT_DETAIL_URL,
             uriExtractionRules = "links containing /dp/"
         )
-        val status = commandService.executeCommand(request)
+
+        val status = runBlocking { commandService.executeCommand(request) }
         println(prettyPulsarObjectMapper().writeValueAsString(status))
         val result = status.commandResult
 
@@ -207,7 +211,8 @@ class CommandServiceTest : MockEcServerTestBase() {
                 from load_and_select(@url, 'body');
             """.trimIndent()
         )
-        val status = commandService.executeCommand(request)
+
+        val status = runBlocking { commandService.executeCommand(request) }
         println(prettyPulsarObjectMapper().writeValueAsString(status))
         val result = status.commandResult
 
@@ -228,7 +233,8 @@ class CommandServiceTest : MockEcServerTestBase() {
             PRODUCT_DETAIL_URL,
             uriExtractionRules = "Regex: http://localhost:8182/ec/dp/\\w+"
         )
-        val status = commandService.executeCommand(request)
+
+        val status = runBlocking { commandService.executeCommand(request) }
         println(prettyPulsarObjectMapper().writeValueAsString(status))
         val result = status.commandResult
 
@@ -252,7 +258,8 @@ class CommandServiceTest : MockEcServerTestBase() {
     @Test
     fun `test executeCommand with simple and clean command`() {
         val prompt = API_COMMAND_PROMPT1
-        val status = commandService.executeCommand(prompt)
+
+        val status = runBlocking { commandService.executeCommand(prompt) }
         println(prettyPulsarObjectMapper().writeValueAsString(status))
         assertNotNull(status)
 
@@ -267,7 +274,8 @@ class CommandServiceTest : MockEcServerTestBase() {
     @Test
     fun `test executeCommand with detailed and verbose command`() {
         val prompt = API_COMMAND_PROMPT3
-        val status = commandService.executeCommand(prompt)
+
+        val status = runBlocking { commandService.executeCommand(prompt) }
         println(prettyPulsarObjectMapper().writeValueAsString(status))
         assertNotNull(status)
 

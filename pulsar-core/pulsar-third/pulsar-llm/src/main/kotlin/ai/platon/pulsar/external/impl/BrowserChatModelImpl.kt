@@ -6,7 +6,10 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.*
 import ai.platon.pulsar.external.logging.ChatModelLogger
 import dev.langchain4j.data.message.*
+import dev.langchain4j.model.chat.response.ChatResponse
 import dev.langchain4j.model.output.FinishReason
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
 import org.ehcache.Cache
@@ -45,19 +48,19 @@ open class BrowserChatModelImpl(
 
     override val settings = ChatModelSettings(conf)
 
-    override fun call(userMessage: String) = call(userMessage, "")
+    override suspend fun call(userMessage: String) = call(userMessage, "")
 
-    override fun call(userMessage: String, systemMessage: String,
-        imageUrl: String?, b64Image: String?, mediaType: String?
+    override suspend fun call(userMessage: String, systemMessage: String,
+                              imageUrl: String?, b64Image: String?, mediaType: String?
     ): ModelResponse {
         return callWithCache(userMessage, systemMessage, imageUrl, b64Image, mediaType)
     }
 
-    override fun call(document: FeaturedDocument, prompt: String) = call(document.document, prompt)
+    override suspend fun call(document: FeaturedDocument, prompt: String) = call(document.document, prompt)
 
-    override fun call(ele: Element, prompt: String) = call(ele.text(), prompt)
+    override suspend fun call(ele: Element, prompt: String) = call(ele.text(), prompt)
 
-    private fun callWithCache(
+    private suspend fun callWithCache(
         userMessage: String, systemMessage: String,
         imageUrl: String? = null,
         b64Image: String? = null, mediaType: String? = null,
@@ -111,12 +114,14 @@ open class BrowserChatModelImpl(
             logger.info("▶ Chat - [len: {}] {}", trimmedUserMessage.length, log)
         }
 
-        val response = try {
+        val response: ChatResponse = try {
             if (systemMessage.isBlank()) {
-                langchainModel.chat(um)
+                // langchainModel.chat(um)
+                sendChatMessageInIOThread(um)
             } else {
                 val sm = SystemMessage.systemMessage(systemMessage)
-                langchainModel.chat(sm, um)
+                // langchainModel.chat(sm, um)
+                sendChatMessageInIOThread(sm, um)
             }
         } catch (e: IOException) {
             logger.info("IOException | {}", e.message)
@@ -170,5 +175,11 @@ open class BrowserChatModelImpl(
         logger.debug("Cached response for key: $cacheKey")
 
         return modelResponse
+    }
+
+    private suspend fun sendChatMessageInIOThread(vararg messages: ChatMessage): ChatResponse {
+        return withContext(Dispatchers.IO) {
+            langchainModel.chat(*messages)
+        }
     }
 }

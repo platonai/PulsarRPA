@@ -3,7 +3,7 @@ package ai.platon.pulsar.examples.sites.social
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 
-fun main() {
+suspend fun main() {
     // see https://console.volcengine.com/ark/region:ark+cn-beijing/endpoint
     val apiKey = System.getProperty("llm.apiKey")
     PulsarSettings
