@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Tag
 import kotlin.test.Test
 
 @Tag("ExternalServiceTest")
+@Tag("SkippableLowerLevelTest")
 class WebDriver2JsonProtocolTests: TTATestBase() {
 
     @Test

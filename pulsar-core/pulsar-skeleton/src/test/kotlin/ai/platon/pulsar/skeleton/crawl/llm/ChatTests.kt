@@ -15,6 +15,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 @Tag("ExternalServiceTest")
+@Tag("SkippableLowerLevelTest")
 class ChatTests {
     
     companion object {
