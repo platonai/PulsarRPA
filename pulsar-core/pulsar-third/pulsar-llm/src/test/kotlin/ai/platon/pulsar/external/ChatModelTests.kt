@@ -60,7 +60,7 @@ class ChatModelTests {
         val document = Documents.parse(productHtml, url)
         
         val prompt = "以下是一个电商网站的网页内容，找出商品标题、商品价格："
-        val response = model.call(document, prompt)
+        val response = runBlocking { model.call(document, prompt) }
         println(response.content)
         
         assertTrue { response.tokenUsage.inputTokenCount > 0 }
@@ -86,7 +86,7 @@ class ChatModelTests {
 - **商品评分**:
     （这里是商品评分）
         """.trimIndent()
-        val response = model.call(text, prompt)
+        val response = runBlocking { model.call(text, prompt) }
         println(response.content)
         
         assertTrue { response.tokenUsage.inputTokenCount > 0 }
