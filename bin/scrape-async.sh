@@ -75,7 +75,7 @@ poll_tasks() {
     local batch_ids=("${PENDING_TASKS[@]:0:$MAX_POLLING_TASKS}")
     local new_pending=()
     for id in "${batch_ids[@]}"; do
-      echo "[INFO] Polling for task $id..."
+      echo "[INFO] ${date +%Y%m%dT%H%M%S} Polling for task $id..."
 
       local status_url
       status_url=$(printf "$STATUS_URL_TEMPLATE" "$id")
@@ -92,7 +92,7 @@ poll_tasks() {
         echo "[SUCCESS] Task $id completed."
       else
         TASK_MAP["$id"]=$((TASK_MAP["$id"]+1))
-        echo "[PENDING] Task $id still in progress (Attempt ${TASK_MAP["$id"]})."
+        echo "[PENDING] ${date +%Y%m%dT%H%M%S} Task $id still in progress (Attempt ${TASK_MAP["$id"]})."
         new_pending+=("$id")
       fi
     done
@@ -101,11 +101,11 @@ poll_tasks() {
       echo "[INFO] All tasks in this batch completed."
       break
     fi
-    echo "[INFO] Still waiting on ${#PENDING_TASKS[@]} tasks in this batch..."
+    echo "[INFO] ${date +%Y%m%dT%H%M%S} Still waiting on ${#PENDING_TASKS[@]} tasks in this batch..."
   done
 
   if [[ ${#PENDING_TASKS[@]} -gt 0 ]]; then
-    echo "[WARNING] Timeout reached. The following tasks are still pending:"
+    echo "[WARNING] ${date +%Y%m%dT%H%M%S} Timeout reached. The following tasks are still pending:"
     for id in "${PENDING_TASKS[@]}"; do
       echo "$id"
     done

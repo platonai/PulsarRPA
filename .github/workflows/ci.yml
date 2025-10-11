@@ -126,10 +126,11 @@ jobs:
             chmod +x ./bin/tests/run-integration-test.sh
           
             echo "🚀 Running integration tests..."
+            date
             echo "Application URL: http://localhost:8182"
             echo "Network: ${{ env.NETWORK_NAME }}"
             echo "Container: ${{ env.CONTAINER_NAME }}"
-          
+
             if timeout 600 ./bin/tests/run-integration-test.sh; then
               echo "✅ Integration tests passed"
               echo "integration_status=success" >> $GITHUB_OUTPUT
