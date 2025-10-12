@@ -57,12 +57,10 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-protocol</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-parse</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
