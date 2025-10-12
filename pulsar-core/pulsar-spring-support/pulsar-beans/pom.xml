@@ -13,9 +13,9 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>ai.platon.pulsar</groupId>
-        <artifactId>pulsar-spring-support</artifactId>
+        <artifactId>pulsar</artifactId>
         <version>4.0.1-SNAPSHOT</version>
-        <relativePath>../pom.xml</relativePath>
+        <relativePath>../../../pom.xml</relativePath>
     </parent>
 
     <artifactId>pulsar-beans</artifactId>
