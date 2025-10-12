@@ -9,7 +9,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar-third</artifactId>
-        <version>4.0.0.ds-SNAPSHOT</version>
+        <version>4.0.0-ds.0</version>
     </parent>
 
     <artifactId>pulsar-boilerpipe</artifactId>
