@@ -16,7 +16,7 @@ echo "$VERSION" > "$APP_HOME/VERSION"
 
 # Replace SNAPSHOT version with the release version
 for FILE_PATTERN in 'pom.xml' 'llm-config.md' 'README.md' 'README-CN.md'; do
-  find "$APP_HOME" -maxdepth 3 -name "$FILE_PATTERN" -type f | while read FILE; do
+  find "$APP_HOME" -maxdepth 8 -name "$FILE_PATTERN" -type f | while read FILE; do
     sed -i "s/$SNAPSHOT_VERSION/$VERSION/g" "$FILE"
   done
 done
