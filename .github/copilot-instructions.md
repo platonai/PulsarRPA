@@ -24,6 +24,7 @@
 - Use `pulsar-tests` heavy suites for diagnosing browser issues; many tests expect Chrome via CDP—ensure devtools binary path comes from existing configuration beans.
 - Logs route through structured format described in `docs/log-format.md`; preserve JSON-compatible message layout when adding fields.
 - For performance regressions, run `./mvnw -pl pulsar-benchmarks -am package -DskipTests`, then execute the shaded JMH jar as documented.
+- Windows-friendly quoting for -D properties, e.g. `-D"spotless.apply.skip=true"`
 ## Integration Tips
 - REST features expose text-based "commands" and X-SQL endpoints; refer to `docs/rest-api-examples.md` and reuse helper DTOs in `pulsar-rest/.../dto` instead of inventing new payloads.
 - When extending extraction logic, prefer registering `ParseFilter` or `PageEventHandlers` in `pulsar-core` rather than branching inside service layers.

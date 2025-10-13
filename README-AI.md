@@ -1,7 +1,7 @@
 # 🚦 AI Coder Agent Guideline
 
-This guideline defines how AI Coder Agents (e.g., GitHub Copilot, Claude Coder, ChatGPT) should behave when contributing 
-to this project. The document standardizes **environment setup**, **coding rules**, **testing strategy**, 
+This guideline defines how AI Coder Agents (e.g., GitHub Copilot, Claude Coder, ChatGPT) should behave when contributing
+to this project. The document standardizes **environment setup**, **coding rules**, **testing strategy**,
 and **CI/CD integration**.
 
 > 💡 Note: This document should be updated as the functionality evolves.
@@ -13,7 +13,7 @@ and **CI/CD integration**.
 - **Project Type**: Multi-module **Maven** project
 - **Primary Language**: **Kotlin**
 - **Build Tool**: Always use `./mvnw` (Maven wrapper) from the project root
-- **System Adaptation**: Detect **OS environment first** to select best-suited tools  
+- **System Adaptation**: Detect **OS environment first** to select best-suited tools
 - **Java Compatibility**: Read `pom.xml` determine Java versions
 
 ---
@@ -33,6 +33,7 @@ Provide consistent, minimal, verifiable contributions:
 - Environment Detection:
   - Always detect OS (Windows/macOS/Linux) before suggesting shell commands; prefer cross-platform forms.
   - Use the Maven wrapper: `./mvnw` (Unix) or `mvnw.cmd` (Windows) from project root.
+  - Use windows-friendly quoting for -D properties, e.g. `-D"spotless.apply.skip=true"`
 - Editing Rules:
   - Do not mass‑reformat unrelated code; restrict diffs to purposeful changes.
   - Preserve license headers and existing comment style.
@@ -127,7 +128,7 @@ project-root/
   ```kotlin
   @Test
   fun `Given valid user input When processing request Then return expected result`()
-  
+
   @Test
   fun `When ask to click a button then generate correct WebDriver action code`()
   ```
@@ -149,7 +150,7 @@ project-root/
 
 - **Spring Test Configuration**:
   ```kotlin
-  @SpringBootTest(classes = [Application::class], 
+  @SpringBootTest(classes = [Application::class],
                   webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
   ```
 
@@ -160,7 +161,7 @@ project-root/
   - **Focus**: Core logic, data transformations, algorithms
   - **Isolation**: No external dependencies, use mocks/stubs
   - **Speed**: < 100ms per test
-  
+
 - **Integration Tests** (25% of test suite):
   - **Scope**: Module interactions, database operations, Spring context
   - **Focus**: Component integration, configuration validation
@@ -181,7 +182,7 @@ project-root/
   server.port ≈ SERVER_PORT
   ```
 
-- **Environment Consistency**: 
+- **Environment Consistency**:
   - Behavior identical with/without Spring `Environment`
   - Test profiles: `test`, `integration`, `e2e`
   - Separate test configurations for different test types
@@ -211,7 +212,7 @@ project-root/
   ```kotlin
   // Kotlin-friendly mocking
   @MockK lateinit var mockService: ExternalService
-  
+
   // Spring Boot test slices
   @WebMvcTest(Controller::class)
   @DataJpaTest
