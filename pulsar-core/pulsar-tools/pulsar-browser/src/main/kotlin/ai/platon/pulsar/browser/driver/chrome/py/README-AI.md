@@ -2,6 +2,8 @@
 
 本文档描述如何将 `pulsar-browser/py/service.py` 中的 DomService 能力迁移为 Kotlin/JVM 原生实现，确保与现有系统保持行为一致、可灰度切换与快速回滚。
 
+> **说明**：Python DomService 代码目前仅作为历史文档与行为参考，不再纳入可执行路径，也不会在测试流程中被调用。
+
 ---
 
 ## 执行清单（给审阅者）
@@ -69,7 +71,7 @@
 ## 四、功能分解与里程碑
 - M0 调研与基线
   - 梳理 `service.py`/`views.py` 的职责与输出形状，形成 ADR（接口输入/输出、域调用、边界条件）。
-  - 用 Python 版本采集一组“黄金样本”页面，固化为测试基线（DOM/AX/Snapshot/序列化输出）。
+  - 以 Kotlin 实现采集一组“黄金样本”页面，固化为测试基线（DOM/AX/Snapshot/序列化输出），Python 结果仅供行为理解。
 - M1 CDP 会话与 Target 管理
   - 建立 Chrome 连接、Target 创建/附加、Session 管理（PageTarget 与 iframe TargetInfo 映射）。
   - 获取 devicePixelRatio、基本导航、加载等待。
@@ -113,13 +115,47 @@
     - `AccessibilityHandlerTests.kt`：验证 getFullAXTree 的返回结构与字段映射。
     - `DomSnapshotHandlerTests.kt`：验证 captureSnapshot 输出关键信息（scroll/client/bounds）。
 - 基准（Golden）测试
-  - 选择含 iframe、shadow DOM、长列表、表单等页面，固化 Python 基线与 Kotlin 结果；字段级对比。
+  - 选择含 iframe、shadow DOM、长列表、表单等页面，固化 Kotlin 基线；按版本化 diff 验证字段级一致性，Python 结果仅用于行为参照。
 - 集成测试
   - CDP 直连参考：`pulsar-tests/src/test/kotlin/ai/platon/pulsar/browser/PulsarWebDriverCDPTests.kt`。
   - 上层抽象参考：`pulsar-tests/src/test/kotlin/ai/platon/pulsar/browser/PulsarWebDriverMockSite2Tests.kt`。
   - 端到端：启动无头 Chrome，走全流程：导航 → 采集 → 合并 → 序列化 → 交付。
 - 回归测试
   - 针对日志中常见站点/失败栈的专项用例。
+
+### 端到端测试设计（更新 2025/10/13）
+- **目标**：在统一的测试框架内验证 Kotlin `ChromeCdpDomService` 的端到端流程，输出可回放的结构化结果，并对比版本化的 Kotlin 黄金基线。
+- **测试骨架**：在 `pulsar-tests` 新增 `DomServiceEndToEndTests.kt`（JUnit5 @Tag("dom-e2e")），复用 `RemoteDevToolsRule` 启动无头 Chrome。测试步骤：
+  1. 使用 Kotlin 实现依次调用 `getAllTrees` → `buildEnhancedDomTree` → `buildSimplifiedTree` → `serializeForLLM`，将结果写入 `pulsar-tests/src/test/resources/golden/domservice/<case>/current`。
+  2. 引入版本化的基线目录 `.../baseline`（由已验证的 Kotlin DomService 生成），测试时与当前输出对比。
+  3. 利用共享 diff 工具（新增 `DomServiceGoldenComparator") 对关键字段（节点计数、frame 关联、bounds/scrollRects、AX role/name、LLM JSON）做容差比较。
+- **样本库**：首批覆盖四类页面 —— 基础静态、Shadow DOM、Nested iframe、长列表/滚动。样本 URL 与加载参数记录在 `docs/copilot/domservice-e2e-cases.md`，并通过脚本 `bin/script-tests/domservice-golden.ps1` 可重采集；Python DomService 输出仅用于分析差异成因，不参与断言。
+- **Mock 页面选择**：遵循 `pulsar-tests/src/test/kotlin/ai/platon/pulsar/browser/PulsarWebDriverMockSite2Tests.kt` 的模式，所有端到端用例均通过 Mock Server（`http://127.0.0.1:18080`）访问 `static/generated` 目录下的交互页面：
+  - Mock Server 启动后，所有 `static` 目录下的网页可以直接访问。
+  - 首选 `GET /generated/interactive-dynamic.html`，并将 `TestWebSiteAccess.interactiveUrl` 指向该资源后复用 `runWebDriverTest` 的调用方式，以覆盖延迟加载、滚动、虚拟列队等高频场景；
+  - 若某能力在 `interactive-dynamic.html` 中无法复现，依次验证 `interactive-1.html` ~ `interactive-4.html`、`interactive-screens.html` 等资源，记录差异并将所选页面纳入黄金样本；
+  - 若现有页面仍不足以覆盖需求，则以 `interactive-dynamic.html` 为模板在 `static/generated` 下新增页面（命名为 `interactive-*.html`）。
+  - 支撑性校验（纯文本/JSON）可继续复用 `GET /hello`、`/json` 等轻量接口。
+- **断言与指标**：
+  - 所有差异分类为 `major`（结构）、`minor`（浮点/顺序）、`meta`（计时）。CI 仅在 `major`/`minor` 时失败。
+  - 度量 `cdpTiming`、节点数、生成耗时，输出到 `logs/chat-model/domservice-e2e.json` 便于回归分析。
+- **运行方式**：
+  - 本地：`./mvnw -pl pulsar-tests -am test -Dtest=DomServiceEndToEndTests -Dgroups=dom-e2e`。
+  - CI：按 tag 控制在夜间构建或变更触发运行，黄金差异通过 artifact 附件暴露。
+
+#### Mock Server 启动方式
+- Mock Server 基于 `ai.platon.pulsar.util.server.EnabledMockServerApplication`，监听 `server.port=18080`（定义于 `pulsar-tests-common/src/main/resources/config/application-test.properties`）。
+- **自动模式**：运行任何标注 `@SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = DEFINED_PORT)` 的测试时（包括 `DomServiceEndToEndTests`），Spring Boot 会自动拉起 Mock Server 并在测试结束后关闭。
+- **手动模式**（若需单独调试）：执行
+  ```powershell
+  ./mvnw -pl pulsar-tests-common spring-boot:run -Dspring-boot.run.main-class=ai.platon.pulsar.util.server.EnabledMockServerApplication -Dspring-boot.run.profiles=test
+  ```
+  该命令在当前仓库根目录运行，启动后可直接访问 `http://127.0.0.1:18080/generated/interactive-dynamic.html` 等页面。
+
+#### 测试网页构造
+- 现有 Mock Server 已提供所需的静态与动态页面（位于 `pulsar-tests-common/src/main/resources/static/generated` 目录及其生成内容），默认使用 `interactive-dynamic.html` 作为黄金样本入口。
+- 若 `interactive-dynamic.html` 无法满足特定场景，需在 `static/generated` 中甄别 `interactive-*.html` 是否涵盖该能力，并在文档中标注选择原因。
+- 若仍无法满足，用 `interactive-dynamic.html` 的结构（异步加载、列表编辑、虚拟滚动等模块）为模板新增页面，命名为 `interactive-<feature>.html`，并更新 MockSiteController 暴露路由，同时将页面加入版本化黄金样本目录。
 
 ## 七、构建交付与配置
 - 依赖
@@ -142,7 +178,17 @@
 - 跨 iframe/shadow DOM 对齐难
   - 以复杂页面建立黄金样本，严格字段对齐。
 - 输出细微差异影响上层
-  - 提供兼容映射与灰度开关；金丝雀比对。
+  - 提供兼容映射与灰度开关。
+
+- **M0 调研与基线**：Kotlin 接口与模型已落地（参见 `dom/DomService.kt`、`dom/model`）；Kotlin 黄金样本仍未固化，需要端到端测试采集脚本。
+- **M1 会话与 Handler 层**：`AccessibilityHandler`、`DomTreeHandler`、`DomSnapshotHandler` 已实现并接入 `RemoteDevTools`；尚缺多 target/断线回退场景测试。
+- **M2 树采集层**：`ChromeCdpDomService.getAllTrees` 可抓取 DOM/AX/Snapshot 并统计 `cdpTiming`；需在多 frame 页面验证性能与容错。
+- **M3 合并层**：`buildEnhancedDomTree` 支持滚动、可见性、交互指标合并；但 stacking context 仍存在 TODO，缺乏自动化验证。
+- **M4 功能增强**：滚动与交互性计算已迁移，Shadow DOM/XPath/element hash 实现同步；依旧需要针对嵌套滚动与 iframe 场景的回归测试。
+- **M5 序列化层**：`DomLLMSerializer` 已提供 paint-order pruning、selector map 多键映射；尚未在真实数据上做 diff。
+- **M6 实现切换**：配置开关尚未统一到 `application*.properties`，仅在代码层缓存最近一次结果；需要灰度策略文档化。
+- **M7 性能与鲁棒性**：尚无压测或 retry 策略验证，待端到端测试覆盖大页面。
+- **M8 对齐验证**：缺少 Kotlin 黄金基线 diff 管道，CI 未接入验证流程。
 
 ## 十、产出物清单
 - 接口与实现
@@ -171,7 +217,7 @@
   - get_scroll_info_text：对 iframe 与普通元素采用不同的简洁呈现。
 
 ## 附录 B：黄金样本与差异对比方法
-- 采集固定站点样本，保存 Python 输出（DOM/AX/Snapshot/序列化）。
+- 采集固定站点样本，保存 Kotlin 输出（DOM/AX/Snapshot/序列化），必要时记录 Python 参考结果用于诊断。
 - Kotlin 输出对齐后以字段级 diff 工具比较：
   - 容忍：浮点小误差、无序集合（排序后比较）。
   - 关键字段必须一致：节点层级、frame 关联、bounds、scroll/client rects、paint order。
@@ -183,18 +229,18 @@
 
 ## 下一步开发计划（2025/10/13）
 
-1. **强化 Handler 层与 AX 关联**
-  - 将 `AccessibilityHandler` 的 `TODO` 消除，补齐 selector 过滤与 scrollable 节点探测，保证 frameId → AXNode 映射稳定。
-  - 为 `DomSnapshotHandler` 增补 paint order、stacking context 解析与绝对坐标计算，给后续交互指数提供数据。
+1. **端到端黄金样本基线**
+  - 按“端到端测试设计”章节实现采集脚本与资源目录，固化 Kotlin DomService 输出；补充 `README` 与脚本使用说明。
+    - 将 `TestWebSiteAccess.interactiveUrl` 与相关端到端测试更新为 `interactive-dynamic.html`，覆盖基础/Shadow DOM/iframe/滚动四类页面，记录加载参数与超时策略，并生成首批黄金数据（必要时备注 Python 行为差异，仅供诊断）。
 
-2. **推进树合并与指标计算**
-  - 在 `ChromeCdpDomService.buildEnhancedDomTree` 中升级合并逻辑：补全 absolute bounds/interactivity index/paint order 汇入，重用 snapshot/AX map 减少重复遍历。
-  - 校准滚动与可见性判断，覆盖 iframe/body/html 与嵌套容器的去重策略，与 Python 实现逐条对照。
+2. **Kotlin 黄金 Diff 流水线**
+  - 编写 `DomServiceGoldenComparator`，差异按 `major|minor|meta` 分类，并在失败时输出结构化报告。
+  - 在 `DomServiceEndToEndTests.kt` 中调用 comparator，确保 Kotlin 实现与黄金基线对齐。
 
-3. **完善 XPath/哈希 与回溯缓存**
-  - 补充 shadow DOM、同级索引、iframe 边界等特殊 case，复刻 Python 停止条件；加强祖先缓存防止重复计算。
-  - 为 element hash 引入 parent-branch + STATIC_ATTRIBUTES + backend/session 的开关封装，便于灰度验证。
+3. **CI 与灰度集成**
+  - 在 `pulsar-tests` 引入 @Tag 控制端到端用例，新增 Maven profile `dom-e2e`，将测试纳入夜间/变更触发流水线。
+  - 配置 `application*.properties` 的 `pulsar.dom.impl` 开关与回退策略文档，使 CI 报告可链接到当前实现模式。
 
-4. **扩展 LLM 序列化能力**
-  - 在 `DomLLMSerializer` 中加入 paint-order pruning、compound component 标记、attribute casing 对齐，确保 JSON 与 Python 版本字段一致。
-  - 构建 selector map 反查结构（hash/xpath/backendId 多键），并补充必要的序列化单测。
+4. **验证缺口补强**
+  - 针对 stacking context、滚动去重、可见性判断补充针对性用例，并将指标采集写入 diff 报告。
+  - 对照黄金样本结果，整理 TODO 列表（包含多 target 断线回退、性能数据），作为后续迭代 backlog。
