@@ -231,11 +231,9 @@ class AccessibilityHandler(
                         val stamped = stampFrameId(node, frameId)
                         val key = stamped.frameId to stamped.nodeId
                         if (seenPairs.add(key)) {
-                            frameBucket plusAssign stamped
-                            allNodes plusAssign stamped
                             val backendId = stamped.backendDOMNodeId
                             if (backendId != null) {
-                                byBackend.getOrPut(backendId) { mutableListOf() } plusAssign stamped
+                                byBackend.getOrPut(backendId) { mutableListOf() }
                             }
                         }
                     }
