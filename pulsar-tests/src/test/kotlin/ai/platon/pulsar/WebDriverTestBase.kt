@@ -16,7 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import java.util.concurrent.atomic.AtomicBoolean
 
 @SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-class WebDriverTestBase : TestWebSiteAccess() {
+open class WebDriverTestBase : TestWebSiteAccess() {
 
     companion object {
         val isInitialized = AtomicBoolean(false)
