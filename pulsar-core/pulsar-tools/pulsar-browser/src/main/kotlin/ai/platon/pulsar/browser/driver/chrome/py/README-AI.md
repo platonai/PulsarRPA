@@ -114,5 +114,12 @@ Unix/macOS（参考）：
 
 ---
 
+## 人类评审员意见
+
+以 py/service.py 为基线，检查 ChromeCdpDomService 的实现情况。
+1. 重点检查异常分支处理是否合理
+2. 深入到DomTreeHandler，DomSnapshotHandler，AccessibilityHandler 检查
+3. 确保 browser/../dom 各个文件的逻辑同 browser/../py 下对应逻辑保持一致。
+
 ## 变更记录
 - 2025-10-13：新增“当前实现概览/测试现状/构建与运行/已知待办与风险”等章节，E2E 用例已就绪但黄金样本落盘待补。

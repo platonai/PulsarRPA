@@ -3,6 +3,7 @@ package ai.platon.pulsar.browser.driver.chrome.dom
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMRect
 import ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedSnapshotNode
+import ai.platon.pulsar.common.getLogger
 import com.github.kklisura.cdt.protocol.v2023.commands.DOMSnapshot
 
 /**
@@ -10,6 +11,8 @@ import com.github.kklisura.cdt.protocol.v2023.commands.DOMSnapshot
  * Captures and processes layout snapshots with style and rect information.
  */
 class DomSnapshotHandler(private val devTools: RemoteDevTools) {
+    private val logger = getLogger(this)
+    private val tracer get() = logger.takeIf { it.isTraceEnabled }
 
     private val domSnapshot: DOMSnapshot get() = devTools.domSnapshot
 
@@ -30,13 +33,19 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
         includeAbsoluteCoords: Boolean = true
     ): Map<Int, EnhancedSnapshotNode> {
         val computed = if (includeStyles) EXTENDED_COMPUTED_STYLES else emptyList()
-        val capture = domSnapshot.captureSnapshot(
-            computed,
-            /* includePaintOrder */ includePaintOrder,
-            /* includeDOMRects */ includeDomRects,
-            /* includeBlendedBackgroundColors */ null,
-            /* includeTextColorOpacities */ null,
-        )
+        val capture = try {
+            domSnapshot.captureSnapshot(
+                computed,
+                /* includePaintOrder */ includePaintOrder,
+                /* includeDOMRects */ includeDomRects,
+                /* includeBlendedBackgroundColors */ null,
+                /* includeTextColorOpacities */ null,
+            )
+        } catch (e: Exception) {
+            logger.warn("DOMSnapshot.captureSnapshot failed | err={}", e.toString())
+            tracer?.debug("captureSnapshot exception", e)
+            return emptyMap()
+        }
 
         val byBackend = mutableMapOf<Int, EnhancedSnapshotNode>()
         val strings = capture.strings ?: emptyList()
@@ -46,6 +55,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
             getViewportBounds()
         } else null
 
+        var totalRows = 0
         for (doc in capture.documents ?: emptyList()) {
             val nodeTree = doc.nodes ?: continue
             val layout = doc.layout ?: continue
@@ -60,6 +70,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
             val paintOrders = if (includePaintOrder) layout.paintOrders ?: emptyList() else emptyList()
 
             val rows = nodeIndex.size
+            totalRows += rows
 
             // Build style maps per layout row
             val stylesIdx = layout.styles ?: emptyList()
@@ -105,8 +116,8 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
 
                 // Calculate absolute coordinates if requested
                 val absoluteBounds = if (includeAbsoluteCoords && viewportBounds != null) {
-                    val boundsRect = DOMRect.fromBoundsArray(bounds.getOrNull(row) ?: emptyList())!!
-                    calculateAbsoluteCoordinates(boundsRect, viewportBounds, styles)
+                    val boundsRect = DOMRect.fromBoundsArray(bounds.getOrNull(row) ?: emptyList())
+                    if (boundsRect != null) calculateAbsoluteCoordinates(boundsRect, viewportBounds, styles) else null
                 } else null
 
                 val snap = EnhancedSnapshotNode(
@@ -124,6 +135,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
                 byBackend[backendId] = snap
             }
         }
+        tracer?.debug("DOMSnapshot captured | entries={} rowsApprox={} styles={} paintOrder={}", byBackend.size, totalRows, includeStyles, includePaintOrder)
         return byBackend
     }
 
@@ -131,28 +143,16 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
      * Get viewport bounds for absolute coordinate calculation.
      */
     private fun getViewportBounds(): DOMRect {
-        return try {
-            val evaluation = devTools.runtime.evaluate("""
-                {
-                    width: window.innerWidth,
-                    height: window.innerHeight,
-                    x: 0,
-                    y: 0
-                }
-            """.trimIndent())
-
-            val result = evaluation?.result?.value?.toString()
-            if (result != null && result.contains("width") && result.contains("height")) {
-                // Parse the JSON result
-                val width = result.substringAfter("\"width\":").substringBefore(",").trim().toDoubleOrNull() ?: 1024.0
-                val height = result.substringAfter("\"height\":").substringBefore("}").trim().toDoubleOrNull() ?: 768.0
-                DOMRect(x = 0.0, y = 0.0, width = width, height = height)
-            } else {
-                DOMRect(x = 0.0, y = 0.0, width = 1024.0, height = 768.0)
-            }
+        fun evalNumber(expr: String, fallback: Double): Double = try {
+            val ro = devTools.runtime.evaluate(expr)
+            ro?.result?.value?.toString()?.toDoubleOrNull() ?: ro?.result?.unserializableValue?.toDoubleOrNull() ?: fallback
         } catch (e: Exception) {
-            DOMRect(x = 0.0, y = 0.0, width = 1024.0, height = 768.0)
+            tracer?.debug("Runtime.evaluate failed | expr={} err={}", expr, e.toString())
+            fallback
         }
+        val w = evalNumber("window.innerWidth", 1024.0)
+        val h = evalNumber("window.innerHeight", 768.0)
+        return DOMRect(x = 0.0, y = 0.0, width = w, height = h)
     }
 
     /**
@@ -171,8 +171,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
                 bounds
             }
             "absolute" -> {
-                // Absolute positioning - need to calculate relative to nearest positioned ancestor
-                // For now, return as-is and let the caller handle the calculation
+                // Absolute positioning - nearest positioned ancestor unknown at this stage; return as-is
                 bounds
             }
             "relative" -> {
@@ -198,13 +197,19 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
     @Deprecated("Use captureByBackendNodeId instead")
     fun capture(includeStyles: Boolean = true): List<EnhancedSnapshotNode> {
         val computed = if (includeStyles) REQUIRED_COMPUTED_STYLES else emptyList()
-        val capture = domSnapshot.captureSnapshot(
-            computed,
-            /* includePaintOrder */ true,
-            /* includeDOMRects */ true,
-            /* includeBlendedBackgroundColors */ null,
-            /* includeTextColorOpacities */ null,
-        )
+        val capture = try {
+            domSnapshot.captureSnapshot(
+                computed,
+                /* includePaintOrder */ true,
+                /* includeDOMRects */ true,
+                /* includeBlendedBackgroundColors */ null,
+                /* includeTextColorOpacities */ null,
+            )
+        } catch (e: Exception) {
+            logger.warn("DOMSnapshot.captureSnapshot failed (legacy) | err={}", e.toString())
+            tracer?.debug("capture (legacy) exception", e)
+            return emptyList()
+        }
 
         val docs = capture.documents ?: emptyList()
         if (docs.isEmpty()) return emptyList()
@@ -246,13 +251,19 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
         includeDomRects: Boolean = true
     ): Map<Int, EnhancedSnapshotNode> {
         val computed = if (includeStyles) REQUIRED_COMPUTED_STYLES else emptyList()
-        val capture = domSnapshot.captureSnapshot(
-            computed,
-            /* includePaintOrder */ includePaintOrder,
-            /* includeDOMRects */ includeDomRects,
-            /* includeBlendedBackgroundColors */ null,
-            /* includeTextColorOpacities */ null,
-        )
+        val capture = try {
+            domSnapshot.captureSnapshot(
+                computed,
+                /* includePaintOrder */ includePaintOrder,
+                /* includeDOMRects */ includeDomRects,
+                /* includeBlendedBackgroundColors */ null,
+                /* includeTextColorOpacities */ null,
+            )
+        } catch (e: Exception) {
+            logger.warn("DOMSnapshot.captureSnapshot failed | err={}", e.toString())
+            tracer?.debug("captureByBackendNodeId exception", e)
+            return emptyMap()
+        }
 
         val byBackend = mutableMapOf<Int, EnhancedSnapshotNode>()
         val strings = capture.strings ?: emptyList()
@@ -328,6 +339,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
                 byBackend[backendId] = snap
             }
         }
+        tracer?.debug("Snapshot lookup built | entries={} styles={} paintOrder={}", byBackend.size, includeStyles, includePaintOrder)
         return byBackend
     }
 

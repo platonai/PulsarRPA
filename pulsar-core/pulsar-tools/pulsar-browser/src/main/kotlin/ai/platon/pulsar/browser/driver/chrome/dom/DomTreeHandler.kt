@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedDOMTreeNode
 import ai.platon.pulsar.browser.driver.chrome.dom.model.NodeType
 import ai.platon.pulsar.browser.driver.chrome.dom.model.PageTarget
+import ai.platon.pulsar.common.getLogger
 import kotlin.jvm.Volatile
 import com.github.kklisura.cdt.protocol.v2023.types.dom.Node as CdpNode
 
@@ -12,6 +13,8 @@ import com.github.kklisura.cdt.protocol.v2023.types.dom.Node as CdpNode
  * Fetches and converts CDP DOM tree to enhanced representation.
  */
 class DomTreeHandler(private val devTools: RemoteDevTools) {
+    private val logger = getLogger(this)
+    private val tracer get() = logger.takeIf { it.isTraceEnabled }
 
     @Volatile
     private var lastBackendLookup: Map<Int, EnhancedDOMTreeNode> = emptyMap()
@@ -20,20 +23,27 @@ class DomTreeHandler(private val devTools: RemoteDevTools) {
      * Expose the last backend-node lookup built during document fetch.
      */
     fun lastBackendNodeLookup(): Map<Int, EnhancedDOMTreeNode> = lastBackendLookup
-    
+
     /**
      * Get the full DOM document tree.
-     * 
+     *
+     * @param target Page/frame targeting info (frameId/targetId/sessionId)
      * @param maxDepth Maximum depth to traverse (0 means full tree)
-     * @return Enhanced DOM tree root node
+     * @return Enhanced DOM tree root node; returns an empty root on failure
      */
     fun getDocument(target: PageTarget?, maxDepth: Int = 0): EnhancedDOMTreeNode {
         val dom = devTools.dom
         val depth = maxDepth.takeIf { it > 0 }
-        val document = when {
-            dom == null -> null
-            depth != null -> dom.getDocument(depth, /* pierce */ true)
-            else -> dom.getDocument(null, /* pierce */ true)
+        val document = try {
+            when {
+                dom == null -> null
+                depth != null -> dom.getDocument(depth, /* pierce */ true)
+                else -> dom.getDocument(null, /* pierce */ true)
+            }
+        } catch (e: Exception) {
+            logger.warn("DOM.getDocument failed | frameId={} | err={}", target?.frameId, e.toString())
+            tracer?.debug("DOM.getDocument exception", e)
+            null
         }
 
         if (document == null) {
@@ -53,15 +63,19 @@ class DomTreeHandler(private val devTools: RemoteDevTools) {
         )
 
         lastBackendLookup = backendIndex
+        tracer?.debug(
+            "DOM tree collected | rootId={} backendIndexed={} depthLimit={}",
+            root.nodeId, backendIndex.size, maxDepth
+        )
         return root
     }
 
     /**
      * Map CDP Node to EnhancedDOMTreeNode recursively.
-     * 
+     *
      * @param node CDP node
      * @param depth Current depth in tree
-     * @param maxDepth Maximum depth to traverse
+     * @param maxDepth Maximum depth to traverse (0 = no limit)
      * @param frameId Frame ID for this node
      * @param targetId Target ID for this node
      * @param sessionId Session ID for this node
@@ -98,7 +112,7 @@ class DomTreeHandler(private val devTools: RemoteDevTools) {
             }
             else -> emptyList()
         }
-        
+
         // Process shadow roots if present
         val shadowRoots: List<EnhancedDOMTreeNode> = if (maxDepth == 0 || depth < maxDepth) {
             (node.shadowRoots ?: emptyList()).map {
@@ -115,7 +129,7 @@ class DomTreeHandler(private val devTools: RemoteDevTools) {
         } else {
             emptyList()
         }
-        
+
         // Process content document for iframes
         val contentDocument: EnhancedDOMTreeNode? = if (maxDepth == 0 || depth < maxDepth) {
             node.contentDocument?.let {
