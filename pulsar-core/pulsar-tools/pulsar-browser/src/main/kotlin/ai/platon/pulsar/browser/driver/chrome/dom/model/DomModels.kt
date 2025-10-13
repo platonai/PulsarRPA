@@ -121,7 +121,9 @@ data class EnhancedSnapshotNode(
     @JsonProperty("paint_order")
     val paintOrder: Int? = null,
     @JsonProperty("stacking_contexts")
-    val stackingContexts: Int? = null
+    val stackingContexts: Int? = null,
+    @JsonProperty("absolute_bounds")
+    val absoluteBounds: DOMRect? = null
 )
 
 /**

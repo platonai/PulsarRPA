@@ -3,6 +3,8 @@ package ai.platon.pulsar.browser.driver.chrome.dom
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedDOMTreeNode
 import ai.platon.pulsar.browser.driver.chrome.dom.model.NodeType
+import ai.platon.pulsar.browser.driver.chrome.dom.model.PageTarget
+import kotlin.jvm.Volatile
 import com.github.kklisura.cdt.protocol.v2023.types.dom.Node as CdpNode
 
 /**
@@ -10,6 +12,14 @@ import com.github.kklisura.cdt.protocol.v2023.types.dom.Node as CdpNode
  * Fetches and converts CDP DOM tree to enhanced representation.
  */
 class DomTreeHandler(private val devTools: RemoteDevTools) {
+
+    @Volatile
+    private var lastBackendLookup: Map<Int, EnhancedDOMTreeNode> = emptyMap()
+
+    /**
+     * Expose the last backend-node lookup built during document fetch.
+     */
+    fun lastBackendNodeLookup(): Map<Int, EnhancedDOMTreeNode> = lastBackendLookup
     
     /**
      * Get the full DOM document tree.
@@ -17,9 +27,33 @@ class DomTreeHandler(private val devTools: RemoteDevTools) {
      * @param maxDepth Maximum depth to traverse (0 means full tree)
      * @return Enhanced DOM tree root node
      */
-    fun getDocument(maxDepth: Int = 0): EnhancedDOMTreeNode {
-        val doc = devTools.dom.document ?: return EnhancedDOMTreeNode()
-        return mapNode(doc, 0, maxDepth, frameId = null, targetId = null, sessionId = null)
+    fun getDocument(target: PageTarget?, maxDepth: Int = 0): EnhancedDOMTreeNode {
+        val dom = devTools.dom
+        val depth = maxDepth.takeIf { it > 0 }
+        val document = when {
+            dom == null -> null
+            depth != null -> dom.getDocument(depth, /* pierce */ true)
+            else -> dom.getDocument(null, /* pierce */ true)
+        }
+
+        if (document == null) {
+            lastBackendLookup = emptyMap()
+            return EnhancedDOMTreeNode()
+        }
+
+        val backendIndex = mutableMapOf<Int, EnhancedDOMTreeNode>()
+        val root = mapNode(
+            node = document,
+            depth = 0,
+            maxDepth = maxDepth,
+            frameId = target?.frameId ?: document.frameId,
+            targetId = target?.targetId,
+            sessionId = target?.sessionId,
+            backendIndex = backendIndex
+        )
+
+        lastBackendLookup = backendIndex
+        return root
     }
 
     /**
@@ -39,7 +73,8 @@ class DomTreeHandler(private val devTools: RemoteDevTools) {
         maxDepth: Int,
         frameId: String?,
         targetId: String?,
-        sessionId: String?
+        sessionId: String?,
+        backendIndex: MutableMap<Int, EnhancedDOMTreeNode>
     ): EnhancedDOMTreeNode {
         // Parse attributes from CDP format (flat list: [name1, value1, name2, value2, ...])
         val attrs = (node.attributes ?: emptyList())
@@ -49,8 +84,16 @@ class DomTreeHandler(private val devTools: RemoteDevTools) {
         // Recursively process children if within depth limit
         val children: List<EnhancedDOMTreeNode> = when {
             maxDepth == 0 || depth < maxDepth -> {
-                (node.children ?: emptyList()).map { 
-                    mapNode(it, depth + 1, maxDepth, node.frameId ?: frameId, targetId, sessionId) 
+                (node.children ?: emptyList()).map {
+                    mapNode(
+                        it,
+                        depth + 1,
+                        maxDepth,
+                        node.frameId ?: frameId,
+                        targetId,
+                        sessionId,
+                        backendIndex
+                    )
                 }
             }
             else -> emptyList()
@@ -59,7 +102,15 @@ class DomTreeHandler(private val devTools: RemoteDevTools) {
         // Process shadow roots if present
         val shadowRoots: List<EnhancedDOMTreeNode> = if (maxDepth == 0 || depth < maxDepth) {
             (node.shadowRoots ?: emptyList()).map {
-                mapNode(it, depth + 1, maxDepth, node.frameId ?: frameId, targetId, sessionId)
+                mapNode(
+                    it,
+                    depth + 1,
+                    maxDepth,
+                    node.frameId ?: frameId,
+                    targetId,
+                    sessionId,
+                    backendIndex
+                )
             }
         } else {
             emptyList()
@@ -68,13 +119,21 @@ class DomTreeHandler(private val devTools: RemoteDevTools) {
         // Process content document for iframes
         val contentDocument: EnhancedDOMTreeNode? = if (maxDepth == 0 || depth < maxDepth) {
             node.contentDocument?.let {
-                mapNode(it, depth + 1, maxDepth, it.frameId ?: node.frameId ?: frameId, targetId, sessionId)
+                mapNode(
+                    it,
+                    depth + 1,
+                    maxDepth,
+                    it.frameId ?: node.frameId ?: frameId,
+                    targetId,
+                    sessionId,
+                    backendIndex
+                )
             }
         } else {
             null
         }
 
-        return EnhancedDOMTreeNode(
+        val enhanced = EnhancedDOMTreeNode(
             nodeId = node.nodeId ?: 0,
             backendNodeId = node.backendNodeId,
             nodeName = node.nodeName ?: "",
@@ -88,5 +147,9 @@ class DomTreeHandler(private val devTools: RemoteDevTools) {
             shadowRoots = shadowRoots,
             contentDocument = contentDocument
         )
+
+        enhanced.backendNodeId?.let { backendIndex[it] = enhanced }
+
+        return enhanced
     }
 }

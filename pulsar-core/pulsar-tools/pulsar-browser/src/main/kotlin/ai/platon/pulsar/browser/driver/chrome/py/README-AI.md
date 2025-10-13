@@ -181,36 +181,20 @@
 
 ---
 
-## 下一步开发计划（2025/10/11）
+## 下一步开发计划（2025/10/13）
 
-1. **补全 Handler 层功能**
-  - 完善 `AccessibilityHandler`，支持 frameId 过滤和 AX 树与 DOM/backendNodeId 关联。
-  - 完善 `DomSnapshotHandler`，实现 backendNodeId 到 EnhancedSnapshotNode 的高效映射。
+1. **强化 Handler 层与 AX 关联**
+  - 将 `AccessibilityHandler` 的 `TODO` 消除，补齐 selector 过滤与 scrollable 节点探测，保证 frameId → AXNode 映射稳定。
+  - 为 `DomSnapshotHandler` 增补 paint order、stacking context 解析与绝对坐标计算，给后续交互指数提供数据。
 
-2. **树合并与数据整合**
-  - 实现 DOM/AX/Snapshot 三棵树的合并逻辑，确保节点、frame、shadow/iframe 关联准确。
-  - 支持通过 SnapshotOptions 控制昂贵字段采集。
+2. **推进树合并与指标计算**
+  - 在 `ChromeCdpDomService.buildEnhancedDomTree` 中升级合并逻辑：补全 absolute bounds/interactivity index/paint order 汇入，重用 snapshot/AX map 减少重复遍历。
+  - 校准滚动与可见性判断，覆盖 iframe/body/html 与嵌套容器的去重策略，与 Python 实现逐条对照。
 
-3. **XPath 与哈希**
-  - 完善 XPath 生成，支持 shadow/iframe 边界、兄弟节点索引等，严格对齐 Python 行为。
-  - elementHash 支持 parent-branch 路径与 STATIC_ATTRIBUTES，预留 backendNodeId+sessionId 切换。
+3. **完善 XPath/哈希 与回溯缓存**
+  - 补充 shadow DOM、同级索引、iframe 边界等特殊 case，复刻 Python 停止条件；加强祖先缓存防止重复计算。
+  - 为 element hash 引入 parent-branch + STATIC_ATTRIBUTES + backend/session 的开关封装，便于灰度验证。
 
-4. **序列化与 LLM 支持**
-  - 完善 `DomLLMSerializer`，实现 includeAttributes 过滤、children_nodes/shadow_roots 去重。
-  - 构建 DOMSelectorMap（element_hash → node）。
-
-5. **滚动与交互增强**
-  - 对齐 Python 的 is_actually_scrollable、get_scroll_info_text 逻辑，完善嵌套滚动、iframe/body/html 特判。
-
-6. **兼容层与配置**
-  - 实现 application.properties 配置项，支持 dom.impl=kotlin|python 切换。
-  - 实现回退机制，异常时自动降级到 Python 实现。
-
-7. **测试与基线对齐**
-  - 固化 Python 采集的黄金样本，开发字段级 diff 工具。
-  - 增加单元、集成、端到端测试，覆盖复杂页面、iframe、shadow DOM、滚动等场景。
-  - 对齐输出 JSON 字段，确保兼容性。
-
-8. **文档与风险收尾**
-  - 完善开发文档、接口说明、迁移差异清单。
-  - 梳理已知风险与缓解措施，准备上线灰度方案。
+4. **扩展 LLM 序列化能力**
+  - 在 `DomLLMSerializer` 中加入 paint-order pruning、compound component 标记、attribute casing 对齐，确保 JSON 与 Python 版本字段一致。
+  - 构建 selector map 反查结构（hash/xpath/backendId 多键），并补充必要的序列化单测。

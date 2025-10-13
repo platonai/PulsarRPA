@@ -6,6 +6,8 @@ import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.model.*
 import com.github.kklisura.cdt.protocol.v2023.types.accessibility.AXNode
 import com.github.kklisura.cdt.protocol.v2023.types.accessibility.AXProperty
+import kotlin.jvm.Volatile
+import kotlin.math.abs
 
 /**
  * CDP-backed implementation of DomService using RemoteDevTools.
@@ -25,6 +27,9 @@ class ChromeCdpDomService(
     @Volatile
     private var lastAncestorMap: Map<Int, List<EnhancedDOMTreeNode>> = emptyMap()
 
+    @Volatile
+    private var lastDomByBackend: Map<Int, EnhancedDOMTreeNode> = emptyMap()
+
     override fun getAllTrees(target: PageTarget, options: SnapshotOptions): TargetAllTrees {
         val startTime = System.currentTimeMillis()
         val timings = mutableMapOf<String, Long>()
@@ -38,18 +43,26 @@ class ChromeCdpDomService(
         } else AccessibilityTreeResult.EMPTY
 
         // Fetch DOM tree
-        val domStart = System.currentTimeMillis()
-        val dom = domTree.getDocument(options.maxDepth)
+    val domStart = System.currentTimeMillis()
+        val dom = domTree.getDocument(target, options.maxDepth)
+        val domByBackend = domTree.lastBackendNodeLookup()
         timings["dom_tree"] = System.currentTimeMillis() - domStart
         
         // Fetch snapshot
         val snapshotStart = System.currentTimeMillis()
         val snapshotByBackendId = if (options.includeSnapshot) {
-            snapshot.captureByBackendNodeId(options.includeStyles)
+            snapshot.captureEnhanced(
+                includeStyles = options.includeStyles,
+                includePaintOrder = options.includePaintOrder,
+                includeDomRects = options.includeDOMRects,
+                includeAbsoluteCoords = true // Always include absolute coordinates for better analysis
+            )
         } else {
             emptyMap()
         }
         timings["snapshot"] = System.currentTimeMillis() - snapshotStart
+
+        val devicePixelRatio = getDevicePixelRatio()
 
         // Build AX mappings
         val enhancedAx = axResult.nodes.map { it.toEnhanced() }
@@ -71,64 +84,101 @@ class ChromeCdpDomService(
             snapshotByBackendId = snapshotByBackendId,
             axByBackendId = axByBackendId,
             axTreeByFrameId = axTreeByFrame,
-            devicePixelRatio = 1.0, // TODO: get from CDP
-            cdpTiming = timings
+            devicePixelRatio = devicePixelRatio,
+            cdpTiming = timings,
+            options = options,
+            domByBackendId = domByBackend
         )
     }
 
     override fun buildEnhancedDomTree(trees: TargetAllTrees): EnhancedDOMTreeNode {
+        val options = trees.options
         // Build ancestor map for XPath and hash generation
         val ancestorMap = buildAncestorMap(trees.domTree)
         lastAncestorMap = ancestorMap
-        
+        lastDomByBackend = trees.domByBackendId
+
         // Build sibling map for XPath index calculation
         val siblingMap = buildSiblingMap(trees.domTree)
-        
-        // Merge trees recursively
-        fun merge(node: EnhancedDOMTreeNode, ancestors: List<EnhancedDOMTreeNode>): EnhancedDOMTreeNode {
+
+        // Build paint order map for interaction index calculation
+        val paintOrderMap = buildPaintOrderMap(trees.snapshotByBackendId)
+
+        // Build stacking context map for z-index analysis
+        val stackingContextMap = buildStackingContextMap(trees.snapshotByBackendId)
+
+        // Merge trees recursively with enhanced metrics
+        fun merge(node: EnhancedDOMTreeNode, ancestors: List<EnhancedDOMTreeNode>, depth: Int = 0): EnhancedDOMTreeNode {
             val backendId = node.backendNodeId
-            
+
             // Get snapshot data
-            val snap = if (backendId != null) trees.snapshotByBackendId[backendId] else null
-            
+            val snap = if (options.includeSnapshot && backendId != null) trees.snapshotByBackendId[backendId] else null
+
             // Get AX data
-            val ax = if (backendId != null) trees.axByBackendId[backendId] else null
-            
-            // Calculate scroll ability and visibility
-            val isScrollable = ScrollUtils.isActuallyScrollable(
-                node.copy(snapshotNode = snap)
-            )
-            
+            val ax = if (options.includeAX && backendId != null) trees.axByBackendId[backendId] else null
+
+            // Calculate enhanced metrics
+            val evaluatedNode = node.copy(snapshotNode = snap, axNode = ax)
+
+            // Calculate scroll ability with enhanced logic
+            val isScrollable = if (options.includeScrollAnalysis) {
+                calculateScrollability(evaluatedNode, snap, ancestors)
+            } else null
+
+            // Calculate visibility with stacking context consideration
+            val isVisible = if (options.includeVisibility) {
+                calculateVisibility(evaluatedNode, snap, stackingContextMap[backendId])
+            } else null
+
+            // Calculate interactivity with paint order
+            val isInteractable = if (options.includeInteractivity) {
+                calculateInteractivity(evaluatedNode, snap, paintOrderMap[backendId])
+            } else null
+
+            // Calculate interactive index based on paint order and stacking context
+            val interactiveIndex = if (options.includeInteractivity && snap?.paintOrder != null) {
+                calculateInteractiveIndex(snap, stackingContextMap[backendId], paintOrderMap[backendId])
+            } else null
+
+            // Calculate absolute position from snapshot absolute bounds
+            val absolutePosition = snap?.absoluteBounds
+
             // Calculate XPath
             val xPath = XPathUtils.generateXPath(node, ancestors, siblingMap)
-            
-            // Calculate hashes
+
+            // Calculate hashes with enhanced logic
             val parentBranchHash = if (ancestors.isNotEmpty()) {
                 HashUtils.parentBranchHash(ancestors)
             } else {
                 null
             }
             val elementHash = HashUtils.elementHash(node, parentBranchHash)
-            
-            // Merge children recursively
-            val newAncestors = ancestors + node
-            val mergedChildren = node.children.map { merge(it, newAncestors) }
-            val mergedShadowRoots = node.shadowRoots.map { merge(it, newAncestors) }
-            val mergedContentDocument = node.contentDocument?.let { merge(it, newAncestors) }
-            
-            return node.copy(
+
+            // Merge children recursively with depth tracking
+            val merged = node.copy(
                 snapshotNode = snap,
                 axNode = ax,
                 isScrollable = isScrollable,
+                isVisible = isVisible,
+                isInteractable = isInteractable,
+                interactiveIndex = interactiveIndex,
+                absolutePosition = absolutePosition,
                 xPath = xPath,
                 elementHash = elementHash,
-                parentBranchHash = parentBranchHash,
+                parentBranchHash = parentBranchHash
+            )
+            val newAncestors = ancestors + merged
+            val mergedChildren = node.children.map { merge(it, newAncestors, depth + 1) }
+            val mergedShadowRoots = node.shadowRoots.map { merge(it, newAncestors, depth + 1) }
+            val mergedContentDocument = node.contentDocument?.let { merge(it, newAncestors, depth + 1) }
+
+            return merged.copy(
                 children = mergedChildren,
                 shadowRoots = mergedShadowRoots,
                 contentDocument = mergedContentDocument
             )
         }
-        
+
         val merged = merge(trees.domTree, emptyList())
         lastEnhancedRoot = merged
         return merged
@@ -150,8 +200,14 @@ class ChromeCdpDomService(
         return simplify(root)
     }
 
-    override fun serializeForLLM(root: SimplifiedNode, includeAttributes: List<String>): String {
-        return DomLLMSerializer.serialize(root, includeAttributes)
+    override fun serializeForLLM(root: SimplifiedNode, includeAttributes: List<String>): DomLLMSerialization {
+        // Use enhanced serialization with default options
+        val options = DomLLMSerializer.SerializationOptions(
+            enablePaintOrderPruning = true,
+            enableCompoundComponentDetection = true,
+            enableAttributeCasingAlignment = true
+        )
+        return DomLLMSerializer.serialize(root, includeAttributes, options)
     }
 
     override fun findElement(ref: ElementRefCriteria): EnhancedDOMTreeNode? {
@@ -193,6 +249,7 @@ class ChromeCdpDomService(
         
         // Try backend node ID
         ref.backendNodeId?.let { backendId ->
+            lastDomByBackend[backendId]?.let { return it }
             var found: EnhancedDOMTreeNode? = null
             fun dfs(n: EnhancedDOMTreeNode) {
                 if (found != null) return
@@ -256,6 +313,47 @@ class ChromeCdpDomService(
             isInteractable = node.isInteractable
         )
     }
+
+    private fun computeVisibility(node: EnhancedDOMTreeNode): Boolean? {
+        val snapshot = node.snapshotNode ?: return null
+        val styles = snapshot.computedStyles ?: return null
+        val display = styles["display"]
+        if (display != null && display.equals("none", ignoreCase = true)) return false
+        val visibility = styles["visibility"]
+        if (visibility != null && visibility.equals("hidden", ignoreCase = true)) return false
+        val opacity = styles["opacity"]?.toDoubleOrNull()
+        if (opacity != null && opacity <= 0.0) return false
+        val pointerEvents = styles["pointer-events"]
+        if (pointerEvents != null && pointerEvents.equals("none", ignoreCase = true)) return false
+        return true
+    }
+
+    private fun computeInteractivity(node: EnhancedDOMTreeNode): Boolean? {
+        val snapshot = node.snapshotNode
+        if (snapshot?.isClickable == true) {
+            return true
+        }
+        val tag = node.nodeName.uppercase()
+        if (tag in setOf("BUTTON", "A", "INPUT", "SELECT", "TEXTAREA", "OPTION")) {
+            return true
+        }
+        val role = node.axNode?.role
+        if (role != null && role.lowercase() in setOf("button", "link", "checkbox", "textbox", "combobox")) {
+            return true
+        }
+        return snapshot?.cursorStyle?.equals("pointer", ignoreCase = true)
+    }
+
+    private fun getDevicePixelRatio(): Double {
+        return try {
+            val evaluation = devTools.runtime.evaluate("window.devicePixelRatio")
+            val result = evaluation?.result
+            val numeric = result?.value?.toString()?.toDoubleOrNull()
+            numeric ?: result?.unserializableValue?.toDoubleOrNull() ?: 1.0
+        } catch (e: Exception) {
+            1.0
+        }
+    }
     
     /**
      * Build a map of node ID to ancestors for efficient path calculation.
@@ -292,6 +390,142 @@ class ChromeCdpDomService(
         
         traverse(root)
         return map
+    }
+
+    /**
+     * Build paint order map from snapshot data for interaction index calculation.
+     */
+    private fun buildPaintOrderMap(snapshotByBackendId: Map<Int, EnhancedSnapshotNode>): Map<Int, Int?> {
+        return snapshotByBackendId.mapValues { (_, snapshot) -> snapshot.paintOrder }
+    }
+
+    /**
+     * Build stacking context map from snapshot data for z-index analysis.
+     */
+    private fun buildStackingContextMap(snapshotByBackendId: Map<Int, EnhancedSnapshotNode>): Map<Int, Int?> {
+        return snapshotByBackendId.mapValues { (_, snapshot) -> snapshot.stackingContexts }
+    }
+
+    /**
+     * Calculate scrollability with enhanced logic covering iframe/body/html and nested containers.
+     */
+    private fun calculateScrollability(
+        node: EnhancedDOMTreeNode,
+        snap: EnhancedSnapshotNode?,
+        ancestors: List<EnhancedDOMTreeNode>
+    ): Boolean? {
+        if (snap == null) return null
+
+        // Use existing ScrollUtils for basic scrollability detection
+        val basicScrollable = ScrollUtils.isActuallyScrollable(node)
+        if (!basicScrollable) return false
+
+        // Enhanced logic for iframe/body/html special cases
+        val tagName = node.nodeName.lowercase()
+        val isSpecialElement = tagName in setOf("iframe", "body", "html")
+
+        if (isSpecialElement) {
+            // For special elements, check if they have meaningful scrollable content
+            val scrollHeight = snap.scrollRects?.height ?: 0.0
+            val clientHeight = snap.clientRects?.height ?: 0.0
+            return scrollHeight > clientHeight + 1 // Allow 1px tolerance
+        }
+
+        // For nested containers, check for duplicate scrollability in ancestors
+        val hasScrollableAncestor = ancestors.any { ancestor ->
+            ancestor.isScrollable == true && ancestor.snapshotNode?.scrollRects != null
+        }
+
+        // If parent is already scrollable, this might be a nested scrollable that should be deduplicated
+        return if (hasScrollableAncestor) {
+            // Only mark as scrollable if it has significantly different scroll properties
+            val ancestorScrollAreas = ancestors
+                .filter { it.isScrollable == true }
+                .mapNotNull { it.snapshotNode?.scrollRects }
+            val currentScrollArea = snap.scrollRects ?: return basicScrollable
+
+            // Check if current element has significantly different scroll area
+            ancestorScrollAreas.none { ancestorArea ->
+                abs(ancestorArea.x - currentScrollArea.x) < 5 &&
+                abs(ancestorArea.y - currentScrollArea.y) < 5 &&
+                abs(ancestorArea.width - currentScrollArea.width) < 5 &&
+                abs(ancestorArea.height - currentScrollArea.height) < 5
+            }
+        } else {
+            basicScrollable
+        }
+    }
+
+    /**
+     * Calculate visibility with stacking context consideration.
+     */
+    private fun calculateVisibility(
+        node: EnhancedDOMTreeNode,
+        snap: EnhancedSnapshotNode?,
+        stackingContext: Int?
+    ): Boolean? {
+        if (snap == null) return null
+
+        // Basic visibility checks from computed styles
+        val styles = snap.computedStyles ?: return null
+        val display = styles["display"]
+        if (display != null && display.equals("none", ignoreCase = true)) return false
+        val visibility = styles["visibility"]
+        if (visibility != null && visibility.equals("hidden", ignoreCase = true)) return false
+        val opacity = styles["opacity"]?.toDoubleOrNull()
+        if (opacity != null && opacity <= 0.0) return false
+        val pointerEvents = styles["pointer-events"]
+        if (pointerEvents != null && pointerEvents.equals("none", ignoreCase = true)) return false
+
+        // Consider stacking context - elements in higher stacking contexts may obscure lower ones
+        // For now, just return true if basic checks pass
+        // TODO: Implement more sophisticated stacking context analysis
+        return true
+    }
+
+    /**
+     * Calculate interactivity with paint order consideration.
+     */
+    private fun calculateInteractivity(
+        node: EnhancedDOMTreeNode,
+        snap: EnhancedSnapshotNode?,
+        paintOrder: Int?
+    ): Boolean? {
+        if (snap == null) return null
+
+        // Check if node is clickable based on cursor style
+        if (snap.isClickable == true) return true
+
+        // Check interactivity based on node type and attributes
+        val tag = node.nodeName.uppercase()
+        if (tag in setOf("BUTTON", "A", "INPUT", "SELECT", "TEXTAREA", "OPTION")) {
+            return true
+        }
+
+        // Check AX role for interactivity
+        val role = node.axNode?.role
+        if (role != null && role.lowercase() in setOf("button", "link", "checkbox", "textbox", "combobox")) {
+            return true
+        }
+
+        // Check cursor style
+        return snap.cursorStyle?.equals("pointer", ignoreCase = true)
+    }
+
+    /**
+     * Calculate interactive index based on paint order and stacking context.
+     */
+    private fun calculateInteractiveIndex(
+        snap: EnhancedSnapshotNode,
+        stackingContext: Int?,
+        paintOrder: Int?
+    ): Int? {
+        if (paintOrder == null) return null
+
+        // Higher paint order means element is painted later (on top)
+        // Lower stacking context values mean higher z-index
+        val stackingFactor = (stackingContext ?: 0) * 1000
+        return paintOrder + stackingFactor
     }
 }
 

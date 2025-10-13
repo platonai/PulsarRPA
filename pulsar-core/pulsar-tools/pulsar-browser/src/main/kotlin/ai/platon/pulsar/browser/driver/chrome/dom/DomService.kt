@@ -23,7 +23,7 @@ interface DomService {
      * Serialize SimplifiedNode tree for LLM consumption.
      * Maps to Python DOMTreeSerializer.serialize_for_llm
      */
-    fun serializeForLLM(root: SimplifiedNode, includeAttributes: List<String> = emptyList()): String
+    fun serializeForLLM(root: SimplifiedNode, includeAttributes: List<String> = emptyList()): DomLLMSerialization
     
     /**
      * Find an element by various criteria (CSS selector, XPath, element hash).

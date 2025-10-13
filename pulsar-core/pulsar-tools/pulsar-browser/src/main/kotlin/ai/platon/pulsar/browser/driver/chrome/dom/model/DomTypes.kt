@@ -30,7 +30,13 @@ data class SnapshotOptions(
     @JsonProperty("include_paint_order")
     val includePaintOrder: Boolean = true,
     @JsonProperty("include_dom_rects")
-    val includeDOMRects: Boolean = true
+    val includeDOMRects: Boolean = true,
+    @JsonProperty("include_scroll_analysis")
+    val includeScrollAnalysis: Boolean = true,
+    @JsonProperty("include_visibility")
+    val includeVisibility: Boolean = true,
+    @JsonProperty("include_interactivity")
+    val includeInteractivity: Boolean = true
 )
 
 /**
@@ -48,6 +54,7 @@ data class TargetAllTrees(
     val devicePixelRatio: Double = 1.0,
     @JsonProperty("cdp_timing")
     val cdpTiming: Map<String, Long> = emptyMap(),
+    val options: SnapshotOptions = SnapshotOptions(),
     
     // Internal mappings for merging
     @JsonProperty("snapshot_by_backend_id")
@@ -55,7 +62,9 @@ data class TargetAllTrees(
     @JsonProperty("ax_by_backend_id")
     val axByBackendId: Map<Int, EnhancedAXNode> = emptyMap(),
     @JsonProperty("ax_tree_by_frame_id")
-    val axTreeByFrameId: Map<String, List<EnhancedAXNode>> = emptyMap()
+    val axTreeByFrameId: Map<String, List<EnhancedAXNode>> = emptyMap(),
+    @JsonProperty("dom_by_backend_id")
+    val domByBackendId: Map<Int, EnhancedDOMTreeNode> = emptyMap()
 )
 
 /**

@@ -14,25 +14,151 @@ class AccessibilityHandler(
     private val pageAPI get() = devTools.page.takeIf { isActive }
     private val accessibilityAPI get() = devTools.accessibility.takeIf { isActive }
 
-    fun getAccessibilityTree(selector: String? = null, targetFrameId: String? = null) {
-        // 1. Decide params
-        val mainFrame = pageAPI?.frameTree?.frame
-        if (targetFrameId != null && targetFrameId != mainFrame?.id) {
-            // detect frame id
-            TODO("Frame will be supported in the later version")
+    /**
+     * Get accessibility tree with optional selector filtering and scrollable detection.
+     *
+     * @param selector Optional CSS selector to filter nodes
+     * @param targetFrameId Optional frame ID to target specific frame
+     * @return Accessibility tree result with filtered nodes
+     */
+    fun getAccessibilityTree(selector: String? = null, targetFrameId: String? = null): AccessibilityTreeResult {
+        // 1. Fetch raw AX nodes using getFullAXTree
+        val axResult = getFullAXTreeRecursive(targetFrameId, depth = null)
+
+        if (selector.isNullOrBlank()) {
+            return axResult
         }
 
-        // 2. Fetch raw AX nodes using getFullAXTree
-        val nodes = getFullAXTree(null, targetFrameId)
-
-        // 3. Scrollable detection
-//        val scrollableIds = findScrollableElementIds(
-//            targetFrameId,
-//        );
+        // 2. Apply selector filtering if provided
+        return filterNodesBySelector(axResult, selector)
     }
 
-    fun findScrollableElementIds(targetFrameId: String? = null) {
+    /**
+     * Filter accessibility nodes by CSS selector.
+     * This uses Runtime.evaluate to find matching DOM nodes and then filters AX nodes by backendNodeId.
+     */
+    private fun filterNodesBySelector(axResult: AccessibilityTreeResult, selector: String): AccessibilityTreeResult {
+        val runtime = devTools.runtime.takeIf { isActive } ?: return axResult
 
+        // Find DOM nodes matching the selector
+        val evaluation = runtime.evaluate("""
+            Array.from(document.querySelectorAll('$selector')).map(el => {
+                const id = el.backendNodeId || (() => {
+                    const walker = document.createTreeWalker(
+                        document,
+                        NodeFilter.SHOW_ELEMENT,
+                        null,
+                        false
+                    );
+                    let node;
+                    while (node = walker.nextNode()) {
+                        if (node === el) return node.backendNodeId;
+                    }
+                    return null;
+                })();
+                return id;
+            }).filter(id => id != null)
+        """.trimIndent())
+
+        val matchingBackendIds = try {
+            evaluation?.result?.value?.toString()
+                ?.removeSurrounding("[", "]")
+                ?.split(",")
+                ?.mapNotNull { it.trim().toIntOrNull() }
+                ?: emptyList()
+        } catch (e: Exception) {
+            emptyList()
+        }
+
+        if (matchingBackendIds.isEmpty()) {
+            return AccessibilityTreeResult.EMPTY
+        }
+
+        // Filter AX nodes by matching backendNodeIds
+        val filteredNodes = axResult.nodes.filter { node ->
+            node.backendDOMNodeId in matchingBackendIds
+        }
+
+        return AccessibilityTreeResult(
+            nodes = filteredNodes,
+            nodesByFrameId = filteredNodes.groupBy { it.frameId ?: "" },
+            nodesByBackendNodeId = filteredNodes.groupBy { it.backendDOMNodeId ?: -1 }
+        )
+    }
+
+    /**
+     * Find scrollable element IDs using AX properties and DOM evaluation.
+     *
+     * @param targetFrameId Optional frame ID to target specific frame
+     * @return List of backend node IDs that are scrollable
+     */
+    fun findScrollableElementIds(targetFrameId: String? = null): List<Int> {
+        val axResult = getFullAXTreeRecursive(targetFrameId, depth = null)
+        val runtime = devTools.runtime.takeIf { isActive }
+
+        if (axResult.nodes.isEmpty() || runtime == null) {
+            return emptyList()
+        }
+
+        val scrollableBackendIds = mutableSetOf<Int>()
+
+        // First pass: identify scrollable nodes from AX properties
+        axResult.nodes.forEach { node ->
+            val backendId = node.backendDOMNodeId ?: return@forEach
+
+            // Check if AX node indicates scrollable
+            val isScrollableAX = node.properties?.any { prop ->
+                prop.name.toString().lowercase() == "scrollable" &&
+                prop.value?.value == true
+            } ?: false
+
+            if (isScrollableAX) {
+                scrollableBackendIds.add(backendId)
+            }
+        }
+
+        // Second pass: verify with DOM evaluation for additional scrollable elements
+        try {
+            val evaluation = runtime.evaluate("""
+                (() => {
+                    const scrollables = [];
+                    const walker = document.createTreeWalker(
+                        document,
+                        NodeFilter.SHOW_ELEMENT,
+                        null,
+                        false
+                    );
+
+                    let node;
+                    while (node = walker.nextNode()) {
+                        const style = window.getComputedStyle(node);
+                        const hasOverflow = style.overflow === 'auto' ||
+                                          style.overflow === 'scroll' ||
+                                          style.overflowX === 'auto' ||
+                                          style.overflowX === 'scroll' ||
+                                          style.overflowY === 'auto' ||
+                                          style.overflowY === 'scroll';
+
+                        if (hasOverflow && node.scrollHeight > node.clientHeight + 1) {
+                            scrollables.push(node.backendNodeId);
+                        }
+                    }
+                    return scrollables;
+                })()
+            """.trimIndent())
+
+            val additionalIds = evaluation?.result?.value?.toString()
+                ?.removeSurrounding("[", "]")
+                ?.split(",")
+                ?.mapNotNull { it.trim().toIntOrNull() }
+                ?: emptyList()
+
+            scrollableBackendIds.addAll(additionalIds)
+        } catch (e: Exception) {
+            // Fallback to AX-only detection
+        }
+
+        return scrollableBackendIds.toList()
     }
 
     /**
@@ -55,7 +181,12 @@ class AccessibilityHandler(
     fun getFullAXTreeRecursive(targetFrameId: String? = null, depth: Int? = null): AccessibilityTreeResult {
         val page = pageAPI ?: return AccessibilityTreeResult.EMPTY
         val accessibility = accessibilityAPI ?: return AccessibilityTreeResult.EMPTY
-        val frameTree = page.frameTree ?: return AccessibilityTreeResult.EMPTY
+
+        val frameTree = try {
+            page.getFrameTree()
+        } catch (e: Exception) {
+            page.frameTree
+        } ?: return AccessibilityTreeResult.EMPTY
 
         val frameById = linkedMapOf<String, FrameTree>()
         collectFrameTree(frameTree, frameById)
@@ -80,7 +211,11 @@ class AccessibilityHandler(
         val byBackend = LinkedHashMap<Int, MutableList<AXNode>>()
 
         frameIds.forEach { frameId ->
-            val nodes = accessibility.getFullAXTree(depth, frameId)
+            val nodes = runCatching { accessibility.getFullAXTree(depth, frameId) }
+                .getOrElse { emptyList() }
+            if (nodes.isEmpty()) {
+                return@forEach
+            }
             val frameBucket = byFrame.getOrPut(frameId) { mutableListOf() }
             nodes.forEach { node ->
                 val stamped = stampFrameId(node, frameId)
