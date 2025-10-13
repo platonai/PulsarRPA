@@ -190,6 +190,47 @@
 - **M7 性能与鲁棒性**：尚无压测或 retry 策略验证，待端到端测试覆盖大页面。
 - **M8 对齐验证**：缺少 Kotlin 黄金基线 diff 管道，CI 未接入验证流程。
 
+## 九、现状对照与完成度（截至 2025/10/13）
+本节对照本文开发计划，盘点当前实现与缺口，便于审阅与下一步推进。
+
+- 接口与服务层
+  - 存在 `DomService.kt`（接口）与 `ChromeCdpDomService.kt`（CDP 实现），方法覆盖：
+    - getAllTrees、buildEnhancedDomTree、buildSimplifiedTree、serializeForLLM、findElement、toInteractedElement。
+  - `ChromeCdpDomService` 已整合 AX/DOM/Snapshot，计算 XPath/哈希、可见性/可交互性等增强指标，并输出 `DomLLMSerializer` 结果。
+
+- Handler 层
+  - `AccessibilityHandler.kt`：
+    - 已实现 getFullAXTreeRecursive（遍历 FrameTree 并为 AXNode 打上 frameId），
+      selector 过滤（通过 Runtime.evaluate 获取 backendNodeId 后过滤 AX），
+      scrollable 元素探测（AX 属性 + DOM 样式与滚动高度二次验证）。
+  - `DomTreeHandler.kt`：
+    - 已封装 DOM.getDocument（支持 maxDepth、pierce），递归映射 children/shadowRoots/contentDocument；
+      构建了 backendNodeId → EnhancedDOMTreeNode 的回查索引（lastBackendNodeLookup）。
+  - `DomSnapshotHandler.kt`：
+    - 已封装 captureByBackendNodeId 与 captureEnhanced：
+      - 采集 REQUIRED/EXTENDED 计算样式、bounds/scrollRects/clientRects、paintOrder、stackingContexts；
+      - 计算 absoluteBounds（结合 viewport 与样式 position/top/left 简化版），为交互指数奠基。
+
+- 序列化层
+  - `DomLLMSerializer.kt`：
+    - 提供 SerializationOptions，已实现 paint-order pruning、compound component 检测、attribute casing 对齐；
+      输出 `DomLLMSerialization`（含 selectorMap）供上层反查。
+
+- 测试现状（以 pulsar-browser 模块内测试为准）
+  - 已有：
+    - `AccessibilityHandlerTests.kt`
+    - `dom/DomLLMSerializerTest.kt`
+    - `dom/HashUtilsTest.kt` 与 `dom/HashUtilsTests.kt`
+    - `dom/ScrollUtilsTest.kt`
+  - 缺口：
+    - `DomSnapshotHandlerTests.kt` 尚未落地（README 计划中提及）。
+    - DomService 级别的端到端（E2E）集成测试尚未固化在 `pulsar-tests` 模块。
+
+- 与计划的差距与风险
+  - 需要补充黄金样本（Python 基线）与字段级 diff 工具链（可作为 pulsar-tests 的对齐子套件）。
+  - 滚动性/可见性判定仍需对照 Python 特判（iframe/body/html、嵌套滚动去重）。
+  - 应用级开关（application.properties: `pulsar.dom.impl`) 的落地与回退路径需要核验。
+
 ## 十、产出物清单
 - 接口与实现
   - ai/platon/pulsar/browser/driver/chrome/dom/DomService.kt
@@ -206,6 +247,61 @@
   - 单测：哈希/XPath/滚动信息/序列化/Handler
   - 集成：端到端抓取与比对（参考 CDP 与 MockSite2 测试）
   - 基准：黄金样本与 diff 工具
+
+## 十一、端到端（E2E）测试设计与执行指南
+为确保 Kotlin DomService 与 Python 版在语义与输出上的对齐，设计如下 E2E 测试方案（优先落地于 `pulsar-tests` 模块，必要时模块内先行验证）。
+
+- 测试目标与成功准则（Contract）
+  - 输入：URL + SnapshotOptions；输出：TargetAllTrees、EnhancedDOMTree、LLM JSON。
+  - 必须满足：
+    - devicePixelRatio > 0；DOM 节点数 > 0。
+    - includeAX=true 时，AX 节点关联 backendNodeId 比例 > 95%。
+    - includeSnapshot=true 时，存在 bounds/clientRects/scrollRects/paintOrder 等关键字段。
+    - XPath 与 parentBranchHash 稳定（同页面多次采集 hash 不变）。
+    - findElement 可通过 CSS、backendNodeId、elementHash 找回同一元素。
+    - 交互性：常见可点击元素（button/a/input/select）被标记为可交互；
+      滚动性：含 overflow 且 scrollHeight>clientHeight 的容器被标记为可滚动并生成 scroll_info。
+
+- 场景集合（建议）
+  - 基础：无 iframe/无 shadow 的静态页，覆盖文本/表单/按钮/长列表。
+  - 复合：含 1 层 iframe；含 shadow DOM；
+  - 滚动：长列表 + overflow 容器；
+  - 可交互：表单、多按钮、导航菜单；
+  - 可选：复杂站点样本（用于黄金基线，对比宽容浮点/顺序）。
+  - 资源建议：优先使用 `pulsar-tests` 已有 Mock 站点或在 `pulsar-tests/src/test/resources/e2e/` 下提供静态 HTML 资源。
+
+- 测试落地（建议类与断言）
+  - 位置：`pulsar-tests/src/test/kotlin/ai/platon/pulsar/browser/dom/e2e/`
+  - 类：`DomServiceE2ETests.kt`（可拆分多文件）
+    - testGetAllTreesAndMerge_basic：导航 → getAllTrees → buildEnhancedDomTree → 断言节点数/AX 关联/快照关键字段。
+    - testSerializeForLLM_roundtrip：buildSimplifiedTree → serializeForLLM → 校验 JSON 非空、selectorMap 能反查按钮节点。
+    - testFindElement_variants：基于 CSS/XPath/elementHash/backendNodeId 找回同一元素。
+    - testScrollAndVisibility_rules：含 iframe/body/html、嵌套容器的滚动/可见性特判符合期望。
+    - testPaintOrderAndInteractiveIndex：paintOrder 存在时交互指数可计算且排序稳定。
+  - Python 黄金基线（可选门控）：
+    - 环境变量 `PULSAR_E2E_BASELINE_DIR` 指定 Python 输出目录，若存在则做字段级 diff（容忍小数误差、集合排序差异）。
+
+- 运行方式（Windows/cmd）
+  - 模块内快速回归：
+    ```bat
+    mvnw.cmd -pl pulsar-core/pulsar-tools/pulsar-browser -am -Dtest=AccessibilityHandlerTests,DomLLMSerializerTest test
+    ```
+  - 仅运行 E2E（落地后）：
+    ```bat
+    mvnw.cmd -pl pulsar-tests -am -Dtest=DomServiceE2E* test
+    ```
+  - 全量校验：
+    ```bat
+    mvnw.cmd -Pall-modules test
+    ```
+
+- 配置与开关
+  - 推荐通过 `application-private.properties` 或运行参数启用 Kotlin 实现：`-Dpulsar.dom.impl=kotlin`；
+    includeAttributes / maxDepth / snapshot 开关参考本文第七节示例项。
+
+- 指标与日志
+  - 关注 cdp_timing（ax_tree/dom_tree/snapshot/total），在 95 百分位内与 Python 版相近；
+  - 若发生差异，输出节点级差异摘要（节点计数、frame 分布、关键字段缺失统计）。
 
 ## 附录 A：Python 视图模型要点（来自 views.py）
 - NodeType、DOMRect、EnhancedAXNode、EnhancedSnapshotNode、EnhancedDOMTreeNode、SimplifiedNode、DOMInteractedElement 结构与行为是 Kotlin 映射基准。

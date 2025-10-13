@@ -53,7 +53,7 @@ object DomLLMSerializer {
         val compoundComponentMinChildren: Int = 3,
         val preserveOriginalCasing: Boolean = false
     )
-    
+
     /**
      * Enhanced buildSerializable with paint-order pruning and compound component detection.
      */
@@ -91,15 +91,9 @@ object DomLLMSerializer {
             false
         }
 
-        // Recursively serialize children with enhanced logic
+        // Recursively serialize children with enhanced logic (do not filter; prune per-node)
         val childAncestors = ancestors + node.originalNode
-        val filteredChildren = if (options.enablePaintOrderPruning) {
-            filterChildrenByPaintOrder(node.children, options)
-        } else {
-            node.children
-        }
-
-        val serializedChildren = filteredChildren.map {
+        val serializedChildren = node.children.map {
             buildSerializableEnhanced(it, includeAttributes, childAncestors, selectorMap, options, depth + 1)
         }
 
@@ -122,18 +116,6 @@ object DomLLMSerializer {
     private fun shouldPruneByPaintOrder(node: SimplifiedNode, options: SerializationOptions): Boolean {
         val paintOrder = node.originalNode.snapshotNode?.paintOrder ?: return false
         return paintOrder > options.maxPaintOrderThreshold
-    }
-
-    /**
-     * Filter children based on paint order for performance optimization.
-     */
-    private fun filterChildrenByPaintOrder(children: List<SimplifiedNode>, options: SerializationOptions): List<SimplifiedNode> {
-        if (!options.enablePaintOrderPruning) return children
-
-        return children.filter { child ->
-            val paintOrder = child.originalNode.snapshotNode?.paintOrder
-            paintOrder == null || paintOrder <= options.maxPaintOrderThreshold
-        }
     }
 
     /**
@@ -165,9 +147,7 @@ object DomLLMSerializer {
             originalNode.nodeName.contains("-") -> true
 
             // Check for ARIA roles that indicate compound components
-            originalNode.axNode?.role?.let { role ->
-                role in setOf("list", "grid", "tree", "tablist", "menu", "toolbar", "navigation")
-            } ?: false
+            originalNode.axNode?.role in setOf("list", "grid", "tree", "tablist", "menu", "toolbar", "navigation") -> true
 
             else -> false
         }
@@ -219,7 +199,7 @@ object DomLLMSerializer {
             scrollInfoText = null
         )
     }
-    
+
     /**
      * Enhanced cleanOriginalNode with attribute casing alignment and improved filtering.
      */
@@ -337,6 +317,7 @@ object DomLLMSerializer {
             else -> lowerName
         }
     }
+
     private fun cleanOriginalNode(
         node: EnhancedDOMTreeNode,
         includeAttributes: Set<String>
@@ -345,7 +326,7 @@ object DomLLMSerializer {
         val filteredAttrs = node.attributes.filterKeys { key ->
             key.lowercase() in includeAttributes
         }
-        
+
         // Extract AX attributes if present
         val axAttrs = mutableMapOf<String, Any>()
         node.axNode?.let { ax ->
@@ -358,16 +339,16 @@ object DomLLMSerializer {
                 }
             }
         }
-        
+
         // Merge DOM and AX attributes
         val mergedAttrs = filteredAttrs + axAttrs
-        
+
         // Get snapshot info
         val snapshot = node.snapshotNode
         val bounds = snapshot?.bounds
         val clientRects = snapshot?.clientRects
         val scrollRects = snapshot?.scrollRects
-        
+
         return CleanedOriginalNode(
             nodeId = node.nodeId,
             backendNodeId = node.backendNodeId,
@@ -390,7 +371,7 @@ object DomLLMSerializer {
             contentDocument = node.contentDocument?.let { cleanOriginalNode(it, includeAttributes) }
         )
     }
-    
+
     /**
      * Serializable SimplifiedNode structure.
      * Enhanced with compound component marking and paint order information.
@@ -416,7 +397,7 @@ object DomLLMSerializer {
         @JsonProperty("scroll_info_text")
         val scrollInfoText: String?
     )
-    
+
     /**
      * Cleaned original node without children_nodes and shadow_roots.
      * Enhanced with additional snapshot information for LLM consumption.
@@ -466,7 +447,6 @@ object DomLLMSerializer {
         val contentDocument: CleanedOriginalNode?
         // Note: children_nodes and shadow_roots are intentionally omitted
     )
-}
 
     /**
      * Add node to enhanced selector map with multiple lookup keys.
@@ -497,6 +477,8 @@ object DomLLMSerializer {
         selectorMap.putIfAbsent("node:${node.nodeId}", node)
     }
 }
+
+// Keep the serialization result as a top-level data class for reuse
 
 data class DomLLMSerialization(
     val json: String,

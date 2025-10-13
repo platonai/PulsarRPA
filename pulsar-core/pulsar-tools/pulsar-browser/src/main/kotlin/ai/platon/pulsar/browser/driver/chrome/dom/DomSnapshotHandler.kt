@@ -10,9 +10,9 @@ import com.github.kklisura.cdt.protocol.v2023.commands.DOMSnapshot
  * Captures and processes layout snapshots with style and rect information.
  */
 class DomSnapshotHandler(private val devTools: RemoteDevTools) {
-    
+
     private val domSnapshot: DOMSnapshot get() = devTools.domSnapshot
-    
+
     /**
      * Enhanced capture with absolute coordinates and stacking context analysis.
      * This method provides comprehensive layout information for interaction indices.
@@ -105,7 +105,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
 
                 // Calculate absolute coordinates if requested
                 val absoluteBounds = if (includeAbsoluteCoords && viewportBounds != null) {
-                    val boundsRect = DOMRect.fromBoundsArray(bounds.getOrNull(row) ?: emptyList())
+                    val boundsRect = DOMRect.fromBoundsArray(bounds.getOrNull(row) ?: emptyList())!!
                     calculateAbsoluteCoordinates(boundsRect, viewportBounds, styles)
                 } else null
 
@@ -234,9 +234,9 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
     /**
      * Build a mapping from backendNodeId to EnhancedSnapshotNode.
      * This is the primary method for associating snapshot data with DOM nodes.
-     * 
+     *
      * Maps to Python build_snapshot_lookup function.
-     * 
+     *
      * @param includeStyles Whether to capture computed styles
      * @return Map of backendNodeId to snapshot data
      */
@@ -256,7 +256,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
 
         val byBackend = mutableMapOf<Int, EnhancedSnapshotNode>()
         val strings = capture.strings ?: emptyList()
-        
+
         for (doc in capture.documents ?: emptyList()) {
             val nodeTree = doc.nodes ?: continue
             val layout = doc.layout ?: continue
@@ -308,12 +308,12 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
             for (row in 0 until rows) {
                 val nIdx = nodeIndex.getOrNull(row) ?: continue
                 val backendId = backendIds.getOrNull(nIdx) ?: continue
-                
+
                 // Extract cursor and clickability from styles
                 val styles = styleMaps.getOrNull(row) ?: emptyMap()
                 val cursor = styles["cursor"]
                 val isClickable = cursor in setOf("pointer", "hand")
-                
+
                 val snap = EnhancedSnapshotNode(
                     isClickable = isClickable,
                     cursorStyle = cursor,
@@ -324,7 +324,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
                     paintOrder = paintOrders.getOrNull(row),
                     stackingContexts = stackingContexts.getOrNull(row)
                 )
-                
+
                 byBackend[backendId] = snap
             }
         }

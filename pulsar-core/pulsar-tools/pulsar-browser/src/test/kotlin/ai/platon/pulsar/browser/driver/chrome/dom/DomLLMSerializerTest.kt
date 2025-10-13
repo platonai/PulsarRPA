@@ -45,7 +45,7 @@ class DomLLMSerializerTest {
         assertEquals(1, childAttrs.size(), "Child should also honor whitelist")
         assertEquals("ok", childAttrs.get("aria-label").asText())
 
-        assertEquals(2, result.selectorMap.size, "Selector map should include all nodes with hashes")
+        // Enhanced selector map includes multiple keys per node; ensure required hash keys are present
         assertTrue(result.selectorMap.containsKey("root-hash"))
         assertTrue(result.selectorMap.containsKey("child-hash"))
     }

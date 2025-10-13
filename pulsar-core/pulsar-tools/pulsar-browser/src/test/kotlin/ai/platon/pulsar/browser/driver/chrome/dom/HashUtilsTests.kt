@@ -1,7 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome.dom
 
 import ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedDOMTreeNode
-import ai.platon.pulsar.browser.driver.chrome.dom.model.NodeType
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -58,9 +57,8 @@ class HashUtilsTests {
         val defaultHash = HashUtils.elementHash(node, null, HashUtils.DEFAULT_CONFIG)
 
         // Assert
-        assertNotEquals(legacyHash, defaultHash) // Should be different
-        assertFalse(legacyHash.contains("backend"))
-        assertFalse(legacyHash.contains("session"))
+        assertNotEquals(legacyHash, defaultHash) // Should be different when backend/session exist
+        assertEquals(64, legacyHash.length)
     }
 
     @Test
@@ -78,11 +76,24 @@ class HashUtilsTests {
         val backendHash = HashUtils.elementHash(node, null, HashUtils.BACKEND_NODE_CONFIG)
         val defaultHash = HashUtils.elementHash(node, null, HashUtils.DEFAULT_CONFIG)
 
-        // Assert
+        // Assert basic difference
         assertNotEquals(backendHash, defaultHash)
-        assertTrue(backendHash.contains("backend:12345"))
-        assertTrue(backendHash.contains("session:session-123"))
-        assertFalse(backendHash.contains("id=submit-btn")) // Should not include static attributes
+        assertEquals(64, backendHash.length)
+
+        // Changing static attributes should NOT change the backend-node-config hash
+        val nodeWithDifferentAttrs = node.copy(attributes = mapOf("id" to "x", "class" to "y z"))
+        val backendHashAttrChanged = HashUtils.elementHash(nodeWithDifferentAttrs, null, HashUtils.BACKEND_NODE_CONFIG)
+        assertEquals(backendHash, backendHashAttrChanged)
+
+        // Changing backendNodeId SHOULD change the hash
+        val nodeWithDifferentBackend = node.copy(backendNodeId = 54321)
+        val backendHashBackendChanged = HashUtils.elementHash(nodeWithDifferentBackend, null, HashUtils.BACKEND_NODE_CONFIG)
+        assertNotEquals(backendHash, backendHashBackendChanged)
+
+        // Changing sessionId SHOULD change the hash (since config uses session)
+        val nodeWithDifferentSession = node.copy(sessionId = "session-456")
+        val backendHashSessionChanged = HashUtils.elementHash(nodeWithDifferentSession, null, HashUtils.BACKEND_NODE_CONFIG)
+        assertNotEquals(backendHash, backendHashSessionChanged)
     }
 
     @Test
@@ -122,8 +133,6 @@ class HashUtilsTests {
 
         // Assert
         // The hash should be deterministic based on the static attributes
-        val expectedComponents = listOf("input", "class=form-input", "id=username", "type=text")
-        // We can't directly inspect the hash content, but we can verify it's consistent
         val hash2 = HashUtils.elementHash(node, null, HashUtils.DEFAULT_CONFIG)
         assertEquals(hash, hash2)
     }
@@ -192,17 +201,14 @@ class HashUtilsTests {
     @Test
     fun `parentBranchHash handles special elements correctly`() {
         // Arrange
-        val ancestors = listOf(
-            EnhancedDOMTreeNode(nodeId = 1, nodeName = "DIV").apply {
-                // Simulate shadow host
-                java.lang.reflect.Field::class.java.getDeclaredMethod("set", Any::class.java, Any::class.java).let { method ->
-                    method.isAccessible = true
-                    method.invoke(this::class.java.getDeclaredField("shadowRoots"), this, listOf(mockk()))
-                }
-            },
-            EnhancedDOMTreeNode(nodeId = 2, nodeName = "IFRAME", attributes = mapOf("src" to "test.html")),
-            EnhancedDOMTreeNode(nodeId = 3, nodeName = "SLOT", attributes = mapOf("name" to "content"))
+        val shadowHost = EnhancedDOMTreeNode(
+            nodeId = 1,
+            nodeName = "DIV",
+            shadowRoots = listOf(EnhancedDOMTreeNode(nodeId = 10, nodeName = "DIV"))
         )
+        val iframe = EnhancedDOMTreeNode(nodeId = 2, nodeName = "IFRAME", attributes = mapOf("src" to "test.html"))
+        val slot = EnhancedDOMTreeNode(nodeId = 3, nodeName = "SLOT", attributes = mapOf("name" to "content"))
+        val ancestors = listOf(shadowHost, iframe, slot)
 
         // Act
         val hash = HashUtils.parentBranchHash(ancestors)
