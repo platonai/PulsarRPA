@@ -1,5 +1,3 @@
-Great question! **URI** and **URL** are related concepts that are often confused. Let me explain the differences and how they apply to HTML pages.
-
 ## Definitions
 
 ### URI (Uniform Resource Identifier)

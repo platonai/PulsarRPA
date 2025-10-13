@@ -4,11 +4,11 @@ on:
   push:
     tags:
       - 'v[0-9]+.[0-9]+.[0-9]+'
-      - 'v[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+'
+      - 'v[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+.+'
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag (e.g., v1.0.0)'
+        description: 'Release tag (e.g., v1.0.0, v1.0.0-rc.1, v1.0.0-rc.1+build.20251013)'
         required: true
         type: string
       skip_tests:

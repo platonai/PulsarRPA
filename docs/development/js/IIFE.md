@@ -1,4 +1,6 @@
-这种代码形式叫做 **立即执行函数表达式（Immediately Invoked Function Expression）**，简称 **IIFE**。
+## **IIFE**: Immediately Invoked Function Expression。
+
+本文介绍立即执行函数表达式。
 
 ---
 
