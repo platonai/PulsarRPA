@@ -1,6 +1,7 @@
 package ai.platon.pulsar.browser.driver.chrome.dom
 
 import ai.platon.pulsar.WebDriverTestBase
+import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.model.ElementRefCriteria
 import ai.platon.pulsar.browser.driver.chrome.dom.model.PageTarget
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
@@ -24,7 +25,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
     @Test
     fun `Get trees, build and serialize end-to-end with assertions`() = runWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
-        val devTools = driver.implementation
+        val devTools = driver.implementation as RemoteDevTools
         val service = ChromeCdpDomService(devTools)
 
         val options = SnapshotOptions(
@@ -71,7 +72,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
     @Test
     fun `Find element using css, xpath, backend id, element hash and convert to interacted element`() = runWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
-        val devTools = driver.implementation
+        val devTools = driver.implementation as RemoteDevTools
         val service = ChromeCdpDomService(devTools)
 
         val options = SnapshotOptions(
@@ -154,7 +155,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
     @Test
     fun `Options toggling - no AX or Snapshot yields minimal enhanced nodes`() = runWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
-        val devTools = driver.implementation
+        val devTools = driver.implementation as RemoteDevTools
         val service = ChromeCdpDomService(devTools)
 
         val options = SnapshotOptions(
@@ -188,7 +189,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
     @Test
     fun `Scrollability and interactivity analysis on dynamic content`() = runWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
-        val devTools = driver.implementation
+        val devTools = driver.implementation as RemoteDevTools
         val service = ChromeCdpDomService(devTools)
 
         // Create a clearly scrollable container and interactive buttons
@@ -251,7 +252,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
     @Test
     fun `Dynamic content load is reflected in enhanced DOM tree`() = runWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
-        val devTools = driver.implementation
+        val devTools = driver.implementation as RemoteDevTools
         val service = ChromeCdpDomService(devTools)
 
         // Trigger async load of users (2s delay per page script)

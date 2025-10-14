@@ -1,11 +1,13 @@
 package ai.platon.pulsar.browser.driver.chrome.dom
 
 import ai.platon.pulsar.WebDriverTestBase
+import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.model.ElementRefCriteria
 import ai.platon.pulsar.browser.driver.chrome.dom.model.PageTarget
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
+import com.github.kklisura.cdt.protocol.v2023.ChromeDevTools
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Tag
@@ -52,7 +54,7 @@ class ChromeDomServiceE2ETest : WebDriverTestBase() {
     @Test
     fun `Given interactive page When collecting all trees Then get DOM AX and Snapshot with timings`() = runWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
-        val devTools = driver.implementation
+        val devTools = driver.implementation as RemoteDevTools
         val service = ChromeCdpDomService(devTools)
 
         val options = SnapshotOptions(

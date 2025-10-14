@@ -87,7 +87,7 @@ class PulsarWebDriver(
     /**
      * Expose the underlying implementation, used for diagnosis purpose
      * */
-    val implementation get() = devTools
+    override val implementation: Any get() = devTools
 
     init {
         val userAgent = browser.userAgentOverride

@@ -41,7 +41,7 @@ class PlaywrightDriver(
 
     override val browserType: BrowserType = BrowserType.PLAYWRIGHT_CHROME
 
-    val implementation get() = page
+    override val implementation: Any get() = page
 
     private var credentials: Credentials? = null
 

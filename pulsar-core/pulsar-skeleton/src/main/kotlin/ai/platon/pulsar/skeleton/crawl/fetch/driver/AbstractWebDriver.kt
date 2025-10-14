@@ -138,7 +138,8 @@ abstract class AbstractWebDriver(
 
     private val config get() = browser.settings.config
 
-    private val chatModel get() = ChatModelFactory.getOrCreateOrNull(config)
+    open val chatModel get() = ChatModelFactory.getOrCreateOrNull(config)
+    open val implementation: Any = this
 
     /** Idle timeout before a READY driver is considered stale and eligible for recycling/retirement. */
     var idleTimeout: Duration = Duration.ofMinutes(10)
