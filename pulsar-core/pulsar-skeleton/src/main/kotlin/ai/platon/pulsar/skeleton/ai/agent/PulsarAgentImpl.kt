@@ -1,9 +1,17 @@
-package ai.platon.pulsar.skeleton.ai
+package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
+import ai.platon.pulsar.skeleton.ai.ActResult
+import ai.platon.pulsar.skeleton.ai.ActionDescription
+import ai.platon.pulsar.skeleton.ai.ActionOptions
+import ai.platon.pulsar.skeleton.ai.ExtractOptions
+import ai.platon.pulsar.skeleton.ai.ExtractResult
+import ai.platon.pulsar.skeleton.ai.ObserveOptions
+import ai.platon.pulsar.skeleton.ai.ObserveResult
+import ai.platon.pulsar.skeleton.ai.PulsarAgent
 import ai.platon.pulsar.skeleton.ai.detail.ExecutionContext
 import ai.platon.pulsar.skeleton.ai.detail.InteractiveElement
 import ai.platon.pulsar.skeleton.ai.detail.PerformanceMetrics
@@ -103,7 +111,11 @@ class PulsarAgentImpl(
         } catch (e: Exception) {
             logger.error("extract.error requestId={} msg={}", requestId.take(8), e.message, e)
             addHistoryExtract(instruction, requestId, false)
-            ExtractResult(success = false, message = e.message ?: "extract failed", data = JsonNodeFactory.instance.objectNode())
+            ExtractResult(
+                success = false,
+                message = e.message ?: "extract failed",
+                data = JsonNodeFactory.instance.objectNode()
+            )
         }
     }
 
@@ -154,7 +166,12 @@ class PulsarAgentImpl(
         val schema = ExtractionSchema(
             listOf(
                 ExtractionField("title", type = "string", description = "Page title"),
-                ExtractionField("content", type = "string", description = "Primary textual content of the page", required = false),
+                ExtractionField(
+                    "content",
+                    type = "string",
+                    description = "Primary textual content of the page",
+                    required = false
+                ),
                 ExtractionField(
                     name = "links",
                     type = "array",

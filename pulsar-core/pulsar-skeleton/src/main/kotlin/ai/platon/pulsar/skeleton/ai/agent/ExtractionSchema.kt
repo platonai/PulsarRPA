@@ -3,6 +3,7 @@ package ai.platon.pulsar.skeleton.ai.agent
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.databind.node.ArrayNode
 
 /**
  * A richer schema definition than a simple Map<String,String> for extraction output.
@@ -30,7 +31,7 @@ data class ExtractionField(
                 }
                 node.set<ObjectNode>("properties", propsNode)
                 if (requiredList.isNotEmpty()) {
-                    node.set("required", mapper.valueToTree(requiredList))
+                    node.set<ArrayNode>("required", mapper.valueToTree<ArrayNode>(requiredList))
                 }
             }
             "array" -> {
@@ -91,7 +92,7 @@ class ExtractionSchema(private val fields: List<ExtractionField>) {
             if (f.required) required += f.name
         }
         root.set<ObjectNode>("properties", propsNode)
-        if (required.isNotEmpty()) root.set("required", mapper.valueToTree(required))
+        if (required.isNotEmpty()) root.set<ArrayNode>("required", mapper.valueToTree<ArrayNode>(required))
         return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root)
     }
 }

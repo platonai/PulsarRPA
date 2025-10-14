@@ -17,4 +17,6 @@ cmd /c D:\Browser4\mvnw.cmd -q -pl pulsar-tests -am -DskipTests test-compile
 
 cd /d D:\Browser4 && mvnw.cmd -q -DskipTests compile
 # Failed: cd /d D:\Browser4 && mvnw.cmd -q -DskipTests compile
+
+mvnw.cmd -q -pl pulsar-core/pulsar-skeleton -am -DskipTests package
 ```
