@@ -4,9 +4,6 @@ import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.common.getLogger
 import com.github.kklisura.cdt.protocol.v2023.types.accessibility.AXNode
 import com.github.kklisura.cdt.protocol.v2023.types.page.FrameTree
-import java.util.LinkedHashMap
-import kotlin.collections.forEach
-import kotlin.collections.plusAssign
 
 class AccessibilityHandler(
     private val devTools: RemoteDevTools,
@@ -36,135 +33,6 @@ class AccessibilityHandler(
                 .onFailure { e -> logger.warn("Accessibility.enable failed | err={}", e.toString()) }
             accessibilityEnabled = true
         }
-    }
-
-    /**
-     * Get accessibility tree with optional selector filtering and scrollable detection.
-     *
-     * @param selector Optional CSS selector to filter nodes
-     * @param targetFrameId Optional frame ID to target specific frame
-     * @return Accessibility tree result with filtered nodes
-     */
-    fun getAccessibilityTree(selector: String? = null, targetFrameId: String? = null): AccessibilityTreeResult {
-        // Ensure the Accessibility domain is enabled
-        ensureEnabled()
-
-        // 1. Fetch raw AX nodes using getFullAXTree
-        val axResult = getFullAXTreeRecursive(targetFrameId, depth = null)
-
-        if (selector.isNullOrBlank()) {
-            return axResult
-        }
-
-        // 2. Apply selector filtering if provided
-        return filterNodesBySelector(axResult, selector)
-    }
-
-    /**
-     * Filter accessibility nodes by CSS selector.
-     * Uses DOM.querySelectorAll + describeNode to map matched frontend nodeIds to backendNodeIds,
-     * then filters AX nodes by those backendNodeIds.
-     */
-    private fun filterNodesBySelector(axResult: AccessibilityTreeResult, selector: String): AccessibilityTreeResult {
-        val dom = domAPI ?: return axResult
-
-        val docNodeId = runCatching { dom.document?.nodeId }
-            .getOrNull()
-        if (docNodeId == null || docNodeId == 0) {
-            logger.debug("DOM.document not available; skip selector filtering | selector={}", selector)
-            return axResult
-        }
-
-        val matchedNodeIds = runCatching { dom.querySelectorAll(docNodeId, selector) }
-            .onFailure { e -> logger.warn("DOM.querySelectorAll failed | selector={} | err={}", selector, e.toString()) }
-            .getOrElse { emptyList() }
-        if (matchedNodeIds.isEmpty()) {
-            return AccessibilityTreeResult.EMPTY
-        }
-
-        val matchedBackendIds = matchedNodeIds.mapNotNull { nodeId ->
-            runCatching { dom.describeNode(nodeId, null, null, null, false)?.backendNodeId }
-                .onFailure { e -> tracer?.debug("DOM.describeNode failed | nodeId={} | err={}", nodeId, e.toString()) }
-                .getOrNull()
-        }.toSet()
-
-        if (matchedBackendIds.isEmpty()) {
-            return AccessibilityTreeResult.EMPTY
-        }
-
-        // Filter AX nodes by matching backendNodeIds
-        val filteredNodes = axResult.nodes.filter { node ->
-            val b = node.backendDOMNodeId
-            b != null && matchedBackendIds.contains(b)
-        }
-
-        tracer?.debug(
-            "AX selector filter | selector={} matchedDom={} matchedAX={}",
-            selector, matchedBackendIds.size, filteredNodes.size
-        )
-
-        return AccessibilityTreeResult(
-            nodes = filteredNodes,
-            nodesByFrameId = filteredNodes.groupBy { it.frameId ?: "" },
-            nodesByBackendNodeId = filteredNodes.groupBy { it.backendDOMNodeId ?: -1 }
-        )
-    }
-
-    /**
-     * Find scrollable element backendNodeIds using AX properties.
-     * We only rely on AX due to unreliable backendNodeId exposure in JS contexts.
-     *
-     * @param targetFrameId Optional frame ID to target specific frame
-     * @return List of backend node IDs that are scrollable
-     */
-    fun findScrollableElementIds(targetFrameId: String? = null): List<Int> {
-        val axResult = getFullAXTreeRecursive(targetFrameId, depth = null)
-        if (axResult.nodes.isEmpty()) return emptyList()
-
-        val scrollableBackendIds = mutableSetOf<Int>()
-
-        // Identify scrollable nodes from AX properties
-        axResult.nodes.forEach { node ->
-            val backendId = node.backendDOMNodeId ?: return@forEach
-
-            val isScrollableAX = try {
-                val props = node.properties ?: emptyList()
-                props.any { prop ->
-                    val name = prop.name.toString().lowercase()
-                    if (name == "scrollable") {
-                        val v = prop.value?.value
-                        when (v) {
-                            is Boolean -> v
-                            is String -> v.equals("true", ignoreCase = true)
-                            else -> false
-                        }
-                    } else false
-                }
-            } catch (e: Exception) {
-                false
-            }
-
-            if (isScrollableAX) {
-                scrollableBackendIds.add(backendId)
-            }
-        }
-
-        tracer?.debug("AX scrollables detected | count={}", scrollableBackendIds.size)
-        return scrollableBackendIds.toList()
-    }
-
-    /**
-     * Fetches the entire accessibility tree for the root Document
-     *
-     * @param depth The maximum depth at which descendants of the root node should be retrieved. If
-     * omitted, the full tree is returned.
-     * @param frameId The frame for whose document the AX tree should be retrieved. If omited, the
-     * root frame is used.
-     */
-    fun getFullAXTree(depth: Int? = null, frameId: String? = null): List<AXNode> {
-        // Ensure the Accessibility domain is enabled
-        ensureEnabled()
-        return accessibilityAPI?.getFullAXTree(depth, frameId) ?: emptyList()
     }
 
     /**
@@ -233,8 +101,11 @@ class AccessibilityHandler(
                         if (seenPairs.add(key)) {
                             val backendId = stamped.backendDOMNodeId
                             if (backendId != null) {
-                                byBackend.getOrPut(backendId) { mutableListOf() }
+                                byBackend.getOrPut(backendId) { mutableListOf() } += stamped
                             }
+                            // add to frame bucket and all nodes once per unique node
+                            frameBucket += stamped
+                            allNodes += stamped
                         }
                     }
                 }
