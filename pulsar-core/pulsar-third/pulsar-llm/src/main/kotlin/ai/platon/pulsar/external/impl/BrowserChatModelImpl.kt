@@ -24,7 +24,7 @@ import java.io.InterruptedIOException
 import java.time.Duration
 
 open class BrowserChatModelImpl(
-    private val langchainModel: dev.langchain4j.model.chat.ChatModel,
+    val langchainModel: dev.langchain4j.model.chat.ChatModel,
     private val conf: ImmutableConfig
 ) : BrowserChatModel {
     private val logger = getLogger(BrowserChatModelImpl::class)

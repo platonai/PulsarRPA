@@ -3,6 +3,8 @@ package ai.platon.pulsar.skeleton.ai
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.browser.driver.chrome.dom.model.PageTarget
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
+import ai.platon.pulsar.external.BrowserChatModel
+import ai.platon.pulsar.external.impl.BrowserChatModelImpl
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.JsonNode
@@ -12,7 +14,6 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
 import dev.langchain4j.data.message.SystemMessage
 import dev.langchain4j.data.message.UserMessage
-import dev.langchain4j.model.chat.ChatModel
 import dev.langchain4j.model.chat.response.ChatResponse
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -67,9 +68,10 @@ data class ObserveParams(
 
 class InferenceEngine(
     private val driver: WebDriver,
-    private val chatModel: ChatModel
+    private val chatModel: BrowserChatModel
 ) {
     private val domService: DomService = (driver as AbstractWebDriver).domService!!
+    private val langchainModel get() = (chatModel as BrowserChatModelImpl).langchainModel
 
     // ----------------------------------- Public simple stubs (kept for compatibility) -----------------------------------
     fun extract(instruction: String) {
@@ -131,7 +133,7 @@ class InferenceEngine(
         }
 
         val t0 = System.currentTimeMillis()
-        val extractResp: ChatResponse = chatModel.chat(
+        val extractResp: ChatResponse = langchainModel.chat(
             SystemMessage.systemMessage(extractSystem.content.toString()),
             UserMessage.userMessage(extractUser.content.toString())
         )
@@ -198,7 +200,7 @@ class InferenceEngine(
         }
 
         val t2 = System.currentTimeMillis()
-        val metadataResp: ChatResponse = chatModel.chat(
+        val metadataResp: ChatResponse = langchainModel.chat(
             SystemMessage.systemMessage(metadataSystem.content.toString()),
             UserMessage.userMessage(metadataUser.content.toString())
         )
@@ -296,7 +298,7 @@ class InferenceEngine(
         }
 
         val t0 = System.currentTimeMillis()
-        val resp: ChatResponse = chatModel.chat(
+        val resp: ChatResponse = langchainModel.chat(
             SystemMessage.systemMessage(systemMsg.content.toString()),
             UserMessage.userMessage(userMsg.content.toString())
         )

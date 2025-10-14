@@ -88,7 +88,7 @@ class PulsarAgent(
     val conf get() = (driver as AbstractWebDriver).settings.config
 
     private val tta by lazy { TextToAction(conf) }
-    private val model get() = tta.model
+    private val inference by lazy { InferenceEngine(driver, tta.chatModel) }
 
     // Enhanced state management
     private val _history = mutableListOf<String>()
@@ -112,6 +112,24 @@ class PulsarAgent(
         val sessionId = uuid.toString()
 
         return executeWithRetry(action, sessionId, startTime)
+    }
+
+    suspend fun extract(instruction: String): ExtractResult {
+        TODO()
+    }
+
+    suspend fun extract(options: ExtractOptions): ExtractResult {
+        // inference.extract(instruction)
+        TODO()
+    }
+
+    suspend fun observe(instruction: String): List<ObserveResult> {
+        TODO()
+    }
+
+    suspend fun observe(options: ObserveOptions): List<ObserveResult> {
+        // inference.observe(params)
+        TODO()
     }
 
     /**
@@ -916,10 +934,7 @@ $interactiveSummary
             val (system, user) = buildSummaryPrompt(goal)
             logStructured("Generating final summary", context)
 
-            val response = model?.call(user, system) ?: ModelResponse(
-                "Model not available for summary generation",
-                ResponseState.OTHER
-            )
+            val response = tta.chatModel.call(user, system)
 
             logStructured(
                 "Summary generated successfully", context, mapOf(

@@ -2,6 +2,7 @@ package ai.platon.pulsar.skeleton.ai
 
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.detail.InteractiveElement
+import com.fasterxml.jackson.databind.JsonNode
 
 data class ActionOptions(
     val action: String,
@@ -18,15 +19,21 @@ data class ActResult(
     val action: String
 )
 
-data class ExtractOptions<T>(
+data class ExtractOptions(
     val instruction: String? = null,
-    val schema: T? = null,
+    val schema: Map<String, String>? = null,
     val modelName: String? = null,
     val modelClientOptions: Map<String, Any>? = null,
     val domSettleTimeoutMs: Long? = null,
     val selector: String? = null,
     val iframes: Boolean? = null,
     val frameId: String? = null
+)
+
+data class ExtractResult(
+    val success: Boolean,
+    val message: String,
+    val data: JsonNode
 )
 
 data class ObserveOptions(

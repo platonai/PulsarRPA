@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ai.llm.PromptTemplate
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
@@ -24,7 +25,7 @@ open class TextToAction(val conf: ImmutableConfig) {
 
     val baseDir = AppPaths.get("tta")
 
-    val model = ChatModelFactory.getOrCreateOrNull(conf)
+    val chatModel: BrowserChatModel = ChatModelFactory.getOrCreate(conf)
     val webDriverSourceCodeFile = baseDir.resolve("MiniWebDriver.kt")
     var webDriverSourceCode: String
         private set
@@ -121,9 +122,6 @@ open class TextToAction(val conf: ImmutableConfig) {
         screenshotB64: String? = null,
         toolCallLimit: Int = 100,
     ): ActionDescription {
-        if (model == null) {
-            return ActionDescription(listOf(), null, ModelResponse.LLM_NOT_AVAILABLE)
-        }
 
         val systemPrompt = when {
             instruction.contains(AGENT_SYSTEM_PROMPT_PREFIX_20) -> instruction
@@ -131,9 +129,9 @@ open class TextToAction(val conf: ImmutableConfig) {
         }
         val toolUsePrompt = buildToolUsePrompt(systemPrompt, interactiveElements, toolCallLimit)
         val response = if (screenshotB64 != null) {
-            model.call(toolUsePrompt, "", null, screenshotB64, "image/jpeg")
+            chatModel.call(toolUsePrompt, "", null, screenshotB64, "image/jpeg")
         } else {
-            model.call(toolUsePrompt)
+            chatModel.call(toolUsePrompt)
         }
 
         return modelResponseToActionDescription(response, toolCallLimit)
@@ -161,7 +159,7 @@ open class TextToAction(val conf: ImmutableConfig) {
             appendLine(command)
         }
 
-        return model?.call(prompt) ?: ModelResponse.LLM_NOT_AVAILABLE
+        return chatModel.call(prompt)
     }
 
     fun buildToolUsePrompt(
