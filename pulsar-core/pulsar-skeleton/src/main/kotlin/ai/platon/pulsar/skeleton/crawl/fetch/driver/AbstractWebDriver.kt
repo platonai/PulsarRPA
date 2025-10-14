@@ -8,10 +8,10 @@ import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.dom.nodes.GeoAnchor
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.skeleton.ai.ActionDescription
+import ai.platon.pulsar.skeleton.ai.ActionOptions
+import ai.platon.pulsar.skeleton.ai.InstructionResult
 import ai.platon.pulsar.skeleton.ai.PulsarAgent
-import ai.platon.pulsar.skeleton.ai.tta.ActionDescription
-import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
-import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue

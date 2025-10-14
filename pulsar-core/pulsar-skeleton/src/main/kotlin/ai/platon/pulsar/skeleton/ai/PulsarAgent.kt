@@ -3,9 +3,8 @@ package ai.platon.pulsar.skeleton.ai
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.ai.tta.ActionDescription
-import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
-import ai.platon.pulsar.skeleton.ai.tta.InteractiveElement
+import ai.platon.pulsar.external.ResponseState
+import ai.platon.pulsar.skeleton.ai.detail.InteractiveElement
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -107,7 +106,7 @@ class PulsarAgent(
      * Execution with comprehensive error handling and retry mechanism.
      * Returns the final summary with enhanced error handling.
      */
-    suspend fun act(action: ActionOptions): ModelResponse {
+    suspend fun act(action: ActionOptions): ActResult {
         Files.createDirectories(baseDir)
         val startTime = Instant.now()
         val sessionId = uuid.toString()
@@ -119,7 +118,7 @@ class PulsarAgent(
      * Enhanced execution with comprehensive error handling and retry mechanisms
      * Returns the final summary with enhanced error handling.
      */
-    private suspend fun executeWithRetry(action: ActionOptions, sessionId: String, startTime: Instant): ModelResponse {
+    private suspend fun executeWithRetry(action: ActionOptions, sessionId: String, startTime: Instant): ActResult {
         var lastError: Exception? = null
 
         for (attempt in 0..config.maxRetries) {
@@ -151,9 +150,10 @@ class PulsarAgent(
             }
         }
 
-        return ModelResponse(
-            "Failed after ${config.maxRetries + 1} attempts. Last error: ${lastError?.message}",
-            ai.platon.pulsar.external.ResponseState.OTHER
+        return ActResult(
+            success = false,
+            message = "Failed after ${config.maxRetries + 1} attempts. Last error: ${lastError?.message}",
+            action = action.action
         )
     }
 
@@ -161,16 +161,23 @@ class PulsarAgent(
      * Main execution logic with enhanced error handling and monitoring.
      * Returns the final summary with enhanced error handling.
      */
-    private suspend fun executeInternal(action: ActionOptions, sessionId: String, startTime: Instant, attempt: Int): ModelResponse {
+    private suspend fun executeInternal(
+        action: ActionOptions,
+        sessionId: String,
+        startTime: Instant,
+        attempt: Int
+    ): ActResult {
         val overallGoal = action.action
         val context = ExecutionContext(sessionId, 0, "execute", getCurrentUrl())
 
-        logStructured("Starting PulsarAgent execution", context, mapOf(
-            "instruction" to overallGoal.take(100),
-            "attempt" to (attempt + 1),
-            "maxSteps" to config.maxSteps,
-            "maxRetries" to config.maxRetries
-        ))
+        logStructured(
+            "Starting PulsarAgent execution", context, mapOf(
+                "instruction" to overallGoal.take(100),
+                "attempt" to (attempt + 1),
+                "maxSteps" to config.maxSteps,
+                "maxRetries" to config.maxRetries
+            )
+        )
 
         val systemMsg = tta.buildOperatorSystemPrompt(overallGoal)
         var consecutiveNoOps = 0
@@ -185,12 +192,14 @@ class PulsarAgent(
                 // Extract interactive elements each step (could be optimized via diffing later)
                 val interactiveElements = tta.extractInteractiveElementsDeferred(driver)
 
-                logStructured("Executing step", stepContext, mapOf(
-                    "step" to step,
-                    "maxSteps" to config.maxSteps,
-                    "consecutiveNoOps" to consecutiveNoOps,
-                    "interactiveElementCount" to interactiveElements.size
-                ))
+                logStructured(
+                    "Executing step", stepContext, mapOf(
+                        "step" to step,
+                        "maxSteps" to config.maxSteps,
+                        "consecutiveNoOps" to consecutiveNoOps,
+                        "interactiveElementCount" to interactiveElements.size
+                    )
+                )
 
                 // Memory cleanup at intervals
                 if (step % config.memoryCleanupIntervalSteps == 0) {
@@ -203,7 +212,8 @@ class PulsarAgent(
                 // message: agent guide + overall goal + last action summary + current context message
                 val message = buildExecutionMessage(systemMsg, userMsg, screenshotB64)
                 // interactive elements are already appended to message
-                val stepActionResult = generateStepActionWithRetry(message, stepContext, listOf(), screenshotB64)
+                val stepActionResult =
+                    generateStepActionWithRetry(message, stepContext, listOf<InteractiveElement>(), screenshotB64)
 
                 if (stepActionResult == null) {
                     consecutiveNoOps++
@@ -246,21 +256,27 @@ class PulsarAgent(
             }
 
             val executionTime = java.time.Duration.between(startTime, Instant.now())
-            logStructured("Execution completed", context, mapOf(
-                "steps" to step,
-                "executionTime" to executionTime.toString(),
-                "performanceMetrics" to performanceMetrics
-            ))
+            logStructured(
+                "Execution completed", context, mapOf(
+                    "steps" to step,
+                    "executionTime" to executionTime.toString(),
+                    "performanceMetrics" to performanceMetrics
+                )
+            )
 
-            return generateFinalSummary(overallGoal, context)
+            val summary = generateFinalSummary(overallGoal, context)
+            val ok = summary.state != ResponseState.OTHER
+            return ActResult(success = ok, message = summary.content, action = overallGoal)
 
         } catch (e: Exception) {
             val executionTime = java.time.Duration.between(startTime, Instant.now())
-            logStructured("Execution failed", context, mapOf(
-                "steps" to step,
-                "executionTime" to executionTime.toString(),
-                "error" to (e.message ?: "Unknown error")
-            ))
+            logStructured(
+                "Execution failed", context, mapOf(
+                    "steps" to step,
+                    "executionTime" to executionTime.toString(),
+                    "error" to (e.message ?: "Unknown error")
+                )
+            )
             throw classifyError(e, step)
         }
     }
@@ -280,16 +296,37 @@ class PulsarAgent(
             is java.util.concurrent.TimeoutException -> WebDriverAgentError.TimeoutError("Step $step timed out", e)
             is java.net.SocketTimeoutException -> WebDriverAgentError.TimeoutError("Network timeout at step $step", e)
             is java.net.ConnectException -> WebDriverAgentError.TransientError("Connection failed at step $step", e)
-            is java.net.UnknownHostException -> WebDriverAgentError.TransientError("DNS resolution failed at step $step", e)
+            is java.net.UnknownHostException -> WebDriverAgentError.TransientError(
+                "DNS resolution failed at step $step",
+                e
+            )
+
             is java.io.IOException -> {
                 when {
-                    e.message?.contains("connection") == true -> WebDriverAgentError.TransientError("Connection issue at step $step", e)
-                    e.message?.contains("timeout") == true -> WebDriverAgentError.TimeoutError("Network timeout at step $step", e)
+                    e.message?.contains("connection") == true -> WebDriverAgentError.TransientError(
+                        "Connection issue at step $step",
+                        e
+                    )
+
+                    e.message?.contains("timeout") == true -> WebDriverAgentError.TimeoutError(
+                        "Network timeout at step $step",
+                        e
+                    )
+
                     else -> WebDriverAgentError.TransientError("IO error at step $step: ${e.message}", e)
                 }
             }
-            is IllegalArgumentException -> WebDriverAgentError.ValidationError("Validation error at step $step: ${e.message}", e)
-            is IllegalStateException -> WebDriverAgentError.PermanentError("Invalid state at step $step: ${e.message}", e)
+
+            is IllegalArgumentException -> WebDriverAgentError.ValidationError(
+                "Validation error at step $step: ${e.message}",
+                e
+            )
+
+            is IllegalStateException -> WebDriverAgentError.PermanentError(
+                "Invalid state at step $step: ${e.message}",
+                e
+            )
+
             else -> WebDriverAgentError.TransientError("Unexpected error at step $step: ${e.message}", e)
         }
     }
@@ -302,6 +339,7 @@ class PulsarAgent(
             is WebDriverAgentError.TransientError, is WebDriverAgentError.TimeoutError -> true
             is java.net.SocketTimeoutException, is java.net.ConnectException,
             is java.net.UnknownHostException -> true
+
             else -> false
         }
     }
@@ -318,7 +356,11 @@ class PulsarAgent(
     /**
      * Structured logging with context
      */
-    private fun logStructured(message: String, context: ExecutionContext, additionalData: Map<String, Any> = emptyMap()) {
+    private fun logStructured(
+        message: String,
+        context: ExecutionContext,
+        additionalData: Map<String, Any> = emptyMap()
+    ) {
         if (!config.enableStructuredLogging) {
             logger.info("{} - {}", context.sessionId.take(8), message)
             return
@@ -371,7 +413,10 @@ class PulsarAgent(
      * Generates action with retry mechanism
      */
     private suspend fun generateStepActionWithRetry(
-        message: String, context: ExecutionContext, interactiveElements: List<InteractiveElement>, screenshotB64: String?
+        message: String,
+        context: ExecutionContext,
+        interactiveElements: List<InteractiveElement>,
+        screenshotB64: String?
     ): ActionDescription? {
         return try {
             // Use overload supplying extracted elements to avoid re-extraction
@@ -398,10 +443,12 @@ class PulsarAgent(
         }
 
         return try {
-            logStructured("Executing tool call", context, mapOf(
-                "toolName" to toolCall.name,
-                "toolArgs" to toolCall.args
-            ))
+            logStructured(
+                "Executing tool call", context, mapOf(
+                    "toolName" to toolCall.name,
+                    "toolArgs" to toolCall.args
+                )
+            )
 
             driver.execute(action)
             consecutiveFailureCounter.set(0) // Reset on success
@@ -428,7 +475,10 @@ class PulsarAgent(
         return validationCache.getOrPut(cacheKey) {
             when (toolCall.name) {
                 "navigateTo" -> validateNavigateTo(toolCall.args)
-                "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "focus", "scrollTo" -> validateElementAction(toolCall.args)
+                "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "focus", "scrollTo" -> validateElementAction(
+                    toolCall.args
+                )
+
                 "waitForNavigation" -> validateWaitForNavigation(toolCall.args)
                 "goBack", "goForward", "delay" -> true // These don't need validation
                 else -> true // Unknown actions are allowed by default
@@ -496,10 +546,12 @@ class PulsarAgent(
     /**
      * Handles task completion
      */
-    private suspend fun handleTaskCompletion(parsed: ParsedResponse, step: Int, context: ExecutionContext) {
-        logStructured("Task completion detected", context, mapOf(
-            "taskComplete" to (parsed.taskComplete ?: false)
-        ))
+    private fun handleTaskCompletion(parsed: ParsedResponse, step: Int, context: ExecutionContext) {
+        logStructured(
+            "Task completion detected", context, mapOf(
+                "taskComplete" to (parsed.taskComplete ?: false)
+            )
+        )
 
         addToHistory("#$step complete: taskComplete=${parsed.taskComplete}")
     }
@@ -625,7 +677,7 @@ class PulsarAgent(
             summary
         } catch (e: Exception) {
             logError("Failed to generate final summary", e, context.sessionId)
-            ModelResponse("Failed to generate summary: ${e.message}", ai.platon.pulsar.external.ResponseState.OTHER)
+            ModelResponse("Failed to generate summary: ${e.message}", ResponseState.OTHER)
         }
     }
 
@@ -694,7 +746,7 @@ $interactiveSummary
                 p.isBoolean -> p.asBoolean
                 p.isNumber -> {
                     val n = p.asNumber
-                    val d = n.toDouble();
+                    val d = n.toDouble()
                     val i = n.toInt(); if (d == i.toDouble()) i else d
                 }
 
@@ -719,8 +771,10 @@ $interactiveSummary
 
             // Only allow http and https schemes
             if (scheme !in setOf("http", "https")) {
-                logStructured("Blocked unsafe URL scheme", ExecutionContext(uuid.toString(), 0, "url_validation", ""),
-                    mapOf("scheme" to (scheme ?: "null"), "url" to url.take(50)))
+                logStructured(
+                    "Blocked unsafe URL scheme", ExecutionContext(uuid.toString(), 0, "url_validation", ""),
+                    mapOf("scheme" to (scheme ?: "null"), "url" to url.take(50))
+                )
                 return false
             }
 
@@ -730,16 +784,20 @@ $interactiveSummary
             // Block common dangerous domains/patterns
             val dangerousPatterns = listOf("localhost", "127.0.0.1", "0.0.0.0", "file://")
             if (dangerousPatterns.any { host.contains(it) }) {
-                logStructured("Blocked potentially dangerous URL", ExecutionContext(uuid.toString(), 0, "url_validation", ""),
-                    mapOf("host" to host, "reason" to "dangerous_pattern"))
+                logStructured(
+                    "Blocked potentially dangerous URL", ExecutionContext(uuid.toString(), 0, "url_validation", ""),
+                    mapOf("host" to host, "reason" to "dangerous_pattern")
+                )
                 return false
             }
 
             // Validate port (block non-standard ports for http/https)
             val port = uri.port
             if (port != -1 && port !in setOf(80, 443, 8080, 8443)) {
-                logStructured("Blocked URL with non-standard port", ExecutionContext(uuid.toString(), 0, "url_validation", ""),
-                    mapOf("port" to port, "host" to host))
+                logStructured(
+                    "Blocked URL with non-standard port", ExecutionContext(uuid.toString(), 0, "url_validation", ""),
+                    mapOf("port" to port, "host" to host)
+                )
                 return false
             }
 
@@ -826,8 +884,10 @@ $interactiveSummary
             sb.appendLine("Consecutive failures: ${consecutiveFailureCounter.get()}")
 
             Files.writeString(log, sb.toString())
-            logStructured("Transcript persisted successfully", context,
-                mapOf("lines" to _history.size + 10, "path" to log.toString()))
+            logStructured(
+                "Transcript persisted successfully", context,
+                mapOf("lines" to _history.size + 10, "path" to log.toString())
+            )
         }.onFailure { e ->
             logError("Failed to persist transcript", e, context.sessionId)
         }
@@ -858,20 +918,22 @@ $interactiveSummary
 
             val response = model?.call(user, system) ?: ModelResponse(
                 "Model not available for summary generation",
-                ai.platon.pulsar.external.ResponseState.OTHER
+                ResponseState.OTHER
             )
 
-            logStructured("Summary generated successfully", context, mapOf(
-                "responseLength" to response.content.length,
-                "responseState" to response.state
-            ))
+            logStructured(
+                "Summary generated successfully", context, mapOf(
+                    "responseLength" to response.content.length,
+                    "responseState" to response.state
+                )
+            )
 
             response
         } catch (e: Exception) {
             logError("Summary generation failed", e, context.sessionId)
             ModelResponse(
                 "Failed to generate summary: ${e.message}",
-                ai.platon.pulsar.external.ResponseState.OTHER
+                ResponseState.OTHER
             )
         }
     }

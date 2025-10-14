@@ -36,7 +36,7 @@ data class ObserveElement(
     val arguments: List<String>? = null,
 )
 
-data class ObserveResult(
+data class InternalObserveResult(
     val elements: List<ObserveElement>,
     val prompt_tokens: Int,
     val completion_tokens: Int,
@@ -259,7 +259,7 @@ class InferenceEngine(
         return result
     }
 
-    fun observe(params: ObserveParams): ObserveResult {
+    fun observe(params: ObserveParams): InternalObserveResult {
         val domText = params.domElements.joinToString("\n\n")
         val isGPT5 = (System.getProperty("llm.name") ?: "").lowercase().contains("gpt-5")
         val temperature = if (isGPT5) 1.0 else 0.1
@@ -340,7 +340,7 @@ class InferenceEngine(
             )
         }
 
-        return ObserveResult(
+        return InternalObserveResult(
             elements = elements,
             prompt_tokens = usage.prompt_tokens,
             completion_tokens = usage.completion_tokens,

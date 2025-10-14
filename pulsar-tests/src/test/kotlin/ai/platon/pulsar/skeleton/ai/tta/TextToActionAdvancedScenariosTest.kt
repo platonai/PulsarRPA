@@ -2,6 +2,7 @@ package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.skeleton.ai.ActionDescription
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
@@ -47,7 +48,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             println("Model response: ${actionDescription.modelResponse.content}")
 
             // Should handle complex instructions in some way
-            
+
                 val action = actionDescription.functionCalls.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
         }
@@ -75,7 +76,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             println("Generated action: ${actionDescription.functionCalls}")
 
             // Should handle conditional logic
-            
+
                 val action = actionDescription.functionCalls.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
         }
@@ -192,7 +193,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             println("Generated action: ${actionDescription.functionCalls}")
 
             // Should handle contradictions in some way
-            
+
                 val action = actionDescription.functionCalls.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
         }
@@ -250,7 +251,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             println("Generated action: ${actionDescription.functionCalls}")
 
             // Should handle Unicode characters
-            
+
                 val action = actionDescription.functionCalls.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
         }

@@ -8,10 +8,10 @@ import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.skeleton.ai.ActionDescription
+import ai.platon.pulsar.skeleton.ai.ActionOptions
+import ai.platon.pulsar.skeleton.ai.InstructionResult
 import ai.platon.pulsar.skeleton.ai.PulsarAgent
-import ai.platon.pulsar.skeleton.ai.tta.ActionDescription
-import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
-import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.context.PulsarContext

@@ -7,6 +7,9 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
+import ai.platon.pulsar.skeleton.ai.ActionDescription
+import ai.platon.pulsar.skeleton.ai.detail.ElementBounds
+import ai.platon.pulsar.skeleton.ai.detail.InteractiveElement
 import ai.platon.pulsar.skeleton.common.llm.LLMUtils
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.google.gson.JsonElement
@@ -15,77 +18,6 @@ import com.google.gson.JsonParser
 import kotlinx.coroutines.runBlocking
 import org.apache.hadoop.record.compiler.generated.Rcc.driver
 import java.nio.file.Files
-
-data class InteractiveElement(
-    val id: String,
-    val tagName: String,
-    val selector: String,
-    val text: String,
-    val type: String?,
-    val href: String?,
-    val className: String?,
-    val placeholder: String?,
-    val value: String?,
-    val isVisible: Boolean,
-    val bounds: ElementBounds
-) {
-    val description: String
-        get() = buildString {
-            append("[$tagName")
-            if (type != null) append(" type='$type'")
-            append("] ")
-            if (text.isNotBlank()) append("'$text' ")
-            if (placeholder != null) append("placeholder='$placeholder' ")
-            if (value != null) append("value='$value' ")
-            append("selector='$selector'")
-        }
-
-    override fun toString() = description
-}
-
-data class ElementBounds(
-    val x: Double,
-    val y: Double,
-    val width: Double,
-    val height: Double
-)
-
-data class ActionOptions(
-    val action: String,
-    val modelName: String? = null,
-    val variables: Map<String, String>? = null,
-    val domSettleTimeoutMs: Int? = null,
-    val timeoutMs: Int? = null,
-    val iframes: Boolean? = null
-) {
-    companion object {
-        val LLM_NOT_AVAILABLE = ActionDescription(listOf(), null, ModelResponse.LLM_NOT_AVAILABLE)
-    }
-}
-
-data class ActionDescription(
-    val functionCalls: List<String>,
-    val selectedElement: InteractiveElement?,
-    val modelResponse: ModelResponse,
-) {
-    companion object {
-        val LLM_NOT_AVAILABLE = ActionDescription(listOf(), null, ModelResponse.LLM_NOT_AVAILABLE)
-    }
-}
-
-data class InstructionResult(
-    val functionCalls: List<String>,
-    val functionResults : List<Any?>,
-    val modelResponse: ModelResponse,
-) {
-    companion object {
-        val LLM_NOT_AVAILABLE = InstructionResult(
-            listOf(),
-            listOf(),
-            modelResponse = ModelResponse.LLM_NOT_AVAILABLE,
-        )
-    }
-}
 
 open class TextToAction(val conf: ImmutableConfig) {
     private val logger = getLogger(this)
