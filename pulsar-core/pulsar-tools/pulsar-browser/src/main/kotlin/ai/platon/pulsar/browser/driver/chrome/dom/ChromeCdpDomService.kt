@@ -9,7 +9,6 @@ import kotlin.math.abs
 
 /**
  * CDP-backed implementation of DomService using RemoteDevTools.
- * Maps to Python DomService class.
  */
 class ChromeCdpDomService(
     private val devTools: RemoteDevTools,
