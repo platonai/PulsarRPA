@@ -12,16 +12,16 @@ import java.util.function.Consumer
 
 interface Transport: AutoCloseable {
     val isOpen: Boolean
-    
+
     @Throws(ChromeIOException::class)
     fun connect(uri: URI)
-    
+
     @Throws(ChromeIOException::class)
     fun send(message: String)
-    
+
     @Throws(ChromeIOException::class)
     fun sendAsync(message: String): Future<Void>
-    
+
     fun addMessageHandler(consumer: Consumer<String>)
 }
 
@@ -34,7 +34,7 @@ interface CoTransport: AutoCloseable {
 interface RemoteChrome: AutoCloseable {
 
     val isActive: Boolean
-    
+
     val version: ChromeVersion
 
     val host: String
@@ -42,7 +42,7 @@ interface RemoteChrome: AutoCloseable {
     val port: Int
 
     fun canConnect(): Boolean
-    
+
     @Throws(ChromeServiceException::class)
     fun listTabs(): Array<ChromeTab>
 
@@ -57,7 +57,7 @@ interface RemoteChrome: AutoCloseable {
 
     @Throws(ChromeServiceException::class)
     fun closeTab(tab: ChromeTab)
-    
+
     @Throws(ChromeServiceException::class)
     fun createDevTools(tab: ChromeTab, config: DevToolsConfig): RemoteDevTools
 }
@@ -65,7 +65,7 @@ interface RemoteChrome: AutoCloseable {
 interface RemoteDevTools: ChromeDevTools, AutoCloseable {
 
     val isOpen: Boolean
-    
+
     @Throws(ChromeIOException::class, ChromeRPCException::class)
     operator fun <T> invoke(
             returnProperty: String?,
@@ -73,7 +73,7 @@ interface RemoteDevTools: ChromeDevTools, AutoCloseable {
             returnTypeClasses: Array<Class<out Any>>?,
             method: MethodInvocation
     ): T?
-    
+
     @Throws(InterruptedException::class)
     fun awaitTermination()
 
@@ -83,16 +83,16 @@ interface RemoteDevTools: ChromeDevTools, AutoCloseable {
 }
 
 interface CoRemoteDevTools: ChromeDevTools, AutoCloseable {
-    
+
     val isOpen: Boolean
-    
+
     suspend operator fun <T> invoke(
         returnProperty: String?,
         clazz: Class<T>,
         returnTypeClasses: Array<Class<out Any>>?,
         method: MethodInvocation
     ): T?
-    
+
     @Throws(InterruptedException::class)
     fun awaitTermination()
 }

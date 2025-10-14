@@ -190,7 +190,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
     fun `Scrollability and interactivity analysis on dynamic content`() = runWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
         val devTools = driver.implementation as RemoteDevTools
-        val service = ChromeCdpDomService(devTools)
+        val service = driver.domService
 
         // Create a clearly scrollable container and interactive buttons
         runCatching { devTools.runtime.evaluate("generateLargeList(1000)") }

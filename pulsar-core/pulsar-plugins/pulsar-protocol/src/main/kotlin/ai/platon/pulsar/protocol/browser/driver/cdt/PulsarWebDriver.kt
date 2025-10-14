@@ -1,6 +1,8 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt
 
 import ai.platon.pulsar.browser.driver.chrome.*
+import ai.platon.pulsar.browser.driver.chrome.dom.ChromeCdpDomService
+import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
@@ -30,6 +32,7 @@ import com.github.kklisura.cdt.protocol.v2023.types.network.ErrorReason
 import com.github.kklisura.cdt.protocol.v2023.types.network.LoadNetworkResourceOptions
 import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
+import com.google.common.annotations.Beta
 import kotlinx.coroutines.channels.Channel
 import org.apache.commons.lang3.SystemUtils
 import org.apache.hc.core5.net.URIBuilder
@@ -88,6 +91,8 @@ class PulsarWebDriver(
      * Expose the underlying implementation, used for diagnosis purpose
      * */
     override val implementation: Any get() = devTools
+
+    override val domService: DomService get() = ChromeCdpDomService(devTools)
 
     init {
         val userAgent = browser.userAgentOverride

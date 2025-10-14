@@ -1,6 +1,7 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.driver.chrome.NetworkResourceResponse
+import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.URLUtils
@@ -14,6 +15,7 @@ import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.common.annotations.Beta
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -29,6 +31,7 @@ import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 import kotlin.random.nextInt
 
+@Suppress("unused")
 abstract class AbstractWebDriver(
     val guid: String,
     override val browser: AbstractBrowser,
@@ -140,6 +143,9 @@ abstract class AbstractWebDriver(
 
     open val chatModel get() = ChatModelFactory.getOrCreateOrNull(config)
     open val implementation: Any = this
+    // TODO: Will move to WebDriver
+    @Beta
+    open val domService: DomService? = null
 
     /** Idle timeout before a READY driver is considered stale and eligible for recycling/retirement. */
     var idleTimeout: Duration = Duration.ofMinutes(10)
@@ -245,15 +251,15 @@ abstract class AbstractWebDriver(
 
     override fun jvm(): JvmWebDriver = this
 
-    @Suppress("unused")
+
     val mainRequestHeaders: Map<String, Any> get() = navigateEntry.mainRequestHeaders
-    @Suppress("unused")
+
     val mainRequestCookies: List<Map<String, String>> get() = navigateEntry.mainRequestCookies
-    @Suppress("unused")
+
     val mainResponseStatus: Int get() = navigateEntry.mainResponseStatus
-    @Suppress("unused")
+
     val mainResponseStatusText: String get() = navigateEntry.mainResponseStatusText
-    @Suppress("unused")
+
     val mainResponseHeaders: Map<String, Any> get() = navigateEntry.mainResponseHeaders
 
     override suspend fun addInitScript(script: String) { initScriptCache.add(script) }
@@ -546,13 +552,13 @@ abstract class AbstractWebDriver(
     @Throws(IOException::class)
     override suspend fun loadResource(url: String): NetworkResourceResponse { return NetworkResourceHelper.fromJsoup(loadJsoupResource(url)) }
 
-    @Suppress("unused")
+
     override fun equals(other: Any?): Boolean = this === other || (other is AbstractWebDriver && other.id == this.id)
     override fun hashCode(): Int = id
     override fun compareTo(other: AbstractWebDriver): Int = id - other.id
     override fun toString(): String = "#$id"
 
-    @Suppress("unused")
+
     open suspend fun terminate() { stop() }
     @Throws(Exception::class)
     open fun awaitTermination() { /* default no-op */ }

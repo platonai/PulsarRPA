@@ -41,7 +41,6 @@ data class SnapshotOptions(
 
 /**
  * Result from collecting all trees (DOM, AX, Snapshot) for a target.
- * Maps to Python TargetAllTrees dataclass.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class TargetAllTrees(
@@ -55,7 +54,7 @@ data class TargetAllTrees(
     @JsonProperty("cdp_timing")
     val cdpTiming: Map<String, Long> = emptyMap(),
     val options: SnapshotOptions = SnapshotOptions(),
-    
+
     // Internal mappings for merging
     @JsonProperty("snapshot_by_backend_id")
     val snapshotByBackendId: Map<Int, EnhancedSnapshotNode> = emptyMap(),
@@ -84,7 +83,6 @@ data class ElementRefCriteria(
 
 /**
  * Current page targets information.
- * Maps to Python CurrentPageTargets dataclass.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class CurrentPageTargets(
