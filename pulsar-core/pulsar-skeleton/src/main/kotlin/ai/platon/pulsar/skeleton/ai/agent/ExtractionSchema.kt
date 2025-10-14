@@ -1,4 +1,4 @@
-package ai.platon.pulsar.skeleton.ai
+package ai.platon.pulsar.skeleton.ai.agent
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
@@ -29,7 +29,9 @@ data class ExtractionField(
                     if (child.required) requiredList += child.name
                 }
                 node.set<ObjectNode>("properties", propsNode)
-                if (requiredList.isNotEmpty()) node.set("required", mapper.valueToTree(requiredList))
+                if (requiredList.isNotEmpty()) {
+                    node.set("required", mapper.valueToTree(requiredList))
+                }
             }
             "array" -> {
                 val itemNode = items?.toJsonSchemaNode(mapper) ?: JsonNodeFactory.instance.objectNode().apply { put("type", "string") }
@@ -38,9 +40,46 @@ data class ExtractionField(
         }
         return node
     }
+
+    companion object {
+        /** Convenience for a simple string field. */
+        fun string(name: String, description: String? = null, required: Boolean = true): ExtractionField =
+            ExtractionField(name = name, type = "string", description = description, required = required)
+
+        /** Convenience for an object field with child properties. */
+        fun obj(
+            name: String,
+            properties: List<ExtractionField>,
+            description: String? = null,
+            required: Boolean = true
+        ): ExtractionField = ExtractionField(
+            name = name,
+            type = "object",
+            description = description,
+            required = required,
+            properties = properties
+        )
+
+        /** Convenience for an array field with a given item schema. */
+        fun arrayOf(
+            name: String,
+            item: ExtractionField,
+            description: String? = null,
+            required: Boolean = true
+        ): ExtractionField = ExtractionField(
+            name = name,
+            type = "array",
+            description = description,
+            required = required,
+            items = item
+        )
+    }
 }
 
 class ExtractionSchema(private val fields: List<ExtractionField>) {
+    /**
+     * Convert the internal representation to a standard JSON Schema (draft-agnostic) string.
+     */
     fun toJsonSchema(): String {
         val mapper = ObjectMapper()
         val root = JsonNodeFactory.instance.objectNode()
@@ -62,4 +101,3 @@ fun legacyMapToExtractionSchema(map: Map<String,String>): ExtractionSchema {
     val fields = map.entries.map { (k,v) -> ExtractionField(name = k, description = v, required = false) }
     return ExtractionSchema(fields)
 }
-

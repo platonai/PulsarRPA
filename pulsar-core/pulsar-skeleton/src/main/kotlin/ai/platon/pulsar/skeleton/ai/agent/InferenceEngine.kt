@@ -1,10 +1,16 @@
-package ai.platon.pulsar.skeleton.ai
+package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.browser.driver.chrome.dom.model.PageTarget
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.impl.BrowserChatModelImpl
+import ai.platon.pulsar.skeleton.ai.buildExtractSystemPrompt
+import ai.platon.pulsar.skeleton.ai.buildExtractUserPrompt
+import ai.platon.pulsar.skeleton.ai.buildMetadataPrompt
+import ai.platon.pulsar.skeleton.ai.buildMetadataSystemPrompt
+import ai.platon.pulsar.skeleton.ai.buildObserveSystemPrompt
+import ai.platon.pulsar.skeleton.ai.buildObserveUserMessage
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.JsonNode
