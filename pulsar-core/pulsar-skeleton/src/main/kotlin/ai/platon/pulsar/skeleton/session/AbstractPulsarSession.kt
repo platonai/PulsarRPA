@@ -19,6 +19,7 @@ import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.InstructionResult
 import ai.platon.pulsar.skeleton.ai.PulsarAgent
+import ai.platon.pulsar.skeleton.ai.PulsarAgentImpl
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
@@ -537,7 +538,7 @@ abstract class AbstractPulsarSession(
 
     override suspend fun act(action: ActionOptions): PulsarAgent {
         val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`: session.bind(driver)" }
-        val agent = PulsarAgent(driver)
+        val agent = PulsarAgentImpl(driver)
 
         agent.act(action)
 

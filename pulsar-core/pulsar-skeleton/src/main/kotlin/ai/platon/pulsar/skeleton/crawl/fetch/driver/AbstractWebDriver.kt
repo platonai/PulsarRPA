@@ -12,6 +12,7 @@ import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.InstructionResult
 import ai.platon.pulsar.skeleton.ai.PulsarAgent
+import ai.platon.pulsar.skeleton.ai.PulsarAgentImpl
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -293,7 +294,7 @@ abstract class AbstractWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun act(action: ActionOptions): PulsarAgent {
-        val agent = PulsarAgent(this)
+        val agent = PulsarAgentImpl(this)
         agent.act(action) // execute without shadowing
         return agent
     }
