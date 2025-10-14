@@ -6,6 +6,7 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 
 @Tag("ExternalServiceTest")
+@Tag("SkippableLowerLevelTest")
 class Text2WebDriverActionDescriptionTests: TTATestBase() {
 
     @AfterTest

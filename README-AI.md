@@ -1,316 +1,234 @@
-# 🚦 AI Coder Agent Guideline
+# AI Coder Guide (v2025-10-14)
 
-This guideline defines how AI Coder Agents (e.g., GitHub Copilot, Claude Coder, ChatGPT) should behave when contributing 
-to this project. The document standardizes **environment setup**, **coding rules**, **testing strategy**, 
-and **CI/CD integration**.
-
-> 💡 Note: This document should be updated as the functionality evolves.
+Goal: Help AI work efficiently, stably, and predictably across code, review, docs, scripts, and tests—favoring stability and verifiability.
 
 ---
 
-## 1. 🛠 Environment Setup
+## 1. Overview & Environment Setup
 
-- **Project Type**: Multi-module **Maven** project
-- **Primary Language**: **Kotlin**
-- **Build Tool**: Always use `./mvnw` (Maven wrapper) from the project root
-- **System Adaptation**: Detect **OS environment first** to select best-suited tools  
-- **Java Compatibility**: Read `pom.xml` determine Java versions
+- Repository: Multi‑module Maven; always use the Maven wrapper from the project root
+    - Unix/macOS: `./mvnw`
+    - Windows (cmd.exe): `mvnw.cmd`
+- Primary language: Kotlin (Java interop exists; prefer Kotlin for new public APIs)
+- Java compatibility: Determine versions from the root `pom.xml`
+- Domain: Browser Agent and Browser Automation
+- System adaptation: Detect OS first before suggesting/using shell commands; prefer cross‑platform commands
+- Priority order: Stability > Maintainability > Performance > Feature expansion > Aesthetics
+
+Notes for Windows (cmd.exe):
+- Quote `-D` properties, e.g. `-D"spotless.apply.skip=true"`
+- For test glob examples on Windows, see the [Testing Guide](./docs/copilot/test-guide.md)
 
 ---
 
-## 2. 📖 General Guidelines
+## 2. General Guidelines & Coding Patterns
 
-- Prefer **data classes** for DTOs and state holders
-- Keep functions **small and single-responsibility**
-- Document all **public functions and classes** with KDoc
-- Original (Chinese): 如果在任何 README-AI.md 中遇到中文条款，将其翻译为英文。例外：1. 中文引用，2. 明确要求保留中文。
-- Translation: If any Chinese clauses appear in a README-AI.md, translate them into English unless (1) they are direct quotations, or (2) the text explicitly requires keeping Chinese.
+- Prefer immutable data models (Kotlin `data class`, `val` fields)
+- Small, single‑responsibility functions; explicit return types for public APIs
+- Null-safety: Prefer non‑null; when needed use `?`, `?:`, `require`, `check`
+- Extension functions: OK for local enrichment; don’t hide core business flow in extensions
+- Exceptions: Model expected branches with types/returns; throw runtime only for unrecoverable errors
+- Performance basics: Avoid boxing in hot paths; lazy init expensive objects; avoid deep decorator chains
+- Do not mass‑reformat unrelated code; preserve license headers and existing style
+- Avoid adding dependencies; if unavoidable, justify in PR and align with parent BOM
 
-## 3. 🤖 AI Agent Behavior
+---
+
+## 3. AI Agent Behavior
 
 Provide consistent, minimal, verifiable contributions:
-
-- Environment Detection:
-  - Always detect OS (Windows/macOS/Linux) before suggesting shell commands; prefer cross-platform forms.
-  - Use the Maven wrapper: `./mvnw` (Unix) or `mvnw.cmd` (Windows) from project root.
-- Editing Rules:
-  - Do not mass‑reformat unrelated code; restrict diffs to purposeful changes.
-  - Preserve license headers and existing comment style.
-  - Avoid introducing new dependencies unless absolutely necessary; justify in commit/PR description.
-- Code Generation:
-  - Favor pure functions and immutability for new utilities.
-  - Provide minimal, focused unit tests for each new public function (happy path + 1 edge case).
-  - When adding an abstraction (interface/strategy), include a concise rationale in KDoc.
-- Testing Integration:
-  - New features must include at least one `@Tag("UnitTest")` test.
-  - For behavior relying on external services (LLM, network), inject a strategy or generator to allow deterministic offline tests.
-  - Use the system property `-Dpulsar.tta.disableLLM=true` to disable model calls in unit tests.
-- Prompt / LLM Aware Code:
-  - Keep model/system prompts short, structured, and versionable as constants.
-  - Centralize parsing of model outputs; avoid scattering ad hoc JSON parsing.
-- Documentation:
-  - Update the closest README-* file when adding or changing a developer-facing concept.
-  - Translate any lingering Chinese lines per the translation rule above.
-- Security & Safety:
-  - Never log secrets or raw authorization headers.
-  - Validate untrusted input (selectors, URLs) before execution.
-- Performance:
-  - Defer heavy initialization (LLM clients, large caches) until first use (lazy or on-demand pattern).
-- PR Hygiene:
-  - Keep commits logically grouped (docs, refactor, feature, test).
-  - Reference related issue/ticket IDs in commit messages when available.
+- Environment detection: Choose commands per OS; always use Maven wrapper
+- Editing rules: Restrict diffs to purposeful changes; keep style/license headers
+- Code generation: Favor pure functions and immutability; see the [Testing Guide](./docs/copilot/test-guide.md)
+- Abstractions: When adding an interface/strategy, include concise KDoc rationale
+- Testing: see the [Testing Guide](./docs/copilot/test-guide.md)
+- External/LLM code: Inject strategy/provider to enable determinism; see the [Testing Guide](./docs/copilot/test-guide.md)
+- Prompts/LLM: Keep prompts short, structured, versioned constants; centralize output parsing
+- Documentation: Update the closest `README-*` when changing developer-facing concepts
+- Security & safety: Never log secrets; validate untrusted input (selectors, URLs)
+- Performance: Defer heavy init (LLM clients, large caches) until first use
+- PR hygiene: Keep commits logically grouped; reference tickets when available
 
 ---
 
-## 4. 📂 Project Structure Rules
+## 4. AI Workflow
 
-- **Root layout**:
+| Phase | Action | Notes |
+| ---- | ---- | ---- |
+| 1. Discover | Clarify scope | Inputs, expected outputs, constraints |
+| 2. Gather | grep / read code | Locate modules, packages, owners |
+| 3. Design | Draft | Interfaces, dataflow, state, error strategy |
+| 4. Implement | Minimal edits | Avoid broad reformatting/reordering |
+| 5. Verify | Build | For testing, see the [Testing Guide](./docs/copilot/test-guide.md) |
+| 6. Summarize | Output notes | Coverage, risks, next steps |
+
+Definition of Done:
+1. Minimal, self‑consistent change; no behavior break unless marked “Breaking Change”
+2. Build passes: `./mvnw -q -DskipTests` compiles; for testing expectations, see the [Testing Guide](./docs/copilot/test-guide.md)
+3. Testing expectations: see the [Testing Guide](./docs/copilot/test-guide.md)
+4. Logs exclude sensitive information
+5. Dependencies: No drift/duplication; respect BOM
+6. Security: No hardcoded credentials; validate inputs
+7. Docs: Public API/config/behavior changes documented
+8. Commit msg: Motivation + key changes + risks + rollback
+9. Performance: If impact >5%, include assessment/mitigation
+
+---
+
+## 5. Project Structure
+
+Root layout (abridged):
 ```
 project-root/
 ├── pulsar-core/            # Core modules
-│    ├── pulsar-skeleton/   # Core WebDriver & AI translation logic
-│    ├── pulsar-common/     # Common utilities and shared code
-│    ├── pulsar-dom/        # DOM manipulation and parsing
-│    ├── pulsar-persist/    # Data persistence layer
+│    ├── pulsar-skeleton/   # WebDriver & AI translation logic
+│    ├── pulsar-common/     # Shared utilities
+│    ├── pulsar-dom/        # DOM manipulation & parsing
+│    ├── pulsar-persist/    # Data persistence
 │    ├── pulsar-plugins/    # Plugin system
 │    ├── pulsar-ql/         # Query language implementation
-│    ├── pulsar-ql-common/  # Query language common components
+│    ├── pulsar-ql-common/  # QL common components
 │    ├── pulsar-resources/  # Resource management
-│    ├── pulsar-spring-support/ # Spring framework integration
-│    ├── pulsar-third/      # Third-party integrations
-│    └── pulsar-tools/      # Development and utility tools
-├── pulsar-rest/            # REST API and web services
-├── pulsar-client/          # Client libraries and SDKs
-├── pulsar-tests/           # Centralized test packages
-├── pulsar-examples/        # Example code and tutorials
-├── browser4/              # Browser automation modules
-│    ├── browser4-crawler/ # Web crawling functionality
-│    └── browser4-spa/     # Single Page Application support
-├── pulsar-all/            # Aggregation module
-├── pulsar-bom/            # Bill of Materials
-└── pom.xml                # Root Maven configuration
+│    ├── pulsar-spring-support/ # Spring integration
+│    ├── pulsar-third/      # Third-party integrations (LLM etc.)
+│    └── pulsar-tools/      # Dev & utility tools
+├── pulsar-rest/            # REST API & services
+├── pulsar-client/          # Client SDKs
+├── pulsar-tests/           # Centralized tests
+├── pulsar-examples/        # Examples & tutorials
+├── browser4/               # Product-facing modules
+│    ├── browser4-crawler/  # Web crawling
+│    └── browser4-spa/      # SPA UI (React/TypeScript)
+├── pulsar-bom/             # Bill of Materials (versions)
+└── pom.xml                 # Root Maven config
 ```
 
-- **Module guidelines**:
-  - Each module must define its own `pom.xml`
-  - No cyclic dependencies between modules
-  - Shared utilities go to `pulsar-core/pulsar-common`
-  - AI client/utilities in `pulsar-third/pulsar-llm`
+Module guidelines:
+- Each module defines its own `pom.xml`
+- No cyclic dependencies
+- Shared utilities → `pulsar-core/pulsar-common`
+- AI client/utilities → `pulsar-third/pulsar-llm`
 
 ---
 
-## 7. 🧪 Testing Rules
+## 6. Kotlin & Java Interop
 
-### 7.1 🏗️ Test Architecture & Structure
+- Kotlin‑first for new public APIs; keep Java style when editing existing Java
+- Prefer small, reversible migrations; centralize shared constants in Kotlin `object` or Java `final class`
+- Keep public APIs documented with KDoc (what/why/constraints)
 
-- **Test Module Organization**:
-  - **`pulsar-tests/`**: Centralized integration tests and E2E tests
-  - **`pulsar-tests-common/`**: Shared test utilities and base classes
-  - **Individual modules**: Unit tests within each module under `src/test/kotlin/`
+Kotlin code guidelines (highlights):
+- Data classes + immutability; computed properties for derived data
+- Explicit public return types; clear naming (bools with `is/has/can`)
+- Use `require`/`check` for argument/state validation
+- Avoid string interpolation in logs; placeholders only
 
-- **Test Base Classes**:
-  - **`TestBase`**: Fundamental test configuration and Spring context
-  - **`TestWebSiteAccess`**: Inherit for tests requiring test website access (start a mock server automatically)
-  - **`WebDriverTestBase`**: Inherit for WebDriver-based automation tests
-  - **Test website resources**: Located in `pulsar-tests/src/main/resources/static/`
+---
 
-### 7.2 📝 Test Naming & Organization
+---
 
-- **File Naming Conventions**:
-  ```
-  Unit tests:        <ClassName>Test.kt
-  Integration tests: <ClassName>IT.kt or <ClassName>Tests.kt
-  E2E tests:         <ClassName>E2ETest.kt
-  ```
+## 7. Testing
 
-- **Method Naming**: Use descriptive backtick names following BDD style:
-  ```kotlin
-  @Test
-  fun `Given valid user input When processing request Then return expected result`()
-  
-  @Test
-  fun `When ask to click a button then generate correct WebDriver action code`()
-  ```
+For strategy, tags, base classes, coverage targets, and commands, see the detailed guide:
+- [Testing Guide](./docs/copilot/test-guide.md)
 
-- **Package Structure**: Mirror main source packages under `src/test/kotlin/`
+---
 
-### 7.3 🏷️ Test Categorization & Annotations
+## 8. Build & Run
 
-- **Test Categories**:
-  ```kotlin
-  @Tag("UnitTest")           // Fast, isolated unit tests
-  @Tag("IntegrationTest")    // Tests with external dependencies
-  @Tag("E2ETest")           // End-to-end browser automation tests
-  @Tag("ExternalServiceTest") // Tests requiring external services (LLM, APIs)
-  @Tag("TimeConsumingTest")  // Long-running tests (>30 seconds)
-  @Tag("HeavyTest")         // Resource-intensive tests
-  @Tag("SmokeTest")         // Critical path validation tests
-  ```
+Windows (cmd.exe):
+```
+mvnw.cmd -v
+mvnw.cmd -q -DskipTests
+```
 
-- **Spring Test Configuration**:
-  ```kotlin
-  @SpringBootTest(classes = [Application::class], 
-                  webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-  ```
+Unix/macOS:
+```
+./mvnw -q -DskipTests
+```
 
-### 7.4 🎯 Test Types & Strategies
+Multi‑module (build selected modules without tests):
+```
+./mvnw -pl pulsar-core -am -DskipTests package
+```
 
-- **Unit Tests** (70% of test suite):
-  - **Scope**: Individual classes, pure functions, utilities
-  - **Focus**: Core logic, data transformations, algorithms
-  - **Isolation**: No external dependencies, use mocks/stubs
-  - **Speed**: < 100ms per test
-  
-- **Integration Tests** (25% of test suite):
-  - **Scope**: Module interactions, database operations, Spring context
-  - **Focus**: Component integration, configuration validation
-  - **Dependencies**: Real Spring context, test databases
-  - **Speed**: < 5 seconds per test
+If you fail to use a tool or run a command (such as `mvn`), refer to tool guide.
 
-- **E2E Tests** (5% of test suite):
-  - **Scope**: Full user workflows, browser automation
-  - **Focus**: AI → WebDriver command correctness, UI interactions
-  - **Dependencies**: Real browsers, test websites
-  - **Speed**: < 30 seconds per test
+- [tool-guide.md](docs/copilot/tool-guide.md)
 
-### 7.5 🔧 Configuration & Environment
+## 9. Security & Compliance
 
-- **Property Binding**: Spring-style relaxed binding support
-  ```
-  first-name ≈ first_name ≈ firstName ≈ first.name
-  server.port ≈ SERVER_PORT
-  ```
+- No secrets/tokens/private endpoints in code or logs; use `${ENV_VAR}` or `<REDACTED>` placeholders
+- Validate inputs: length/format/enums/ranges; avoid unbounded collections
+- Serialization: Reuse project serializer settings; disallow dynamic reflection on external input
+- External calls: Add timeouts/retries (if idempotent)/rate limiting as needed
 
-- **Environment Consistency**: 
-  - Behavior identical with/without Spring `Environment`
-  - Test profiles: `test`, `integration`, `e2e`
-  - Separate test configurations for different test types
+---
 
-- **Test Data Management**:
-  ```
-  src/test/resources/
-  ├── application-test.properties    # Test-specific configuration
-  ├── test-data/                     # Static test datasets
-  ├── fixtures/                      # Test fixtures and samples
-  └── static/                        # Test web pages and assets
-  ```
+## 10. Performance Notes
 
-### 7.6 🎭 Mocking & Test Doubles
+- Hot paths: Avoid deep decorator chains; inline or cache prudently
+- I/O: Batch operations; reuse connections; reduce blocking (coroutines/Reactor as needed)
+- Memory: Stream/process incrementally; avoid huge collections
+- Metrics: Collect asynchronously; avoid blocking main flows
 
-- **Mocking Strategy**:
-  - **Unit tests**: Mock external dependencies extensively
-  - **Integration tests**: Real Spring beans, mock external services only
-  - **E2E tests**: Minimize mocking, use real systems where possible
-  - **Local Mock Server**:
-    - If a test needs to access a webpage, prefer using the Local Mock Server pages.
-    - Inherit `TestWebSiteAccess` to auto‑start the Local Mock Server
-    - Static web resources path: `pulsar-tests-common/src/main/resources/static`
-    - Generated test pages may be placed under `pulsar-tests-common/src/main/resources/static/generated/`
+---
 
-- **Recommended Libraries**:
-  ```kotlin
-  // Kotlin-friendly mocking
-  @MockK lateinit var mockService: ExternalService
-  
-  // Spring Boot test slices
-  @WebMvcTest(Controller::class)
-  @DataJpaTest
-  @JsonTest
-  ```
+## 11. Benchmarks
 
-### 7.7 📊 Performance & Load Testing
+Module: `pulsar-benchmarks` (excluded from deploy/release profiles)
 
-- **Performance Test Guidelines**:
-  - **Benchmark tests**: Use `@Tag("BenchmarkTest")` for performance regression detection
-  - **Load tests**: Simulate realistic user loads for critical paths
-  - **Memory tests**: Validate memory usage patterns for large datasets
+Run:
+```
+./mvnw -pl pulsar-benchmarks -am package -DskipTests
+java -jar pulsar-benchmarks/target/pulsar-benchmarks-*-shaded.jar -f 1 -wi 3 -i 5
+```
 
-- **Test Timeouts**:
-  ```kotlin
-  @Test
-  @Timeout(value = 30, unit = TimeUnit.SECONDS)
-  fun `Heavy operation completes within time limit`()
-  ```
+Guidelines:
+- Name: `<Domain><Operation>Benchmark`
+- Avoid I/O; prepare data in `@Setup`
+- Brief comment: goal + metrics + regression triggers
+- No logging/I/O inside timed loop
 
-### 7.8 📈 Coverage & Quality Expectations
+---
 
-- **Coverage Targets**:
-  - **Overall**: Minimum 70% instruction coverage (JaCoCo)
-  - **Core modules**: 80%+ coverage for business logic
-  - **Utilities**: 90%+ coverage for reusable components
-  - **Controllers**: 85%+ coverage including error paths
+## 12. Templates & Resources
 
-- **Quality Metrics**:
-  - **Code coverage**: Enforced in CI pipeline
-  - **Test execution time**: Total test suite < 10 minutes
-  - **Flaky test tolerance**: Zero tolerance for flaky tests
-  - **Test maintenance**: Regular cleanup of obsolete tests
-
-### 7.9 🚀 CI/CD Integration
-
-- **Test Execution Phases**:
-  1. **Unit tests**: Run on every commit
-  2. **Integration tests**: Run on PR and main branch
-  3. **E2E tests**: Run nightly and before releases
-  4. **Performance tests**: Run weekly and before major releases
-
-- **Parallel Execution**:
-  ```xml
-  <!-- Maven Surefire configuration -->
-  <parallel>methods</parallel>
-  <threadCount>4</threadCount>
-  <perCoreThreadCount>true</perCoreThreadCount>
-  ```
-
-- **Test Reporting**:
-  - JUnit XML reports for CI integration
-  - JaCoCo coverage reports published to CI
-  - Failed test artifacts preserved for debugging
-
-### 7.10 🛠️ Testing Tools & Utilities
-
-- **Core Testing Stack**:
-  - **JUnit 5**: Primary testing framework
-  - **Mockk**: Kotlin-native mocking library
-  - **Spring Boot Test**: Integration testing support
-  - **Selenium WebDriver**: Browser automation
-  - **TestContainers**: Integration testing with real services
-
-- **Custom Test Utilities**:
-  - **WebDriver factories**: Standardized browser setup
-  - **Test data builders**: Fluent test data creation
-  - **Assertion helpers**: Domain-specific validations
-  - **Test fixtures**: Reusable test scenarios
-
-## 8. 🔬 Benchmarks (JMH)
-- Module: `pulsar-benchmarks` (not part of deploy/release profile)
-- Execution:
-  ```bash
-  ./mvnw -pl pulsar-benchmarks -am package -DskipTests
-  java -jar pulsar-benchmarks/target/pulsar-benchmarks-*-shaded.jar -f 1 -wi 3 -i 5
-  ```
-- Conventions:
-  - Put micro benchmarks close to core algorithms (string processing, DOM, parsing, scoring, ql)
-  - Keep benchmark state isolated (`@State(Scope.Thread)` unless shared)
-  - Always include a short KDoc: purpose + metric + potential regression trigger
-  - Avoid external I/O in JMH loops; pre-load data in `@Setup`
-
-## 9. 🧩 AI Templates & Resources
-Located under `docs/copilot/templates/`:
+Directory: `docs/copilot/templates/`
 - `response-template.md` – Standard AI agent reply format
 - `pr-description-template.md` – PR description scaffold
-- `test-tag-usage.md` – Tag examples (`UnitTest`, `IntegrationTest`, `E2ETest`, `BenchmarkTest` ...)
+- For tag usage examples, see the [Testing Guide](./docs/copilot/test-guide.md)
 
-Usage Guidance:
-- When generating a PR: fill all mandatory sections (Summary, Motivation, Risk, Rollback)
-- For performance-sensitive change: add provisional benchmark in `pulsar-benchmarks` referencing ticket ID
-- For flaky test triage: cite tag + recent runtime + failure signature
-
-## 10. ♻️ Future Improvements (Tracking)
-- Aggregate JaCoCo across modules (already partially via CI profile) -> Automate delta report
-- Add more domain-specific benchmarks (DOM diff, selector matching, scoring heuristics)
-- Integrate benchmark threshold check into CI optional workflow
-- Auto-generate test gap report (class vs test coverage skeleton)
+Usage:
+- New/changed PRs: Fill Summary / Motivation / Risk / Rollback
+- Perf-sensitive changes: Attach temporary benchmark or justify skipping
+- Flaky triage: Refer to the [Testing Guide](./docs/copilot/test-guide.md)
 
 ---
-If adding new categories (e.g., Load / Stress), extend both this file and `docs/copilot/README-AI.md` to keep them in sync.
+
+## 13. Quick Reference
+
+| Item | Convention |
+|----|------|
+| Build | `./mvnw` entry point (Windows: `mvnw.cmd`) |
+| Language | Kotlin-first; maintain Java interop |
+| Logging | Placeholders, low-noise, no sensitive data |
+| Dependency mgmt | BOM-unified; no duplicate versions |
+| Config layering | `application*.properties` overrides |
+| Docs | Public APIs need KDoc / README entries |
+| Benchmarks | JMH in `pulsar-benchmarks` |
+| Testing | See `docs/copilot/test-guide.md` |
+
+---
+
+## 14. Future Improvements (Tracking)
+
+- Aggregate JaCoCo across modules → Automate delta report
+- More domain benchmarks: DOM diff / selector matching / QL parsing / scoring heuristics
+- Optional CI performance guard with thresholds
+- Auto-generate test gap report (class vs test coverage skeleton)
+- Flaky dashboard (frequency / first-seen)
+
+---
+
+Sync policy: This unified guide supersedes the two prior documents as of 2025‑10‑14. If adding new categories (e.g., Load/Stress), update this file and keep the per-module docs in sync.

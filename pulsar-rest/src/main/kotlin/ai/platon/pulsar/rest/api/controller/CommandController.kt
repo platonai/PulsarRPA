@@ -6,6 +6,7 @@ import ai.platon.pulsar.rest.api.entities.CommandStatus
 import ai.platon.pulsar.rest.api.service.CommandService
 import ai.platon.pulsar.rest.api.service.ConversationService
 import ai.platon.pulsar.skeleton.crawl.event.impl.PageEventHandlersFactory
+import kotlinx.coroutines.runBlocking
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.http.codec.ServerSentEvent
@@ -36,7 +37,7 @@ class CommandController(
         val eventHandlers = PageEventHandlersFactory.create()
         val response = when {
             async -> commandService.submitAsync(request, eventHandlers)
-            else -> commandService.executeSync(request, eventHandlers)
+            else -> runBlocking { commandService.executeSync(request, eventHandlers) }
         }
 
         return ResponseEntity.ok(response)
@@ -56,7 +57,7 @@ class CommandController(
         @RequestParam(name = "async") async: Boolean? = null,
         @RequestParam(name = "mode") mode: String? = null,
     ): ResponseEntity<Any> {
-        val request = conversationService.normalizePlainCommand(plainCommand)
+        val request = runBlocking { conversationService.normalizePlainCommand(plainCommand) }
             ?: return ResponseEntity.badRequest().body("Invalid plain command: $plainCommand")
 
         val async = async ?: (mode?.lowercase() == "async")
@@ -66,7 +67,7 @@ class CommandController(
         val eventHandlers = PageEventHandlersFactory.create()
         val response = when {
             async -> commandService.submitAsync(request, eventHandlers)
-            else -> commandService.executeSync(request, eventHandlers)
+            else -> runBlocking { commandService.executeSync(request, eventHandlers) }
         }
 
         return ResponseEntity.ok(response)

@@ -514,19 +514,19 @@ abstract class AbstractPulsarSession(
     @Deprecated("Will be removed in a future release.")
     override fun harvest(page: WebPage, engine: String): TextDocument = harvest0(page, engine)
 
-    override fun chat(prompt: String): ModelResponse = context.chat(prompt)
+    override suspend fun chat(prompt: String): ModelResponse = context.chat(prompt)
 
-    override fun chat(prompt: String, page: WebPage) = chat(
+    override suspend fun chat(prompt: String, page: WebPage) = chat(
         prompt +
                 "\n\nThere is the source code of the page:\n\n\n" + page.contentAsString
     )
 
-    override fun chat(prompt: String, document: FeaturedDocument) = chat(
+    override suspend fun chat(prompt: String, document: FeaturedDocument) = chat(
         prompt +
                 "\n\nThere is the text content of the page:\n\n\n" + document.text
     )
 
-    override fun chat(prompt: String, element: Element) = chat(
+    override suspend fun chat(prompt: String, element: Element) = chat(
         prompt +
                 "\n\nThere is the text content of the selected element:\n\n\n" + element.text()
     )
@@ -566,7 +566,7 @@ abstract class AbstractPulsarSession(
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
         val tta = TextToAction(sessionConfig)
 
-        val actions = tta.generateWebDriverActionsWithToolCallSpecs(prompt)
+        val actions = tta.generateWebDriverActionsWithToolCallSpecsDeferred(prompt)
 
         // Dispatches and executes each action using a SimpleCommandDispatcher.
         val dispatcher = SimpleCommandDispatcher()

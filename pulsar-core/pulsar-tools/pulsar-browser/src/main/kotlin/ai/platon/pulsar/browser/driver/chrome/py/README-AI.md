@@ -2,6 +2,15 @@
 
 本文档描述如何将 `pulsar-browser/py/service.py` 中的 DomService 能力迁移为 Kotlin/JVM 原生实现，确保与现有系统保持行为一致、可灰度切换与快速回滚。
 
+> **说明**：Python DomService 代码目前仅作为历史文档与行为参考，不再纳入可执行路径，也不会在测试流程中被调用。
+
+---
+
+## 2. 使用前必读 (Prerequisites)
+
+在制定计划前，快速阅读：
+1. 根目录 `README-AI.md`
+
 ---
 
 ## 执行清单（给审阅者）
@@ -21,166 +30,103 @@
 - 范围：
   - 对外 JSON 字段与语义尽量保持不变，降低上层改动成本。
   - 使用 JVM CDP 客户端替代 Python 的 cdp_use，覆盖 Accessibility/DOM/DOMSnapshot/Target/Emulation 等域。
-  - 提供实现开关（kotlin|python），阶段性回归对比。
 - 非目标：不引入新功能，仅做必要的鲁棒性增强（超时、重试、容错）。
 
-## 二、技术选型与依赖
-- CDP 客户端（JVM）：
-  - 明确采用：kklisura/chrome-devtools-java-client（已在项目中使用 v2023 API，覆盖 AX/DOM/DOMSnapshot/Target/Emulation/Runtime/CSS 等域）。
-  - 说明：通过现有的 RemoteDevTools 封装统一获得 domain 客户端（page/dom/css/runtime/accessibility），无需额外引入其他 CDP 库。
-  - 兜底：如遇个别端点缺失，可使用同库提供的原始方法调用进行 protocol 级补齐。
-- 序列化：Jackson（项目已有），字段名与 Python 输出一致；必要时使用 @JsonProperty 映射。
-- 并发与超时：本模块不考虑（由上层统一治理）。本实现保持串行 CDP 操作即可。
-- 日志与指标：沿用 slf4j/kotlin-logging；埋点 cdp_timing、target 切换、异常原因。
+---
 
-## 三、公共接口与数据模型（建议包：ai.platon.pulsar.browser.driver.chrome.dom）
-- 接口
-  - interface DomService
-    - fun getAllTrees(target: PageTarget, options: SnapshotOptions): TargetAllTrees
-    - fun buildEnhancedDomTree(trees: TargetAllTrees): EnhancedDOMTreeNode
-    - fun serializeForLLM(root: SimplifiedNode, includeAttributes: List<String>): String
-    - fun findElement(ref: ElementRefCriteria): EnhancedDOMTreeNode?
-    - fun toInteractedElement(node: EnhancedDOMTreeNode): DOMInteractedElement
-- 核心数据类（字段名对齐 Python 结构）
-  - NodeType, DOMRect, EnhancedAXProperty, EnhancedAXNode, EnhancedSnapshotNode
-  - EnhancedDOMTreeNode（含 frameId、sessionId、shadowRoots、contentDocument）
-  - SimplifiedNode（LLM 友好树）
-  - TargetAllTrees（snapshot/dom_tree/ax_tree/devicePixelRatio/cdp_timing）
-  - DOMInteractedElement（element_hash、x_path、bounds）
-- 哈希与 XPath：
-  - 复刻 Python 的 parent-branch + STATIC_ATTRIBUTES sha256 哈希；预留基于 backendNodeId+sessionId 的实现切换。
-  - XPath 构造逻辑与停止边界（shadow/iframe）保持一致。
+## 二、当前实现概览（更新 2025-10-13）
+已落地的 Kotlin 实现（核心路径均在 `pulsar-core/pulsar-tools/pulsar-browser` 模块）：
+- 服务入口
+  - `chrome/dom/ChromeCdpDomService.kt`：对齐 Python DomService 的主实现，串联 DOM/AX/Snapshot 采集、增强合并、序列化与元素查找。
+- CDP 处理器
+  - `chrome/AccessibilityHandler.kt`：启用/采集 AX 树，支持多 frame 递归收集与选择器过滤、可滚动元素探测。
+  - `chrome/dom/DomTreeHandler.kt`：获取 DOM 树并映射为增强节点，维护 backendNodeId → 节点索引。
+  - `chrome/dom/DomSnapshotHandler.kt`：快照采集（样式/rect/paintOrder/stacking），增强版支持 absolute bounds 计算。
+- 模型与序列化
+  - `chrome/dom/model/DomModels.kt`、`DomTypes.kt`：EnhancedDOMTreeNode、EnhancedAXNode、EnhancedSnapshotNode、SimplifiedNode 等数据结构（字段名对齐 Python 语义）。
+  - `chrome/dom/DomLLMSerializer.kt`：LLM 友好序列化，含 paint-order 剪枝、复合组件检测、属性大小写对齐、选择器映射。
+- 工具
+  - `chrome/dom/XPathUtils.kt`：跨 shadow DOM/iframe 的 XPath 生成与缓存。
+  - `chrome/dom/HashUtils.kt`：元素哈希（父链/静态属性/后端节点/会话可配）、父链哈希。
+  - `chrome/dom/ScrollUtils.kt`：可滚动性判定、信息文本与去重策略。
 
-### 现有 Handler 抽象与实现计划（chrome-devtools-java-client 驱动）
-- 已有抽象与类（位于 `ai.platon.pulsar.browser.driver.chrome`）：
-  - `PageHandler`：封装 Page/DOM/CSS/Runtime 常用操作（导航、查询、计算样式、滚动/聚焦等）。
-  - `AccessibilityHandler`：接入 Accessibility 域（AX 树获取等）。当前已存在骨架类，需完善实现。
-  - 其他：`ScreenshotHandler` 等。
-- 本次需要落实：
-  - 完成 `AccessibilityHandler` 的实现，基于 `com.github.kklisura.cdt.protocol.v2023.types.accessibility`：
-    - getFullAXTree(depth: Int?, frameId: String?): List<AXNode>
-    - 按 frameId 获取指定 Frame 的 AX 树；与 DOM/backendNodeId 做后续关联。
-    - 预留 selector → AXNode 过滤的入口（必要时通过 Runtime.evaluate 实现定位后再用 AX 过滤）。
-  - 如有需要，新增轻量 Handler 抽象层，职责单一、面向 DomService：
-    - `DomTreeHandler`：封装 DOM.getDocument / describeNode / querySelector / attributes 等纯 DOM 能力。
-    - `DomSnapshotHandler`：封装 DOMSnapshot.captureSnapshot 及解析（样式/布局/scroll/client/bounds/paint order）。
-  - 以上 Handler 以 `RemoteDevTools` 为依赖入口，统一从中获取 domain 客户端实例。
+功能覆盖现状：
+- DOM/AX/Snapshot 采集：已实现；AX 按 frame 聚合；Snapshot 支持样式/rect/paintOrder/stacking。
+- 树合并与增强：已实现滚动性/可见性/可交互性/交互指数、XPath、哈希、绝对坐标（基础版）。
+- 简化树与 LLM 序列化：已实现选择器映射与剪枝策略。
+- 元素查找与交互映射：支持 elementHash/XPath/backendNodeId/CSS 选择器（基础选择器）。
 
-## 四、功能分解与里程碑
-- M0 调研与基线
-  - 梳理 `service.py`/`views.py` 的职责与输出形状，形成 ADR（接口输入/输出、域调用、边界条件）。
-  - 用 Python 版本采集一组“黄金样本”页面，固化为测试基线（DOM/AX/Snapshot/序列化输出）。
-- M1 CDP 会话与 Target 管理
-  - 建立 Chrome 连接、Target 创建/附加、Session 管理（PageTarget 与 iframe TargetInfo 映射）。
-  - 获取 devicePixelRatio、基本导航、加载等待。
-  - Handler 层落地：`PageHandler` 复用；补齐 `AccessibilityHandler`；按需增加 `DomTreeHandler`、`DomSnapshotHandler`。
-- M2 树采集层（与 Python 等价的 CDP 调用）
-  - Accessibility.getFullAXTree（由 `AccessibilityHandler` 提供）。
-  - DOM.getDocument（含 depth 管理、frame/iframe 关联，建议由 `DomTreeHandler` 提供）。
-  - DOMSnapshot.captureSnapshot（样式、布局、scroll/client/bounds、paint order，建议由 `DomSnapshotHandler` 提供）。
-  - 统计 cdp_timing 指标。
-- M3 数据整合层
-  - 将三棵树合并为 EnhancedDOMTreeNode（nodeId/backendNodeId 对齐；AX 关联；snapshot 属性灌入）。
-  - 处理 iframe 的 contentDocument、shadowRoots 合并。
-  - 支持通过 SnapshotOptions 关闭/开启昂贵字段的采集。
-- M4 功能增强层
-  - 滚动性判断 is_actually_scrollable（基于 snapshot 的 scrollRects/clientRects/computed_styles）。
-  - should_show_scroll_info 与 get_scroll_info_text 逻辑对齐。
-  - XPath、element_hash、parent_branch_hash 的 Kotlin 复刻。
-- M5 LLM 序列化与选择器映射
-  - 构造 SimplifiedNode，避免 children_nodes/shadow_roots 重复序列化。
-  - 实现 serializeForLLM（对齐 Python DOMTreeSerializer 的 include_attributes 逻辑）。
-  - 构建 DOMSelectorMap（element_hash → node）。
-- M6 兼容层与实现切换
-  - Kotlin 实现的 Facade 暴露与 Python DomService 等价的调用表。
-  - application.properties 增加开关，允许回退到 Python 实现。
-- M7 性能与鲁棒性
-  - 大页面的内存/时间优化（限深/限宽、可选域、延迟装配）。
-  - 断开/超时/Target detaching 的重试与幂等（注意：并发/超时仍由上层控制，本模块只保证顺序执行）。
-- M8 对齐验证与上线
-  - 与“黄金样本”字段级 diff（允许浮点/顺序容忍阈值），达到一致性目标。
-  - 文档与开关收尾，上线灰度。
+---
 
-## 五、兼容性与回滚
-- 外部接口：保持 JSON 字段与结构不变；必要时提供旧字段兼容映射。
-- 回滚：提供实现开关；失败时日志提示 + 自动降级到 Python。
-- 跨平台：使用 Maven Wrapper 构建；确保 Windows/macOS/Linux 一致行为。
+## 三、与 Python 行为对照（要点）
+- JSON 字段：模型命名与注解对齐 Python（如 `element_hash`、`x_path`、`clientRects` 等）。
+- 哈希策略：支持“父链+静态属性”的传统策略与“后端节点/会话”策略，可通过 `HashUtils.HashConfig` 调整。
+- XPath：考虑 shadow host、iframe 边界与同名兄弟索引，生成规则更健壮（仍保持向下兼容）。
+- 滚动性：AX+样式+rect 结合，含嵌套容器去重；`iframe/body/html` 专项处理。
+- 可见性/交互性：依据样式与 AX role/光标等，stacking 仅做占位处理（见“已知待办”）。
 
-## 六、测试与验证
-- 单元测试（位置：`pulsar-tests/src/test/kotlin/ai/platon/pulsar/browser`）
-  - 数据类序列化/反序列化；哈希/XPath；滚动信息边界。
-  - Handler 层单测建议：
-    - `AccessibilityHandlerTests.kt`：验证 getFullAXTree 的返回结构与字段映射。
-    - `DomSnapshotHandlerTests.kt`：验证 captureSnapshot 输出关键信息（scroll/client/bounds）。
-- 基准（Golden）测试
-  - 选择含 iframe、shadow DOM、长列表、表单等页面，固化 Python 基线与 Kotlin 结果；字段级对比。
-- 集成测试
-  - CDP 直连参考：`pulsar-tests/src/test/kotlin/ai/platon/pulsar/browser/PulsarWebDriverCDPTests.kt`。
-  - 上层抽象参考：`pulsar-tests/src/test/kotlin/ai/platon/pulsar/browser/PulsarWebDriverMockSite2Tests.kt`。
-  - 端到端：启动无头 Chrome，走全流程：导航 → 采集 → 合并 → 序列化 → 交付。
-- 回归测试
-  - 针对日志中常见站点/失败栈的专项用例。
+---
 
-## 七、构建交付与配置
-- 依赖
-  - 在 pulsar-browser 模块引入 JVM CDP 客户端依赖（已采用 chrome-devtools-java-client）；Jackson。
-  - 如需新增 Handler，请与现有 `RemoteDevTools` 对齐，避免重复管理连接。
-- 配置项（application.properties 示例）
-  - pulsar.dom.includeAttributes
-  - pulsar.dom.snapshot.timeout
-  - pulsar.dom.maxDepth / maxChildren
-  - pulsar.dom.impl=kotlin|python
-- 构建与运行（建议）
-  - Windows: 使用 mvnw.cmd 从项目根目录构建/测试
-  - *nix: 使用 ./mvnw 构建/测试
+## 四、兼容/回滚策略
+- 不提供回滚到 python 方案。
 
-## 八、风险与缓解
-- CDP 域覆盖差异或语义不一致
-  - 采用覆盖 DOMSnapshot/AX 的 chrome-devtools-java-client；不足处以同库原始 Protocol 调用兜底。
-- 性能与内存压力
-  - 限深/限宽；可配置域；延迟构建；压测与统计。
-- 跨 iframe/shadow DOM 对齐难
-  - 以复杂页面建立黄金样本，严格字段对齐。
-- 输出细微差异影响上层
-  - 提供兼容映射与灰度开关；金丝雀比对。
+---
 
-## 九、时间排期（建议）
-- 第1周：M0-M2（调研、依赖落地、CDP 采集）
-- 第2周：M3-M4（数据整合、滚动逻辑、哈希/XPath）
-- 第3周：M5-M6（序列化、兼容层、实现切换）
-- 第4周：M7-M8（性能/鲁棒性、黄金样本对齐、上线）
+## 五、构建与运行（Windows 优先说明）
+- 统一使用 Maven Wrapper 从项目根目录调用。
+- 会自动拉起 Mock Server（见测试基类注解），无需手动启动。
 
-## 十、产出物清单
-- 接口与实现
-  - ai/platon/pulsar/browser/driver/chrome/dom/DomService.kt
-  - ai/platon/pulsar/browser/driver/chrome/dom/ChromeCdpDomService.kt
-  - ai/platon/pulsar/browser/driver/chrome/dom/model/*.kt（数据类/枚举/序列化）
-  - ai/platon/pulsar/browser/driver/chrome/dom/serializer/*.kt（LLM 序列化）
-  - ai/platon/pulsar/browser/driver/chrome/AccessibilityHandler.kt（完成 AX 能力）
-  - ai/platon/pulsar/browser/driver/chrome/DomSnapshotHandler.kt（若新增）
-  - ai/platon/pulsar/browser/driver/chrome/DomTreeHandler.kt（若新增）
-- 配置与文档
-  - application.properties 示例项与 README 更新
-  - ADR：迁移对齐说明与差异清单
-- 测试
-  - 单测：哈希/XPath/滚动信息/序列化/Handler
-  - 集成：端到端抓取与比对（参考 CDP 与 MockSite2 测试）
-  - 基准：黄金样本与 diff 工具
+示例命令（Windows cmd.exe）：
+- 仅运行相关测试模块
+  - `mvnw.cmd -pl pulsar-tests -am test -D"spotless.apply.skip=true"`
+- 全量（所有模块）测试
+  - `mvnw.cmd -Pall-modules test -D"spotless.apply.skip=true"`
 
-## 附录 A：Python 视图模型要点（来自 views.py）
-- NodeType、DOMRect、EnhancedAXNode、EnhancedSnapshotNode、EnhancedDOMTreeNode、SimplifiedNode、DOMInteractedElement 结构与行为是 Kotlin 映射基准。
-- element_hash：基于 parent-branch 路径 + STATIC_ATTRIBUTES 的 sha256；需在 Kotlin 复刻并保留后续切换到 backendNodeId+sessionId 的选项。
-- XPath：
-  - 生成时遇到 shadow root 透传；遇到 iframe 停止；同标签兄弟用 1-based 索引。
-- 滚动信息：
-  - is_actually_scrollable：scrollRects vs clientRects + CSS overflow 判断；iframe/body/html 特判；嵌套滚动去重。
-  - get_scroll_info_text：对 iframe 与普通元素采用不同的简洁呈现。
+Unix/macOS（参考）：
+- `./mvnw -pl pulsar-tests -am test -D"spotless.apply.skip=true"`
+- `./mvnw -Pall-modules test -D"spotless.apply.skip=true"`
 
-## 附录 B：黄金样本与差异对比方法
-- 采集固定站点样本，保存 Python 输出（DOM/AX/Snapshot/序列化）。
-- Kotlin 输出对齐后以字段级 diff 工具比较：
-  - 容忍：浮点小误差、无序集合（排序后比较）。
-  - 关键字段必须一致：节点层级、frame 关联、bounds、scroll/client rects、paint order。
+---
 
-## 附录 C：验收标准（Definition of Done）
-- 功能覆盖：M0-M8 全部完成，开关可切换且默认 Kotlin。
+## 六、测试与验证（现状与计划）
+- 已有测试
+  - 端到端：`pulsar-tests/src/test/kotlin/.../ChromeCdpDomServiceE2ETest.kt`
+    - 骨架：`getAllTrees` → `buildEnhancedDomTree` → `buildSimplifiedTree` → `serializeForLLM`
+    - 访问页面：`/generated/interactive-dynamic.html`（由 Mock Server 提供，端口 18080）。
+  - 单元/组件：
+    - `HashUtilsTests.kt`、`ScrollUtilsTest.kt`、`DomLLMSerializerTest.kt`（覆盖哈希、滚动、序列化关键逻辑）。
+- 待补测试
+  - `AccessibilityHandlerTests.kt`：AX 树结构与字段映射。
+  - `DomSnapshotHandlerTests.kt`：快照样式/rect/paintOrder/stacking 与 absolute bounds。
+  - 黄金样本对齐测试：将 E2E 结果落盘到 `pulsar-tests/src/test/resources/golden/domservice/<case>/current`，并与版本化基线比对（TODO：落盘工具方法与基线初始化）。
+
+运行要点：
+- Mock Server：`@SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = DEFINED_PORT)` 标注的测试会自动启动 `127.0.0.1:18080`，静态资源目录为 `pulsar-tests-common/src/main/resources/static/generated`。
+- 页面选择：优先 `interactive-dynamic.html`，必要时使用 `interactive-1~4.html`、`interactive-screens.html`；若覆盖不足，按模板新增 `interactive-<feature>.html`（并更新路由与黄金样本）。
+
+---
+
+## 七、已知待办与风险
+- Stacking context 遮挡与可见性：目前仅记录 `stacking_contexts` 与 `paint_order`，未完整计算遮挡关系（TODO）。
+- 绝对坐标：`DomSnapshotHandler` 的 absolute bounds 计算为基础版，缺失定位上下文链/变换矩阵（可迭代增强）。
+- 选择器查找：`findElement` 的 CSS 选择器仅覆盖简单情形（tag/#id/.class），复杂选择器可考虑利用 Runtime.evaluate 或 CSS domain（权衡成本）。
+- 性能：XPath/哈希缓存已加入；在长页面/大量节点时需关注内存占用与序列化体积（建议压测与阈值调参）。
+
+---
+
+## 八、里程碑与验收（建议）
+- M1：AX/DOM/Snapshot 采集与合并完成，E2E 测试可稳定通过（当前基本达成）。
+- M2：完善 AX/Snapshot 单测与黄金样本落盘对齐，Stacking 可见性规则初版。
+- M3：引入可选运行时开关与更多复杂选择器/遮挡计算，覆盖更多 Mock 页面与真实站点回归。
+
+---
+
+## 人类评审员意见
+
+以 py/service.py 为基线，检查 ChromeCdpDomService 的实现情况。
+1. 重点检查异常分支处理是否合理
+2. 深入到DomTreeHandler，DomSnapshotHandler，AccessibilityHandler 检查
+3. 确保 browser/../dom 各个文件的逻辑同 browser/../py 下对应逻辑保持一致。
+
+## 变更记录
+- 2025-10-13：新增“当前实现概览/测试现状/构建与运行/已知待办与风险”等章节，E2E 用例已就绪但黄金样本落盘待补。

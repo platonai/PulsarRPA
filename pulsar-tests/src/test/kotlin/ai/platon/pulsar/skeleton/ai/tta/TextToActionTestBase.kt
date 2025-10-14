@@ -7,6 +7,7 @@ import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll
 import org.springframework.boot.test.context.SpringBootTest
@@ -26,7 +27,7 @@ class TextToActionTestBase : WebDriverTestBase() {
         fun checkConfiguration() {
             if (isModelConfigured) {
                 model = ChatModelFactory.getOrCreate(conf)
-                val response = model.call("这是一个测试，来测试你是否工作正常。计算11的平方，仅返回数字。")
+                val response = runBlocking { model.call("这是一个测试，来测试你是否工作正常。计算11的平方，仅返回数字。") }
                 Assumptions.assumeTrue(response.content.contains("121"))
             } else {
                 println("=========================== LLM NOT CONFIGURED ==========================================")

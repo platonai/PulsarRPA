@@ -2,6 +2,7 @@ package ai.platon.pulsar.external
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.ImmutableConfig
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll
 
@@ -17,7 +18,7 @@ class ChatModelTestBase {
         fun checkConfiguration() {
             if (isModelConfigured) {
                 model = ChatModelFactory.getOrCreate(conf)
-                val response = model.call("这是一个测试，来测试你是否工作正常。计算11的平方，仅返回数字。")
+                val response = runBlocking { model.call("这是一个测试，来测试你是否工作正常。计算11的平方，仅返回数字。") }
                 Assumptions.assumeTrue(response.content.contains("121"))
             } else {
                 println("=========================== LLM NOT CONFIGURED ==========================================")

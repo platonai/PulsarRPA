@@ -10,6 +10,7 @@ import ai.platon.pulsar.rest.api.common.MockEcServerTestBase
 import ai.platon.pulsar.rest.api.config.MockEcServerConfiguration
 import ai.platon.pulsar.rest.api.entities.CommandRequest
 import ai.platon.pulsar.rest.api.entities.PromptRequest
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
@@ -82,7 +83,7 @@ class ConversationServiceTest : MockEcServerTestBase() {
     fun `test prompt conversion to request`() {
         val prompt = API_COMMAND_PROMPT1
 
-        val request = conversationService.normalizePlainCommand(prompt)
+        val request = runBlocking { conversationService.normalizePlainCommand(prompt) }
         println(prettyPulsarObjectMapper().writeValueAsString(request).toString())
         assertNotNull(request)
         verifyPromptRequestL2(request)
@@ -92,7 +93,7 @@ class ConversationServiceTest : MockEcServerTestBase() {
     fun `test prompt conversion to request 2`() {
         val prompt = API_COMMAND_PROMPT2
 
-        val request = conversationService.normalizePlainCommand(prompt)
+        val request = runBlocking { conversationService.normalizePlainCommand(prompt) }
         println(prettyPulsarObjectMapper().writeValueAsString(request).toString())
         assertNotNull(request)
         verifyPromptRequestL2(request)
@@ -131,12 +132,12 @@ from load_and_select(@url, 'body');
 
         val prompt1 = commandTemplate.replace("{PLACEHOLDER_URL}", url1)
 
-        val result1 = conversationService.convertPlainCommandToJSON(prompt1, url1)
+        val result1 = runBlocking { conversationService.convertPlainCommandToJSON(prompt1, url1) }
         assertNotNull(result1)
 
         val prompt2 = commandTemplate.replace("{PLACEHOLDER_URL}", url2)
 
-        val result2 = conversationService.convertPlainCommandToJSON(prompt2, url2)
+        val result2 = runBlocking { conversationService.convertPlainCommandToJSON(prompt2, url2) }
         assertNotNull(result2)
 
         val template1 = result1.replace(url1, "").replace(url2, "")
@@ -149,7 +150,7 @@ from load_and_select(@url, 'body');
     fun `test prompt conversion to request 3`() {
         val prompt = API_COMMAND_PROMPT3
 
-        val request = conversationService.normalizePlainCommand(prompt)
+        val request = runBlocking { conversationService.normalizePlainCommand(prompt) }
         println(prettyPulsarObjectMapper().writeValueAsString(request).toString())
         assertNotNull(request)
         verifyPromptRequestL2(request)
@@ -167,7 +168,7 @@ Page summary prompt: Provide a brief introduction of this product.
 
         """.trimIndent()
 
-        val result1 = conversationService.convertPlainCommandToJSON(prompt1, url1)
+        val result1 = runBlocking { conversationService.convertPlainCommandToJSON(prompt1, url1) }
         assertNotNull(result1)
 
         val prompt2 = """
@@ -177,7 +178,7 @@ Page summary prompt: Provide a brief introduction of this product.
 
         """.trimIndent()
 
-        val result2 = conversationService.convertPlainCommandToJSON(prompt2, url2)
+        val result2 = runBlocking { conversationService.convertPlainCommandToJSON(prompt2, url2) }
         assertNotNull(result2)
 
         val template1 = result1.replace(url1, "").replace(url2, "")
@@ -194,7 +195,7 @@ Go to localhost:18182/ec/dp/B0E000001
 Page summary prompt: Provide a brief introduction of this product.
         """.trimIndent()
 
-        val request = conversationService.normalizePlainCommand(prompt)
+        val request = runBlocking { conversationService.normalizePlainCommand(prompt) }
         assertNull(request)
     }
 
@@ -205,7 +206,7 @@ Page summary prompt: Provide a brief introduction of this product.
     fun `When chat about a page then the result is not empty`() {
         val request = PromptRequest(PRODUCT_LIST_URL, "Tell me something about the page")
 
-        val response = conversationService.chat(request)
+        val response = runBlocking { conversationService.chat(request) }
         println(response.toString())
         assertTrue { response.isNotEmpty() }
     }
@@ -222,7 +223,7 @@ Page summary prompt: Provide a brief introduction of this product.
             PRODUCT_DETAIL_URL, "Tell me something about the page", "", actions = actions
         )
 
-        val response = conversationService.chat(request)
+        val response = runBlocking { conversationService.chat(request) }
         println(response.toString())
         assertTrue { response.isNotEmpty() }
     }
@@ -248,7 +249,7 @@ Page summary prompt: Provide a brief introduction of this product.
         """.trimIndent()
 
         try {
-            val markdown = conversationService.convertResponseToMarkdown(response)
+            val markdown = runBlocking { conversationService.convertResponseToMarkdown(response) }
             println(markdown.toString())
         } catch (e: Exception) {
             e.printStackTrace()
