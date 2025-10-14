@@ -11,9 +11,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
 import java.nio.file.Files
 import java.time.Instant
 import java.util.*
@@ -79,7 +77,7 @@ data class ExecutionContext(
     val additionalContext: Map<String, Any> = emptyMap()
 )
 
-class PulsarActAgent(
+class PulsarAgent(
     val driver: WebDriver,
     val maxSteps: Int = 100,
     val config: WebDriverAgentConfig = WebDriverAgentConfig(maxSteps = maxSteps)
@@ -109,7 +107,7 @@ class PulsarActAgent(
      * Execution with comprehensive error handling and retry mechanism.
      * Returns the final summary with enhanced error handling.
      */
-    suspend fun execute(action: ActionOptions): ModelResponse {
+    suspend fun act(action: ActionOptions): ModelResponse {
         Files.createDirectories(baseDir)
         val startTime = Instant.now()
         val sessionId = uuid.toString()

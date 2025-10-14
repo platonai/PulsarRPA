@@ -8,7 +8,7 @@ import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.skeleton.ai.PulsarActAgent
+import ai.platon.pulsar.skeleton.ai.PulsarAgent
 import ai.platon.pulsar.skeleton.ai.tta.ActionDescription
 import ai.platon.pulsar.skeleton.ai.tta.ActionOptions
 import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
@@ -2273,11 +2273,11 @@ interface PulsarSession : AutoCloseable {
      * Each step in the plan uses at most one tool.
      *
      * @param action A string describing the action to be performed.
-     * @return A [PulsarActAgent] instance that executes the action.
+     * @return A [PulsarAgent] instance that executes the action.
      * @throws Exception if the action cannot be performed or if an error occurs during execution.
      */
     @Beta
-    suspend fun act(action: String): PulsarActAgent
+    suspend fun act(action: String): PulsarAgent
 
     /**
      * Executes an action described by the given [ActionOptions].
@@ -2285,11 +2285,11 @@ interface PulsarSession : AutoCloseable {
      * Each step in the plan uses at most one tool.
      *
      * @param action An [ActionOptions] object describing the action to be performed.
-     * @return A [PulsarActAgent] instance that executes the action.
+     * @return A [PulsarAgent] instance that executes the action.
      * @throws Exception if the action cannot be performed or if an error occurs during execution.
      */
     @Beta
-    suspend fun act(action: ActionOptions): PulsarActAgent
+    suspend fun act(action: ActionOptions): PulsarAgent
 
     /**
      * Perform an action described by [action].
