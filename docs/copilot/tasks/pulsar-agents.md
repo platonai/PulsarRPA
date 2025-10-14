@@ -3,7 +3,6 @@
 ## 2. 使用前必读 (Prerequisites)
 在执行任何操作前，快速阅读：
 1. 根目录 `README-AI.md`
-2. `docs/copilot/README-AI.md`
 
 ---
 ## 3. 背景 (Background)

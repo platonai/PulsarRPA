@@ -17,7 +17,7 @@
 - Direct Maven: `./mvnw -Pall-modules test` for full suite, add `-pl <module> -am` for scoped runs; unit tests should stay under 100 ms and carry tags from `docs/copilot/templates/test-tag-usage.md`.
 - Coverage enforced via Jacoco in the `ci` profile (70% instruction minimum); keep new code covered or justify deviations.
 ## Coding Patterns
-- Follow Kotlin-first style from `docs/copilot/README-AI.md`: immutable data classes, explicit return types, and logger placeholders (no string interpolation in log messages).
+- Follow Kotlin-first style from root `README-AI.md`: immutable data classes, explicit return types, and logger placeholders (no string interpolation in log messages).
 - Public APIs require KDoc summarizing intent, parameters, return, and exceptions; update adjacent docs when behavior shifts (see `docs/advanced-guides.md`).
 - Configuration overrides belong in layered `application*.properties`; avoid scattering hardcoded defaults in code.
 ## Debug & Tooling

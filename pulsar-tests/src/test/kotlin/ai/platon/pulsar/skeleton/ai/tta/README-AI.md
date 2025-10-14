@@ -1,29 +1,29 @@
 # 🚦 AI Coder Agent Guideline for Text-To-Action Testing
 
-这个文件指导AI代理如何为Text-To-Action功能生成、执行和改进测试。
+This document guides AI agents on how to create, run, and evolve tests for the Text-To-Action (TTA) feature.
 
-## 📋 前置条件
+## 📋 Prerequisites
 
-在开始之前，请阅读以下文档以了解项目全貌：
+Before you start, read the following to understand the project landscape:
 
-1. **项目根目录** `README-AI.md` - 全局开发规范和项目结构
-2. **核心功能文档** `pulsar-core/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/ai/README-AI.md` - TTA核心实现指南
-3. 所有测试都必须使用 Mock Server 的网页进行测试，这些网页资源位于`pulsar-tests-common/src/main/resources/static/generated/tta`目录下
+1. Root `README-AI.md` – global dev rules and project structure
+2. Core guide `pulsar-core/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/ai/README-AI.md` – TTA core implementation
+3. All tests must use the Mock Server pages under `pulsar-tests-common/src/main/resources/static/generated/tta`
 
-## 🎯 测试目标
+## 🎯 Test Goals
 
-测试 **Text-To-Action (TTA)** 功能，确保AI能够正确地将用户的自然语言指令转换为可执行的WebDriver操作。
+Test the Text-To-Action (TTA) capability to ensure the AI correctly translates natural language commands into executable WebDriver actions.
 
-**核心测试对象：**
-- `ai.platon.pulsar.skeleton.ai.tta.TextToAction#generateWebDriverAction` 方法
-- 仅测试 generateWebDriverAction 方法，忽略其他方法
-- 自然语言 → WebDriver API 转换的准确性
-- 交互元素识别和选择的可靠性
-- DOM变化下元素引用的稳定性
+Focus areas:
+- `ai.platon.pulsar.skeleton.ai.tta.TextToAction#generateWebDriverAction`
+- Only test generateWebDriverAction; ignore other methods
+- Natural language → WebDriver API mapping accuracy
+- Reliable identification and selection of interactive elements
+- Stability of element references under DOM changes
 
-## 🏗 测试环境配置
+## 🛠 Test Environment
 
-### 目录结构
+### Directory Layout
 ```
 pulsar-tests/src/test/kotlin/ai/platon/pulsar/skeleton/ai/tta/    # Test code directory
 ├── TextToActionTestBase.kt                                       # Test base class
@@ -40,7 +40,7 @@ pulsar-tests/src/test/kotlin/ai/platon/pulsar/skeleton/ai/tta/    # Test code di
 ├── ConditionalActionsAndNavigationTest.kt                        # Conditional actions and navigation tests
 └── README-AI.md                                                  # This file
 
-# Note: The actual interactive test web pages are stored in a shared module (used by multiple test modules)
+# Note: Interactive test pages live in a shared module used by multiple suites
 pulsar-tests-common/src/main/resources/static/generated/tta       # Actual test web page directory
 ├── interactive-1.html                                            # Basic interactions
 ├── interactive-2.html                                            # Complex forms
@@ -52,172 +52,171 @@ pulsar-tests-common/src/main/resources/static/generated/tta       # Actual test 
 └── interactive-screens.html                                      # Multi-screen placeholder (to be enhanced)
 ```
 
-### 环境要求
-- **Java版本**: 根据根目录 `pom.xml` 确定
-- **构建工具**: 使用 Maven Wrapper 从项目根目录运行（Windows: `mvnw.cmd`，Linux/macOS: `./mvnw`）
-- **LLM配置**: 需要配置AI模型API密钥
-- **网页服务器**: 继承 `WebDriverTestBase` 自动启动
-- **WebDriver 对象**: 继承 `WebDriverTestBase`，使用 `runWebDriverTest` 获得
+### Environment Requirements
+- Java version: derive from root `pom.xml`
+- Build tool: use Maven Wrapper from project root (Windows: `mvnw.cmd`, Linux/macOS: `./mvnw`)
+- LLM config: requires API keys via environment/properties
+- Web server: inherited by `WebDriverTestBase` (auto-starts Mock Server)
+- WebDriver: use `runWebDriverTest` provided by `WebDriverTestBase`
 
-## 🔧 测试基础设施
+## 🔧 Test Foundation
 
-### 测试基类继承关系
+### Inheritance
 ```text
-WebDriverTestBase              # 提供网页服务器和WebDriver支持（已含 @SpringBootTest）
+WebDriverTestBase              # Provides mock web server and WebDriver support (@SpringBootTest included)
     ↓
-TextToActionTestBase          # TTA专用测试基础设施（已含 @SpringBootTest 与 LLM 检查）
+TextToActionTestBase          # TTA-specific fixtures (@SpringBootTest + LLM checks included)
     ↓
-具体测试类                     # 实际测试实现
+Concrete tests                # Actual test classes
 ```
 
-提示：测试类无需再次添加 `@SpringBootTest`，基类已包含该注解。
+Note: Test classes do not need to add `@SpringBootTest` again; the base already includes it.
 
-### LLM配置检查
-测试基类会自动检查LLM配置：
-- 如果未配置API密钥，测试将被跳过并显示配置提示
-- 配置文件位置
+### LLM Configuration Check
+The base test class automatically checks for LLM configuration:
+- If API keys are missing, tests are skipped with a configuration hint
+- Configuration files may be resolved from:
   - `${project.baseDir}/application[-private].properties`
   - `AppPaths.CONFIG_ENABLED_DIR/application[-private].properties`
-- 支持环境变量配置
+- Environment variables are supported
 
-## 📝 测试编写规范
+## 📝 Test Authoring Guidelines
 
-### 1. 测试文件命名
-- 功能测试: `<Feature>Test.kt` (如 `TextToActionTest.kt`)
-- 综合测试: `<Feature>ComprehensiveTests.kt`
-- 集成测试: `<Feature>IT.kt`
+### 1. File Naming
+- Functional tests: `<Feature>Test.kt` (e.g., `TextToActionTest.kt`)
+- Comprehensive suites: `<Feature>ComprehensiveTests.kt`
+- Integration tests: `<Feature>IT.kt`
 
-### 2. 测试方法命名
-使用反引号描述性命名：
+### 2. Method Naming
+Use descriptive backtick names in BDD style:
 ```kotlin
 @Test
 fun `When ask to click a button then generate correct WebDriver action code`() = runWebDriverTest { driver ->
-    // 测试实现
+    // test implementation
 }
 
 @Test
-fun `Given complex form when ask to fill specific field then select correct element`() = runWebDriverTest { driver ->
-    // 测试实现
+fun `Given complex form when asking to fill a specific field then select correct element`() = runWebDriverTest { driver ->
+    // test implementation
 }
 ```
 
-### 3. 测试注解使用
+### 3. Annotations
 ```kotlin
-@Tag("ExternalServiceTest")    // 需要外部服务（LLM API）
-@Tag("TimeConsumingTest")      // 耗时测试
+@Tag("ExternalServiceTest")    // Requires external service (LLM API)
+@Tag("TimeConsumingTest")      // Long-running tests
 class TextToActionComprehensiveTests : TextToActionTestBase() {
     // ...
 }
 ```
 
-## 🧪 测试策略
+## 🧠 Test Strategy
 
-### 1. 测试网页选择策略
-- **优先使用现有测试网页**: 检查 `interactive-*.html` 是否满足测试需求
-- **创建新网页条件**: 当现有网页无法覆盖特定测试场景时（动态加载、歧义解析、Shadow DOM 等）
-- **命名规范**: `interactive-<number>.html` 或 `<feature>-test.html`
+### 1. Page Selection Strategy
+- Prefer existing test pages: check whether `interactive-*.html` covers the need
+- Create a new page only when existing pages can’t cover the scenario (dynamic loading, ambiguity, Shadow DOM, etc.)
+- Naming: `interactive-<number>.html` or `<feature>-test.html`
 
-### 2. 测试层次划分
+### 2. Test Layers
 
-#### 单元测试 (Unit Tests)
-- 测试单个方法的正确性
-- 不依赖外部LLM服务（使用mock）
-- 快速执行，覆盖边界条件
+#### Unit Tests
+- Validate a single method
+- No real LLM dependency (use mocks)
+- Fast and cover edge cases
 
-#### 集成测试 (Integration Tests) 
-- 测试TTA与LLM的真实交互
-- 使用真实API调用
-- 使用Mock Server
-- 验证端到端的转换流程
-- 从自然语言输入到浏览器操作执行
+#### Integration Tests
+- Real TTA + LLM interactions
+- Use real API calls
+- Use Mock Server
+- Validate end-to-end translation flow
 
-#### E2E测试 (End-to-End Tests)
-- 使用真实运行的网站
-- 完整的用户场景测试
-- 从自然语言输入到浏览器操作执行
-- 验证最终的自动化效果
+#### E2E Tests
+- Use a real site when necessary
+- Full user workflows
+- From natural language input to browser actions
+- Validate final automation effect
 
-### 3. 测试用例设计原则
+### 3. Test Case Design Principles
 
-#### 正向测试
+#### Positive cases
 ```kotlin
 @Test
-fun `When given clear action command then generate precise WebDriver code`() = runWebDriverTest { driver ->
-    val command = "点击登录按钮"
+fun `When given clear action then generate precise WebDriver code`() = runWebDriverTest { driver ->
+    val command = "click the login button"
     val action = textToAction.generateWebDriverAction(command, driver)
     assertThat(action.functionCalls.joinToString("\n")).contains("driver.click(")
 }
 
 @Test
 fun `When asking to check element existence then generate exists check`() = runWebDriverTest { driver ->
-    val command = "检查登录按钮是否存在"
+    val command = "check whether the login button exists"
     val action = textToAction.generateWebDriverAction(command, driver)
     assertThat(action.functionCalls.joinToString("\n")).contains("driver.exists(")
 }
 
 @Test
 fun `When asking to verify element visibility then generate visibility check`() = runWebDriverTest { driver ->
-    val command = "确认提交按钮可见"
+    val command = "ensure the submit button is visible"
     val action = textToAction.generateWebDriverAction(command, driver)
     assertThat(action.functionCalls.joinToString("\n")).contains("driver.isVisible(")
 }
 
 @Test
 fun `When asking to focus element then generate focus action`() = runWebDriverTest { driver ->
-    val command = "聚焦到搜索框"
+    val command = "focus the search input"
     val action = textToAction.generateWebDriverAction(command, driver)
     assertThat(action.functionCalls.joinToString("\n")).contains("driver.focus(")
 }
 
 @Test
 fun `When asking to scroll to element then generate scrollTo action`() = runWebDriverTest { driver ->
-    val command = "滚动到页面底部"
+    val command = "scroll to the bottom of the page"
     val action = textToAction.generateWebDriverAction(command, driver)
     assertThat(action.functionCalls.joinToString("\n")).contains("driver.scrollTo(")
 }
 ```
 
-#### 边界测试
+#### Edge cases
 ```kotlin
 @Test
-fun `When no matching element exists then generate empty tool-calls`() = runWebDriverTest { driver ->
-    val action = textToAction.generateWebDriverAction("点击不存在的按钮", driver)
+fun `When element does not exist then return empty tool-calls`() = runWebDriverTest { driver ->
+    val action = textToAction.generateWebDriverAction("click a non-existent button", driver)
     assertThat(action.functionCalls.joinToString()).doesNotContain("driver.click(")
 }
 
 @Test
-fun `When asking for conditional action then generate appropriate checks`() = runWebDriverTest { driver ->
-    val action = textToAction.generateWebDriverAction("如果登录按钮存在就点击它", driver)
+fun `When asking for conditional action then include appropriate checks`() = runWebDriverTest { driver ->
+    val action = textToAction.generateWebDriverAction("if the login button exists then click it", driver)
     val calls = action.functionCalls.joinToString()
     assertThat(calls).contains("driver.exists(") || calls.contains("driver.click(")
 }
 
 @Test
-fun `When asking for defensive interaction then generate visibility check`() = runWebDriverTest { driver ->
-    val action = textToAction.generateWebDriverAction("确认提交按钮可见后点击", driver)
+fun `When asking for defensive interaction then check visibility before action`() = runWebDriverTest { driver ->
+    val action = textToAction.generateWebDriverAction("ensure the submit button is visible before clicking", driver)
     val calls = action.functionCalls.joinToString()
     assertThat(calls).contains("driver.isVisible(") || calls.contains("driver.click(")
 }
 ```
 
-#### 歧义/恢复测试
+#### Ambiguity/recovery
 ```kotlin
 @Test
-fun `When ambiguous command then choose best match or ask clarify`() = runWebDriverTest { driver ->
-    val action = textToAction.generateWebDriverAction("点击按钮", driver)
-    // 验证策略，例如优先 data-testid 或文本最相近
+fun `When ambiguous command then choose best match or ask to clarify`() = runWebDriverTest { driver ->
+    val action = textToAction.generateWebDriverAction("click the button", driver)
+    // Verify strategy: prioritize data-testid or closest text match
 }
 
 @Test
 fun `When asking for navigation sequence then generate proper flow`() = runWebDriverTest { driver ->
-    val action = textToAction.generateWebDriverAction("点击链接后等待页面跳转完成", driver)
+    val action = textToAction.generateWebDriverAction("click the link and wait for navigation", driver)
     val calls = action.functionCalls.joinToString()
     assertThat(calls).contains("driver.click(") || calls.contains("driver.waitForNavigation(")
 }
 
 @Test
 fun `When asking for complex interaction then generate multi-step sequence`() = runWebDriverTest { driver ->
-    val action = textToAction.generateWebDriverAction("滚动到表单，确认输入框可见，然后输入文本", driver)
+    val action = textToAction.generateWebDriverAction("scroll to the form, ensure the input is visible, then type text", driver)
     val calls = action.functionCalls.joinToString()
     assertThat(calls).contains("driver.scrollTo(") ||
                   calls.contains("driver.isVisible(") ||
@@ -226,218 +225,214 @@ fun `When asking for complex interaction then generate multi-step sequence`() = 
 }
 ```
 
-## 🎯 重点测试场景
+## 🎯 High-value Scenarios
 
-### 1. 基础操作转换（与当前工具列表对齐）
-- 点击操作: "点击登录按钮" → `driver.click("#login-btn")`
-- 输入操作: "在搜索框输入AI工具" → `driver.fill("#search-input", "AI工具")`
-- 键盘操作: "在输入框按下 Enter" → `driver.press("#search-input", "Enter")`
-- 滚动操作: "滚动到页面中间" → `driver.scrollToMiddle(0.5)` 或 `driver.scrollDown(1)`
-- 滚动到元素: "滚动到评论区" → `driver.scrollTo("#comments")`
-- 屏幕滚动: "滚到第2屏中部" → `driver.scrollToScreen(1.5)`
-- 导航操作: "打开 /docs 页面" → `driver.navigateTo("/docs")`
-- 等待元素: "等待提交按钮出现" → `driver.waitForSelector("#submit-btn", 5000L)`
-- 等待导航: "点击登录后等待跳转" → `driver.click("#login")` + `driver.waitForNavigation()`
-- 浏览器历史: "返回上一页" → `driver.goBack()`，"前进到下一页" → `driver.goForward()`
-- 元素检查: "检查元素是否存在" → `driver.exists("#element")`，"检查元素是否可见" → `driver.isVisible("#element")`
-- 元素聚焦: "聚焦到搜索框" → `driver.focus("#search-input")`
-- 勾选/取消: `driver.check("#agree")` / `driver.uncheck("#agree")`
-- 高级点击（文本/属性匹配）: `driver.clickTextMatches(".list", "提交", 1)` / `driver.clickMatches(".item", "data-id", "^x-\\d+$", 1)`
-- 点击第 N 个链接: `driver.clickNthAnchor(3)`（从 0 开始）
-- 截图: 整页 `driver.captureScreenshot()` 或节点 `driver.captureScreenshot("#area")`
-- 提取内容: "提取文本内容" → `driver.selectFirstTextOrNull("#content")`（注：该选择类API尚未作为 tool_call 暴露，当前工具模式不会生成此调用）
+### 1. Basic action mapping (aligned with current tool list)
+- Click: "click the login button" → `driver.click("#login-btn")`
+- Input: "type AI tools in the search box" → `driver.fill("#search-input", "AI tools")`
+- Keyboard: "press Enter in the input" → `driver.press("#search-input", "Enter")`
+- Scroll: "scroll to the middle of the page" → `driver.scrollToMiddle(0.5)` or `driver.scrollDown(1)`
+- Scroll to element: "scroll to the comments section" → `driver.scrollTo("#comments")`
+- Screen scroll: "scroll to the middle of the second screen" → `driver.scrollToScreen(1.5)`
+- Navigation: "open /docs" → `driver.navigateTo("/docs")`
+- Wait for element: "wait for the submit button to appear" → `driver.waitForSelector("#submit-btn", 5000L)`
+- Wait for navigation: "after clicking login, wait for redirect" → `driver.click("#login")` + `driver.waitForNavigation()`
+- Browser history: "go back" → `driver.goBack()`, "go forward" → `driver.goForward()`
+- Element checks: `driver.exists("#element")` and `driver.isVisible("#element")`
+- Focus: `driver.focus("#search-input")`
+- Check/uncheck: `driver.check("#agree")` / `driver.uncheck("#agree")`
+- Advanced clicks (text/attribute matches): `driver.clickTextMatches(".list", "Submit", 1)` / `driver.clickMatches(".item", "data-id", "^x-\\d+$", 1)`
+- Click nth link: `driver.clickNthAnchor(3)` (0-based)
+- Screenshots: full page `driver.captureScreenshot()` or node `driver.captureScreenshot("#area")`
+- Extraction: "extract text content" → `driver.selectFirstTextOrNull("#content")` (Note: selection APIs are not yet exposed as tool calls; current tool mode won't generate these calls)
 
-### 2. 元素选择准确性
-- 通过文本匹配: "点击提交按钮"
-- 通过位置描述: "点击右上角的菜单"
-- 通过功能描述: "选择搜索框"
-- 处理相似元素: 多个按钮时的精确选择
+### 2. Element selection accuracy
+- Match by text: "click the submit button"
+- By position: "click the top-right menu"
+- By function: "select the search box"
+- Handle similar elements: precise disambiguation when multiple buttons exist
 
-### 3. 复杂场景处理
-- 动态加载内容的元素识别
-- 表单填写的字段匹配
-- 多步骤操作的序列生成
-- 条件判断逻辑的处理
-- 防御性编程：exists/isVisible 检查后再执行操作
-- 导航处理：waitForNavigation 在页面跳转后的使用
-- 复杂交互序列：滚动→检查→聚焦→输入的组合操作
+### 3. Complex scenarios
+- Identify elements loaded dynamically
+- Match fields in complex forms
+- Generate multi-step sequences
+- Conditional logic handling
+- Defensive programming: exists/isVisible checks before actions
+- Navigation handling: waitForNavigation after page transitions
+- Complex sequences: scroll → check → focus → input
 
-### 4. 错误和边界情况
-- 元素不存在时的fallback策略
-- 模糊指令的处理
-- DOM结构变化的适应性
-- 超时和异常的处理
-- 条件执行失败：元素存在但不可见时的处理
-- 导航超时：页面加载过慢时的处理
-- 复杂序列中某一步失败时的恢复策略
-
----
-
-## ✅ 与实现对齐的工具调用 API 清单（当前可用）
-
-- 已暴露并已支持（TTA 工具 → driver.* 映射存在）：
-  - navigateTo(url)
-  - waitForSelector(selector, timeoutMillis)
-  - exists(selector): Boolean - 检查元素是否存在
-  - isVisible(selector): Boolean - 检查元素是否可见
-  - focus(selector) - 聚焦到指定元素
-  - click(selector)
-  - fill(selector, text)
-  - press(selector, key)
-  - check(selector) / uncheck(selector)
-  - scrollDown(count) / scrollUp(count) / scrollToTop() / scrollToBottom() / scrollToMiddle(ratio)
-  - scrollTo(selector) - 滚动到指定元素
-  - scrollToScreen(screenNumber)
-  - clickTextMatches(selector, pattern, count)
-  - clickMatches(selector, attrName, pattern, count)
-  - clickNthAnchor(n, rootSelector?)
-  - waitForNavigation(oldUrl?, timeoutMillis?) - 等待页面导航完成
-  - goBack() - 浏览器后退
-  - goForward() - 浏览器前进
-  - captureScreenshot() / captureScreenshot(selector)
-  - delay(millis)
-  - stop()
-
-- MiniWebDriver 已有但尚未通过工具暴露（建议后续开放）：
-  - 状态查询：isHidden(selector), isChecked(selector)
-  - 焦点与输入：type(selector, text)
-  - 精确滚动与定位：moveMouseTo(x, y) / moveMouseTo(selector, dx, dy)
-  - 轮滚/拖拽：mouseWheelDown/Up(...), dragAndDrop(selector, dx, dy)
-  - 页面与节点提取：outerHTML(), outerHTML(selector)
-  - 文本/属性/属性值/属性对/超大批量：selectFirstTextOrNull, selectTextAll, selectFirstAttributeOrNull, selectAttributes, selectAttributeAll
-  - 属性/Property：selectFirstPropertyValueOrNull, selectPropertyValueAll
-  - 链接/图片批量：selectHyperlinks, selectImages
-  - 会话态：getCookies(), url()/currentUrl()/documentURI()/baseURI()/referrer()
-  - 置前：bringToFront()
-
-## 🧭 建议新增的工具调用与使用场景
-
-- exists/isVisible：
-  - 场景："如果页面有‘购买’按钮就点击" → 先判存活/可见再 click，降低报错。
-- focus/type：
-  - 场景：需要保留原值或模拟逐字输入（用于触发 input/keyup 监听）。
-- scrollTo(selector)：
-  - 场景："滚到评论区并点赞"，比 scrollDown 更稳健。
-- waitForNavigation/goBack/goForward：
-  - 场景："点击登录后等待跳转"、"返回上一页"、"前进到下一页"。
-- mouseWheelDown/Up、moveMouseTo、dragAndDrop：
-  - 场景：画布、拖拽排序、地图/白板、复杂滚动容器。
-- outerHTML/page extract 与批量选择 API：
-  - 场景："抓取列表所有标题/链接/图片"、"导出节点HTML"。
-- getCookies/url/referrer：
-  - 场景：需要校验登陆态、记录来源、调试导航链路。
-
-> 建议优先开放：exists/isVisible/focus/scrollTo(selector)/waitForNavigation，因为它们能显著提升稳健性与可观测性，且风险低。
-
-## 🧱 元素抽取与上下文感知差距
-
-- 当前交互元素抽取逻辑覆盖：input/textarea/select/button/a[href]、显式 onclick/contenteditable/role=button|link，过滤 hidden/disabled。
-- 尚未覆盖：
-  - iframe 内部元素（需要切换上下文）
-  - Shadow DOM（open/closed）
-  - a11y 语义（aria-*、role+name）优先级
-- 测试页面规划已包含上述方向，建议在对应页面落地后扩展元素抽取脚本与测试用例。
-
-## ✍️ 文档需要更新（与实现对齐）的要点
-
-- 在“基础操作转换”中补充：
-  - scrollToScreen、clickTextMatches、clickMatches、clickNthAnchor、captureScreenshot(selector)
-- 在“重点测试场景”中新增：
-  - "点击第 N 个链接"、"文本/属性匹配点击"、"局部截图" 场景
-- 在“差距摘要/路线图”中明确：
-  - 目前元素抽取不支持 iframe/Shadow DOM，需要测试落地后再扩展
-- 新增“建议开放的工具调用”章节（见上），作为未来测试项的来源清单
+### 4. Errors and boundaries
+- Fallback when element is missing
+- Ambiguous instruction handling
+- Adapt to DOM structure changes
+- Timeouts and exception handling
+- Conditional execution failures: element exists but not visible
+- Navigation timeout: slow page load handling
+- Recovery from a failed step in a multi-step sequence
 
 ---
 
-## 📊 测试覆盖率要求
+## ✅ Current Tool-call API (available)
 
-- **指令覆盖率**: 90%+ 常见用户指令类型
-- **元素类型覆盖率**: 85%+ HTML交互元素类型
-- **代码覆盖率**: 70%+ (JaCoCo配置)
-- **场景覆盖率**: 100% 核心用户场景
+Exposed and supported (TTA tools → driver mapping exists):
+- navigateTo(url)
+- waitForSelector(selector, timeoutMillis)
+- exists(selector): Boolean – element existence
+- isVisible(selector): Boolean – element visibility
+- focus(selector)
+- click(selector)
+- fill(selector, text)
+- press(selector, key)
+- check(selector) / uncheck(selector)
+- scrollDown(count) / scrollUp(count) / scrollToTop() / scrollToBottom() / scrollToMiddle(ratio)
+- scrollTo(selector)
+- scrollToScreen(screenNumber)
+- clickTextMatches(selector, pattern, count)
+- clickMatches(selector, attrName, pattern, count)
+- clickNthAnchor(n, rootSelector?)
+- waitForNavigation(oldUrl?, timeoutMillis?)
+- goBack()
+- goForward()
+- captureScreenshot() / captureScreenshot(selector)
+- delay(millis)
+- stop()
+
+MiniWebDriver has more capabilities not yet exposed via tools (recommended to open later):
+- State queries: isHidden(selector), isChecked(selector)
+- Focus and typing: type(selector, text)
+- Precise scroll/positioning: moveMouseTo(x, y) / moveMouseTo(selector, dx, dy)
+- Wheel/drag: mouseWheelDown/Up(...), dragAndDrop(selector, dx, dy)
+- Page/node extraction: outerHTML(), outerHTML(selector)
+- Text/attributes/properties/bulk: selectFirstTextOrNull, selectTextAll, selectFirstAttributeOrNull, selectAttributes, selectAttributeAll
+- Properties: selectFirstPropertyValueOrNull, selectPropertyValueAll
+- Links/images bulk: selectHyperlinks, selectImages
+- Session: getCookies(), url()/currentUrl()/documentURI()/baseURI()/referrer()
+- Z-order: bringToFront()
+
+## 💡 Recommended future tool exposure and scenarios
+
+- exists/isVisible:
+  - Scenario: "If there is a ‘Buy’ button, click it" → check existence/visibility before click to reduce errors.
+- focus/type:
+  - Scenario: retain original value or simulate keystrokes (trigger input/keyup listeners).
+- scrollTo(selector):
+  - Scenario: "Scroll to the comments section and like it" – more robust than generic scroll.
+- waitForNavigation/goBack/goForward:
+  - Scenario: post-login navigation wait, back/forward navigation.
+- mouseWheelDown/Up, moveMouseTo, dragAndDrop:
+  - Scenario: canvas, drag-sort, maps/whiteboards, complex scroll containers.
+- outerHTML/page extract and bulk selection APIs:
+  - Scenario: "Capture all titles/links/images in list", "Export node HTML".
+- getCookies/url/referrer:
+  - Scenario: verify login state, capture referrers, debug navigation chain.
+
+> Prioritize exposing exists/isVisible/focus/scrollTo(selector)/waitForNavigation first. They significantly improve robustness and observability with low risk.
+
+## 🧩 Interactive elements and context awareness gaps
+
+- Current extraction covers: input/textarea/select/button/a[href], explicit onclick/contenteditable, role=button|link; filters out hidden/disabled.
+- Not covered yet:
+  - Elements within iframes (context switching needed)
+  - Shadow DOM (open/closed)
+  - a11y semantics (aria-*, role+name) prioritization
+- Test pages already include most directions above; extend extraction scripts and tests as the corresponding pages land.
+
+## ✍️ Doc updates aligned with implementation
+
+- In "Basic action mapping", include: scrollToScreen, clickTextMatches, clickMatches, clickNthAnchor, captureScreenshot(selector)
+- In "High-value scenarios", add: nth-link clicking, text/attribute match clicks, partial screenshot
+- In "Gaps/roadmap", clarify: iframe/Shadow DOM not supported yet; expand after pages land
+- Add "Recommended tools to expose" section (above) as source for future tests
 
 ---
-## ✅ 当前测试网页能力与差距摘要
-| 页面 | 已含能力 | 主要缺失 |
-|------|----------|----------|
-| interactive-1 | 基础输入/选择/按钮/显隐/简单计算 | 多按钮歧义/错误态/滚动长内容 |
-| interactive-2 | 多控件表单/滑块/订阅开关/动态字体 | 表单验证/多步骤/条件显示/file/radio |
-| interactive-3 | IntersectionObserver动画/范围控制/显隐切换 | 真异步加载/列表增删/懒加载/分页 |
-| interactive-4 | 暗色模式/拖拽排序 | 跨列表拖拽/撤销/Shadow DOM/多拖拽类型 |
-| interactive-dynamic | 延迟/异步加载/列表增删 | 更复杂的懒加载/虚拟列表 |
-| interactive-ambiguity | 重复元素/歧义冲突/data-testid | 更全面的消歧策略/位置参照 |
-| forms-advanced-test | radio/file/date/time/password/禁用/只读 | 校验错误态更全/无障碍属性 |
-| interactive-screens | 多屏滚动/长页面/分段内容 | 真正多屏/Tab/iframe/分栏/路由感知 |
 
-> 结论：需要新增专用页面覆盖：动态异步、歧义冲突、Shadow DOM、可访问性、媒体/富文本、多屏结构。
+## 📈 Coverage Expectations
 
-## 🧩 元素类型覆盖进度（概览）
-- 已覆盖: text/email/number/range/textarea/select/checkbox/button/a/draggable list/toggle(自制)/slider
-- 未覆盖（优先）: password/search/date/time/file/radio/progress/meter/dialog/modal/contenteditable/iframe/video/audio/canvas/disabled/readonly/aria-live/Shadow DOM
-
-## 🗺 改进路线（分阶段）
-1. Phase 1（结构修复）
-   - 测试网页实际目录修改为 pulsar-tests-common/src/main/resources/static/generated/tta
-   - 重命名interactive-<number>.html，使用可读性强的名字
-   - 修正文档路径说明（已完成）
-   - 修复暗色模式
-   - 重写 interactive-screens 为真正多屏：Tab + iframe + anchor + 长滚动区
-2. Phase 2（动态与歧义）
-   - 新增 `interactive-dynamic.html`：异步加载(setTimeout)、列表增删、懒加载图片、虚拟滚动占位
-   - 新增 `interactive-ambiguity.html`：重复按钮/同文本不同区域/data-testid 策略
-3. Phase 3（高级控件）
-   - `forms-advanced-test.html`: radio/file/date/time/password/验证错误态/disabled/readonly
-   - `modal-dialog-test.html`: 自定义 dialog + focus trap + ESC 关闭
-4. Phase 4（平台/可访问性）
-   - `shadow-components-test.html`: open/closed shadow + slot
-   - `a11y-test.html`: landmarks/nav/main/aria-label/aria-live/aria-expanded
-   - `media-rich-test.html`: video/audio/canvas/contenteditable
-5. Phase 5（策略验证）
-   - 编写元素定位优先级测试：data-testid > aria-label > role+name > 文本 > 相对位置
-   - 加入 dom 置换 / stale element 重试测试
-
-## 🏷 定位与命名规范补充
-- 为歧义消解引入: `data-testid="tta-<domain>-<seq>"`
-- Shadow DOM 元素：外层再加 wrapper `data-scope="shadow-demo"`
-- 动态插入元素：添加 `data-dynamic="true"` 便于过滤
-
-## 🔁 推荐测试辅助方法（后续可在基类中补充）
-- `waitFor(selector, timeout)` 条件等待
-- `retrying(action)` 处理暂时性 stale
-- `byTestId(id)` 简化选择器
-
-## 📌 新增/更新页面的验收清单
-- 是否引入新元素类型
-- 是否提供至少 1 个歧义选择场景
-- 是否包含动态/延迟/可失败交互
-- 是否添加 data-testid / aria 元数据
-- 是否在 README 能力表中登记
-
-## 🧪 质量度量改进建议
-- 脚本统计元素种类：扫描 `static/generated/tta/*.html` 输出覆盖率
-- 统计测试指令语料类型分布（动作/目标/修饰）
-- 失败分类：解析失败/定位失败/执行失败/超时
+- Instruction coverage: >90% common user instruction types
+- Element types: >85% interactive HTML elements
+- Code coverage: >70% (JaCoCo)
+- Scenario coverage: 100% of core user flows
 
 ---
-## 🚀 测试执行命令
+## ✅ Current test pages capability summary
+| Page | Capabilities | Missing |
+|------|--------------|---------|
+| interactive-1 | Basic input/selection/buttons/show-hide/simple calc | Multi-button ambiguity/error states/long scroll content |
+| interactive-2 | Multi-control form/slider/toggle/dynamic fonts | Form validation/multiple steps/conditional display/file/radio |
+| interactive-3 | IntersectionObserver animations/range control/show-hide toggle | Real async loading/list add-remove/lazy loading/pagination |
+| interactive-4 | Dark mode/drag-and-drop | Cross-list DnD/undo/Shadow DOM/multiple DnD types |
+| interactive-dynamic | Delay/async loading/list add-remove | More complex lazy loading/virtual lists |
+| interactive-ambiguity | Duplicate elements/ambiguity/data-testid handling | More comprehensive disambiguation/position reference |
+| forms-advanced-test | radio/file/date/time/password/disabled/readonly | Fuller validation error states/a11y attributes |
+| interactive-screens | Multi-screen scrolling/long page/sectioned content | Real multi-screen/tabs/iframe/segmented/routing awareness |
 
-Windows (cmd.exe)：
+Conclusion: Add dedicated pages for dynamic async, ambiguity, Shadow DOM, accessibility, media/rich text, and multi-screen structures.
+
+## 🧪 Element type coverage progress (overview)
+- Covered: text/email/number/range/textarea/select/checkbox/button/a/draggable list/custom toggle/slider
+- Not covered (priority): password/search/date/time/file/radio/progress/meter/dialog/modal/contenteditable/iframe/video/audio/canvas/disabled/readonly/aria-live/Shadow DOM
+
+## 🗺 Roadmap (phased)
+1. Phase 1 (structure fixes)
+   - Ensure test pages live in pulsar-tests-common/src/main/resources/static/generated/tta
+   - Rename interactive-<number>.html to readable names
+   - Fix dark mode
+   - Rewrite interactive-screens to real multi-screen: Tab + iframe + anchor + long scroll area
+2. Phase 2 (dynamic & ambiguity)
+   - Add interactive-dynamic.html: async load (setTimeout), list add/remove, lazy images, virtual scroll placeholder
+   - Add interactive-ambiguity.html: duplicate buttons/same text across regions/data-testid strategies
+3. Phase 3 (advanced controls)
+   - forms-advanced-test.html: radio/file/date/time/password/validation errors/disabled/readonly
+   - modal-dialog-test.html: custom dialog + focus trap + ESC close
+4. Phase 4 (platform/a11y)
+   - shadow-components-test.html: open/closed shadow + slot
+   - a11y-test.html: landmarks/nav/main/aria-label/aria-live/aria-expanded
+   - media-rich-test.html: video/audio/canvas/contenteditable
+5. Phase 5 (strategy validation)
+   - Element locator priority tests: data-testid > aria-label > role+name > text > relative position
+   - Add DOM replacement/stale element retry tests
+
+## 🎯 Locating and naming conventions
+- Introduce `data-testid="tta-<domain>-<seq>"` to help disambiguation
+- For Shadow DOM demos, wrap outer scope with `data-scope="shadow-demo"`
+- Mark dynamically inserted elements with `data-dynamic="true"` for filtering
+
+## 🔁 Recommended helper methods (can be added to base later)
+- `waitFor(selector, timeout)` conditional wait
+- `retrying(action)` handle transient stale elements
+- `byTestId(id)` simplify selectors
+
+## 📌 Acceptance checklist for new/updated pages
+- Introduces new element types?
+- Includes at least 1 ambiguity scenario?
+- Contains dynamic/delayed/failable interactions?
+- Provides data-testid / aria metadata?
+- Listed in this README capability table?
+
+## 📊 Quality metrics improvements
+- Script to count element types in `static/generated/tta/*.html` and report coverage
+- Track instruction category distribution (action/target/modifier)
+- Classify failures: parse/locate/execute/timeout
+
+---
+## 🚀 Test Commands
+
+Windows (cmd.exe):
 ```
-# 运行所有 TTA 测试（包路径已校正）
+:: Run all TTA tests (paths fixed)
 mvnw.cmd test -Dtest="ai.platon.pulsar.skeleton.ai.tta.**"
 
-# 运行特定测试类
+:: Run a specific test class
 mvnw.cmd test -Dtest=TextToActionTest
 
-# 跳过需要 LLM 的测试（可覆盖默认 excludedGroups）
+:: Skip tests requiring LLM (override default excludedGroups if any)
 mvnw.cmd test -DexcludedGroups=ExternalServiceTest
 
-# 运行覆盖率报告（JaCoCo）
+:: Generate coverage report (JaCoCo)
 mvnw.cmd clean test jacoco:report
 ```
 
-Linux/macOS：
+Linux/macOS:
 ```
 ./mvnw test -Dtest="ai.platon.pulsar.skeleton.ai.tta.**"
 ./mvnw test -Dtest=TextToActionTest
@@ -445,30 +440,5 @@ Linux/macOS：
 ./mvnw clean test jacoco:report
 ```
 
-> NOTE: 在测试命令中，参数中如果有特殊符号如 `.`，使用双引号，例如：`-Dtest="ai.platon.pulsar.skeleton.ai.tta.**"`。
-> 默认已排除 `TimeConsumingTest, ExternalServiceTest`，如需执行请清空或调整 `-DexcludedGroups`。
-
-## 📈 持续改进指导
-
-### 1. 测试维护
-- 定期更新测试网页以覆盖新的UI模式
-- 根据用户反馈添加真实场景测试
-- 监控测试执行时间，优化慢速测试
-
-### 2. 质量监控
-- 跟踪TTA转换的准确率
-- 监控LLM API调用的成功率和延迟
-- 分析失败用例，改进指令理解
-
-### 3. 测试数据管理
-- 维护标准测试指令集
-- 收集和分类边界用例
-- 建立回归测试基准
-
-## 人类评审员意见
-
-- 测试站点必须使用本地 Mock Server，保证测试网页内容可控，交互响应可控
-- 生成的代码中优先使用英文，包括注释、字符串、模拟数据等
-
----
-> 💡 **提示**: 本文档应随功能演进更新。发现覆盖盲区请优先：登记差距 → 设计页面 → 编写用例 → 更新能力表。
+Notes:
+- If parameters include special characters like `.`, use double quotes, e.g. `-Dtest="ai.platon.pulsar.skeleton.ai.tta.**"`.
