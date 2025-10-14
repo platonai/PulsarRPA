@@ -19,7 +19,51 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.UUID
+import java.util.*
+
+// ----------------------------------- Data models -----------------------------------
+data class LLMUsage(
+    val prompt_tokens: Int = 0,
+    val completion_tokens: Int = 0,
+)
+
+data class Metadata(val progress: String = "", val completed: Boolean = false)
+
+data class ObserveElement(
+    val elementId: String,
+    val description: String,
+    val method: String? = null,
+    val arguments: List<String>? = null,
+)
+
+data class ObserveResult(
+    val elements: List<ObserveElement>,
+    val prompt_tokens: Int,
+    val completion_tokens: Int,
+    val inference_time_ms: Long,
+)
+
+data class ExtractParams(
+    val instruction: String,
+    val domElements: List<String>,
+    /** JSON Schema string describing the desired extraction output */
+    val schema: String,
+    val chunksSeen: Int = 0,
+    val chunksTotal: Int = 0,
+    val requestId: String = UUID.randomUUID().toString(),
+    val userProvidedInstructions: String? = null,
+    val logInferenceToFile: Boolean = false,
+)
+
+data class ObserveParams(
+    val instruction: String,
+    val domElements: List<String>,
+    val requestId: String = UUID.randomUUID().toString(),
+    val userProvidedInstructions: String? = null,
+    val returnAction: Boolean = false,
+    val logInferenceToFile: Boolean = false,
+    val fromAct: Boolean = false,
+)
 
 class InferenceEngine(
     private val driver: WebDriver,
@@ -42,40 +86,6 @@ class InferenceEngine(
         // Intentionally left as lightweight wrapper; prefer using the structured observe(params) API below
         // ...existing code...
     }
-
-    // ----------------------------------- Data models -----------------------------------
-    data class LLMUsage(
-        val prompt_tokens: Int = 0,
-        val completion_tokens: Int = 0,
-    )
-
-    data class Metadata(val progress: String = "", val completed: Boolean = false)
-
-    data class ObserveElement(
-        val elementId: String,
-        val description: String,
-        val method: String? = null,
-        val arguments: List<String>? = null,
-    )
-
-    data class ObserveResult(
-        val elements: List<ObserveElement>,
-        val prompt_tokens: Int,
-        val completion_tokens: Int,
-        val inference_time_ms: Long,
-    )
-
-    data class ExtractParams(
-        val instruction: String,
-        val domElements: List<String>,
-        /** JSON Schema string describing the desired extraction output */
-        val schema: String,
-        val chunksSeen: Int = 0,
-        val chunksTotal: Int = 0,
-        val requestId: String = UUID.randomUUID().toString(),
-        val userProvidedInstructions: String? = null,
-        val logInferenceToFile: Boolean = false,
-    )
 
     /**
      * Returns an ObjectNode with extracted fields expanded at top-level, plus:
@@ -249,16 +259,6 @@ class InferenceEngine(
         return result
     }
 
-    data class ObserveParams(
-        val instruction: String,
-        val domElements: List<String>,
-        val requestId: String = UUID.randomUUID().toString(),
-        val userProvidedInstructions: String? = null,
-        val returnAction: Boolean = false,
-        val logInferenceToFile: Boolean = false,
-        val fromAct: Boolean = false,
-    )
-
     fun observe(params: ObserveParams): ObserveResult {
         val domText = params.domElements.joinToString("\n\n")
         val isGPT5 = (System.getProperty("llm.name") ?: "").lowercase().contains("gpt-5")
@@ -280,7 +280,8 @@ class InferenceEngine(
         )
 
         val prefix = if (params.fromAct) "act" else "observe"
-        var callFile = ""; var callTs = ""
+        var callFile = "";
+        var callTs = ""
         if (params.logInferenceToFile) {
             val (f, ts) = writeTimestampedTxtFile(
                 prefix = "${prefix}_summary",
@@ -307,8 +308,9 @@ class InferenceEngine(
 
         val raw = resp.aiMessage().text().trim()
         val mapper = ObjectMapper()
-        val node: ObjectNode = runCatching { mapper.readTree(raw) as? ObjectNode ?: JsonNodeFactory.instance.objectNode() }
-            .getOrElse { JsonNodeFactory.instance.objectNode() }
+        val node: ObjectNode =
+            runCatching { mapper.readTree(raw) as? ObjectNode ?: JsonNodeFactory.instance.objectNode() }
+                .getOrElse { JsonNodeFactory.instance.objectNode() }
 
         val elements: List<ObserveElement> = parseObserveElements(node, params.returnAction)
 
