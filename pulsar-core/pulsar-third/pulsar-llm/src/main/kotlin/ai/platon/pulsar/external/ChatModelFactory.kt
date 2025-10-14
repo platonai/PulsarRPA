@@ -20,7 +20,7 @@ object ChatModelFactory {
 
     private val llmGuideReported = AtomicBoolean(false)
     const val DOCUMENT_PATH = "https://github.com/platonai/browser4/blob/master/docs/config/llm/llm-config.md"
-    const val LLM_GUIDE =
+    const val LLM_DEVELOPER_GUIDE =
         """
 The LLM is not configured, the LLM feature is disabled.
 
@@ -73,7 +73,7 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
                 }
 
                 if (llmGuideReported.compareAndSet(false, true)) {
-                    throttlingLogger.info(LLM_GUIDE)
+                    throttlingLogger.info(LLM_DEVELOPER_GUIDE)
                 }
             }
             return false
