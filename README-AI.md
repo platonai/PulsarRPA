@@ -1,9 +1,6 @@
-# AI Copilot + AI Coder Unified Guide (v2025-10-14)
+# AI Coder Guide (v2025-10-14)
 
-This document unifies and supersedes the previous guides:
-- Root `README-AI.md` (AI Coder Agent Guideline)
-
-Goal: Help AI and developers work efficiently, stably, and predictably across code, review, docs, scripts, and tests—favoring stability and verifiability.
+Goal: Help AI work efficiently, stably, and predictably across code, review, docs, scripts, and tests—favoring stability and verifiability.
 
 ---
 
