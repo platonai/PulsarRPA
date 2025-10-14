@@ -1,8 +1,7 @@
 package ai.platon.pulsar.browser.driver.chrome.dom
 
-import ai.platon.pulsar.browser.driver.chrome.dom.AccessibilityHandler
-import ai.platon.pulsar.browser.driver.chrome.dom.AccessibilityHandler.AccessibilityTreeResult
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
+import ai.platon.pulsar.browser.driver.chrome.dom.AccessibilityHandler.AccessibilityTreeResult
 import ai.platon.pulsar.browser.driver.chrome.dom.model.*
 import ai.platon.pulsar.common.getLogger
 import com.github.kklisura.cdt.protocol.v2023.types.accessibility.AXNode

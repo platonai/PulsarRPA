@@ -75,6 +75,9 @@ class ChromeDomServiceE2ETest : WebDriverTestBase() {
         val simplified = service.buildSimplifiedTree(enhancedRoot)
         val llm = service.serializeForLLM(simplified)
 
+        assertTrue { enhancedRoot.children.isNotEmpty() }
+        kotlin.test.assertTrue { simplified.children.isNotEmpty() }
+
         assertTrue(llm.json.length > 50, "Serialized JSON should not be trivial")
         assertTrue(llm.selectorMap.isNotEmpty(), "Selector map should contain entries")
 
