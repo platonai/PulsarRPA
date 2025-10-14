@@ -152,6 +152,10 @@ Multi‑module (build selected modules without tests):
 ./mvnw -pl pulsar-core -am -DskipTests package
 ```
 
+If you fail to use a tool or run a command (such as `mvn`), refer to tool guide.
+
+- [tool-guide.md](docs/copilot/tool-guide.md)
+
 ## 9. Security & Compliance
 
 - No secrets/tokens/private endpoints in code or logs; use `${ENV_VAR}` or `<REDACTED>` placeholders
