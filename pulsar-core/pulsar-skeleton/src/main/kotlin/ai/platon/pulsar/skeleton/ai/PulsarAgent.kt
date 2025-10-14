@@ -18,6 +18,7 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
 import kotlin.math.pow
+import com.fasterxml.jackson.databind.node.JsonNodeFactory
 
 /**
  * Configuration for enhanced error handling and retry mechanisms
@@ -114,22 +115,61 @@ class PulsarAgent(
         return executeWithRetry(action, sessionId, startTime)
     }
 
-    suspend fun extract(instruction: String): ExtractResult {
-        TODO()
+    /** Default rich extraction schema (JSON Schema string) */
+    private val defaultExtractionSchemaJson: String by lazy {
+        val schema = ExtractionSchema(
+            listOf(
+                ExtractionField("title", type = "string", description = "Page title"),
+                ExtractionField("content", type = "string", description = "Primary textual content of the page", required = false),
+                ExtractionField(
+                    name = "links",
+                    type = "array",
+                    description = "Important hyperlinks on the page",
+                    required = false,
+                    items = ExtractionField(
+                        name = "link",
+                        type = "object",
+                        properties = listOf(
+                            ExtractionField("text", type = "string", description = "Anchor text", required = false),
+                            ExtractionField("href", type = "string", description = "Href URL", required = false)
+                        ),
+                        required = false
+                    )
+                )
+            )
+        )
+        schema.toJsonSchema()
     }
 
-    suspend fun extract(options: ExtractOptions): ExtractResult {
-        // inference.extract(instruction)
-        TODO()
+    private fun buildSchemaJsonFromMap(schema: Map<String, String>?): String {
+        if (schema == null || schema.isEmpty()) return defaultExtractionSchemaJson
+        return legacyMapToExtractionSchema(schema).toJsonSchema()
     }
 
-    suspend fun observe(instruction: String): List<ObserveResult> {
-        TODO()
+    private fun collectDomElements(): List<String> {
+        return runCatching {
+            val domService = (driver as AbstractWebDriver).domService ?: return emptyList()
+            // Use default snapshot options via service; rely on internal defaults
+            val trees = domService.getAllTrees()
+            val enhanced = domService.buildEnhancedDomTree(trees)
+            val simplified = domService.buildSimplifiedTree(enhanced)
+            val serialized = domService.serializeForLLM(simplified)
+            listOf(serialized.json)
+        }.getOrElse { emptyList() }
     }
 
-    suspend fun observe(options: ObserveOptions): List<ObserveResult> {
-        // inference.observe(params)
-        TODO()
+    private fun logExtractStart(instruction: String, requestId: String) {
+        logger.info("extract.start requestId={} instruction='{}'", requestId.take(8), instruction.take(120))
+    }
+    private fun logObserveStart(instruction: String, requestId: String) {
+        logger.info("observe.start requestId={} instruction='{}'", requestId.take(8), instruction.take(120))
+    }
+
+    private fun addHistoryExtract(instruction: String, requestId: String, success: Boolean) {
+        addToHistory("extract[$requestId] ${if (success) "OK" else "FAIL"} ${instruction.take(60)}")
+    }
+    private fun addHistoryObserve(instruction: String, requestId: String, size: Int, success: Boolean) {
+        addToHistory("observe[$requestId] ${if (success) "OK" else "FAIL"} ${instruction.take(50)} -> $size elements")
     }
 
     /**
@@ -950,6 +990,82 @@ $interactiveSummary
                 "Failed to generate summary: ${e.message}",
                 ResponseState.OTHER
             )
+        }
+    }
+
+    // ------------------------------- Extract / Observe implementation -------------------------------
+
+    suspend fun extract(instruction: String): ExtractResult {
+        val opts = ExtractOptions(instruction = instruction, schema = null)
+        return extract(opts)
+    }
+
+    suspend fun extract(options: ExtractOptions): ExtractResult {
+        val instruction = options.instruction?.takeIf { it.isNotBlank() } ?: "Extract key structured data from the page"
+        val requestId = UUID.randomUUID().toString()
+        logExtractStart(instruction, requestId)
+
+        val schemaJson = buildSchemaJsonFromMap(options.schema)
+        val domElements = collectDomElements()
+
+        return try {
+            val resultNode = inference.extract(
+                ExtractParams(
+                    instruction = instruction,
+                    domElements = domElements,
+                    schema = schemaJson,
+                    requestId = requestId,
+                    logInferenceToFile = config.enableStructuredLogging
+                )
+            )
+            addHistoryExtract(instruction, requestId, true)
+            ExtractResult(success = true, message = "OK", data = resultNode)
+        } catch (e: Exception) {
+            logger.error("extract.error requestId={} msg={}", requestId.take(8), e.message, e)
+            addHistoryExtract(instruction, requestId, false)
+            ExtractResult(success = false, message = e.message ?: "extract failed", data = JsonNodeFactory.instance.objectNode())
+        }
+    }
+
+    suspend fun observe(instruction: String): List<ObserveResult> {
+        val opts = ObserveOptions(instruction = instruction, returnAction = null)
+        return observe(opts)
+    }
+
+    suspend fun observe(options: ObserveOptions): List<ObserveResult> {
+        val instruction = options.instruction?.takeIf { it.isNotBlank() } ?: "Understand the page and list actionable elements"
+        val requestId = UUID.randomUUID().toString()
+        logObserveStart(instruction, requestId)
+
+        val domElements = collectDomElements()
+        val returnAction = options.returnAction ?: true
+
+        return try {
+            val internal = inference.observe(
+                ObserveParams(
+                    instruction = instruction,
+                    domElements = domElements,
+                    requestId = requestId,
+                    returnAction = returnAction,
+                    logInferenceToFile = config.enableStructuredLogging,
+                    fromAct = false
+                )
+            )
+            val results = internal.elements.map { el ->
+                ObserveResult(
+                    selector = "node:${el.elementId}",
+                    description = el.description,
+                    backendNodeId = null,
+                    method = el.method?.ifBlank { null },
+                    arguments = el.arguments?.takeIf { it.isNotEmpty() }
+                )
+            }
+            addHistoryObserve(instruction, requestId, results.size, true)
+            results
+        } catch (e: Exception) {
+            logger.error("observe.error requestId={} msg={}", requestId.take(8), e.message, e)
+            addHistoryObserve(instruction, requestId, 0, false)
+            emptyList()
         }
     }
 }
