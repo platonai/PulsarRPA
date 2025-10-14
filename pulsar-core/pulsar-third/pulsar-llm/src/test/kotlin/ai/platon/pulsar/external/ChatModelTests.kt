@@ -58,17 +58,17 @@ class ChatModelTests {
     @Test
     fun `should generate answer and return token usage and finish reason stop`() {
         val document = Documents.parse(productHtml, url)
-        
+
         val prompt = "以下是一个电商网站的网页内容，找出商品标题、商品价格："
         val response = runBlocking { model.call(document, prompt) }
         println(response.content)
-        
+
         assertTrue { response.tokenUsage.inputTokenCount > 0 }
         assertTrue { response.tokenUsage.outputTokenCount > 0 }
         assertTrue { response.tokenUsage.totalTokenCount > 0 }
         assertTrue { response.state == ResponseState.STOP }
     }
-    
+
     @Test
     fun `should generate answer from the partial content of a webpage`() {
         val text = productText
@@ -86,20 +86,20 @@ class ChatModelTests {
 - **商品评分**:
     （这里是商品评分）
         """.trimIndent()
-        val response = runBlocking { model.call(text, prompt) }
+        val response = runBlocking { model.callUmSm(text, prompt) }
         println(response.content)
-        
+
         assertTrue { response.tokenUsage.inputTokenCount > 0 }
         assertTrue { response.tokenUsage.outputTokenCount > 0 }
         assertTrue { response.tokenUsage.totalTokenCount > 0 }
         assertTrue { response.state == ResponseState.STOP }
     }
-    
+
     @Test
     fun `When ask LLM to analyze cluster then it responses with json`() {
         val response = runBlocking { model.call(clusterAnalysisPrompt) }
         println(response.content)
-        
+
         assertTrue { response.tokenUsage.inputTokenCount > 0 }
         assertTrue { response.tokenUsage.outputTokenCount > 0 }
         assertTrue { response.tokenUsage.totalTokenCount > 0 }

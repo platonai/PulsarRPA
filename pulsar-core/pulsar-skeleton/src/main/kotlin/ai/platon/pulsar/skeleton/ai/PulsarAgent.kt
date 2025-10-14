@@ -4,6 +4,10 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
+import ai.platon.pulsar.skeleton.ai.detail.WebDriverAgentConfig
+import ai.platon.pulsar.skeleton.ai.detail.WebDriverAgentError
+import ai.platon.pulsar.skeleton.ai.detail.PerformanceMetrics
+import ai.platon.pulsar.skeleton.ai.detail.ExecutionContext
 import ai.platon.pulsar.skeleton.ai.detail.InteractiveElement
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
@@ -19,63 +23,6 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
 import kotlin.math.pow
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
-
-/**
- * Configuration for enhanced error handling and retry mechanisms
- */
-data class WebDriverAgentConfig(
-    val maxSteps: Int = 100,
-    val maxRetries: Int = 3,
-    val baseRetryDelayMs: Long = 1000,
-    val maxRetryDelayMs: Long = 30000,
-    val consecutiveNoOpLimit: Int = 5,
-    val actionGenerationTimeoutMs: Long = 30000,
-    val screenshotCaptureTimeoutMs: Long = 5000,
-    val enableStructuredLogging: Boolean = false,
-    val enableDebugMode: Boolean = false,
-    val enablePerformanceMetrics: Boolean = true,
-    val memoryCleanupIntervalSteps: Int = 50,
-    val maxHistorySize: Int = 100,
-    val enableAdaptiveDelays: Boolean = true,
-    val enablePreActionValidation: Boolean = true
-)
-
-/**
- * Enhanced error classification for better retry strategies
- */
-sealed class WebDriverAgentError(message: String, cause: Throwable? = null) : Exception(message, cause) {
-    class TransientError(message: String, cause: Throwable? = null) : WebDriverAgentError(message, cause)
-    class PermanentError(message: String, cause: Throwable? = null) : WebDriverAgentError(message, cause)
-    class TimeoutError(message: String, cause: Throwable? = null) : WebDriverAgentError(message, cause)
-    class ResourceExhaustedError(message: String, cause: Throwable? = null) : WebDriverAgentError(message, cause)
-    class ValidationError(message: String, cause: Throwable? = null) : WebDriverAgentError(message, cause)
-}
-
-/**
- * Performance metrics for monitoring and optimization
- */
-data class PerformanceMetrics(
-    val totalSteps: Int = 0,
-    val successfulActions: Int = 0,
-    val failedActions: Int = 0,
-    val averageActionTimeMs: Double = 0.0,
-    val totalExecutionTimeMs: Long = 0,
-    val memoryUsageMB: Double = 0.0,
-    val retryCount: Int = 0,
-    val consecutiveFailures: Int = 0
-)
-
-/**
- * Structured logging context for better debugging
- */
-data class ExecutionContext(
-    val sessionId: String,
-    val stepNumber: Int,
-    val actionType: String,
-    val targetUrl: String,
-    val timestamp: Instant = Instant.now(),
-    val additionalContext: Map<String, Any> = emptyMap()
-)
 
 class PulsarAgent(
     val driver: WebDriver,
@@ -113,6 +60,80 @@ class PulsarAgent(
         val sessionId = uuid.toString()
 
         return executeWithRetry(action, sessionId, startTime)
+    }
+
+    suspend fun extract(instruction: String): ExtractResult {
+        val opts = ExtractOptions(instruction = instruction, schema = null)
+        return extract(opts)
+    }
+
+    suspend fun extract(options: ExtractOptions): ExtractResult {
+        val instruction = options.instruction?.takeIf { it.isNotBlank() } ?: "Extract key structured data from the page"
+        val requestId = UUID.randomUUID().toString()
+        logExtractStart(instruction, requestId)
+
+        val schemaJson = buildSchemaJsonFromMap(options.schema)
+        val domElements = collectDomElements()
+
+        return try {
+            val resultNode = inference.extract(
+                ExtractParams(
+                    instruction = instruction,
+                    domElements = domElements,
+                    schema = schemaJson,
+                    requestId = requestId,
+                    logInferenceToFile = config.enableStructuredLogging
+                )
+            )
+            addHistoryExtract(instruction, requestId, true)
+            ExtractResult(success = true, message = "OK", data = resultNode)
+        } catch (e: Exception) {
+            logger.error("extract.error requestId={} msg={}", requestId.take(8), e.message, e)
+            addHistoryExtract(instruction, requestId, false)
+            ExtractResult(success = false, message = e.message ?: "extract failed", data = JsonNodeFactory.instance.objectNode())
+        }
+    }
+
+    suspend fun observe(instruction: String): List<ObserveResult> {
+        val opts = ObserveOptions(instruction = instruction, returnAction = null)
+        return observe(opts)
+    }
+
+    suspend fun observe(options: ObserveOptions): List<ObserveResult> {
+        val instruction = options.instruction?.takeIf { it.isNotBlank() } ?: "Understand the page and list actionable elements"
+        val requestId = UUID.randomUUID().toString()
+        logObserveStart(instruction, requestId)
+
+        val domElements = collectDomElements()
+        val returnAction = options.returnAction ?: true
+
+        return try {
+            val internal = inference.observe(
+                ObserveParams(
+                    instruction = instruction,
+                    domElements = domElements,
+                    requestId = requestId,
+                    returnAction = returnAction,
+                    logInferenceToFile = config.enableStructuredLogging,
+                    fromAct = false
+                )
+            )
+            val results = internal.elements.map { el ->
+                ObserveResult(
+                    selector = "node:${el.elementId}",
+                    description = el.description,
+                    backendNodeId = null,
+                    method = el.method?.ifBlank { null },
+                    arguments = el.arguments?.takeIf { it.isNotEmpty() }
+                )
+            }
+            addHistoryObserve(instruction, requestId, results.size, true)
+            results
+        } catch (e: Exception) {
+            logger.error("observe.error requestId={} msg={}", requestId.take(8), e.message, e)
+            addHistoryObserve(instruction, requestId, 0, false)
+            emptyList()
+        }
     }
 
     /** Default rich extraction schema (JSON Schema string) */
@@ -974,7 +995,7 @@ $interactiveSummary
             val (system, user) = buildSummaryPrompt(goal)
             logStructured("Generating final summary", context)
 
-            val response = tta.chatModel.call(user, system)
+            val response = tta.chatModel.callUmSm(user, system)
 
             logStructured(
                 "Summary generated successfully", context, mapOf(
@@ -990,82 +1011,6 @@ $interactiveSummary
                 "Failed to generate summary: ${e.message}",
                 ResponseState.OTHER
             )
-        }
-    }
-
-    // ------------------------------- Extract / Observe implementation -------------------------------
-
-    suspend fun extract(instruction: String): ExtractResult {
-        val opts = ExtractOptions(instruction = instruction, schema = null)
-        return extract(opts)
-    }
-
-    suspend fun extract(options: ExtractOptions): ExtractResult {
-        val instruction = options.instruction?.takeIf { it.isNotBlank() } ?: "Extract key structured data from the page"
-        val requestId = UUID.randomUUID().toString()
-        logExtractStart(instruction, requestId)
-
-        val schemaJson = buildSchemaJsonFromMap(options.schema)
-        val domElements = collectDomElements()
-
-        return try {
-            val resultNode = inference.extract(
-                ExtractParams(
-                    instruction = instruction,
-                    domElements = domElements,
-                    schema = schemaJson,
-                    requestId = requestId,
-                    logInferenceToFile = config.enableStructuredLogging
-                )
-            )
-            addHistoryExtract(instruction, requestId, true)
-            ExtractResult(success = true, message = "OK", data = resultNode)
-        } catch (e: Exception) {
-            logger.error("extract.error requestId={} msg={}", requestId.take(8), e.message, e)
-            addHistoryExtract(instruction, requestId, false)
-            ExtractResult(success = false, message = e.message ?: "extract failed", data = JsonNodeFactory.instance.objectNode())
-        }
-    }
-
-    suspend fun observe(instruction: String): List<ObserveResult> {
-        val opts = ObserveOptions(instruction = instruction, returnAction = null)
-        return observe(opts)
-    }
-
-    suspend fun observe(options: ObserveOptions): List<ObserveResult> {
-        val instruction = options.instruction?.takeIf { it.isNotBlank() } ?: "Understand the page and list actionable elements"
-        val requestId = UUID.randomUUID().toString()
-        logObserveStart(instruction, requestId)
-
-        val domElements = collectDomElements()
-        val returnAction = options.returnAction ?: true
-
-        return try {
-            val internal = inference.observe(
-                ObserveParams(
-                    instruction = instruction,
-                    domElements = domElements,
-                    requestId = requestId,
-                    returnAction = returnAction,
-                    logInferenceToFile = config.enableStructuredLogging,
-                    fromAct = false
-                )
-            )
-            val results = internal.elements.map { el ->
-                ObserveResult(
-                    selector = "node:${el.elementId}",
-                    description = el.description,
-                    backendNodeId = null,
-                    method = el.method?.ifBlank { null },
-                    arguments = el.arguments?.takeIf { it.isNotEmpty() }
-                )
-            }
-            addHistoryObserve(instruction, requestId, results.size, true)
-            results
-        } catch (e: Exception) {
-            logger.error("observe.error requestId={} msg={}", requestId.take(8), e.message, e)
-            addHistoryObserve(instruction, requestId, 0, false)
-            emptyList()
         }
     }
 }

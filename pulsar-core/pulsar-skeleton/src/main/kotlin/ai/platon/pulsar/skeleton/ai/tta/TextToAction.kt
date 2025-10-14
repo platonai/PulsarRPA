@@ -129,7 +129,7 @@ open class TextToAction(val conf: ImmutableConfig) {
         }
         val toolUsePrompt = buildToolUsePrompt(systemPrompt, interactiveElements, toolCallLimit)
         val response = if (screenshotB64 != null) {
-            chatModel.call(toolUsePrompt, "", null, screenshotB64, "image/jpeg")
+            chatModel.callUmSm(toolUsePrompt, "", null, screenshotB64, "image/jpeg")
         } else {
             chatModel.call(toolUsePrompt)
         }

@@ -94,7 +94,7 @@ class InferenceEngine(
      *   - metadata: { progress, completed }
      *   - prompt_tokens, completion_tokens, inference_time_ms
      */
-    fun extract(params: ExtractParams): ObjectNode {
+    suspend fun extract(params: ExtractParams): ObjectNode {
         val mapper = ObjectMapper()
         val domText = params.domElements.joinToString("\n\n")
         val isGPT5 = (System.getProperty("llm.name") ?: "").lowercase().contains("gpt-5")

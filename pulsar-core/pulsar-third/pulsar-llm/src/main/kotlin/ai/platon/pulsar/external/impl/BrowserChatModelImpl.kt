@@ -48,19 +48,25 @@ open class BrowserChatModelImpl(
 
     override val settings = ChatModelSettings(conf)
 
-    override suspend fun call(userMessage: String) = call(userMessage, "")
-
-    override suspend fun call(userMessage: String, systemMessage: String,
-                              imageUrl: String?, b64Image: String?, mediaType: String?
-    ): ModelResponse {
-        return callWithCache(userMessage, systemMessage, imageUrl, b64Image, mediaType)
-    }
+    override suspend fun call(userMessage: String) = callUmSm(userMessage, "")
 
     override suspend fun call(document: FeaturedDocument, prompt: String) = call(document.document, prompt)
 
-    override suspend fun call(ele: Element, prompt: String) = call(ele.text(), prompt)
+    override suspend fun call(ele: Element, prompt: String) = callUmSm(ele.text(), prompt)
 
-    private suspend fun callWithCache(
+    override suspend fun callSmUm(systemMessage: String, userMessage: String,
+                                  imageUrl: String?, b64Image: String?, mediaType: String?
+    ): ModelResponse {
+        return callUmSmWithCache(userMessage, systemMessage, imageUrl, b64Image, mediaType)
+    }
+
+    override suspend fun callUmSm(userMessage: String, systemMessage: String,
+                                  imageUrl: String?, b64Image: String?, mediaType: String?
+    ): ModelResponse {
+        return callUmSmWithCache(userMessage, systemMessage, imageUrl, b64Image, mediaType)
+    }
+
+    private suspend fun callUmSmWithCache(
         userMessage: String, systemMessage: String,
         imageUrl: String? = null,
         b64Image: String? = null, mediaType: String? = null,
