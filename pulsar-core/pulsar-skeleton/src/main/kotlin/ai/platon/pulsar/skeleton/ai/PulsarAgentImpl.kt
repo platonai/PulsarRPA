@@ -58,6 +58,11 @@ class PulsarAgentImpl(
     override val uuid = UUID.randomUUID()
     override val history: List<String> get() = _history
 
+    override suspend fun act(action: String): ActResult {
+        val opts = ActionOptions(action = action)
+        return act(opts)
+    }
+
     /**
      * Execution with comprehensive error handling and retry mechanism.
      * Returns the final summary with enhanced error handling.

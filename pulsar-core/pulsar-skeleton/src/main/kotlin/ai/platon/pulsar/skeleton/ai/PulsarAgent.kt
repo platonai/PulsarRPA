@@ -59,6 +59,7 @@ interface PulsarAgent {
     val uuid: UUID
     val history: List<String>
 
+    suspend fun act(action: String): ActResult
     suspend fun act(action: ActionOptions): ActResult
     suspend fun extract(instruction: String): ExtractResult
     suspend fun extract(options: ExtractOptions): ExtractResult
