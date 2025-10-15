@@ -1,1 +1,9 @@
-npx --no-install commitlint --edit "$1"
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Ensure we run from the repository root
+REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || echo ".")
+cd "$REPO_ROOT"
+
+# Use explicit config to avoid picking defaults from @commitlint/config-conventional (100 chars)
+npx --no-install commitlint --config commitlint.config.js --edit "$1"
