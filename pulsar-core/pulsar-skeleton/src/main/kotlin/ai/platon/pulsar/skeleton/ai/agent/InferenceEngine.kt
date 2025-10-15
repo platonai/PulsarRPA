@@ -4,7 +4,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.browser.driver.chrome.dom.model.PageTarget
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.external.BrowserChatModel
-import ai.platon.pulsar.external.impl.BrowserChatModelImpl
+import ai.platon.pulsar.external.impl.CachedBrowserChatModel
 import ai.platon.pulsar.skeleton.ai.buildExtractSystemPrompt
 import ai.platon.pulsar.skeleton.ai.buildExtractUserPrompt
 import ai.platon.pulsar.skeleton.ai.buildMetadataPrompt
@@ -77,7 +77,6 @@ class InferenceEngine(
     private val chatModel: BrowserChatModel
 ) {
     private val domService: DomService = (driver as AbstractWebDriver).domService!!
-    private val langchainModel get() = (chatModel as BrowserChatModelImpl).langchainModel
 
     // ----------------------------------- Public simple stubs (kept for compatibility) -----------------------------------
     fun extract(instruction: String) {
@@ -139,7 +138,7 @@ class InferenceEngine(
         }
 
         val t0 = System.currentTimeMillis()
-        val extractResp: ChatResponse = langchainModel.chat(
+        val extractResp: ChatResponse = chatModel.send(
             SystemMessage.systemMessage(extractSystem.content.toString()),
             UserMessage.userMessage(extractUser.content.toString())
         )
@@ -206,7 +205,7 @@ class InferenceEngine(
         }
 
         val t2 = System.currentTimeMillis()
-        val metadataResp: ChatResponse = langchainModel.chat(
+        val metadataResp: ChatResponse = chatModel.send(
             SystemMessage.systemMessage(metadataSystem.content.toString()),
             UserMessage.userMessage(metadataUser.content.toString())
         )
@@ -267,7 +266,7 @@ class InferenceEngine(
         return result
     }
 
-    fun observe(params: ObserveParams): InternalObserveResult {
+    suspend fun observe(params: ObserveParams): InternalObserveResult {
         val domText = params.domElements.joinToString("\n\n")
         val isGPT5 = (System.getProperty("llm.name") ?: "").lowercase().contains("gpt-5")
         val temperature = if (isGPT5) 1.0 else 0.1
@@ -288,7 +287,7 @@ class InferenceEngine(
         )
 
         val prefix = if (params.fromAct) "act" else "observe"
-        var callFile = "";
+        var callFile = "";"".also { }
         var callTs = ""
         if (params.logInferenceToFile) {
             val (f, ts) = writeTimestampedTxtFile(
@@ -304,7 +303,7 @@ class InferenceEngine(
         }
 
         val t0 = System.currentTimeMillis()
-        val resp: ChatResponse = langchainModel.chat(
+        val resp: ChatResponse = chatModel.send(
             SystemMessage.systemMessage(systemMsg.content.toString()),
             UserMessage.userMessage(userMsg.content.toString())
         )
@@ -316,11 +315,11 @@ class InferenceEngine(
 
         val raw = resp.aiMessage().text().trim()
         val mapper = ObjectMapper()
-        val node: ObjectNode =
-            runCatching { mapper.readTree(raw) as? ObjectNode ?: JsonNodeFactory.instance.objectNode() }
-                .getOrElse { JsonNodeFactory.instance.objectNode() }
+        // Parse as generic JsonNode to support both object and array roots
+        val root: JsonNode = runCatching { mapper.readTree(raw) as? JsonNode ?: JsonNodeFactory.instance.objectNode() }
+            .getOrElse { JsonNodeFactory.instance.objectNode() }
 
-        val elements: List<ObserveElement> = parseObserveElements(node, params.returnAction)
+        val elements: List<ObserveElement> = parseObserveElements(root, params.returnAction)
 
         var respFile = ""
         if (params.logInferenceToFile) {
@@ -357,8 +356,21 @@ class InferenceEngine(
     }
 
     // ----------------------------------- Helpers -----------------------------------
-    private fun parseObserveElements(root: ObjectNode, returnAction: Boolean): List<ObserveElement> {
-        val arr: ArrayNode = root.path("elements") as? ArrayNode ?: JsonNodeFactory.instance.arrayNode()
+    private fun parseObserveElements(root: JsonNode, returnAction: Boolean): List<ObserveElement> {
+        // Determine the array of items to read
+        val arr: ArrayNode = when {
+            root.isObject && root.has("elements") && root.get("elements").isArray -> root.get("elements") as ArrayNode
+            root.isArray -> root as ArrayNode
+            root.isObject -> {
+                // Single element object fallback
+                val single = root as ObjectNode
+                val tmp = JsonNodeFactory.instance.arrayNode()
+                tmp.add(single)
+                tmp
+            }
+            else -> JsonNodeFactory.instance.arrayNode()
+        }
+
         val result = mutableListOf<ObserveElement>()
         for (i in 0 until arr.size()) {
             val el: JsonNode = arr.get(i)
@@ -370,7 +382,7 @@ class InferenceEngine(
             val desc = el.path("description").asText("")
             val baseMethod = el.path("method").asText(null)
             val argsNode = el.path("arguments")
-            val args: List<String>? = if (argsNode.isArray) {
+            val args: List<String>? = if (argsNode != null && argsNode.isArray) {
                 argsNode.map { it.asText("") }
             } else null
 

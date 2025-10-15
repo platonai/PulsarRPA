@@ -6,6 +6,7 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.*
 import ai.platon.pulsar.external.logging.ChatModelLogger
 import dev.langchain4j.data.message.*
+import dev.langchain4j.model.chat.request.ChatRequest
 import dev.langchain4j.model.chat.response.ChatResponse
 import dev.langchain4j.model.output.FinishReason
 import kotlinx.coroutines.Dispatchers
@@ -23,11 +24,11 @@ import java.io.IOException
 import java.io.InterruptedIOException
 import java.time.Duration
 
-open class BrowserChatModelImpl(
+open class CachedBrowserChatModel(
     val langchainModel: dev.langchain4j.model.chat.ChatModel,
     private val conf: ImmutableConfig
 ) : BrowserChatModel {
-    private val logger = getLogger(BrowserChatModelImpl::class)
+    private val logger = getLogger(CachedBrowserChatModel::class)
 
     private val llmResponseCacheTTL = conf.getLong("llm.response.cache.ttl", 600L) // Default to 10 minutes if not set
 
@@ -54,20 +55,54 @@ open class BrowserChatModelImpl(
 
     override suspend fun call(ele: Element, prompt: String) = callUmSm(ele.text(), prompt)
 
-    override suspend fun callSmUm(systemMessage: String, userMessage: String,
-                                  imageUrl: String?, b64Image: String?, mediaType: String?
+    override suspend fun callSmUm(
+        systemMessage: String, userMessage: String,
+        imageUrl: String?, b64Image: String?, mediaType: String?
+    ): ModelResponse {
+        return callSmUmWithCache(systemMessage, userMessage, imageUrl, b64Image, mediaType)
+    }
+
+    override suspend fun callUmSm(
+        userMessage: String, systemMessage: String,
+        imageUrl: String?, b64Image: String?, mediaType: String?
     ): ModelResponse {
         return callUmSmWithCache(userMessage, systemMessage, imageUrl, b64Image, mediaType)
     }
 
-    override suspend fun callUmSm(userMessage: String, systemMessage: String,
-                                  imageUrl: String?, b64Image: String?, mediaType: String?
-    ): ModelResponse {
-        return callUmSmWithCache(userMessage, systemMessage, imageUrl, b64Image, mediaType)
+    /**
+     * This is the main API to interact with the chat model.
+     *
+     * @param chatRequest a [ChatRequest], containing all the inputs to the LLM
+     * @return a [ChatResponse], containing all the outputs from the LLM
+     */
+    override suspend fun send(chatRequest: ChatRequest): ChatResponse {
+        return withContext(Dispatchers.IO) {
+            langchainModel.chat(chatRequest)
+        }
+    }
+
+    override suspend fun send(vararg messages: ChatMessage): ChatResponse {
+        return withContext(Dispatchers.IO) {
+            langchainModel.chat(*messages)
+        }
+    }
+
+    override suspend fun send(messages: List<ChatMessage>): ChatResponse {
+        return withContext(Dispatchers.IO) {
+            langchainModel.chat(messages)
+        }
     }
 
     private suspend fun callUmSmWithCache(
         userMessage: String, systemMessage: String,
+        imageUrl: String? = null,
+        b64Image: String? = null, mediaType: String? = null,
+    ): ModelResponse {
+        return callSmUmWithCache(systemMessage, userMessage, imageUrl, b64Image, mediaType)
+    }
+
+    private suspend fun callSmUmWithCache(
+        systemMessage: String, userMessage: String,
         imageUrl: String? = null,
         b64Image: String? = null, mediaType: String? = null,
     ): ModelResponse {

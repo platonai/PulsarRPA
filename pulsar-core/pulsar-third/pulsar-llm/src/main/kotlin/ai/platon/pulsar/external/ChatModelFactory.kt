@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.logging.ThrottlingLogger
-import ai.platon.pulsar.external.impl.BrowserChatModelImpl
+import ai.platon.pulsar.external.impl.CachedBrowserChatModel
 import dev.langchain4j.model.openai.OpenAiChatModel
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
@@ -229,7 +229,7 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
             .timeout(Duration.ofSeconds(60))
             .build()
 
-        return BrowserChatModelImpl(lm, conf)
+        return CachedBrowserChatModel(lm, conf)
     }
 
     /**
@@ -247,7 +247,7 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
             .maxRetries(2)
             .timeout(Duration.ofSeconds(90))
             .build()
-        return BrowserChatModelImpl(lm, conf)
+        return CachedBrowserChatModel(lm, conf)
     }
 
     /**
@@ -265,7 +265,7 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
             .maxRetries(2)
             .timeout(Duration.ofSeconds(90))
             .build()
-        return BrowserChatModelImpl(lm, conf)
+        return CachedBrowserChatModel(lm, conf)
     }
 
     /**
@@ -285,7 +285,7 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
             .maxRetries(2)
             .timeout(Duration.ofSeconds(90))
             .build()
-        return BrowserChatModelImpl(lm, conf)
+        return CachedBrowserChatModel(lm, conf)
     }
 
     /**
