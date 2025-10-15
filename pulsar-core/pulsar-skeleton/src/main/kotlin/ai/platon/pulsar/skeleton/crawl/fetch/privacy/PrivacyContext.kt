@@ -45,7 +45,7 @@ interface PrivacyContext: AutoCloseable {
     /**
      * The associated privacy agent.
      * */
-    val privacyAgent: PrivacyAgent
+    val profile: BrowserProfile
     /**
      * Check whether the privacy context is at full capacity. If the privacy context is
      * indeed at full capacity, it should not be used for processing new tasks,
@@ -234,7 +234,7 @@ interface PrivacyContext: AutoCloseable {
      * It should be called periodically to keep the privacy context alive.
      * */
     fun buildReport(): String
-    
+
     companion object {
         // The prefix for all temporary privacy contexts. System context, prototype context and default context are not
         // required to start with the prefix.

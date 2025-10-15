@@ -94,27 +94,27 @@ interface PrivacyManager : AutoCloseable {
     /**
      * Gets or creates a privacy context for the given privacy agent.
      *
-     * @param privacyAgent The privacy agent associated with the context.
+     * @param profile The privacy agent associated with the context.
      * @return The privacy context.
      */
-    fun getOrCreate(privacyAgent: PrivacyAgent): PrivacyContext
+    fun getOrCreate(profile: BrowserProfile): PrivacyContext
 
     /**
      * Creates an unmanaged privacy context for the given privacy agent.
      *
-     * @param privacyAgent The privacy agent associated with the context.
+     * @param profile The privacy agent associated with the context.
      * @return The unmanaged privacy context.
      */
-    fun createUnmanagedContext(privacyAgent: PrivacyAgent): PrivacyContext
+    fun createUnmanagedContext(profile: BrowserProfile): PrivacyContext
 
     /**
      * Creates an unmanaged privacy context for the given privacy agent and fetcher.
      *
-     * @param privacyAgent The privacy agent associated with the context.
+     * @param profile The privacy agent associated with the context.
      * @param fetcher The web driver fetcher used to create the context.
      * @return The unmanaged privacy context.
      */
-    fun createUnmanagedContext(privacyAgent: PrivacyAgent, fetcher: WebDriverFetcher): PrivacyContext
+    fun createUnmanagedContext(profile: BrowserProfile, fetcher: WebDriverFetcher): PrivacyContext
 
     /**
      * Closes a given privacy context, moving it from the active list to the zombie list.

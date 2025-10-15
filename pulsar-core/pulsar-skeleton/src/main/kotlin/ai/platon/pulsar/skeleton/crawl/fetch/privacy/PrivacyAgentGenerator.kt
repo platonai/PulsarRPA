@@ -11,25 +11,25 @@ import java.nio.file.Files
 interface PrivacyAgentGenerator {
     var conf: ImmutableConfig
     @Throws(Exception::class)
-    operator fun invoke(fingerprint: Fingerprint): PrivacyAgent
+    operator fun invoke(fingerprint: Fingerprint): BrowserProfile
 }
 
 open class DefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
     override var conf: ImmutableConfig = ImmutableConfig()
     @Throws(Exception::class)
-    override fun invoke(fingerprint: Fingerprint): PrivacyAgent = PrivacyAgent.createDefault(fingerprint.browserType)
+    override fun invoke(fingerprint: Fingerprint): BrowserProfile = BrowserProfile.createDefault(fingerprint.browserType)
 }
 
 open class SystemDefaultPrivacyAgentGenerator: PrivacyAgentGenerator {
     override var conf: ImmutableConfig = ImmutableConfig()
     @Throws(Exception::class)
-    override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.createSystemDefault(fingerprint.browserType)
+    override fun invoke(fingerprint: Fingerprint) = BrowserProfile.createSystemDefault(fingerprint.browserType)
 }
 
 open class PrototypePrivacyAgentGenerator: PrivacyAgentGenerator {
     override var conf: ImmutableConfig = ImmutableConfig()
     @Throws(Exception::class)
-    override fun invoke(fingerprint: Fingerprint) = PrivacyAgent.createDefault(fingerprint.browserType)
+    override fun invoke(fingerprint: Fingerprint) = BrowserProfile.createDefault(fingerprint.browserType)
 }
 
 open class SequentialPrivacyAgentGenerator(
@@ -56,17 +56,17 @@ open class SequentialPrivacyAgentGenerator(
     }
 
     @Throws(IOException::class)
-    override fun invoke(fingerprint: Fingerprint): PrivacyAgent {
+    override fun invoke(fingerprint: Fingerprint): BrowserProfile {
         // The number of allowed active privacy contexts
         val maxAgents = computeMaxAgentCount()
-        
+
         val contextDir = BrowserFiles.computeNextSequentialContextDir(group, fingerprint, maxAgents)
         // logger.info("Use sequential privacy agent | $contextDir")
-        
+
         require(Files.exists(contextDir)) { "The context dir does not exist: $contextDir" }
 
-        val agent = PrivacyAgent(contextDir, fingerprint)
-        
+        val agent = BrowserProfile(contextDir, fingerprint)
+
         return agent
     }
 }
@@ -82,7 +82,7 @@ open class RandomPrivacyAgentGenerator: PrivacyAgentGenerator {
     override var conf: ImmutableConfig = ImmutableConfig.DEFAULT
 
     @Throws(IOException::class)
-    override fun invoke(fingerprint: Fingerprint): PrivacyAgent =
-        PrivacyAgent(BrowserFiles.computeRandomTmpContextDir(), fingerprint)
+    override fun invoke(fingerprint: Fingerprint): BrowserProfile =
+        BrowserProfile(BrowserFiles.computeRandomTmpContextDir(), fingerprint)
 }
 

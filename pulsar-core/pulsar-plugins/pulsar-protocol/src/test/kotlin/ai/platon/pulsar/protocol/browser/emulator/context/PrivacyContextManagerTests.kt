@@ -9,11 +9,10 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.persist.WebPageExt
 import ai.platon.pulsar.protocol.browser.DefaultWebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
-import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserProfile
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -34,7 +33,7 @@ class PrivacyContextManagerTests {
     private val contextPath2 = contextPathBase.resolve("cx.7KmtAC2")
     private val conf = ImmutableConfig()
     private lateinit var driverPoolManager: WebDriverPoolManager
-    
+
     @BeforeTest
     fun setup() {
         BrowserSettings.maxBrowserContexts(6).maxOpenTabs(10).withSequentialBrowsers(15)
@@ -68,68 +67,68 @@ class PrivacyContextManagerTests {
             // proxy: {}
             "8.8.8.8"
         )
-        
+
         // println(report)
-        
+
         assertTrue { report.contains("Privacy context has lived for PT1M | 03092518dNOgA1 | active ready") }
         assertTrue { report.contains("success: 1023(0.45 pages/s)") }
         assertTrue { report.contains("small: 101(1.0%)") }
         assertTrue { report.contains("traffic: 1G(1M/s)") }
         assertTrue { report.contains("tasks: 123 total run: 234") }
     }
-    
+
     @Test
     fun testPrivacyContextComparison() {
         val privacyManager = MultiPrivacyContextManager(driverPoolManager, conf)
         val fingerprint = Fingerprint(BrowserType.PULSAR_CHROME)
-        
+
         val pc = privacyManager.tryGetNextReadyPrivacyContext(fingerprint)
         assertTrue { pc.isActive }
         assertTrue { pc.isReady }
         privacyManager.close(pc)
         assertTrue { !pc.isActive }
-        assertFalse { privacyManager.temporaryContexts.containsKey(pc.privacyAgent) }
+        assertFalse { privacyManager.temporaryContexts.containsKey(pc.profile) }
         assertFalse { privacyManager.temporaryContexts.containsValue(pc) }
-        
+
         val pc2 = privacyManager.tryGetNextReadyPrivacyContext(fingerprint)
         assertTrue { pc2.isActive }
         assertTrue { pc2.isReady }
-        println(pc.privacyAgent.contextDir)
-        println(pc2.privacyAgent.contextDir)
-        assertNotEquals(pc.privacyAgent, pc2.privacyAgent)
+        println(pc.profile.contextDir)
+        println(pc2.profile.contextDir)
+        assertNotEquals(pc.profile, pc2.profile)
         assertNotEquals(pc, pc2)
-        assertTrue { privacyManager.temporaryContexts.containsKey(pc2.privacyAgent) }
+        assertTrue { privacyManager.temporaryContexts.containsKey(pc2.profile) }
         assertTrue { privacyManager.temporaryContexts.containsValue(pc2) }
     }
-    
+
     @Test
     fun testPrivacyContextClosing() {
         val privacyManager = MultiPrivacyContextManager(driverPoolManager, conf)
         val userAgents = UserAgent()
-        
+
         repeat(100) {
             val proxyServer = "127.0.0." + Random.nextInt(200)
             val userAgent = userAgents.getRandomUserAgent()
             val fingerprint = Fingerprint(BrowserType.DEFAULT, proxyServer, userAgent = userAgent)
             val pc = privacyManager.tryGetNextReadyPrivacyContext(fingerprint)
-            
+
             assertTrue { pc.isActive }
             privacyManager.close(pc)
             assertTrue { !pc.isActive }
-            assertFalse { privacyManager.temporaryContexts.containsKey(pc.privacyAgent) }
+            assertFalse { privacyManager.temporaryContexts.containsKey(pc.profile) }
             assertFalse { privacyManager.temporaryContexts.containsValue(pc) }
         }
     }
-    
+
     @Test
     fun testPrivacyContextClosingConcurrently() {
         val privacyManager = MultiPrivacyContextManager(driverPoolManager, conf)
         val userAgents = UserAgent()
-        
+
         val volatileContexts = ConcurrentLinkedDeque<PrivacyContext>()
         val producer = Executors.newScheduledThreadPool(50)
         val closer = Executors.newScheduledThreadPool(5)
-        
+
         producer.scheduleWithFixedDelay({
             val proxyServer = "127.0.0." + Random.nextInt(200)
             val userAgent = userAgents.getRandomUserAgent()
@@ -141,11 +140,11 @@ class PrivacyContextManagerTests {
 
             assertTrue { pc.isActive }
         }, 100, 500, TimeUnit.MILLISECONDS)
-        
+
         closer.scheduleWithFixedDelay({
             volatileContexts.forEach { pc ->
                 // proxy server can be changed, which will be improved in the further
-                pc.privacyAgent.fingerprint.proxyURI = URI("127.0.0." + Random.nextInt(200))
+                pc.profile.fingerprint.proxyURI = URI("127.0.0." + Random.nextInt(200))
 
                 privacyManager.close(pc)
                 volatileContexts.remove(pc)
@@ -153,35 +152,35 @@ class PrivacyContextManagerTests {
                 logger.info("Closed privacy context {} | {}", pc.display, pc.id)
 
                 assertTrue { !pc.isActive }
-                assertFalse { privacyManager.temporaryContexts.containsKey(pc.privacyAgent) }
+                assertFalse { privacyManager.temporaryContexts.containsKey(pc.profile) }
                 assertFalse { privacyManager.temporaryContexts.containsValue(pc) }
             }
         }, 2, 1, TimeUnit.SECONDS)
-        
+
         producer.awaitTermination(15, TimeUnit.SECONDS)
-        
+
         producer.shutdownNow()
         closer.shutdownNow()
     }
-    
+
     @Test
     fun `When a privacy context closed then it's removed from the active queue`() {
         val manager = MultiPrivacyContextManager(driverPoolManager, conf)
-        
-        val agent = PrivacyAgent(contextPath, BrowserType.DEFAULT)
+
+        val agent = BrowserProfile(contextPath, BrowserType.DEFAULT)
         val privacyContext = manager.getOrCreate(agent)
-        
+
         assertTrue { manager.temporaryContexts.containsKey(agent) }
         manager.close(privacyContext)
         assertFalse { manager.temporaryContexts.containsKey(agent) }
     }
-    
+
     @Test
     fun `When tasks run then contexts rotates`() {
         val manager = MultiPrivacyContextManager(driverPoolManager, conf)
         val url = "about:blank"
         val page = WebPageExt.newTestWebPage(url)
-        
+
         runBlocking {
             repeat(10) {
                 val task = FetchTask.create(page)
@@ -191,14 +190,14 @@ class PrivacyContextManagerTests {
             }
         }
     }
-    
+
     @Ignore("Failed, will correct the test later")
     @Test
     fun `When task run then maintainer started`() {
         val manager = MultiPrivacyContextManager(driverPoolManager, conf)
         val url = "about:blank"
         val page = WebPageExt.newTestWebPage(url)
-        
+
         runBlocking {
             val task = FetchTask.create(page)
             manager.run(task) { _, driver -> mockFetch(task, driver) }
@@ -206,12 +205,12 @@ class PrivacyContextManagerTests {
             while (n-- > 0 && manager.maintainCount.get() <= 0) {
                 delay(1000)
             }
-            
+
             assertTrue { n > 0 }
             assertTrue { manager.maintainCount.get() > 0 }
         }
     }
-    
+
     private suspend fun mockFetch(task: FetchTask, driver: WebDriver): FetchResult {
         return FetchResult.canceled(task)
     }

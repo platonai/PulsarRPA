@@ -4,7 +4,6 @@ import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.browser.BrowserContextMode
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
-import ai.platon.pulsar.common.concurrent.ConcurrentPassiveExpiringSet
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_CONTEXT_NUMBER
 import ai.platon.pulsar.common.config.CapabilityTypes.PRIVACY_AGENT_GENERATOR_CLASS
 import ai.platon.pulsar.common.getLogger
@@ -13,7 +12,6 @@ import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import java.nio.file.Files
 import java.nio.file.Path
-import java.time.Duration
 
 /**
  * A privacy agent defines a unique agent to visit websites.
@@ -21,10 +19,10 @@ import java.time.Duration
  * Page visits through different privacy agents should not be detected
  * as the same person, even if the visits are from the same host.
  * */
-data class PrivacyAgent(
+data class BrowserProfile(
     val contextDir: Path,
     var fingerprint: Fingerprint
-) : Comparable<PrivacyAgent> {
+) : Comparable<BrowserProfile> {
 
     val id = PrivacyAgentId(contextDir, fingerprint.browserType)
     val ident get() = id.ident
@@ -45,11 +43,11 @@ data class PrivacyAgent(
      * The PrivacyAgent equality.
      * Note: do not use the default equality function
      * */
-    override fun equals(other: Any?) = other is PrivacyAgent && other.id == this.id
+    override fun equals(other: Any?) = other is BrowserProfile && other.id == this.id
 
     override fun hashCode() = id.hashCode()
 
-    override fun compareTo(other: PrivacyAgent) = id.compareTo(other.id)
+    override fun compareTo(other: BrowserProfile) = id.compareTo(other.id)
 
 //    override fun toString() = /** AUTO GENERATED **/
 
@@ -64,7 +62,7 @@ data class PrivacyAgent(
 
         private fun create(contextDir: Path) = create(BrowserType.PULSAR_CHROME, contextDir)
 
-        private fun create(browserType: BrowserType, contextDir: Path): PrivacyAgent {
+        private fun create(browserType: BrowserType, contextDir: Path): BrowserProfile {
             val path = contextDir.resolve("fingerprint.json")
             val fingerprint: Fingerprint = if (Files.exists(path)) {
                 pulsarObjectMapper().readValue<Fingerprint>(path.toFile()).also { it.source = path.toString() }
@@ -72,14 +70,14 @@ data class PrivacyAgent(
                 Fingerprint(browserType)
             }
             fingerprint.browserType = browserType
-            return PrivacyAgent(contextDir, fingerprint)
+            return BrowserProfile(contextDir, fingerprint)
         }
 
-        fun createSystemDefault(): PrivacyAgent {
+        fun createSystemDefault(): BrowserProfile {
             return createSystemDefault(BrowserType.DEFAULT)
         }
 
-        fun createSystemDefault(browserType: BrowserType): PrivacyAgent {
+        fun createSystemDefault(browserType: BrowserType): BrowserProfile {
             throttlingLogger.info("You are creating a SYSTEM_DEFAULT browser context, force set max browser number to be 1")
             BrowserSettings.withBrowserContextMode(BrowserContextMode.SYSTEM_DEFAULT, browserType)
             require(System.getProperty(BROWSER_CONTEXT_NUMBER).toIntOrNull() == 1)
@@ -87,11 +85,11 @@ data class PrivacyAgent(
             return create(browserType, PrivacyContext.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER)
         }
 
-        fun createDefault(): PrivacyAgent {
+        fun createDefault(): BrowserProfile {
             return createDefault(BrowserType.DEFAULT)
         }
 
-        fun createDefault(browserType: BrowserType): PrivacyAgent {
+        fun createDefault(browserType: BrowserType): BrowserProfile {
             throttlingLogger.info("You are creating a DEFAULT browser context, force set max browser number to be 1")
 
             BrowserSettings.withBrowserContextMode(BrowserContextMode.DEFAULT, browserType)
@@ -100,11 +98,11 @@ data class PrivacyAgent(
             return create(browserType, PrivacyContext.DEFAULT_CONTEXT_DIR)
         }
 
-        fun createPrototype(): PrivacyAgent {
+        fun createPrototype(): BrowserProfile {
             return createPrototype(BrowserType.DEFAULT)
         }
 
-        fun createPrototype(browserType: BrowserType): PrivacyAgent {
+        fun createPrototype(browserType: BrowserType): BrowserProfile {
             throttlingLogger.info("You are creating a PROTOTYPE browser context, force set max browser number to be 1")
 
             BrowserSettings.withBrowserContextMode(BrowserContextMode.PROTOTYPE, browserType)
@@ -115,14 +113,14 @@ data class PrivacyAgent(
 
         fun createNextSequential() = createNextSequential(BrowserType.PULSAR_CHROME)
 
-        fun createNextSequential(browserType: BrowserType): PrivacyAgent {
+        fun createNextSequential(browserType: BrowserType): BrowserProfile {
             BrowserSettings.withBrowserContextMode(BrowserContextMode.SEQUENTIAL, browserType)
             return create(browserType, PrivacyContext.NEXT_SEQUENTIAL_CONTEXT_DIR)
         }
 
         fun createRandomTemp() = createRandomTemp(BrowserType.PULSAR_CHROME)
 
-        fun createRandomTemp(browserType: BrowserType): PrivacyAgent {
+        fun createRandomTemp(browserType: BrowserType): BrowserProfile {
             BrowserSettings.withBrowserContextMode(BrowserContextMode.TEMPORARY, browserType)
             return create(browserType, PrivacyContext.createRandom(browserType))
         }

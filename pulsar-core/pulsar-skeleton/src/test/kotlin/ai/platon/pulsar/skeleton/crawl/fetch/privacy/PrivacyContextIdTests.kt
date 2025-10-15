@@ -12,8 +12,8 @@ class PrivacyAgentTests {
 
     @Test
     fun testPrivacyAgentComparison() {
-        val id = PrivacyAgent(contextPath, BrowserType.PULSAR_CHROME)
-        val id2 = PrivacyAgent(contextPath2, BrowserType.PLAYWRIGHT_CHROME)
+        val id = BrowserProfile(contextPath, BrowserType.PULSAR_CHROME)
+        val id2 = BrowserProfile(contextPath2, BrowserType.PLAYWRIGHT_CHROME)
         assertNotEquals(id, id2)
         assertNotEquals(id.hashCode(), id2.hashCode())
         assertTrue { id < id2 }
@@ -22,13 +22,13 @@ class PrivacyAgentTests {
 
     @Test
     fun testPrivacyAgentEquality() {
-        val id = PrivacyAgent(contextPath, BrowserType.PULSAR_CHROME)
-        val id2 = PrivacyAgent(contextPath, BrowserType.PULSAR_CHROME)
+        val id = BrowserProfile(contextPath, BrowserType.PULSAR_CHROME)
+        val id2 = BrowserProfile(contextPath, BrowserType.PULSAR_CHROME)
         assertEquals(id, id2)
         assertEquals(id.hashCode(), id2.hashCode())
         assertTrue { id == id2 }
 
-        val activeContexts = ConcurrentHashMap<PrivacyAgent, Any>()
+        val activeContexts = ConcurrentHashMap<BrowserProfile, Any>()
         activeContexts[id] = 1
         assertTrue { activeContexts.containsKey(id) }
         assertTrue { activeContexts.containsKey(id2) }
@@ -36,9 +36,9 @@ class PrivacyAgentTests {
 
     @Test
     fun testPrivacyAgentContains() {
-        val activeContexts = ConcurrentHashMap<PrivacyAgent, Any>()
-        val id = PrivacyAgent(contextPath, BrowserType.PULSAR_CHROME)
-        val id2 = PrivacyAgent(contextPath, BrowserType.PLAYWRIGHT_CHROME)
+        val activeContexts = ConcurrentHashMap<BrowserProfile, Any>()
+        val id = BrowserProfile(contextPath, BrowserType.PULSAR_CHROME)
+        val id2 = BrowserProfile(contextPath, BrowserType.PLAYWRIGHT_CHROME)
         activeContexts[id] = 1
         assertTrue { activeContexts.containsKey(id) }
         assertFalse { activeContexts.containsKey(id2) }

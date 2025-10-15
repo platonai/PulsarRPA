@@ -55,8 +55,8 @@ abstract class AbstractBrowser(
     override val isConnected: Boolean get() = isActive
 
     override val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
-    
-    override val isPermanent: Boolean get() = id.privacyAgent.isPermanent
+
+    override val isPermanent: Boolean get() = id.profile.isPermanent
 
     override val isActive get() = AppContext.isActive && !isClosed // && initialized.get()
 

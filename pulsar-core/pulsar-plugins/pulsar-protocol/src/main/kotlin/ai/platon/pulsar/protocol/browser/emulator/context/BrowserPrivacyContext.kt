@@ -30,7 +30,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.AbstractPrivacyContext
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
-import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserProfile
 import com.google.common.annotations.Beta
 
 open class BrowserPrivacyContext(
@@ -38,8 +38,8 @@ open class BrowserPrivacyContext(
     val driverPoolManager: WebDriverPoolManager,
     val coreMetrics: CoreMetrics? = null,
     conf: ImmutableConfig,
-    privacyAgent: PrivacyAgent
-) : AbstractPrivacyContext(privacyAgent, conf) {
+    profile: BrowserProfile
+) : AbstractPrivacyContext(profile, conf) {
     private val logger = getLogger(BrowserPrivacyContext::class)
     private val throttlingLogger = ThrottlingLogger(logger)
 
@@ -55,7 +55,7 @@ open class BrowserPrivacyContext(
             return doRetired
         }
 
-    val browserId = BrowserId(privacyAgent.contextDir, privacyAgent.fingerprint)
+    val browserId = BrowserId(profile.contextDir, profile.fingerprint)
     val driverContext = WebDriverContext(browserId, driverPoolManager, conf)
     var proxyContext: ProxyContext? = null
         private set
