@@ -56,7 +56,7 @@ Naming conventions:
 
 ## 4. Tags (JUnit 5 @Tag)
 
-- `UnitTest`, `IntegrationTest`, `E2ETest`, `ExternalServiceTest`, `TimeConsumingTest`, `HeavyTest`, `SmokeTest`, `BenchmarkTest`
+- `IntegrationTest`, `E2ETest`, `ExternalServiceTest`, `TimeConsumingTest`, `HeavyTest`, `SmokeTest`, `BenchmarkTest`
 
 Usage examples in `docs/copilot/templates/test-tag-usage.md`.
 
@@ -161,7 +161,7 @@ Guidelines:
 ## 13. Quick Reference (Testing)
 
 - Test naming: `XxxTest` / `XxxIT` / `XxxE2ETest`
-- Test tags: `UnitTest` / `IntegrationTest` / `E2ETest` / ...
+- Test tags: `IntegrationTest` / `E2ETest` / ...
 - Coverage: Global ≥ 70% / Core ≥ 80% / Utilities ≥ 90% / Controllers ≥ 85%
 - Commands: see Section 9
 

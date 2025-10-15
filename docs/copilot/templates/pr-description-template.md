@@ -31,7 +31,7 @@
 ## Test Coverage
 - Added Tests: <List>
 - Modified Tests: <List>
-- Tags Executed: <UnitTest / IntegrationTest / E2ETest>
+- Tags Executed: <IntegrationTest / E2ETest>
 
 ## Verification
 Commands executed:

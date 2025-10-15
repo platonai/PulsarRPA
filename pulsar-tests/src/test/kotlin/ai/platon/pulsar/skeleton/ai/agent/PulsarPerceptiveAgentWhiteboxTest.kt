@@ -12,7 +12,6 @@ import kotlin.math.abs
  * Whitebox tests for private helpers inside PulsarPerceptiveAgent using reflection.
  * These tests avoid LLM calls by only exercising branches that don't initialize TTA/chat model.
  */
-@Tag("UnitTest")
 class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
 
     private fun getMethod(instance: Any, name: String, vararg params: Class<*>): Method {
