@@ -25,7 +25,7 @@ data class BrowserId(
      * */
     val browserType: BrowserType get() = fingerprint.browserType
     /**
-     * The privacy agent of the browser.
+     * The browser profile of the browser.
      * */
     val profile = BrowserProfile(contextDir, fingerprint)
     /**
@@ -51,7 +51,7 @@ data class BrowserId(
     /**
      * The constructor of the browser id.
      *
-     * @param profile The privacy agent of the browser.
+     * @param profile The browser profile of the browser.
      * */
     constructor(profile: BrowserProfile): this(profile.contextDir, profile.fingerprint)
     /**

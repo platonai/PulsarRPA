@@ -265,7 +265,7 @@ open class MultiPrivacyContextManager(
 
             val privacyAgent = createPrivacyAgent(page, fingerprint)
             if (privacyAgent.isPermanent) {
-                // logger.info("Prepare for permanent privacy agent | {}", privacyAgent)
+                // logger.info("Prepare for permanent browser profile | {}", privacyAgent)
                 reserveResourceForcefully()
                 return getOrCreate(privacyAgent)
             }
@@ -339,7 +339,7 @@ open class MultiPrivacyContextManager(
 
     @Throws(PrivacyException::class)
     private fun createPrivacyAgent(page: WebPage, fingerprint: Fingerprint): BrowserProfile {
-        // Specify the privacy agent by the user code
+        // Specify the browser profile by the user code
         val specifiedProfile = page.getBeanOrNull(BrowserProfile::class.java)
         if (specifiedProfile is BrowserProfile) {
             return specifiedProfile
@@ -349,7 +349,7 @@ open class MultiPrivacyContextManager(
         try {
             return generator.invoke(fingerprint)
         } catch (e: IOException) {
-            throw PrivacyException("Failed to create a privacy agent | ${generator::class.simpleName}", e)
+            throw PrivacyException("Failed to create a browser profile | ${generator::class.simpleName}", e)
         }
     }
 

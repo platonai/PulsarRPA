@@ -61,7 +61,7 @@ open class SequentialPrivacyAgentGenerator(
         val maxAgents = computeMaxAgentCount()
 
         val contextDir = BrowserFiles.computeNextSequentialContextDir(group, fingerprint, maxAgents)
-        // logger.info("Use sequential privacy agent | $contextDir")
+        // logger.info("Use sequential browser profile | $contextDir")
 
         require(Files.exists(contextDir)) { "The context dir does not exist: $contextDir" }
 
@@ -72,7 +72,7 @@ open class SequentialPrivacyAgentGenerator(
 }
 
 /**
- * The random privacy agent generator.
+ * The random browser profile generator.
  *
  * If the prototype Chrome browser does not exist, it acts as "New Incognito window", or in Chinese, "打开无痕浏览器".
  * If the prototype Chrome browser exists, it copies the prototype Chrome browser's user data directory, and inherits

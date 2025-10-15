@@ -134,7 +134,7 @@ public interface CapabilityTypes {
      * */
     String MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER = "max.sequential.privacy.agent.number";
     /**
-     * The class name of privacy agent generator
+     * The class name of browser profile generator
      * */
     String PRIVACY_AGENT_GENERATOR_CLASS = "privacy.agent.generator.class";
     String PRIVACY_MINOR_WARNING_FACTOR = "privacy.minor.warning.factor";

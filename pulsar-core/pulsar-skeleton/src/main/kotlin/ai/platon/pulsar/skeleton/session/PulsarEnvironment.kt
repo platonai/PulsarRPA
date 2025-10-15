@@ -10,7 +10,7 @@ class PulsarEnvironment {
             H2_SESSION_FACTORY_CLASS to "ai.platon.pulsar.ql.h2.H2SessionFactory",
 
             /**
-             * Use the sequential privacy agent generator by default.
+             * Use the sequential browser profile generator by default.
              * If the prototype data directory doesn't exist, it acts as a browse in incognito mode.
              * If the prototype data directory exists, it copies and inherits the prototype Chrome browser's
              * user data directory.

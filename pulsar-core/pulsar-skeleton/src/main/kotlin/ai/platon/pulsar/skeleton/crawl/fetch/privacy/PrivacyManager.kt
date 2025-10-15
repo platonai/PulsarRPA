@@ -92,25 +92,25 @@ interface PrivacyManager : AutoCloseable {
     fun tryGetNextUnderLoadedPrivacyContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext?
 
     /**
-     * Gets or creates a privacy context for the given privacy agent.
+     * Gets or creates a privacy context for the given browser profile.
      *
-     * @param profile The privacy agent associated with the context.
+     * @param profile The browser profile associated with the context.
      * @return The privacy context.
      */
     fun getOrCreate(profile: BrowserProfile): PrivacyContext
 
     /**
-     * Creates an unmanaged privacy context for the given privacy agent.
+     * Creates an unmanaged privacy context for the given browser profile.
      *
-     * @param profile The privacy agent associated with the context.
+     * @param profile The browser profile associated with the context.
      * @return The unmanaged privacy context.
      */
     fun createUnmanagedContext(profile: BrowserProfile): PrivacyContext
 
     /**
-     * Creates an unmanaged privacy context for the given privacy agent and fetcher.
+     * Creates an unmanaged privacy context for the given browser profile and fetcher.
      *
-     * @param profile The privacy agent associated with the context.
+     * @param profile The browser profile associated with the context.
      * @param fetcher The web driver fetcher used to create the context.
      * @return The unmanaged privacy context.
      */

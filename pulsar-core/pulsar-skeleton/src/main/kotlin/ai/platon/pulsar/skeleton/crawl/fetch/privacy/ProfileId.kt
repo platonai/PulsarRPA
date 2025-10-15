@@ -19,22 +19,22 @@ data class ProfileId(
         else -> ident.substringAfter(PrivacyContext.CONTEXT_DIR_PREFIX)
     }
     /**
-     * If true, the privacy agent opens browser just like a real user does every day.
+     * If true, the browser profile opens browser just like a real user does every day.
      * */
     val isSystemDefault get() = this.contextDir == AppPaths.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER
     /**
-     * If true, the privacy agent opens browser with the default data dir, the default data dir will not be removed
+     * If true, the browser profile opens browser with the default data dir, the default data dir will not be removed
      * after the browser closes.
      * */
     val isDefault get() = this.contextDir == PrivacyContext.DEFAULT_CONTEXT_DIR
     /**
-     * If true, the privacy agent opens browser with the prototype data dir.
-     * Every change to the browser will be kept in the prototype data dir, and every temporary privacy agent
+     * If true, the browser profile opens browser with the prototype data dir.
+     * Every change to the browser will be kept in the prototype data dir, and every temporary browser profile
      * uses a copy of the prototype data dir.
      * */
     val isPrototype get() = this.contextDir == PrivacyContext.PROTOTYPE_CONTEXT_DIR
     /**
-     * If true, the privacy agent opens browser with one of a set of pre-created data dirs, the pre-created data dirs will
+     * If true, the browser profile opens browser with one of a set of pre-created data dirs, the pre-created data dirs will
      * not be removed after the browser closes.
      * */
     val isGroup get() = this.contextDir.startsWith(AppPaths.CONTEXT_GROUP_BASE_DIR)

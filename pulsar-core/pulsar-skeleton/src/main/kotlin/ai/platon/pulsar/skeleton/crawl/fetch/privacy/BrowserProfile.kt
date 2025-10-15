@@ -14,7 +14,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 /**
- * A privacy agent defines a unique agent to visit websites.
+ * A browser profile defines a unique agent to visit websites.
  *
  * Page visits through different privacy agents should not be detected
  * as the same person, even if the visits are from the same host.
@@ -56,7 +56,7 @@ data class BrowserProfile(
         private val throttlingLogger = ThrottlingLogger(logger)
 
         /**
-         * The random privacy agent opens browser with a random data dir.
+         * The random browser profile opens browser with a random data dir.
          * */
         val RANDOM_TEMP get() = createRandomTemp()
 

@@ -27,7 +27,7 @@ import java.nio.file.Path
 import java.time.Duration
 
 /**
- * A privacy context is a unique context of a privacy agent to the target website,
+ * A privacy context is a unique context of a browser profile to the target website,
  * it will be closed once it is leaked.
  *
  * One of the biggest difficulties in web scraping tasks is the bot stealth.
@@ -43,7 +43,7 @@ interface PrivacyContext: AutoCloseable {
      * */
     val id: ProfileId
     /**
-     * The associated privacy agent.
+     * The associated browser profile.
      * */
     val profile: BrowserProfile
     /**
