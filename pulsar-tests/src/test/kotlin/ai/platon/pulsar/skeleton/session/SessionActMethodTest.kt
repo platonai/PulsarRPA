@@ -113,7 +113,7 @@ class SessionActMethodTest : TextToActionTestBase() {
 
     /**
      * Mirrors action: "extract article titles and their hrefs from the main list".
-     * Since the agent returns a PulsarAgent with a history, we assert key tokens appear there.
+     * Since the agent returns a PerceptiveAgent with a history, we assert key tokens appear there.
      */
     @Test
     fun testExtractArticleTitles() = runBlocking {

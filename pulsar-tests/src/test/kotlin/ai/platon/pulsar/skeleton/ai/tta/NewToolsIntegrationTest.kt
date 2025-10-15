@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 
 /**
- * Integration tests for the newly implemented tools in PulsarAgent:
+ * Integration tests for the newly implemented tools in PerceptiveAgent:
  * exists(selector), isVisible(selector), focus(selector), scrollTo(selector), waitForNavigation(oldUrl?, timeoutMillis?)
  * goBack(), goForward()
  *

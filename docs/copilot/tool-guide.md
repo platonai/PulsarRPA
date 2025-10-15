@@ -19,4 +19,8 @@ cd /d D:\Browser4 && mvnw.cmd -q -DskipTests compile
 # Failed: cd /d D:\Browser4 && mvnw.cmd -q -DskipTests compile
 
 mvnw.cmd -q -pl pulsar-core/pulsar-skeleton -am -DskipTests package
+mvnw.cmd -pl pulsar-core/pulsar-skeleton -am -DskipTests -B package
+
+cd D:\Browser4 && mvnw.cmd -pl pulsar-tests -Dtest="ai.platon.pulsar.skeleton.ai.PulsarAgentExtractObserveE2ETest" test -DskipITs
+# Failed: cd /d D:\Browser4 && mvnw.cmd -pl pulsar-tests -am -Dtest=ai.platon.pulsar.skeleton.ai.PulsarAgentExtractObserveE2ETest test -DskipITs
 ```

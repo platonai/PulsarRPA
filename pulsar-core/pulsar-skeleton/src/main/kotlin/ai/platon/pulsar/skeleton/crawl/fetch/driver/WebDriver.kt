@@ -11,7 +11,7 @@ import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.InstructionResult
-import ai.platon.pulsar.skeleton.ai.PulsarAgent
+import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import com.google.common.annotations.Beta
 import org.jsoup.Connection
 import java.io.Closeable
@@ -414,14 +414,14 @@ interface WebDriver : Closeable {
      */
     @Throws(WebDriverException::class)
     @Beta
-    suspend fun act(action: String): PulsarAgent
+    suspend fun act(action: String): PerceptiveAgent
 
     /**
      * Create an AI agent to resolve the action requirement.
      */
     @Throws(WebDriverException::class)
     @Beta
-    suspend fun act(action: ActionOptions): PulsarAgent
+    suspend fun act(action: ActionOptions): PerceptiveAgent
 
     /**
      * Perform a model-generated action described by [action]. Executes (possibly multiple) low-level driver operations

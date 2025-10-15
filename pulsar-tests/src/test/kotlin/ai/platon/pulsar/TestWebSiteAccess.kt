@@ -62,6 +62,7 @@ class TestWebSiteAccess {
     protected val actMockSiteBaseURL get() = "$generatedAssetsBaseURL/tta/act"
     protected val actMockSiteHomeURL get() = "$actMockSiteBaseURL/act-demo.html"
 
+    protected val interactiveDynamicURL get() = "$generatedAssetsBaseURL/interactive-dynamic.html"
     protected val multiScreensInteractiveUrl get() = "$generatedAssetsBaseURL/interactive-screens.html"
 
     protected val generatedMockAmazonBaseURL get() = "$generatedAssetsBaseURL/mock-amazon"

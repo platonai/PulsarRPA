@@ -11,8 +11,8 @@ import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.InstructionResult
-import ai.platon.pulsar.skeleton.ai.PulsarAgent
-import ai.platon.pulsar.skeleton.ai.agent.PulsarAgentImpl
+import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
+import ai.platon.pulsar.skeleton.ai.agent.PulsarPerceptiveAgent
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -288,13 +288,13 @@ abstract class AbstractWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun act(action: String): PulsarAgent {
+    override suspend fun act(action: String): PerceptiveAgent {
         return act(ActionOptions(action))
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun act(action: ActionOptions): PulsarAgent {
-        val agent = PulsarAgentImpl(this)
+    override suspend fun act(action: ActionOptions): PerceptiveAgent {
+        val agent = PulsarPerceptiveAgent(this)
         agent.act(action) // execute without shadowing
         return agent
     }

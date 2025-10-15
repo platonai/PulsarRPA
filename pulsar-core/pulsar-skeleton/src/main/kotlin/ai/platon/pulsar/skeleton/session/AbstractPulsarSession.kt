@@ -18,8 +18,8 @@ import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.InstructionResult
-import ai.platon.pulsar.skeleton.ai.PulsarAgent
-import ai.platon.pulsar.skeleton.ai.agent.PulsarAgentImpl
+import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
+import ai.platon.pulsar.skeleton.ai.agent.PulsarPerceptiveAgent
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
@@ -532,13 +532,13 @@ abstract class AbstractPulsarSession(
                 "\n\nThere is the text content of the selected element:\n\n\n" + element.text()
     )
 
-    override suspend fun act(action: String): PulsarAgent {
+    override suspend fun act(action: String): PerceptiveAgent {
         return act(ActionOptions(action = action))
     }
 
-    override suspend fun act(action: ActionOptions): PulsarAgent {
+    override suspend fun act(action: ActionOptions): PerceptiveAgent {
         val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`: session.bind(driver)" }
-        val agent = PulsarAgentImpl(driver)
+        val agent = PulsarPerceptiveAgent(driver)
 
         agent.act(action)
 

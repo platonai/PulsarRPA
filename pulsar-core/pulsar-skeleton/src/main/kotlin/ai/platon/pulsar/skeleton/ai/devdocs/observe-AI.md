@@ -1,4 +1,4 @@
-# PulsarAgent.extract extract / observe 源码逻辑梳理与伪代码
+# PerceptiveAgent.extract extract / observe 源码逻辑梳理与伪代码
 
 ## 📋 Prerequisites
 
@@ -9,13 +9,13 @@ Before starting development, ensure you understand:
 
 ## 🎯 Overview
 
-[PulsarAgent.kt](../PulsarAgent.kt)`InferenceEngine.kt` 实现三个方法：`act`, `extract` 与 `observe`。
+[PerceptiveAgent.kt](../PerceptiveAgent.kt)`InferenceEngine.kt` 实现三个方法：`act`, `extract` 与 `observe`。
 
 本文介绍 `extract` 与 `observe` 两个核心方法的执行流程、输入输出契约、日志/度量采集点，以及典型边界情况，并给出伪代码与实现要点。
 
 你需要根据本文介绍来实现这两个方法。
 
-- 代码位置：`pulsar-core/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/ai/PulsarAgent.kt`
+- 代码位置：`pulsar-core/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/ai/PerceptiveAgent.kt`
 - 相关类型：`InferenceEngine`
 
 难点

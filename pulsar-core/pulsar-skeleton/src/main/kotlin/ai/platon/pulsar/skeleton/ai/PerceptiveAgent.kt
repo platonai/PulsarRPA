@@ -55,7 +55,7 @@ data class ObserveResult(
     val arguments: List<String>? = null
 )
 
-interface PulsarAgent {
+interface PerceptiveAgent {
     val uuid: UUID
     val history: List<String>
 

@@ -4,19 +4,8 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
-import ai.platon.pulsar.skeleton.ai.ActResult
-import ai.platon.pulsar.skeleton.ai.ActionDescription
-import ai.platon.pulsar.skeleton.ai.ActionOptions
-import ai.platon.pulsar.skeleton.ai.ExtractOptions
-import ai.platon.pulsar.skeleton.ai.ExtractResult
-import ai.platon.pulsar.skeleton.ai.ObserveOptions
-import ai.platon.pulsar.skeleton.ai.ObserveResult
-import ai.platon.pulsar.skeleton.ai.PulsarAgent
-import ai.platon.pulsar.skeleton.ai.detail.ExecutionContext
-import ai.platon.pulsar.skeleton.ai.detail.InteractiveElement
-import ai.platon.pulsar.skeleton.ai.detail.PerformanceMetrics
-import ai.platon.pulsar.skeleton.ai.detail.WebDriverAgentConfig
-import ai.platon.pulsar.skeleton.ai.detail.WebDriverAgentError
+import ai.platon.pulsar.skeleton.ai.*
+import ai.platon.pulsar.skeleton.ai.detail.*
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -33,18 +22,18 @@ import java.net.UnknownHostException
 import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
 import kotlin.math.pow
 
-class PulsarAgentImpl(
+class PulsarPerceptiveAgent(
     val driver: WebDriver,
     val maxSteps: Int = 100,
     val config: WebDriverAgentConfig = WebDriverAgentConfig(maxSteps = maxSteps)
-): PulsarAgent {
+): PerceptiveAgent {
     private val logger = getLogger(this)
 
     private val baseDir = AppPaths.get("agent")
@@ -152,7 +141,7 @@ class PulsarAgentImpl(
                     arguments = el.arguments?.takeIf { it.isNotEmpty() }
                 )
             }
-            addHistoryObserve(instruction, requestId, results.size, true)
+            addHistoryObserve(instruction, requestId, results.size, results.isNotEmpty())
             results
         } catch (e: Exception) {
             logger.error("observe.error requestId={} msg={}", requestId.take(8), e.message, e)
@@ -280,7 +269,7 @@ class PulsarAgentImpl(
         val context = ExecutionContext(sessionId, 0, "execute", getCurrentUrl())
 
         logStructured(
-            "Starting PulsarAgent execution", context, mapOf(
+            "Starting PerceptiveAgent execution", context, mapOf(
                 "instruction" to overallGoal.take(100),
                 "attempt" to (attempt + 1),
                 "maxSteps" to config.maxSteps,
@@ -497,7 +486,7 @@ class PulsarAgentImpl(
             "timestamp" to Instant.now()
         )
 
-        logger.error("PulsarAgent Error: {} - {}", message, errorData, error)
+        logger.error("PerceptiveAgent Error: {} - {}", message, errorData, error)
     }
 
     /**
