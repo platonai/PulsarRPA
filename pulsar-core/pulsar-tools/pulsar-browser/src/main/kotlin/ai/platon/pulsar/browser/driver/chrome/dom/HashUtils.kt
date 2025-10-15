@@ -77,40 +77,60 @@ object HashUtils {
         // Check cache first
         elementHashCache[cacheKey]?.let { return it }
 
+        // Resolve effective session id once
+        val effectiveSessionId = sessionId ?: node.sessionId
+
+        // Detect strict backend-only mode (only backend+session identifiers should be used)
+        val isBackendOnlyMode = config.useBackendNodeId && config.useSessionId &&
+                !config.useParentBranch && !config.useStaticAttributes
+
         val parts = mutableListOf<String>()
 
-        // Include parent branch hash if available and configured
-        if (config.useParentBranch && !parentBranchHash.isNullOrEmpty()) {
-            parts.add(parentBranchHash)
-        }
-
-        // Add tag name
-        parts.add(node.nodeName.lowercase())
-
-        // Add static attributes in sorted order if configured
-        if (config.useStaticAttributes) {
-            val staticAttrs = node.attributes.filterKeys { it in StaticAttributes.ATTRIBUTES }
-                .toSortedMap()
-                .map { "${it.key}=${it.value}" }
-            parts.addAll(staticAttrs)
-        }
-
-        // Include backend node ID if available and configured
-        if (config.useBackendNodeId) {
+        if (isBackendOnlyMode) {
+            // Only include backend node id and session id (no tag/static/parent)
             node.backendNodeId?.let { parts.add("backend:$it") }
-        }
+            if (!effectiveSessionId.isNullOrEmpty()) {
+                parts.add("session:$effectiveSessionId")
+            }
 
-        // Include session ID if available and configured
-        val effectiveSessionId = sessionId ?: node.sessionId
-        if (config.useSessionId && !effectiveSessionId.isNullOrEmpty()) {
-            parts.add("session:$effectiveSessionId")
-        }
+            // If both identifiers are absent, fall back to a minimal identifier to avoid empty input
+            if (parts.isEmpty() && config.fallbackToSimpleHash) {
+                val fallbackIdentifier = buildFallbackIdentifier(node)
+                parts.add("fallback:$fallbackIdentifier")
+            }
+        } else {
+            // Include parent branch hash if available and configured
+            if (config.useParentBranch && !parentBranchHash.isNullOrEmpty()) {
+                parts.add(parentBranchHash)
+            }
 
-        // Fallback strategy: if no meaningful identifiers found and fallback is enabled,
-        // use a combination of tag + position-based identifier
-        if (parts.size <= 1 && config.fallbackToSimpleHash) {
-            val fallbackIdentifier = buildFallbackIdentifier(node)
-            parts.add("fallback:$fallbackIdentifier")
+            // Add tag name
+            parts.add(node.nodeName.lowercase())
+
+            // Add static attributes in sorted order if configured
+            if (config.useStaticAttributes) {
+                val staticAttrs = node.attributes.filterKeys { it in StaticAttributes.ATTRIBUTES }
+                    .toSortedMap()
+                    .map { "${it.key}=${it.value}" }
+                parts.addAll(staticAttrs)
+            }
+
+            // Include backend node ID if available and configured
+            if (config.useBackendNodeId) {
+                node.backendNodeId?.let { parts.add("backend:$it") }
+            }
+
+            // Include session ID if available and configured
+            if (config.useSessionId && !effectiveSessionId.isNullOrEmpty()) {
+                parts.add("session:$effectiveSessionId")
+            }
+
+            // Fallback strategy: if no meaningful identifiers found and fallback is enabled,
+            // use a combination of tag + position-based identifier
+            if (parts.size <= 1 && config.fallbackToSimpleHash) {
+                val fallbackIdentifier = buildFallbackIdentifier(node)
+                parts.add("fallback:$fallbackIdentifier")
+            }
         }
 
         val key = parts.joinToString("|")
@@ -152,8 +172,21 @@ object HashUtils {
         config: HashConfig,
         sessionId: String?
     ): String {
+        // Build a stable attributes signature so that changes to attributes invalidate the cache
+        val attributesSignature = buildString {
+            node.attributes.toSortedMap().forEach { (k, v) ->
+                append(k)
+                append("=")
+                append(v)
+                append(";")
+            }
+        }
         return buildString {
             append(node.nodeId)
+            append(":")
+            append(node.backendNodeId ?: "null")
+            append(":")
+            append(node.nodeName.lowercase())
             append(":")
             append(parentBranchHash ?: "null")
             append(":")
@@ -166,6 +199,8 @@ object HashUtils {
             append(config.useStaticAttributes)
             append(":")
             append(sessionId ?: node.sessionId ?: "null")
+            append(":")
+            append(attributesSignature)
         }
     }
 
