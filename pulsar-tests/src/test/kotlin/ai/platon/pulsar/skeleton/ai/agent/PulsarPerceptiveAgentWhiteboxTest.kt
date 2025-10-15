@@ -85,7 +85,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
     fun `calculateRetryDelay should grow exponentially and respect cap`() = runWebDriverTest { driver ->
         val config = AgentConfig(baseRetryDelayMs = 100, maxRetryDelayMs = 1000)
         val agent = PulsarPerceptiveAgent(driver, config = config)
-        val m = getMethod(agent, "calculateRetryDelay", Int::class.javaPrimitiveType)
+        val m = getMethod(agent, "calculateRetryDelay", Int::class.javaPrimitiveType!!)
 
         val d0 = m.invoke(agent, 0) as Long
         val d1 = m.invoke(agent, 1) as Long
@@ -143,7 +143,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
     @Test
     fun `calculateConsecutiveNoOpDelay grows linearly with cap`() = runWebDriverTest { driver ->
         val agent = PulsarPerceptiveAgent(driver)
-        val m = getMethod(agent, "calculateConsecutiveNoOpDelay", Int::class.javaPrimitiveType)
+        val m = getMethod(agent, "calculateConsecutiveNoOpDelay", Int::class.javaPrimitiveType!!)
 
         val d1 = m.invoke(agent, 1) as Long
         val d2 = m.invoke(agent, 2) as Long

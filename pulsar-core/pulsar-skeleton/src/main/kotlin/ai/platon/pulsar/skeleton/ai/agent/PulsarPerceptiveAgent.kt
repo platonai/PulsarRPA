@@ -446,9 +446,11 @@ class PulsarPerceptiveAgent(
      * Calculates retry delay with exponential backoff and jitter
      */
     private fun calculateRetryDelay(attempt: Int): Long {
-        val exponentialDelay = config.baseRetryDelayMs * (2.0.pow(attempt.toDouble())).toLong()
-        val jitter = (0..500).random().toLong()
-        return min(exponentialDelay + jitter, config.maxRetryDelayMs)
+        // Use multiplicative jitter so delay is monotonic w.r.t attempt
+        val baseExp = config.baseRetryDelayMs * (2.0.pow(attempt.toDouble()))
+        val jitterPercent = (0..30).random() / 100.0 // 0%..30% multiplicative jitter
+        val withJitter = baseExp * (1.0 + jitterPercent)
+        return min(withJitter.toLong(), config.maxRetryDelayMs)
     }
 
     /**

@@ -19,7 +19,7 @@ import kotlin.test.assertFailsWith
 
 /**
  * Comprehensive unit and integration tests for PulsarPerceptiveAgent
- * 
+ *
  * Test Coverage:
  * - Agent initialization and configuration
  * - Act method with various scenarios
@@ -34,7 +34,7 @@ import kotlin.test.assertFailsWith
 class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
     private val mapper = ObjectMapper()
-    
+
     companion object {
         const val TIMEOUT_MS = 60_000L
     }
@@ -47,7 +47,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given default config When agent created Then should have valid uuid and empty history`() {
             runWebDriverTest { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
-                
+
                 assertNotNull(agent.uuid)
                 assertTrue(agent.history.isEmpty())
                 assertTrue(agent.toString().contains("no history"))
@@ -63,7 +63,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     consecutiveNoOpLimit = 3
                 )
                 val agent = PulsarPerceptiveAgent(driver, config = customConfig)
-                
+
                 assertNotNull(agent.uuid)
                 assertTrue(agent.history.isEmpty())
             }
@@ -78,18 +78,18 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given valid page When extract called Then should return structured data`() {
             assumeLLMConfigured()
-            
+
             runResourceWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
-                
+
                 val result = runBlocking {
                     agent.extract("Extract the page title and main content")
                 }
-                
+
                 assertTrue(result.success, "Extract should succeed")
                 assertNotNull(result.data)
                 assertFalse(result.data.isEmpty, "Extracted data should not be empty")
-                
+
                 // History should be updated
                 assertTrue(agent.history.isNotEmpty())
                 assertContains(agent.history.last(), "extract")
@@ -100,27 +100,27 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given custom schema When extract called Then should follow schema structure`() {
             assumeLLMConfigured()
-            
+
             runResourceWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
-                
+
                 val customSchema = mapOf(
                     "title" to "string - page title",
                     "buttonCount" to "number - count of buttons"
                 )
-                
+
                 val options = ExtractOptions(
                     instruction = "Extract title and count buttons",
                     schema = customSchema
                 )
-                
+
                 val result = runBlocking {
                     agent.extract(options)
                 }
-                
+
                 assertTrue(result.success)
                 assertNotNull(result.data)
-                
+
                 // Verify schema fields are present
                 val jsonNode = result.data
                 assertTrue(jsonNode.has("title") || jsonNode.has("buttonCount"),
@@ -132,14 +132,14 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given empty instruction When extract called Then should use default instruction`() {
             assumeLLMConfigured()
-            
+
             runResourceWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
-                
+
                 val result = runBlocking {
                     agent.extract("")
                 }
-                
+
                 // Should still work with default instruction
                 assertNotNull(result)
             }
@@ -152,13 +152,13 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 runBlocking {
                     driver.navigateTo("about:blank")
                 }
-                
+
                 val agent = PulsarPerceptiveAgent(driver)
-                
+
                 val result = runBlocking {
                     agent.extract("Extract data")
                 }
-                
+
                 // Should handle gracefully even on failure
                 assertNotNull(result)
             }
@@ -173,22 +173,22 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given interactive page When observe called Then should return actionable elements`() {
             assumeLLMConfigured()
-            
+
             runResourceWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
-                
+
                 val results = runBlocking {
                     agent.observe("List all interactive elements on this page")
                 }
-                
+
                 // Should find some interactive elements
                 assertTrue(results.isNotEmpty(), "Should find interactive elements")
-                
+
                 results.forEach { result ->
                     assertNotNull(result.selector, "Selector should not be null")
                     assertTrue(result.description.isNotBlank(), "Description should not be blank")
                 }
-                
+
                 // History should be updated
                 assertTrue(agent.history.isNotEmpty())
                 assertContains(agent.history.last(), "observe")
@@ -199,24 +199,24 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given observe options When observe called Then should respect options`() {
             assumeLLMConfigured()
-            
+
             runResourceWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
-                
+
                 val options = ObserveOptions(
                     instruction = "Find all buttons",
                     returnAction = false
                 )
-                
+
                 val results = runBlocking {
                     agent.observe(options)
                 }
-                
+
                 assertNotNull(results)
-                
+
                 // When returnAction is false, method and arguments should be null
                 results.forEach { result ->
-                    assertTrue(result.method == null || result.method.isBlank())
+                    assertTrue(result.method == null || result.method!!.isBlank())
                 }
             }
         }
@@ -225,19 +225,19 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given observe with returnAction true When observe called Then should include actions`() {
             assumeLLMConfigured()
-            
+
             runResourceWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
-                
+
                 val options = ObserveOptions(
                     instruction = "Find clickable elements",
                     returnAction = true
                 )
-                
+
                 val results = runBlocking {
                     agent.observe(options)
                 }
-                
+
                 assertNotNull(results)
                 // Some results might have methods/arguments
             }
@@ -247,14 +247,14 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given empty instruction When observe called Then should use default instruction`() {
             assumeLLMConfigured()
-            
+
             runResourceWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
-                
+
                 val results = runBlocking {
                     agent.observe("")
                 }
-                
+
                 assertNotNull(results)
             }
         }
@@ -268,14 +268,14 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given simple action When act called Then should execute and return result`() {
             assumeLLMConfigured()
-            
+
             runResourceWebDriverTest(actMockSiteHomeURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
-                
+
                 val result = runBlocking {
                     agent.act("Click the search button")
                 }
-                
+
                 assertNotNull(result)
                 assertTrue(agent.history.isNotEmpty())
             }
@@ -285,18 +285,18 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given ActionOptions When act called Then should use options`() {
             assumeLLMConfigured()
-            
+
             runResourceWebDriverTest(actMockSiteHomeURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
-                
+
                 val options = ActionOptions(
                     action = "Navigate to the home page"
                 )
-                
+
                 val result = runBlocking {
                     agent.act(options)
                 }
-                
+
                 assertNotNull(result)
                 assertEquals("Navigate to the home page", result.action)
             }
@@ -306,14 +306,14 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given act execution When history updated Then toString should reflect latest state`() {
             runResourceWebDriverTest(actMockSiteHomeURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
-                
+
                 // Initially empty
                 assertTrue(agent.toString().contains("no history"))
-                
+
                 // Manually add to history (simulating execution)
                 val history = agent.history as? MutableList
                 history?.add("Test action completed")
-                
+
                 if (agent.history.isNotEmpty()) {
                     assertFalse(agent.toString().contains("no history"))
                 }
@@ -329,13 +329,13 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given invalid URL When navigate fails Then should handle gracefully`() {
             runWebDriverTest { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
-                
+
                 // This should not throw but handle errors internally
                 val result = runBlocking {
                     driver.navigateTo("about:blank")
                     agent.extract("Extract something")
                 }
-                
+
                 assertNotNull(result)
             }
         }
@@ -344,23 +344,23 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given multiple consecutive failures When act called Then should respect retry limits`() {
             assumeLLMConfigured()
-            
+
             runWebDriverTest { driver ->
                 val config = AgentConfig(
                     maxRetries = 1,
                     maxSteps = 5
                 )
                 val agent = PulsarPerceptiveAgent(driver, config = config)
-                
+
                 // Navigate to blank page which may cause issues
                 runBlocking {
                     driver.navigateTo("about:blank")
                 }
-                
+
                 val result = runBlocking {
                     agent.act("Do something impossible")
                 }
-                
+
                 assertNotNull(result)
             }
         }
@@ -373,17 +373,17 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Test
         fun `Given multiple operations When executed Then history should accumulate`() {
             assumeLLMConfigured()
-            
+
             runResourceWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
-                
+
                 val initialHistorySize = agent.history.size
-                
+
                 runBlocking {
                     agent.extract("Extract title")
                     agent.observe("List elements")
                 }
-                
+
                 assertTrue(agent.history.size >= initialHistorySize + 2,
                     "History should grow with operations")
             }
@@ -393,7 +393,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given agent with history When toString called Then should show latest entry`() {
             runResourceWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
-                
+
                 if (agent.history.isEmpty()) {
                     assertTrue(agent.toString().contains("no history"))
                 } else {
@@ -413,10 +413,10 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
             runWebDriverTest { driver ->
                 val config1 = AgentConfig(maxSteps = 10)
                 val config2 = AgentConfig(maxSteps = 100)
-                
+
                 val agent1 = PulsarPerceptiveAgent(driver, maxSteps = 10, config = config1)
                 val agent2 = PulsarPerceptiveAgent(driver, maxSteps = 100, config = config2)
-                
+
                 assertNotNull(agent1)
                 assertNotNull(agent2)
             }
@@ -429,9 +429,9 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     enableStructuredLogging = true,
                     enablePerformanceMetrics = true
                 )
-                
+
                 val agent = PulsarPerceptiveAgent(driver, config = config)
-                
+
                 assertNotNull(agent)
             }
         }
@@ -444,9 +444,9 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     baseRetryDelayMs = 100,
                     maxRetryDelayMs = 5000
                 )
-                
+
                 val agent = PulsarPerceptiveAgent(driver, config = config)
-                
+
                 assertNotNull(agent)
             }
         }
@@ -457,9 +457,9 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 val config = AgentConfig(
                     enablePreActionValidation = true
                 )
-                
+
                 val agent = PulsarPerceptiveAgent(driver, config = config)
-                
+
                 assertNotNull(agent)
             }
         }
@@ -474,20 +474,20 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Timeout(value = 120_000L, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given multiple operations When executed in sequence Then should complete within time limit`() {
             assumeLLMConfigured()
-            
+
             runResourceWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
-                
+
                 val startTime = System.currentTimeMillis()
-                
+
                 runBlocking {
                     repeat(3) {
                         agent.observe("Find interactive elements")
                     }
                 }
-                
+
                 val duration = System.currentTimeMillis() - startTime
-                
+
                 // Should complete within reasonable time
                 assertTrue(duration < 120_000, "Operations should complete within 120 seconds")
             }
@@ -501,11 +501,11 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     memoryCleanupIntervalSteps = 5,
                     maxHistorySize = 20
                 )
-                
+
                 val agent = PulsarPerceptiveAgent(driver, config = config)
-                
+
                 assertNotNull(agent)
-                
+
                 // The agent should manage its memory during execution
             }
         }
@@ -520,7 +520,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         val hasLLMConfig = System.getenv("OPENAI_API_KEY") != null ||
                 System.getenv("ANTHROPIC_API_KEY") != null ||
                 System.getProperty("llm.apiKey") != null
-        
+
         Assumptions.assumeTrue(hasLLMConfig, "LLM not configured - skipping test")
     }
 }
