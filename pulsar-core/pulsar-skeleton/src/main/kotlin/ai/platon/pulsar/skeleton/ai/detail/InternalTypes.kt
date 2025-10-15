@@ -40,7 +40,7 @@ data class ElementBounds(
 /**
  * Configuration for enhanced error handling and retry mechanisms
  */
-data class WebDriverAgentConfig(
+data class AgentConfig(
     val maxSteps: Int = 100,
     val maxRetries: Int = 3,
     val baseRetryDelayMs: Long = 1000,
@@ -60,12 +60,12 @@ data class WebDriverAgentConfig(
 /**
  * Enhanced error classification for better retry strategies
  */
-sealed class WebDriverAgentError(message: String, cause: Throwable? = null) : Exception(message, cause) {
-    class TransientError(message: String, cause: Throwable? = null) : WebDriverAgentError(message, cause)
-    class PermanentError(message: String, cause: Throwable? = null) : WebDriverAgentError(message, cause)
-    class TimeoutError(message: String, cause: Throwable? = null) : WebDriverAgentError(message, cause)
-    class ResourceExhaustedError(message: String, cause: Throwable? = null) : WebDriverAgentError(message, cause)
-    class ValidationError(message: String, cause: Throwable? = null) : WebDriverAgentError(message, cause)
+sealed class PerceptiveAgentError(message: String, cause: Throwable? = null) : Exception(message, cause) {
+    class TransientError(message: String, cause: Throwable? = null) : PerceptiveAgentError(message, cause)
+    class PermanentError(message: String, cause: Throwable? = null) : PerceptiveAgentError(message, cause)
+    class TimeoutError(message: String, cause: Throwable? = null) : PerceptiveAgentError(message, cause)
+    class ResourceExhaustedError(message: String, cause: Throwable? = null) : PerceptiveAgentError(message, cause)
+    class ValidationError(message: String, cause: Throwable? = null) : PerceptiveAgentError(message, cause)
 }
 
 /**

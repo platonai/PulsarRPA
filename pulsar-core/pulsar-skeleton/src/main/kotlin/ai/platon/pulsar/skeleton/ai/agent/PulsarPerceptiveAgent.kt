@@ -32,7 +32,7 @@ import kotlin.math.pow
 class PulsarPerceptiveAgent(
     val driver: WebDriver,
     val maxSteps: Int = 100,
-    val config: WebDriverAgentConfig = WebDriverAgentConfig(maxSteps = maxSteps)
+    val config: AgentConfig = AgentConfig(maxSteps = maxSteps)
 ): PerceptiveAgent {
     private val logger = getLogger(this)
 
@@ -222,14 +222,14 @@ class PulsarPerceptiveAgent(
         for (attempt in 0..config.maxRetries) {
             try {
                 return executeInternal(action, sessionId, startTime, attempt)
-            } catch (e: WebDriverAgentError.TransientError) {
+            } catch (e: PerceptiveAgentError.TransientError) {
                 lastError = e
                 logError("Transient error on attempt ${attempt + 1}", e, sessionId)
                 if (attempt < config.maxRetries) {
                     val delay = calculateRetryDelay(attempt)
                     delay(delay)
                 }
-            } catch (e: WebDriverAgentError.TimeoutError) {
+            } catch (e: PerceptiveAgentError.TimeoutError) {
                 lastError = e
                 logError("Timeout error on attempt ${attempt + 1}", e, sessionId)
                 if (attempt < config.maxRetries) {
@@ -388,44 +388,44 @@ class PulsarPerceptiveAgent(
     /**
      * Classifies errors for appropriate retry strategies
      */
-    private fun classifyError(e: Exception, step: Int): WebDriverAgentError {
+    private fun classifyError(e: Exception, step: Int): PerceptiveAgentError {
         return when (e) {
-            is WebDriverAgentError -> e
-            is TimeoutException -> WebDriverAgentError.TimeoutError("Step $step timed out", e)
-            is SocketTimeoutException -> WebDriverAgentError.TimeoutError("Network timeout at step $step", e)
-            is ConnectException -> WebDriverAgentError.TransientError("Connection failed at step $step", e)
-            is UnknownHostException -> WebDriverAgentError.TransientError(
+            is PerceptiveAgentError -> e
+            is TimeoutException -> PerceptiveAgentError.TimeoutError("Step $step timed out", e)
+            is SocketTimeoutException -> PerceptiveAgentError.TimeoutError("Network timeout at step $step", e)
+            is ConnectException -> PerceptiveAgentError.TransientError("Connection failed at step $step", e)
+            is UnknownHostException -> PerceptiveAgentError.TransientError(
                 "DNS resolution failed at step $step",
                 e
             )
 
             is IOException -> {
                 when {
-                    e.message?.contains("connection") == true -> WebDriverAgentError.TransientError(
+                    e.message?.contains("connection") == true -> PerceptiveAgentError.TransientError(
                         "Connection issue at step $step",
                         e
                     )
 
-                    e.message?.contains("timeout") == true -> WebDriverAgentError.TimeoutError(
+                    e.message?.contains("timeout") == true -> PerceptiveAgentError.TimeoutError(
                         "Network timeout at step $step",
                         e
                     )
 
-                    else -> WebDriverAgentError.TransientError("IO error at step $step: ${e.message}", e)
+                    else -> PerceptiveAgentError.TransientError("IO error at step $step: ${e.message}", e)
                 }
             }
 
-            is IllegalArgumentException -> WebDriverAgentError.ValidationError(
+            is IllegalArgumentException -> PerceptiveAgentError.ValidationError(
                 "Validation error at step $step: ${e.message}",
                 e
             )
 
-            is IllegalStateException -> WebDriverAgentError.PermanentError(
+            is IllegalStateException -> PerceptiveAgentError.PermanentError(
                 "Invalid state at step $step: ${e.message}",
                 e
             )
 
-            else -> WebDriverAgentError.TransientError("Unexpected error at step $step: ${e.message}", e)
+            else -> PerceptiveAgentError.TransientError("Unexpected error at step $step: ${e.message}", e)
         }
     }
 
@@ -434,7 +434,7 @@ class PulsarPerceptiveAgent(
      */
     private fun shouldRetryError(e: Exception): Boolean {
         return when (e) {
-            is WebDriverAgentError.TransientError, is WebDriverAgentError.TimeoutError -> true
+            is PerceptiveAgentError.TransientError, is PerceptiveAgentError.TimeoutError -> true
             is SocketTimeoutException, is ConnectException,
             is UnknownHostException -> true
 
@@ -558,7 +558,7 @@ class PulsarPerceptiveAgent(
             logError("Tool execution failed (consecutive failures: $failures)", e, context.sessionId)
 
             if (failures >= 3) {
-                throw WebDriverAgentError.PermanentError("Too many consecutive failures at step $step", e)
+                throw PerceptiveAgentError.PermanentError("Too many consecutive failures at step $step", e)
             }
 
             null
@@ -618,7 +618,7 @@ class PulsarPerceptiveAgent(
 
         if (consecutiveNoOps >= config.consecutiveNoOpLimit) {
             logStructured("Too many consecutive no-ops, stopping execution", context)
-            throw WebDriverAgentError.PermanentError("Maximum consecutive no-ops reached: $consecutiveNoOps")
+            throw PerceptiveAgentError.PermanentError("Maximum consecutive no-ops reached: $consecutiveNoOps")
         }
 
         val delay = calculateConsecutiveNoOpDelay(consecutiveNoOps)
