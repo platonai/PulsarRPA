@@ -7,7 +7,7 @@ Windows:
 ```shell
 mvnw.cmd -v
 mvnw.cmd -pl pulsar-tests -Dtest="*E2ETest*" test
-mvnw.cmd -pl pulsar-tests -Dtest="*ChromeDomServiceE2ETest*" test -D"spotless.apply.skip=true"
+mvnw.cmd -pl pulsar-tests -Dtest="*ChromeDomServiceE2ETest*" test -D"dot.sperated.parameter=quoted"
 
 mvnw.cmd -pl pulsar-tests -Dtest=ChromeDomServiceFullCoverageTest test
 # Failed: mvnw.cmd -pl pulsar-tests -am -Dtest=ChromeDomServiceFullCoverageTest test

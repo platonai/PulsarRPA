@@ -17,7 +17,7 @@
 - 推荐脚本：
   - Windows：`bin/build.ps1 [-test]`
   - Linux/macOS：`bin/build.sh [-test]`
-- 提示：Windows 下 -D 参数加引号，例如：`-D"spotless.apply.skip=true"`
+- 提示：Windows 下 -D 参数加引号，例如：`-D"dot.sperated.parameter=quoted"`
 
 ## 3) 项目要点
 - 模块：

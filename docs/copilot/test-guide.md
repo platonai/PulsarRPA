@@ -5,7 +5,7 @@ This guide centralizes all test-related practices for Browser4. The main AI Copi
 - Repository type: Multi-module Maven (use Maven wrapper)
 - Primary language: Kotlin with Java interop
 - OS note (Windows cmd.exe): Use Windows-friendly quotes for properties and test globs
-  - Examples: `-D"spotless.apply.skip=true"`, `-Dtest="*E2ETest*"`
+  - Examples: `-D"dot.sperated.parameter=quoted"`, `-Dtest="*E2ETest*"`
 
 ---
 
@@ -121,7 +121,7 @@ Cross-platform examples using Maven wrapper:
   - Windows: `mvnw.cmd -pl pulsar-core -am test`
 
 - E2E examples (Windows):
-  - `mvnw.cmd -pl pulsar-tests -Dtest="*ChromeDomServiceE2ETest*" test -D"spotless.apply.skip=true"`
+  - `mvnw.cmd -pl pulsar-tests -Dtest="*ChromeDomServiceE2ETest*" test -D"dot.sperated.parameter=quoted"`
   - `mvnw.cmd -pl pulsar-tests -Dtest="*E2ETest*" test`
 
 ---

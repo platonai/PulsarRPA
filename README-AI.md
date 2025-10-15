@@ -16,7 +16,7 @@ Goal: Help AI work efficiently, stably, and predictably across code, review, doc
 - Priority order: Stability > Maintainability > Performance > Feature expansion > Aesthetics
 
 Notes for Windows (cmd.exe):
-- Quote `-D` properties, e.g. `-D"spotless.apply.skip=true"`
+- Quote `-D` properties, e.g. `-D"dot.sperated.parameter=quoted"`
 - For test glob examples on Windows, see the [Testing Guide](./docs/copilot/test-guide.md)
 
 ---

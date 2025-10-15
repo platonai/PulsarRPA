@@ -526,11 +526,18 @@ $AGENT_SYSTEM_PROMPT
     }
 
     // Newly reintroduced helpers --------------------------------------------------------------
+    /**
+     * deprecated, use DomService to build interactive element instead
+     * */
+    @Deprecated("use DomService to build interactive element instead")
     fun extractInteractiveElements(driver: WebDriver): List<InteractiveElement> {
         return runBlocking { extractInteractiveElementsDeferred(driver) }
     }
 
-    // Newly reintroduced helpers --------------------------------------------------------------
+    /**
+     * deprecated, use DomService to build interactive element instead
+     * */
+    @Deprecated("use DomService to build interactive element instead")
     suspend fun extractInteractiveElementsDeferred(driver: WebDriver): List<InteractiveElement> {
         try {
             // If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression).
