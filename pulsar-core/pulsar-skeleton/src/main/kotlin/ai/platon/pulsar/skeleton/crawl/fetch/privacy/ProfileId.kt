@@ -4,10 +4,10 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.browser.BrowserType
 import java.nio.file.Path
 
-data class PrivacyAgentId(
+data class ProfileId(
     val contextDir: Path,
     val browserType: BrowserType
-): Comparable<PrivacyAgentId> {
+): Comparable<ProfileId> {
 
     val ident = contextDir.last().toString()
 
@@ -64,7 +64,7 @@ data class PrivacyAgentId(
             return true
         }
 
-        return other is PrivacyAgentId
+        return other is ProfileId
                 && other.contextDir == contextDir
                 && other.browserType.name == browserType.name
     }
@@ -73,7 +73,7 @@ data class PrivacyAgentId(
         return 31 * contextDir.hashCode() + browserType.name.hashCode()
     }
 
-    override fun compareTo(other: PrivacyAgentId): Int {
+    override fun compareTo(other: ProfileId): Int {
         val b = contextDir.compareTo(other.contextDir)
         if (b != 0) {
             return b

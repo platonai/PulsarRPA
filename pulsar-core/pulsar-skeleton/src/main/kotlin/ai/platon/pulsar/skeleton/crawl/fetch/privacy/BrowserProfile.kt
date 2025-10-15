@@ -24,7 +24,7 @@ data class BrowserProfile(
     var fingerprint: Fingerprint
 ) : Comparable<BrowserProfile> {
 
-    val id = PrivacyAgentId(contextDir, fingerprint.browserType)
+    val id = ProfileId(contextDir, fingerprint.browserType)
     val ident get() = id.ident
     val display get() = id.display
     val browserType get() = fingerprint.browserType

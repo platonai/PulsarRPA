@@ -41,7 +41,7 @@ interface PrivacyContext: AutoCloseable {
     /**
      * The privacy context id.
      * */
-    val id: PrivacyAgentId
+    val id: ProfileId
     /**
      * The associated privacy agent.
      * */
