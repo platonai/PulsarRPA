@@ -780,6 +780,14 @@
                 <version>${ktor.version}</version>
             </dependency>
 
+
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit5.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -849,6 +857,7 @@
         <langchain4j.version>1.5.0</langchain4j.version>
 
         <!-- Plugin versions -->
+        <!-- Overrides ai.platon:platon -->
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
         <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
         <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
@@ -863,7 +872,7 @@
         <license-maven-plugin.version>4.3</license-maven-plugin.version>
         <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
 
-        <!-- Overrides ai.platon:platon -->
+        <junit5.version>5.12.1</junit5.version>
 <!--        <kotlin.version>2.2.20</kotlin.version>-->
 <!--        <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>-->
 <!--        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>-->
