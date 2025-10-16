@@ -9,8 +9,15 @@ This guide centralizes all test-related practices for Browser4. The main AI Copi
 
 ---
 
+## 0. Prerequisites
+
+Before any task, read:
+
+1. `README-AI.md` in project root directory.
+
 ## 1. Principles & Scope
 
+- Do not swallow errors
 - Include focused unit tests for new/changed logic (happy path + at least one edge case)
 - Testing integration: Prefer unit tests by default; add integration/E2E where behavior spans modules or browser automation
 - External/LLM code: Inject strategy/provider to enable deterministic offline tests (no live keys required)
