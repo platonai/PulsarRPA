@@ -1,6 +1,7 @@
 package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.WebDriverTestBase
+import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.ai.detail.AgentConfig
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
@@ -509,12 +510,6 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
      * Helper method to check if LLM is configured
      */
     private fun assumeLLMConfigured() {
-        // Skip test if LLM is not configured
-        // This allows tests to run in environments without LLM API keys
-        val hasLLMConfig = System.getenv("OPENAI_API_KEY") != null ||
-                System.getenv("ANTHROPIC_API_KEY") != null ||
-                System.getProperty("llm.apiKey") != null
-
-        Assumptions.assumeTrue(hasLLMConfig, "LLM not configured - skipping test")
+        Assumptions.assumeTrue(ChatModelFactory.isModelConfigured(conf), "LLM not configured - skipping test")
     }
 }

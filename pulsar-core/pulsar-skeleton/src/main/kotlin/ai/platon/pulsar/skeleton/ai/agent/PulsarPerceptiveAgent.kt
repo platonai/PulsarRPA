@@ -72,6 +72,106 @@ class PulsarPerceptiveAgent(
         return executeWithRetry(action, sessionId, startTime)
     }
 
+    override suspend fun act(observe: ObserveResult): ActResult {
+        val method = observe.method?.trim().orEmpty()
+        val selector = observe.selector.trim()
+        val argsList = observe.arguments ?: emptyList()
+
+        if (method.isBlank()) {
+            val msg = "No actionable method provided in ObserveResult for selector: $selector"
+            addToHistory(msg)
+            return ActResult(success = false, message = msg, action = observe.description)
+        }
+
+        // Build a minimal ToolCall-like map for validation
+        val toolArgs = mutableMapOf<String, Any?>()
+        // Inject selector when the action likely targets an element
+        val selectorActions = setOf(
+            "click","fill","press","check","uncheck","exists","isVisible","visible","focus",
+            "scrollTo","captureScreenshot","outerHTML","selectFirstTextOrNull","selectTextAll",
+            "selectFirstAttributeOrNull","selectAttributes","selectAttributeAll","selectHyperlinks",
+            "selectAnchors","selectImages","selectFirstPropertyValueOrNull","selectPropertyValueAll",
+            "setAttribute","setAttributeAll","setProperty","setPropertyAll","evaluate","evaluateValue",
+            "evaluateDetail","evaluateValueDetail","clickMatches","clickTextMatches","clickablePoint",
+            "boundingBox","moveMouseTo","dragAndDrop"
+        )
+        val noSelectorActions = setOf(
+            "navigateTo","open","waitForNavigation","scrollDown","scrollUp","scrollToTop","scrollToBottom",
+            "scrollToMiddle","mouseWheelDown","mouseWheelUp","waitForPage","bringToFront","delay",
+            "instruct","getCookies","deleteCookies","clearBrowserCookies","pause","stop","currentUrl",
+            "url","documentURI","baseURI","referrer","pageSource","newJsoupSession","loadJsoupResource",
+            "loadResource","waitUntil"
+        )
+
+        val lowerMethod = method
+        val finalArgsList = mutableListOf<String>()
+        if (lowerMethod !in noSelectorActions) {
+            toolArgs["selector"] = selector
+            // Prepend selector into function call args for element actions
+            finalArgsList += selector
+        }
+        // Append original arguments (as-is, in order)
+        finalArgsList += argsList
+
+        // For waitForNavigation validation, provide oldUrl if not present
+        if (lowerMethod == "waitForNavigation") {
+            toolArgs["oldUrl"] = runCatching { driver.currentUrl() }.getOrDefault("")
+        }
+        // For navigateTo safety, validate URL if present
+        if (lowerMethod == "navigateTo" && finalArgsList.isNotEmpty()) {
+            if (!isSafeUrl(finalArgsList.first())) {
+                val msg = "Blocked unsafe URL: ${finalArgsList.first()}"
+                addToHistory(msg)
+                return ActResult(false, msg, action = observe.description)
+            }
+        }
+
+        // Pre-action validation (lightweight)
+        if (config.enablePreActionValidation) {
+            val ok = validateToolCall(ToolCall(lowerMethod, toolArgs))
+            if (!ok) {
+                val msg = "Tool call validation failed for $lowerMethod with selector ${selector.take(120)}"
+                logStructured(msg, ExecutionContext(uuid.toString(), 0, "observe_act", runCatching { driver.currentUrl() }.getOrDefault("")))
+                addToHistory(msg)
+                return ActResult(false, msg, action = observe.description)
+            }
+        }
+
+        // Build dispatcher-compatible function call: driver.method('arg1','arg2',...)
+        fun escArg(s: String): String {
+            // Use single quotes; escape any existing single quotes and backslashes
+            return "'" + s.replace("\\", "\\\\").replace("'", "\\'") + "'"
+        }
+        val callArgs = finalArgsList.map { escArg(it) }.joinToString(",")
+        val functionCall = "driver.$lowerMethod($callArgs)"
+
+        // Execute via WebDriver dispatcher
+        return try {
+            val actionDesc = ActionDescription(
+                functionCalls = listOf(functionCall),
+                selectedElement = null,
+                modelResponse = ModelResponse(
+                    content = "ObserveResult action: ${observe.description}",
+                    state = ResponseState.STOP
+                )
+            )
+            val result = driver.execute(actionDesc)
+
+            val msg = "Action [$method] executed on selector: ${selector}".trim()
+            addToHistory("observe.act -> ${functionCall}")
+            ActResult(
+                success = true,
+                message = msg,
+                action = functionCall
+            )
+        } catch (e: Exception) {
+            logError("observe.act execution failed", e, uuid.toString())
+            val msg = e.message ?: "Execution failed"
+            addToHistory("observe.act FAIL ${method} ${selector.take(80)} -> ${msg}")
+            ActResult(success = false, message = msg, action = "${method} ${selector}")
+        }
+    }
+
     override suspend fun extract(instruction: String): ExtractResult {
         val opts = ExtractOptions(instruction = instruction, schema = null)
         return extract(opts)
@@ -297,14 +397,15 @@ class PulsarPerceptiveAgent(
                 val stepContext = context.copy(stepNumber = step, actionType = "step")
 
                 // Extract interactive elements each step (could be optimized via diffing later)
-                val interactiveElements = tta.extractInteractiveElementsDeferred(driver)
+                // val domElements = inference.collectDomElements()
+                val domElements = tta.extractInteractiveElementsDeferred(driver)
 
                 logStructured(
                     "Executing step", stepContext, mapOf(
                         "step" to step,
                         "maxSteps" to config.maxSteps,
                         "consecutiveNoOps" to consecutiveNoOps,
-                        "interactiveElementCount" to interactiveElements.size
+                        "domElementCount" to domElements.size
                     )
                 )
 
@@ -314,13 +415,13 @@ class PulsarPerceptiveAgent(
                 }
 
                 val screenshotB64 = captureScreenshotWithRetry(stepContext)
-                val userMsg = buildUserMessage(overallGoal, interactiveElements)
+                val userMsg = buildUserMessage(overallGoal, domElements)
 
                 // message: agent guide + overall goal + last action summary + current context message
                 val message = buildExecutionMessage(systemMsg, userMsg, screenshotB64)
                 // interactive elements are already appended to message
                 val stepActionResult =
-                    generateStepActionWithRetry(message, stepContext, listOf<InteractiveElement>(), screenshotB64)
+                    generateStepActionWithRetry(message, stepContext, listOf(), screenshotB64)
 
                 if (stepActionResult == null) {
                     consecutiveNoOps++
@@ -791,12 +892,17 @@ class PulsarPerceptiveAgent(
     }
 
     private suspend fun buildUserMessage(instruction: String, interactiveElements: List<InteractiveElement>): String {
+        val domElements = tta.formatInteractiveElements(interactiveElements)
+        return buildUserMessage(instruction, domElements)
+    }
+
+    private suspend fun buildUserMessage(instruction: String, domElements: Collection<String>): String {
         val currentUrl = getCurrentUrl()
-        val h = if (_history.isEmpty()) "(无)" else _history.takeLast(min(8, _history.size)).joinToString("\n")
-        val interactiveSummary = tta.formatInteractiveElements(interactiveElements)
+        val his = if (_history.isEmpty()) "(无)" else _history.takeLast(min(8, _history.size)).joinToString("\n")
+        val interactiveSummary = domElements.joinToString("\n")
         return """
 此前动作摘要：
-$h
+$his
 
 可交互元素：
 $interactiveSummary
