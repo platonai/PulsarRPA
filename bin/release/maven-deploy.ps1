@@ -59,7 +59,7 @@ $VERSION | Set-Content "$AppHome\VERSION"
 }
 
 if ($PerformClean) {
-  & $MvnCmd clean -Pall-modules
+  & $MvnCmd clean
   if ($LastExitCode -ne 0) {
     exit $LastExitCode
   }

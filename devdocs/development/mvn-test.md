@@ -35,7 +35,7 @@ Browser4 项目使用 Maven Surefire 插件来管理测试进程的执行，该�
   ```bash
   # 默认跳过测试
   ./bin/build.sh
-  
+
   # 启用测试
   ./bin/build.sh -test
   ```
@@ -44,7 +44,7 @@ Browser4 项目使用 Maven Surefire 插件来管理测试进程的执行，该�
   ```bash
   # 跳过测试编译和执行
   mvn install -DskipTests
-  
+
   # 跳过测试编译
   mvn install -Dmaven.test.skip=true
   ```
@@ -89,11 +89,11 @@ Browser4 项目使用 Maven Surefire 插件来管理测试进程的执行，该�
 #### B. 运行特定测试
 ```bash
 # 测试特定类的特定方法
-./mvnw -Pall-modules -pl pulsar-tests \
+./mvnw -pl pulsar-tests \
   -Dtest=ai.platon.pulsar.basic.crawl.TestEventHandlers#whenLoadAListenableLink_ThenEventsAreTriggered test
 
 # 测试特定浏览器场景
-./mvnw -Pall-modules -pl pulsar-tests \
+./mvnw -pl pulsar-tests \
   -Dtest="ai.platon.pulsar.heavy.BrowserRotationTest#testWithSequentialBrowser" \
   -DBrowserRotationTest_TestFileCount=10000 test
 ```
@@ -103,13 +103,13 @@ Browser4 项目使用 Maven Surefire 插件来管理测试进程的执行，该�
 项目使用 `.mvn/jvm.config` 文件来配置 JVM 参数：
 
 ```
---add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED 
---add-opens jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED 
---add-opens jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED 
---add-opens jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED 
---add-opens jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED 
---add-opens jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED 
---add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED 
+--add-opens jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
+--add-opens jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED
+--add-opens jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED
+--add-opens jdk.compiler/com.sun.tools.javac.jvm=ALL-UNNAMED
+--add-opens jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED
+--add-opens jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED
+--add-opens jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED
 --add-opens jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED
 ```
 
@@ -125,11 +125,11 @@ Browser4 项目使用 Maven Surefire 插件来管理测试进程的执行，该�
     <!-- 并发执行测试类 -->
     <parallel>classes</parallel>
     <threadCount>4</threadCount>
-    
+
     <!-- 或者按方法并发 -->
     <parallel>methods</parallel>
     <threadCount>10</threadCount>
-    
+
     <!-- 设置超时时间 -->
     <forkedProcessTimeoutInSeconds>1800</forkedProcessTimeoutInSeconds>
 </configuration>
@@ -140,7 +140,7 @@ Browser4 项目使用 Maven Surefire 插件来管理测试进程的执行，该�
 <configuration>
     <!-- 设置 JVM 参数 -->
     <argLine>-Xmx2048m -XX:MaxPermSize=256m</argLine>
-    
+
     <!-- 每个测试类使用新的 JVM -->
     <forkCount>1</forkCount>
     <reuseForks>false</reuseForks>

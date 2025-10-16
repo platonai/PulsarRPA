@@ -49,38 +49,38 @@ bin/build.ps1 -clean -test
 ### Test All Modules
 Run all tests across all modules:
 ```shell
-./mvnw -Pall-modules test
+./mvnw test
 ```
 
 ### Test a Single Module
 Test a specific module (example with pulsar-tests):
 ```shell
-./mvnw -Pall-modules -pl pulsar-tests test
+./mvnw -pl pulsar-tests test
 ```
 
 ### Test a Single Class
 Test a specific class:
 ```shell
 # Test the TestEventHandlers class
-./mvnw -Pall-modules -pl pulsar-tests -Dtest=ai.platon.pulsar.basic.crawl.TestEventHandlers test
+./mvnw -pl pulsar-tests -Dtest=ai.platon.pulsar.basic.crawl.TestEventHandlers test
 
 # Test with specific parameters
-./mvnw -Pall-modules -pl pulsar-tests -Dtest=ai.platon.pulsar.test3.heavy.BrowserRotationTest -DBrowserRotationTest_TestFileCount=10000 test
+./mvnw -pl pulsar-tests -Dtest=ai.platon.pulsar.test3.heavy.BrowserRotationTest -DBrowserRotationTest_TestFileCount=10000 test
 ```
 
 ### Test a Specific Method in a Class
 Test a single method within a class:
 ```shell
-./mvnw -Pall-modules -pl pulsar-tests -Dtest=ai.platon.pulsar.basic.crawl.TestEventHandlers#whenLoadAListenableLink_ThenEventsAreTriggered test
+./mvnw -pl pulsar-tests -Dtest=ai.platon.pulsar.basic.crawl.TestEventHandlers#whenLoadAListenableLink_ThenEventsAreTriggered test
 ```
 
 ### Test Specific Browser Rotation Scenarios
 ```shell
 # Test sequential browser scenario
-./mvnw -Pall-modules -pl pulsar-tests -Dtest="ai.platon.pulsar.heavy.BrowserRotationTest#testWithSequentialBrowser" -DBrowserRotationTest_TestFileCount=10000 test
+./mvnw -pl pulsar-tests -Dtest="ai.platon.pulsar.heavy.BrowserRotationTest#testWithSequentialBrowser" -DBrowserRotationTest_TestFileCount=10000 test
 ```
 
 ```shell
 # Test temporary browser scenario
-./mvnw -Pall-modules -pl pulsar-tests -Dtest="ai.platon.pulsar.heavy.BrowserRotationTest#testWithTemporaryBrowser" -DBrowserRotationTest_TestFileCount=10000 test
+./mvnw -pl pulsar-tests -Dtest="ai.platon.pulsar.heavy.BrowserRotationTest#testWithTemporaryBrowser" -DBrowserRotationTest_TestFileCount=10000 test
 ```
