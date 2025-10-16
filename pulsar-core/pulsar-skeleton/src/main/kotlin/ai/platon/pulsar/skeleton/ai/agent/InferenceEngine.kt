@@ -136,7 +136,7 @@ class InferenceEngine(
         }
 
         val t0 = System.currentTimeMillis()
-        val extractResp: ChatResponse = chatModel.send(
+        val extractResp: ChatResponse = chatModel.langchainChat(
             SystemMessage.systemMessage(extractSystem.content.toString()),
             UserMessage.userMessage(extractUser.content.toString())
         )
@@ -203,7 +203,7 @@ class InferenceEngine(
         }
 
         val t2 = System.currentTimeMillis()
-        val metadataResp: ChatResponse = chatModel.send(
+        val metadataResp: ChatResponse = chatModel.langchainChat(
             SystemMessage.systemMessage(metadataSystem.content.toString()),
             UserMessage.userMessage(metadataUser.content.toString())
         )
@@ -301,7 +301,7 @@ class InferenceEngine(
         }
 
         val t0 = System.currentTimeMillis()
-        val resp: ChatResponse = chatModel.send(
+        val resp: ChatResponse = chatModel.langchainChat(
             SystemMessage.systemMessage(systemMsg.content.toString()),
             UserMessage.userMessage(userMsg.content.toString())
         )

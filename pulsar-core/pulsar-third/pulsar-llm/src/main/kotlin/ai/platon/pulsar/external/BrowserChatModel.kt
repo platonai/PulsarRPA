@@ -6,7 +6,7 @@ import dev.langchain4j.model.chat.request.ChatRequest
 import dev.langchain4j.model.chat.response.ChatResponse
 import org.jsoup.nodes.Element
 
-interface BrowserChatModel {
+interface BrowserChatModel: AutoCloseable {
     val settings: ChatModelSettings
 
     /**
@@ -99,14 +99,24 @@ interface BrowserChatModel {
     suspend fun call(ele: Element, prompt: String): ModelResponse
 
     /**
-     * This is the main API to interact with the chat model.
+     * This is a LangChain compatible API to interact with the chat model.
      *
      * @param chatRequest a [ChatRequest], containing all the inputs to the LLM
      * @return a [ChatResponse], containing all the outputs from the LLM
      */
-    suspend fun send(chatRequest: ChatRequest): ChatResponse
+    suspend fun langchainChat(chatRequest: ChatRequest): ChatResponse
 
-    suspend fun send(vararg messages: ChatMessage): ChatResponse
+    /**
+     * This is a LangChain compatible API to interact with the chat model.
+     *
+     * @return a [ChatResponse], containing all the outputs from the LLM
+     */
+    suspend fun langchainChat(vararg messages: ChatMessage): ChatResponse
 
-    suspend fun send(messages: List<ChatMessage>): ChatResponse
+    /**
+     * This is a LangChain compatible API to interact with the chat model.
+     *
+     * @return a [ChatResponse], containing all the outputs from the LLM
+     */
+    suspend fun langchainChat(messages: List<ChatMessage>): ChatResponse
 }

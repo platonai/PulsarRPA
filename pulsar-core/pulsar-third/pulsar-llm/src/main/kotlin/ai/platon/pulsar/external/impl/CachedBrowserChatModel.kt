@@ -47,6 +47,8 @@ open class CachedBrowserChatModel(
     private val responseCache: Cache<String, ModelResponse> =
         cacheManager.getCache("modelResponses", String::class.java, ModelResponse::class.java)
 
+    private val llmLogger = ChatModelLogger()
+
     override val settings = ChatModelSettings(conf)
 
     override suspend fun call(userMessage: String) = callUmSm(userMessage, "")
@@ -75,22 +77,63 @@ open class CachedBrowserChatModel(
      * @param chatRequest a [ChatRequest], containing all the inputs to the LLM
      * @return a [ChatResponse], containing all the outputs from the LLM
      */
-    override suspend fun send(chatRequest: ChatRequest): ChatResponse {
-        return withContext(Dispatchers.IO) {
-            langchainModel.chat(chatRequest)
+    override suspend fun langchainChat(chatRequest: ChatRequest): ChatResponse {
+        // Extract user/system messages for logging (best-effort)
+        val (userText, systemText) = try {
+            val msgs = chatRequest.messages()
+            extractUserAndSystemTexts(msgs)
+        } catch (e: Throwable) {
+            // If ChatRequest API differs, fall back to empty strings
+            Pair("", "")
+        }
+
+        val requestId = llmLogger.logRequestUmSm(userText, systemText)
+        try {
+            return withContext(Dispatchers.IO) {
+                val resp = langchainModel.chat(chatRequest)
+                // Log response by mapping to our ModelResponse
+                llmLogger.logResponse(requestId, toModelResponse(resp))
+                resp
+            }
+        } catch (e: Exception) {
+            // Best-effort logging on failure, then rethrow to preserve behavior
+            llmLogger.logResponse(requestId, ModelResponse("", ResponseState.OTHER))
+            throw e
         }
     }
 
-    override suspend fun send(vararg messages: ChatMessage): ChatResponse {
-        return withContext(Dispatchers.IO) {
-            langchainModel.chat(*messages)
+    override suspend fun langchainChat(vararg messages: ChatMessage): ChatResponse {
+        val (userText, systemText) = extractUserAndSystemTexts(messages.toList())
+        val requestId = llmLogger.logRequestUmSm(userText, systemText)
+        try {
+            return withContext(Dispatchers.IO) {
+                val resp = langchainModel.chat(*messages)
+                llmLogger.logResponse(requestId, toModelResponse(resp))
+                resp
+            }
+        } catch (e: Exception) {
+            llmLogger.logResponse(requestId, ModelResponse("", ResponseState.OTHER))
+            throw e
         }
     }
 
-    override suspend fun send(messages: List<ChatMessage>): ChatResponse {
-        return withContext(Dispatchers.IO) {
-            langchainModel.chat(messages)
+    override suspend fun langchainChat(messages: List<ChatMessage>): ChatResponse {
+        val (userText, systemText) = extractUserAndSystemTexts(messages)
+        val requestId = llmLogger.logRequestUmSm(userText, systemText)
+        try {
+            return withContext(Dispatchers.IO) {
+                val resp = langchainModel.chat(messages)
+                llmLogger.logResponse(requestId, toModelResponse(resp))
+                resp
+            }
+        } catch (e: Exception) {
+            llmLogger.logResponse(requestId, ModelResponse("", ResponseState.OTHER))
+            throw e
         }
+    }
+
+    override fun close() {
+        llmLogger.close()
     }
 
     private suspend fun callUmSmWithCache(
@@ -133,7 +176,7 @@ open class CachedBrowserChatModel(
         }
 
         // 记录请求
-        val requestId = ChatModelLogger.logRequest(trimmedUserMessage, systemMessage)
+        val requestId = llmLogger.logRequestUmSm(trimmedUserMessage, systemMessage)
 
         // Build user message, optionally with b64Image content parts
         val um: UserMessage = if (imageProvided) {
@@ -167,13 +210,13 @@ open class CachedBrowserChatModel(
         } catch (e: IOException) {
             logger.info("IOException | {}", e.message)
             return ModelResponse("", ResponseState.OTHER).also {
-                ChatModelLogger.logResponse(requestId, it)
+                llmLogger.logResponse(requestId, it)
             }
         } catch (e: RuntimeException) {
             if (e.cause is InterruptedIOException) {
                 logger.info("InterruptedIOException | {}", e.message)
                 return ModelResponse("", ResponseState.OTHER).also {
-                    ChatModelLogger.logResponse(requestId, it)
+                    llmLogger.logResponse(requestId, it)
                 }
             } else {
                 logger.warn("RuntimeException | {} | {}", langchainModel.javaClass.simpleName, e.message)
@@ -182,7 +225,7 @@ open class CachedBrowserChatModel(
         } catch (e: Exception) {
             logger.warn("[Unexpected] Exception | {} | {}", langchainModel.javaClass.simpleName, e.message)
             return ModelResponse("", ResponseState.OTHER).also {
-                ChatModelLogger.logResponse(requestId, it)
+                llmLogger.logResponse(requestId, it)
             }
         }
 
@@ -209,7 +252,7 @@ open class CachedBrowserChatModel(
         }
 
         // 记录响应
-        ChatModelLogger.logResponse(requestId, modelResponse)
+        llmLogger.logResponse(requestId, modelResponse)
 
         // Cache the response
         responseCache.put(cacheKey, modelResponse)
@@ -222,5 +265,61 @@ open class CachedBrowserChatModel(
         return withContext(Dispatchers.IO) {
             langchainModel.chat(*messages)
         }
+    }
+
+    // --- helpers ---
+    private fun extractUserAndSystemTexts(messages: List<ChatMessage>): Pair<String, String> {
+        val userParts = mutableListOf<String>()
+        val systemParts = mutableListOf<String>()
+        for (m in messages) {
+            when (m) {
+                is SystemMessage -> {
+                    try {
+                        systemParts.add(m.text())
+                    } catch (_: Throwable) {
+                        systemParts.add(m.toString())
+                    }
+                }
+                is UserMessage -> {
+                    // Aggregate textual content parts; fall back to toString()
+                    val txt = try {
+                        val contents = try { m.contents() } catch (_: Throwable) { emptyList<Content>() }
+                        val joined = contents.mapNotNull { c ->
+                            try {
+                                if (c is TextContent) c.text() else null
+                            } catch (_: Throwable) { null }
+                        }.filter { it.isNotBlank() }.joinToString("\n")
+                        if (joined.isNotBlank()) joined else m.toString()
+                    } catch (_: Throwable) {
+                        m.toString()
+                    }
+                    userParts.add(txt)
+                }
+                else -> {
+                    // ignore other message types for user/system logging
+                }
+            }
+        }
+        val userText = userParts.joinToString("\n\n").take(settings.maximumLength)
+        val systemText = systemParts.joinToString("\n\n").take(settings.maximumLength)
+        return Pair(userText, systemText)
+    }
+
+    private fun toModelResponse(response: ChatResponse): ModelResponse {
+        val u = response.tokenUsage()
+        val tokenUsage = if (u != null) TokenUsage(u.inputTokenCount(), u.outputTokenCount(), u.totalTokenCount()) else TokenUsage(0, 0, 0)
+        val state = when (response.finishReason()) {
+            FinishReason.STOP -> ResponseState.STOP
+            FinishReason.LENGTH -> ResponseState.LENGTH
+            FinishReason.TOOL_EXECUTION -> ResponseState.TOOL_EXECUTION
+            FinishReason.CONTENT_FILTER -> ResponseState.CONTENT_FILTER
+            else -> ResponseState.OTHER
+        }
+        val content = try {
+            response.aiMessage().text().trim()
+        } catch (_: Throwable) {
+            ""
+        }
+        return ModelResponse(content, state, tokenUsage)
     }
 }
