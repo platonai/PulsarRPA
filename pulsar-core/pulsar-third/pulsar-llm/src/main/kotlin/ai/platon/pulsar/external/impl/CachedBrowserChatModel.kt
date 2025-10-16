@@ -77,7 +77,7 @@ open class CachedBrowserChatModel(
      * @param chatRequest a [ChatRequest], containing all the inputs to the LLM
      * @return a [ChatResponse], containing all the outputs from the LLM
      */
-    override suspend fun langchainChat(chatRequest: ChatRequest): ChatResponse {
+    override suspend fun langChainChat(chatRequest: ChatRequest): ChatResponse {
         // Extract user/system messages for logging (best-effort)
         val (userText, systemText) = try {
             val msgs = chatRequest.messages()
@@ -102,7 +102,7 @@ open class CachedBrowserChatModel(
         }
     }
 
-    override suspend fun langchainChat(vararg messages: ChatMessage): ChatResponse {
+    override suspend fun langChainChat(vararg messages: ChatMessage): ChatResponse {
         val (userText, systemText) = extractUserAndSystemTexts(messages.toList())
         val requestId = llmLogger.logRequestUmSm(userText, systemText)
         try {
@@ -117,7 +117,7 @@ open class CachedBrowserChatModel(
         }
     }
 
-    override suspend fun langchainChat(messages: List<ChatMessage>): ChatResponse {
+    override suspend fun langChainChat(messages: List<ChatMessage>): ChatResponse {
         val (userText, systemText) = extractUserAndSystemTexts(messages)
         val requestId = llmLogger.logRequestUmSm(userText, systemText)
         try {

@@ -36,7 +36,7 @@ interface BrowserChatModel: AutoCloseable {
         imageUrl: String? = null,
         b64Image: String? = null,
         mediaType: String? = null
-    ): ModelResponse = callUmSm(userMessage, systemMessage, imageUrl, mediaType, b64Image)
+    ): ModelResponse = callSmUm(systemMessage, userMessage, imageUrl, b64Image, mediaType)
 
     /**
      * Call the model to generate a response based on a sequence of messages and attachment.
@@ -104,19 +104,19 @@ interface BrowserChatModel: AutoCloseable {
      * @param chatRequest a [ChatRequest], containing all the inputs to the LLM
      * @return a [ChatResponse], containing all the outputs from the LLM
      */
-    suspend fun langchainChat(chatRequest: ChatRequest): ChatResponse
+    suspend fun langChainChat(chatRequest: ChatRequest): ChatResponse
 
     /**
      * This is a LangChain compatible API to interact with the chat model.
      *
      * @return a [ChatResponse], containing all the outputs from the LLM
      */
-    suspend fun langchainChat(vararg messages: ChatMessage): ChatResponse
+    suspend fun langChainChat(vararg messages: ChatMessage): ChatResponse
 
     /**
      * This is a LangChain compatible API to interact with the chat model.
      *
      * @return a [ChatResponse], containing all the outputs from the LLM
      */
-    suspend fun langchainChat(messages: List<ChatMessage>): ChatResponse
+    suspend fun langChainChat(messages: List<ChatMessage>): ChatResponse
 }
