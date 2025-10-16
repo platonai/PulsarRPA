@@ -12,6 +12,8 @@ import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.detail.ElementBounds
 import ai.platon.pulsar.skeleton.ai.detail.InteractiveElement
 import ai.platon.pulsar.skeleton.common.llm.LLMUtils
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCall
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
@@ -31,9 +33,6 @@ open class TextToAction(val conf: ImmutableConfig) {
         private set
     var webDriverSourceCodeUseMessage: String
         private set
-
-    // Tool-use helpers -------------------------------------------------------------------------
-    internal data class ToolCall(val name: String, val args: Map<String, Any?>)
 
     init {
         Files.createDirectories(baseDir)
@@ -69,7 +68,7 @@ open class TextToAction(val conf: ImmutableConfig) {
         try {
             val interactiveElements = extractInteractiveElements(driver)
 
-            return generateWebDriverActionDeffered(instruction, interactiveElements, screenshotB64)
+            return generateWebDriverActionDeferred(instruction, interactiveElements, screenshotB64)
         } catch (e: Exception) {
             val errorResponse = ModelResponse(
                 """
@@ -99,7 +98,7 @@ open class TextToAction(val conf: ImmutableConfig) {
         }
     }
 
-    open suspend fun generateWebDriverActionDeffered(
+    open suspend fun generateWebDriverActionDeferred(
         instruction: String,
         interactiveElements: List<InteractiveElement> = listOf(),
         screenshotB64: String? = null
@@ -238,7 +237,7 @@ $AGENT_SYSTEM_PROMPT
                 for ((k, v) in argsObj.entrySet()) {
                     args[k] = jsonElementToKotlin(v)
                 }
-                ToolCall(name, args)
+                ToolCall("driver", name, args)
             }
         } catch (e: Exception) {
             logger.warn("Failed to parse tool calls: {}", e.message)
@@ -266,64 +265,7 @@ $AGENT_SYSTEM_PROMPT
         else -> null
     }
 
-    internal fun toolCallToDriverLine(tc: ToolCall): String? = when (tc.name) {
-        // Navigation
-        "navigateTo" -> tc.args["url"]?.let { "driver.navigateTo(\"$it\")" }
-        // Backward compatibility for older prompts
-        "goto" -> tc.args["url"]?.let { "driver.navigateTo(\"$it\")" }
-        // Wait
-        "waitForSelector" -> tc.args["selector"]?.let { sel -> "driver.waitForSelector(\"$sel\", ${(tc.args["timeoutMillis"] ?: 5000)}L)" }
-        // Status checking (first batch of new tools)
-        "exists" -> tc.args["selector"]?.let { "driver.exists(\"$it\")" }
-        "isVisible" -> tc.args["selector"]?.let { "driver.isVisible(\"$it\")" }
-        "focus" -> tc.args["selector"]?.let { "driver.focus(\"$it\")" }
-        // Basic interactions
-        "click" -> tc.args["selector"]?.let { "driver.click(\"$it\")" }
-        "fill" -> tc.args["selector"]?.let { s -> "driver.fill(\"$s\", \"${tc.args["text"] ?: ""}\")" }
-        "press" -> tc.args["selector"]?.let { s -> tc.args["key"]?.let { k -> "driver.press(\"$s\", \"$k\")" } }
-        "check" -> tc.args["selector"]?.let { "driver.check(\"$it\")" }
-        "uncheck" -> tc.args["selector"]?.let { "driver.uncheck(\"$it\")" }
-        // Scrolling
-        "scrollDown" -> "driver.scrollDown(${tc.args["count"] ?: 1})"
-        "scrollUp" -> "driver.scrollUp(${tc.args["count"] ?: 1})"
-        "scrollTo" -> tc.args["selector"]?.let { "driver.scrollTo(\"$it\")" }
-        "scrollToTop" -> "driver.scrollToTop()"
-        "scrollToBottom" -> "driver.scrollToBottom()"
-        "scrollToMiddle" -> "driver.scrollToMiddle(${tc.args["ratio"] ?: 0.5})"
-        "scrollToScreen" -> tc.args["screenNumber"]?.let { n -> "driver.scrollToScreen(${n})" }
-        // Advanced clicks
-        "clickTextMatches" -> tc.args["selector"]?.let { s ->
-            val pattern = tc.args["pattern"] ?: return@let null
-            val count = tc.args["count"] ?: 1
-            "driver.clickTextMatches(\"$s\", \"$pattern\", $count)"
-        }
-        "clickMatches" -> tc.args["selector"]?.let { s ->
-            val attr = tc.args["attrName"] ?: return@let null
-            val pattern = tc.args["pattern"] ?: return@let null
-            val count = tc.args["count"] ?: 1
-            "driver.clickMatches(\"$s\", \"$attr\", \"$pattern\", $count)"
-        }
-        "clickNthAnchor" -> tc.args["n"]?.let { n ->
-            val root = tc.args["rootSelector"]?.toString() ?: "body"
-            "driver.clickNthAnchor(${n}, \"$root\")"
-        }
-        // Enhanced navigation
-        "waitForNavigation" -> {
-            val oldUrl = tc.args["oldUrl"]?.toString() ?: ""
-            val timeout = tc.args["timeoutMillis"] ?: 5000L
-            "driver.waitForNavigation(\"$oldUrl\", ${timeout}L)"
-        }
-        "goBack" -> "driver.goBack()"
-        "goForward" -> "driver.goForward()"
-        // Screenshots
-        "captureScreenshot" -> {
-            val sel = tc.args["selector"]?.toString()
-            if (sel.isNullOrBlank()) "driver.captureScreenshot()" else "driver.captureScreenshot(\"$sel\")"
-        }
-        // Timing
-        "delay" -> "driver.delay(${tc.args["millis"] ?: 1000}L)"
-        else -> null
-    }
+    internal fun toolCallToDriverLine(tc: ToolCall): String? = ToolCallExecutor.toolCallToDriverLine(tc)
 
     /**
      * Parse JavaScript result into InteractiveElement objects
@@ -559,35 +501,7 @@ $AGENT_SYSTEM_PROMPT
 
     companion object {
 
-        const val TOOL_CALL_LIST = """
-- navigateTo(url: String)
-- waitForSelector(selector: String, timeoutMillis: Long = 5000)
-- exists(selector: String): Boolean
-- isVisible(selector: String): Boolean
-- focus(selector: String)
-- click(selector: String)
-- fill(selector: String, text: String)
-- press(selector: String, key: String)
-- check(selector: String)
-- uncheck(selector: String)
-- scrollDown(count: Int = 1)
-- scrollUp(count: Int = 1)
-- scrollTo(selector: String)
-- scrollToTop()
-- scrollToBottom()
-- scrollToMiddle(ratio: Double = 0.5)
-- scrollToScreen(screenNumber: Double)
-- clickTextMatches(selector: String, pattern: String, count: Int = 1)
-- clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
-- clickNthAnchor(n: Int, rootSelector: String = "body")
-- waitForNavigation(oldUrl: String = "", timeoutMillis: Long = 5000): Long
-- goBack()
-- goForward()
-- captureScreenshot()
-- captureScreenshot(selector: String)
-- delay(millis: Long)
-- stop()
-    """
+        const val TOOL_CALL_LIST = ToolCallExecutor.TOOL_CALL_LIST
 
         val AGENT_SYSTEM_PROMPT = """
 你是一个网页通用代理，目标是基于用户目标一步一步完成任务。

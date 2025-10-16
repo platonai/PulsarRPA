@@ -1,6 +1,6 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
-data class ToolCall(val domain: String, val method: String, val args: Map<String, Any?>)
+data class ToolCall(val domain: String, val name: String, val args: Map<String, Any?>)
 
 /**
  * Executes WebDriver commands provided as string expressions.
@@ -50,9 +50,9 @@ class ToolCallExecutor {
 
         return try {
             val args = toolCall.args?.values?.toList()?.map { it.toString() } ?: emptyList()
-            execute1(toolCall.domain, toolCall.method, args, driver)
+            execute1(toolCall.domain, toolCall.name, args, driver)
         } catch (e: Exception) {
-            println("Error executing command: ${toolCall.method} - ${e.message}")
+            println("Error executing command: ${toolCall.name} - ${e.message}")
             null
         }
     }
@@ -67,13 +67,19 @@ class ToolCallExecutor {
     /**
      * Extract function name and arguments from the command string
      * */
-    private suspend fun execute1(objectName: String, functionName: String, args: List<String>, driver: WebDriver): Any? {
+    private suspend fun execute1(
+        objectName: String,
+        functionName: String,
+        args: List<String>,
+        driver: WebDriver
+    ): Any? {
         // Execute the appropriate WebDriver method based on the function name
         return when (functionName) {
             "open" -> {
                 // Navigate to URL and wait for page to load
                 if (args.isNotEmpty()) driver.open(args[0]) else null
             }
+
             "navigateTo" -> {
                 // Navigate to URL without waiting for page to load
                 when (args.size) {
@@ -82,6 +88,7 @@ class ToolCallExecutor {
                     else -> null
                 }
             }
+
             "click" -> {
                 // Click on an element with optional repeat count
                 when (args.size) {
@@ -90,10 +97,12 @@ class ToolCallExecutor {
                     else -> if (args.isNotEmpty()) driver.click(args[0]) else null
                 }
             }
+
             "type" -> {
                 // Type text into an element
                 if (args.size >= 2) driver.type(args[0], args[1]) else null
             }
+
             "waitForNavigation" -> {
                 // Wait for navigation to complete with optional timeout
                 when (args.size) {
@@ -102,6 +111,7 @@ class ToolCallExecutor {
                     else -> driver.waitForNavigation(args[0], args[1].toLongOrNull() ?: 30000L)
                 }
             }
+
             "captureScreenshot" -> {
                 // Capture screenshot of the page or a specific element
                 if (args.isEmpty()) {
@@ -110,6 +120,7 @@ class ToolCallExecutor {
                     driver.captureScreenshot(args[0])
                 }
             }
+
             "scrollDown" -> {
                 // Scroll down the page with optional repeat count
                 if (args.isEmpty()) {
@@ -118,6 +129,7 @@ class ToolCallExecutor {
                     driver.scrollDown(args[0].toIntOrNull() ?: 1)
                 }
             }
+
             "scrollUp" -> {
                 // Scroll up the page with optional repeat count
                 if (args.isEmpty()) {
@@ -126,14 +138,17 @@ class ToolCallExecutor {
                     driver.scrollUp(args[0].toIntOrNull() ?: 1)
                 }
             }
+
             "scrollToTop" -> {
                 // Scroll to the top of the page
                 driver.scrollToTop()
             }
+
             "scrollToBottom" -> {
                 // Scroll to the bottom of the page
                 driver.scrollToBottom()
             }
+
             "scrollToMiddle" -> {
                 // Scroll to a relative position on the page
                 if (args.isNotEmpty()) {
@@ -142,6 +157,7 @@ class ToolCallExecutor {
                     driver.scrollToMiddle(0.5)
                 }
             }
+
             "mouseWheelDown" -> {
                 // Simulate mouse wheel down with various parameter options
                 when (args.size) {
@@ -153,6 +169,7 @@ class ToolCallExecutor {
                         args[1].toDoubleOrNull() ?: 0.0,
                         args[2].toDoubleOrNull() ?: 0.0
                     )
+
                     else -> driver.mouseWheelDown(
                         args[0].toIntOrNull() ?: 1,
                         args[1].toDoubleOrNull() ?: 0.0,
@@ -161,6 +178,7 @@ class ToolCallExecutor {
                     )
                 }
             }
+
             "mouseWheelUp" -> {
                 // Simulate mouse wheel up with various parameter options
                 when (args.size) {
@@ -172,6 +190,7 @@ class ToolCallExecutor {
                         args[1].toDoubleOrNull() ?: 0.0,
                         args[2].toDoubleOrNull() ?: 0.0
                     )
+
                     else -> driver.mouseWheelUp(
                         args[0].toIntOrNull() ?: 1,
                         args[1].toDoubleOrNull() ?: 0.0,
@@ -180,6 +199,7 @@ class ToolCallExecutor {
                     )
                 }
             }
+
             "moveMouseTo" -> {
                 // Move mouse to coordinates or element with offset
                 when (args.size) {
@@ -188,6 +208,7 @@ class ToolCallExecutor {
                     else -> null
                 }
             }
+
             "dragAndDrop" -> {
                 // Perform drag and drop from an element with x,y offset
                 if (args.size >= 3) {
@@ -196,6 +217,7 @@ class ToolCallExecutor {
                     null
                 }
             }
+
             "outerHTML" -> {
                 // Get HTML markup of the page or a specific element
                 if (args.isEmpty()) {
@@ -204,14 +226,17 @@ class ToolCallExecutor {
                     driver.outerHTML(args[0])
                 }
             }
+
             "selectFirstTextOrNull" -> {
                 // Get text content of the first element matching the selector
                 if (args.isNotEmpty()) driver.selectFirstTextOrNull(args[0]) else null
             }
+
             "selectTextAll" -> {
                 // Get text content of all elements matching the selector
                 if (args.isNotEmpty()) driver.selectTextAll(args[0]) else null
             }
+
             "selectFirstAttributeOrNull" -> {
                 // Get attribute value of the first element matching the selector
                 if (args.size >= 2) {
@@ -220,10 +245,12 @@ class ToolCallExecutor {
                     null
                 }
             }
+
             "selectAttributes" -> {
                 // Get all attributes of the first element matching the selector
                 if (args.isNotEmpty()) driver.selectAttributes(args[0]) else null
             }
+
             "selectAttributeAll" -> {
                 // Get specified attribute of all elements matching the selector
                 when (args.size) {
@@ -234,9 +261,11 @@ class ToolCallExecutor {
                         args[2].toIntOrNull() ?: 0,
                         args[3].toIntOrNull() ?: Integer.MAX_VALUE
                     )
+
                     else -> if (args.size >= 2) driver.selectAttributeAll(args[0], args[1]) else null
                 }
             }
+
             "setAttribute" -> {
                 // Set attribute on the first element matching the selector
                 if (args.size >= 3) {
@@ -245,6 +274,7 @@ class ToolCallExecutor {
                     null
                 }
             }
+
             "setAttributeAll" -> {
                 // Set attribute on all elements matching the selector
                 if (args.size >= 3) {
@@ -253,6 +283,7 @@ class ToolCallExecutor {
                     null
                 }
             }
+
             "selectHyperlinks" -> {
                 // Extract hyperlinks from elements matching the selector
                 when (args.size) {
@@ -262,9 +293,11 @@ class ToolCallExecutor {
                         args[1].toIntOrNull() ?: 0,
                         args[2].toIntOrNull() ?: Integer.MAX_VALUE
                     )
+
                     else -> if (args.isNotEmpty()) driver.selectHyperlinks(args[0]) else null
                 }
             }
+
             "selectAnchors" -> {
                 // Extract anchor elements matching the selector
                 when (args.size) {
@@ -274,9 +307,11 @@ class ToolCallExecutor {
                         args[1].toIntOrNull() ?: 0,
                         args[2].toIntOrNull() ?: Integer.MAX_VALUE
                     )
+
                     else -> if (args.isNotEmpty()) driver.selectAnchors(args[0]) else null
                 }
             }
+
             "selectImages" -> {
                 // Extract image sources from elements matching the selector
                 when (args.size) {
@@ -286,9 +321,11 @@ class ToolCallExecutor {
                         args[1].toIntOrNull() ?: 0,
                         args[2].toIntOrNull() ?: Integer.MAX_VALUE
                     )
+
                     else -> if (args.isNotEmpty()) driver.selectImages(args[0]) else null
                 }
             }
+
             "evaluate" -> {
                 // Execute JavaScript and return the result
                 when (args.size) {
@@ -297,34 +334,42 @@ class ToolCallExecutor {
                     else -> if (args.isNotEmpty()) driver.evaluate(args[0]) else null
                 }
             }
+
             "evaluateDetail" -> {
                 // Execute JavaScript and return detailed evaluation result
                 if (args.isNotEmpty()) driver.evaluateDetail(args[0]) else null
             }
+
             "clickablePoint" -> {
                 // Get the clickable point of an element
                 if (args.isNotEmpty()) driver.clickablePoint(args[0]) else null
             }
+
             "boundingBox" -> {
                 // Get the bounding box of an element
                 if (args.isNotEmpty()) driver.boundingBox(args[0]) else null
             }
+
             "newJsoupSession" -> {
                 // Create a new Jsoup session with current page context
                 driver.newJsoupSession()
             }
+
             "loadJsoupResource" -> {
                 // Load a resource using Jsoup with current page context
                 if (args.isNotEmpty()) driver.loadJsoupResource(args[0]) else null
             }
+
             "loadResource" -> {
                 // Load a resource without browser rendering
                 if (args.isNotEmpty()) driver.loadResource(args[0]) else null
             }
+
             "pause" -> {
                 // Pause page navigation and pending resource fetches
                 driver.pause()
             }
+
             "stop" -> {
                 // Stop all navigations and release resources
                 driver.stop()
@@ -334,26 +379,32 @@ class ToolCallExecutor {
                 // Get the URL currently displayed in the address bar
                 driver.currentUrl()
             }
+
             "url" -> {
                 // Get the document URL
                 driver.url()
             }
+
             "documentURI" -> {
                 // Get the document URI
                 driver.documentURI()
             }
+
             "baseURI" -> {
                 // Get the base URI used to resolve relative URLs
                 driver.baseURI()
             }
+
             "referrer" -> {
                 // Get the referrer of the current page
                 driver.referrer()
             }
+
             "pageSource" -> {
                 // Get the source code of the current page
                 driver.pageSource()
             }
+
             "chat" -> {
                 // Interact with AI model about a specific element
                 if (args.size >= 2) {
@@ -362,14 +413,17 @@ class ToolCallExecutor {
                     null
                 }
             }
+
             "instruct" -> {
                 // Execute AI-assisted browser automation
                 if (args.isNotEmpty()) driver.instruct(args[0]) else null
             }
+
             "getCookies" -> {
                 // Get all cookies from the current page
                 driver.getCookies()
             }
+
             "deleteCookies" -> {
                 // Delete cookies with various parameter options
                 when (args.size) {
@@ -379,10 +433,12 @@ class ToolCallExecutor {
                     else -> if (args.isNotEmpty()) driver.deleteCookies(args[0]) else null
                 }
             }
+
             "clearBrowserCookies" -> {
                 // Clear all browser cookies
                 driver.clearBrowserCookies()
             }
+
             "waitForSelector" -> {
                 // Wait for element to appear in DOM with optional timeout
                 when (args.size) {
@@ -391,6 +447,7 @@ class ToolCallExecutor {
                     else -> if (args.isNotEmpty()) driver.waitForSelector(args[0]) else null
                 }
             }
+
             "waitForPage" -> {
                 // Wait for navigation to a specific URL
                 if (args.size >= 2) {
@@ -401,38 +458,47 @@ class ToolCallExecutor {
                     null
                 }
             }
+
             "waitUntil" -> {
                 // Cannot be implemented via string commands as it requires a lambda
                 null
             }
+
             "exists" -> {
                 // Check if element exists in DOM
                 if (args.isNotEmpty()) driver.exists(args[0]) else null
             }
+
             "isVisible" -> {
                 // Check if element is visible
                 if (args.isNotEmpty()) driver.isVisible(args[0]) else null
             }
+
             "visible" -> {
                 // Alias for isVisible
                 if (args.isNotEmpty()) driver.visible(args[0]) else null
             }
+
             "isHidden" -> {
                 // Check if element is hidden
                 if (args.isNotEmpty()) driver.isHidden(args[0]) else null
             }
+
             "isChecked" -> {
                 // Check if element is checked
                 if (args.isNotEmpty()) driver.isChecked(args[0]) else null
             }
+
             "bringToFront" -> {
                 // Bring browser window to front
                 driver.bringToFront()
             }
+
             "focus" -> {
                 // Focus on an element
                 if (args.isNotEmpty()) driver.focus(args[0]) else null
             }
+
             "fill" -> {
                 // Clear and fill text into an element
                 if (args.size >= 2) {
@@ -441,6 +507,7 @@ class ToolCallExecutor {
                     null
                 }
             }
+
             "press" -> {
                 // Press a keyboard key on an element
                 if (args.size >= 2) {
@@ -449,6 +516,7 @@ class ToolCallExecutor {
                     null
                 }
             }
+
             "clickTextMatches" -> {
                 // Click element whose text content matches a pattern
                 when (args.size) {
@@ -457,6 +525,7 @@ class ToolCallExecutor {
                     else -> if (args.size >= 2) driver.clickTextMatches(args[0], args[1]) else null
                 }
             }
+
             "clickMatches" -> {
                 // Click element whose attribute matches a pattern
                 when (args.size) {
@@ -465,6 +534,7 @@ class ToolCallExecutor {
                     else -> if (args.size >= 3) driver.clickMatches(args[0], args[1], args[2]) else null
                 }
             }
+
             "clickNthAnchor" -> {
                 // Click the nth anchor element in the DOM
                 when (args.size) {
@@ -473,18 +543,22 @@ class ToolCallExecutor {
                     else -> if (args.isNotEmpty()) driver.clickNthAnchor(args[0].toIntOrNull() ?: 0) else null
                 }
             }
+
             "check" -> {
                 // Check a checkbox or radio button
                 if (args.isNotEmpty()) driver.check(args[0]) else null
             }
+
             "uncheck" -> {
                 // Uncheck a checkbox
                 if (args.isNotEmpty()) driver.uncheck(args[0]) else null
             }
+
             "scrollTo" -> {
                 // Scroll to bring element into view
                 if (args.isNotEmpty()) driver.scrollTo(args[0]) else null
             }
+
             "scrollToScreen" -> {
                 // Scroll to a specific screen position by number
                 if (args.isNotEmpty()) {
@@ -493,6 +567,7 @@ class ToolCallExecutor {
                     driver.scrollToScreen(0.5)
                 }
             }
+
             "selectFirstPropertyValueOrNull" -> {
                 // Get property value of first element matching selector
                 if (args.size >= 2) {
@@ -501,6 +576,7 @@ class ToolCallExecutor {
                     null
                 }
             }
+
             "selectPropertyValueAll" -> {
                 // Get property values from all elements matching selector
                 when (args.size) {
@@ -511,9 +587,11 @@ class ToolCallExecutor {
                         args[2].toIntOrNull() ?: 0,
                         args[3].toIntOrNull() ?: Integer.MAX_VALUE
                     )
+
                     else -> if (args.size >= 2) driver.selectPropertyValueAll(args[0], args[1]) else null
                 }
             }
+
             "setProperty" -> {
                 // Set property on first element matching selector
                 if (args.size >= 3) {
@@ -522,6 +600,7 @@ class ToolCallExecutor {
                     null
                 }
             }
+
             "setPropertyAll" -> {
                 // Set property on all elements matching the selector
                 if (args.size >= 3) {
@@ -530,6 +609,7 @@ class ToolCallExecutor {
                     null
                 }
             }
+
             "evaluateValue" -> {
                 // Execute JavaScript and return JSON value
                 when (args.size) {
@@ -538,10 +618,12 @@ class ToolCallExecutor {
                     else -> if (args.isNotEmpty()) driver.evaluateValue(args[0]) else null
                 }
             }
+
             "evaluateValueDetail" -> {
                 // Execute JavaScript and return detailed JSON value
                 if (args.isNotEmpty()) driver.evaluateValueDetail(args[0]) else null
             }
+
             "delay" -> {
                 // Pause execution for specified milliseconds
                 if (args.isNotEmpty()) {
@@ -550,6 +632,7 @@ class ToolCallExecutor {
                     driver.delay(1000L)
                 }
             }
+
             else -> {
                 // Command not supported or implemented
                 null
@@ -558,6 +641,55 @@ class ToolCallExecutor {
     }
 
     companion object {
+
+        const val TOOL_CALL_LIST = """
+- navigateTo(url: String)
+- waitForSelector(selector: String, timeoutMillis: Long = 5000)
+- exists(selector: String): Boolean
+- isVisible(selector: String): Boolean
+- focus(selector: String)
+- click(selector: String)
+- fill(selector: String, text: String)
+- press(selector: String, key: String)
+- check(selector: String)
+- uncheck(selector: String)
+- scrollDown(count: Int = 1)
+- scrollUp(count: Int = 1)
+- scrollTo(selector: String)
+- scrollToTop()
+- scrollToBottom()
+- scrollToMiddle(ratio: Double = 0.5)
+- scrollToScreen(screenNumber: Double)
+- clickTextMatches(selector: String, pattern: String, count: Int = 1)
+- clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
+- clickNthAnchor(n: Int, rootSelector: String = "body")
+- waitForNavigation(oldUrl: String = "", timeoutMillis: Long = 5000): Long
+- goBack()
+- goForward()
+- captureScreenshot()
+- captureScreenshot(selector: String)
+- delay(millis: Long)
+- stop()
+    """
+
+        val SELECTOR_ACTIONS = setOf(
+            "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "visible", "focus",
+            "scrollTo", "captureScreenshot", "outerHTML", "selectFirstTextOrNull", "selectTextAll",
+            "selectFirstAttributeOrNull", "selectAttributes", "selectAttributeAll", "selectHyperlinks",
+            "selectAnchors", "selectImages", "selectFirstPropertyValueOrNull", "selectPropertyValueAll",
+            "setAttribute", "setAttributeAll", "setProperty", "setPropertyAll", "evaluate", "evaluateValue",
+            "evaluateDetail", "evaluateValueDetail", "clickMatches", "clickTextMatches", "clickablePoint",
+            "boundingBox", "moveMouseTo", "dragAndDrop"
+        )
+
+        val NO_SELECTOR_ACTIONS = setOf(
+            "navigateTo", "open", "waitForNavigation", "scrollDown", "scrollUp", "scrollToTop", "scrollToBottom",
+            "scrollToMiddle", "mouseWheelDown", "mouseWheelUp", "waitForPage", "bringToFront", "delay",
+            "instruct", "getCookies", "deleteCookies", "clearBrowserCookies", "pause", "stop", "currentUrl",
+            "url", "documentURI", "baseURI", "referrer", "pageSource", "newJsoupSession", "loadJsoupResource",
+            "loadResource", "waitUntil"
+        )
+
         /**
          * Parses a function call from a text string into its components.
          *
@@ -599,5 +731,68 @@ class ToolCallExecutor {
 
             return Triple(objectName, functionName, args)
         }
+
+        fun toolCallToDriverLine(tc: ToolCall): String? = when (tc.name) {
+            // Navigation
+            "navigateTo" -> tc.args["url"]?.let { "driver.navigateTo(\"$it\")" }
+            // Backward compatibility for older prompts
+            "goto" -> tc.args["url"]?.let { "driver.navigateTo(\"$it\")" }
+            // Wait
+            "waitForSelector" -> tc.args["selector"]?.let { sel -> "driver.waitForSelector(\"$sel\", ${(tc.args["timeoutMillis"] ?: 5000)}L)" }
+            // Status checking (first batch of new tools)
+            "exists" -> tc.args["selector"]?.let { "driver.exists(\"$it\")" }
+            "isVisible" -> tc.args["selector"]?.let { "driver.isVisible(\"$it\")" }
+            "focus" -> tc.args["selector"]?.let { "driver.focus(\"$it\")" }
+            // Basic interactions
+            "click" -> tc.args["selector"]?.let { "driver.click(\"$it\")" }
+            "fill" -> tc.args["selector"]?.let { s -> "driver.fill(\"$s\", \"${tc.args["text"] ?: ""}\")" }
+            "press" -> tc.args["selector"]?.let { s -> tc.args["key"]?.let { k -> "driver.press(\"$s\", \"$k\")" } }
+            "check" -> tc.args["selector"]?.let { "driver.check(\"$it\")" }
+            "uncheck" -> tc.args["selector"]?.let { "driver.uncheck(\"$it\")" }
+            // Scrolling
+            "scrollDown" -> "driver.scrollDown(${tc.args["count"] ?: 1})"
+            "scrollUp" -> "driver.scrollUp(${tc.args["count"] ?: 1})"
+            "scrollTo" -> tc.args["selector"]?.let { "driver.scrollTo(\"$it\")" }
+            "scrollToTop" -> "driver.scrollToTop()"
+            "scrollToBottom" -> "driver.scrollToBottom()"
+            "scrollToMiddle" -> "driver.scrollToMiddle(${tc.args["ratio"] ?: 0.5})"
+            "scrollToScreen" -> tc.args["screenNumber"]?.let { n -> "driver.scrollToScreen(${n})" }
+            // Advanced clicks
+            "clickTextMatches" -> tc.args["selector"]?.let { s ->
+                val pattern = tc.args["pattern"] ?: return@let null
+                val count = tc.args["count"] ?: 1
+                "driver.clickTextMatches(\"$s\", \"$pattern\", $count)"
+            }
+
+            "clickMatches" -> tc.args["selector"]?.let { s ->
+                val attr = tc.args["attrName"] ?: return@let null
+                val pattern = tc.args["pattern"] ?: return@let null
+                val count = tc.args["count"] ?: 1
+                "driver.clickMatches(\"$s\", \"$attr\", \"$pattern\", $count)"
+            }
+
+            "clickNthAnchor" -> tc.args["n"]?.let { n ->
+                val root = tc.args["rootSelector"]?.toString() ?: "body"
+                "driver.clickNthAnchor(${n}, \"$root\")"
+            }
+            // Enhanced navigation
+            "waitForNavigation" -> {
+                val oldUrl = tc.args["oldUrl"]?.toString() ?: ""
+                val timeout = tc.args["timeoutMillis"] ?: 5000L
+                "driver.waitForNavigation(\"$oldUrl\", ${timeout}L)"
+            }
+
+            "goBack" -> "driver.goBack()"
+            "goForward" -> "driver.goForward()"
+            // Screenshots
+            "captureScreenshot" -> {
+                val sel = tc.args["selector"]?.toString()
+                if (sel.isNullOrBlank()) "driver.captureScreenshot()" else "driver.captureScreenshot(\"$sel\")"
+            }
+            // Timing
+            "delay" -> "driver.delay(${tc.args["millis"] ?: 1000}L)"
+            else -> null
+        }
+
     }
 }
