@@ -17,7 +17,7 @@ Goal: Help AI work efficiently, stably, and predictably across code, review, doc
 
 Notes for Windows (cmd.exe):
 - Quote `-D` properties, e.g. `-D"dot.sperated.parameter=quoted"`
-- For test glob examples on Windows, see the [Testing Guide](./docs/copilot/test-guide.md)
+- For test glob examples on Windows, see the [Testing Guide](./devdocs/copilot/test-guide.md)
 
 ---
 
@@ -39,10 +39,10 @@ Notes for Windows (cmd.exe):
 Provide consistent, minimal, verifiable contributions:
 - Environment detection: Choose commands per OS; always use Maven wrapper
 - Editing rules: Restrict diffs to purposeful changes; keep style/license headers
-- Code generation: Favor pure functions and immutability; see the [Testing Guide](./docs/copilot/test-guide.md)
+- Code generation: Favor pure functions and immutability; see the [Testing Guide](./devdocs/copilot/test-guide.md)
 - Abstractions: When adding an interface/strategy, include concise KDoc rationale
-- Testing: see the [Testing Guide](./docs/copilot/test-guide.md)
-- External/LLM code: Inject strategy/provider to enable determinism; see the [Testing Guide](./docs/copilot/test-guide.md)
+- Testing: see the [Testing Guide](./devdocs/copilot/test-guide.md)
+- External/LLM code: Inject strategy/provider to enable determinism; see the [Testing Guide](./devdocs/copilot/test-guide.md)
 - Prompts/LLM: Keep prompts short, structured, versioned constants; centralize output parsing
 - Documentation: Update the closest `README-*` when changing developer-facing concepts
 - Security & safety: Never log secrets; validate untrusted input (selectors, URLs)
@@ -59,13 +59,13 @@ Provide consistent, minimal, verifiable contributions:
 | 2. Gather | grep / read code | Locate modules, packages, owners |
 | 3. Design | Draft | Interfaces, dataflow, state, error strategy |
 | 4. Implement | Minimal edits | Avoid broad reformatting/reordering |
-| 5. Verify | Build | For testing, see the [Testing Guide](./docs/copilot/test-guide.md) |
+| 5. Verify | Build | For testing, see the [Testing Guide](./devdocs/copilot/test-guide.md) |
 | 6. Summarize | Output notes | Coverage, risks, next steps |
 
 Definition of Done:
 1. Minimal, self‑consistent change; no behavior break unless marked “Breaking Change”
-2. Build passes: `./mvnw -q -DskipTests` compiles; for testing expectations, see the [Testing Guide](./docs/copilot/test-guide.md)
-3. Testing expectations: see the [Testing Guide](./docs/copilot/test-guide.md)
+2. Build passes: `./mvnw -q -DskipTests` compiles; for testing expectations, see the [Testing Guide](./devdocs/copilot/test-guide.md)
+3. Testing expectations: see the [Testing Guide](./devdocs/copilot/test-guide.md)
 4. Logs exclude sensitive information
 5. Dependencies: No drift/duplication; respect BOM
 6. Security: No hardcoded credentials; validate inputs
@@ -130,7 +130,7 @@ Kotlin code guidelines (highlights):
 ## 7. Testing
 
 For strategy, tags, base classes, coverage targets, and commands, see the detailed guide:
-- [Testing Guide](./docs/copilot/test-guide.md)
+- [Testing Guide](./devdocs/copilot/test-guide.md)
 
 ---
 
@@ -197,12 +197,12 @@ Guidelines:
 Directory: `docs/copilot/templates/`
 - `response-template.md` – Standard AI agent reply format
 - `pr-description-template.md` – PR description scaffold
-- For tag usage examples, see the [Testing Guide](./docs/copilot/test-guide.md)
+- For tag usage examples, see the [Testing Guide](./devdocs/copilot/test-guide.md)
 
 Usage:
 - New/changed PRs: Fill Summary / Motivation / Risk / Rollback
 - Perf-sensitive changes: Attach temporary benchmark or justify skipping
-- Flaky triage: Refer to the [Testing Guide](./docs/copilot/test-guide.md)
+- Flaky triage: Refer to the [Testing Guide](./devdocs/copilot/test-guide.md)
 
 ---
 
@@ -217,7 +217,7 @@ Usage:
 | Config layering | `application*.properties` overrides |
 | Docs | Public APIs need KDoc / README entries |
 | Benchmarks | JMH in `pulsar-benchmarks` |
-| Testing | See `docs/copilot/test-guide.md` |
+| Testing | See `devdocs/copilot/test-guide.md` |
 
 ---
 
