@@ -21,6 +21,7 @@ class MessageWriter(
 ): AutoCloseable {
 
     companion object {
+        @Suppress("unused")
         const val OFF = 0
         const val ERROR = 1
         const val WARN = 2
@@ -39,7 +40,7 @@ class MessageWriter(
         var CHECK_SIZE_EACH_WRITES = 4096
 
         var IDLE_TIMEOUT = Duration.ofMinutes(5)
-        
+
         private val ID_SUPPLIER = AtomicLong()
     }
 
@@ -50,7 +51,7 @@ class MessageWriter(
     private val closed = AtomicBoolean()
 
     val id = ID_SUPPLIER.incrementAndGet()
-    
+
     var lastActiveTime = Instant.now()
         private set
     val idleTime get() = Duration.between(lastActiveTime, Instant.now())
@@ -62,14 +63,18 @@ class MessageWriter(
 
     var checkSize: Int = 0
     var writingError: Boolean = false
-    
+
     var closeCount = 0
 
     fun write(s: String) {
+        // Do not write if the writer has been closed explicitly
+        if (closed.get()) return
         writeFile(s)
     }
 
     fun write(level: Int, clazz: KClass<*>, s: String, t: Throwable? = null) {
+        // Do not write if the writer has been closed explicitly
+        if (closed.get()) return
         if (level > this.levelFile) {
             return
         }
@@ -77,16 +82,20 @@ class MessageWriter(
     }
 
     fun write(level: Int, module: String, s: String, t: Throwable? = null) {
+        // Do not write if the writer has been closed explicitly
+        if (closed.get()) return
         if (level > this.levelFile) {
             return
         }
         writeFile(format(module, s), t)
     }
-    
+
     fun flush() {
+        if (closed.get()) return
+        lastActiveTime = Instant.now()
         printWriter?.flush()
     }
-    
+
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             closeWriter("close writer")
@@ -101,22 +110,55 @@ class MessageWriter(
     @Synchronized
     private fun writeFile(s: String, t: Throwable? = null) {
         try {
-            if (checkSize++ >= CHECK_SIZE_EACH_WRITES) {
+            // update activity time as early as possible
+            lastActiveTime = Instant.now()
+
+            val threshold = if (CHECK_SIZE_EACH_WRITES <= 0) 1 else CHECK_SIZE_EACH_WRITES
+            if (++checkSize >= threshold) {
                 checkSize = 0
                 closeWriter("rotate file")
-                val count = Files.list(filePath.parent)
-                    .filter { it.isRegularFile() }
-                    .filter { it.fileName.toString().contains(filePath.fileName.toString()) }
-                    .count()
-                if (maxFileSize > 0 && Files.size(filePath) > maxFileSize) {
-                    val old = Paths.get("$filePath.$count")
-                    Files.move(filePath, old, StandardCopyOption.REPLACE_EXISTING)
+
+                // Determine next rotation index safely (match baseName or baseName.N with numeric N)
+                val baseName = filePath.fileName.toString()
+                val dir = filePath.parent ?: Paths.get(".")
+                val pattern = Regex("^" + Regex.escape(baseName) + "\\.(\\d+)$")
+                var maxIndex = 0
+                try {
+                    Files.list(dir).use { stream ->
+                        stream
+                            .filter { it.isRegularFile() }
+                            .map { it.fileName.toString() }
+                            .forEach { name ->
+                                val m = pattern.matchEntire(name)
+                                if (m != null) {
+                                    val idx = m.groupValues[1].toIntOrNull() ?: 0
+                                    if (idx > maxIndex) maxIndex = idx
+                                }
+                            }
+                    }
+                } catch (_: Exception) {
+                    // ignore listing errors, fall back to index 0
+                }
+                val nextIndex = maxIndex + 1
+
+                if (maxFileSize > 0 && Files.exists(filePath)) {
+                    try {
+                        if (Files.size(filePath) > maxFileSize) {
+                            val rotated = Paths.get("$filePath.$nextIndex")
+                            Files.move(filePath, rotated, StandardCopyOption.REPLACE_EXISTING)
+                        }
+                    } catch (_: Exception) {
+                        // ignore rotation errors, keep writing to current file
+                    }
                 }
             }
 
             openWriter()?.also {
                 it.println(s)
                 t?.printStackTrace(it)
+                // ensure stacktraces are flushed too
+                it.flush()
+                lastActiveTime = Instant.now()
             }
         } catch (e: Exception) {
             logWritingError(e)
@@ -135,10 +177,14 @@ class MessageWriter(
     private fun openWriter(): PrintWriter? {
         if (printWriter == null) {
             try {
-                Files.createDirectories(filePath.parent)
+                val parent = filePath.parent
+                if (parent != null) {
+                    Files.createDirectories(parent)
+                }
                 // println("Create printer writer to $path")
                 fileWriter = Files.newBufferedWriter(filePath, StandardOpenOption.CREATE, StandardOpenOption.APPEND)
                 printWriter = PrintWriter(fileWriter!!, true)
+                lastActiveTime = Instant.now()
             } catch (e: Exception) {
                 logWritingError(e)
                 return null
@@ -151,7 +197,7 @@ class MessageWriter(
     @Synchronized
     private fun closeWriter(message: String) {
         if (closeCount++ < 20) {
-            // logger.info("Closing writer #$id | ${idleTime.readable()} | $message | $filePath")
+            logger.debug("Closing writer #{} | idle={} | {} | {}", id, idleTime, message, filePath)
         }
 
         printWriter?.flush()
