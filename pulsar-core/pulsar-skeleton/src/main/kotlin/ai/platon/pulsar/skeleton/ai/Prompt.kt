@@ -34,11 +34,11 @@ fun buildUserInstructionsString(userProvidedInstructions: String?): String {
     return """
 
 # Custom Instructions Provided by the User
-    
+
 Please keep the user's instructions in mind when performing actions. If the user's instructions are not relevant to the current task, ignore them.
 
 User Instructions:
-${userProvidedInstructions}
+$userProvidedInstructions
 """.trimEnd()
 }
 
@@ -48,9 +48,9 @@ fun buildExtractSystemPrompt(
     userProvidedInstructions: String? = null,
 ): ChatMessage {
     val baseContent = """You are extracting content on behalf of a user.
-  If a user asks you to extract a 'list' of information, or 'all' information, 
+  If a user asks you to extract a 'list' of information, or 'all' information,
   YOU MUST EXTRACT ALL OF THE INFORMATION THAT THE USER REQUESTS.
-   
+
   You will be given:
 1. An instruction
 2. """
@@ -202,7 +202,7 @@ fun buildObserveUserMessage(
 ): ChatMessage {
     val content = """
 instruction: $instruction
-Accessibility Tree: 
+Accessibility Tree:
 $domElements
 """.trim()
 
@@ -222,18 +222,18 @@ fun buildActObservePrompt(
 ): String {
     // Base instruction
     var instruction = """
-Find the most relevant element to perform an action on given the following action: $action. 
-  Provide an action for this element such as ${supportedActions.joinToString(", ")}, or any other playwright locator method. 
+Find the most relevant element to perform an action on given the following action: $action.
+  Provide an action for this element such as ${supportedActions.joinToString(", ")}, or any other playwright locator method.
   Remember that to users, buttons and links look the same in most cases.
-  If the action is completely unrelated to a potential action to be taken on the page, return an empty array. 
-  ONLY return one action. If multiple actions are relevant, return the most relevant one. 
-  If the user is asking to scroll to a position on the page, e.g., 'halfway' or 0.75, etc, you must return the argument 
+  If the action is completely unrelated to a potential action to be taken on the page, return an empty array.
+  ONLY return one action. If multiple actions are relevant, return the most relevant one.
+  If the user is asking to scroll to a position on the page, e.g., 'halfway' or 0.75, etc, you must return the argument
   formatted as the correct percentage, e.g., '50%' or '75%', etc.
   If the user is asking to scroll to the next chunk/previous chunk, choose the nextChunk/prevChunk method. No arguments are required here.
-  If the action implies a key press, e.g., 'press enter', 'press a', 'press space', etc., always choose the press method 
-  with the appropriate key as argument — e.g. 'a', 'Enter', 'Space'. Do not choose a click action on an on-screen keyboard. 
+  If the action implies a key press, e.g., 'press enter', 'press a', 'press space', etc., always choose the press method
+  with the appropriate key as argument — e.g. 'a', 'Enter', 'Space'. Do not choose a click action on an on-screen keyboard.
   Capitalize the first character like 'Enter', 'Tab', 'Escape' only for special keys.
-  If the action implies choosing an option from a dropdown, AND the corresponding element is a 'select' element, 
+  If the action implies choosing an option from a dropdown, AND the corresponding element is a 'select' element,
   choose the selectOptionFromDropdown method. The argument should be the text of the option to select.
   If the action implies choosing an option from a dropdown, and the corresponding element is NOT a 'select' element, choose the click method.
 """.trimIndent()
@@ -242,7 +242,7 @@ Find the most relevant element to perform an action on given the following actio
     if (variables != null && variables.isNotEmpty()) {
         val variableNames = variables.keys.joinToString(", ") { "%$it%" }
         val variablesPrompt = """
-The following variables are available to use in the action: $variableNames. 
+The following variables are available to use in the action: $variableNames.
     Fill the argument variables with the variable name.
 """.trimIndent()
         instruction += " $variablesPrompt"
@@ -255,7 +255,7 @@ fun buildOperatorSystemPrompt(goal: String): ChatMessage {
     val content = """
 You are a general-purpose agent whose job is to accomplish the user's goal across multiple model calls by running actions on the page.
 
-You will be given a goal and a list of steps that have been taken so far. Your job is to determine if either the user's 
+You will be given a goal and a list of steps that have been taken so far. Your job is to determine if either the user's
 goal has been completed or if there are still steps that need to be taken.
 
 # Your current goal

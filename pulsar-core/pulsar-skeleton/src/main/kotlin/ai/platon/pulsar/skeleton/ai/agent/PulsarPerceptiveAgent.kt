@@ -8,6 +8,7 @@ import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.ai.detail.*
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.google.gson.JsonElement
@@ -65,6 +66,14 @@ class PulsarPerceptiveAgent(
      * Returns the final summary with enhanced error handling.
      */
     override suspend fun act(action: ActionOptions): ActResult {
+        return observeAct(action)
+    }
+
+    /**
+     * Execution with comprehensive error handling and retry mechanism.
+     * Returns the final summary with enhanced error handling.
+     */
+    override suspend fun actLegacy(action: ActionOptions): ActResult {
         Files.createDirectories(baseDir)
         val startTime = Instant.now()
         val sessionId = uuid.toString()
@@ -86,22 +95,8 @@ class PulsarPerceptiveAgent(
         // Build a minimal ToolCall-like map for validation
         val toolArgs = mutableMapOf<String, Any?>()
         // Inject selector when the action likely targets an element
-        val selectorActions = setOf(
-            "click","fill","press","check","uncheck","exists","isVisible","visible","focus",
-            "scrollTo","captureScreenshot","outerHTML","selectFirstTextOrNull","selectTextAll",
-            "selectFirstAttributeOrNull","selectAttributes","selectAttributeAll","selectHyperlinks",
-            "selectAnchors","selectImages","selectFirstPropertyValueOrNull","selectPropertyValueAll",
-            "setAttribute","setAttributeAll","setProperty","setPropertyAll","evaluate","evaluateValue",
-            "evaluateDetail","evaluateValueDetail","clickMatches","clickTextMatches","clickablePoint",
-            "boundingBox","moveMouseTo","dragAndDrop"
-        )
-        val noSelectorActions = setOf(
-            "navigateTo","open","waitForNavigation","scrollDown","scrollUp","scrollToTop","scrollToBottom",
-            "scrollToMiddle","mouseWheelDown","mouseWheelUp","waitForPage","bringToFront","delay",
-            "instruct","getCookies","deleteCookies","clearBrowserCookies","pause","stop","currentUrl",
-            "url","documentURI","baseURI","referrer","pageSource","newJsoupSession","loadJsoupResource",
-            "loadResource","waitUntil"
-        )
+        val selectorActions = ToolCallExecutor.SELECTOR_ACTIONS
+        val noSelectorActions = ToolCallExecutor.NO_SELECTOR_ACTIONS
 
         val lowerMethod = method
         val finalArgsList = mutableListOf<String>()
@@ -131,7 +126,15 @@ class PulsarPerceptiveAgent(
             val ok = validateToolCall(ToolCall(lowerMethod, toolArgs))
             if (!ok) {
                 val msg = "Tool call validation failed for $lowerMethod with selector ${selector.take(120)}"
-                logStructured(msg, ExecutionContext(uuid.toString(), 0, "observe_act", runCatching { driver.currentUrl() }.getOrDefault("")))
+                logStructured(
+                    msg,
+                    ExecutionContext(
+                        uuid.toString(),
+                        0,
+                        "observe_act",
+                        runCatching { driver.currentUrl() }.getOrDefault("")
+                    )
+                )
                 addToHistory(msg)
                 return ActResult(false, msg, action = observe.description)
             }
@@ -142,6 +145,7 @@ class PulsarPerceptiveAgent(
             // Use single quotes; escape any existing single quotes and backslashes
             return "'" + s.replace("\\", "\\\\").replace("'", "\\'") + "'"
         }
+
         val callArgs = finalArgsList.map { escArg(it) }.joinToString(",")
         val functionCall = "driver.$lowerMethod($callArgs)"
 
@@ -214,6 +218,10 @@ class PulsarPerceptiveAgent(
     }
 
     override suspend fun observe(options: ObserveOptions): List<ObserveResult> {
+        return doObserve(options)
+    }
+
+    private suspend fun doObserve(options: ObserveOptions): List<ObserveResult> {
         val instruction = options.instruction?.takeIf { it.isNotBlank() } ?: "Understand the page and list actionable elements"
         val requestId = UUID.randomUUID().toString()
         logObserveStart(instruction, requestId)
@@ -269,6 +277,107 @@ class PulsarPerceptiveAgent(
             }
             emptyList()
         }
+    }
+
+    private suspend fun observeAct(action: ActionOptions): ActResult {
+        // 1) Build instruction for action-oriented observe
+        val supportedActions = ToolCallExecutor.SUPPORTED_ACTIONS
+        val instruction = buildActObservePrompt(action.action, supportedActions, action.variables)
+
+        // 2) Optional settle wait before observing DOM (if provided)
+        val settleMs = action.domSettleTimeoutMs?.toLong()?.coerceAtLeast(0L)
+        if (settleMs != null && settleMs > 0) {
+            runCatching { driver.delay(settleMs) }
+                .onFailure { e -> logger.warn("observeAct: domSettleTimeoutMs delay failed | {}", e.toString()) }
+        }
+
+        // 3) Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
+        val requestId = UUID.randomUUID().toString()
+        val results: List<ObserveResult> = try {
+            val domElements = inference.collectDomElements()
+            val internal = inference.observe(
+                ObserveParams(
+                    instruction = instruction,
+                    domElements = domElements,
+                    requestId = requestId,
+                    returnAction = true,
+                    logInferenceToFile = config.enableStructuredLogging,
+                    fromAct = true,
+                )
+            )
+            val mapped = internal.elements.map { el ->
+                ObserveResult(
+                    selector = "node:${'$'}{el.elementId}",
+                    description = el.description,
+                    backendNodeId = null,
+                    method = el.method?.ifBlank { null },
+                    arguments = el.arguments?.takeIf { it.isNotEmpty() }
+                )
+            }
+            addHistoryObserve(instruction, requestId, mapped.size, mapped.isNotEmpty())
+            mapped
+        } catch (e: Exception) {
+            logger.error("observeAct.observe.error requestId={} msg={}", requestId.take(8), e.message, e)
+            addHistoryObserve(instruction, requestId, 0, false)
+            // Fallback: best-effort interactive element extraction with no action returned
+            val interactive = runCatching { tta.extractInteractiveElementsDeferred(driver) }.getOrElse { emptyList() }
+            if (interactive.isNotEmpty()) {
+                interactive.map { ie ->
+                    val label = listOfNotNull(
+                        ie.text.takeIf { it.isNotBlank() }?.take(80),
+                        ie.placeholder?.takeIf { it.isNotBlank() }?.let { "placeholder=\"$it\"" },
+                        ie.type?.takeIf { it.isNotBlank() }?.let { "type=$it" },
+                        ie.tagName.takeIf { it.isNotBlank() }?.lowercase()
+                    ).joinToString(" | ").ifBlank { ie.selector.take(100) }
+                    ObserveResult(
+                        selector = ie.selector,
+                        description = label,
+                        backendNodeId = null,
+                        method = null,
+                        arguments = null
+                    )
+                }
+            } else emptyList()
+        }
+
+        if (results.isEmpty()) {
+            val msg = "observeAct: No actionable element found"
+            addToHistory(msg)
+            return ActResult(false, msg, action = action.action)
+        }
+
+        // 4) Choose the top candidate and substitute variables into arguments
+        val chosen0 = results.first()
+        val method = chosen0.method?.trim().orEmpty()
+        if (method.isBlank()) {
+            val msg = "observeAct: LLM returned no method for selected element"
+            addToHistory(msg)
+            return ActResult(false, msg, action = action.action)
+        }
+
+        val vars = action.variables ?: emptyMap()
+        fun substituteVars(s: String): String {
+            var out = s
+            // placeholders like %name%
+            vars.forEach { (k, v) -> out = out.replace("%$k%", v) }
+            return out
+        }
+        val substitutedArgs: List<String>? = chosen0.arguments?.map { substituteVars(it) }
+        val chosen = chosen0.copy(arguments = substitutedArgs)
+
+        // 5) Execute action, and optionally wait for navigation if caller provided timeoutMs
+        val oldUrl = runCatching { driver.currentUrl() }.getOrDefault("")
+        val execResult = act(chosen)
+
+        // If a timeout is provided and the action likely triggers navigation, wait for navigation
+        val timeoutMs = action.timeoutMs?.toLong()?.takeIf { it > 0 }
+        val maybeNavMethod = method in setOf("navigateTo", "click", "goBack", "goForward")
+        if (timeoutMs != null && maybeNavMethod && execResult.success) {
+            runCatching { driver.waitForNavigation(oldUrl, timeoutMs) }
+                .onFailure { e -> logger.warn("observeAct: waitForNavigation failed | {}", e.toString()) }
+        }
+
+        return execResult.copy(action = action.action)
     }
 
     /** Default rich extraction schema (JSON Schema string) */
@@ -425,7 +534,8 @@ class PulsarPerceptiveAgent(
 
                 if (stepActionResult == null) {
                     consecutiveNoOps++
-                    handleConsecutiveNoOps(consecutiveNoOps, step, stepContext)
+                    val stop = handleConsecutiveNoOps(consecutiveNoOps, step, stepContext)
+                    if (stop) break
                     continue
                 }
 
@@ -441,7 +551,8 @@ class PulsarPerceptiveAgent(
                 val toolCall = parsed.toolCalls.firstOrNull()
                 if (toolCall == null) {
                     consecutiveNoOps++
-                    handleConsecutiveNoOps(consecutiveNoOps, step, stepContext)
+                    val stop = handleConsecutiveNoOps(consecutiveNoOps, step, stepContext)
+                    if (stop) break
                     continue
                 }
 
@@ -456,6 +567,10 @@ class PulsarPerceptiveAgent(
                     updatePerformanceMetrics(step, stepStartTime, true)
                     logStructured("Step completed successfully", stepContext, mapOf("summary" to execSummary))
                 } else {
+                    // Treat validation failures or execution skips as no-ops to avoid infinite loops
+                    consecutiveNoOps++
+                    val stop = handleConsecutiveNoOps(consecutiveNoOps, step, stepContext)
+                    if (stop) break
                     updatePerformanceMetrics(step, stepStartTime, false)
                 }
 
@@ -630,7 +745,7 @@ class PulsarPerceptiveAgent(
     ): ActionDescription? {
         return try {
             // Use overload supplying extracted elements to avoid re-extraction
-            tta.generateWebDriverActionDeffered(message, interactiveElements, screenshotB64)
+            tta.generateWebDriverActionDeferred(message, interactiveElements, screenshotB64)
         } catch (e: Exception) {
             logError("Action generation failed", e, context.sessionId)
             consecutiveFailureCounter.incrementAndGet()
@@ -648,7 +763,8 @@ class PulsarPerceptiveAgent(
         context: ExecutionContext
     ): String? {
         if (config.enablePreActionValidation && !validateToolCall(toolCall)) {
-            logStructured("Tool call validation failed", context, mapOf("toolCall" to toolCall.name))
+            logStructured("Tool call validation failed", context, mapOf("toolCall" to toolCall.name, "args" to toolCall.args))
+            addToHistory("#$step validation-failed ${toolCall.name}")
             return null
         }
 
@@ -724,17 +840,19 @@ class PulsarPerceptiveAgent(
     /**
      * Handles consecutive no-op scenarios with intelligent backoff
      */
-    private suspend fun handleConsecutiveNoOps(consecutiveNoOps: Int, step: Int, context: ExecutionContext) {
+    private suspend fun handleConsecutiveNoOps(consecutiveNoOps: Int, step: Int, context: ExecutionContext): Boolean {
         addToHistory("#$step no-op (consecutive: $consecutiveNoOps)")
         logStructured("No tool calls generated", context, mapOf("consecutiveNoOps" to consecutiveNoOps))
 
         if (consecutiveNoOps >= config.consecutiveNoOpLimit) {
             logStructured("Too many consecutive no-ops, stopping execution", context)
-            throw PerceptiveAgentError.PermanentError("Maximum consecutive no-ops reached: $consecutiveNoOps")
+            // Signal caller to stop loop gracefully
+            return true
         }
 
         val delay = calculateConsecutiveNoOpDelay(consecutiveNoOps)
         delay(delay)
+        return false
     }
 
     /**
@@ -1017,9 +1135,7 @@ $interactiveSummary
             }
 
             true
-        }.onFailure { e ->
-            logError("URL validation failed", e, uuid.toString())
-        }.getOrElse { false }
+        }.getOrDefault(false)
     }
 
     /**

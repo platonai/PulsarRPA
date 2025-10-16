@@ -643,34 +643,36 @@ class ToolCallExecutor {
     companion object {
 
         const val TOOL_CALL_LIST = """
-- navigateTo(url: String)
-- waitForSelector(selector: String, timeoutMillis: Long = 5000)
-- exists(selector: String): Boolean
-- isVisible(selector: String): Boolean
-- focus(selector: String)
-- click(selector: String)
-- fill(selector: String, text: String)
-- press(selector: String, key: String)
-- check(selector: String)
-- uncheck(selector: String)
-- scrollDown(count: Int = 1)
-- scrollUp(count: Int = 1)
-- scrollTo(selector: String)
-- scrollToTop()
-- scrollToBottom()
-- scrollToMiddle(ratio: Double = 0.5)
-- scrollToScreen(screenNumber: Double)
-- clickTextMatches(selector: String, pattern: String, count: Int = 1)
-- clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
-- clickNthAnchor(n: Int, rootSelector: String = "body")
-- waitForNavigation(oldUrl: String = "", timeoutMillis: Long = 5000): Long
-- goBack()
-- goForward()
-- captureScreenshot()
-- captureScreenshot(selector: String)
-- delay(millis: Long)
-- stop()
+navigateTo(url: String)
+waitForSelector(selector: String, timeoutMillis: Long = 5000)
+exists(selector: String): Boolean
+isVisible(selector: String): Boolean
+focus(selector: String)
+click(selector: String)
+fill(selector: String, text: String)
+press(selector: String, key: String)
+check(selector: String)
+uncheck(selector: String)
+scrollDown(count: Int = 1)
+scrollUp(count: Int = 1)
+scrollTo(selector: String)
+scrollToTop()
+scrollToBottom()
+scrollToMiddle(ratio: Double = 0.5)
+scrollToScreen(screenNumber: Double)
+clickTextMatches(selector: String, pattern: String, count: Int = 1)
+clickMatches(selector: String, attrName: String, pattern: String, count: Int = 1)
+clickNthAnchor(n: Int, rootSelector: String = "body")
+waitForNavigation(oldUrl: String = "", timeoutMillis: Long = 5000): Long
+goBack()
+goForward()
+delay(millis: Long)
+stop()
     """
+
+        val SUPPORTED_TOOL_CALLS = TOOL_CALL_LIST.split("\n").map { it.trim() }
+
+        val SUPPORTED_ACTIONS = SUPPORTED_TOOL_CALLS.map { it.substringBefore("(") }
 
         val SELECTOR_ACTIONS = setOf(
             "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "visible", "focus",
@@ -689,6 +691,8 @@ class ToolCallExecutor {
             "url", "documentURI", "baseURI", "referrer", "pageSource", "newJsoupSession", "loadJsoupResource",
             "loadResource", "waitUntil"
         )
+
+        val MAY_NAVIGATE_ACTIONS = setOf("navigateTo", "click", "goBack", "goForward")
 
         /**
          * Parses a function call from a text string into its components.
