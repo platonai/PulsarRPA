@@ -7,11 +7,11 @@ import com.fasterxml.jackson.annotation.JsonProperty
  * Marker for target and session details.
  */
 data class PageTarget(
-    @JsonProperty("target_id")
+    @get:JsonProperty("target_id") @param:JsonProperty("target_id")
     val targetId: String? = null,
-    @JsonProperty("frame_id")
+    @get:JsonProperty("frame_id") @param:JsonProperty("frame_id")
     val frameId: String? = null,
-    @JsonProperty("session_id")
+    @get:JsonProperty("session_id") @param:JsonProperty("session_id")
     val sessionId: String? = null
 )
 
@@ -19,23 +19,23 @@ data class PageTarget(
  * Options controlling snapshot breadth/depth and expensive fields.
  */
 data class SnapshotOptions(
-    @JsonProperty("max_depth")
+    @get:JsonProperty("max_depth") @param:JsonProperty("max_depth")
     val maxDepth: Int = 0, // 0 means full tree
-    @JsonProperty("include_ax")
+    @get:JsonProperty("include_ax") @param:JsonProperty("include_ax")
     val includeAX: Boolean = true,
-    @JsonProperty("include_snapshot")
+    @get:JsonProperty("include_snapshot") @param:JsonProperty("include_snapshot")
     val includeSnapshot: Boolean = true,
-    @JsonProperty("include_styles")
+    @get:JsonProperty("include_styles") @param:JsonProperty("include_styles")
     val includeStyles: Boolean = true,
-    @JsonProperty("include_paint_order")
+    @get:JsonProperty("include_paint_order") @param:JsonProperty("include_paint_order")
     val includePaintOrder: Boolean = true,
-    @JsonProperty("include_dom_rects")
+    @get:JsonProperty("include_dom_rects") @param:JsonProperty("include_dom_rects")
     val includeDOMRects: Boolean = true,
-    @JsonProperty("include_scroll_analysis")
+    @get:JsonProperty("include_scroll_analysis") @param:JsonProperty("include_scroll_analysis")
     val includeScrollAnalysis: Boolean = true,
-    @JsonProperty("include_visibility")
+    @get:JsonProperty("include_visibility") @param:JsonProperty("include_visibility")
     val includeVisibility: Boolean = true,
-    @JsonProperty("include_interactivity")
+    @get:JsonProperty("include_interactivity") @param:JsonProperty("include_interactivity")
     val includeInteractivity: Boolean = true
 )
 
@@ -45,25 +45,25 @@ data class SnapshotOptions(
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class TargetAllTrees(
     val snapshot: Map<String, Any>? = null,
-    @JsonProperty("dom_tree")
-    val domTree: EnhancedDOMTreeNode = EnhancedDOMTreeNode(),
-    @JsonProperty("ax_tree")
-    val axTree: List<EnhancedAXNode> = emptyList(),
-    @JsonProperty("device_pixel_ratio")
+    @get:JsonProperty("dom_tree") @param:JsonProperty("dom_tree")
+    val domTree: DOMTreeNodeEx = DOMTreeNodeEx(),
+    @get:JsonProperty("ax_tree") @param:JsonProperty("ax_tree")
+    val axTree: List<AXNodeEx> = emptyList(),
+    @get:JsonProperty("device_pixel_ratio") @param:JsonProperty("device_pixel_ratio")
     val devicePixelRatio: Double = 1.0,
-    @JsonProperty("cdp_timing")
+    @get:JsonProperty("cdp_timing") @param:JsonProperty("cdp_timing")
     val cdpTiming: Map<String, Long> = emptyMap(),
     val options: SnapshotOptions = SnapshotOptions(),
 
     // Internal mappings for merging
-    @JsonProperty("snapshot_by_backend_id")
-    val snapshotByBackendId: Map<Int, EnhancedSnapshotNode> = emptyMap(),
-    @JsonProperty("ax_by_backend_id")
-    val axByBackendId: Map<Int, EnhancedAXNode> = emptyMap(),
-    @JsonProperty("ax_tree_by_frame_id")
-    val axTreeByFrameId: Map<String, List<EnhancedAXNode>> = emptyMap(),
-    @JsonProperty("dom_by_backend_id")
-    val domByBackendId: Map<Int, EnhancedDOMTreeNode> = emptyMap()
+    @get:JsonProperty("snapshot_by_backend_id") @param:JsonProperty("snapshot_by_backend_id")
+    val snapshotByBackendId: Map<Int, SnapshotNodeEx> = emptyMap(),
+    @get:JsonProperty("ax_by_backend_id") @param:JsonProperty("ax_by_backend_id")
+    val axByBackendId: Map<Int, AXNodeEx> = emptyMap(),
+    @get:JsonProperty("ax_tree_by_frame_id") @param:JsonProperty("ax_tree_by_frame_id")
+    val axTreeByFrameId: Map<String, List<AXNodeEx>> = emptyMap(),
+    @get:JsonProperty("dom_by_backend_id") @param:JsonProperty("dom_by_backend_id")
+    val domByBackendId: Map<Int, DOMTreeNodeEx> = emptyMap()
 )
 
 /**
@@ -71,13 +71,13 @@ data class TargetAllTrees(
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class ElementRefCriteria(
-    @JsonProperty("css_selector")
+    @get:JsonProperty("css_selector") @param:JsonProperty("css_selector")
     val cssSelector: String? = null,
-    @JsonProperty("x_path")
+    @get:JsonProperty("x_path") @param:JsonProperty("x_path")
     val xPath: String? = null,
-    @JsonProperty("element_hash")
+    @get:JsonProperty("element_hash") @param:JsonProperty("element_hash")
     val elementHash: String? = null,
-    @JsonProperty("backend_node_id")
+    @get:JsonProperty("backend_node_id") @param:JsonProperty("backend_node_id")
     val backendNodeId: Int? = null
 )
 
@@ -86,9 +86,9 @@ data class ElementRefCriteria(
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class CurrentPageTargets(
-    @JsonProperty("page_session")
+    @get:JsonProperty("page_session") @param:JsonProperty("page_session")
     val pageSession: Map<String, Any>,
-    @JsonProperty("iframe_sessions")
+    @get:JsonProperty("iframe_sessions") @param:JsonProperty("iframe_sessions")
     val iframeSessions: List<Map<String, Any>> = emptyList()
 )
 
@@ -100,7 +100,7 @@ data class CurrentPageTargets(
 data class PropagatingBounds(
     val tag: String,
     val bounds: DOMRect,
-    @JsonProperty("node_id")
+    @get:JsonProperty("node_id") @param:JsonProperty("node_id")
     val nodeId: Int,
     val depth: Int
 )

@@ -14,25 +14,25 @@ interface DomService {
     /**
      * Build the enhanced DOM tree by merging DOM, AX, and Snapshot data.
      */
-    fun buildEnhancedDomTree(trees: TargetAllTrees): EnhancedDOMTreeNode
+    fun buildEnhancedDomTree(trees: TargetAllTrees): DOMTreeNodeEx
 
     /**
      * Serialize SimplifiedNode tree for LLM consumption.
      */
-    fun serializeForLLM(root: SimplifiedNode, includeAttributes: List<String> = emptyList()): DomLLMSerialization
+    fun serializeForLLM(root: SlimNode, includeAttributes: List<String> = emptyList()): DomLLMSerialization
 
     /**
      * Find an element by various criteria (CSS selector, XPath, element hash).
      */
-    fun findElement(ref: ElementRefCriteria): EnhancedDOMTreeNode?
+    fun findElement(ref: ElementRefCriteria): DOMTreeNodeEx?
 
     /**
      * Convert EnhancedDOMTreeNode to DOMInteractedElement for agent interaction.
      */
-    fun toInteractedElement(node: EnhancedDOMTreeNode): DOMInteractedElement
+    fun toInteractedElement(node: DOMTreeNodeEx): DOMInteractedElement
 
     /**
      * Build simplified node tree from enhanced DOM tree.
      */
-    fun buildSimplifiedTree(root: EnhancedDOMTreeNode): SimplifiedNode
+    fun buildSimplifiedTree(root: DOMTreeNodeEx): SlimNode
 }

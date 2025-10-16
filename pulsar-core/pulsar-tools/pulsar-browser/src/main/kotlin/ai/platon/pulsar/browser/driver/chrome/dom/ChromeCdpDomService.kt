@@ -21,13 +21,13 @@ class ChromeCdpDomService(
     private val snapshot = DomSnapshotHandler(devTools)
 
     @Volatile
-    private var lastEnhancedRoot: EnhancedDOMTreeNode? = null
+    private var lastEnhancedRoot: DOMTreeNodeEx? = null
 
     @Volatile
-    private var lastAncestorMap: Map<Int, List<EnhancedDOMTreeNode>> = emptyMap()
+    private var lastAncestorMap: Map<Int, List<DOMTreeNodeEx>> = emptyMap()
 
     @Volatile
-    private var lastDomByBackend: Map<Int, EnhancedDOMTreeNode> = emptyMap()
+    private var lastDomByBackend: Map<Int, DOMTreeNodeEx> = emptyMap()
 
     override fun getAllTrees(target: PageTarget, options: SnapshotOptions): TargetAllTrees {
         val startTime = System.currentTimeMillis()
@@ -53,7 +53,7 @@ class ChromeCdpDomService(
                 logger.warn("DOM tree collection failed | frameId={} | err={}", target.frameId, e.toString())
                 tracer?.debug("DOM tree exception", e)
             }
-            .getOrElse { EnhancedDOMTreeNode() }
+            .getOrElse { DOMTreeNodeEx() }
         val domByBackend = runCatching { domTree.lastBackendNodeLookup() }.getOrDefault(emptyMap())
         timings["dom_tree"] = System.currentTimeMillis() - domStart
 
@@ -80,13 +80,13 @@ class ChromeCdpDomService(
 
         // Build AX mappings
         val enhancedAx = axResult.nodes.map { it.toEnhanced() }
-        val axByBackendId: Map<Int, EnhancedAXNode> = buildMap {
+        val axByBackendId: Map<Int, AXNodeEx> = buildMap {
             axResult.nodesByBackendNodeId.forEach { (backendId, nodes) ->
                 val first = nodes.firstOrNull() ?: return@forEach
                 put(backendId, first.toEnhanced())
             }
         }
-        val axTreeByFrame: Map<String, List<EnhancedAXNode>> = axResult.nodesByFrameId.mapValues { (_, list) ->
+        val axTreeByFrame: Map<String, List<AXNodeEx>> = axResult.nodesByFrameId.mapValues { (_, list) ->
             list.map { it.toEnhanced() }
         }
 
@@ -110,7 +110,7 @@ class ChromeCdpDomService(
         )
     }
 
-    override fun buildEnhancedDomTree(trees: TargetAllTrees): EnhancedDOMTreeNode {
+    override fun buildEnhancedDomTree(trees: TargetAllTrees): DOMTreeNodeEx {
         val options = trees.options
         // Build ancestor map for XPath and hash generation
         val ancestorMap = buildAncestorMap(trees.domTree)
@@ -128,10 +128,10 @@ class ChromeCdpDomService(
 
         // Merge trees recursively with enhanced metrics
         fun merge(
-            node: EnhancedDOMTreeNode,
-            ancestors: List<EnhancedDOMTreeNode>,
+            node: DOMTreeNodeEx,
+            ancestors: List<DOMTreeNodeEx>,
             depth: Int = 0
-        ): EnhancedDOMTreeNode {
+        ): DOMTreeNodeEx {
             val backendId = node.backendNodeId
 
             // Get snapshot data
@@ -213,11 +213,11 @@ class ChromeCdpDomService(
         return merged
     }
 
-    override fun buildSimplifiedTree(root: EnhancedDOMTreeNode): SimplifiedNode {
-        fun simplify(node: EnhancedDOMTreeNode): SimplifiedNode {
+    override fun buildSimplifiedTree(root: DOMTreeNodeEx): SlimNode {
+        fun simplify(node: DOMTreeNodeEx): SlimNode {
             val simplifiedChildren = node.children.map { simplify(it) }
 
-            return SimplifiedNode(
+            return SlimNode(
                 originalNode = node,
                 children = simplifiedChildren,
                 shouldDisplay = node.nodeType == NodeType.ELEMENT_NODE ||
@@ -229,7 +229,7 @@ class ChromeCdpDomService(
         return simplify(root)
     }
 
-    override fun serializeForLLM(root: SimplifiedNode, includeAttributes: List<String>): DomLLMSerialization {
+    override fun serializeForLLM(root: SlimNode, includeAttributes: List<String>): DomLLMSerialization {
         // Use enhanced serialization with default options
         val options = DomLLMSerializer.SerializationOptions(
             enablePaintOrderPruning = true,
@@ -239,13 +239,13 @@ class ChromeCdpDomService(
         return DomLLMSerializer.serialize(root, includeAttributes, options)
     }
 
-    override fun findElement(ref: ElementRefCriteria): EnhancedDOMTreeNode? {
+    override fun findElement(ref: ElementRefCriteria): DOMTreeNodeEx? {
         val root = lastEnhancedRoot ?: return null
 
         // Try element hash first (fastest)
         ref.elementHash?.let { hash ->
-            var found: EnhancedDOMTreeNode? = null
-            fun dfs(n: EnhancedDOMTreeNode) {
+            var found: DOMTreeNodeEx? = null
+            fun dfs(n: DOMTreeNodeEx) {
                 if (found != null) return
                 if (n.elementHash == hash) {
                     found = n
@@ -261,8 +261,8 @@ class ChromeCdpDomService(
 
         // Try XPath
         ref.xPath?.let { xpath ->
-            var found: EnhancedDOMTreeNode? = null
-            fun dfs(n: EnhancedDOMTreeNode) {
+            var found: DOMTreeNodeEx? = null
+            fun dfs(n: DOMTreeNodeEx) {
                 if (found != null) return
                 if (n.xPath == xpath) {
                     found = n
@@ -279,8 +279,8 @@ class ChromeCdpDomService(
         // Try backend node ID
         ref.backendNodeId?.let { backendId ->
             lastDomByBackend[backendId]?.let { return it }
-            var found: EnhancedDOMTreeNode? = null
-            fun dfs(n: EnhancedDOMTreeNode) {
+            var found: DOMTreeNodeEx? = null
+            fun dfs(n: DOMTreeNodeEx) {
                 if (found != null) return
                 if (n.backendNodeId == backendId) {
                     found = n
@@ -305,7 +305,7 @@ class ChromeCdpDomService(
             val id = idRegex.find(selector)?.groupValues?.getOrNull(1)
             val classes = classRegex.findAll(selector).map { it.groupValues[1] }.toSet()
 
-            fun matches(n: EnhancedDOMTreeNode): Boolean {
+            fun matches(n: DOMTreeNodeEx): Boolean {
                 if (tag != null && !n.nodeName.equals(tag, ignoreCase = true)) return false
                 if (id != null && n.attributes["id"] != id) return false
                 if (classes.isNotEmpty()) {
@@ -315,8 +315,8 @@ class ChromeCdpDomService(
                 return true
             }
 
-            var found: EnhancedDOMTreeNode? = null
-            fun dfs(n: EnhancedDOMTreeNode) {
+            var found: DOMTreeNodeEx? = null
+            fun dfs(n: DOMTreeNodeEx) {
                 if (found != null) return
                 if (matches(n)) {
                     found = n
@@ -333,7 +333,7 @@ class ChromeCdpDomService(
         return null
     }
 
-    override fun toInteractedElement(node: EnhancedDOMTreeNode): DOMInteractedElement {
+    override fun toInteractedElement(node: DOMTreeNodeEx): DOMInteractedElement {
         return DOMInteractedElement(
             elementHash = node.elementHash ?: HashUtils.simpleElementHash(node),
             xPath = node.xPath,
@@ -343,7 +343,7 @@ class ChromeCdpDomService(
         )
     }
 
-    private fun computeVisibility(node: EnhancedDOMTreeNode): Boolean? {
+    private fun computeVisibility(node: DOMTreeNodeEx): Boolean? {
         val snapshot = node.snapshotNode ?: return null
         val styles = snapshot.computedStyles ?: return null
         val display = styles["display"]
@@ -357,7 +357,7 @@ class ChromeCdpDomService(
         return true
     }
 
-    private fun computeInteractivity(node: EnhancedDOMTreeNode): Boolean? {
+    private fun computeInteractivity(node: DOMTreeNodeEx): Boolean? {
         val snapshot = node.snapshotNode
         if (snapshot?.isClickable == true) {
             return true
@@ -388,10 +388,10 @@ class ChromeCdpDomService(
     /**
      * Build a map of node ID to ancestors for efficient path calculation.
      */
-    private fun buildAncestorMap(root: EnhancedDOMTreeNode): Map<Int, List<EnhancedDOMTreeNode>> {
-        val map = mutableMapOf<Int, List<EnhancedDOMTreeNode>>()
+    private fun buildAncestorMap(root: DOMTreeNodeEx): Map<Int, List<DOMTreeNodeEx>> {
+        val map = mutableMapOf<Int, List<DOMTreeNodeEx>>()
 
-        fun traverse(node: EnhancedDOMTreeNode, ancestors: List<EnhancedDOMTreeNode>) {
+        fun traverse(node: DOMTreeNodeEx, ancestors: List<DOMTreeNodeEx>) {
             map[node.nodeId] = ancestors
             val newAncestors = ancestors + node
             node.children.forEach { traverse(it, newAncestors) }
@@ -406,10 +406,10 @@ class ChromeCdpDomService(
     /**
      * Build a map of parent node ID to children for index calculation.
      */
-    private fun buildSiblingMap(root: EnhancedDOMTreeNode): Map<Int, List<EnhancedDOMTreeNode>> {
-        val map = mutableMapOf<Int, List<EnhancedDOMTreeNode>>()
+    private fun buildSiblingMap(root: DOMTreeNodeEx): Map<Int, List<DOMTreeNodeEx>> {
+        val map = mutableMapOf<Int, List<DOMTreeNodeEx>>()
 
-        fun traverse(node: EnhancedDOMTreeNode) {
+        fun traverse(node: DOMTreeNodeEx) {
             if (node.children.isNotEmpty()) {
                 map[node.nodeId] = node.children
             }
@@ -425,14 +425,14 @@ class ChromeCdpDomService(
     /**
      * Build paint order map from snapshot data for interaction index calculation.
      */
-    private fun buildPaintOrderMap(snapshotByBackendId: Map<Int, EnhancedSnapshotNode>): Map<Int, Int?> {
+    private fun buildPaintOrderMap(snapshotByBackendId: Map<Int, SnapshotNodeEx>): Map<Int, Int?> {
         return snapshotByBackendId.mapValues { (_, snapshot) -> snapshot.paintOrder }
     }
 
     /**
      * Build stacking context map from snapshot data for z-index analysis.
      */
-    private fun buildStackingContextMap(snapshotByBackendId: Map<Int, EnhancedSnapshotNode>): Map<Int, Int?> {
+    private fun buildStackingContextMap(snapshotByBackendId: Map<Int, SnapshotNodeEx>): Map<Int, Int?> {
         return snapshotByBackendId.mapValues { (_, snapshot) -> snapshot.stackingContexts }
     }
 
@@ -440,9 +440,9 @@ class ChromeCdpDomService(
      * Calculate scrollability with enhanced logic covering iframe/body/html and nested containers.
      */
     private fun calculateScrollability(
-        node: EnhancedDOMTreeNode,
-        snap: EnhancedSnapshotNode?,
-        ancestors: List<EnhancedDOMTreeNode>
+        node: DOMTreeNodeEx,
+        snap: SnapshotNodeEx?,
+        ancestors: List<DOMTreeNodeEx>
     ): Boolean? {
         if (snap == null) return null
 
@@ -490,8 +490,8 @@ class ChromeCdpDomService(
      * Calculate visibility with stacking context consideration.
      */
     private fun calculateVisibility(
-        node: EnhancedDOMTreeNode,
-        snap: EnhancedSnapshotNode?,
+        node: DOMTreeNodeEx,
+        snap: SnapshotNodeEx?,
         stackingContext: Int?
     ): Boolean? {
         if (snap == null) return null
@@ -517,8 +517,8 @@ class ChromeCdpDomService(
      * Calculate interactivity with paint order consideration.
      */
     private fun calculateInteractivity(
-        node: EnhancedDOMTreeNode,
-        snap: EnhancedSnapshotNode?,
+        node: DOMTreeNodeEx,
+        snap: SnapshotNodeEx?,
         paintOrder: Int?
     ): Boolean? {
         if (snap == null) return null
@@ -546,7 +546,7 @@ class ChromeCdpDomService(
      * Calculate interactive index based on paint order and stacking context.
      */
     private fun calculateInteractiveIndex(
-        snap: EnhancedSnapshotNode,
+        snap: SnapshotNodeEx,
         stackingContext: Int?,
         paintOrder: Int?
     ): Int? {
@@ -562,7 +562,7 @@ class ChromeCdpDomService(
 /**
  * Convert CDP AXNode to EnhancedAXNode.
  */
-private fun AXNode.toEnhanced(): EnhancedAXNode {
+private fun AXNode.toEnhanced(): AXNodeEx {
     val props = properties?.mapNotNull { prop ->
         try {
             EnhancedAXProperty(
@@ -574,7 +574,7 @@ private fun AXNode.toEnhanced(): EnhancedAXNode {
         }
     }
 
-    return EnhancedAXNode(
+    return AXNodeEx(
         axNodeId = nodeId,
         ignored = ignored ?: false,
         role = role?.value?.toString(),

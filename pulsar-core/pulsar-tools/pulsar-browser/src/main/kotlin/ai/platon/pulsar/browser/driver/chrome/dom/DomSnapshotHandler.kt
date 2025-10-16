@@ -2,7 +2,7 @@ package ai.platon.pulsar.browser.driver.chrome.dom
 
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMRect
-import ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedSnapshotNode
+import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotNodeEx
 import ai.platon.pulsar.common.getLogger
 import com.github.kklisura.cdt.protocol.v2023.commands.DOMSnapshot
 
@@ -31,7 +31,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
         includePaintOrder: Boolean = true,
         includeDomRects: Boolean = true,
         includeAbsoluteCoords: Boolean = true
-    ): Map<Int, EnhancedSnapshotNode> {
+    ): Map<Int, SnapshotNodeEx> {
         val computed = if (includeStyles) EXTENDED_COMPUTED_STYLES else emptyList()
         val capture = try {
             domSnapshot.captureSnapshot(
@@ -47,7 +47,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
             return emptyMap()
         }
 
-        val byBackend = mutableMapOf<Int, EnhancedSnapshotNode>()
+        val byBackend = mutableMapOf<Int, SnapshotNodeEx>()
         val strings = capture.strings ?: emptyList()
 
         // Calculate viewport dimensions for absolute coordinate calculation
@@ -120,7 +120,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
                     if (boundsRect != null) calculateAbsoluteCoordinates(boundsRect, viewportBounds, styles) else null
                 } else null
 
-                val snap = EnhancedSnapshotNode(
+                val snap = SnapshotNodeEx(
                     isClickable = isClickable,
                     cursorStyle = cursor,
                     bounds = DOMRect.fromBoundsArray(bounds.getOrNull(row) ?: emptyList()),
@@ -195,7 +195,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
      * @deprecated Use captureByBackendNodeId or captureEnhanced for better functionality
      */
     @Deprecated("Use captureByBackendNodeId instead")
-    fun capture(includeStyles: Boolean = true): List<EnhancedSnapshotNode> {
+    fun capture(includeStyles: Boolean = true): List<SnapshotNodeEx> {
         val computed = if (includeStyles) REQUIRED_COMPUTED_STYLES else emptyList()
         val capture = try {
             domSnapshot.captureSnapshot(
@@ -214,7 +214,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
         val docs = capture.documents ?: emptyList()
         if (docs.isEmpty()) return emptyList()
 
-        val all = mutableListOf<EnhancedSnapshotNode>()
+        val all = mutableListOf<SnapshotNodeEx>()
         for (doc in docs) {
             val layout = doc.layout ?: continue
             val bounds = layout.bounds ?: emptyList()
@@ -225,7 +225,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
 
             val n = maxOf(bounds.size, offsetRects.size, scrollRects.size, clientRects.size, paintOrders.size)
             for (i in 0 until n) {
-                all += EnhancedSnapshotNode(
+                all += SnapshotNodeEx(
                     bounds = DOMRect.fromBoundsArray(bounds.getOrNull(i) ?: emptyList()),
                     clientRects = DOMRect.fromRectArray(clientRects.getOrNull(i) ?: emptyList()),
                     scrollRects = DOMRect.fromRectArray(scrollRects.getOrNull(i) ?: emptyList()),
@@ -249,7 +249,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
         includeStyles: Boolean = true,
         includePaintOrder: Boolean = true,
         includeDomRects: Boolean = true
-    ): Map<Int, EnhancedSnapshotNode> {
+    ): Map<Int, SnapshotNodeEx> {
         val computed = if (includeStyles) REQUIRED_COMPUTED_STYLES else emptyList()
         val capture = try {
             domSnapshot.captureSnapshot(
@@ -265,7 +265,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
             return emptyMap()
         }
 
-        val byBackend = mutableMapOf<Int, EnhancedSnapshotNode>()
+        val byBackend = mutableMapOf<Int, SnapshotNodeEx>()
         val strings = capture.strings ?: emptyList()
 
         for (doc in capture.documents ?: emptyList()) {
@@ -325,7 +325,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
                 val cursor = styles["cursor"]
                 val isClickable = cursor in setOf("pointer", "hand")
 
-                val snap = EnhancedSnapshotNode(
+                val snap = SnapshotNodeEx(
                     isClickable = isClickable,
                     cursorStyle = cursor,
                     bounds = DOMRect.fromBoundsArray(bounds.getOrNull(row) ?: emptyList()),

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome.dom
 
-import ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedDOMTreeNode
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.StaticAttributes
 import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
@@ -66,7 +66,7 @@ object HashUtils {
      * @return SHA256 hex string
      */
     fun elementHash(
-        node: EnhancedDOMTreeNode,
+        node: DOMTreeNodeEx,
         parentBranchHash: String? = null,
         config: HashConfig = DEFAULT_CONFIG,
         sessionId: String? = null
@@ -144,7 +144,7 @@ object HashUtils {
     /**
      * Build fallback identifier for nodes without meaningful attributes.
      */
-    private fun buildFallbackIdentifier(node: EnhancedDOMTreeNode): String {
+    private fun buildFallbackIdentifier(node: DOMTreeNodeEx): String {
         val parts = mutableListOf<String>()
         parts.add(node.nodeName.lowercase())
 
@@ -167,7 +167,7 @@ object HashUtils {
      * Build cache key for element hash calculation.
      */
     private fun buildElementHashCacheKey(
-        node: EnhancedDOMTreeNode,
+        node: DOMTreeNodeEx,
         parentBranchHash: String?,
         config: HashConfig,
         sessionId: String?
@@ -213,7 +213,7 @@ object HashUtils {
      * @param ancestors List of ancestor nodes from root to immediate parent
      * @return SHA256 hex string representing the path to this node
      */
-    fun parentBranchHash(ancestors: List<EnhancedDOMTreeNode>): String {
+    fun parentBranchHash(ancestors: List<DOMTreeNodeEx>): String {
         // Build cache key
         val cacheKey = buildParentBranchHashCacheKey(ancestors)
 
@@ -259,7 +259,7 @@ object HashUtils {
     /**
      * Build cache key for parent branch hash calculation.
      */
-    private fun buildParentBranchHashCacheKey(ancestors: List<EnhancedDOMTreeNode>): String {
+    private fun buildParentBranchHashCacheKey(ancestors: List<DOMTreeNodeEx>): String {
         return buildString {
             ancestors.forEach { ancestor ->
                 append(ancestor.nodeId)
@@ -276,7 +276,7 @@ object HashUtils {
      * Simple element hash for quick lookups (without parent branch).
      * Useful for backward compatibility with existing code.
      */
-    fun simpleElementHash(node: EnhancedDOMTreeNode): String {
+    fun simpleElementHash(node: DOMTreeNodeEx): String {
         return elementHash(node, parentBranchHash = null)
     }
 }

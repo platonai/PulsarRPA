@@ -1,10 +1,10 @@
 package ai.platon.pulsar.browser.driver.chrome.dom
 
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMRect
-import ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedDOMTreeNode
-import ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedSnapshotNode
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
+import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.NodeType
-import ai.platon.pulsar.browser.driver.chrome.dom.model.SimplifiedNode
+import ai.platon.pulsar.browser.driver.chrome.dom.model.SlimNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -16,22 +16,22 @@ class DomLLMSerializerTest {
 
     @Test
     fun `serialize filters attributes and populates selector map`() {
-        val childOriginal = EnhancedDOMTreeNode(
+        val childOriginal = DOMTreeNodeEx(
             nodeId = 2,
             nodeName = "SPAN",
             attributes = mapOf("data-test" to "value", "aria-label" to "ok"),
             elementHash = "child-hash"
         )
-        val rootOriginal = EnhancedDOMTreeNode(
+        val rootOriginal = DOMTreeNodeEx(
             nodeId = 1,
             nodeName = "DIV",
             attributes = mapOf("id" to "card", "data-id" to "123"),
             elementHash = "root-hash"
         )
 
-        val root = SimplifiedNode(
+        val root = SlimNode(
             originalNode = rootOriginal,
-            children = listOf(SimplifiedNode(originalNode = childOriginal))
+            children = listOf(SlimNode(originalNode = childOriginal))
         )
 
         val result = DomLLMSerializer.serialize(root, listOf("data-id", "aria-label"))
@@ -52,27 +52,27 @@ class DomLLMSerializerTest {
 
     @Test
     fun `serialize propagates scroll info only when helper allows it`() {
-        val scrollableNode = EnhancedDOMTreeNode(
+        val scrollableNode = DOMTreeNodeEx(
             nodeId = 3,
             nodeName = "div",
             attributes = emptyMap(),
             elementHash = "scroll-hash",
-            snapshotNode = EnhancedSnapshotNode(
+            snapshotNode = SnapshotNodeEx(
                 computedStyles = mapOf("overflow" to "auto"),
                 clientRects = DOMRect(0.0, 0.0, 200.0, 200.0),
                 scrollRects = DOMRect(0.0, 0.0, 400.0, 400.0)
             )
         )
-        val rootOriginal = EnhancedDOMTreeNode(
+        val rootOriginal = DOMTreeNodeEx(
             nodeId = 1,
             nodeName = "BODY",
             nodeType = NodeType.ELEMENT_NODE,
             elementHash = "body-hash"
         )
 
-        val simplified = SimplifiedNode(
+        val simplified = SlimNode(
             originalNode = rootOriginal,
-            children = listOf(SimplifiedNode(originalNode = scrollableNode))
+            children = listOf(SlimNode(originalNode = scrollableNode))
         )
 
         val result = DomLLMSerializer.serialize(simplified)
@@ -85,33 +85,33 @@ class DomLLMSerializerTest {
 
     @Test
     fun `serialize with paint order pruning removes high paint order elements`() {
-        val highPaintOrderNode = EnhancedDOMTreeNode(
+        val highPaintOrderNode = DOMTreeNodeEx(
             nodeId = 4,
             nodeName = "DIV",
             elementHash = "high-paint-hash",
-            snapshotNode = EnhancedSnapshotNode(
+            snapshotNode = SnapshotNodeEx(
                 paintOrder = 1500 // Above default threshold of 1000
             )
         )
-        val normalNode = EnhancedDOMTreeNode(
+        val normalNode = DOMTreeNodeEx(
             nodeId = 5,
             nodeName = "SPAN",
             elementHash = "normal-hash",
-            snapshotNode = EnhancedSnapshotNode(
+            snapshotNode = SnapshotNodeEx(
                 paintOrder = 500 // Below threshold
             )
         )
-        val rootOriginal = EnhancedDOMTreeNode(
+        val rootOriginal = DOMTreeNodeEx(
             nodeId = 1,
             nodeName = "BODY",
             elementHash = "body-hash"
         )
 
-        val simplified = SimplifiedNode(
+        val simplified = SlimNode(
             originalNode = rootOriginal,
             children = listOf(
-                SimplifiedNode(originalNode = highPaintOrderNode),
-                SimplifiedNode(originalNode = normalNode)
+                SlimNode(originalNode = highPaintOrderNode),
+                SlimNode(originalNode = normalNode)
             )
         )
 
@@ -132,28 +132,28 @@ class DomLLMSerializerTest {
 
     @Test
     fun `serialize detects compound components correctly`() {
-        val listItem = EnhancedDOMTreeNode(
+        val listItem = DOMTreeNodeEx(
             nodeId = 6,
             nodeName = "LI",
             elementHash = "li-hash"
         )
-        val listNode = EnhancedDOMTreeNode(
+        val listNode = DOMTreeNodeEx(
             nodeId = 5,
             nodeName = "UL",
             elementHash = "ul-hash"
         )
-        val rootOriginal = EnhancedDOMTreeNode(
+        val rootOriginal = DOMTreeNodeEx(
             nodeId = 1,
             nodeName = "BODY",
             elementHash = "body-hash"
         )
 
-        val simplified = SimplifiedNode(
+        val simplified = SlimNode(
             originalNode = rootOriginal,
             children = listOf(
-                SimplifiedNode(
+                SlimNode(
                     originalNode = listNode,
-                    children = List(5) { SimplifiedNode(originalNode = listItem) } // 5 children to meet threshold
+                    children = List(5) { SlimNode(originalNode = listItem) } // 5 children to meet threshold
                 )
             )
         )
@@ -171,7 +171,7 @@ class DomLLMSerializerTest {
 
     @Test
     fun `serialize aligns attribute casing correctly`() {
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeId = 7,
             nodeName = "INPUT",
             elementHash = "input-hash",
@@ -183,7 +183,7 @@ class DomLLMSerializerTest {
             )
         )
 
-        val simplified = SimplifiedNode(originalNode = node)
+        val simplified = SlimNode(originalNode = node)
 
         val options = DomLLMSerializer.SerializationOptions(
             enableAttributeCasingAlignment = true,
@@ -201,7 +201,7 @@ class DomLLMSerializerTest {
 
     @Test
     fun `serialize builds enhanced selector map with multiple keys`() {
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeId = 8,
             nodeName = "BUTTON",
             elementHash = "button-hash",
@@ -209,7 +209,7 @@ class DomLLMSerializerTest {
             backendNodeId = 12345
         )
 
-        val simplified = SimplifiedNode(originalNode = node)
+        val simplified = SlimNode(originalNode = node)
 
         val result = DomLLMSerializer.serialize(simplified)
 
@@ -229,13 +229,13 @@ class DomLLMSerializerTest {
 
     @Test
     fun `serialize preserves original casing when configured`() {
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeId = 9,
             nodeName = "CustomElement",
             elementHash = "custom-hash"
         )
 
-        val simplified = SimplifiedNode(originalNode = node)
+        val simplified = SlimNode(originalNode = node)
 
         val options = DomLLMSerializer.SerializationOptions(
             preserveOriginalCasing = true

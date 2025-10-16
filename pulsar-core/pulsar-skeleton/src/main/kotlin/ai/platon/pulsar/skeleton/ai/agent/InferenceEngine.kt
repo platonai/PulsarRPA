@@ -3,14 +3,10 @@ package ai.platon.pulsar.skeleton.ai.agent
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.browser.driver.chrome.dom.model.PageTarget
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
-import ai.platon.pulsar.external.impl.CachedBrowserChatModel
-import ai.platon.pulsar.skeleton.ai.buildExtractSystemPrompt
-import ai.platon.pulsar.skeleton.ai.buildExtractUserPrompt
-import ai.platon.pulsar.skeleton.ai.buildMetadataPrompt
-import ai.platon.pulsar.skeleton.ai.buildMetadataSystemPrompt
-import ai.platon.pulsar.skeleton.ai.buildObserveSystemPrompt
-import ai.platon.pulsar.skeleton.ai.buildObserveUserMessage
+import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.JsonNode
@@ -24,6 +20,7 @@ import dev.langchain4j.model.chat.response.ChatResponse
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -76,6 +73,7 @@ class InferenceEngine(
     private val driver: WebDriver,
     private val chatModel: BrowserChatModel
 ) {
+    private val logger = getLogger(this)
     private val domService: DomService = (driver as AbstractWebDriver).domService!!
 
     // ----------------------------------- Public simple stubs (kept for compatibility) -----------------------------------
@@ -353,6 +351,44 @@ class InferenceEngine(
             completion_tokens = usage.completion_tokens,
             inference_time_ms = (t1 - t0)
         )
+    }
+
+    fun collectDomElements(): List<String> {
+        val trees = domService.getAllTrees()
+        val enhanced = domService.buildEnhancedDomTree(trees)
+        val hasElements = enhanced.children.isNotEmpty() ||
+                enhanced.shadowRoots.isNotEmpty() ||
+                enhanced.contentDocument != null
+        val simplified = domService.buildSimplifiedTree(enhanced)
+        val serialized = domService.serializeForLLM(simplified)
+
+        if (!hasElements) {
+            // Write a lightweight diagnostic to help root cause empty DOM
+            runCatching {
+                val diagnostics = mapOf(
+                    "timestamp" to Instant.now().toString(),
+                    "reason" to "Empty DOM tree collected",
+                    "devicePixelRatio" to trees.devicePixelRatio,
+                    "axNodeCount" to trees.axTree.size,
+                    "snapshotEntryCount" to trees.snapshotByBackendId.size,
+                    "timingsMs" to trees.cdpTiming
+                )
+                val dir = AppPaths.get("logs", "chat-model").toFile()
+                if (!dir.exists()) dir.mkdirs()
+                val out = dir.resolve("domservice-diagnostics.json")
+                Files.writeString(out.toPath(), diagnostics.toString() + System.lineSeparator(),
+                    java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND)
+            }.onFailure { e -> logger.warn("Failed to write DOM diagnostics | {}", e.toString()) }
+
+            throw IllegalStateException("Empty DOM tree collected (AX=${trees.axTree.size}, SNAP=${trees.snapshotByBackendId.size}). See logs/chat-model/domservice-diagnostics.json")
+        }
+
+        val json = serialized.json
+        if (json.isBlank()) {
+            throw IllegalStateException("Serialized DOM JSON is blank")
+        }
+
+        return listOf(json)
     }
 
     // ----------------------------------- Helpers -----------------------------------

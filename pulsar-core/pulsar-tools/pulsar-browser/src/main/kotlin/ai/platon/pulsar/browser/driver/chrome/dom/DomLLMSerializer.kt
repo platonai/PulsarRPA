@@ -1,6 +1,9 @@
 package ai.platon.pulsar.browser.driver.chrome.dom
 
-import ai.platon.pulsar.browser.driver.chrome.dom.model.*
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMRect
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DefaultIncludeAttributes
+import ai.platon.pulsar.browser.driver.chrome.dom.model.SlimNode
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -26,17 +29,15 @@ object DomLLMSerializer {
      * @return JSON string
      */
     fun serialize(
-        root: SimplifiedNode,
+        root: SlimNode,
         includeAttributes: List<String> = emptyList(),
         options: SerializationOptions = SerializationOptions()
     ): DomLLMSerialization {
-        val attrs = if (includeAttributes.isEmpty()) {
+        val attrs = includeAttributes.ifEmpty {
             DefaultIncludeAttributes.ATTRIBUTES
-        } else {
-            includeAttributes
         }.map { it.lowercase() }.toSet()
 
-        val selectorMap = linkedMapOf<String, EnhancedDOMTreeNode>()
+        val selectorMap = linkedMapOf<String, DOMTreeNodeEx>()
         val serializable = buildSerializableEnhanced(root, attrs, emptyList(), selectorMap, options)
         val json = mapper.writeValueAsString(serializable)
         return DomLLMSerialization(json = json, selectorMap = selectorMap)
@@ -58,10 +59,10 @@ object DomLLMSerializer {
      * Enhanced buildSerializable with paint-order pruning and compound component detection.
      */
     private fun buildSerializableEnhanced(
-        node: SimplifiedNode,
+        node: SlimNode,
         includeAttributes: Set<String>,
-        ancestors: List<EnhancedDOMTreeNode>,
-        selectorMap: MutableMap<String, EnhancedDOMTreeNode>,
+        ancestors: List<DOMTreeNodeEx>,
+        selectorMap: MutableMap<String, DOMTreeNodeEx>,
         options: SerializationOptions,
         depth: Int = 0
     ): SerializableNode {
@@ -113,7 +114,7 @@ object DomLLMSerializer {
     /**
      * Determine if a node should be pruned based on paint order.
      */
-    private fun shouldPruneByPaintOrder(node: SimplifiedNode, options: SerializationOptions): Boolean {
+    private fun shouldPruneByPaintOrder(node: SlimNode, options: SerializationOptions): Boolean {
         val paintOrder = node.originalNode.snapshotNode?.paintOrder ?: return false
         return paintOrder > options.maxPaintOrderThreshold
     }
@@ -121,7 +122,7 @@ object DomLLMSerializer {
     /**
      * Detect if a node represents a compound component.
      */
-    private fun detectCompoundComponent(node: SimplifiedNode, options: SerializationOptions): Boolean {
+    private fun detectCompoundComponent(node: SlimNode, options: SerializationOptions): Boolean {
         // Skip if not enough children
         if (node.children.size < options.compoundComponentMinChildren) return false
 
@@ -159,9 +160,9 @@ object DomLLMSerializer {
      * Create a pruned node with minimal information for high paint-order elements.
      */
     private fun createPrunedNode(
-        node: SimplifiedNode,
-        ancestors: List<EnhancedDOMTreeNode>,
-        selectorMap: MutableMap<String, EnhancedDOMTreeNode>
+        node: SlimNode,
+        ancestors: List<DOMTreeNodeEx>,
+        selectorMap: MutableMap<String, DOMTreeNodeEx>
     ): SerializableNode {
         val prunedOriginal = CleanedOriginalNode(
             nodeId = node.originalNode.nodeId,
@@ -204,7 +205,7 @@ object DomLLMSerializer {
      * Enhanced cleanOriginalNode with attribute casing alignment and improved filtering.
      */
     private fun cleanOriginalNodeEnhanced(
-        node: EnhancedDOMTreeNode,
+        node: DOMTreeNodeEx,
         includeAttributes: Set<String>,
         options: SerializationOptions
     ): CleanedOriginalNode {
@@ -319,7 +320,7 @@ object DomLLMSerializer {
     }
 
     private fun cleanOriginalNode(
-        node: EnhancedDOMTreeNode,
+        node: DOMTreeNodeEx,
         includeAttributes: Set<String>
     ): CleanedOriginalNode {
         // Filter attributes
@@ -375,26 +376,25 @@ object DomLLMSerializer {
     /**
      * Serializable SimplifiedNode structure.
      * Enhanced with compound component marking and paint order information.
-     * Maps to Python SimplifiedNode.__json__
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private data class SerializableNode(
-        @JsonProperty("should_display")
+        @get:JsonProperty("should_display") @param:JsonProperty("should_display")
         val shouldDisplay: Boolean,
-        @JsonProperty("interactive_index")
+        @get:JsonProperty("interactive_index") @param:JsonProperty("interactive_index")
         val interactiveIndex: Int?,
-        @JsonProperty("ignored_by_paint_order")
+        @get:JsonProperty("ignored_by_paint_order") @param:JsonProperty("ignored_by_paint_order")
         val ignoredByPaintOrder: Boolean,
-        @JsonProperty("excluded_by_parent")
+        @get:JsonProperty("excluded_by_parent") @param:JsonProperty("excluded_by_parent")
         val excludedByParent: Boolean,
-        @JsonProperty("is_compound_component")
+        @get:JsonProperty("is_compound_component") @param:JsonProperty("is_compound_component")
         val isCompoundComponent: Boolean? = null,
-        @JsonProperty("original_node")
+        @get:JsonProperty("original_node") @param:JsonProperty("original_node")
         val originalNode: CleanedOriginalNode,
         val children: List<SerializableNode>,
-        @JsonProperty("should_show_scroll_info")
+        @get:JsonProperty("should_show_scroll_info") @param:JsonProperty("should_show_scroll_info")
         val shouldShowScrollInfo: Boolean?,
-        @JsonProperty("scroll_info_text")
+        @get:JsonProperty("scroll_info_text") @param:JsonProperty("scroll_info_text")
         val scrollInfoText: String?
     )
 
@@ -405,45 +405,45 @@ object DomLLMSerializer {
      */
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private data class CleanedOriginalNode(
-        @JsonProperty("node_id")
+        @get:JsonProperty("node_id") @param:JsonProperty("node_id")
         val nodeId: Int,
-        @JsonProperty("backend_node_id")
+        @get:JsonProperty("backend_node_id") @param:JsonProperty("backend_node_id")
         val backendNodeId: Int?,
-        @JsonProperty("node_type")
+        @get:JsonProperty("node_type") @param:JsonProperty("node_type")
         val nodeType: Int,
-        @JsonProperty("node_name")
+        @get:JsonProperty("node_name") @param:JsonProperty("node_name")
         val nodeName: String,
-        @JsonProperty("node_value")
+        @get:JsonProperty("node_value") @param:JsonProperty("node_value")
         val nodeValue: String?,
         val attributes: Map<String, Any>?,
-        @JsonProperty("frame_id")
+        @get:JsonProperty("frame_id") @param:JsonProperty("frame_id")
         val frameId: String?,
-        @JsonProperty("session_id")
+        @get:JsonProperty("session_id") @param:JsonProperty("session_id")
         val sessionId: String?,
-        @JsonProperty("is_scrollable")
+        @get:JsonProperty("is_scrollable") @param:JsonProperty("is_scrollable")
         val isScrollable: Boolean?,
-        @JsonProperty("is_visible")
+        @get:JsonProperty("is_visible") @param:JsonProperty("is_visible")
         val isVisible: Boolean?,
-        @JsonProperty("is_interactable")
+        @get:JsonProperty("is_interactable") @param:JsonProperty("is_interactable")
         val isInteractable: Boolean?,
-        @JsonProperty("x_path")
+        @get:JsonProperty("x_path") @param:JsonProperty("x_path")
         val xPath: String?,
-        @JsonProperty("element_hash")
+        @get:JsonProperty("element_hash") @param:JsonProperty("element_hash")
         val elementHash: String?,
-        @JsonProperty("interactive_index")
+        @get:JsonProperty("interactive_index") @param:JsonProperty("interactive_index")
         val interactiveIndex: Int?,
         val bounds: DOMRect?,
-        @JsonProperty("clientRects")
+        @get:JsonProperty("clientRects") @param:JsonProperty("clientRects")
         val clientRects: DOMRect?,
-        @JsonProperty("scrollRects")
+        @get:JsonProperty("scrollRects") @param:JsonProperty("scrollRects")
         val scrollRects: DOMRect?,
-        @JsonProperty("absolute_bounds")
+        @get:JsonProperty("absolute_bounds") @param:JsonProperty("absolute_bounds")
         val absoluteBounds: DOMRect? = null,
-        @JsonProperty("paint_order")
+        @get:JsonProperty("paint_order") @param:JsonProperty("paint_order")
         val paintOrder: Int? = null,
-        @JsonProperty("stacking_contexts")
+        @get:JsonProperty("stacking_contexts") @param:JsonProperty("stacking_contexts")
         val stackingContexts: Int? = null,
-        @JsonProperty("content_document")
+        @get:JsonProperty("content_document") @param:JsonProperty("content_document")
         val contentDocument: CleanedOriginalNode?
         // Note: children_nodes and shadow_roots are intentionally omitted
     )
@@ -453,8 +453,8 @@ object DomLLMSerializer {
      * Supports element hash, XPath, and backend node ID for comprehensive element lookup.
      */
     private fun addToEnhancedSelectorMap(
-        node: EnhancedDOMTreeNode,
-        selectorMap: MutableMap<String, EnhancedDOMTreeNode>
+        node: DOMTreeNodeEx,
+        selectorMap: MutableMap<String, DOMTreeNodeEx>
     ) {
         // Add by element hash (primary key)
         node.elementHash?.let { hash ->
@@ -482,5 +482,5 @@ object DomLLMSerializer {
 
 data class DomLLMSerialization(
     val json: String,
-    val selectorMap: Map<String, EnhancedDOMTreeNode>
+    val selectorMap: Map<String, DOMTreeNodeEx>
 )

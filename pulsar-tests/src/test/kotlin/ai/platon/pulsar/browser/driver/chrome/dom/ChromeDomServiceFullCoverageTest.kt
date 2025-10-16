@@ -3,6 +3,7 @@ package ai.platon.pulsar.browser.driver.chrome.dom
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.model.ElementRefCriteria
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.PageTarget
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
@@ -14,7 +15,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
     private val testURL get() = "$generatedAssetsBaseURL/interactive-dynamic.html"
 
     // Helper to DFS find the first node by id in the enhanced tree
-    private fun findNodeById(root: ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedDOMTreeNode, id: String): ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedDOMTreeNode? {
+    private fun findNodeById(root: DOMTreeNodeEx, id: String): DOMTreeNodeEx? {
         if (root.attributes["id"] == id) return root
         root.children.forEach { findNodeById(it, id)?.let { return it } }
         root.shadowRoots.forEach { findNodeById(it, id)?.let { return it } }
@@ -43,7 +44,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         // Prepare a deterministic dynamic state (virtual list -> scrollable container, images are added on DOMContentLoaded)
         runCatching { devTools.runtime.evaluate("generateLargeList(100)") }
 
-        fun collectRoot(): ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedDOMTreeNode {
+        fun collectRoot(): DOMTreeNodeEx {
             repeat(3) { attempt ->
                 val t = service.getAllTrees(target = PageTarget(), options = options)
                 val r = service.buildEnhancedDomTree(t)
@@ -87,7 +88,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
             includeInteractivity = true
         )
 
-        fun collectRoot(): ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedDOMTreeNode {
+        fun collectRoot(): DOMTreeNodeEx {
             repeat(3) { attempt ->
                 val t = service.getAllTrees(target = PageTarget(), options = options)
                 val r = service.buildEnhancedDomTree(t)
@@ -218,14 +219,15 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         }
         assertTrue(hasContainer, "Expected #virtualScrollContainer to be present after generateLargeList(1000)")
 
-        fun collectRoot(): ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedDOMTreeNode {
+        fun collectRoot(): DOMTreeNodeEx {
             repeat(3) { attempt ->
                 val t = service.getAllTrees(target = PageTarget(), options = options)
                 val r = service.buildEnhancedDomTree(t)
                 if (r.children.isNotEmpty() || attempt == 2) return r
                 Thread.sleep(300)
             }
-            return service.buildEnhancedDomTree(service.getAllTrees(PageTarget(), options))
+            val allTrees = service.getAllTrees(PageTarget(), options)
+            return service.buildEnhancedDomTree(allTrees)
         }
         val root = collectRoot()
         assertNotNull(root)
@@ -281,7 +283,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
             includeInteractivity = true
         )
 
-        fun collectRoot(): ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedDOMTreeNode {
+        fun collectRoot(): DOMTreeNodeEx {
             repeat(3) { attempt ->
                 val t = service.getAllTrees(target = PageTarget(), options = options)
                 val r = service.buildEnhancedDomTree(t)

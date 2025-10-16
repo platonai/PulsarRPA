@@ -83,7 +83,7 @@ class PulsarPerceptiveAgent(
         logExtractStart(instruction, requestId)
 
         val schemaJson = buildSchemaJsonFromMap(options.schema)
-        val domElements = collectDomElements()
+        val domElements = inference.collectDomElements()
 
         return try {
             val resultNode = inference.extract(
@@ -118,7 +118,7 @@ class PulsarPerceptiveAgent(
         val requestId = UUID.randomUUID().toString()
         logObserveStart(instruction, requestId)
 
-        val domElements = collectDomElements()
+        val domElements = inference.collectDomElements()
         val returnAction = options.returnAction ?: true
 
         return try {
@@ -132,6 +132,7 @@ class PulsarPerceptiveAgent(
                     fromAct = false
                 )
             )
+
             val results = internal.elements.map { el ->
                 ObserveResult(
                     selector = "node:${el.elementId}",
@@ -141,11 +142,31 @@ class PulsarPerceptiveAgent(
                     arguments = el.arguments?.takeIf { it.isNotEmpty() }
                 )
             }
+
             addHistoryObserve(instruction, requestId, results.size, results.isNotEmpty())
             results
         } catch (e: Exception) {
             logger.error("observe.error requestId={} msg={}", requestId.take(8), e.message, e)
             addHistoryObserve(instruction, requestId, 0, false)
+            // Final safeguard fallback on exception
+            val interactive = runCatching { tta.extractInteractiveElementsDeferred(driver) }.getOrElse { emptyList() }
+            if (interactive.isNotEmpty()) {
+                return interactive.map { ie ->
+                    val label = listOfNotNull(
+                        ie.text.takeIf { it.isNotBlank() }?.take(80),
+                        ie.placeholder?.takeIf { it.isNotBlank() }?.let { "placeholder=\"$it\"" },
+                        ie.type?.takeIf { it.isNotBlank() }?.let { "type=$it" },
+                        ie.tagName.takeIf { it.isNotBlank() }?.lowercase()
+                    ).joinToString(" | ").ifBlank { ie.selector.take(100) }
+                    ObserveResult(
+                        selector = ie.selector,
+                        description = label,
+                        backendNodeId = null,
+                        method = null,
+                        arguments = null
+                    )
+                }
+            }
             emptyList()
         }
     }
@@ -186,18 +207,6 @@ class PulsarPerceptiveAgent(
         return legacyMapToExtractionSchema(schema).toJsonSchema()
     }
 
-    private fun collectDomElements(): List<String> {
-        return runCatching {
-            val domService = (driver as AbstractWebDriver).domService ?: return emptyList()
-            // Use default snapshot options via service; rely on internal defaults
-            val trees = domService.getAllTrees()
-            val enhanced = domService.buildEnhancedDomTree(trees)
-            val simplified = domService.buildSimplifiedTree(enhanced)
-            val serialized = domService.serializeForLLM(simplified)
-            listOf(serialized.json)
-        }.getOrElse { emptyList() }
-    }
-
     private fun logExtractStart(instruction: String, requestId: String) {
         logger.info("extract.start requestId={} instruction='{}'", requestId.take(8), instruction.take(120))
     }
@@ -224,20 +233,20 @@ class PulsarPerceptiveAgent(
                 return executeInternal(action, sessionId, startTime, attempt)
             } catch (e: PerceptiveAgentError.TransientError) {
                 lastError = e
-                logError("Transient error on attempt ${attempt + 1}", e, sessionId)
+                logError("Transient error on attempt ${'$'}{attempt + 1}", e, sessionId)
                 if (attempt < config.maxRetries) {
                     val delay = calculateRetryDelay(attempt)
                     delay(delay)
                 }
             } catch (e: PerceptiveAgentError.TimeoutError) {
                 lastError = e
-                logError("Timeout error on attempt ${attempt + 1}", e, sessionId)
+                logError("Timeout error on attempt ${'$'}{attempt + 1}", e, sessionId)
                 if (attempt < config.maxRetries) {
                     delay(config.baseRetryDelayMs)
                 }
             } catch (e: Exception) {
                 lastError = e
-                logError("Unexpected error on attempt ${attempt + 1}", e, sessionId)
+                logError("Unexpected error on attempt ${'$'}{attempt + 1}", e, sessionId)
                 if (shouldRetryError(e) && attempt < config.maxRetries) {
                     val delay = calculateRetryDelay(attempt)
                     delay(delay)
@@ -250,7 +259,7 @@ class PulsarPerceptiveAgent(
 
         return ActResult(
             success = false,
-            message = "Failed after ${config.maxRetries + 1} attempts. Last error: ${lastError?.message}",
+            message = "Failed after ${'$'}{config.maxRetries + 1} attempts. Last error: ${'$'}{lastError?.message}",
             action = action.action
         )
     }
@@ -342,7 +351,7 @@ class PulsarPerceptiveAgent(
                 val execSummary = executeToolCallWithRetry(toolCall, stepActionResult, step, stepContext)
 
                 if (execSummary != null) {
-                    addToHistory("#$step ${execSummary}")
+                    addToHistory("#${'$'}step ${'$'}{execSummary}")
                     updatePerformanceMetrics(step, stepStartTime, true)
                     logStructured("Step completed successfully", stepContext, mapOf("summary" to execSummary))
                 } else {
@@ -391,11 +400,11 @@ class PulsarPerceptiveAgent(
     private fun classifyError(e: Exception, step: Int): PerceptiveAgentError {
         return when (e) {
             is PerceptiveAgentError -> e
-            is TimeoutException -> PerceptiveAgentError.TimeoutError("Step $step timed out", e)
-            is SocketTimeoutException -> PerceptiveAgentError.TimeoutError("Network timeout at step $step", e)
-            is ConnectException -> PerceptiveAgentError.TransientError("Connection failed at step $step", e)
+            is TimeoutException -> PerceptiveAgentError.TimeoutError("Step ${'$'}step timed out", e)
+            is SocketTimeoutException -> PerceptiveAgentError.TimeoutError("Network timeout at step ${'$'}step", e)
+            is ConnectException -> PerceptiveAgentError.TransientError("Connection failed at step ${'$'}step", e)
             is UnknownHostException -> PerceptiveAgentError.TransientError(
-                "DNS resolution failed at step $step",
+                "DNS resolution failed at step ${'$'}step",
                 e
             )
 

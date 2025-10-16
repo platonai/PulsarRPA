@@ -5,14 +5,12 @@ import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.model.ElementRefCriteria
 import ai.platon.pulsar.browser.driver.chrome.dom.model.PageTarget
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
-import com.github.kklisura.cdt.protocol.v2023.ChromeDevTools
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
 import kotlin.test.assertIs
 import java.io.File
 import java.time.Instant
@@ -42,7 +40,7 @@ class ChromeDomServiceE2ETest : WebDriverTestBase() {
         out.appendText(mapper.writeValueAsString(metrics) + System.lineSeparator())
     }
 
-    private fun countDomNodes(root: ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedDOMTreeNode?): Int {
+    private fun countDomNodes(root: DOMTreeNodeEx?): Int {
         if (root == null) return 0
         var n = 1
         root.children.forEach { n += countDomNodes(it) }

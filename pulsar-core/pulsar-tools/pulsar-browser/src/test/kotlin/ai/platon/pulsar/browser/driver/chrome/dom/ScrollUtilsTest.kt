@@ -1,8 +1,8 @@
 package ai.platon.pulsar.browser.driver.chrome.dom
 
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMRect
-import ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedDOMTreeNode
-import ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedSnapshotNode
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
+import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotNodeEx
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -12,9 +12,9 @@ class ScrollUtilsTest {
 
     @Test
     fun `isActuallyScrollable returns true when scroll rect exceeds client rect`() {
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeName = "DIV",
-            snapshotNode = EnhancedSnapshotNode(
+            snapshotNode = SnapshotNodeEx(
                 computedStyles = mapOf("overflow" to "auto"),
                 clientRects = DOMRect(0.0, 0.0, 200.0, 150.0),
                 scrollRects = DOMRect(0.0, 0.0, 400.0, 300.0)
@@ -26,9 +26,9 @@ class ScrollUtilsTest {
 
     @Test
     fun `isActuallyScrollable returns false when overflow hidden`() {
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeName = "DIV",
-            snapshotNode = EnhancedSnapshotNode(
+            snapshotNode = SnapshotNodeEx(
                 computedStyles = mapOf("overflow" to "hidden"),
                 clientRects = DOMRect(0.0, 0.0, 200.0, 150.0),
                 scrollRects = DOMRect(0.0, 0.0, 400.0, 300.0)
@@ -40,17 +40,17 @@ class ScrollUtilsTest {
 
     @Test
     fun `shouldShowScrollInfo hides nested scroll containers`() {
-        val outer = EnhancedDOMTreeNode(
+        val outer = DOMTreeNodeEx(
             nodeName = "DIV",
-            snapshotNode = EnhancedSnapshotNode(
+            snapshotNode = SnapshotNodeEx(
                 computedStyles = mapOf("overflow" to "auto"),
                 clientRects = DOMRect(0.0, 0.0, 300.0, 300.0),
                 scrollRects = DOMRect(0.0, 0.0, 600.0, 600.0)
             )
         )
-        val inner = EnhancedDOMTreeNode(
+        val inner = DOMTreeNodeEx(
             nodeName = "DIV",
-            snapshotNode = EnhancedSnapshotNode(
+            snapshotNode = SnapshotNodeEx(
                 computedStyles = mapOf("overflow" to "auto"),
                 clientRects = DOMRect(0.0, 0.0, 150.0, 150.0),
                 scrollRects = DOMRect(0.0, 0.0, 400.0, 400.0)
@@ -63,9 +63,9 @@ class ScrollUtilsTest {
 
     @Test
     fun `getScrollInfoText describes dominant scroll axes`() {
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeName = "DIV",
-            snapshotNode = EnhancedSnapshotNode(
+            snapshotNode = SnapshotNodeEx(
                 computedStyles = mapOf("overflow-x" to "auto", "overflow-y" to "hidden"),
                 clientRects = DOMRect(0.0, 0.0, 150.0, 150.0),
                 scrollRects = DOMRect(0.0, 0.0, 300.0, 150.0)

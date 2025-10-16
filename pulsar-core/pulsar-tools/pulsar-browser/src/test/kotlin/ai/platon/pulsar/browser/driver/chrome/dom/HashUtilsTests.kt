@@ -1,6 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome.dom
 
-import ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedDOMTreeNode
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -23,7 +23,7 @@ class HashUtilsTests {
     @Test
     fun `elementHash with default config includes all components`() {
         // Arrange
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeId = 1,
             nodeName = "BUTTON",
             attributes = mapOf("id" to "submit-btn", "class" to "btn primary"),
@@ -44,7 +44,7 @@ class HashUtilsTests {
     @Test
     fun `elementHash with legacy config excludes backend and session IDs`() {
         // Arrange
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeId = 1,
             nodeName = "BUTTON",
             attributes = mapOf("id" to "submit-btn", "class" to "btn primary"),
@@ -64,7 +64,7 @@ class HashUtilsTests {
     @Test
     fun `elementHash with backend node config uses only backend and session`() {
         // Arrange
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeId = 1,
             nodeName = "BUTTON",
             attributes = mapOf("id" to "submit-btn", "class" to "btn primary"),
@@ -99,7 +99,7 @@ class HashUtilsTests {
     @Test
     fun `elementHash includes parent branch hash when provided`() {
         // Arrange
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeId = 1,
             nodeName = "BUTTON",
             attributes = mapOf("id" to "submit-btn")
@@ -117,7 +117,7 @@ class HashUtilsTests {
     @Test
     fun `elementHash uses static attributes correctly`() {
         // Arrange
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeId = 1,
             nodeName = "INPUT",
             attributes = mapOf(
@@ -140,7 +140,7 @@ class HashUtilsTests {
     @Test
     fun `elementHash fallback strategy works for nodes without meaningful attributes`() {
         // Arrange
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeId = 1,
             nodeName = "DIV",
             attributes = mapOf("data-random" to "value"), // Not in STATIC_ATTRIBUTES
@@ -164,7 +164,7 @@ class HashUtilsTests {
     @Test
     fun `elementHash caching works correctly`() {
         // Arrange
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeId = 1,
             nodeName = "BUTTON",
             attributes = mapOf("id" to "test-btn")
@@ -183,10 +183,10 @@ class HashUtilsTests {
     fun `parentBranchHash creates consistent hash for ancestor path`() {
         // Arrange
         val ancestors = listOf(
-            EnhancedDOMTreeNode(nodeId = 1, nodeName = "HTML"),
-            EnhancedDOMTreeNode(nodeId = 2, nodeName = "BODY", attributes = mapOf("class" to "main-body")),
-            EnhancedDOMTreeNode(nodeId = 3, nodeName = "DIV", attributes = mapOf("id" to "container", "class" to "wrapper extra")),
-            EnhancedDOMTreeNode(nodeId = 4, nodeName = "BUTTON", attributes = mapOf("class" to "btn primary"))
+            DOMTreeNodeEx(nodeId = 1, nodeName = "HTML"),
+            DOMTreeNodeEx(nodeId = 2, nodeName = "BODY", attributes = mapOf("class" to "main-body")),
+            DOMTreeNodeEx(nodeId = 3, nodeName = "DIV", attributes = mapOf("id" to "container", "class" to "wrapper extra")),
+            DOMTreeNodeEx(nodeId = 4, nodeName = "BUTTON", attributes = mapOf("class" to "btn primary"))
         )
 
         // Act
@@ -201,13 +201,13 @@ class HashUtilsTests {
     @Test
     fun `parentBranchHash handles special elements correctly`() {
         // Arrange
-        val shadowHost = EnhancedDOMTreeNode(
+        val shadowHost = DOMTreeNodeEx(
             nodeId = 1,
             nodeName = "DIV",
-            shadowRoots = listOf(EnhancedDOMTreeNode(nodeId = 10, nodeName = "DIV"))
+            shadowRoots = listOf(DOMTreeNodeEx(nodeId = 10, nodeName = "DIV"))
         )
-        val iframe = EnhancedDOMTreeNode(nodeId = 2, nodeName = "IFRAME", attributes = mapOf("src" to "test.html"))
-        val slot = EnhancedDOMTreeNode(nodeId = 3, nodeName = "SLOT", attributes = mapOf("name" to "content"))
+        val iframe = DOMTreeNodeEx(nodeId = 2, nodeName = "IFRAME", attributes = mapOf("src" to "test.html"))
+        val slot = DOMTreeNodeEx(nodeId = 3, nodeName = "SLOT", attributes = mapOf("name" to "content"))
         val ancestors = listOf(shadowHost, iframe, slot)
 
         // Act
@@ -222,8 +222,8 @@ class HashUtilsTests {
     fun `parentBranchHash caching works correctly`() {
         // Arrange
         val ancestors = listOf(
-            EnhancedDOMTreeNode(nodeId = 1, nodeName = "HTML"),
-            EnhancedDOMTreeNode(nodeId = 2, nodeName = "BODY")
+            DOMTreeNodeEx(nodeId = 1, nodeName = "HTML"),
+            DOMTreeNodeEx(nodeId = 2, nodeName = "BODY")
         )
 
         // Act
@@ -238,7 +238,7 @@ class HashUtilsTests {
     @Test
     fun `simpleElementHash uses default configuration`() {
         // Arrange
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeId = 1,
             nodeName = "INPUT",
             attributes = mapOf("type" to "text", "placeholder" to "Enter text")
@@ -255,7 +255,7 @@ class HashUtilsTests {
     @Test
     fun `elementHash with custom sessionId override`() {
         // Arrange
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeId = 1,
             nodeName = "BUTTON",
             sessionId = "original-session"
@@ -273,7 +273,7 @@ class HashUtilsTests {
     @Test
     fun `elementHash handles null and empty values gracefully`() {
         // Arrange
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeId = 1,
             nodeName = "DIV",
             attributes = emptyMap(),
@@ -292,7 +292,7 @@ class HashUtilsTests {
     @Test
     fun `all hash configurations produce different hashes for same node`() {
         // Arrange
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeId = 1,
             nodeName = "BUTTON",
             attributes = mapOf("id" to "test-btn", "class" to "btn"),
@@ -314,7 +314,7 @@ class HashUtilsTests {
     @Test
     fun `hash configurations are deterministic`() {
         // Arrange
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeId = 1,
             nodeName = "INPUT",
             attributes = mapOf("type" to "email", "required" to "true"),
@@ -336,7 +336,7 @@ class HashUtilsTests {
     @Test
     fun `fallback identifier includes helpful attributes`() {
         // Arrange
-        val node = EnhancedDOMTreeNode(
+        val node = DOMTreeNodeEx(
             nodeId = 1,
             nodeName = "INPUT",
             attributes = mapOf(

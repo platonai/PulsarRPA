@@ -5,7 +5,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  * DOM node types based on the DOM specification.
- * Maps to Python NodeType enum in views.py
  */
 enum class NodeType(val value: Int) {
     ELEMENT_NODE(1),
@@ -29,7 +28,6 @@ enum class NodeType(val value: Int) {
 
 /**
  * DOM rectangle with coordinates.
- * Maps to Python DOMRect dataclass.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class DOMRect(
@@ -72,7 +70,6 @@ data class DOMRect(
 
 /**
  * Enhanced accessibility property.
- * Maps to Python EnhancedAXProperty dataclass.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class EnhancedAXProperty(
@@ -82,159 +79,153 @@ data class EnhancedAXProperty(
 
 /**
  * Enhanced accessibility node with essential AX tree information.
- * Maps to Python EnhancedAXNode dataclass.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class EnhancedAXNode(
-    @JsonProperty("ax_node_id")
+data class AXNodeEx(
+    @get:JsonProperty("ax_node_id") @param:JsonProperty("ax_node_id")
     val axNodeId: String,
     val ignored: Boolean = false,
     val role: String? = null,
     val name: String? = null,
     val description: String? = null,
     val properties: List<EnhancedAXProperty>? = null,
-    @JsonProperty("child_ids")
+    @get:JsonProperty("child_ids") @param:JsonProperty("child_ids")
     val childIds: List<String>? = null,
-    @JsonProperty("backend_node_id")
+    @get:JsonProperty("backend_node_id") @param:JsonProperty("backend_node_id")
     val backendNodeId: Int? = null,
-    @JsonProperty("frame_id")
+    @get:JsonProperty("frame_id") @param:JsonProperty("frame_id")
     val frameId: String? = null
 )
 
 /**
  * Enhanced snapshot node data extracted from DOMSnapshot.
- * Maps to Python EnhancedSnapshotNode dataclass.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class EnhancedSnapshotNode(
-    @JsonProperty("is_clickable")
+data class SnapshotNodeEx(
+    @get:JsonProperty("is_clickable") @param:JsonProperty("is_clickable")
     val isClickable: Boolean? = null,
-    @JsonProperty("cursor_style")
+    @get:JsonProperty("cursor_style") @param:JsonProperty("cursor_style")
     val cursorStyle: String? = null,
     val bounds: DOMRect? = null,
-    @JsonProperty("clientRects")
+    @get:JsonProperty("clientRects") @param:JsonProperty("clientRects")
     val clientRects: DOMRect? = null,
-    @JsonProperty("scrollRects")
+    @get:JsonProperty("scrollRects") @param:JsonProperty("scrollRects")
     val scrollRects: DOMRect? = null,
-    @JsonProperty("computed_styles")
+    @get:JsonProperty("computed_styles") @param:JsonProperty("computed_styles")
     val computedStyles: Map<String, String>? = null,
-    @JsonProperty("paint_order")
+    @get:JsonProperty("paint_order") @param:JsonProperty("paint_order")
     val paintOrder: Int? = null,
-    @JsonProperty("stacking_contexts")
+    @get:JsonProperty("stacking_contexts") @param:JsonProperty("stacking_contexts")
     val stackingContexts: Int? = null,
-    @JsonProperty("absolute_bounds")
+    @get:JsonProperty("absolute_bounds") @param:JsonProperty("absolute_bounds")
     val absoluteBounds: DOMRect? = null
 )
 
 /**
  * Enhanced DOM tree node containing merged information from DOM, AX, and Snapshot trees.
- * Maps to Python EnhancedDOMTreeNode dataclass.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class EnhancedDOMTreeNode(
+data class DOMTreeNodeEx(
     // DOM Node data
-    @JsonProperty("node_id")
+    @get:JsonProperty("node_id") @param:JsonProperty("node_id")
     val nodeId: Int = 0,
-    @JsonProperty("backend_node_id")
+    @get:JsonProperty("backend_node_id") @param:JsonProperty("backend_node_id")
     val backendNodeId: Int? = null,
-    @JsonProperty("node_type")
+    @get:JsonProperty("node_type") @param:JsonProperty("node_type")
     val nodeType: NodeType = NodeType.ELEMENT_NODE,
-    @JsonProperty("node_name")
+    @get:JsonProperty("node_name") @param:JsonProperty("node_name")
     val nodeName: String = "",
-    @JsonProperty("node_value")
+    @get:JsonProperty("node_value") @param:JsonProperty("node_value")
     val nodeValue: String = "",
     val attributes: Map<String, String> = emptyMap(),
-    @JsonProperty("is_scrollable")
+    @get:JsonProperty("is_scrollable") @param:JsonProperty("is_scrollable")
     val isScrollable: Boolean? = null,
-    @JsonProperty("is_visible")
+    @get:JsonProperty("is_visible") @param:JsonProperty("is_visible")
     val isVisible: Boolean? = null,
-    @JsonProperty("absolute_position")
+    @get:JsonProperty("absolute_position") @param:JsonProperty("absolute_position")
     val absolutePosition: DOMRect? = null,
 
     // Frame information
-    @JsonProperty("target_id")
+    @get:JsonProperty("target_id") @param:JsonProperty("target_id")
     val targetId: String? = null,
-    @JsonProperty("frame_id")
+    @get:JsonProperty("frame_id") @param:JsonProperty("frame_id")
     val frameId: String? = null,
-    @JsonProperty("session_id")
+    @get:JsonProperty("session_id") @param:JsonProperty("session_id")
     val sessionId: String? = null,
 
     // Tree structure
-    @JsonProperty("children_nodes")
-    val children: List<EnhancedDOMTreeNode> = emptyList(),
-    @JsonProperty("shadow_roots")
-    val shadowRoots: List<EnhancedDOMTreeNode> = emptyList(),
-    @JsonProperty("content_document")
-    val contentDocument: EnhancedDOMTreeNode? = null,
+    @get:JsonProperty("children_nodes") @param:JsonProperty("children_nodes")
+    val children: List<DOMTreeNodeEx> = emptyList(),
+    @get:JsonProperty("shadow_roots") @param:JsonProperty("shadow_roots")
+    val shadowRoots: List<DOMTreeNodeEx> = emptyList(),
+    @get:JsonProperty("content_document") @param:JsonProperty("content_document")
+    val contentDocument: DOMTreeNodeEx? = null,
 
     // Snapshot data
-    @JsonProperty("snapshot_node")
-    val snapshotNode: EnhancedSnapshotNode? = null,
+    @get:JsonProperty("snapshot_node") @param:JsonProperty("snapshot_node")
+    val snapshotNode: SnapshotNodeEx? = null,
 
     // AX data
-    @JsonProperty("ax_node")
-    val axNode: EnhancedAXNode? = null,
+    @get:JsonProperty("ax_node") @param:JsonProperty("ax_node")
+    val axNode: AXNodeEx? = null,
 
     // XPath and hash
-    @JsonProperty("x_path")
+    @get:JsonProperty("x_path") @param:JsonProperty("x_path")
     val xPath: String? = null,
-    @JsonProperty("element_hash")
+    @get:JsonProperty("element_hash") @param:JsonProperty("element_hash")
     val elementHash: String? = null,
-    @JsonProperty("parent_branch_hash")
+    @get:JsonProperty("parent_branch_hash") @param:JsonProperty("parent_branch_hash")
     val parentBranchHash: String? = null,
 
     // Visibility and interaction
-    @JsonProperty("is_interactable")
+    @get:JsonProperty("is_interactable") @param:JsonProperty("is_interactable")
     val isInteractable: Boolean? = null,
-    @JsonProperty("interactive_index")
+    @get:JsonProperty("interactive_index") @param:JsonProperty("interactive_index")
     val interactiveIndex: Int? = null
 )
 
 /**
  * Simplified node for LLM serialization.
- * Maps to Python SimplifiedNode dataclass.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class SimplifiedNode(
-    @JsonProperty("original_node")
-    val originalNode: EnhancedDOMTreeNode,
-    val children: List<SimplifiedNode> = emptyList(),
-    @JsonProperty("should_display")
+data class SlimNode(
+    @get:JsonProperty("original_node") @param:JsonProperty("original_node")
+    val originalNode: DOMTreeNodeEx,
+    val children: List<SlimNode> = emptyList(),
+    @get:JsonProperty("should_display") @param:JsonProperty("should_display")
     val shouldDisplay: Boolean = true,
-    @JsonProperty("interactive_index")
+    @get:JsonProperty("interactive_index") @param:JsonProperty("interactive_index")
     val interactiveIndex: Int? = null,
-    @JsonProperty("is_new")
+    @get:JsonProperty("is_new") @param:JsonProperty("is_new")
     val isNew: Boolean = false,
-    @JsonProperty("ignored_by_paint_order")
+    @get:JsonProperty("ignored_by_paint_order") @param:JsonProperty("ignored_by_paint_order")
     val ignoredByPaintOrder: Boolean = false,
-    @JsonProperty("excluded_by_parent")
+    @get:JsonProperty("excluded_by_parent") @param:JsonProperty("excluded_by_parent")
     val excludedByParent: Boolean = false,
-    @JsonProperty("is_shadow_host")
+    @get:JsonProperty("is_shadow_host") @param:JsonProperty("is_shadow_host")
     val isShadowHost: Boolean = false,
-    @JsonProperty("is_compound_component")
+    @get:JsonProperty("is_compound_component") @param:JsonProperty("is_compound_component")
     val isCompoundComponent: Boolean = false
 )
 
 /**
  * DOM interacted element for agent interaction.
- * Maps to Python DOMInteractedElement.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class DOMInteractedElement(
-    @JsonProperty("element_hash")
+    @get:JsonProperty("element_hash") @param:JsonProperty("element_hash")
     val elementHash: String,
-    @JsonProperty("x_path")
+    @get:JsonProperty("x_path") @param:JsonProperty("x_path")
     val xPath: String? = null,
     val bounds: DOMRect? = null,
-    @JsonProperty("is_visible")
+    @get:JsonProperty("is_visible") @param:JsonProperty("is_visible")
     val isVisible: Boolean? = null,
-    @JsonProperty("is_interactable")
+    @get:JsonProperty("is_interactable") @param:JsonProperty("is_interactable")
     val isInteractable: Boolean? = null
 )
 
 /**
  * Static attributes used for element hashing.
- * Maps to Python STATIC_ATTRIBUTES set.
  */
 object StaticAttributes {
     val ATTRIBUTES = setOf(
@@ -253,7 +244,6 @@ object StaticAttributes {
 
 /**
  * Default attributes to include in LLM serialization.
- * Maps to Python DEFAULT_INCLUDE_ATTRIBUTES.
  */
 object DefaultIncludeAttributes {
     val ATTRIBUTES = listOf(

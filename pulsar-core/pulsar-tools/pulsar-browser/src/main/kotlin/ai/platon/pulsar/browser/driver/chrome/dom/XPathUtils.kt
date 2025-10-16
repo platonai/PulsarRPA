@@ -1,6 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome.dom
 
-import ai.platon.pulsar.browser.driver.chrome.dom.model.EnhancedDOMTreeNode
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.NodeType
 import java.util.concurrent.ConcurrentHashMap
 
@@ -15,7 +15,7 @@ object XPathUtils {
 
     // Cache for sibling index calculations
     private val siblingIndexCache = ConcurrentHashMap<String, Int>()
-    
+
     /**
      * Generate XPath for a node based on its position in the tree.
      * Maps to Python EnhancedDOMTreeNode.x_path property.
@@ -34,9 +34,9 @@ object XPathUtils {
      * @return XPath string
      */
     fun generateXPath(
-        node: EnhancedDOMTreeNode,
-        ancestors: List<EnhancedDOMTreeNode> = emptyList(),
-        siblings: Map<Int, List<EnhancedDOMTreeNode>> = emptyMap()
+        node: DOMTreeNodeEx,
+        ancestors: List<DOMTreeNodeEx> = emptyList(),
+        siblings: Map<Int, List<DOMTreeNodeEx>> = emptyMap()
     ): String {
         // Only generate XPath for element nodes
         if (node.nodeType != NodeType.ELEMENT_NODE) {
@@ -113,23 +113,23 @@ object XPathUtils {
     /**
      * Build cache key for XPath calculation.
      */
-    private fun buildXPathCacheKey(node: EnhancedDOMTreeNode, ancestors: List<EnhancedDOMTreeNode>): String {
+    private fun buildXPathCacheKey(node: DOMTreeNodeEx, ancestors: List<DOMTreeNodeEx>): String {
         return buildString {
             append(node.nodeId)
             append(":")
             ancestors.forEach { append(it.nodeId).append(",") }
         }
     }
-    
+
     /**
      * Build XPath segment for a single node.
      * Enhanced with caching, better index calculation, and special case handling.
      * Includes tag name, optional id predicate, and index for disambiguation.
      */
     private fun buildXPathSegment(
-        node: EnhancedDOMTreeNode,
-        parent: EnhancedDOMTreeNode?,
-        siblings: Map<Int, List<EnhancedDOMTreeNode>>,
+        node: DOMTreeNodeEx,
+        parent: DOMTreeNodeEx?,
+        siblings: Map<Int, List<DOMTreeNodeEx>>,
         insideBoundary: Boolean = false
     ): String {
         val tag = node.nodeName.lowercase()
@@ -200,30 +200,30 @@ object XPathUtils {
             tag
         }
     }
-    
+
     /**
      * Generate a simplified XPath for display purposes.
      * Uses only tag names and IDs, without indices.
      */
-    fun generateSimpleXPath(node: EnhancedDOMTreeNode, ancestors: List<EnhancedDOMTreeNode> = emptyList()): String {
+    fun generateSimpleXPath(node: DOMTreeNodeEx, ancestors: List<DOMTreeNodeEx> = emptyList()): String {
         val parts = ancestors.mapNotNull { ancestor ->
             if (ancestor.nodeType != NodeType.ELEMENT_NODE) return@mapNotNull null
-            
+
             val tag = ancestor.nodeName.lowercase()
             val id = ancestor.attributes["id"]
-            
+
             if (!id.isNullOrEmpty()) {
                 "$tag[@id='$id']"
             } else {
                 tag
             }
         }.toMutableList()
-        
+
         // Add target node
         val tag = node.nodeName.lowercase()
         val id = node.attributes["id"]
         parts.add(if (!id.isNullOrEmpty()) "$tag[@id='$id']" else tag)
-        
+
         return "/" + parts.joinToString("/")
     }
 }
