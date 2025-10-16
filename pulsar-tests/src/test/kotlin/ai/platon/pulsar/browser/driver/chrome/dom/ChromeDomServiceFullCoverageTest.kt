@@ -234,13 +234,23 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
 
         // Locate scroll container by CSS, fallback to DFS by id
         var scrollContainer = service.findElement(ElementRefCriteria(cssSelector = "#virtualScrollContainer"))
-        if (scrollContainer == null) {
-            val direct = findNodeById(root, "virtualScrollContainer")
-            if (direct != null) {
-                scrollContainer = direct.xPath?.let { service.findElement(ElementRefCriteria(xPath = it)) }
-                    ?: direct.elementHash?.let { service.findElement(ElementRefCriteria(elementHash = it)) }
-            }
-        }
+        assertNotNull(scrollContainer, "Expected scroll container to be found and resolved")
+        requireNotNull(scrollContainer)
+        assertEquals(true, scrollContainer.isScrollable, "Expected #virtualScrollContainer to be marked scrollable")
+
+        val direct = findNodeById(root, "virtualScrollContainer")
+        assertNotNull(direct)
+        requireNotNull(direct)
+
+        val xPath = direct.xPath
+        assertNotNull(xPath)
+
+        scrollContainer = service.findElement(ElementRefCriteria(xPath = xPath))
+        assertNotNull(scrollContainer)
+
+        assertNotNull(direct.elementHash)
+        scrollContainer = service.findElement(ElementRefCriteria(elementHash = direct.elementHash))
+        assertNotNull(scrollContainer)
 
         assertNotNull(scrollContainer, "Expected scroll container to be found and resolved")
         assertEquals(true, scrollContainer!!.isScrollable, "Expected #virtualScrollContainer to be marked scrollable")

@@ -1,0 +1,356 @@
+package ai.platon.pulsar.browser.driver.chrome.dom
+
+import ai.platon.pulsar.WebDriverTestBase
+import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
+import ai.platon.pulsar.browser.driver.chrome.dom.model.ElementRefCriteria
+import ai.platon.pulsar.browser.driver.chrome.dom.model.PageTarget
+import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
+import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
+import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Test
+import kotlin.test.assertIs
+import kotlin.test.fail
+
+class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
+    private val testURL get() = "$generatedAssetsBaseURL/interactive-dynamic.html"
+
+    // Helper to DFS find the first node by id in the enhanced tree
+    private fun findNodeById(root: DOMTreeNodeEx, id: String): DOMTreeNodeEx? {
+        if (root.attributes["id"] == id) return root
+        root.children.forEach { findNodeById(it, id)?.let { return it } }
+        root.shadowRoots.forEach { findNodeById(it, id)?.let { return it } }
+        root.contentDocument?.let { findNodeById(it, id)?.let { return it } }
+        return null
+    }
+
+    private fun collectRoot(service: ChromeCdpDomService, options: SnapshotOptions): DOMTreeNodeEx {
+        repeat(3) { attempt ->
+            val t = service.getAllTrees(target = PageTarget(), options = options)
+            val r = service.buildEnhancedDomTree(t)
+            if (r.children.isNotEmpty() || attempt == 2) return r
+            Thread.sleep(300)
+        }
+        return service.buildEnhancedDomTree(service.getAllTrees(PageTarget(), options))
+    }
+
+    @Test
+    fun `isScrollable basics - regular elements and overflow hidden`() = runWebDriverTest(testURL) { driver ->
+        assertIs<PulsarWebDriver>(driver)
+        val devTools = driver.implementation as RemoteDevTools
+        val service = ChromeCdpDomService(devTools)
+
+        // Create a basic scrollable DIV and a non-scrollable (overflow hidden) DIV
+        runCatching {
+            devTools.runtime.evaluate(
+                """
+                (function(){
+                  // clear any previous markers if tests reuse the page
+                  const old1 = document.getElementById('scroll_basic'); if (old1) old1.remove();
+                  const old2 = document.getElementById('scroll_hidden'); if (old2) old2.remove();
+
+                  const d1 = document.createElement('div');
+                  d1.id = 'scroll_basic';
+                  d1.style.width = '300px';
+                  d1.style.height = '200px';
+                  d1.style.overflow = 'auto';
+                  d1.style.border = '0';
+                  const c1 = document.createElement('div');
+                  c1.style.width = '600px';
+                  c1.style.height = '500px';
+                  d1.appendChild(c1);
+                  document.body.appendChild(d1);
+
+                  const d2 = document.createElement('div');
+                  d2.id = 'scroll_hidden';
+                  d2.style.width = '300px';
+                  d2.style.height = '200px';
+                  d2.style.overflow = 'hidden';
+                  const c2 = document.createElement('div');
+                  c2.style.width = '600px';
+                  c2.style.height = '500px';
+                  d2.appendChild(c2);
+                  document.body.appendChild(d2);
+                  return true;
+                })();
+                """.trimIndent()
+            )
+        }
+
+        val options = SnapshotOptions(
+            maxDepth = 100,
+            includeAX = true,
+            includeSnapshot = true,
+            includeStyles = true,
+            includePaintOrder = true,
+            includeDOMRects = true,
+            includeScrollAnalysis = true,
+            includeVisibility = true,
+            includeInteractivity = true
+        )
+
+        // Wait for elements to exist deterministically
+        fun waitExists(id: String) {
+            repeat(30) {
+                val ok = runCatching {
+                    devTools.runtime.evaluate("document.getElementById('${'$'}id') != null")
+                }.getOrNull()?.result?.value?.toString()?.equals("true", true) == true
+                if (ok) return
+                Thread.sleep(100)
+            }
+            fail("Element #${'$'}id not found in time")
+        }
+        waitExists("scroll_basic")
+        waitExists("scroll_hidden")
+
+        val root = collectRoot(service, options)
+
+        val basic = service.findElement(ElementRefCriteria(cssSelector = "#scroll_basic"))
+            ?: findNodeById(root, "scroll_basic")
+        assertNotNull(basic)
+        assertEquals(true, basic!!.isScrollable, "#scroll_basic should be scrollable")
+
+        val hidden = service.findElement(ElementRefCriteria(cssSelector = "#scroll_hidden"))
+            ?: findNodeById(root, "scroll_hidden")
+        assertNotNull(hidden)
+        assertEquals(false, hidden!!.isScrollable, "#scroll_hidden should NOT be scrollable due to overflow:hidden")
+    }
+
+    @Test
+    fun `isScrollable special - body html and toggle overflow`() = runWebDriverTest(testURL) { driver ->
+        assertIs<PulsarWebDriver>(driver)
+        val devTools = driver.implementation as RemoteDevTools
+        val service = ChromeCdpDomService(devTools)
+
+        // Ensure the page has large content and explicitly set overflow on body/html
+        runCatching {
+            devTools.runtime.evaluate(
+                """
+                (function(){
+                  // Remove previous marker
+                  const old = document.getElementById('huge_content'); if (old) old.remove();
+                  const huge = document.createElement('div');
+                  huge.id = 'huge_content';
+                  huge.style.width = '100%';
+                  huge.style.height = '5000px';
+                  document.body.appendChild(huge);
+                  // First, clear overflow so body/html won't be considered scrollable by our logic
+                  document.documentElement.style.overflow = '';
+                  document.body.style.overflow = '';
+                  return true;
+                })();
+                """.trimIndent()
+            )
+        }
+
+        val baseOptions = SnapshotOptions(
+            maxDepth = 100,
+            includeAX = true,
+            includeSnapshot = true,
+            includeStyles = true,
+            includePaintOrder = true,
+            includeDOMRects = true,
+            includeScrollAnalysis = true,
+            includeVisibility = true,
+            includeInteractivity = true
+        )
+
+        // Case 1: No overflow set => expect body isScrollable == false (strict rule)
+        var root = collectRoot(service, baseOptions)
+        var body = service.findElement(ElementRefCriteria(cssSelector = "body"))
+            ?: findNodeById(root, "body")
+        assertNotNull(body)
+        assertEquals(false, body!!.isScrollable, "Body should not be scrollable without overflow:auto/scroll even if content is large")
+
+        // Case 2: Set overflow:auto on documentElement and body => expect true
+        runCatching {
+            devTools.runtime.evaluate(
+                "document.documentElement.style.overflow='auto'; document.body.style.overflow='auto'; true;")
+        }
+        root = collectRoot(service, baseOptions)
+        body = service.findElement(ElementRefCriteria(cssSelector = "body"))
+            ?: findNodeById(root, "body")
+        assertNotNull(body)
+        assertEquals(true, body!!.isScrollable, "Body should be scrollable when overflow:auto and content larger than viewport")
+    }
+
+    @Test
+    fun `isScrollable dedup - nested containers similar vs distinct areas`() = runWebDriverTest(testURL) { driver ->
+        assertIs<PulsarWebDriver>(driver)
+        val devTools = driver.implementation as RemoteDevTools
+        val service = ChromeCdpDomService(devTools)
+
+        // Build nested scroll containers
+        runCatching {
+            devTools.runtime.evaluate(
+                """
+                (function(){
+                  // cleanup
+                  ['outer_same','inner_same','outer_diff','inner_diff'].forEach(id=>{const e=document.getElementById(id); if(e) e.remove();});
+
+                  // Case A: outer/inner with nearly identical scroll areas
+                  const outerA = document.createElement('div');
+                  outerA.id = 'outer_same';
+                  outerA.style.width = '320px';
+                  outerA.style.height = '240px';
+                  outerA.style.overflow = 'auto';
+                  outerA.style.position = 'relative';
+                  const fillerA = document.createElement('div');
+                  fillerA.style.width = '640px';
+                  fillerA.style.height = '480px';
+                  outerA.appendChild(fillerA);
+
+                  const innerA = document.createElement('div');
+                  innerA.id = 'inner_same';
+                  innerA.style.width = '320px';
+                  innerA.style.height = '240px';
+                  innerA.style.overflow = 'auto';
+                  innerA.style.position = 'absolute';
+                  innerA.style.left = '0px';
+                  innerA.style.top = '0px';
+                  const innerFillA = document.createElement('div');
+                  innerFillA.style.width = '640px';
+                  innerFillA.style.height = '480px';
+                  innerA.appendChild(innerFillA);
+
+                  outerA.appendChild(innerA);
+                  document.body.appendChild(outerA);
+
+                  // Case B: outer/inner with distinct scroll areas (inner smaller)
+                  const outerB = document.createElement('div');
+                  outerB.id = 'outer_diff';
+                  outerB.style.width = '320px';
+                  outerB.style.height = '240px';
+                  outerB.style.overflow = 'auto';
+                  outerB.style.position = 'relative';
+                  const fillerB = document.createElement('div');
+                  fillerB.style.width = '800px';
+                  fillerB.style.height = '600px';
+                  outerB.appendChild(fillerB);
+
+                  const innerB = document.createElement('div');
+                  innerB.id = 'inner_diff';
+                  innerB.style.width = '200px';
+                  innerB.style.height = '150px';
+                  innerB.style.overflow = 'auto';
+                  innerB.style.position = 'absolute';
+                  innerB.style.left = '0px';
+                  innerB.style.top = '0px';
+                  const innerFillB = document.createElement('div');
+                  innerFillB.style.width = '500px';
+                  innerFillB.style.height = '400px';
+                  innerB.appendChild(innerFillB);
+
+                  outerB.appendChild(innerB);
+                  document.body.appendChild(outerB);
+                  return true;
+                })();
+                """.trimIndent()
+            )
+        }
+
+        val options = SnapshotOptions(
+            maxDepth = 100,
+            includeAX = true,
+            includeSnapshot = true,
+            includeStyles = true,
+            includePaintOrder = true,
+            includeDOMRects = true,
+            includeScrollAnalysis = true,
+            includeVisibility = true,
+            includeInteractivity = true
+        )
+
+        // Wait for elements
+        fun waitExists(id: String) {
+            repeat(30) {
+                val ok = runCatching {
+                    devTools.runtime.evaluate("document.getElementById('${'$'}id') != null")
+                }.getOrNull()?.result?.value?.toString()?.equals("true", true) == true
+                if (ok) return
+                Thread.sleep(100)
+            }
+            fail("Element #${'$'}id not found in time")
+        }
+        listOf("outer_same","inner_same","outer_diff","inner_diff").forEach { waitExists(it) }
+
+        val root = collectRoot(service, options)
+
+        val outerSame = service.findElement(ElementRefCriteria(cssSelector = "#outer_same"))
+            ?: findNodeById(root, "outer_same")
+        val innerSame = service.findElement(ElementRefCriteria(cssSelector = "#inner_same"))
+            ?: findNodeById(root, "inner_same")
+        val outerDiff = service.findElement(ElementRefCriteria(cssSelector = "#outer_diff"))
+            ?: findNodeById(root, "outer_diff")
+        val innerDiff = service.findElement(ElementRefCriteria(cssSelector = "#inner_diff"))
+            ?: findNodeById(root, "inner_diff")
+
+        assertNotNull(outerSame); assertNotNull(innerSame); assertNotNull(outerDiff); assertNotNull(innerDiff)
+
+        // Outer should be scrollable
+        assertEquals(true, outerSame!!.isScrollable)
+        // Inner with nearly identical scroll area should be deduped => false
+        assertEquals(false, innerSame!!.isScrollable, "Inner with similar scroll area should be deduplicated")
+
+        // Distinct areas: both scrollable
+        assertEquals(true, outerDiff!!.isScrollable)
+        assertEquals(true, innerDiff!!.isScrollable)
+    }
+
+    @Test
+    fun `isScrollable null when scroll analysis disabled`() = runWebDriverTest(testURL) { driver ->
+        assertIs<PulsarWebDriver>(driver)
+        val devTools = driver.implementation as RemoteDevTools
+        val service = ChromeCdpDomService(devTools)
+
+        // Create a basic scrollable DIV
+        runCatching {
+            devTools.runtime.evaluate(
+                """
+                (function(){
+                  const old = document.getElementById('scroll_disabled'); if (old) old.remove();
+                  const d = document.createElement('div');
+                  d.id = 'scroll_disabled';
+                  d.style.width = '300px';
+                  d.style.height = '200px';
+                  d.style.overflow = 'auto';
+                  const c = document.createElement('div');
+                  c.style.width = '600px';
+                  c.style.height = '400px';
+                  d.appendChild(c);
+                  document.body.appendChild(d);
+                  return true;
+                })();
+                """.trimIndent()
+            )
+        }
+
+        val options = SnapshotOptions(
+            maxDepth = 100,
+            includeAX = true,
+            includeSnapshot = true,
+            includeStyles = true,
+            includePaintOrder = true,
+            includeDOMRects = true,
+            includeScrollAnalysis = false, // disabled here
+            includeVisibility = true,
+            includeInteractivity = true
+        )
+
+        // Wait for element
+        repeat(30) {
+            val ok = runCatching {
+                devTools.runtime.evaluate("document.getElementById('scroll_disabled') != null")
+            }.getOrNull()?.result?.value?.toString()?.equals("true", true) == true
+            if (ok) return@repeat
+            Thread.sleep(100)
+        }
+
+        val root = collectRoot(service, options)
+        val node = service.findElement(ElementRefCriteria(cssSelector = "#scroll_disabled"))
+            ?: findNodeById(root, "scroll_disabled")
+        assertNotNull(node)
+        assertNull(node!!.isScrollable, "isScrollable should be null when includeScrollAnalysis=false")
+    }
+}
+
