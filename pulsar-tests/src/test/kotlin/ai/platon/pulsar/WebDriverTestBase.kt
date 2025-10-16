@@ -1,7 +1,6 @@
 package ai.platon.pulsar
 
 import ai.platon.pulsar.browser.FastWebDriverService
-import ai.platon.pulsar.browser.WebDriverService
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.SimpleScriptConfuser
 import ai.platon.pulsar.protocol.browser.impl.DefaultBrowserFactory
@@ -53,26 +52,26 @@ open class WebDriverTestBase : TestWebSiteAccess() {
     /**
      * Run webdriver test with the default browser.
      * */
-    protected fun runWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) =
-        webDriverService.runWebDriverTest(url, browser, block)
+    protected fun runEnhancedWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) =
+        webDriverService.runEnhancedWebDriverTest(url, browser, block)
 
     /**
      * Run webdriver test with the default browser.
      * */
-    protected fun runWebDriverTest(block: suspend (driver: WebDriver) -> Unit) =
-        webDriverService.runWebDriverTest(browser, block)
+    protected fun runEnhancedWebDriverTest(block: suspend (driver: WebDriver) -> Unit) =
+        webDriverService.runEnhancedWebDriverTest(browser, block)
 
     /**
      * Run webdriver test with a specified browser.
      * */
-    protected fun runWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) =
-        webDriverService.runWebDriverTest(url, browser, block)
+    protected fun runEnhancedWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) =
+        webDriverService.runEnhancedWebDriverTest(url, browser, block)
 
     /**
      * Run webdriver test with a specified browser.
      * */
-    protected fun runWebDriverTest(browser: Browser, block: suspend (driver: WebDriver) -> Unit) =
-        webDriverService.runWebDriverTest(browser, block)
+    protected fun runEnhancedWebDriverTest(browser: Browser, block: suspend (driver: WebDriver) -> Unit) =
+        webDriverService.runEnhancedWebDriverTest(browser, block)
 
     /**
      * Run webdriver test with a newly created browser with the given browser profile.
@@ -80,13 +79,13 @@ open class WebDriverTestBase : TestWebSiteAccess() {
     protected fun runWebDriverTest(browserId: BrowserId, block: suspend (driver: WebDriver) -> Unit) =
         webDriverService.runWebDriverTest(browserId, block)
 
-    protected fun runResourceWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) =
-        webDriverService.runResourceWebDriverTest(url, block)
+    protected fun runWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) =
+        webDriverService.runWebDriverTest(url, block)
 
-    protected fun runResourceWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) =
-        webDriverService.runResourceWebDriverTest(url, browser, block)
+    protected fun runWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) =
+        webDriverService.runWebDriverTest(url, browser, block)
 
-    protected suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 3) = webDriverService.open(url, driver, scrollCount)
+    protected suspend fun openEnhanced(url: String, driver: WebDriver, scrollCount: Int = 3) = webDriverService.openEnhanced(url, driver, scrollCount)
 
-    protected suspend fun openResource(url: String, driver: WebDriver, scrollCount: Int = 1) = webDriverService.openResource(url, driver, scrollCount)
+    protected suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 1) = webDriverService.open(url, driver, scrollCount)
 }

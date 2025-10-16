@@ -24,7 +24,7 @@ class WebDriverSimpleTests: WebDriverTestBase() {
 
     @Test
     fun testScrollDown() {
-        runWebDriverTest(browser) { driver -> visit(PRODUCT_DETAIL_URL, driver) }
+        runEnhancedWebDriverTest(browser) { driver -> visit(PRODUCT_DETAIL_URL, driver) }
     }
 
     @Test
@@ -42,8 +42,8 @@ class WebDriverSimpleTests: WebDriverTestBase() {
             return
         }
 
-        runWebDriverTest(browser) { driver ->
-            open(productURL, driver)
+        runEnhancedWebDriverTest(browser) { driver ->
+            openEnhanced(productURL, driver)
             val response = driver.chat("Tell me something about this page", "#productTitle")
             println(response)
         }

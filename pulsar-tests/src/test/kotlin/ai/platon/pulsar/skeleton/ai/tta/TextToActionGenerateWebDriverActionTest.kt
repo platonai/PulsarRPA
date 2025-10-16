@@ -25,7 +25,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
     fun `When generateWebDriverAction is called then return ActionDescription with single action`() {
         val prompt = "点击搜索按钮"
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             // Navigate to a test page first
             driver.navigateTo("https://example.com")
             driver.waitForSelector("body")
@@ -54,7 +54,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             "Click the search button"
         )
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo("https://example.com")
             driver.waitForSelector("body")
 
@@ -65,7 +65,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $prompt")
 
                 // Check if the generated action is appropriate
-                
+
                     val action = actionDescription.functionCalls.first()
                     println("Prompt: $prompt -> Generated action: $action")
                     assertTrue(action.contains("click") || action.contains("driver.click"), "Should generate click-related action")
@@ -82,7 +82,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             "Fill the search input with 'query'"
         )
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo("https://example.com")
             driver.waitForSelector("body")
 
@@ -109,7 +109,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             "Navigate to https://github.com"
         )
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             prompts.forEach { prompt ->
                 val actionDescription = textToAction.generateWebDriverAction(prompt, driver)
 
@@ -132,7 +132,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             "Scroll to the middle of the page"
         )
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo("https://example.com")
             driver.waitForSelector("body")
 
@@ -158,7 +158,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             "Wait for the submit button"
         )
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo("https://example.com")
             driver.waitForSelector("body")
 
@@ -184,7 +184,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             "Check the agreement checkbox"
         )
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo("https://example.com")
             driver.waitForSelector("body")
 
@@ -217,7 +217,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
     fun `When generateWebDriverAction is called with empty page then handle appropriately`() {
         val prompt = "点击按钮"
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo("about:blank")
 
             val actionDescription = textToAction.generateWebDriverAction(prompt, driver)
@@ -237,7 +237,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             "Perform an action"
         )
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo("https://example.com")
             driver.waitForSelector("body")
 
@@ -256,7 +256,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
     fun `When generateWebDriverAction selects best matching element then include it in result`() {
         val prompt = "点击搜索按钮"
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo("https://example.com")
             driver.waitForSelector("body")
 
@@ -274,7 +274,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
     fun `When generateWebDriverAction returns ActionDescription then all fields are properly set`() {
         val prompt = "点击提交按钮"
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo("https://example.com")
             driver.waitForSelector("body")
 
@@ -296,14 +296,14 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
     fun `When generateWebDriverAction uses tool call style then parse tool calls correctly`() {
         val prompt = "点击搜索按钮"
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo("https://example.com")
             driver.waitForSelector("body")
 
             val actionDescription = textToAction.generateWebDriverAction(prompt, driver)
 
             // Test that the tool call parsing works correctly
-            
+
                 val action = actionDescription.functionCalls.first()
                 println("Generated tool call style action: $action")
 
@@ -324,7 +324,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             "点击 div" to "div"
         )
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo("https://example.com")
             driver.waitForSelector("body")
 
@@ -349,7 +349,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             "勾选复选框" to "check"
         )
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo("https://example.com")
             driver.waitForSelector("body")
 
@@ -368,7 +368,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
     fun `When generateWebDriverAction is called repeatedly then maintain consistency`() {
         val prompt = "点击搜索按钮"
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo("https://example.com")
             driver.waitForSelector("body")
 

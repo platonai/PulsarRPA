@@ -21,7 +21,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
     // ======== INPUT FIELD TESTS ========
 
     @Test
-    fun `Make sure interactive elements calculated correctly`() = runWebDriverTest(browser) { driver ->
+    fun `Make sure interactive elements calculated correctly`() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -55,7 +55,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When given text input commands then generate appropriate fill actions`() = runWebDriverTest(browser) { driver ->
+    fun `When given text input commands then generate appropriate fill actions`() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -80,7 +80,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When given number input commands then generate appropriate fill actions`() = runWebDriverTest(browser) { driver ->
+    fun `When given number input commands then generate appropriate fill actions`() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -110,7 +110,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
     // ======== SELECT/DROPDOWN TESTS ========
 
     @Test
-    fun `When given select commands then generate appropriate selection actions`() = runWebDriverTest(browser) { driver ->
+    fun `When given select commands then generate appropriate selection actions`() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -134,7 +134,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When given language selection commands then generate appropriate actions`() = runWebDriverTest(browser) { driver ->
+    fun `When given language selection commands then generate appropriate actions`() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -160,7 +160,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
     // ======== BUTTON CLICK TESTS ========
 
     @Test
-    fun `When given button click commands then generate appropriate click actions`() = runWebDriverTest(browser) { driver ->
+    fun `When given button click commands then generate appropriate click actions`() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -184,7 +184,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When given show summary commands then generate appropriate click actions`() = runWebDriverTest(browser) { driver ->
+    fun `When given show summary commands then generate appropriate click actions`() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -210,7 +210,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
     // ======== CHECKBOX/TOGGLE TESTS ========
 
     @Test
-    fun `When given checkbox commands then generate appropriate check actions`() = runWebDriverTest(browser) { driver ->
+    fun `When given checkbox commands then generate appropriate check actions`() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -234,7 +234,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When given uncheck commands then generate appropriate uncheck actions`() = runWebDriverTest(browser) { driver ->
+    fun `When given uncheck commands then generate appropriate uncheck actions`() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -263,7 +263,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
     // ======== SLIDER/RANGE TESTS ========
 
     @Test
-    fun `When given slider commands then generate appropriate interaction actions`() = runWebDriverTest(browser) { driver ->
+    fun `When given slider commands then generate appropriate interaction actions`() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -291,7 +291,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
     // ======== FORM INTERACTION TESTS ========
 
     @Test
-    fun `When given form filling commands then generate appropriate sequential actions`() = runWebDriverTest(browser) { driver ->
+    fun `When given form filling commands then generate appropriate sequential actions`() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -317,7 +317,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
     // ======== DYNAMIC CONTENT TESTS ========
 
     @Test
-    fun `When given commands for dynamic elements then generate appropriate actions`() = runWebDriverTest(browser) { driver ->
+    fun `When given commands for dynamic elements then generate appropriate actions`() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -346,7 +346,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
     // ======== SCROLL AND NAVIGATION TESTS ========
 
     @Test
-    fun `When given scroll commands then generate appropriate scroll actions`() = runWebDriverTest(browser) { driver ->
+    fun `When given scroll commands then generate appropriate scroll actions`() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -372,7 +372,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
     // ======== WAIT AND TIMING TESTS ========
 
     @Test
-    fun `When given wait commands then generate appropriate wait actions`() = runWebDriverTest(browser) { driver ->
+    fun `When given wait commands then generate appropriate wait actions`() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -398,7 +398,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
     // ======== ERROR HANDLING TESTS ========
 
     @Test
-    fun `When given commands for non-existent elements then handle gracefully`() = runWebDriverTest(browser) { driver ->
+    fun `When given commands for non-existent elements then handle gracefully`() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -424,7 +424,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When given ambiguous commands then select most reasonable element`() = runWebDriverTest(browser) { driver ->
+    fun `When given ambiguous commands then select most reasonable element`() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 

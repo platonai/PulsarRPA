@@ -13,7 +13,7 @@ class ChromeDomInteractiveDynamicE2ETest : WebDriverTestBase() {
     @Test
     @Tag("E2E")
     fun `Given interactive-dynamic When performing full interactions Then page behaviors and states are correct`() =
-        runWebDriverTest(testURL) { driver ->
+        runEnhancedWebDriverTest(testURL) { driver ->
             // Basic smoke: title and hero content present
             driver.waitForSelector("h1")
             val title = driver.selectFirstTextOrNull("h1")

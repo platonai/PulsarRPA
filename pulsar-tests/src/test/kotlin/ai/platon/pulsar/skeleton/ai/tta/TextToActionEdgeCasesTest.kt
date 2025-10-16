@@ -22,7 +22,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     // ===== Tests for empty and null scenarios =====
 
     @Test
-    fun `When command is empty then handle gracefully`() = runWebDriverTest { driver ->
+    fun `When command is empty then handle gracefully`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -34,7 +34,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When command is blank then handle gracefully`() = runWebDriverTest { driver ->
+    fun `When command is blank then handle gracefully`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -46,7 +46,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When command is very long then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When command is very long then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -61,7 +61,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     // ===== Tests for special characters and encoding =====
 
     @Test
-    fun `When command contains special characters then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When command contains special characters then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -74,7 +74,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When command contains unicode characters then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When command contains unicode characters then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -87,7 +87,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When command contains quotes then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When command contains quotes then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -102,7 +102,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     // ===== Tests for impossible requests =====
 
     @Test
-    fun `When command asks for non-existent element then handle gracefully`() = runWebDriverTest { driver ->
+    fun `When command asks for non-existent element then handle gracefully`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -115,7 +115,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When command asks for impossible action then handle gracefully`() = runWebDriverTest { driver ->
+    fun `When command asks for impossible action then handle gracefully`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -130,7 +130,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     // ===== Tests for contradictory requests =====
 
     @Test
-    fun `When command contains contradictory instructions then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When command contains contradictory instructions then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -145,7 +145,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     // ===== Tests for ambiguous requests =====
 
     @Test
-    fun `When command is extremely vague then select reasonable action`() = runWebDriverTest { driver ->
+    fun `When command is extremely vague then select reasonable action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -167,7 +167,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When command asks for something that could be multiple things then select one`() = runWebDriverTest { driver ->
+    fun `When command asks for something that could be multiple things then select one`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
@@ -189,7 +189,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     // ===== Tests for pages with no interactive elements =====
 
     @Test
-    fun `When page has no interactive elements then handle gracefully`() = runWebDriverTest { driver ->
+    fun `When page has no interactive elements then handle gracefully`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("about:blank")
 
         val actionDescription = textToAction.generateWebDriverAction("点击按钮", driver)
@@ -202,7 +202,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     // ===== Tests for malformed commands =====
 
     @Test
-    fun `When command contains grammar errors then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When command contains grammar errors then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -225,7 +225,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     // ===== Tests for extremely specific requests =====
 
     @Test
-    fun `When command is extremely specific then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When command is extremely specific then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -248,7 +248,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     // ===== Tests for rapid successive calls =====
 
     @Test
-    fun `When multiple rapid calls are made then handle consistently`() = runWebDriverTest { driver ->
+    fun `When multiple rapid calls are made then handle consistently`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -273,7 +273,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     // ===== Tests for mixed language commands =====
 
     @Test
-    fun `When command mixes languages then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When command mixes languages then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -296,7 +296,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     // ===== Tests for extremely long text input =====
 
     @Test
-    fun `When fill command contains extremely long text then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When fill command contains extremely long text then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -313,7 +313,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     // ===== Tests for selectedElement field validation =====
 
     @Test
-    fun `When element is selected then validate selectedElement structure`() = runWebDriverTest { driver ->
+    fun `When element is selected then validate selectedElement structure`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -333,7 +333,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     // ===== Tests for model response validation =====
 
     @Test
-    fun `When action is generated then validate model response structure`() = runWebDriverTest { driver ->
+    fun `When action is generated then validate model response structure`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 

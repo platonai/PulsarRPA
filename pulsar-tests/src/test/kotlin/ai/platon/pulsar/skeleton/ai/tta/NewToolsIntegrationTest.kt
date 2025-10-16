@@ -25,7 +25,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
     // ===== Tests for exists() tool =====
 
     @Test
-    fun `When asking to check if element exists then generate correct exists action`() = runWebDriverTest { driver ->
+    fun `When asking to check if element exists then generate correct exists action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -42,7 +42,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When asking to check if non-existent element exists then generate exists action with appropriate selector`() = runWebDriverTest { driver ->
+    fun `When asking to check if non-existent element exists then generate exists action with appropriate selector`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -59,7 +59,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
     // ===== Tests for isVisible() tool =====
 
     @Test
-    fun `When asking to check if element is visible then generate correct isVisible action`() = runWebDriverTest { driver ->
+    fun `When asking to check if element is visible then generate correct isVisible action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -76,7 +76,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When asking to check visibility of hidden element then generate isVisible action`() = runWebDriverTest { driver ->
+    fun `When asking to check visibility of hidden element then generate isVisible action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -93,7 +93,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
     // ===== Tests for focus() tool =====
 
     @Test
-    fun `When asking to focus an element then generate correct focus action`() = runWebDriverTest { driver ->
+    fun `When asking to focus an element then generate correct focus action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -110,7 +110,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When asking to focus a button then generate focus action`() = runWebDriverTest { driver ->
+    fun `When asking to focus a button then generate focus action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -129,7 +129,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
     // ===== Tests for scrollTo() tool =====
 
     @Test
-    fun `When asking to scroll to an element then generate correct scrollTo action`() = runWebDriverTest { driver ->
+    fun `When asking to scroll to an element then generate correct scrollTo action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-screens.html")
         driver.waitForSelector("body")
 
@@ -146,7 +146,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When asking to scroll to specific section then generate scrollTo action`() = runWebDriverTest { driver ->
+    fun `When asking to scroll to specific section then generate scrollTo action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-screens.html")
         driver.waitForSelector("body")
 
@@ -165,7 +165,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
     // ===== Tests for waitForNavigation() tool =====
 
     @Test
-    fun `When asking to wait for navigation after clicking link then generate waitForNavigation action`() = runWebDriverTest { driver ->
+    fun `When asking to wait for navigation after clicking link then generate waitForNavigation action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -184,7 +184,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When asking to wait for page load then generate waitForNavigation action`() = runWebDriverTest { driver ->
+    fun `When asking to wait for page load then generate waitForNavigation action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -204,7 +204,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
     // ===== Tests for goBack() and goForward() tools =====
 
     @Test
-    fun `When asking to go back in browser history then generate goBack action`() = runWebDriverTest { driver ->
+    fun `When asking to go back in browser history then generate goBack action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -219,7 +219,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When asking to go forward in browser history then generate goForward action`() = runWebDriverTest { driver ->
+    fun `When asking to go forward in browser history then generate goForward action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -236,7 +236,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
     // ===== Tests for conditional/defensive actions (combining multiple tools) =====
 
     @Test
-    fun `When asking to click element only if it exists then generate exists + click actions`() = runWebDriverTest { driver ->
+    fun `When asking to click element only if it exists then generate exists + click actions`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -259,7 +259,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When asking to wait for element and then interact then generate waitForSelector + interaction actions`() = runWebDriverTest { driver ->
+    fun `When asking to wait for element and then interact then generate waitForSelector + interaction actions`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -284,7 +284,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
     // ===== Tests for complex scenarios =====
 
     @Test
-    fun `When asking to verify element visibility before clicking then generate isVisible + click actions`() = runWebDriverTest { driver ->
+    fun `When asking to verify element visibility before clicking then generate isVisible + click actions`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -306,7 +306,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When asking to focus element before interaction then generate focus + interaction actions`() = runWebDriverTest { driver ->
+    fun `When asking to focus element before interaction then generate focus + interaction actions`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 

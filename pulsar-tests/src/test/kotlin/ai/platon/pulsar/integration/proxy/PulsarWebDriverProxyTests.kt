@@ -56,7 +56,7 @@ class PulsarWebDriverProxyTests : WebDriverTestBase() {
     fun `When navigate to a HTML page with proxy then success`() = runWebDriverTest(browserId) { driver ->
         Assumptions.assumeTrue(proxies.isNotEmpty())
 
-        open(ipTestUrl, driver, 1)
+        openEnhanced(ipTestUrl, driver, 1)
 
         val navigateEntry = driver.navigateEntry
         assertTrue { navigateEntry.documentTransferred }

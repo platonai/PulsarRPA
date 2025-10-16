@@ -24,8 +24,8 @@ class PulsarWebDriverMockSite2Tests : WebDriverTestBase() {
     }
 
     @Test
-    fun `When navigate to a HTML page then the navigate state are correct`() = runWebDriverTest(browser) { driver ->
-        open(interactiveUrl, driver, 1)
+    fun `When navigate to a HTML page then the navigate state are correct`() = runEnhancedWebDriverTest(browser) { driver ->
+        openEnhanced(interactiveUrl, driver, 1)
 
         val navigateEntry = driver.navigateEntry
         assertTrue("Expect documentTransferred") { navigateEntry.documentTransferred }
@@ -42,7 +42,7 @@ class PulsarWebDriverMockSite2Tests : WebDriverTestBase() {
     }
 
     @Test
-    fun `when open a HTML page then script is injected`() = runWebDriverTest(interactiveUrl, browser) { driver ->
+    fun `when open a HTML page then script is injected`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
         var detail = driver.evaluateDetail("typeof(window)")
         println(detail)
         // assertNotNull(detail?.value)
@@ -68,7 +68,7 @@ class PulsarWebDriverMockSite2Tests : WebDriverTestBase() {
     }
 
     @Test
-    fun `open a HTML page and compute metadata`() = runWebDriverTest(interactiveUrl, browser) { driver ->
+    fun `open a HTML page and compute metadata`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
         driver.evaluate("__pulsar_utils__.scrollToMiddle()")
         var detail = driver.evaluateDetail("__pulsar_utils__.compute()")
         println(detail)
@@ -96,7 +96,7 @@ class PulsarWebDriverMockSite2Tests : WebDriverTestBase() {
     }
 
     @Test
-    fun `open a HTML page and compute screen number`() = runWebDriverTest(multiScreensInteractiveUrl, browser) { driver ->
+    fun `open a HTML page and compute screen number`() = runEnhancedWebDriverTest(multiScreensInteractiveUrl, browser) { driver ->
         driver.evaluate("__pulsar_utils__.scrollToTop()")
         var metadata = computeActiveDOMMetadata(driver)
         assertEquals(0f, metadata.screenNumber)
@@ -112,7 +112,7 @@ class PulsarWebDriverMockSite2Tests : WebDriverTestBase() {
     }
 
     @Test
-    fun `Ensure injected js variables are not seen`() = runWebDriverTest(interactiveUrl, browser) { driver ->
+    fun `Ensure injected js variables are not seen`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
         val windowVariables = driver.evaluate("JSON.stringify(Object.keys(window))").toString()
         assertTrue { windowVariables.contains("document") }
         assertTrue { windowVariables.contains("setTimeout") }
@@ -147,7 +147,7 @@ class PulsarWebDriverMockSite2Tests : WebDriverTestBase() {
     }
 
     @Test
-    fun `Ensure no injected document variables are seen`() = runWebDriverTest(interactiveUrl, browser) { driver ->
+    fun `Ensure no injected document variables are seen`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
         val nodeVariables = driver.evaluate("JSON.stringify(Object.keys(document))").toString()
 //            assertTrue { nodeVariables.contains("querySelector") }
 //            assertTrue { nodeVariables.contains("textContent") }

@@ -15,7 +15,7 @@ class PulsarWebDriverMockSiteScreenshotTests : WebDriverTestBase() {
     private val screenshotDir = AppPaths.TEST_DIR.resolve("screenshot")
 
     @Test
-    fun testCaptureScreenshot() = runWebDriverTest(interactiveUrl, browser) { driver ->
+    fun testCaptureScreenshot() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
         driver.waitForSelector("#userInformation")
         assertTrue { driver.exists("#userInformation") }
         val pageSource = driver.pageSource()

@@ -24,7 +24,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     // ======== TESTS WITH INTERACTIVE-1.HTML ========
 
     @Test
-    fun `When on interactive-1 page and ask to type name then fill the name input field`() = runWebDriverTest { driver ->
+    fun `When on interactive-1 page and ask to type name then fill the name input field`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -41,7 +41,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on interactive-1 page and ask to select color then interact with color dropdown`() = runWebDriverTest { driver ->
+    fun `When on interactive-1 page and ask to select color then interact with color dropdown`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -58,7 +58,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on interactive-1 page and ask to click add button then click the add button`() = runWebDriverTest { driver ->
+    fun `When on interactive-1 page and ask to click add button then click the add button`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -75,7 +75,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on interactive-1 page and ask to toggle message then click toggle button`() = runWebDriverTest { driver ->
+    fun `When on interactive-1 page and ask to toggle message then click toggle button`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -92,7 +92,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on interactive-1 page and ask to fill numbers then fill both number inputs`() = runWebDriverTest { driver ->
+    fun `When on interactive-1 page and ask to fill numbers then fill both number inputs`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -112,7 +112,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     // ======== TESTS WITH INTERACTIVE-2.HTML ========
 
     @Test
-    fun `When on interactive-2 page and ask to fill name then fill name input field`() = runWebDriverTest { driver ->
+    fun `When on interactive-2 page and ask to fill name then fill name input field`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -128,7 +128,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on interactive-2 page and ask to select language then interact with language dropdown`() = runWebDriverTest { driver ->
+    fun `When on interactive-2 page and ask to select language then interact with language dropdown`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -144,7 +144,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on interactive-2 page and ask to toggle newsletter then click the checkbox`() = runWebDriverTest { driver ->
+    fun `When on interactive-2 page and ask to toggle newsletter then click the checkbox`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -160,7 +160,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on interactive-2 page and ask to click show summary then click the button`() = runWebDriverTest { driver ->
+    fun `When on interactive-2 page and ask to click show summary then click the button`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -176,7 +176,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on interactive-2 page and ask to adjust text size then interact with slider`() = runWebDriverTest { driver ->
+    fun `When on interactive-2 page and ask to adjust text size then interact with slider`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -195,7 +195,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     // ======== TESTS WITH INTERACTIVE-AMBIGUITY.HTML ========
 
     @Test
-    fun `When on ambiguity page and ask to click save in user section then select user save button`() = runWebDriverTest { driver ->
+    fun `When on ambiguity page and ask to click save in user section then select user save button`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
@@ -212,7 +212,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on ambiguity page and ask to click save in product section then select product save button`() = runWebDriverTest { driver ->
+    fun `When on ambiguity page and ask to click save in product section then select product save button`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
@@ -229,7 +229,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on ambiguity page and ask to click top right menu then select header menu button`() = runWebDriverTest { driver ->
+    fun `When on ambiguity page and ask to click top right menu then select header menu button`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
@@ -246,7 +246,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on ambiguity page and ask to fill billing name then select billing name field`() = runWebDriverTest { driver ->
+    fun `When on ambiguity page and ask to fill billing name then select billing name field`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
@@ -263,7 +263,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on ambiguity page and ask to search products then select product search field`() = runWebDriverTest { driver ->
+    fun `When on ambiguity page and ask to search products then select product search field`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
@@ -282,7 +282,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     // ======== COMPLEX SCENARIO TESTS ========
 
     @Test
-    fun `When given complex multi-step instruction then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When given complex multi-step instruction then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -298,7 +298,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When given ambiguous command then select most reasonable element`() = runWebDriverTest { driver ->
+    fun `When given ambiguous command then select most reasonable element`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
@@ -315,7 +315,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When given command with no matching elements then generate empty or fallback action`() = runWebDriverTest { driver ->
+    fun `When given command with no matching elements then generate empty or fallback action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -333,7 +333,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     // ======== LANGUAGE AND CULTURAL TESTS ========
 
     @Test
-    fun `When given English commands then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When given English commands then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -355,7 +355,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When given mixed language commands then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When given mixed language commands then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -379,7 +379,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     // ======== EDGE CASE TESTS ========
 
     @Test
-    fun `When given empty command then handle gracefully`() = runWebDriverTest { driver ->
+    fun `When given empty command then handle gracefully`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -394,7 +394,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When given very long command then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When given very long command then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -409,7 +409,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When given command with special characters then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When given command with special characters then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 

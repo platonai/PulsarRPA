@@ -33,7 +33,7 @@ class PulsarAgentExtractObserveE2ETest : WebDriverTestBase() {
     }
 
     @Test
-    fun `Given interactive page When observe Then get actionable elements`() = runWebDriverTest(testURL) { driver ->
+    fun `Given interactive page When observe Then get actionable elements`() = runEnhancedWebDriverTest(testURL) { driver ->
         assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping observe E2E test")
 
         val agent = PulsarPerceptiveAgent(driver)
@@ -54,7 +54,7 @@ class PulsarAgentExtractObserveE2ETest : WebDriverTestBase() {
     }
 
     @Test
-    fun `Given interactive page When extract Then get structured data`() = runWebDriverTest(testURL) { driver ->
+    fun `Given interactive page When extract Then get structured data`() = runEnhancedWebDriverTest(testURL) { driver ->
         assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping extract E2E test")
 
         val agent = PulsarPerceptiveAgent(driver)

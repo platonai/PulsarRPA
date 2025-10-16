@@ -48,7 +48,7 @@ class TestLoadResources: WebDriverTestBase() {
 
     @Ignore("This test is not stable")
     @Test
-    fun testLoadResource2() = runWebDriverTest(browser) { driver ->
+    fun testLoadResource2() = runEnhancedWebDriverTest(browser) { driver ->
         val resourceUrl = robotsUrl
         val referrer = URLUtils.getOrigin(resourceUrl)
         driver.navigateTo(referrer)
@@ -73,7 +73,7 @@ class TestLoadResources: WebDriverTestBase() {
     }
 
     @Test
-    fun testJsoupLoadResource() = runWebDriverTest { driver ->
+    fun testJsoupLoadResource() = runEnhancedWebDriverTest { driver ->
 //        val resourceUrl = "https://www.amazon.com/robots.txt"
         val resourceUrl = robotsUrl
 

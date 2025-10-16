@@ -3,10 +3,8 @@ package ai.platon.pulsar.skeleton.ai.agent
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.skeleton.ai.detail.AgentConfig
 import org.junit.jupiter.api.Assertions.*
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.lang.reflect.Method
-import kotlin.math.abs
 
 /**
  * Whitebox tests for private helpers inside PulsarPerceptiveAgent using reflection.
@@ -21,7 +19,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
     }
 
     @Test
-    fun `parseOperatorResponse should parse valid tool_calls JSON without LLM`() = runWebDriverTest { driver ->
+    fun `parseOperatorResponse should parse valid tool_calls JSON without LLM`() = runEnhancedWebDriverTest { driver ->
         val agent = PulsarPerceptiveAgent(driver, config = AgentConfig(enableStructuredLogging = false))
 
         val json = """
@@ -50,7 +48,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
     }
 
     @Test
-    fun `isSafeUrl should allow http and https and block others`() = runWebDriverTest { driver ->
+    fun `isSafeUrl should allow http and https and block others`() = runEnhancedWebDriverTest { driver ->
         val agent = PulsarPerceptiveAgent(driver)
         val m = getMethod(agent, "isSafeUrl", String::class.java)
 
@@ -67,7 +65,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
     }
 
     @Test
-    fun `buildExecutionMessage should append screenshot marker when present`() = runWebDriverTest { driver ->
+    fun `buildExecutionMessage should append screenshot marker when present`() = runEnhancedWebDriverTest { driver ->
         val agent = PulsarPerceptiveAgent(driver)
         val m = getMethod(agent, "buildExecutionMessage", String::class.java, String::class.java, String::class.java)
 
@@ -81,7 +79,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
     }
 
     @Test
-    fun `calculateRetryDelay should grow exponentially and respect cap`() = runWebDriverTest { driver ->
+    fun `calculateRetryDelay should grow exponentially and respect cap`() = runEnhancedWebDriverTest { driver ->
         val config = AgentConfig(baseRetryDelayMs = 100, maxRetryDelayMs = 1000)
         val agent = PulsarPerceptiveAgent(driver, config = config)
         val m = getMethod(agent, "calculateRetryDelay", Int::class.javaPrimitiveType!!)
@@ -97,7 +95,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
     }
 
     @Test
-    fun `validateNavigateTo should enforce URL safety`() = runWebDriverTest { driver ->
+    fun `validateNavigateTo should enforce URL safety`() = runEnhancedWebDriverTest { driver ->
         val agent = PulsarPerceptiveAgent(driver)
         val m = getMethod(agent, "validateNavigateTo", Map::class.java)
 
@@ -110,7 +108,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
     }
 
     @Test
-    fun `validateElementAction should require non-blank reasonable selector`() = runWebDriverTest { driver ->
+    fun `validateElementAction should require non-blank reasonable selector`() = runEnhancedWebDriverTest { driver ->
         val agent = PulsarPerceptiveAgent(driver)
         val m = getMethod(agent, "validateElementAction", Map::class.java)
 
@@ -125,7 +123,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
     }
 
     @Test
-    fun `validateWaitForNavigation should enforce timeout range and url length`() = runWebDriverTest { driver ->
+    fun `validateWaitForNavigation should enforce timeout range and url length`() = runEnhancedWebDriverTest { driver ->
         val agent = PulsarPerceptiveAgent(driver)
         val m = getMethod(agent, "validateWaitForNavigation", Map::class.java)
 
@@ -140,7 +138,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
     }
 
     @Test
-    fun `calculateConsecutiveNoOpDelay grows linearly with cap`() = runWebDriverTest { driver ->
+    fun `calculateConsecutiveNoOpDelay grows linearly with cap`() = runEnhancedWebDriverTest { driver ->
         val agent = PulsarPerceptiveAgent(driver)
         val m = getMethod(agent, "calculateConsecutiveNoOpDelay", Int::class.javaPrimitiveType!!)
 
@@ -153,7 +151,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
     }
 
     @Test
-    fun `jsonElementToKotlin converts primitives arrays and objects`() = runWebDriverTest { driver ->
+    fun `jsonElementToKotlin converts primitives arrays and objects`() = runEnhancedWebDriverTest { driver ->
         val agent = PulsarPerceptiveAgent(driver)
         val m = getMethod(agent, "jsonElementToKotlin", com.google.gson.JsonElement::class.java)
         val parser = com.google.gson.JsonParser()

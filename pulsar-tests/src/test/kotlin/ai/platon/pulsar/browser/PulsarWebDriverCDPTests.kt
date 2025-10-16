@@ -7,7 +7,6 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
-import com.github.kklisura.cdt.protocol.v2023.ChromeDevTools
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
@@ -51,7 +50,7 @@ class PulsarWebDriverCDPTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test evaluate`() = runWebDriverTest(testURL, browser) { driver ->
+    fun `test evaluate`() = runEnhancedWebDriverTest(testURL, browser) { driver ->
         val code = """1+1"""
 
         val result = driver.evaluate(code)
@@ -84,7 +83,7 @@ class PulsarWebDriverCDPTests : WebDriverTestBase() {
                     println(e.message)
                 }
 
-                open(url, driver)
+                openEnhanced(url, driver)
                 block(driver)
             }
         }

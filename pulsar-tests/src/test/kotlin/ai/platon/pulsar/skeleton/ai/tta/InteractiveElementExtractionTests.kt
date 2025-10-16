@@ -28,7 +28,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `test JavaScript element extraction with interactive-1 HTML page`() = runWebDriverTest(interactiveUrl, browser) { driver ->
+    fun `test JavaScript element extraction with interactive-1 HTML page`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
         // Wait for page to load completely
         driver.waitForSelector("body", 5000)
 
@@ -58,7 +58,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
         )
 
         for (pageUrl in testPages) {
-            runWebDriverTest(pageUrl, browser) { driver ->
+            runEnhancedWebDriverTest(pageUrl, browser) { driver ->
                 driver.waitForSelector("body", 5000)
 
                 // Test extraction functionality using available methods
@@ -80,7 +80,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `test element bounds calculation with positioned elements`() = runWebDriverTest(interactiveUrl, browser) { driver ->
+    fun `test element bounds calculation with positioned elements`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
         driver.waitForSelector("body", 5000)
 
         // Test bounds-related functionality
@@ -102,7 +102,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `test element visibility detection with interactive elements`() = runWebDriverTest(interactiveUrl, browser) { driver ->
+    fun `test element visibility detection with interactive elements`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
         driver.waitForSelector("body", 5000)
 
         // Test visibility-related functionality
@@ -124,7 +124,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `test element description generation accuracy`() = runWebDriverTest(interactiveUrl, browser) { driver ->
+    fun `test element description generation accuracy`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
         driver.waitForSelector("body", 5000)
 
         // Test description generation functionality
@@ -146,7 +146,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `test JavaScript selector generation logic`() = runWebDriverTest(interactiveUrl, browser) { driver ->
+    fun `test JavaScript selector generation logic`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
         driver.waitForSelector("body", 5000)
 
         // Test selector generation functionality
@@ -168,7 +168,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `test interactive functionality with dynamic content`() = runWebDriverTest(interactiveUrl, browser) { driver ->
+    fun `test interactive functionality with dynamic content`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
         driver.waitForSelector("body", 5000)
 
         // Test dynamic content functionality
@@ -190,7 +190,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `test extraction with hidden elements using toggle functionality`() = runWebDriverTest(interactiveUrl, browser) { driver ->
+    fun `test extraction with hidden elements using toggle functionality`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
         driver.waitForSelector("body", 5000)
 
         // Test hidden element functionality
@@ -227,7 +227,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `test extraction performance with complex page`() = runWebDriverTest(multiScreensInteractiveUrl, browser) { driver ->
+    fun `test extraction performance with complex page`() = runEnhancedWebDriverTest(multiScreensInteractiveUrl, browser) { driver ->
         driver.waitForSelector("body", 5000)
 
         // Test performance with complex page

@@ -13,62 +13,6 @@ open class WebDriverService(
     val browserFactory: BrowserFactory,
     val requiredPageSize: Int = 100
 ) {
-    fun runWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) {
-        runBlocking {
-            browserFactory.launchRandomTempBrowser().use {
-                it.newDriver().use { driver ->
-                    open(url, driver)
-
-                    val pageSource = driver.pageSource()
-                    val display = StringUtils.abbreviateMiddle(pageSource, "...", 100)
-                    assumeTrue(
-                        { (pageSource?.length ?: 0) > requiredPageSize },
-                        "Page source is too small | $display"
-                    )
-
-                    block(driver)
-                }
-            }
-        }
-    }
-
-    fun runWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) {
-        runBlocking {
-            browser.newDriver().use { driver ->
-                open(url, driver)
-
-                val pageSource = driver.pageSource()
-                val display = StringUtils.abbreviateMiddle(pageSource, "...", 100)
-                assumeTrue(
-                    { (pageSource?.length ?: 0) > requiredPageSize },
-                    "Page source is too small | $display"
-                )
-
-                block(driver)
-            }
-        }
-    }
-
-    fun runResourceWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) {
-        runBlocking {
-            browserFactory.launchRandomTempBrowser().use {
-                it.newDriver().use { driver ->
-                    openResource(url, driver)
-                    block(driver)
-                }
-            }
-        }
-    }
-
-    fun runResourceWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) {
-        runBlocking {
-            browser.newDriver().use { driver ->
-                openResource(url, driver)
-                block(driver)
-            }
-        }
-    }
-
     fun runWebDriverTest(block: suspend (driver: WebDriver) -> Unit) {
         runBlocking {
             browserFactory.launchRandomTempBrowser().use {
@@ -89,13 +33,82 @@ open class WebDriverService(
         }
     }
 
-    fun runWebDriverTest(browser: Browser, block: suspend (driver: WebDriver) -> Unit) {
+    fun runWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) {
+        runBlocking {
+            browserFactory.launchRandomTempBrowser().use {
+                it.newDriver().use { driver ->
+                    open(url, driver)
+                    block(driver)
+                }
+            }
+        }
+    }
+
+    fun runWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) {
+        runBlocking {
+            browser.newDriver().use { driver ->
+                open(url, driver)
+                block(driver)
+            }
+        }
+    }
+
+
+
+    fun runEnhancedWebDriverTest(url: String, block: suspend (driver: WebDriver) -> Unit) {
+        runBlocking {
+            browserFactory.launchRandomTempBrowser().use {
+                it.newDriver().use { driver ->
+                    openEnhanced(url, driver)
+
+                    val pageSource = driver.pageSource()
+                    val display = StringUtils.abbreviateMiddle(pageSource, "...", 100)
+                    assumeTrue(
+                        { (pageSource?.length ?: 0) > requiredPageSize },
+                        "Page source is too small | $display"
+                    )
+
+                    block(driver)
+                }
+            }
+        }
+    }
+
+    fun runEnhancedWebDriverTest(url: String, browser: Browser, block: suspend (driver: WebDriver) -> Unit) {
+        runBlocking {
+            browser.newDriver().use { driver ->
+                openEnhanced(url, driver)
+
+                val pageSource = driver.pageSource()
+                val display = StringUtils.abbreviateMiddle(pageSource, "...", 100)
+                assumeTrue(
+                    { (pageSource?.length ?: 0) > requiredPageSize },
+                    "Page source is too small | $display"
+                )
+
+                block(driver)
+            }
+        }
+    }
+
+    fun runEnhancedWebDriverTest(browser: Browser, block: suspend (driver: WebDriver) -> Unit) {
         runBlocking {
             browser.newDriver().use { block(it) }
         }
     }
 
-    open suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 3) {
+    open suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 1) {
+        driver.navigateTo(url)
+        driver.waitForNavigation()
+        var n = scrollCount
+        while (n-- > 0) {
+            driver.scrollDown(1)
+            delay(1000)
+        }
+        driver.scrollToTop()
+    }
+
+    open suspend fun openEnhanced(url: String, driver: WebDriver, scrollCount: Int = 3) {
         driver.navigateTo(url)
         driver.waitForSelector("body")
 //        driver.waitForSelector("input[id]")
@@ -117,24 +130,13 @@ open class WebDriverService(
         val display = StringUtils.abbreviateMiddle(pageSource, "...", 100)
         assumeTrue({ (pageSource?.length ?: 0) > requiredPageSize }, "Page source is too small | $display")
     }
-
-    open suspend fun openResource(url: String, driver: WebDriver, scrollCount: Int = 1) {
-        driver.navigateTo(url)
-        driver.waitForNavigation()
-        var n = scrollCount
-        while (n-- > 0) {
-            driver.scrollDown(1)
-            delay(1000)
-        }
-        driver.scrollToTop()
-    }
 }
 
 open class FastWebDriverService(
     browserFactory: BrowserFactory,
     requiredPageSize: Int = 1
 ) : WebDriverService(browserFactory, requiredPageSize) {
-    override suspend fun open(url: String, driver: WebDriver, scrollCount: Int) {
+    override suspend fun openEnhanced(url: String, driver: WebDriver, scrollCount: Int) {
         driver.navigateTo(url)
         driver.delay(1000)
 

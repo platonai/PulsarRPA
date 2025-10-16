@@ -14,7 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest
 @Tag("ExternalServiceTest")
 @SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class WebDriverActMethodTest : TextToActionTestBase() {
-    
+
     private val tta by lazy { TextToAction(conf) }
 
     @BeforeEach
@@ -26,7 +26,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
     fun `When act method is called with click action then generate and execute single click action`() {
         val prompt = "点击搜索按钮"
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             // Navigate to a test page with interactive elements first
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
@@ -49,7 +49,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
     fun `When act method is called with fill action then generate and execute single fill action`() {
         val prompt = "在搜索框中输入 'test input'"
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             // Navigate to a test page
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
@@ -72,7 +72,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
     fun `When act method is called with navigation action then generate single navigation action`() {
         val prompt = "打开网页 https://www.google.com"
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             val result = tta.generateWebDriverAction(prompt)
 
             assertNotNull(result)
@@ -91,7 +91,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
     fun `When act method is called with scroll action then generate single scroll action`() {
         val prompt = "滚动到页面中间位置"
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             // Navigate to a test page
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
@@ -114,7 +114,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
     fun `When act method is called with wait action then generate single wait action`() {
         val prompt = "等待提交按钮出现"
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             // Navigate to a test page
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
@@ -137,7 +137,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
     fun `When act method is called with checkbox action then generate single checkbox action`() {
         val prompt = "勾选同意条款复选框"
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             // Navigate to a test page
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
@@ -160,7 +160,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
     fun `When act method is called with English prompt then handle appropriately`() {
         val prompt = "Click the search button"
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             // Navigate to a test page
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
@@ -179,7 +179,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
     fun `When act method encounters ambiguous prompt then handle gracefully`() {
         val prompt = "Do something on the page"
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             // Navigate to a test page
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
@@ -196,7 +196,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
 
     @Test
     fun `When act method is called multiple times then each call is independent`() {
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             // Navigate to a test page
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
@@ -230,7 +230,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             "取消勾选通知复选框" to listOf("uncheck", "notification")
         )
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             // Navigate to a test page
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")

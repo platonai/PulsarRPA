@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Assertions.*
 class PulsarPerceptiveAgentActIT : WebDriverTestBase() {
 
     @Test
-    fun `Given mock act page When act click Then history updates`() = runWebDriverTest(actMockSiteHomeURL) { driver ->
+    fun `Given mock act page When act click Then history updates`() = runEnhancedWebDriverTest(actMockSiteHomeURL) { driver ->
         Assumptions.assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping act IT")
 
         val agent = PulsarPerceptiveAgent(driver)
@@ -25,7 +25,7 @@ class PulsarPerceptiveAgentActIT : WebDriverTestBase() {
     }
 
     @Test
-    fun `Given ActionOptions When act navigate Then result returns action text`() = runWebDriverTest(actMockSiteHomeURL) { driver ->
+    fun `Given ActionOptions When act navigate Then result returns action text`() = runEnhancedWebDriverTest(actMockSiteHomeURL) { driver ->
         Assumptions.assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping act IT")
 
         val agent = PulsarPerceptiveAgent(driver)

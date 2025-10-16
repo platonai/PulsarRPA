@@ -25,7 +25,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
     @Test
     fun `When multiple buttons exist and ask for specific one then select correct button`() =
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
             driver.waitForSelector("body")
 
@@ -46,7 +46,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         }
 
     @Test
-    fun `When multiple links exist and ask for specific one then select correct link`() = runWebDriverTest { driver ->
+    fun `When multiple links exist and ask for specific one then select correct link`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
@@ -64,7 +64,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
     @Test
     fun `When multiple input fields exist and ask for specific one then select correct field`() =
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
             driver.waitForSelector("body")
 
@@ -88,7 +88,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
     // ===== Tests for element selection by position/context =====
 
     @Test
-    fun `When ask for element by position then select correct positioned element`() = runWebDriverTest { driver ->
+    fun `When ask for element by position then select correct positioned element`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -105,7 +105,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When ask for element by context then select contextually appropriate element`() = runWebDriverTest { driver ->
+    fun `When ask for element by context then select contextually appropriate element`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -125,7 +125,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
     // ===== Tests for element selection with data-testid attributes =====
 
     @Test
-    fun `When elements have data-testid and ask by testid then select correct element`() = runWebDriverTest { driver ->
+    fun `When elements have data-testid and ask by testid then select correct element`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
@@ -146,7 +146,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
     @Test
     fun `When elements have aria-label and ask by aria label then select correct element`() =
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
             driver.waitForSelector("body")
 
@@ -169,7 +169,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
     // ===== Tests for element selection with placeholder text =====
 
     @Test
-    fun `When input has placeholder and ask by placeholder then select correct input`() = runWebDriverTest { driver ->
+    fun `When input has placeholder and ask by placeholder then select correct input`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -189,7 +189,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
     // ===== Tests for element selection with text content =====
 
     @Test
-    fun `When button has specific text and ask by text then select correct button`() = runWebDriverTest { driver ->
+    fun `When button has specific text and ask by text then select correct button`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -206,7 +206,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When link has specific text and ask by link text then select correct link`() = runWebDriverTest { driver ->
+    fun `When link has specific text and ask by link text then select correct link`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
@@ -226,7 +226,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
     @Test
     fun `When multiple input types exist and ask for specific type then select correct input`() =
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo("$generatedAssetsBaseURL/tta/forms-advanced-test.html")
             driver.waitForSelector("body")
 
@@ -248,7 +248,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         }
 
     @Test
-    fun `When ask for password field then select password type input`() = runWebDriverTest { driver ->
+    fun `When ask for password field then select password type input`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/forms-advanced-test.html")
         driver.waitForSelector("body")
 
@@ -268,7 +268,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
     // ===== Tests for element selection with class names =====
 
     @Test
-    fun `When element has specific class and ask by class then select correct element`() = runWebDriverTest { driver ->
+    fun `When element has specific class and ask by class then select correct element`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
@@ -288,7 +288,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
 
     @Test
     fun `When ask for element within specific section then select correct section element`() =
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
             driver.waitForSelector("body")
 
@@ -311,7 +311,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
     // ===== Tests for element selection accuracy validation =====
 
     @Test
-    fun `When element is selected then verify selectedElement field is populated`() = runWebDriverTest { driver ->
+    fun `When element is selected then verify selectedElement field is populated`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -331,7 +331,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When multiple similar elements exist then select most appropriate one`() = runWebDriverTest { driver ->
+    fun `When multiple similar elements exist then select most appropriate one`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
         driver.waitForSelector("body")
 

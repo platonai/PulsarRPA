@@ -16,7 +16,7 @@ class TextToActionSimpleTest : TextToActionTestBase() {
     fun `When generateWebDriverAction is called with mock server page then return valid action`() {
         val prompt = "点击搜索按钮"
 
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo(ttaUrl1)
             driver.waitForSelector("body")
 
@@ -43,7 +43,7 @@ class TextToActionSimpleTest : TextToActionTestBase() {
 
     @Test
     fun `When on interactive-1 page and ask to fill form then generate correct action`() {
-        runWebDriverTest { driver ->
+        runEnhancedWebDriverTest { driver ->
             driver.navigateTo(ttaUrl1)
             driver.waitForSelector("body")
 
@@ -65,7 +65,7 @@ class TextToActionSimpleTest : TextToActionTestBase() {
                 println("WARNING: No function calls generated. This indicates the AI model couldn't determine an action.")
                 println("This is expected behavior when no interactive elements are available on the page.")
                 // Don't fail the test - this is the correct behavior when no elements are found
-                return@runWebDriverTest
+                return@runEnhancedWebDriverTest
             }
 
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")

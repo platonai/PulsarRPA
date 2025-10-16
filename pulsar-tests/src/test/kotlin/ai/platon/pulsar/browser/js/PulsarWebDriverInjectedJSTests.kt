@@ -18,7 +18,7 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
     val testURL get() = "$generatedAssetsBaseURL/injected-js.test.html"
 
     @Test
-    fun `test evaluate that returns primitive value`() = runWebDriverTest(testURL, browser) { driver ->
+    fun `test evaluate that returns primitive value`() = runEnhancedWebDriverTest(testURL, browser) { driver ->
         val expression = """1+1"""
 
         val result = driver.evaluate(expression)
@@ -26,7 +26,7 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test evaluate that returns JS Object`() = runWebDriverTest(testURL, browser) { driver ->
+    fun `test evaluate that returns JS Object`() = runEnhancedWebDriverTest(testURL, browser) { driver ->
         val expression = """document"""
 
         val result = driver.evaluateDetail(expression)
@@ -41,7 +41,7 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test evaluateValueDetail that returns JS Object`() = runWebDriverTest(testURL, browser) { driver ->
+    fun `test evaluateValueDetail that returns JS Object`() = runEnhancedWebDriverTest(testURL, browser) { driver ->
         val code = """document"""
 
         val result = driver.evaluateValueDetail(code)
@@ -58,7 +58,7 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test __pulsar_NodeExt`() = runWebDriverTest(testURL, browser) { driver ->
+    fun `test __pulsar_NodeExt`() = runEnhancedWebDriverTest(testURL, browser) { driver ->
         var result = driver.evaluateValue("__pulsar_NodeExt")
         println(result)
 
@@ -70,7 +70,7 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test getConfig`() = runWebDriverTest(testURL, browser) { driver ->
+    fun `test getConfig`() = runEnhancedWebDriverTest(testURL, browser) { driver ->
         val expression = """__pulsar_utils__.getConfig()"""
 
         val result = driver.evaluateValue(expression)
@@ -78,7 +78,7 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test queryComputedStyle`() = runWebDriverTest(testURL, browser) { driver ->
+    fun `test queryComputedStyle`() = runEnhancedWebDriverTest(testURL, browser) { driver ->
         val expression = """__pulsar_utils__.queryComputedStyle('button', ['color', 'background-color'])"""
 
         val result = driver.evaluateValue(expression)
@@ -94,7 +94,7 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
         runBlocking {
             ScriptLoader.addInitParameter("ATTR_ELEMENT_NODE_DATA", AppConstants.PULSAR_ATTR_ELEMENT_NODE_DATA)
             driver.browser.settings.scriptLoader.reload()
-            open(testURL, driver)
+            openEnhanced(testURL, driver)
 
             val config = driver.evaluateValue("__pulsar_CONFIGS")
             println(config)
@@ -116,7 +116,7 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test JS queryComputedStyle`() = runWebDriverTest(testURL, browser) { driver ->
+    fun `test JS queryComputedStyle`() = runEnhancedWebDriverTest(testURL, browser) { driver ->
         val expression = """__pulsar_utils__.queryComputedStyle('button', ['color', 'background-color'])"""
 
         val result = driver.evaluateValue(expression)
@@ -126,7 +126,7 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test JS compute`() = runWebDriverTest(testURL, browser) { driver ->
+    fun `test JS compute`() = runEnhancedWebDriverTest(testURL, browser) { driver ->
         val expression = """new __pulsar_NodeTraversor(new __pulsar_NodeFeatureCalculator()).traverse(document.body);"""
 
         val result = driver.evaluateValue(expression)

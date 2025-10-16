@@ -16,18 +16,18 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
 
     protected val expressions = """
             typeof(window)
-            
+
             typeof(window.history)
             window.history
             window.history.length
-            
+
             typeof(document)
             document.location
             document.baseURI
-            
+
             typeof(document.body)
             document.body.clientWidth
-            
+
             typeof(__pulsar_)
             __pulsar_utils__.add(1, 1)
         """.trimIndent().split("\n").map { it.trim() }.filter { it.isNotBlank() }
@@ -40,7 +40,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test evaluate that returns primitive values`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+    fun `test evaluate that returns primitive values`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
         val code = """1+1"""
 
         val result = driver.evaluate(code)
@@ -48,7 +48,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test evaluate that returns object`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+    fun `test evaluate that returns object`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
         val code = """__pulsar_utils__.getConfig()"""
 
         val result = driver.evaluateDetail(code)
@@ -82,7 +82,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test evaluate single line expressions`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+    fun `test evaluate single line expressions`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
         val code = "(() => {\n  const a = 1;\n  const b = 2;\n  return a + b;\n})()"
 
         val result = driver.evaluate(code)
@@ -90,7 +90,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test evaluate multi-line expressions`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+    fun `test evaluate multi-line expressions`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
         val code = """
 () => {
   const a = 10;
@@ -120,7 +120,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test evaluate IIFE (Immediately Invoked Function Expression)`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+    fun `test evaluate IIFE (Immediately Invoked Function Expression)`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
         val code = """
 (() => {
   const a = 10;
@@ -134,7 +134,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test fill form with JavaScript`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+    fun `test fill form with JavaScript`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
         val selector = "input[id=input]"
 
         driver.fill(selector, text)
@@ -148,7 +148,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test fill`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+    fun `test fill`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
         val selector = "input[id=input]"
 
         driver.fill(selector, text)
@@ -158,7 +158,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test selectFirstPropertyValueOrNull`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+    fun `test selectFirstPropertyValueOrNull`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
         val selector = "input[id=input]"
 
         driver.fill(selector, text)
@@ -169,7 +169,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test selectPropertyValueAll`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+    fun `test selectPropertyValueAll`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
         val selector = "input"
 
         val propValues = driver.selectPropertyValueAll(selector, "tagName")
@@ -178,7 +178,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test setProperty`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+    fun `test setProperty`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
         val selector = "input"
         val propName = "value"
 
@@ -189,7 +189,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test setPropertyAll`() = runWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+    fun `test setPropertyAll`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
         val selector = "input"
         val propName = "value"
 
@@ -201,7 +201,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test deleteCookies`() = runWebDriverTest("$assetsPBaseURL/cookie.html", browser) { driver ->
+    fun `test deleteCookies`() = runEnhancedWebDriverTest("$assetsPBaseURL/cookie.html", browser) { driver ->
         var cookies = driver.getCookies()
 
         println(cookies.toString())
@@ -221,7 +221,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test clearBrowserCookies`() = runWebDriverTest("$assetsPBaseURL/cookie.html", browser) { driver ->
+    fun `test clearBrowserCookies`() = runEnhancedWebDriverTest("$assetsPBaseURL/cookie.html", browser) { driver ->
         var cookies = driver.getCookies()
 
         println(cookies.toString())
@@ -240,7 +240,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test buildDomTree`() = runWebDriverTest(interactiveUrl, browser) { driver ->
+    fun `test buildDomTree`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
         var buildDomTreeJs = ResourceLoader.readString("js/build_dom_tree.js")
         buildDomTreeJs = buildDomTreeJs.trimEnd { it.isWhitespace() || it == ';' }
         // println(StringUtils.abbreviateMiddle(buildDomTreeJs, "...", 500))
@@ -268,7 +268,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `when open a JSON page then script is injected`() = runResourceWebDriverTest(jsonUrl) { driver ->
+    fun `when open a JSON page then script is injected`() = runWebDriverTest(jsonUrl) { driver ->
         val r = driver.evaluate("__pulsar_utils__.add(1, 1)")
         assertEquals(2, r)
 
@@ -276,7 +276,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `when open a PLAIN TXT page then script is injected`() = runResourceWebDriverTest(plainTextUrl) { driver ->
+    fun `when open a PLAIN TXT page then script is injected`() = runWebDriverTest(plainTextUrl) { driver ->
         val r = driver.evaluate("__pulsar_utils__.add(1, 1)")
         assertEquals(2, r)
 
@@ -284,7 +284,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `when open a CSV TXT page then script is not injected`() = runResourceWebDriverTest(csvTextUrl) { driver ->
+    fun `when open a CSV TXT page then script is not injected`() = runWebDriverTest(csvTextUrl) { driver ->
         expressions.forEach { expression ->
             val detail = driver.evaluateDetail(expression)
             println(String.format("%-10s %-40s %s", "CSV TXT", expression, detail))

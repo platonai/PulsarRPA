@@ -1,21 +1,15 @@
 package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.WebDriverTestBase
-import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.ai.detail.AgentConfig
-import ai.platon.pulsar.skeleton.ai.detail.PerceptiveAgentError
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 import org.springframework.boot.test.context.SpringBootTest
-import java.time.Duration
 import kotlin.test.assertContains
-import kotlin.test.assertFailsWith
 
 /**
  * Comprehensive unit and integration tests for PulsarPerceptiveAgent
@@ -45,7 +39,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
         @Test
         fun `Given default config When agent created Then should have valid uuid and empty history`() {
-            runWebDriverTest { driver ->
+            runEnhancedWebDriverTest { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
                 assertNotNull(agent.uuid)
@@ -56,7 +50,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
         @Test
         fun `Given custom config When agent created Then should use custom configuration`() {
-            runWebDriverTest { driver ->
+            runEnhancedWebDriverTest { driver ->
                 val customConfig = AgentConfig(
                     maxSteps = 50,
                     maxRetries = 2,
@@ -79,7 +73,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given valid page When extract called Then should return structured data`() {
             assumeLLMConfigured()
 
-            runResourceWebDriverTest(interactiveDynamicURL) { driver ->
+            runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
                 val result = runBlocking {
@@ -101,7 +95,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given custom schema When extract called Then should follow schema structure`() {
             assumeLLMConfigured()
 
-            runResourceWebDriverTest(interactiveDynamicURL) { driver ->
+            runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
                 val customSchema = mapOf(
@@ -133,7 +127,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given empty instruction When extract called Then should use default instruction`() {
             assumeLLMConfigured()
 
-            runResourceWebDriverTest(interactiveDynamicURL) { driver ->
+            runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
                 val result = runBlocking {
@@ -147,7 +141,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
         @Test
         fun `Given extraction failure When extract called Then should return failure result`() {
-            runWebDriverTest { driver ->
+            runEnhancedWebDriverTest { driver ->
                 // Navigate to a problematic page
                 runBlocking {
                     driver.navigateTo("about:blank")
@@ -174,7 +168,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given interactive page When observe called Then should return actionable elements`() {
             assumeLLMConfigured()
 
-            runResourceWebDriverTest(interactiveDynamicURL) { driver ->
+            runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
                 val results = runBlocking {
@@ -200,7 +194,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given observe options When observe called Then should respect options`() {
             assumeLLMConfigured()
 
-            runResourceWebDriverTest(interactiveDynamicURL) { driver ->
+            runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
                 val options = ObserveOptions(
@@ -226,7 +220,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given observe with returnAction true When observe called Then should include actions`() {
             assumeLLMConfigured()
 
-            runResourceWebDriverTest(interactiveDynamicURL) { driver ->
+            runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
                 val options = ObserveOptions(
@@ -248,7 +242,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given empty instruction When observe called Then should use default instruction`() {
             assumeLLMConfigured()
 
-            runResourceWebDriverTest(interactiveDynamicURL) { driver ->
+            runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
                 val results = runBlocking {
@@ -269,7 +263,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given simple action When act called Then should execute and return result`() {
             assumeLLMConfigured()
 
-            runResourceWebDriverTest(actMockSiteHomeURL) { driver ->
+            runWebDriverTest(actMockSiteHomeURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
                 val result = runBlocking {
@@ -286,7 +280,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given ActionOptions When act called Then should use options`() {
             assumeLLMConfigured()
 
-            runResourceWebDriverTest(actMockSiteHomeURL) { driver ->
+            runWebDriverTest(actMockSiteHomeURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
                 val options = ActionOptions(
@@ -304,7 +298,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
         @Test
         fun `Given act execution When history updated Then toString should reflect latest state`() {
-            runResourceWebDriverTest(actMockSiteHomeURL) { driver ->
+            runWebDriverTest(actMockSiteHomeURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
                 // Initially empty
@@ -327,7 +321,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
         @Test
         fun `Given invalid URL When navigate fails Then should handle gracefully`() {
-            runWebDriverTest { driver ->
+            runEnhancedWebDriverTest { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
                 // This should not throw but handle errors internally
@@ -345,7 +339,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given multiple consecutive failures When act called Then should respect retry limits`() {
             assumeLLMConfigured()
 
-            runWebDriverTest { driver ->
+            runEnhancedWebDriverTest { driver ->
                 val config = AgentConfig(
                     maxRetries = 1,
                     maxSteps = 5
@@ -374,7 +368,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given multiple operations When executed Then history should accumulate`() {
             assumeLLMConfigured()
 
-            runResourceWebDriverTest(interactiveDynamicURL) { driver ->
+            runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
                 val initialHistorySize = agent.history.size
@@ -391,7 +385,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
         @Test
         fun `Given agent with history When toString called Then should show latest entry`() {
-            runResourceWebDriverTest(interactiveDynamicURL) { driver ->
+            runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
                 if (agent.history.isEmpty()) {
@@ -410,7 +404,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
         @Test
         fun `Given different maxSteps When agent created Then should respect configuration`() {
-            runWebDriverTest { driver ->
+            runEnhancedWebDriverTest { driver ->
                 val config1 = AgentConfig(maxSteps = 10)
                 val config2 = AgentConfig(maxSteps = 100)
 
@@ -424,7 +418,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
         @Test
         fun `Given structured logging enabled When agent executes Then should log appropriately`() {
-            runResourceWebDriverTest(interactiveDynamicURL) { driver ->
+            runWebDriverTest(interactiveDynamicURL) { driver ->
                 val config = AgentConfig(
                     enableStructuredLogging = true,
                     enablePerformanceMetrics = true
@@ -438,7 +432,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
         @Test
         fun `Given adaptive delays enabled When agent executes Then should adjust timing`() {
-            runResourceWebDriverTest(interactiveDynamicURL) { driver ->
+            runWebDriverTest(interactiveDynamicURL) { driver ->
                 val config = AgentConfig(
                     enableAdaptiveDelays = true,
                     baseRetryDelayMs = 100,
@@ -453,7 +447,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
         @Test
         fun `Given pre-action validation enabled When agent executes Then should validate actions`() {
-            runResourceWebDriverTest(interactiveDynamicURL) { driver ->
+            runWebDriverTest(interactiveDynamicURL) { driver ->
                 val config = AgentConfig(
                     enablePreActionValidation = true
                 )
@@ -475,7 +469,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given multiple operations When executed in sequence Then should complete within time limit`() {
             assumeLLMConfigured()
 
-            runResourceWebDriverTest(interactiveDynamicURL) { driver ->
+            runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
                 val startTime = System.currentTimeMillis()
@@ -496,7 +490,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Test
         @Tag("TimeConsumingTest")
         fun `Given memory cleanup interval When many steps executed Then should manage memory`() {
-            runResourceWebDriverTest(interactiveDynamicURL) { driver ->
+            runWebDriverTest(interactiveDynamicURL) { driver ->
                 val config = AgentConfig(
                     memoryCleanupIntervalSteps = 5,
                     maxHistorySize = 20

@@ -21,7 +21,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
     // ===== Conditional Action Tests =====
 
     @Test
-    fun `When asking to click button only if it exists and is visible then generate defensive checks`() = runWebDriverTest { driver ->
+    fun `When asking to click button only if it exists and is visible then generate defensive checks`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -48,7 +48,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When asking to fill form only after verifying field exists then generate verification sequence`() = runWebDriverTest { driver ->
+    fun `When asking to fill form only after verifying field exists then generate verification sequence`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -72,7 +72,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When asking to interact with element after waiting for it to become visible then generate wait + check + interact`() = runWebDriverTest { driver ->
+    fun `When asking to interact with element after waiting for it to become visible then generate wait + check + interact`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-dynamic.html")
         driver.waitForSelector("body")
 
@@ -100,7 +100,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
     // ===== Navigation Scenario Tests =====
 
     @Test
-    fun `When asking to navigate and wait for page load then generate navigate + waitForNavigation sequence`() = runWebDriverTest { driver ->
+    fun `When asking to navigate and wait for page load then generate navigate + waitForNavigation sequence`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -123,7 +123,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When asking to click link and wait for navigation then generate click + waitForNavigation`() = runWebDriverTest { driver ->
+    fun `When asking to click link and wait for navigation then generate click + waitForNavigation`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -146,7 +146,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When asking to navigate back and forward then generate goBack + goForward sequence`() = runWebDriverTest { driver ->
+    fun `When asking to navigate back and forward then generate goBack + goForward sequence`() = runEnhancedWebDriverTest { driver ->
         // First navigate to a couple of pages to establish history
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
@@ -174,7 +174,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
     // ===== Complex Real-World Scenarios =====
 
     @Test
-    fun `When asking to fill form with validation then generate complete validation sequence`() = runWebDriverTest { driver ->
+    fun `When asking to fill form with validation then generate complete validation sequence`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -204,7 +204,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When asking to handle navigation with error checking then generate defensive navigation sequence`() = runWebDriverTest { driver ->
+    fun `When asking to handle navigation with error checking then generate defensive navigation sequence`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -231,7 +231,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When asking to scroll and interact with element then generate scroll + focus + interact sequence`() = runWebDriverTest { driver ->
+    fun `When asking to scroll and interact with element then generate scroll + focus + interact sequence`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-screens.html")
         driver.waitForSelector("body")
 
@@ -261,7 +261,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
     // ===== Error Handling and Edge Cases =====
 
     @Test
-    fun `When asking to handle ambiguous elements then generate appropriate checks`() = runWebDriverTest { driver ->
+    fun `When asking to handle ambiguous elements then generate appropriate checks`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
@@ -284,7 +284,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When asking to verify page state before action then generate state verification sequence`() = runWebDriverTest { driver ->
+    fun `When asking to verify page state before action then generate state verification sequence`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-dynamic.html")
         driver.waitForSelector("body")
 

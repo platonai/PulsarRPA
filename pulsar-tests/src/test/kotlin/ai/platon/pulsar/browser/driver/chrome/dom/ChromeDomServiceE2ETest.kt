@@ -50,7 +50,7 @@ class ChromeDomServiceE2ETest : WebDriverTestBase() {
     }
 
     @Test
-    fun `Given interactive page When collecting all trees Then get DOM AX and Snapshot with timings`() = runWebDriverTest(testURL) { driver ->
+    fun `Given interactive page When collecting all trees Then get DOM AX and Snapshot with timings`() = runEnhancedWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
         val devTools = driver.implementation as RemoteDevTools
         val service = ChromeCdpDomService(devTools)

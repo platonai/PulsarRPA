@@ -24,7 +24,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     // ===== Tests using interactive-1.html (Basic interactions) =====
 
     @Test
-    fun `When on interactive-1 page and ask to click search button then generate correct click action`() = runWebDriverTest { driver ->
+    fun `When on interactive-1 page and ask to click search button then generate correct click action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -39,7 +39,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on interactive-1 page and ask to fill search input then generate correct fill action`() = runWebDriverTest { driver ->
+    fun `When on interactive-1 page and ask to fill search input then generate correct fill action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -55,7 +55,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on interactive-1 page and ask to select from dropdown then generate correct select action`() = runWebDriverTest { driver ->
+    fun `When on interactive-1 page and ask to select from dropdown then generate correct select action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -71,7 +71,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on interactive-1 page and ask to click toggle then generate correct click action`() = runWebDriverTest { driver ->
+    fun `When on interactive-1 page and ask to click toggle then generate correct click action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -88,7 +88,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     // ===== Tests using interactive-2.html (Complex form) =====
 
     @Test
-    fun `When on interactive-2 page and ask to fill username field then generate correct fill action`() = runWebDriverTest { driver ->
+    fun `When on interactive-2 page and ask to fill username field then generate correct fill action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -104,7 +104,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on interactive-2 page and ask to fill email field then generate correct fill action`() = runWebDriverTest { driver ->
+    fun `When on interactive-2 page and ask to fill email field then generate correct fill action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -120,7 +120,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on interactive-2 page and ask to adjust slider then generate correct slider action`() = runWebDriverTest { driver ->
+    fun `When on interactive-2 page and ask to adjust slider then generate correct slider action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -136,7 +136,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on interactive-2 page and ask to toggle subscription switch then generate correct toggle action`() = runWebDriverTest { driver ->
+    fun `When on interactive-2 page and ask to toggle subscription switch then generate correct toggle action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -153,7 +153,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     // ===== Tests using interactive-3.html (Dynamic content) =====
 
     @Test
-    fun `When on interactive-3 page and ask to scroll to trigger animations then generate scroll action`() = runWebDriverTest { driver ->
+    fun `When on interactive-3 page and ask to scroll to trigger animations then generate scroll action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-3.html")
         driver.waitForSelector("body")
 
@@ -168,7 +168,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on interactive-3 page and ask to adjust range input then generate correct range action`() = runWebDriverTest { driver ->
+    fun `When on interactive-3 page and ask to adjust range input then generate correct range action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-3.html")
         driver.waitForSelector("body")
 
@@ -186,7 +186,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     // ===== Tests using interactive-4.html (Dark mode + Drag) =====
 
     @Test
-    fun `When on interactive-4 page and ask to toggle dark mode then generate correct click action`() = runWebDriverTest { driver ->
+    fun `When on interactive-4 page and ask to toggle dark mode then generate correct click action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-4.html")
         driver.waitForSelector("body")
 
@@ -201,7 +201,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on interactive-4 page and ask to drag item then generate correct drag action`() = runWebDriverTest { driver ->
+    fun `When on interactive-4 page and ask to drag item then generate correct drag action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-4.html")
         driver.waitForSelector("body")
 
@@ -219,7 +219,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     // ===== Tests using advanced forms page =====
 
     @Test
-    fun `When on forms-advanced-test page and ask to fill password field then generate correct fill action`() = runWebDriverTest { driver ->
+    fun `When on forms-advanced-test page and ask to fill password field then generate correct fill action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/forms-advanced-test.html")
         driver.waitForSelector("body")
 
@@ -235,7 +235,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When on forms-advanced-test page and ask to select date then generate correct date action`() = runWebDriverTest { driver ->
+    fun `When on forms-advanced-test page and ask to select date then generate correct date action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/forms-advanced-test.html")
         driver.waitForSelector("body")
 
@@ -253,7 +253,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     // ===== Tests using dynamic content page =====
 
     @Test
-    fun `When on interactive-dynamic page and ask to wait for content then generate wait action`() = runWebDriverTest { driver ->
+    fun `When on interactive-dynamic page and ask to wait for content then generate wait action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-dynamic.html")
         driver.waitForSelector("body")
 
@@ -270,7 +270,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     // ===== Tests using ambiguity page =====
 
     @Test
-    fun `When on interactive-ambiguity page and ask to click specific button then resolve ambiguity correctly`() = runWebDriverTest { driver ->
+    fun `When on interactive-ambiguity page and ask to click specific button then resolve ambiguity correctly`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
@@ -287,7 +287,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     // ===== Tests for navigation actions =====
 
     @Test
-    fun `When ask to navigate to different page then generate correct navigation action`() = runWebDriverTest { driver ->
+    fun `When ask to navigate to different page then generate correct navigation action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -302,7 +302,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When ask to go back then generate correct back action`() = runWebDriverTest { driver ->
+    fun `When ask to go back then generate correct back action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
         // Navigate to another page first
@@ -322,7 +322,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     // ===== Tests for error handling and edge cases =====
 
     @Test
-    fun `When ask to interact with non-existent element then handle gracefully`() = runWebDriverTest { driver ->
+    fun `When ask to interact with non-existent element then handle gracefully`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -336,7 +336,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When ask with ambiguous command then select best matching action`() = runWebDriverTest { driver ->
+    fun `When ask with ambiguous command then select best matching action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -352,7 +352,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     // ===== Tests for English language support =====
 
     @Test
-    fun `When ask in English to click button then generate correct action`() = runWebDriverTest { driver ->
+    fun `When ask in English to click button then generate correct action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
@@ -367,7 +367,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When ask in English to fill form then generate correct action`() = runWebDriverTest { driver ->
+    fun `When ask in English to fill form then generate correct action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -385,7 +385,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     // ===== Tests for complex multi-step scenarios =====
 
     @Test
-    fun `When ask to perform complex form submission then generate appropriate action`() = runWebDriverTest { driver ->
+    fun `When ask to perform complex form submission then generate appropriate action`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -401,7 +401,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
     }
 
     @Test
-    fun `When ask to interact with dynamic elements then handle correctly`() = runWebDriverTest { driver ->
+    fun `When ask to interact with dynamic elements then handle correctly`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-dynamic.html")
         driver.waitForSelector("body")
 

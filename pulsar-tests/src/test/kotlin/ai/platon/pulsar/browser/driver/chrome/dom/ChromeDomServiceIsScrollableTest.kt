@@ -35,7 +35,7 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
     }
 
     @Test
-    fun `isScrollable basics - regular elements and overflow hidden`() = runWebDriverTest(testURL) { driver ->
+    fun `isScrollable basics - regular elements and overflow hidden`() = runEnhancedWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
         val devTools = driver.implementation as RemoteDevTools
         val service = ChromeCdpDomService(devTools)
@@ -117,7 +117,7 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
     }
 
     @Test
-    fun `isScrollable special - body html and toggle overflow`() = runWebDriverTest(testURL) { driver ->
+    fun `isScrollable special - body html and toggle overflow`() = runEnhancedWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
         val devTools = driver.implementation as RemoteDevTools
         val service = ChromeCdpDomService(devTools)
@@ -180,7 +180,7 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
     }
 
     @Test
-    fun `isScrollable dedup - nested containers similar vs distinct areas`() = runWebDriverTest(testURL) { driver ->
+    fun `isScrollable dedup - nested containers similar vs distinct areas`() = runEnhancedWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
         val devTools = driver.implementation as RemoteDevTools
         val service = ChromeCdpDomService(devTools)
@@ -303,7 +303,7 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
     }
 
     @Test
-    fun `isScrollable null when scroll analysis disabled`() = runWebDriverTest(testURL) { driver ->
+    fun `isScrollable null when scroll analysis disabled`() = runEnhancedWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
         val devTools = driver.implementation as RemoteDevTools
         val service = ChromeCdpDomService(devTools)

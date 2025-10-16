@@ -26,7 +26,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
     // ======== MULTI-STEP COMPLEX COMMANDS ========
 
     @Test
-    fun `When given multi-step workflow commands then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When given multi-step workflow commands then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo(ttaUrl2)
         driver.waitForSelector("body")
 
@@ -55,7 +55,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When given conditional commands then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When given conditional commands then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -85,7 +85,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
     // ======== CONTEXT-AWARE COMMANDS ========
 
     @Test
-    fun `When given context-specific commands then use appropriate context`() = runWebDriverTest { driver ->
+    fun `When given context-specific commands then use appropriate context`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
@@ -112,7 +112,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When given spatial reference commands then use position context`() = runWebDriverTest { driver ->
+    fun `When given spatial reference commands then use position context`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
@@ -141,7 +141,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
     // ======== ERROR RECOVERY TESTS ========
 
     @Test
-    fun `When given malformed commands then handle gracefully`() = runWebDriverTest { driver ->
+    fun `When given malformed commands then handle gracefully`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -172,7 +172,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When given contradictory commands then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When given contradictory commands then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -202,7 +202,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
     // ======== EDGE CASE TESTS ========
 
     @Test
-    fun `When given extremely long commands then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When given extremely long commands then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -229,7 +229,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When given commands with special Unicode characters then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When given commands with special Unicode characters then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -258,7 +258,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When given commands in different languages then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When given commands in different languages then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -287,7 +287,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
     // ======== PERFORMANCE AND STRESS TESTS ========
 
     @Test
-    fun `When given rapid sequential commands then maintain consistency`() = runWebDriverTest { driver ->
+    fun `When given rapid sequential commands then maintain consistency`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
@@ -315,7 +315,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When given commands with timing requirements then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When given commands with timing requirements then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-2.html")
         driver.waitForSelector("body")
 
@@ -342,7 +342,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
     // ======== VALIDATION AND ASSERTION TESTS ========
 
     @Test
-    fun `When given validation-related commands then handle appropriately`() = runWebDriverTest { driver ->
+    fun `When given validation-related commands then handle appropriately`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("$ttaBaseURL/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
@@ -369,7 +369,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
     // ======== RESPONSE ANALYSIS TESTS ========
 
     @Test
-    fun `When analyzing responses then extract meaningful information`() = runWebDriverTest { driver ->
+    fun `When analyzing responses then extract meaningful information`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
