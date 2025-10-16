@@ -127,11 +127,12 @@ open class TextToAction(val conf: ImmutableConfig) {
             instruction.contains(AGENT_SYSTEM_PROMPT_PREFIX_20) -> instruction
             else -> buildOperatorSystemPrompt(instruction)
         }
-        val toolUsePrompt = buildToolUsePrompt(systemPrompt, interactiveElements, toolCallLimit)
+
+        val toolUsePrompt = buildToolUsePrompt(interactiveElements, toolCallLimit)
         val response = if (screenshotB64 != null) {
-            chatModel.callUmSm(toolUsePrompt, "", null, screenshotB64, "image/jpeg")
+            chatModel.call(systemPrompt, toolUsePrompt, null, screenshotB64, "image/jpeg")
         } else {
-            chatModel.call(toolUsePrompt)
+            chatModel.call(systemPrompt, toolUsePrompt)
         }
 
         return modelResponseToActionDescription(response, toolCallLimit)
@@ -163,13 +164,10 @@ open class TextToAction(val conf: ImmutableConfig) {
     }
 
     fun buildToolUsePrompt(
-        systemPrompt: String,
         interactiveElements: List<InteractiveElement>,
         toolCallLimit: Int = 100,
     ): String {
         val prompt = buildString {
-            append(systemPrompt)
-
             appendLine("每次最多调用 $toolCallLimit 个工具")
 
             if (interactiveElements.isNotEmpty()) {
@@ -191,14 +189,13 @@ $AGENT_SYSTEM_PROMPT
         """.trimIndent()
     }
 
-    fun formatInteractiveElements(elements: List<InteractiveElement>, limit: Int = 200, charLimitPerLine: Int = 180): String {
-        if (elements.isEmpty()) return "(无)"
+    fun formatInteractiveElements(elements: List<InteractiveElement>, limit: Int = 200, charLimitPerLine: Int = 180): List<String> {
         val ranked = rankInteractiveElements(elements).take(limit)
         return ranked.mapIndexed { idx, e ->
             val base = e.description
             val clipped = if (base.length > charLimitPerLine) base.take(charLimitPerLine - 3) + "..." else base
             "${idx + 1}. $clipped"
-        }.joinToString("\n")
+        }
     }
 
     fun rankInteractiveElements(elements: List<InteractiveElement>): List<InteractiveElement> {
