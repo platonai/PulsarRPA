@@ -48,7 +48,7 @@ abstract class AbstractWebDriver(
      * Responsibilities:
      * - Maintain a lightweight navigation/session state (no heavy browser objects are stored here).
      * - Provide higher-level convenience operations (attribute/property selection, scrolling helpers, delays).
-     * - Coordinate AI-assisted action generation (Text-To-Action) and dispatch via [SimpleCommandDispatcher].
+     * - Coordinate AI-assisted action generation (Text-To-Action) and dispatch via [ToolCallExecutor].
      * - Bridge between low-level browser protocol implementations and higher-level crawling / task logic.
      *
      * Threading model:
@@ -305,7 +305,7 @@ abstract class AbstractWebDriver(
             return InstructionResult(listOf(), listOf(), action.modelResponse)
         }
         val functionCalls = action.functionCalls.take(1)
-        val dispatcher = SimpleCommandDispatcher()
+        val dispatcher = ToolCallExecutor()
         val functionResults = functionCalls.map { fc -> dispatcher.execute(fc, this) }
         return InstructionResult(action.functionCalls, functionResults, action.modelResponse)
     }
@@ -314,7 +314,7 @@ abstract class AbstractWebDriver(
     override suspend fun instruct(prompt: String): InstructionResult {
         val tta = TextToAction(config)
         val actions = tta.generateWebDriverActionsWithToolCallSpecsDeferred(prompt)
-        val dispatcher = SimpleCommandDispatcher()
+        val dispatcher = ToolCallExecutor()
         val functionResults = actions.functionCalls.map { fc -> dispatcher.execute(fc, this) }
         return InstructionResult(actions.functionCalls, functionResults, actions.modelResponse)
     }

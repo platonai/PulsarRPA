@@ -28,7 +28,7 @@ import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.SimpleCommandDispatcher
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
@@ -553,7 +553,7 @@ abstract class AbstractPulsarSession(
         val functionCalls = action.functionCalls
 
         // Dispatches and executes each action using a SimpleCommandDispatcher.
-        val dispatcher = SimpleCommandDispatcher()
+        val dispatcher = ToolCallExecutor()
         val functionResults = functionCalls.map { action ->
             dispatcher.execute(action, driver)
         }
@@ -570,7 +570,7 @@ abstract class AbstractPulsarSession(
         val actions = tta.generateWebDriverActionsWithToolCallSpecsDeferred(prompt)
 
         // Dispatches and executes each action using a SimpleCommandDispatcher.
-        val dispatcher = SimpleCommandDispatcher()
+        val dispatcher = ToolCallExecutor()
         val functionResults = actions.functionCalls.map { action ->
             dispatcher.execute(action, driver)
         }

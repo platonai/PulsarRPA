@@ -1,5 +1,7 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
+data class ToolCall(val domain: String, val method: String, val args: Map<String, Any?>)
+
 /**
  * Executes WebDriver commands provided as string expressions.
  *
@@ -21,7 +23,7 @@ package ai.platon.pulsar.skeleton.crawl.fetch.driver
  *
  * @author Vincent Zhang, ivincent.zhang@gmail.com, platon.ai
  */
-class SimpleCommandDispatcher {
+class ToolCallExecutor {
 
     /**
      * Executes a WebDriver command provided as a string expression.
@@ -43,10 +45,29 @@ class SimpleCommandDispatcher {
         }
     }
 
+    suspend fun execute(toolCall: ToolCall, driver: WebDriver): Any? {
+        // require(toolCall.domain == "driver")
+
+        return try {
+            val args = toolCall.args?.values?.toList()?.map { it.toString() } ?: emptyList()
+            execute1(toolCall.domain, toolCall.method, args, driver)
+        } catch (e: Exception) {
+            println("Error executing command: ${toolCall.method} - ${e.message}")
+            null
+        }
+    }
+
     private suspend fun execute0(command: String, driver: WebDriver): Any? {
         // Extract function name and arguments from the command string
         val (objectName, functionName, args) = parseSimpleFunctionCall(command) ?: return null
 
+        return execute1(objectName, functionName, args, driver)
+    }
+
+    /**
+     * Extract function name and arguments from the command string
+     * */
+    private suspend fun execute1(objectName: String, functionName: String, args: List<String>, driver: WebDriver): Any? {
         // Execute the appropriate WebDriver method based on the function name
         return when (functionName) {
             "open" -> {
