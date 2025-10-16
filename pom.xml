@@ -571,6 +571,10 @@
                     <!-- All tests are in the same JVM process -->
                     <forkCount>1</forkCount>
                     <reuseForks>true</reuseForks>
+                    <!-- Enable byte-buddy-agent -->
+                    <argLine>
+                        -XX:+EnableDynamicAgentLoading
+                    </argLine>
                 </configuration>
 
                 <dependencies>
