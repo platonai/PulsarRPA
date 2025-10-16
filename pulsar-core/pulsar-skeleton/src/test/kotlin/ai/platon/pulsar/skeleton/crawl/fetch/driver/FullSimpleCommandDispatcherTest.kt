@@ -1,4 +1,4 @@
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.SimpleCommandDispatcher
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.test.Ignore
@@ -9,7 +9,7 @@ class FullSimpleCommandDispatcherTest {
     @Test
     fun testParseSimpleFunctionCall_validInput() {
         val input = "driver.open(\"https://t.tt\")"
-        val result = SimpleCommandDispatcher.parseSimpleFunctionCall(input)
+        val result = ToolCallExecutor.parseSimpleFunctionCall(input)
         assertNotNull(result)
         assertEquals("driver", result?.first)
         assertEquals("open", result?.second)
