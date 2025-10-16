@@ -25,7 +25,7 @@ open class TextToAction(val conf: ImmutableConfig) {
 
     val baseDir = AppPaths.get("tta")
 
-    val chatModel: BrowserChatModel = ChatModelFactory.getOrCreate(conf)
+    val chatModel: BrowserChatModel get() = ChatModelFactory.getOrCreate(conf)
     val webDriverSourceCodeFile = baseDir.resolve("MiniWebDriver.kt")
     var webDriverSourceCode: String
         private set

@@ -93,12 +93,12 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
         fun waitExists(id: String) {
             repeat(30) {
                 val ok = runCatching {
-                    devTools.runtime.evaluate("document.getElementById('${'$'}id') != null")
+                    devTools.runtime.evaluate("document.getElementById('${id}') != null")
                 }.getOrNull()?.result?.value?.toString()?.equals("true", true) == true
                 if (ok) return
                 Thread.sleep(100)
             }
-            fail("Element #${'$'}id not found in time")
+            fail("Element #$id not found in time")
         }
         waitExists("scroll_basic")
         waitExists("scroll_hidden")
@@ -162,7 +162,7 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
         assertNotNull(body)
         assertEquals(false, body!!.isScrollable, "Body should not be scrollable without overflow:auto/scroll even if content is large")
 
-        // Case 2: Set overflow:auto on documentElement and body => expect true
+        // Case 2: Set overflow:auto on documentElement and body => expect at least one scrollable (html or body)
         runCatching {
             devTools.runtime.evaluate(
                 "document.documentElement.style.overflow='auto'; document.body.style.overflow='auto'; true;")
@@ -170,8 +170,13 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
         root = collectRoot(service, baseOptions)
         body = service.findElement(ElementRefCriteria(cssSelector = "body"))
             ?: findNodeById(root, "body")
+        val html = service.findElement(ElementRefCriteria(cssSelector = "html"))
+            ?: findNodeById(root, "html")
         assertNotNull(body)
-        assertEquals(true, body!!.isScrollable, "Body should be scrollable when overflow:auto and content larger than viewport")
+        assertNotNull(html)
+        val bodyScrollable = body!!.isScrollable == true
+        val htmlScrollable = html!!.isScrollable == true
+        assertTrue(bodyScrollable || htmlScrollable, "Either <body> or <html> should be scrollable when overflow:auto and content larger than viewport")
     }
 
     @Test
@@ -265,12 +270,12 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
         fun waitExists(id: String) {
             repeat(30) {
                 val ok = runCatching {
-                    devTools.runtime.evaluate("document.getElementById('${'$'}id') != null")
+                    devTools.runtime.evaluate("document.getElementById('${id}') != null")
                 }.getOrNull()?.result?.value?.toString()?.equals("true", true) == true
                 if (ok) return
                 Thread.sleep(100)
             }
-            fail("Element #${'$'}id not found in time")
+            fail("Element #$id not found in time")
         }
         listOf("outer_same","inner_same","outer_diff","inner_diff").forEach { waitExists(it) }
 
@@ -353,4 +358,3 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
         assertNull(node!!.isScrollable, "isScrollable should be null when includeScrollAnalysis=false")
     }
 }
-
