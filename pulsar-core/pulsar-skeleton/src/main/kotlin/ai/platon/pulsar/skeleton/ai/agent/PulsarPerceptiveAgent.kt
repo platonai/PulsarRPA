@@ -188,8 +188,8 @@ class PulsarPerceptiveAgent(
         logExtractStart(instruction, requestId)
 
         val schemaJson = buildSchemaJsonFromMap(options.schema)
-        val domElements = domService.buildSlimNodeTree()
-        val domJson = domService.serialize(domElements).json
+        val slimDom = domService.buildSlimDom()
+        val domJson = domService.serialize(slimDom).json
 
         return try {
             val resultNode = inference.extract(
@@ -231,7 +231,7 @@ class PulsarPerceptiveAgent(
         logObserveStart(instruction, requestId)
 
         val allTrees = inference.domService.getAllTrees()
-        val domElements = inference.domService.buildSlimNodeTree(allTrees)
+        val domElements = inference.domService.buildSlimDom(allTrees)
         val domJson = inference.domService.serialize(domElements).json
 
         return try {
@@ -299,7 +299,7 @@ class PulsarPerceptiveAgent(
         // 3) Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
         val requestId = UUID.randomUUID().toString()
         val results: List<ObserveResult> = try {
-            val domElements = domService.buildSlimNodeTree()
+            val domElements = domService.buildSlimDom()
             val domJson = domService.serialize(domElements).json
 
             val internal = inference.observe(
@@ -485,7 +485,7 @@ class PulsarPerceptiveAgent(
                 val stepContext = context.copy(stepNumber = step, actionType = "step")
 
                 // Extract interactive elements each step (could be optimized via diffing later)
-                val domElements2 = domService.buildSlimNodeTree()
+                val domElements2 = domService.buildSlimDom()
                 val domElements = tta.extractInteractiveElementsDeferred(driver)
 
                 logStructured(

@@ -16,9 +16,9 @@ interface DomService {
      */
     fun buildEnhancedDomTree(trees: TargetAllTrees): DOMTreeNodeEx
 
-    fun buildSlimNodeTree(): SlimNode
+    fun buildSlimDom(): SlimNode
 
-    fun buildSlimNodeTree(trees: TargetAllTrees): SlimNode
+    fun buildSlimDom(trees: TargetAllTrees): SlimNode
 
     /**
      * Serialize SimplifiedNode tree for LLM consumption.

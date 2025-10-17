@@ -250,12 +250,12 @@ class ChromeCdpDomService(
         return simplify(root)
     }
 
-    override fun buildSlimNodeTree(): SlimNode {
+    override fun buildSlimDom(): SlimNode {
         val trees = getAllTrees()
-        return buildSlimNodeTree(trees)
+        return buildSlimDom(trees)
     }
 
-    override fun buildSlimNodeTree(trees: TargetAllTrees): SlimNode {
+    override fun buildSlimDom(trees: TargetAllTrees): SlimNode {
         val enhanced = buildEnhancedDomTree(trees)
         val hasElements = enhanced.children.isNotEmpty() ||
                 enhanced.shadowRoots.isNotEmpty() ||
