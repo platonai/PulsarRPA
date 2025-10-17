@@ -61,7 +61,7 @@ interface PerceptiveAgent {
 
     suspend fun act(action: String): ActResult
     suspend fun act(action: ActionOptions): ActResult
-    suspend fun multiAct(action: ActionOptions): ActResult
+    suspend fun resolve(action: ActionOptions): ActResult
     suspend fun act(observe: ObserveResult): ActResult
     suspend fun extract(instruction: String): ExtractResult
     suspend fun extract(options: ExtractOptions): ExtractResult

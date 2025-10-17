@@ -73,6 +73,8 @@ class InferenceEngine(
 ) {
     private val logger = getLogger(this)
     private val promptBuilder = BrowserUsePromptBuilder(promptLocale)
+    // Reuse a single ObjectMapper for JSON parsing within this class
+    private val mapper = ObjectMapper()
 
     val domService: DomService = (driver as AbstractWebDriver).domService!!
 
@@ -82,10 +84,7 @@ class InferenceEngine(
      *   - prompt_tokens, completion_tokens, inference_time_ms
      */
     suspend fun extract(params: ExtractParams): ObjectNode {
-        val mapper = ObjectMapper()
         val domText = params.domElements.joinToString("\n\n")
-        val isGPT5 = (System.getProperty("llm.name") ?: "").lowercase().contains("gpt-5")
-        val temperature = if (isGPT5) 1.0 else 0.1
 
         // 1) Extraction call -----------------------------------------------------------------
         val systemMsg = promptBuilder.buildExtractSystemPrompt(params.userProvidedInstructions)
@@ -99,34 +98,25 @@ class InferenceEngine(
         var callFile = ""
         var extractCallTs = ""
         if (params.logInferenceToFile) {
-            val (file, ts) = writeTimestampedTxtFile(
-                prefix = "extract_summary",
+            val (file, ts) = logCallIfEnabled(
+                dirPrefix = "extract_summary",
                 kind = "extract_call",
-                payload = mapOf(
-                    "requestId" to params.requestId,
-                    "modelCall" to "extract",
-                    "messages" to messages,
-                )
+                requestId = params.requestId,
+                modelCall = "extract",
+                messages = messages,
+                enabled = true
             )
             callFile = file
             extractCallTs = ts
         }
 
-        val t0 = System.currentTimeMillis()
-        val systemMessage = SystemMessage.systemMessage(systemMsg.content.toString())
-        val userMessage = UserMessage.userMessage(userMsg.content.toString())
-        val chatRequest = ChatRequest.builder()
-            .messages(systemMessage, userMessage)
-            // .temperature(temperature) // use the provider default currently
-            .build()
-        val extractResp: ChatResponse = chatModel.langChainChat(chatRequest)
-        val t1 = System.currentTimeMillis()
+        val (extractResp, extractElapsedMs) = callChat(
+            systemContent = systemMsg.content.toString(),
+            userContent = userMsg.content.toString()
+        )
 
         val messageText = extractResp.aiMessage().text().trim()
-        val usage1 = LLMUsage(
-            prompt_tokens = extractResp.tokenUsage().inputTokenCount(),
-            completion_tokens = extractResp.tokenUsage().outputTokenCount(),
-        )
+        val usage1 = toUsage(extractResp)
 
         val extractedNode: ObjectNode = runCatching {
             mapper.readTree(messageText) as? ObjectNode ?: JsonNodeFactory.instance.objectNode()
@@ -153,7 +143,7 @@ class InferenceEngine(
                     "LLM_output_file" to extractRespFile,
                     "prompt_tokens" to usage1.prompt_tokens,
                     "completion_tokens" to usage1.completion_tokens,
-                    "inference_time_ms" to (t1 - t0)
+                    "inference_time_ms" to extractElapsedMs
                 )
             )
         }
@@ -171,28 +161,23 @@ class InferenceEngine(
         var metadataCallFile = ""
         var metadataCallTs = ""
         if (params.logInferenceToFile) {
-            val (file, ts) = writeTimestampedTxtFile(
-                prefix = "extract_summary",
+            val (file, ts) = logCallIfEnabled(
+                dirPrefix = "extract_summary",
                 kind = "metadata_call",
-                payload = mapOf(
-                    "requestId" to params.requestId,
-                    "modelCall" to "metadata",
-                    "messages" to listOf(metadataSystem, metadataUser),
-                )
+                requestId = params.requestId,
+                modelCall = "metadata",
+                messages = listOf(metadataSystem, metadataUser),
+                enabled = true
             )
             metadataCallFile = file; metadataCallTs = ts
         }
 
-        val t2 = System.currentTimeMillis()
-        val metadataResp: ChatResponse = chatModel.langChainChat(
-            SystemMessage.systemMessage(metadataSystem.content.toString()),
-            UserMessage.userMessage(metadataUser.content.toString())
+        val (metadataResp, metadataElapsedMs) = callChat(
+            systemContent = metadataSystem.content.toString(),
+            userContent = metadataUser.content.toString()
         )
-        val t3 = System.currentTimeMillis()
-        val usage2 = LLMUsage(
-            prompt_tokens = metadataResp.tokenUsage().inputTokenCount(),
-            completion_tokens = metadataResp.tokenUsage().outputTokenCount(),
-        )
+
+        val usage2 = toUsage(metadataResp)
 
         val metaText = metadataResp.aiMessage().text().trim()
         val metaNode: ObjectNode = runCatching {
@@ -223,7 +208,7 @@ class InferenceEngine(
                     "LLM_output_file" to metadataRespFile,
                     "prompt_tokens" to usage2.prompt_tokens,
                     "completion_tokens" to usage2.completion_tokens,
-                    "inference_time_ms" to (t3 - t2)
+                    "inference_time_ms" to metadataElapsedMs
                 )
             )
         }
@@ -231,7 +216,7 @@ class InferenceEngine(
         // 3) Merge & return ------------------------------------------------------------------
         val totalPrompt = (usage1.prompt_tokens) + (usage2.prompt_tokens)
         val totalCompletion = (usage1.completion_tokens) + (usage2.completion_tokens)
-        val totalTime = (t1 - t0) + (t3 - t2)
+        val totalTime = metadataElapsedMs + extractElapsedMs
 
         val result: ObjectNode = (extractedNode.deepCopy()).apply {
             set<ObjectNode>("metadata", JsonNodeFactory.instance.objectNode().apply {
@@ -246,10 +231,6 @@ class InferenceEngine(
     }
 
     suspend fun observe(params: ObserveParams): InternalObserveResult {
-        val isGPT5 = (System.getProperty("llm.name") ?: "").lowercase().contains("gpt-5")
-        // TODO: Investigate the API differences among various providers.
-        val temperature = if (isGPT5) 1.0 else 0.1
-
         // Build dynamic schema hint for the LLM (prompt-enforced)
         val systemMsg = promptBuilder.buildObserveSystemPrompt(params.userProvidedInstructions)
         val domText = promptBuilder.buildObserveDomText(params, schemaHint = true)
@@ -259,34 +240,24 @@ class InferenceEngine(
         var callFile = ""
         var callTs = ""
         if (params.logInferenceToFile) {
-            val (f, ts) = writeTimestampedTxtFile(
-                prefix = "${prefix}_summary",
+            val (f, ts) = logCallIfEnabled(
+                dirPrefix = "${prefix}_summary",
                 kind = "${prefix}_call",
-                payload = mapOf(
-                    "requestId" to params.requestId,
-                    "modelCall" to prefix,
-                    "messages" to listOf(systemMsg, userMsg)
-                )
+                requestId = params.requestId,
+                modelCall = prefix,
+                messages = listOf(systemMsg, userMsg),
+                enabled = true
             )
             callFile = f; callTs = ts
         }
 
-        val t0 = System.currentTimeMillis()
-        val systemMessage = SystemMessage.systemMessage(systemMsg.content.toString())
-        val userMessage = UserMessage.userMessage(userMsg.content.toString())
-        val chatRequest = ChatRequest.builder()
-            .messages(systemMessage, userMessage)
-            // .temperature(temperature) // use the provider default currently
-            .build()
-        val resp: ChatResponse = chatModel.langChainChat(chatRequest)
-        val t1 = System.currentTimeMillis()
-        val usage = LLMUsage(
-            prompt_tokens = resp.tokenUsage().inputTokenCount(),
-            completion_tokens = resp.tokenUsage().outputTokenCount(),
+        val (resp, elapsedMs) = callChat(
+            systemContent = systemMsg.content.toString(),
+            userContent = userMsg.content.toString()
         )
+        val usage = toUsage(resp)
 
         val raw = resp.aiMessage().text().trim()
-        val mapper = ObjectMapper()
         // Parse as generic JsonNode to support both object and array roots
         val root: JsonNode = runCatching { mapper.readTree(raw) as? JsonNode ?: JsonNodeFactory.instance.objectNode() }
             .getOrElse { JsonNodeFactory.instance.objectNode() }
@@ -314,7 +285,7 @@ class InferenceEngine(
                     "LLM_output_file" to respFile,
                     "prompt_tokens" to usage.prompt_tokens,
                     "completion_tokens" to usage.completion_tokens,
-                    "inference_time_ms" to (t1 - t0)
+                    "inference_time_ms" to elapsedMs
                 )
             )
         }
@@ -323,7 +294,7 @@ class InferenceEngine(
             elements = elements,
             prompt_tokens = usage.prompt_tokens,
             completion_tokens = usage.completion_tokens,
-            inference_time_ms = (t1 - t0)
+            inference_time_ms = elapsedMs
         )
     }
 
@@ -413,4 +384,43 @@ class InferenceEngine(
         current.add(entryNode)
         Files.write(file, mapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(current))
     }
+
+    // ------------------------------ Small utilities --------------------------------
+    private fun logCallIfEnabled(
+        dirPrefix: String,
+        kind: String,
+        requestId: String,
+        modelCall: String,
+        messages: List<Any>,
+        enabled: Boolean
+    ): Pair<String, String> {
+        if (!enabled) return "" to ""
+        return writeTimestampedTxtFile(
+            prefix = dirPrefix,
+            kind = kind,
+            payload = mapOf(
+                "requestId" to requestId,
+                "modelCall" to modelCall,
+                "messages" to messages,
+            )
+        )
+    }
+
+    private suspend fun callChat(systemContent: String, userContent: String): Pair<ChatResponse, Long> {
+        val systemMessage = SystemMessage.systemMessage(systemContent)
+        val userMessage = UserMessage.userMessage(userContent)
+        val chatRequest = ChatRequest.builder()
+            .messages(systemMessage, userMessage)
+            // use provider default temperature
+            .build()
+        val t0 = System.currentTimeMillis()
+        val resp: ChatResponse = chatModel.langChainChat(chatRequest)
+        val t1 = System.currentTimeMillis()
+        return resp to (t1 - t0)
+    }
+
+    private fun toUsage(resp: ChatResponse): LLMUsage = LLMUsage(
+        prompt_tokens = resp.tokenUsage().inputTokenCount(),
+        completion_tokens = resp.tokenUsage().outputTokenCount(),
+    )
 }

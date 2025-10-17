@@ -37,7 +37,7 @@ class PulsarPerceptiveAgent(
     val driver: WebDriver,
     val maxSteps: Int = 100,
     val config: AgentConfig = AgentConfig(maxSteps = maxSteps)
-): PerceptiveAgent {
+) : PerceptiveAgent {
     private val logger = getLogger(this)
 
     private val baseDir = AppPaths.get("agent")
@@ -64,7 +64,7 @@ class PulsarPerceptiveAgent(
     /**
      * Run `observe -> act -> observe -> act -> ...` loop to resolve the problem.
      * */
-    override suspend fun multiAct(action: ActionOptions): ActResult {
+    override suspend fun resolve(action: ActionOptions): ActResult {
         Files.createDirectories(baseDir)
         val startTime = Instant.now()
         val sessionId = uuid.toString()
@@ -150,7 +150,7 @@ class PulsarPerceptiveAgent(
             return "'" + s.replace("\\", "\\\\").replace("'", "\\'") + "'"
         }
 
-        val callArgs = finalArgsList.map { escArg(it) }.joinToString(",")
+        val callArgs = finalArgsList.joinToString(",") { escArg(it) }
         val functionCall = "driver.$lowerMethod($callArgs)"
 
         // Execute via WebDriver dispatcher
@@ -165,8 +165,8 @@ class PulsarPerceptiveAgent(
             )
             val result = driver.execute(actionDesc)
 
-            val msg = "Action [$method] executed on selector: ${selector}".trim()
-            addToHistory("observe.act -> ${functionCall}")
+            val msg = "Action [$method] executed on selector: $selector".trim()
+            addToHistory("observe.act -> $functionCall")
             ActResult(
                 success = true,
                 message = msg,
@@ -257,7 +257,8 @@ class PulsarPerceptiveAgent(
     }
 
     private suspend fun doObserve(options: ObserveOptions): List<ObserveResult> {
-        val instruction = options.instruction?.takeIf { it.isNotBlank() } ?: "Understand the page and list actionable elements"
+        val instruction =
+            options.instruction?.takeIf { it.isNotBlank() } ?: "Understand the page and list actionable elements"
         val requestId = UUID.randomUUID().toString()
         logObserveStart(instruction, requestId)
 
@@ -424,6 +425,7 @@ class PulsarPerceptiveAgent(
     private fun logExtractStart(instruction: String, requestId: String) {
         logger.info("extract.start requestId={} instruction='{}'", requestId.take(8), instruction.take(120))
     }
+
     private fun logObserveStart(instruction: String, requestId: String) {
         logger.info("observe.start requestId={} instruction='{}'", requestId.take(8), instruction.take(120))
     }
@@ -431,6 +433,7 @@ class PulsarPerceptiveAgent(
     private fun addHistoryExtract(instruction: String, requestId: String, success: Boolean) {
         addToHistory("extract[$requestId] ${if (success) "OK" else "FAIL"} ${instruction.take(60)}")
     }
+
     private fun addHistoryObserve(instruction: String, requestId: String, size: Int, success: Boolean) {
         addToHistory("observe[$requestId] ${if (success) "OK" else "FAIL"} ${instruction.take(50)} -> $size elements")
     }
@@ -511,15 +514,16 @@ class PulsarPerceptiveAgent(
                 val stepContext = context.copy(stepNumber = step, actionType = "step")
 
                 // Extract interactive elements each step (could be optimized via diffing later)
-                val domElements2 = domService.buildSlimDOM()
-                val domElements = tta.extractInteractiveElementsDeferred(driver)
+                // val slimDOM = domService.buildSlimDOM()
+                val domState = getDOMState()
+                // val domElements = tta.extractInteractiveElementsDeferred(driver)
 
                 logStructured(
                     "Executing step", stepContext, mapOf(
                         "step" to step,
                         "maxSteps" to config.maxSteps,
                         "consecutiveNoOps" to consecutiveNoOps,
-                        "domElementCount" to domElements.size
+                        "domStateSummary" to DomDebug.summarize(domState)
                     )
                 )
 
@@ -529,7 +533,7 @@ class PulsarPerceptiveAgent(
                 }
 
                 val screenshotB64 = captureScreenshotWithRetry(stepContext)
-                val userMsg = buildUserMessage(overallGoal, domElements)
+                val userMsg = buildUserMessage(overallGoal, domState)
 
                 // message: agent guide + overall goal + last action summary + current context message
                 val message = buildExecutionMessage(systemMsg, userMsg, screenshotB64)
@@ -768,7 +772,11 @@ class PulsarPerceptiveAgent(
         context: ExecutionContext
     ): String? {
         if (config.enablePreActionValidation && !validateToolCall(toolCall)) {
-            logStructured("Tool call validation failed", context, mapOf("toolCall" to toolCall.name, "args" to toolCall.args))
+            logStructured(
+                "Tool call validation failed",
+                context,
+                mapOf("toolCall" to toolCall.name, "args" to toolCall.args)
+            )
             addToHistory("#$step validation-failed ${toolCall.name}")
             return null
         }
@@ -1014,15 +1022,10 @@ class PulsarPerceptiveAgent(
         }
     }
 
-    private suspend fun buildUserMessage(instruction: String, interactiveElements: List<InteractiveElement>): String {
-        val domElements = tta.formatInteractiveElements(interactiveElements)
-        return buildUserMessage(instruction, domElements)
-    }
-
-    private suspend fun buildUserMessage(instruction: String, domElements: Collection<String>): String {
+    private suspend fun buildUserMessage(instruction: String, domState: DOMState): String {
         val currentUrl = getCurrentUrl()
         val his = if (_history.isEmpty()) "(无)" else _history.takeLast(min(8, _history.size)).joinToString("\n")
-        val interactiveSummary = domElements.joinToString("\n")
+        val interactiveSummary = domState.json
         return """
 此前动作摘要：
 $his
@@ -1033,7 +1036,7 @@ $interactiveSummary
 请基于当前页面截图、交互元素与历史动作，规划下一步（严格单步原子动作），若无法推进请输出空 tool_calls。
 当前目标：$instruction
 当前URL：$currentUrl
-        """.trimIndent()
+		""".trimIndent()
     }
 
     private data class ToolCall(val name: String, val args: Map<String, Any?>)
