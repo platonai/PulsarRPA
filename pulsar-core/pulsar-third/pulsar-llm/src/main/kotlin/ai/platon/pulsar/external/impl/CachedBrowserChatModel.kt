@@ -154,7 +154,12 @@ open class CachedBrowserChatModel(
             return ModelResponse("", ResponseState.OTHER)
         }
 
-        val trimmedUserMessage = userMessage.take(settings.maximumLength).trim()
+        val maxLength = settings.maximumInputTokenLength
+        if (userMessage.length > maxLength) {
+            logger.warn("User message is too long and will be truncated | {}/{}", userMessage.length, maxLength)
+        }
+
+        val trimmedUserMessage = userMessage.take(settings.maximumInputTokenLength).trim()
 
         // Build cache key; include b64Image/mediaType hash if provided
         val b64ImageProvided = !b64Image.isNullOrBlank() && !mediaType.isNullOrBlank()
@@ -167,6 +172,7 @@ open class CachedBrowserChatModel(
             DigestUtils.md5Hex(imageUrl)
         } else ""
 
+        // TODO: optimize calculating the md5 for long text
         val cacheKey = DigestUtils.md5Hex("$trimmedUserMessage|$systemMessage$attachmentKeyPart")
 
         // Check if the response is already cached
@@ -287,9 +293,11 @@ open class CachedBrowserChatModel(
                         val joined = contents.mapNotNull { c ->
                             try {
                                 if (c is TextContent) c.text() else null
-                            } catch (_: Throwable) { null }
+                            } catch (_: Throwable) {
+                                null
+                            }
                         }.filter { it.isNotBlank() }.joinToString("\n")
-                        if (joined.isNotBlank()) joined else m.toString()
+                        joined.ifBlank { m.toString() }
                     } catch (_: Throwable) {
                         m.toString()
                     }
@@ -300,8 +308,9 @@ open class CachedBrowserChatModel(
                 }
             }
         }
-        val userText = userParts.joinToString("\n\n").take(settings.maximumLength)
-        val systemText = systemParts.joinToString("\n\n").take(settings.maximumLength)
+
+        val userText = userParts.joinToString("\n\n").take(settings.maximumInputTokenLength)
+        val systemText = systemParts.joinToString("\n\n").take(settings.maximumInputTokenLength)
         return Pair(userText, systemText)
     }
 

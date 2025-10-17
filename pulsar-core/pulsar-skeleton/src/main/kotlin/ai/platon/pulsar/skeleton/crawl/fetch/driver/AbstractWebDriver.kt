@@ -282,7 +282,7 @@ abstract class AbstractWebDriver(
     override suspend fun chat(prompt: String, selector: String): ModelResponse {
         val chatModel = chatModel ?: return ModelResponse.LLM_NOT_AVAILABLE
         val textContent = selectFirstTextOrNull(selector) ?: return ModelResponse.EMPTY
-        val textContent0 = textContent.take(chatModel.settings.maximumLength)
+        val textContent0 = textContent.take(chatModel.settings.maximumInputTokenLength)
         val prompt2 = "$prompt\n\n\nThere is the text content of the selected element:\n\n\n$textContent0"
         return chatModel.call(prompt2)
     }
