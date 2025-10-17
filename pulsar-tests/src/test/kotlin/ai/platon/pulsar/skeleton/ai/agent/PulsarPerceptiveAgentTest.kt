@@ -290,9 +290,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     action = "Navigate to the home page"
                 )
 
-                val result = runBlocking {
-                    agent.act(options)
-                }
+                val result = agent.act(options)
 
                 assertNotNull(result)
                 assertEquals("Navigate to the home page", result.action)
@@ -376,10 +374,8 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
                 val initialHistorySize = agent.history.size
 
-                runBlocking {
-                    agent.extract("Extract title")
-                    agent.observe("List elements")
-                }
+                agent.extract("Extract title")
+                agent.observe("List elements")
 
                 assertTrue(agent.history.size >= initialHistorySize + 2,
                     "History should grow with operations")

@@ -20,7 +20,7 @@ class PulsarPerceptiveAgentActIT : WebDriverTestBase() {
         Assumptions.assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping act IT")
 
         val agent = PulsarPerceptiveAgent(driver)
-        val result = agent.act("点击搜索按钮")
+        val result = agent.act("搜索browser")
 
         assertNotNull(result)
         assertTrue(agent.history.isNotEmpty())

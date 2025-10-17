@@ -34,7 +34,7 @@ class DomLLMSerializerTest {
             children = listOf(SlimNode(originalNode = childOriginal))
         )
 
-        val result = DomLLMSerializer.serialize(root, listOf("data-id", "aria-label"))
+        val result = DomSerializer.serialize(root, listOf("data-id", "aria-label"))
         val tree = mapper.readTree(result.json)
 
         val rootAttrs = tree.get("original_node").get("attributes")
@@ -75,7 +75,7 @@ class DomLLMSerializerTest {
             children = listOf(SlimNode(originalNode = scrollableNode))
         )
 
-        val result = DomLLMSerializer.serialize(simplified)
+        val result = DomSerializer.serialize(simplified)
         val tree = mapper.readTree(result.json)
         val child = tree.get("children").first()
 
@@ -115,11 +115,11 @@ class DomLLMSerializerTest {
             )
         )
 
-        val options = DomLLMSerializer.SerializationOptions(
+        val options = DomSerializer.SerializationOptions(
             enablePaintOrderPruning = true,
             maxPaintOrderThreshold = 1000
         )
-        val result = DomLLMSerializer.serialize(simplified, emptyList(), options)
+        val result = DomSerializer.serialize(simplified, emptyList(), options)
         val tree = mapper.readTree(result.json)
 
         val children = tree.get("children")
@@ -158,11 +158,11 @@ class DomLLMSerializerTest {
             )
         )
 
-        val options = DomLLMSerializer.SerializationOptions(
+        val options = DomSerializer.SerializationOptions(
             enableCompoundComponentDetection = true,
             compoundComponentMinChildren = 3
         )
-        val result = DomLLMSerializer.serialize(simplified, emptyList(), options)
+        val result = DomSerializer.serialize(simplified, emptyList(), options)
         val tree = mapper.readTree(result.json)
 
         val ulNode = tree.get("children").first()
@@ -185,11 +185,11 @@ class DomLLMSerializerTest {
 
         val simplified = SlimNode(originalNode = node)
 
-        val options = DomLLMSerializer.SerializationOptions(
+        val options = DomSerializer.SerializationOptions(
             enableAttributeCasingAlignment = true,
             preserveOriginalCasing = false
         )
-        val result = DomLLMSerializer.serialize(simplified, listOf("class", "for", "readonly", "customattr"), options)
+        val result = DomSerializer.serialize(simplified, listOf("class", "for", "readonly", "customattr"), options)
         val tree = mapper.readTree(result.json)
 
         val attrs = tree.get("original_node").get("attributes")
@@ -211,7 +211,7 @@ class DomLLMSerializerTest {
 
         val simplified = SlimNode(originalNode = node)
 
-        val result = DomLLMSerializer.serialize(simplified)
+        val result = DomSerializer.serialize(simplified)
 
         // Check that all expected keys are present in the selector map
         assertTrue(result.selectorMap.containsKey("button-hash"), "Element hash key should be present")
@@ -237,13 +237,59 @@ class DomLLMSerializerTest {
 
         val simplified = SlimNode(originalNode = node)
 
-        val options = DomLLMSerializer.SerializationOptions(
+        val options = DomSerializer.SerializationOptions(
             preserveOriginalCasing = true
         )
-        val result = DomLLMSerializer.serialize(simplified, emptyList(), options)
+        val result = DomSerializer.serialize(simplified, emptyList(), options)
         val tree = mapper.readTree(result.json)
 
         assertEquals("CustomElement", tree.get("original_node").get("node_name").asText(),
             "Original casing should be preserved when configured")
+    }
+
+    @Test
+    fun `serialize handles deep tree end-to-end`() {
+        val levels = 30
+
+        // Build a deep chain of SlimNodes: node-1 -> node-2 -> ... -> node-29 -> node-30(leaf)
+        var leaf: SlimNode = SlimNode(
+            originalNode = DOMTreeNodeEx(
+                nodeId = levels,
+                nodeName = "SPAN",
+                elementHash = "node-$levels"
+            )
+        )
+        for (i in levels - 1 downTo 1) {
+            val parentOriginal = DOMTreeNodeEx(
+                nodeId = i,
+                nodeName = "DIV",
+                elementHash = "node-$i"
+            )
+            leaf = SlimNode(
+                originalNode = parentOriginal,
+                children = listOf(leaf)
+            )
+        }
+
+        val result = DomSerializer.serialize(leaf)
+        val tree = mapper.readTree(result.json)
+
+        // Traverse down the first-child chain and count levels
+        var cursor = tree
+        var count = 1 // count root
+        while (cursor.has("children") && cursor.get("children").size() > 0) {
+            cursor = cursor.get("children").first()
+            count++
+        }
+        assertEquals(levels, count, "All $levels levels should be preserved in serialization")
+
+        // The last node should be the SPAN leaf
+        val lastNodeName = cursor.get("original_node").get("node_name").asText()
+        assertEquals("span", lastNodeName)
+
+        // Ensure selector map contains all element hash keys
+        for (i in 1..levels) {
+            assertTrue(result.selectorMap.containsKey("node-$i"), "selectorMap should contain element hash for node-$i")
+        }
     }
 }

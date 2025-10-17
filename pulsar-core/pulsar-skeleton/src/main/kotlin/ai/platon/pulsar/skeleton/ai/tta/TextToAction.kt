@@ -516,7 +516,7 @@ $AGENT_SYSTEM_PROMPT
 输出严格使用 JSON 字段：
 
 {
-  tool_calls: [ { name: string, args: object } ]
+  tool_calls: [ { name: string, args: [string] } ]
   taskComplete: boolean
 }
 

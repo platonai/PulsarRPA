@@ -1,12 +1,11 @@
 package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
-import ai.platon.pulsar.browser.driver.chrome.dom.model.PageTarget
-import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
+import ai.platon.pulsar.browser.driver.chrome.dom.model.SlimNode
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
-import ai.platon.pulsar.skeleton.ai.*
+import ai.platon.pulsar.skeleton.ai.BrowserUsePromptBuilder
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.JsonNode
@@ -16,6 +15,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
 import dev.langchain4j.data.message.SystemMessage
 import dev.langchain4j.data.message.UserMessage
+import dev.langchain4j.model.chat.request.ChatRequest
 import dev.langchain4j.model.chat.response.ChatResponse
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
@@ -71,26 +71,13 @@ data class ObserveParams(
 
 class InferenceEngine(
     private val driver: WebDriver,
-    private val chatModel: BrowserChatModel
+    private val chatModel: BrowserChatModel,
+    private val promptLocale: Locale = Locale.CHINESE,
 ) {
     private val logger = getLogger(this)
-    private val domService: DomService = (driver as AbstractWebDriver).domService!!
+    private val promptBuilder = BrowserUsePromptBuilder(promptLocale)
 
-    // ----------------------------------- Public simple stubs (kept for compatibility) -----------------------------------
-    fun extract(instruction: String) {
-        // Fetch trees for potential future use; current overloads provide richer interfaces
-        domService.getAllTrees(PageTarget(), SnapshotOptions())
-    }
-
-    fun extract(instruction: String, domElements: List<String>) {
-        // Intentionally left as lightweight wrapper; prefer using the structured extract(params) API below
-        // ...existing code...
-    }
-
-    fun observe(instruction: String, domElements: List<String>) {
-        // Intentionally left as lightweight wrapper; prefer using the structured observe(params) API below
-        // ...existing code...
-    }
+    val domService: DomService = (driver as AbstractWebDriver).domService!!
 
     /**
      * Returns an ObjectNode with extracted fields expanded at top-level, plus:
@@ -104,19 +91,11 @@ class InferenceEngine(
         val temperature = if (isGPT5) 1.0 else 0.1
 
         // 1) Extraction call -----------------------------------------------------------------
-        val extractSystem = buildExtractSystemPrompt(false, params.userProvidedInstructions)
-        val extractUser = buildExtractUserPrompt(
+        val extractSystem = promptBuilder.buildExtractSystemPrompt(params.userProvidedInstructions)
+        val extractUser = promptBuilder.buildExtractUserPrompt(
             params.instruction,
             // Inject schema hint to strongly guide JSON output
-            buildString {
-                append(domText)
-                append("\n\n")
-                append("You MUST respond with a valid JSON object that strictly conforms to the following JSON Schema. ")
-                append("Do not include any extra commentary.\n")
-                append("JSON Schema:\n")
-                append(params.schema)
-            },
-            false,
+            promptBuilder.buildExtractDomContent(domText, params)
         )
 
         val extractMessages = listOf(extractSystem, extractUser)
@@ -136,10 +115,13 @@ class InferenceEngine(
         }
 
         val t0 = System.currentTimeMillis()
-        val extractResp: ChatResponse = chatModel.langChainChat(
-            SystemMessage.systemMessage(extractSystem.content.toString()),
-            UserMessage.userMessage(extractUser.content.toString())
-        )
+        val systemMessage = SystemMessage.systemMessage(extractSystem.content.toString())
+        val userMessage = UserMessage.userMessage(extractUser.content.toString())
+        val chatRequest = ChatRequest.builder()
+            .messages(systemMessage, userMessage)
+            // .temperature(temperature) // use the provider default currently
+            .build()
+        val extractResp: ChatResponse = chatModel.langChainChat(chatRequest)
         val t1 = System.currentTimeMillis()
 
         val extractText = extractResp.aiMessage().text().trim()
@@ -147,6 +129,7 @@ class InferenceEngine(
             prompt_tokens = extractResp.tokenUsage().inputTokenCount(),
             completion_tokens = extractResp.tokenUsage().outputTokenCount(),
         )
+
         var extractedNode: ObjectNode = runCatching {
             mapper.readTree(extractText) as? ObjectNode ?: JsonNodeFactory.instance.objectNode()
         }.getOrElse { JsonNodeFactory.instance.objectNode() }
@@ -178,9 +161,9 @@ class InferenceEngine(
         }
 
         // 2) Metadata call -------------------------------------------------------------------
-        val metadataSystem = buildMetadataSystemPrompt()
+        val metadataSystem = promptBuilder.buildMetadataSystemPrompt()
         // For metadata, pass the extracted object directly
-        val metadataUser = buildMetadataPrompt(
+        val metadataUser = promptBuilder.buildMetadataPrompt(
             params.instruction,
             extractedNode,
             params.chunksSeen,
@@ -265,27 +248,17 @@ class InferenceEngine(
     }
 
     suspend fun observe(params: ObserveParams): InternalObserveResult {
-        val domText = params.domElements.joinToString("\n\n")
         val isGPT5 = (System.getProperty("llm.name") ?: "").lowercase().contains("gpt-5")
+        // TODO: Investigate the API differences among various providers.
         val temperature = if (isGPT5) 1.0 else 0.1
 
         // Build dynamic schema hint for the LLM (prompt-enforced)
-        val schemaHint = buildString {
-            append("You MUST respond with a valid JSON object matching this schema: { \"elements\": [ { \"elementId\": string, \"description\": string")
-            if (params.returnAction) {
-                append(", \"method\": string, \"arguments\": [string]")
-            }
-            append(" } ] } . The elementId must follow the 'number-number' format and MUST NOT include square brackets. Do not include any extra text.")
-        }
-
-        val systemMsg = buildObserveSystemPrompt(params.userProvidedInstructions)
-        val userMsg = buildObserveUserMessage(
-            params.instruction,
-            domText + "\n\n" + schemaHint
-        )
+        val systemMsg = promptBuilder.buildObserveSystemPrompt(params.userProvidedInstructions)
+        val domText = promptBuilder.buildObserveDomText(params, schemaHint = true)
+        val userMsg = promptBuilder.buildObserveUserMessage(params.instruction, domText)
 
         val prefix = if (params.fromAct) "act" else "observe"
-        var callFile = "";"".also { }
+        var callFile = ""
         var callTs = ""
         if (params.logInferenceToFile) {
             val (f, ts) = writeTimestampedTxtFile(
@@ -301,10 +274,13 @@ class InferenceEngine(
         }
 
         val t0 = System.currentTimeMillis()
-        val resp: ChatResponse = chatModel.langChainChat(
-            SystemMessage.systemMessage(systemMsg.content.toString()),
-            UserMessage.userMessage(userMsg.content.toString())
-        )
+        val systemMessage = SystemMessage.systemMessage(systemMsg.content.toString())
+        val userMessage = UserMessage.userMessage(userMsg.content.toString())
+        val chatRequest = ChatRequest.builder()
+            .messages(systemMessage, userMessage)
+            // .temperature(temperature) // use the provider default currently
+            .build()
+        val resp: ChatResponse = chatModel.langChainChat(chatRequest)
         val t1 = System.currentTimeMillis()
         val usage = LLMUsage(
             prompt_tokens = resp.tokenUsage().inputTokenCount(),
@@ -353,14 +329,14 @@ class InferenceEngine(
         )
     }
 
-    fun collectDomElements(): List<String> {
+    fun buildSlimNodeTree(): SlimNode {
         val trees = domService.getAllTrees()
         val enhanced = domService.buildEnhancedDomTree(trees)
         val hasElements = enhanced.children.isNotEmpty() ||
                 enhanced.shadowRoots.isNotEmpty() ||
                 enhanced.contentDocument != null
         val simplified = domService.buildSimplifiedTree(enhanced)
-        val serialized = domService.serializeForLLM(simplified)
+        // val serialized = domService.serializeForLLM(simplified)
 
         if (!hasElements) {
             // Write a lightweight diagnostic to help root cause empty DOM
@@ -383,12 +359,12 @@ class InferenceEngine(
             throw IllegalStateException("Empty DOM tree collected (AX=${trees.axTree.size}, SNAP=${trees.snapshotByBackendId.size}). See logs/chat-model/domservice-diagnostics.json")
         }
 
-        val json = serialized.json
-        if (json.isBlank()) {
-            throw IllegalStateException("Serialized DOM JSON is blank")
-        }
+//        val json = serialized.json
+//        if (json.isBlank()) {
+//            throw IllegalStateException("Serialized DOM JSON is blank")
+//        }
 
-        return listOf(json)
+        return simplified
     }
 
     // ----------------------------------- Helpers -----------------------------------
@@ -444,7 +420,7 @@ class InferenceEngine(
 
     private fun safeJsonPreview(raw: String, limit: Int = 2000): String {
         // Bound file payload length for safety
-        return if (raw.length > limit) raw.substring(0, limit) + "...<truncated>" else raw
+        return if (raw.length > limit) raw.take(limit) + "...<truncated>" else raw
     }
 
     private fun logsDir(): Path = Path.of("logs")

@@ -11,9 +11,8 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 
 /**
  * Serializer for DOM trees optimized for LLM consumption.
- * Maps to Python DOMTreeSerializer.
  */
-object DomLLMSerializer {
+object DomSerializer {
     private val mapper: ObjectMapper = jacksonObjectMapper().apply {
         setSerializationInclusion(JsonInclude.Include.NON_NULL)
     }
@@ -21,7 +20,6 @@ object DomLLMSerializer {
     /**
      * Serialize SimplifiedNode tree to JSON string for LLM.
      * Enhanced with paint-order pruning, compound component marking, and attribute casing alignment.
-     * Maps to Python DOMTreeSerializer.serialize_for_llm
      *
      * @param root The simplified node tree root
      * @param includeAttributes List of attribute names to include (empty = use defaults)
@@ -33,12 +31,11 @@ object DomLLMSerializer {
         includeAttributes: List<String> = emptyList(),
         options: SerializationOptions = SerializationOptions()
     ): DomLLMSerialization {
-        val attrs = includeAttributes.ifEmpty {
-            DefaultIncludeAttributes.ATTRIBUTES
-        }.map { it.lowercase() }.toSet()
+        val attrsList = includeAttributes.ifEmpty { DefaultIncludeAttributes.ATTRIBUTES }
+        val attrs = attrsList.map { it.lowercase() }.toSet()
 
         val selectorMap = linkedMapOf<String, DOMTreeNodeEx>()
-        val serializable = buildSerializableEnhanced(root, attrs, emptyList(), selectorMap, options)
+        val serializable = buildSerializableEnhanced(root, attrs, emptyList(), selectorMap, options, includeOrder = attrsList.map { it.lowercase() })
         val json = mapper.writeValueAsString(serializable)
         return DomLLMSerialization(json = json, selectorMap = selectorMap)
     }
@@ -64,7 +61,8 @@ object DomLLMSerializer {
         ancestors: List<DOMTreeNodeEx>,
         selectorMap: MutableMap<String, DOMTreeNodeEx>,
         options: SerializationOptions,
-        depth: Int = 0
+        depth: Int = 0,
+        includeOrder: List<String> = emptyList()
     ): SerializableNode {
         // Apply paint-order pruning if enabled
         if (options.enablePaintOrderPruning && shouldPruneByPaintOrder(node, options)) {
@@ -73,7 +71,7 @@ object DomLLMSerializer {
         }
 
         // Clean original node with enhanced attribute casing alignment
-        val cleanedOriginal = cleanOriginalNodeEnhanced(node.originalNode, includeAttributes, options)
+        val cleanedOriginal = cleanOriginalNodeEnhanced(node.originalNode, includeAttributes, options, includeOrder)
 
         val showScrollInfo = ScrollUtils.shouldShowScrollInfo(node.originalNode, ancestors)
         val scrollInfoText = if (showScrollInfo) {
@@ -95,7 +93,7 @@ object DomLLMSerializer {
         // Recursively serialize children with enhanced logic (do not filter; prune per-node)
         val childAncestors = ancestors + node.originalNode
         val serializedChildren = node.children.map {
-            buildSerializableEnhanced(it, includeAttributes, childAncestors, selectorMap, options, depth + 1)
+            buildSerializableEnhanced(it, includeAttributes, childAncestors, selectorMap, options, depth + 1, includeOrder)
         }
 
         return SerializableNode(
@@ -123,29 +121,36 @@ object DomLLMSerializer {
      * Detect if a node represents a compound component.
      */
     private fun detectCompoundComponent(node: SlimNode, options: SerializationOptions): Boolean {
-        // Skip if not enough children
-        if (node.children.size < options.compoundComponentMinChildren) return false
-
         val originalNode = node.originalNode
+        val tag = originalNode.nodeName.lowercase()
+
+        // Input types that usually render compound controls
+        val inputCompoundTypes = setOf(
+            "date", "time", "datetime-local", "month", "week", "range", "number", "color", "file"
+        )
 
         // Check for common compound component patterns
         val hasCompoundStructure = when {
+            // Specific controls that have built-in compound UI
+            tag == "select" || tag == "details" || tag == "audio" || tag == "video" -> true
+
+            // Input with certain types
+            tag == "input" && originalNode.attributes["type"]?.lowercase() in inputCompoundTypes -> true
+
             // Form components
-            originalNode.nodeName.equals("form", ignoreCase = true) -> true
+            tag == "form" && node.children.size >= options.compoundComponentMinChildren -> true
 
             // List components
-            originalNode.nodeName.equals("ul", ignoreCase = true) ||
-            originalNode.nodeName.equals("ol", ignoreCase = true) ||
-            originalNode.nodeName.equals("dl", ignoreCase = true) -> true
+            tag in setOf("ul", "ol", "dl") && node.children.size >= options.compoundComponentMinChildren -> true
 
             // Table components
-            originalNode.nodeName.equals("table", ignoreCase = true) -> true
+            tag == "table" && node.children.size >= options.compoundComponentMinChildren -> true
 
             // Navigation components
-            originalNode.nodeName.equals("nav", ignoreCase = true) -> true
+            tag == "nav" && node.children.size >= options.compoundComponentMinChildren -> true
 
             // Custom elements (web components)
-            originalNode.nodeName.contains("-") -> true
+            originalNode.nodeName.contains("-") && node.children.size >= options.compoundComponentMinChildren -> true
 
             // Check for ARIA roles that indicate compound components
             originalNode.axNode?.role in setOf("list", "grid", "tree", "tablist", "menu", "toolbar", "navigation") -> true
@@ -207,10 +212,11 @@ object DomLLMSerializer {
     private fun cleanOriginalNodeEnhanced(
         node: DOMTreeNodeEx,
         includeAttributes: Set<String>,
-        options: SerializationOptions
+        options: SerializationOptions,
+        includeOrder: List<String>
     ): CleanedOriginalNode {
         // Filter attributes with enhanced casing alignment
-        val filteredAttrs = if (options.enableAttributeCasingAlignment) {
+        val filteredAttrs: Map<String, String> = if (options.enableAttributeCasingAlignment) {
             alignAttributeCasing(node.attributes, includeAttributes, options)
         } else {
             node.attributes.filterKeys { key ->
@@ -219,7 +225,7 @@ object DomLLMSerializer {
         }
 
         // Extract AX attributes if present with enhanced processing
-        val axAttrs = mutableMapOf<String, Any>()
+        val axAttrs = linkedMapOf<String, String>()
         node.axNode?.let { ax ->
             ax.role?.let { axAttrs["role"] = it }
             ax.name?.let { axAttrs["ax_name"] = it }
@@ -230,13 +236,49 @@ object DomLLMSerializer {
                     prop.name.lowercase()
                 }
                 if (key in includeAttributes) {
-                    prop.value?.let { axAttrs[key] = it }
+                    val v = prop.value
+                    when (v) {
+                        is Boolean -> axAttrs[key] = v.toString().lowercase()
+                        null -> {}
+                        else -> {
+                            val s = v.toString().trim()
+                            if (s.isNotEmpty()) axAttrs[key] = s
+                        }
+                    }
                 }
             }
         }
 
-        // Merge DOM and AX attributes
-        val mergedAttrs = filteredAttrs + axAttrs
+        // Merge DOM and AX attributes (DOM first, AX overrides)
+        val merged = linkedMapOf<String, String>()
+        filteredAttrs.forEach { (k, v) -> merged[k] = v }
+        axAttrs.forEach { (k, v) -> merged[k] = v }
+
+        // Remove 'role' that duplicates node name (align with Python)
+        val nodeNameLower = node.nodeName.lowercase()
+        if (merged["role"] != null && merged["role"]!!.equals(nodeNameLower, ignoreCase = true)) {
+            merged.remove("role")
+        }
+
+        // Remove duplicate long values keeping first occurrence according to include order (>5 length like Python)
+        if (merged.size > 1) {
+            val seen = mutableMapOf<String, String>() // value -> key
+            val keysToRemove = mutableSetOf<String>()
+            // iterate in includeOrder priority if provided, otherwise current order
+            val orderedKeys = includeOrder.filter { merged.containsKey(it) } + merged.keys.filter { it !in includeOrder }
+            for (key in orderedKeys) {
+                val value = merged[key] ?: continue
+                if (value.length > 5) {
+                    val existingKey = seen[value]
+                    if (existingKey != null && existingKey != key) {
+                        keysToRemove.add(key)
+                    } else {
+                        seen[value] = key
+                    }
+                }
+            }
+            keysToRemove.forEach { merged.remove(it) }
+        }
 
         // Get snapshot info with enhanced processing
         val snapshot = node.snapshotNode
@@ -253,7 +295,7 @@ object DomLLMSerializer {
             nodeType = node.nodeType.value,
             nodeName = if (options.preserveOriginalCasing) node.nodeName else node.nodeName.lowercase(),
             nodeValue = node.nodeValue.takeIf { it.isNotEmpty() },
-            attributes = mergedAttrs.takeIf { it.isNotEmpty() },
+            attributes = merged.takeIf { it.isNotEmpty() },
             frameId = node.frameId,
             sessionId = node.sessionId,
             isScrollable = node.isScrollable,
@@ -269,7 +311,7 @@ object DomLLMSerializer {
             paintOrder = paintOrder,
             stackingContexts = stackingContexts,
             // contentDocument is cleaned recursively if present
-            contentDocument = node.contentDocument?.let { cleanOriginalNodeEnhanced(it, includeAttributes, options) }
+            contentDocument = node.contentDocument?.let { cleanOriginalNodeEnhanced(it, includeAttributes, options, includeOrder) }
         )
     }
 

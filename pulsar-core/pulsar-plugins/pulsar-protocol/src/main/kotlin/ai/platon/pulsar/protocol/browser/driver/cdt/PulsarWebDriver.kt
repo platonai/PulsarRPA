@@ -199,9 +199,11 @@ class PulsarWebDriver(
         return invokeOnPage("evaluateValueDetail") { createJsEvaluate(page.evaluateValueDetail(expression)) }
     }
 
-    @Throws(WebDriverException::class)
     override suspend fun currentUrl(): String {
-        navigateUrl = invokeOnPage("currentUrl") { mainFrameAPI?.url } ?: navigateUrl
+        val mainFrameUrl = runCatching { invokeOnPage("currentUrl") { mainFrameAPI?.url } }
+            .onFailure { logger.warn("Failed to retrieve the mainFrameUrl", it) }
+            .getOrNull()
+        navigateUrl = mainFrameUrl ?: navigateUrl
         return navigateUrl
     }
 

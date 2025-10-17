@@ -670,9 +670,20 @@ delay(millis: Long)
 stop()
     """
 
-        val SUPPORTED_TOOL_CALLS = TOOL_CALL_LIST.split("\n").map { it.trim() }
+        val SUPPORTED_TOOL_CALLS = TOOL_CALL_LIST.split("\n").filter { it.contains("(") }.map { it.trim() }
 
         val SUPPORTED_ACTIONS = SUPPORTED_TOOL_CALLS.map { it.substringBefore("(") }
+
+//        export enum SUPPORTED_EXTRA_ACTIONS {
+//            CLICK = "click",
+//            FILL = "fill",
+//            TYPE = "type",
+//            PRESS = "press",
+//            SCROLL = "scrollTo",
+//            NEXT_CHUNK = "nextChunk",
+//            PREV_CHUNK = "prevChunk",
+//            SELECT_OPTION_FROM_DROPDOWN = "selectOptionFromDropdown",
+//        }
 
         val SELECTOR_ACTIONS = setOf(
             "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "visible", "focus",

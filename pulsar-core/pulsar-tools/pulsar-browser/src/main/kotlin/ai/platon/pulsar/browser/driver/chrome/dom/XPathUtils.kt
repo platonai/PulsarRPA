@@ -6,7 +6,6 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Utility functions for generating XPath expressions.
- * Maps to Python XPath generation logic in views.py
  */
 object XPathUtils {
 
@@ -18,7 +17,6 @@ object XPathUtils {
 
     /**
      * Generate XPath for a node based on its position in the tree.
-     * Maps to Python EnhancedDOMTreeNode.x_path property.
      *
      * Enhanced Rules:
      * - Stops at shadow root boundaries (returns path up to shadow host)

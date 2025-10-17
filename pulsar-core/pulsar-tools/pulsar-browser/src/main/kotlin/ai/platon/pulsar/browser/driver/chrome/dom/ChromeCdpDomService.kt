@@ -231,12 +231,12 @@ class ChromeCdpDomService(
 
     override fun serializeForLLM(root: SlimNode, includeAttributes: List<String>): DomLLMSerialization {
         // Use enhanced serialization with default options
-        val options = DomLLMSerializer.SerializationOptions(
+        val options = DomSerializer.SerializationOptions(
             enablePaintOrderPruning = true,
             enableCompoundComponentDetection = true,
             enableAttributeCasingAlignment = true
         )
-        return DomLLMSerializer.serialize(root, includeAttributes, options)
+        return DomSerializer.serialize(root, includeAttributes, options)
     }
 
     override fun findElement(ref: ElementRefCriteria): DOMTreeNodeEx? {

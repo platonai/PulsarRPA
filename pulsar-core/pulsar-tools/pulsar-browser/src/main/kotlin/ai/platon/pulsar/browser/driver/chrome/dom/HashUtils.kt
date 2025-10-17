@@ -7,7 +7,6 @@ import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Utility functions for computing element hashes and parent branch hashes.
- * Maps to Python hash computation logic in views.py
  */
 object HashUtils {
 
@@ -52,7 +51,6 @@ object HashUtils {
 
     /**
      * Compute element hash based on parent-branch path + STATIC_ATTRIBUTES with configuration support.
-     * Maps to Python EnhancedDOMTreeNode.element_hash property.
      *
      * Enhanced with:
      * - Configurable hash generation modes (legacy, backend-node-based, hybrid)
@@ -208,7 +206,6 @@ object HashUtils {
      * Compute parent branch hash for a node based on its position in the tree.
      * Enhanced with caching and improved path calculation.
      * This is used to build unique paths through the DOM tree.
-     * Maps to Python EnhancedDOMTreeNode.parent_branch_hash property.
      *
      * @param ancestors List of ancestor nodes from root to immediate parent
      * @return SHA256 hex string representing the path to this node

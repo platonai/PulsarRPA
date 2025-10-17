@@ -321,7 +321,6 @@ interface WebDriver : Closeable {
      *
      * @return A string containing the URL of the document, or the passed in url to navigate.
      */
-    @Throws(WebDriverException::class)
     suspend fun currentUrl(): String
 
     /**

@@ -42,6 +42,7 @@ class PulsarPerceptiveAgent(
 
     private val tta by lazy { TextToAction(conf) }
     private val inference by lazy { InferenceEngine(driver, tta.chatModel) }
+    private val promptBuilder = BrowserUsePromptBuilder()
 
     // Enhanced state management
     private val _history = mutableListOf<String>()
@@ -56,6 +57,17 @@ class PulsarPerceptiveAgent(
     override val uuid = UUID.randomUUID()
     override val history: List<String> get() = _history
 
+    /**
+     * Run `observe -> act -> observe -> act -> ...` loop to resolve the problem.
+     * */
+    override suspend fun multiAct(action: ActionOptions): ActResult {
+        Files.createDirectories(baseDir)
+        val startTime = Instant.now()
+        val sessionId = uuid.toString()
+
+        return executeWithRetry(action, sessionId, startTime)
+    }
+
     override suspend fun act(action: String): ActResult {
         val opts = ActionOptions(action = action)
         return act(opts)
@@ -67,18 +79,6 @@ class PulsarPerceptiveAgent(
      */
     override suspend fun act(action: ActionOptions): ActResult {
         return observeAct(action)
-    }
-
-    /**
-     * Execution with comprehensive error handling and retry mechanism.
-     * Returns the final summary with enhanced error handling.
-     */
-    override suspend fun actLegacy(action: ActionOptions): ActResult {
-        Files.createDirectories(baseDir)
-        val startTime = Instant.now()
-        val sessionId = uuid.toString()
-
-        return executeWithRetry(action, sessionId, startTime)
     }
 
     override suspend fun act(observe: ObserveResult): ActResult {
@@ -187,7 +187,7 @@ class PulsarPerceptiveAgent(
         logExtractStart(instruction, requestId)
 
         val schemaJson = buildSchemaJsonFromMap(options.schema)
-        val domElements = inference.collectDomElements()
+        val domElements = inference.buildSlimNodeTree()
 
         return try {
             val resultNode = inference.extract(
@@ -226,14 +226,14 @@ class PulsarPerceptiveAgent(
         val requestId = UUID.randomUUID().toString()
         logObserveStart(instruction, requestId)
 
-        val domElements = inference.collectDomElements()
+        val domElements = inference.buildSlimNodeTree()
         val returnAction = options.returnAction ?: true
 
         return try {
             val internal = inference.observe(
                 ObserveParams(
                     instruction = instruction,
-                    domElements = domElements,
+                    domElements = inference.domService.serializeForLLM(domElements).json,
                     requestId = requestId,
                     returnAction = returnAction,
                     logInferenceToFile = config.enableStructuredLogging,
@@ -281,8 +281,8 @@ class PulsarPerceptiveAgent(
 
     private suspend fun observeAct(action: ActionOptions): ActResult {
         // 1) Build instruction for action-oriented observe
-        val supportedActions = ToolCallExecutor.SUPPORTED_ACTIONS
-        val instruction = buildActObservePrompt(action.action, supportedActions, action.variables)
+        val toolCalls = ToolCallExecutor.SUPPORTED_TOOL_CALLS
+        val instruction = promptBuilder.buildActObservePrompt(action.action, toolCalls, action.variables)
 
         // 2) Optional settle wait before observing DOM (if provided)
         val settleMs = action.domSettleTimeoutMs?.toLong()?.coerceAtLeast(0L)
@@ -294,7 +294,7 @@ class PulsarPerceptiveAgent(
         // 3) Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
         val requestId = UUID.randomUUID().toString()
         val results: List<ObserveResult> = try {
-            val domElements = inference.collectDomElements()
+            val domElements = inference.buildSlimNodeTree()
             val internal = inference.observe(
                 ObserveParams(
                     instruction = instruction,
@@ -307,7 +307,7 @@ class PulsarPerceptiveAgent(
             )
             val mapped = internal.elements.map { el ->
                 ObserveResult(
-                    selector = "node:${'$'}{el.elementId}",
+                    selector = "node:${el.elementId}",
                     description = el.description,
                     backendNodeId = null,
                     method = el.method?.ifBlank { null },
@@ -319,25 +319,7 @@ class PulsarPerceptiveAgent(
         } catch (e: Exception) {
             logger.error("observeAct.observe.error requestId={} msg={}", requestId.take(8), e.message, e)
             addHistoryObserve(instruction, requestId, 0, false)
-            // Fallback: best-effort interactive element extraction with no action returned
-            val interactive = runCatching { tta.extractInteractiveElementsDeferred(driver) }.getOrElse { emptyList() }
-            if (interactive.isNotEmpty()) {
-                interactive.map { ie ->
-                    val label = listOfNotNull(
-                        ie.text.takeIf { it.isNotBlank() }?.take(80),
-                        ie.placeholder?.takeIf { it.isNotBlank() }?.let { "placeholder=\"$it\"" },
-                        ie.type?.takeIf { it.isNotBlank() }?.let { "type=$it" },
-                        ie.tagName.takeIf { it.isNotBlank() }?.lowercase()
-                    ).joinToString(" | ").ifBlank { ie.selector.take(100) }
-                    ObserveResult(
-                        selector = ie.selector,
-                        description = label,
-                        backendNodeId = null,
-                        method = null,
-                        arguments = null
-                    )
-                }
-            } else emptyList()
+            emptyList()
         }
 
         if (results.isEmpty()) {
@@ -347,23 +329,13 @@ class PulsarPerceptiveAgent(
         }
 
         // 4) Choose the top candidate and substitute variables into arguments
-        val chosen0 = results.first()
-        val method = chosen0.method?.trim().orEmpty()
+        val chosen = results.first()
+        val method = chosen.method?.trim().orEmpty()
         if (method.isBlank()) {
             val msg = "observeAct: LLM returned no method for selected element"
             addToHistory(msg)
             return ActResult(false, msg, action = action.action)
         }
-
-        val vars = action.variables ?: emptyMap()
-        fun substituteVars(s: String): String {
-            var out = s
-            // placeholders like %name%
-            vars.forEach { (k, v) -> out = out.replace("%$k%", v) }
-            return out
-        }
-        val substitutedArgs: List<String>? = chosen0.arguments?.map { substituteVars(it) }
-        val chosen = chosen0.copy(arguments = substitutedArgs)
 
         // 5) Execute action, and optionally wait for navigation if caller provided timeoutMs
         val oldUrl = runCatching { driver.currentUrl() }.getOrDefault("")
@@ -371,7 +343,7 @@ class PulsarPerceptiveAgent(
 
         // If a timeout is provided and the action likely triggers navigation, wait for navigation
         val timeoutMs = action.timeoutMs?.toLong()?.takeIf { it > 0 }
-        val maybeNavMethod = method in setOf("navigateTo", "click", "goBack", "goForward")
+        val maybeNavMethod = method in ToolCallExecutor.MAY_NAVIGATE_ACTIONS
         if (timeoutMs != null && maybeNavMethod && execResult.success) {
             runCatching { driver.waitForNavigation(oldUrl, timeoutMs) }
                 .onFailure { e -> logger.warn("observeAct: waitForNavigation failed | {}", e.toString()) }
@@ -506,7 +478,7 @@ class PulsarPerceptiveAgent(
                 val stepContext = context.copy(stepNumber = step, actionType = "step")
 
                 // Extract interactive elements each step (could be optimized via diffing later)
-                // val domElements = inference.collectDomElements()
+                val domElements2 = inference.buildSlimNodeTree()
                 val domElements = tta.extractInteractiveElementsDeferred(driver)
 
                 logStructured(

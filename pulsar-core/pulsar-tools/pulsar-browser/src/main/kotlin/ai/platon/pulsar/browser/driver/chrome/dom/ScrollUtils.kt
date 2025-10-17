@@ -5,13 +5,11 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 
 /**
  * Utility functions for scroll-related logic.
- * Maps to Python scroll detection logic in views.py
  */
 object ScrollUtils {
 
     /**
      * Determine if a node is actually scrollable.
-     * Maps to Python is_actually_scrollable function.
      *
      * Rules:
      * - Check CSS overflow properties (scroll or auto)
@@ -66,7 +64,6 @@ object ScrollUtils {
 
     /**
      * Generate scroll information text for display.
-     * Maps to Python get_scroll_info_text function.
      *
      * @param node The DOM node
      * @return Human-readable scroll info or null if not scrollable

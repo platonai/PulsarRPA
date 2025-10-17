@@ -240,8 +240,6 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
      * Build a mapping from backendNodeId to EnhancedSnapshotNode.
      * This is the primary method for associating snapshot data with DOM nodes.
      *
-     * Maps to Python build_snapshot_lookup function.
-     *
      * @param includeStyles Whether to capture computed styles
      * @return Map of backendNodeId to snapshot data
      */
@@ -346,7 +344,6 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
     companion object {
         /**
          * Required computed styles for proper visibility, scroll detection, and absolute positioning.
-         * Maps to Python REQUIRED_COMPUTED_STYLES.
          */
         val REQUIRED_COMPUTED_STYLES = listOf(
             "display",

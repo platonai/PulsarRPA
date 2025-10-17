@@ -94,7 +94,6 @@ data class CurrentPageTargets(
 
 /**
  * Propagating bounds for filtering children in serialization.
- * Maps to Python PropagatingBounds dataclass.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 data class PropagatingBounds(
