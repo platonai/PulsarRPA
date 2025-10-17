@@ -22,6 +22,8 @@
     <logger name="ai.platon.pulsar.browser" level="INFO"/>
     <logger name="ai.platon.pulsar.browser.driver.chrome.impl" level="INFO"/>
 
+    <logger name="ai.platon.pulsar.skeleton.ai.agent" level="DEBUG"/>
+
     <logger name="org.apache.gora.mongodb.store" level="INFO"/>
     <logger name="org.apache.gora" level="INFO"/>
 
