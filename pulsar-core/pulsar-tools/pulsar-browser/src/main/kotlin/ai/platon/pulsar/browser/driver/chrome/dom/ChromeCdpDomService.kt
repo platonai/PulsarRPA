@@ -4,9 +4,11 @@ import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.AccessibilityHandler.AccessibilityTreeResult
 import ai.platon.pulsar.browser.driver.chrome.dom.model.*
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.getLogger
 import com.github.kklisura.cdt.protocol.v2023.types.accessibility.AXNode
 import java.nio.file.Files
+import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.time.Instant
 import kotlin.math.abs
@@ -271,11 +273,8 @@ class ChromeCdpDomService(
                     "timingsMs" to trees.cdpTiming
                 )
 
-                val dir = AppPaths.get("logs", "chat-model").toFile()
-                if (!dir.exists()) dir.mkdirs()
-                val out = dir.resolve("dom-service-diagnostics.json")
-                Files.writeString(out.toPath(), diagnostics.toString() + System.lineSeparator(),
-                    StandardOpenOption.CREATE, StandardOpenOption.APPEND)
+                val out = AppPaths.getProcTmpDirectory("dom-service-diagnostics.json")
+                MessageWriter(out).use { it.write(diagnostics) }
             }.onFailure { e -> logger.warn("Failed to write DOM diagnostics | {}", e.toString()) }
 
             throw IllegalStateException("Empty DOM tree collected (AX=${trees.axTree.size}, SNAP=${trees.snapshotByBackendId.size}). See logs/chat-model/domservice-diagnostics.json")
