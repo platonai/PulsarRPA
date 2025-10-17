@@ -32,7 +32,7 @@ class ChromeCdpDomService(
     @Volatile
     private var lastDomByBackend: Map<Int, DOMTreeNodeEx> = emptyMap()
 
-    override fun getDetailTrees(target: PageTarget, options: SnapshotOptions): TargetDetailTrees {
+    override fun getMultiDOMTrees(target: PageTarget, options: SnapshotOptions): TargetDetailTrees {
         val startTime = System.currentTimeMillis()
         val timings = mutableMapOf<String, Long>()
 
@@ -247,7 +247,7 @@ class ChromeCdpDomService(
     }
 
     override fun buildSlimDOM(): SlimNode {
-        val trees = getDetailTrees()
+        val trees = getMultiDOMTrees()
         return buildSlimDOM(trees)
     }
 

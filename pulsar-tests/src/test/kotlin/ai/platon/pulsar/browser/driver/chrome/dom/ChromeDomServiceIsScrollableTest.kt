@@ -26,12 +26,12 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
 
     private fun collectRoot(service: ChromeCdpDomService, options: SnapshotOptions): DOMTreeNodeEx {
         repeat(3) { attempt ->
-            val t = service.getDetailTrees(target = PageTarget(), options = options)
+            val t = service.getMultiDOMTrees(target = PageTarget(), options = options)
             val r = service.buildEnhancedDomTree(t)
             if (r.children.isNotEmpty() || attempt == 2) return r
             Thread.sleep(300)
         }
-        return service.buildEnhancedDomTree(service.getDetailTrees(PageTarget(), options))
+        return service.buildEnhancedDomTree(service.getMultiDOMTrees(PageTarget(), options))
     }
 
     @Test

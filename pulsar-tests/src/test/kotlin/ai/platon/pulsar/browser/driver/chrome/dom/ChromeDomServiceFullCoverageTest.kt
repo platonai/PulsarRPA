@@ -46,7 +46,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
 
         fun collectRoot(): DOMTreeNodeEx {
             repeat(3) { attempt ->
-                val t = service.getDetailTrees(target = PageTarget(), options = options)
+                val t = service.getMultiDOMTrees(target = PageTarget(), options = options)
                 // Print TargetAllTrees summary once per attempt (last one will be the most recent)
                 println(DomDebug.summarize(t))
                 val r = service.buildEnhancedDomTree(t)
@@ -54,7 +54,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
                 Thread.sleep(300)
             }
             // Unreachable
-            return service.buildEnhancedDomTree(service.getDetailTrees(PageTarget(), options))
+            return service.buildEnhancedDomTree(service.getMultiDOMTrees(PageTarget(), options))
         }
 
         val enhancedRoot = collectRoot()
@@ -96,13 +96,13 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
 
         fun collectRoot(): DOMTreeNodeEx {
             repeat(3) { attempt ->
-                val t = service.getDetailTrees(target = PageTarget(), options = options)
+                val t = service.getMultiDOMTrees(target = PageTarget(), options = options)
                 println(DomDebug.summarize(t))
                 val r = service.buildEnhancedDomTree(t)
                 if (r.children.isNotEmpty() || attempt == 2) return r
                 Thread.sleep(300)
             }
-            return service.buildEnhancedDomTree(service.getDetailTrees(PageTarget(), options))
+            return service.buildEnhancedDomTree(service.getMultiDOMTrees(PageTarget(), options))
         }
         val root = collectRoot()
         assertNotNull(root)
@@ -181,7 +181,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
             includeInteractivity = false
         )
 
-        val trees = service.getDetailTrees(PageTarget(), options)
+        val trees = service.getMultiDOMTrees(PageTarget(), options)
         println(DomDebug.summarize(trees))
         assertTrue(trees.snapshotByBackendId.isEmpty())
         assertTrue(trees.axTree.isEmpty())
@@ -234,13 +234,13 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
 
         fun collectRoot(): DOMTreeNodeEx {
             repeat(3) { attempt ->
-                val t = service.getDetailTrees(target = PageTarget(), options = options)
+                val t = service.getMultiDOMTrees(target = PageTarget(), options = options)
                 println(DomDebug.summarize(t))
                 val r = service.buildEnhancedDomTree(t)
                 if (r.children.isNotEmpty() || attempt == 2) return r
                 Thread.sleep(300)
             }
-            val allTrees = service.getDetailTrees(PageTarget(), options)
+            val allTrees = service.getMultiDOMTrees(PageTarget(), options)
             return service.buildEnhancedDomTree(allTrees)
         }
         val root = collectRoot()
@@ -312,13 +312,13 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
 
         fun collectRoot(): DOMTreeNodeEx {
             repeat(3) { attempt ->
-                val t = service.getDetailTrees(target = PageTarget(), options = options)
+                val t = service.getMultiDOMTrees(target = PageTarget(), options = options)
                 println(DomDebug.summarize(t))
                 val r = service.buildEnhancedDomTree(t)
                 if (r.children.isNotEmpty() || attempt == 2) return r
                 Thread.sleep(300)
             }
-            return service.buildEnhancedDomTree(service.getDetailTrees(PageTarget(), options))
+            return service.buildEnhancedDomTree(service.getMultiDOMTrees(PageTarget(), options))
         }
         val root = collectRoot()
         println(DomDebug.summarize(root))

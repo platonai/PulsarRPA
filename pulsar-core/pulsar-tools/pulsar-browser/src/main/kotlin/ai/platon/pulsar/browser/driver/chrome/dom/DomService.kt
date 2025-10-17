@@ -9,7 +9,7 @@ interface DomService {
     /**
      * Collect all trees (DOM, AX, Snapshot) for the given target.
      */
-    fun getDetailTrees(target: PageTarget = PageTarget(), options: SnapshotOptions = SnapshotOptions()): TargetDetailTrees
+    fun getMultiDOMTrees(target: PageTarget = PageTarget(), options: SnapshotOptions = SnapshotOptions()): TargetDetailTrees
 
     /**
      * Build the enhanced DOM tree by merging DOM, AX, and Snapshot data.

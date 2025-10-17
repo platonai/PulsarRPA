@@ -242,7 +242,7 @@ class PulsarPerceptiveAgent(
             includeInteractivity = true
         )
 
-        val allTrees = inference.domService.getDetailTrees(options = snapshotOptions)
+        val allTrees = inference.domService.getMultiDOMTrees(options = snapshotOptions)
         val slimDOM = inference.domService.buildSlimDOM(allTrees)
         val domJson = inference.domService.serialize(slimDOM).json
 
