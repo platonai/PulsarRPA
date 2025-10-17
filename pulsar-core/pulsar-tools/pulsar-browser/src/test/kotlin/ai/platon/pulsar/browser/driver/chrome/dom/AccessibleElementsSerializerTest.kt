@@ -25,7 +25,7 @@ class AccessibleElementsSerializerTest {
         )
         val root = parent.copy(children = listOf(childInside))
 
-        val slim = AccessibleElementsSerializer(root, enableBBoxFiltering = true).run()
+        val slim = AccessibleElementsSerializer(root, enableBBoxFiltering = true).buildSimplifiedSlimDOM()
         assertNotNull(slim)
         val childSlim = slim!!.children.firstOrNull()
         assertNotNull(childSlim)
@@ -56,7 +56,7 @@ class AccessibleElementsSerializerTest {
             children = listOf(btn1, btn2)
         )
 
-        val slim = AccessibleElementsSerializer(root, enableBBoxFiltering = false).run()
+        val slim = AccessibleElementsSerializer(root, enableBBoxFiltering = false).buildSimplifiedSlimDOM()
         assertNotNull(slim)
 
         // Serialize to build selector map with index:* entries
@@ -65,5 +65,38 @@ class AccessibleElementsSerializerTest {
         assertTrue(keys.any { it == "index:1" }, "Selector map should include index:1")
         assertTrue(keys.any { it == "index:2" }, "Selector map should include index:2")
     }
-}
 
+    @Test
+    fun `optimizeTree prunes invisible non-scrollable parent with all children pruned`() {
+        // Root visible container
+        val root = DOMTreeNodeEx(
+            nodeId = 1,
+            nodeName = "DIV",
+            isVisible = true
+        )
+        // Invisible, non-scrollable parent with one child text that will be pruned (no snapshot, not visible)
+        val invisibleParent = DOMTreeNodeEx(
+            nodeId = 2,
+            nodeName = "DIV",
+            isVisible = false,
+            isScrollable = false,
+            children = listOf(
+                DOMTreeNodeEx(
+                    nodeId = 3,
+                    nodeType = NodeType.TEXT_NODE,
+                    nodeName = "#text",
+                    nodeValue = " ", // trivial text
+                    isVisible = false,
+                    snapshotNode = null
+                )
+            )
+        )
+        val rootWithChild = root.copy(children = listOf(invisibleParent))
+
+        val slim = AccessibleElementsSerializer(rootWithChild, enableBBoxFiltering = false).buildSimplifiedSlimDOM()
+        assertNotNull(slim)
+        // After createSimplifiedTree, the text child is pruned; then optimizeTree should drop the invisible parent
+        val child = slim!!.children.firstOrNull()
+        assertNull(child, "Invisible non-scrollable parent with no kept children should be pruned by optimizeTree")
+    }
+}

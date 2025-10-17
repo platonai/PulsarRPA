@@ -1,8 +1,6 @@
 package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
-import ai.platon.pulsar.browser.driver.chrome.dom.model.SlimNode
-import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.skeleton.ai.BrowserUsePromptBuilder
@@ -20,7 +18,6 @@ import dev.langchain4j.model.chat.response.ChatResponse
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
-import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*

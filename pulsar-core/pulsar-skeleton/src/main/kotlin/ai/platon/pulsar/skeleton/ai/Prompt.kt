@@ -288,7 +288,7 @@ $domElements
         val instruction = if (isCN) {
             """
 根据以下动作查找最相关的页面元素：$action。
-为该元素提供一个动作，支持的 Kotlin 语法如下：
+为该元素提供一个动作，支持的动作如下（Kotlin 语法）：
 
 ```
 ${toolCalls.joinToString("\n")}
@@ -301,7 +301,7 @@ ${toolCalls.joinToString("\n")}
         } else {
             """
 Find the most relevant element to perform an action on given the following action: $action.
-Provide an action for this element, supported actions in Kotlin syntax:
+Provide an action for this element, supported actions (Kotlin syntax):
 
 ```
 ${toolCalls.joinToString("\n")}

@@ -190,8 +190,22 @@ class PulsarPerceptiveAgent(
         logExtractStart(instruction, requestId)
 
         val schemaJson = buildSchemaJsonFromMap(options.schema)
-        val slimDom = domService.buildSlimDOM()
-        val domJson = domService.serialize(slimDom).json
+
+        val snapshotOptions = SnapshotOptions(
+            maxDepth = 1000,
+            includeAX = true,
+            includeSnapshot = true,
+            includeStyles = true,
+            includePaintOrder = true,
+            includeDOMRects = true,
+            includeScrollAnalysis = true,
+            includeVisibility = true,
+            includeInteractivity = true
+        )
+
+        val allTrees = inference.domService.getMultiDOMTrees(options = snapshotOptions)
+        val slimDOM = inference.domService.buildSlimDOM(allTrees)
+        val domJson = inference.domService.serialize(slimDOM).json
 
         return try {
             val resultNode = inference.extract(
@@ -231,10 +245,10 @@ class PulsarPerceptiveAgent(
         logObserveStart(instruction, requestId)
 
         val snapshotOptions = SnapshotOptions(
-            maxDepth = 100,
+            maxDepth = 1000,
             includeAX = true,
             includeSnapshot = true,
-            includeStyles = false,
+            includeStyles = true,
             includePaintOrder = true,
             includeDOMRects = true,
             includeScrollAnalysis = true,
@@ -243,8 +257,8 @@ class PulsarPerceptiveAgent(
         )
 
         val allTrees = inference.domService.getMultiDOMTrees(options = snapshotOptions)
-        val slimDOM = inference.domService.buildSlimDOM(allTrees)
-        val domJson = inference.domService.serialize(slimDOM).json
+        val slimDOM = domService.buildSlimDOM(allTrees)
+        val domJson = domService.serialize(slimDOM).json
 
         val returnAction = options.returnAction ?: true
 
@@ -316,13 +330,29 @@ class PulsarPerceptiveAgent(
         // 3) Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
         val requestId = UUID.randomUUID().toString()
         val results: List<ObserveResult> = try {
-            val domElements = domService.buildSlimDOM()
-            val domJson = domService.serialize(domElements).json
+
+            val snapshotOptions = SnapshotOptions(
+                maxDepth = 1000,
+                includeAX = true,
+                includeSnapshot = true,
+                includeStyles = true,
+                includePaintOrder = true,
+                includeDOMRects = true,
+                includeScrollAnalysis = true,
+                includeVisibility = true,
+                includeInteractivity = true
+            )
+
+            val allTrees = domService.getMultiDOMTrees(options = snapshotOptions)
+            logger.info(DomDebug.summarize(allTrees))
+            val slimDOM = domService.buildSlimDOM(allTrees)
+            logger.info(DomDebug.summarize(slimDOM))
+            val domState = domService.serialize(slimDOM)
 
             val internal = inference.observe(
                 ObserveParams(
                     instruction = instruction,
-                    domElements = listOf(domJson),
+                    domElements = listOf(domState.json),
                     requestId = requestId,
                     returnAction = true,
                     logInferenceToFile = config.enableStructuredLogging,

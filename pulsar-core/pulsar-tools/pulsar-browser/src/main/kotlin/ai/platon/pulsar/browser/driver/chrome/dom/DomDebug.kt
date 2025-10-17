@@ -71,7 +71,8 @@ object DomDebug {
         val label = (node.nodeName.ifBlank { "?" } + id + klass).trim()
         val hashShort = node.elementHash?.take(12) ?: ""
         val xPathShort = node.xPath?.takeLast(40) ?: ""
-        val counts = if (includeTreeStats) stats(node).toString() else "children=${node.children.size} shadowRoots=${node.shadowRoots.size} contentDocument=${node.contentDocument != null}"
+        val counts =
+            if (includeTreeStats) stats(node).toString() else "children=${node.children.size} shadowRoots=${node.shadowRoots.size} contentDocument=${node.contentDocument != null}"
         return buildString {
             appendLine("DOMTreeNodeEx")
             appendLine("- nodeId=${node.nodeId} backendId=${node.backendNodeId} type=${node.nodeType} name=${node.nodeName}")

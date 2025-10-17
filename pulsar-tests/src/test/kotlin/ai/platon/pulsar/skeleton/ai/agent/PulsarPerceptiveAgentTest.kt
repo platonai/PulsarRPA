@@ -1,7 +1,6 @@
 package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.WebDriverTestBase
-import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.ai.detail.AgentConfig
@@ -268,9 +267,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
             runWebDriverTest(actMockSiteHomeURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
-                val result = runBlocking {
-                    agent.act("Click the search button")
-                }
+                val result = agent.act("Click the search button")
 
                 assertNotNull(result)
                 assertTrue(agent.history.isNotEmpty())

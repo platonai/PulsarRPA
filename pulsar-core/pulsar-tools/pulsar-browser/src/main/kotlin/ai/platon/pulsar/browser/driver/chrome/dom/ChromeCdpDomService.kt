@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
 import com.github.kklisura.cdt.protocol.v2023.types.accessibility.AXNode
 import java.nio.file.Files
+import java.nio.file.StandardOpenOption
 import java.time.Instant
 import kotlin.math.abs
 
@@ -256,9 +257,9 @@ class ChromeCdpDomService(
         val hasElements = enhanced.children.isNotEmpty() ||
                 enhanced.shadowRoots.isNotEmpty() ||
                 enhanced.contentDocument != null
-        val simplified = buildSimplifiedSlimDOM(enhanced)
+        val simplified = AccessibleElementsSerializer(enhanced).buildSimplifiedSlimDOM()
 
-        if (!hasElements) {
+        if (!hasElements || simplified == null) {
             // Write a lightweight diagnostic to help root cause empty DOM
             runCatching {
                 val diagnostics = mapOf(
@@ -269,11 +270,12 @@ class ChromeCdpDomService(
                     "snapshotEntryCount" to trees.snapshotByBackendId.size,
                     "timingsMs" to trees.cdpTiming
                 )
+
                 val dir = AppPaths.get("logs", "chat-model").toFile()
                 if (!dir.exists()) dir.mkdirs()
-                val out = dir.resolve("domservice-diagnostics.json")
+                val out = dir.resolve("dom-service-diagnostics.json")
                 Files.writeString(out.toPath(), diagnostics.toString() + System.lineSeparator(),
-                    java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND)
+                    StandardOpenOption.CREATE, StandardOpenOption.APPEND)
             }.onFailure { e -> logger.warn("Failed to write DOM diagnostics | {}", e.toString()) }
 
             throw IllegalStateException("Empty DOM tree collected (AX=${trees.axTree.size}, SNAP=${trees.snapshotByBackendId.size}). See logs/chat-model/domservice-diagnostics.json")

@@ -8,7 +8,7 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * Build a SlimNode tree aligned with Python's serialize_accessible_elements pipeline:
+ * Build a SlimNode tree:
  * - Create simplified tree (skip disabled tags, include iframe content, preserve shadow DOM)
  * - Optimize tree (remove non-meaningful parents)
  * - Apply bounding box filtering with propagating bounds (mark excluded_by_parent)
@@ -51,7 +51,7 @@ class AccessibleElementsSerializer(
     private var interactiveCounter = 1
 
     /** Entry point */
-    fun run(): SlimNode? {
+    fun buildSimplifiedSlimDOM(): SlimNode? {
         val simplified = createSimplifiedTree(root) ?: return null
         val optimized = optimizeTree(simplified)
         val filtered = if (enableBBoxFiltering) applyBoundingBoxFiltering(optimized) else optimized
@@ -146,7 +146,10 @@ class AccessibleElementsSerializer(
         val newNode = node.copy(children = optimizedChildren)
         // Consider node visible solely based on isVisible flag; do not require snapshot presence
         val isVisible = newNode.originalNode.isVisible == true
-        return if (isVisible || newNode.originalNode.isScrollable == true || newNode.originalNode.nodeType == NodeType.TEXT_NODE || newNode.children.isNotEmpty()) {
+        return if (isVisible ||
+            newNode.originalNode.isScrollable == true ||
+            newNode.originalNode.nodeType == NodeType.TEXT_NODE ||
+            newNode.children.isNotEmpty()) {
             newNode
         } else null
     }

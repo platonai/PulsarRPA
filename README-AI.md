@@ -17,6 +17,7 @@ Goal: Help AI work efficiently, stably, and predictably across code, review, doc
 
 Notes for Windows (cmd.exe):
 - Quote `-D` properties, e.g. `-D"dot.sperated.parameter=quoted"`
+- When running tests with the `-am` parameter, add `-D"surefire.failIfNoSpecifiedTests=false"`
 - For test glob examples on Windows, see the [Testing Guide](./devdocs/copilot/test-guide.md)
 
 ---

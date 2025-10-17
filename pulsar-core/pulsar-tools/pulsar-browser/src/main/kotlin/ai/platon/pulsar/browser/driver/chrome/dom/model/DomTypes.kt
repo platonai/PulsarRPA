@@ -20,7 +20,7 @@ data class PageTarget(
  */
 data class SnapshotOptions(
     @get:JsonProperty("max_depth") @param:JsonProperty("max_depth")
-    val maxDepth: Int = 0, // 0 means full tree
+    val maxDepth: Int = 1000, // 0 means full tree TODO: it seems a bug with 0 for full tree logic
     @get:JsonProperty("include_ax") @param:JsonProperty("include_ax")
     val includeAX: Boolean = true,
     @get:JsonProperty("include_snapshot") @param:JsonProperty("include_snapshot")
