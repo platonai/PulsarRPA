@@ -37,7 +37,7 @@ class AccessibleElementsSerializerRealWebTest : WebDriverTestBase() {
     }
 
     @Test
-    fun `SimplifiedSlimDOM invariants on examplecom`() = runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
+    fun `SimplifiedSlimDOM invariants on interactive-dynamic page`() = runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
         val devTools = driver.implementation as RemoteDevTools
         val service = ChromeCdpDomService(devTools)

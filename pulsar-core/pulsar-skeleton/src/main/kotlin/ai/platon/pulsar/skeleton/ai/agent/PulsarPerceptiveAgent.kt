@@ -1,5 +1,6 @@
 package ai.platon.pulsar.skeleton.ai.agent
 
+import ai.platon.pulsar.browser.driver.chrome.dom.DOMState
 import ai.platon.pulsar.browser.driver.chrome.dom.DomDebug
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
@@ -185,33 +186,17 @@ class PulsarPerceptiveAgent(
     }
 
     override suspend fun extract(options: ExtractOptions): ExtractResult {
-        val instruction = options.instruction?.takeIf { it.isNotBlank() } ?: "Extract key structured data from the page"
+        val instruction = promptBuilder.enhanceExtractUserInstruction(options.instruction)
         val requestId = UUID.randomUUID().toString()
         logExtractStart(instruction, requestId)
 
         val schemaJson = buildSchemaJsonFromMap(options.schema)
 
-        val snapshotOptions = SnapshotOptions(
-            maxDepth = 1000,
-            includeAX = true,
-            includeSnapshot = true,
-            includeStyles = true,
-            includePaintOrder = true,
-            includeDOMRects = true,
-            includeScrollAnalysis = true,
-            includeVisibility = true,
-            includeInteractivity = true
-        )
-
-        val allTrees = inference.domService.getMultiDOMTrees(options = snapshotOptions)
-        val slimDOM = inference.domService.buildSlimDOM(allTrees)
-        val domJson = inference.domService.serialize(slimDOM).json
-
         return try {
             val resultNode = inference.extract(
                 ExtractParams(
                     instruction = instruction,
-                    domElements = listOf(domJson),
+                    domElements = listOf(getDOMState().json),
                     schema = schemaJson,
                     requestId = requestId,
                     logInferenceToFile = config.enableStructuredLogging
@@ -239,11 +224,7 @@ class PulsarPerceptiveAgent(
         return doObserve(options)
     }
 
-    private suspend fun doObserve(options: ObserveOptions): List<ObserveResult> {
-        val instruction = options.instruction?.takeIf { it.isNotBlank() } ?: "Understand the page and list actionable elements"
-        val requestId = UUID.randomUUID().toString()
-        logObserveStart(instruction, requestId)
-
+    private fun getDOMState(): DOMState {
         val snapshotOptions = SnapshotOptions(
             maxDepth = 1000,
             includeAX = true,
@@ -256,20 +237,37 @@ class PulsarPerceptiveAgent(
             includeInteractivity = true
         )
 
-        val allTrees = inference.domService.getMultiDOMTrees(options = snapshotOptions)
+        val allTrees = domService.getMultiDOMTrees(options = snapshotOptions)
+        if (logger.isDebugEnabled) {
+            logger.debug("allTrees summary: \n{}", DomDebug.summarize(allTrees))
+        }
+
         val slimDOM = domService.buildSlimDOM(allTrees)
-        val domJson = domService.serialize(slimDOM).json
+        if (logger.isDebugEnabled) {
+            logger.debug("slimDOM summary: \n{}", DomDebug.summarize(slimDOM))
+        }
+
+        val domState = domService.serialize(slimDOM)
+        if (logger.isDebugEnabled) {
+            logger.debug("domState summary: \n{}", DomDebug.summarize(domState))
+            logger.debug("domState.json: \nlength: {}\n{}", domState.json.length, domState.json)
+        }
+
+        return domState
+    }
+
+    private suspend fun doObserve(options: ObserveOptions): List<ObserveResult> {
+        val instruction = options.instruction?.takeIf { it.isNotBlank() } ?: "Understand the page and list actionable elements"
+        val requestId = UUID.randomUUID().toString()
+        logObserveStart(instruction, requestId)
 
         val returnAction = options.returnAction ?: true
-
-        logger.info(DomDebug.summarize(allTrees))
-        logger.info(DomDebug.summarize(slimDOM))
 
         return try {
             val internal = inference.observe(
                 ObserveParams(
                     instruction = instruction,
-                    domElements = listOf(domJson),
+                    domElements = listOf(getDOMState().json),
                     requestId = requestId,
                     returnAction = returnAction,
                     logInferenceToFile = config.enableStructuredLogging,
@@ -330,29 +328,10 @@ class PulsarPerceptiveAgent(
         // 3) Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
         val requestId = UUID.randomUUID().toString()
         val results: List<ObserveResult> = try {
-
-            val snapshotOptions = SnapshotOptions(
-                maxDepth = 1000,
-                includeAX = true,
-                includeSnapshot = true,
-                includeStyles = true,
-                includePaintOrder = true,
-                includeDOMRects = true,
-                includeScrollAnalysis = true,
-                includeVisibility = true,
-                includeInteractivity = true
-            )
-
-            val allTrees = domService.getMultiDOMTrees(options = snapshotOptions)
-            logger.info(DomDebug.summarize(allTrees))
-            val slimDOM = domService.buildSlimDOM(allTrees)
-            logger.info(DomDebug.summarize(slimDOM))
-            val domState = domService.serialize(slimDOM)
-
             val internal = inference.observe(
                 ObserveParams(
                     instruction = instruction,
-                    domElements = listOf(domState.json),
+                    domElements = listOf(getDOMState().json),
                     requestId = requestId,
                     returnAction = true,
                     logInferenceToFile = config.enableStructuredLogging,

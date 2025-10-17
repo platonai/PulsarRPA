@@ -79,9 +79,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
             runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
-                val result = runBlocking {
-                    agent.extract("Extract the page title and main content")
-                }
+                val result = agent.extract("Extract the page title and main content")
 
                 assertTrue(result.success, "Extract should succeed")
                 assertNotNull(result.data)
@@ -111,9 +109,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     schema = customSchema
                 )
 
-                val result = runBlocking {
-                    agent.extract(options)
-                }
+                val result = agent.extract(options)
 
                 assertTrue(result.success)
                 assertNotNull(result.data)
