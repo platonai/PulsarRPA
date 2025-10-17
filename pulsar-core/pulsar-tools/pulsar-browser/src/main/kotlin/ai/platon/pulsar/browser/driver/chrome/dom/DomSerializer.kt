@@ -86,6 +86,10 @@ object DomSerializer {
 
         // Add to selector map with multiple keys for enhanced lookup
         addToEnhancedSelectorMap(node.originalNode, selectorMap)
+        // Also add interactive index mapping if present on SlimNode
+        node.interactiveIndex?.let { idx ->
+            selectorMap.putIfAbsent("index:$idx", node.originalNode)
+        }
 
         // Detect compound components if enabled
         val isCompoundComponent = if (options.enableCompoundComponentDetection) {
