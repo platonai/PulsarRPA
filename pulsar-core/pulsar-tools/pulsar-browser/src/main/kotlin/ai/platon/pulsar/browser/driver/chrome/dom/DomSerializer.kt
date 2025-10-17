@@ -5,7 +5,6 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DefaultIncludeAttributes
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SlimNode
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 
@@ -427,24 +426,15 @@ object DomSerializer {
      * Serializable SimplifiedNode structure.
      * Enhanced with compound component marking and paint order information.
      */
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private data class SerializableNode(
-        @get:JsonProperty("should_display") @param:JsonProperty("should_display")
         val shouldDisplay: Boolean,
-        @get:JsonProperty("interactive_index") @param:JsonProperty("interactive_index")
         val interactiveIndex: Int?,
-        @get:JsonProperty("ignored_by_paint_order") @param:JsonProperty("ignored_by_paint_order")
         val ignoredByPaintOrder: Boolean,
-        @get:JsonProperty("excluded_by_parent") @param:JsonProperty("excluded_by_parent")
         val excludedByParent: Boolean,
-        @get:JsonProperty("is_compound_component") @param:JsonProperty("is_compound_component")
         val isCompoundComponent: Boolean? = null,
-        @get:JsonProperty("original_node") @param:JsonProperty("original_node")
         val originalNode: CleanedOriginalNode,
         val children: List<SerializableNode>,
-        @get:JsonProperty("should_show_scroll_info") @param:JsonProperty("should_show_scroll_info")
         val shouldShowScrollInfo: Boolean?,
-        @get:JsonProperty("scroll_info_text") @param:JsonProperty("scroll_info_text")
         val scrollInfoText: String?
     )
 
@@ -453,47 +443,27 @@ object DomSerializer {
      * Enhanced with additional snapshot information for LLM consumption.
      * This prevents duplication since SimplifiedNode.children already contains them.
      */
-    @JsonInclude(JsonInclude.Include.NON_NULL)
     private data class CleanedOriginalNode(
-        @get:JsonProperty("node_id") @param:JsonProperty("node_id")
         val nodeId: Int,
-        @get:JsonProperty("backend_node_id") @param:JsonProperty("backend_node_id")
         val backendNodeId: Int?,
-        @get:JsonProperty("node_type") @param:JsonProperty("node_type")
         val nodeType: Int,
-        @get:JsonProperty("node_name") @param:JsonProperty("node_name")
         val nodeName: String,
-        @get:JsonProperty("node_value") @param:JsonProperty("node_value")
         val nodeValue: String?,
         val attributes: Map<String, Any>?,
-        @get:JsonProperty("frame_id") @param:JsonProperty("frame_id")
         val frameId: String?,
-        @get:JsonProperty("session_id") @param:JsonProperty("session_id")
         val sessionId: String?,
-        @get:JsonProperty("is_scrollable") @param:JsonProperty("is_scrollable")
         val isScrollable: Boolean?,
-        @get:JsonProperty("is_visible") @param:JsonProperty("is_visible")
         val isVisible: Boolean?,
-        @get:JsonProperty("is_interactable") @param:JsonProperty("is_interactable")
         val isInteractable: Boolean?,
-        @get:JsonProperty("x_path") @param:JsonProperty("x_path")
         val xPath: String?,
-        @get:JsonProperty("element_hash") @param:JsonProperty("element_hash")
         val elementHash: String?,
-        @get:JsonProperty("interactive_index") @param:JsonProperty("interactive_index")
         val interactiveIndex: Int?,
         val bounds: DOMRect?,
-        @get:JsonProperty("clientRects") @param:JsonProperty("clientRects")
         val clientRects: DOMRect?,
-        @get:JsonProperty("scrollRects") @param:JsonProperty("scrollRects")
         val scrollRects: DOMRect?,
-        @get:JsonProperty("absolute_bounds") @param:JsonProperty("absolute_bounds")
         val absoluteBounds: DOMRect? = null,
-        @get:JsonProperty("paint_order") @param:JsonProperty("paint_order")
         val paintOrder: Int? = null,
-        @get:JsonProperty("stacking_contexts") @param:JsonProperty("stacking_contexts")
         val stackingContexts: Int? = null,
-        @get:JsonProperty("content_document") @param:JsonProperty("content_document")
         val contentDocument: CleanedOriginalNode?
         // Note: children_nodes and shadow_roots are intentionally omitted
     )
