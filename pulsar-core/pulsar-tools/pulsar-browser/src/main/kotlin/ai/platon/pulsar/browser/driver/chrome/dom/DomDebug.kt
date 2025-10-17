@@ -108,5 +108,44 @@ object DomDebug {
             appendLine("- stats=($s)")
         }
     }
-}
 
+    fun summarize(state: DOMState): String {
+        val totalEntries = state.selectorMap.size
+        val keys = state.selectorMap.keys
+        val xpathKeys = keys.count { it.startsWith("xpath:") }
+        val backendKeys = keys.count { it.startsWith("backend:") }
+        val nodeKeys = keys.count { it.startsWith("node:") }
+        val hashKeys = totalEntries - xpathKeys - backendKeys - nodeKeys
+
+        // Deduplicate nodes by nodeId to avoid double counting
+        val uniqueNodes = state.selectorMap.values.distinctBy { it.nodeId }
+        val uniqueCount = uniqueNodes.size
+
+        val interactable = uniqueNodes.count { it.isInteractable == true }
+        val visible = uniqueNodes.count { it.isVisible == true }
+        val scrollable = uniqueNodes.count { it.isScrollable == true }
+        val withXPath = uniqueNodes.count { !it.xPath.isNullOrBlank() }
+        val withHash = uniqueNodes.count { !it.elementHash.isNullOrBlank() }
+        val withSnapshot = uniqueNodes.count { it.snapshotNode != null }
+        val withBounds = uniqueNodes.count { it.snapshotNode?.clientRects != null || it.snapshotNode?.absoluteBounds != null || it.absolutePosition != null }
+
+        // Build a small sample label list
+        fun labelOf(n: DOMTreeNodeEx): String {
+            val attrs = n.attributes
+            val id = attrs["id"]?.let { "#${it}" } ?: ""
+            val klass = attrs["class"]?.let { "." + it.split(Regex("\\s+")).take(2).joinToString(".") } ?: ""
+            val name = n.nodeName.ifBlank { "?" }
+            return (name + id + klass).trim()
+        }
+        val sample = uniqueNodes.take(3).joinToString(", ") { labelOf(it) }
+
+        return buildString {
+            appendLine("DOMState")
+            appendLine("- json.length=${state.json.length}")
+            appendLine("- selectorMap.entries=${totalEntries}")
+            appendLine("- selectorMap.uniqueNodes=${uniqueCount} (hashKeys=${hashKeys}, xpathKeys=${xpathKeys}, backendKeys=${backendKeys}, nodeKeys=${nodeKeys})")
+            appendLine("- nodes: interactable=${interactable}, visible=${visible}, scrollable=${scrollable}, withXPath=${withXPath}, withHash=${withHash}, withSnapshot=${withSnapshot}, withBounds=${withBounds}")
+            if (sample.isNotBlank()) appendLine("- sample=${sample}")
+        }
+    }
+}
