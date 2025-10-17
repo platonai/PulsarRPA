@@ -30,7 +30,7 @@ object DomSerializer {
         root: SlimNode,
         includeAttributes: List<String> = emptyList(),
         options: SerializationOptions = SerializationOptions()
-    ): DomLLMSerialization {
+    ): DOMState {
         val attrsList = includeAttributes.ifEmpty { DefaultIncludeAttributes.ATTRIBUTES }
         val includeAttributes = attrsList.map { it.lowercase() }.toSet()
 
@@ -39,11 +39,12 @@ object DomSerializer {
             root,
             includeAttributes,
             emptyList(),
-            selectorMap, options,
-            depth = 1000,
+            selectorMap,
+            options,
+            depth = 0,
             includeOrder = attrsList.map { it.lowercase() })
         val json = mapper.writeValueAsString(serializable)
-        return DomLLMSerialization(json = json, selectorMap = selectorMap)
+        return DOMState(json = json, selectorMap = selectorMap)
     }
 
     /**
@@ -525,7 +526,7 @@ object DomSerializer {
 
 // Keep the serialization result as a top-level data class for reuse
 
-data class DomLLMSerialization(
+data class DOMState(
     val json: String,
     val selectorMap: Map<String, DOMTreeNodeEx>
 )

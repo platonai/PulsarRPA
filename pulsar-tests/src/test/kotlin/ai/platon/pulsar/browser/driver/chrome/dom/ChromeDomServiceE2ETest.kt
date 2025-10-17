@@ -67,7 +67,7 @@ class ChromeDomServiceE2ETest : WebDriverTestBase() {
             includeInteractivity = true
         )
 
-        val trees = service.getAllTrees(target = PageTarget(), options = options)
+        val trees = service.getDetailTrees(target = PageTarget(), options = options)
         assertTrue(trees.devicePixelRatio > 0.1, "devicePixelRatio should be positive")
         assertTrue(trees.cdpTiming.isNotEmpty(), "cdpTiming should record phases")
 

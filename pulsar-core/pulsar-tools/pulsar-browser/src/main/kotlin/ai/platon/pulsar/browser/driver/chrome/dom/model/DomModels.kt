@@ -72,7 +72,7 @@ data class DOMRect(
  * Enhanced accessibility property.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class EnhancedAXProperty(
+data class AXPropertyEx(
     val name: String,
     val value: Any? = null
 )
@@ -88,7 +88,7 @@ data class AXNodeEx(
     val role: String? = null,
     val name: String? = null,
     val description: String? = null,
-    val properties: List<EnhancedAXProperty>? = null,
+    val properties: List<AXPropertyEx>? = null,
     @get:JsonProperty("child_ids") @param:JsonProperty("child_ids")
     val childIds: List<String>? = null,
     @get:JsonProperty("backend_node_id") @param:JsonProperty("backend_node_id")

@@ -32,7 +32,7 @@ class ChromeCdpDomService(
     @Volatile
     private var lastDomByBackend: Map<Int, DOMTreeNodeEx> = emptyMap()
 
-    override fun getAllTrees(target: PageTarget, options: SnapshotOptions): TargetDetailTrees {
+    override fun getDetailTrees(target: PageTarget, options: SnapshotOptions): TargetDetailTrees {
         val startTime = System.currentTimeMillis()
         val timings = mutableMapOf<String, Long>()
 
@@ -247,7 +247,7 @@ class ChromeCdpDomService(
     }
 
     override fun buildSlimDOM(): SlimNode {
-        val trees = getAllTrees()
+        val trees = getDetailTrees()
         return buildSlimDOM(trees)
     }
 
@@ -282,7 +282,7 @@ class ChromeCdpDomService(
         return simplified
     }
 
-    override fun serialize(root: SlimNode, includeAttributes: List<String>): DomLLMSerialization {
+    override fun serialize(root: SlimNode, includeAttributes: List<String>): DOMState {
         // Use enhanced serialization with default options
         val options = DomSerializer.SerializationOptions(
             enablePaintOrderPruning = true,
@@ -618,7 +618,7 @@ class ChromeCdpDomService(
 private fun AXNode.toEnhanced(): AXNodeEx {
     val props = properties?.mapNotNull { prop ->
         try {
-            EnhancedAXProperty(
+            AXPropertyEx(
                 name = prop.name.toString(),
                 value = prop.value?.value
             )

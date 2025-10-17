@@ -9,7 +9,7 @@ interface DomService {
     /**
      * Collect all trees (DOM, AX, Snapshot) for the given target.
      */
-    fun getAllTrees(target: PageTarget = PageTarget(), options: SnapshotOptions = SnapshotOptions()): TargetDetailTrees
+    fun getDetailTrees(target: PageTarget = PageTarget(), options: SnapshotOptions = SnapshotOptions()): TargetDetailTrees
 
     /**
      * Build the enhanced DOM tree by merging DOM, AX, and Snapshot data.
@@ -38,5 +38,5 @@ interface DomService {
     /**
      * Serialize SimplifiedNode tree for LLM consumption.
      */
-    fun serialize(root: SlimNode, includeAttributes: List<String> = emptyList()): DomLLMSerialization
+    fun serialize(root: SlimNode, includeAttributes: List<String> = emptyList()): DOMState
 }

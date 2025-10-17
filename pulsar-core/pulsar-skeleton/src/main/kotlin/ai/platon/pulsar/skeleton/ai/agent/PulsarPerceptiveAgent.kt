@@ -234,7 +234,7 @@ class PulsarPerceptiveAgent(
             maxDepth = 100,
             includeAX = true,
             includeSnapshot = true,
-            includeStyles = true,
+            includeStyles = false,
             includePaintOrder = true,
             includeDOMRects = true,
             includeScrollAnalysis = true,
@@ -242,14 +242,14 @@ class PulsarPerceptiveAgent(
             includeInteractivity = true
         )
 
-        val allTrees = inference.domService.getAllTrees(options = snapshotOptions)
-        val slimDom = inference.domService.buildSlimDOM(allTrees)
-        val domJson = inference.domService.serialize(slimDom).json
+        val allTrees = inference.domService.getDetailTrees(options = snapshotOptions)
+        val slimDOM = inference.domService.buildSlimDOM(allTrees)
+        val domJson = inference.domService.serialize(slimDOM).json
 
         val returnAction = options.returnAction ?: true
 
-        println(DomDebug.summarize(allTrees))
-        println(DomDebug.summarize(slimDom))
+        logger.info(DomDebug.summarize(allTrees))
+        logger.info(DomDebug.summarize(slimDOM))
 
         return try {
             val internal = inference.observe(
