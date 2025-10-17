@@ -754,7 +754,7 @@ class PulsarPerceptiveAgent(
     ): ActionDescription? {
         return try {
             // Use overload supplying extracted elements to avoid re-extraction
-            tta.generateWebDriverActionDeferred(message, interactiveElements, screenshotB64)
+            tta.generateWebDriverAction(message, interactiveElements, screenshotB64)
         } catch (e: Exception) {
             logError("Action generation failed", e, context.sessionId)
             consecutiveFailureCounter.incrementAndGet()

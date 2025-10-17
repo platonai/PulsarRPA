@@ -67,7 +67,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
         )
 
         testCases.forEach { (command, expectedField) ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -92,7 +92,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
         )
 
         testCases.forEach { (command, possibleFields) ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -122,7 +122,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
         )
 
         testCases.forEach { (command, expectedField) ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -146,7 +146,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
         )
 
         testCases.forEach { (command, expectedField) ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -172,7 +172,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
         )
 
         testCases.forEach { (command, expectedContext) ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -196,7 +196,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
         )
 
         testCases.forEach { (command, expectedContext) ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -222,7 +222,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
         )
 
         testCases.forEach { (command, expectedAction) ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -249,7 +249,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
         )
 
         testCases.forEach { (command, expectedAction) ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -275,7 +275,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
         )
 
         testCases.forEach { (command, expectedField) ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -302,7 +302,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
         )
 
         testCases.forEach { (command, expectedContext) ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -332,7 +332,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
         )
 
         testCases.forEach { (command, expectedContext) ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -358,7 +358,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
         )
 
         testCases.forEach { (command, expectedAction) ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -384,7 +384,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
         )
 
         testCases.forEach { (command, expectedAction) ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -410,7 +410,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
         )
 
         testCases.forEach { (command, expectedContext) ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -436,7 +436,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
         )
 
         testCases.forEach { (command, expectedContext) ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")

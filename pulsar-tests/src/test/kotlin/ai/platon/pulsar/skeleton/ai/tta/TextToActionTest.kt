@@ -24,7 +24,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask to click a button then generate correct WebDriver action code`() {
         val prompt = "点击搜索按钮"
 
-        val actionDescription = textToAction.generateWebDriverAction(prompt, listOf())
+        val actionDescription = textToAction.generateWebDriverActionBlocking(prompt, listOf())
         lastResponse = actionDescription.modelResponse
         println(actionDescription.modelResponse.content)
 
@@ -36,7 +36,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask to fill input field then generate correct WebDriver action code`() {
         val prompt = "在搜索框中输入 'AI toys'"
 
-        val actionDescription = textToAction.generateWebDriverAction(prompt, listOf())
+        val actionDescription = textToAction.generateWebDriverActionBlocking(prompt, listOf())
         lastResponse = actionDescription.modelResponse
         println(actionDescription.modelResponse.content)
 

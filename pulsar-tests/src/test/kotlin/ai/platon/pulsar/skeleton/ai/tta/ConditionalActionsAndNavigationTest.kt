@@ -25,7 +25,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverAction("如果搜索按钮存在且可见就点击它", driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking("如果搜索按钮存在且可见就点击它", driver)
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
@@ -52,7 +52,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverAction("先确认用户名输入框存在，然后输入'testuser'", driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking("先确认用户名输入框存在，然后输入'testuser'", driver)
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
@@ -76,7 +76,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-dynamic.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverAction("等待动态按钮出现并可见，然后点击它", driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking("等待动态按钮出现并可见，然后点击它", driver)
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
@@ -104,7 +104,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverAction("跳转到交互页面2并等待页面完全加载", driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking("跳转到交互页面2并等待页面完全加载", driver)
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
@@ -127,7 +127,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverAction("点击跳转到页面2的链接，然后等待页面跳转完成", driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking("点击跳转到页面2的链接，然后等待页面跳转完成", driver)
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
@@ -153,7 +153,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverAction("返回上一页，然后再前进到当前页", driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking("返回上一页，然后再前进到当前页", driver)
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
@@ -178,7 +178,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverAction(
+        val actionDescription = textToAction.generateWebDriverActionBlocking(
             "检查用户名输入框是否存在且可见，如果满足条件则输入'testuser'，然后聚焦到密码框", driver)
 
         assertNotNull(actionDescription)
@@ -208,7 +208,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverAction(
+        val actionDescription = textToAction.generateWebDriverActionBlocking(
             "等待页面完全加载，检查导航菜单是否存在，如果存在则点击它并等待新页面加载", driver)
 
         assertNotNull(actionDescription)
@@ -235,7 +235,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-screens.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverAction(
+        val actionDescription = textToAction.generateWebDriverActionBlocking(
             "滚动到页面底部的表单，聚焦到邮箱输入框，然后输入'test@example.com'", driver)
 
         assertNotNull(actionDescription)
@@ -265,7 +265,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverAction("检查所有提交按钮中哪个是可见的，然后点击第一个可见的", driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking("检查所有提交按钮中哪个是可见的，然后点击第一个可见的", driver)
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
@@ -288,7 +288,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-dynamic.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverAction(
+        val actionDescription = textToAction.generateWebDriverActionBlocking(
             "确认页面已完全加载，检查动态内容是否存在，如果存在则滚动到它", driver)
 
         assertNotNull(actionDescription)

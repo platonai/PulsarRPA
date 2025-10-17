@@ -26,7 +26,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverAction("", driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking("", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
@@ -38,7 +38,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverAction("   ", driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking("   ", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
@@ -51,7 +51,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val longCommand = "点击搜索按钮并输入一些文本然后滚动到页面底部再点击提交按钮并且等待页面加载完成"
-        val actionDescription = textToAction.generateWebDriverAction(longCommand, driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking(longCommand, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
@@ -66,7 +66,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val specialCommand = "点击搜索按钮!@#$%^*()"
-        val actionDescription = textToAction.generateWebDriverAction(specialCommand, driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking(specialCommand, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
@@ -79,7 +79,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val unicodeCommand = "点击搜索按钮 🎯 测试"
-        val actionDescription = textToAction.generateWebDriverAction(unicodeCommand, driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking(unicodeCommand, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
@@ -92,7 +92,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val quotedCommand = """点击"搜索"按钮"""
-        val actionDescription = textToAction.generateWebDriverAction(quotedCommand, driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking(quotedCommand, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
@@ -107,7 +107,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val impossibleCommand = "点击魔法传送门按钮"
-        val actionDescription = textToAction.generateWebDriverAction(impossibleCommand, driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking(impossibleCommand, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
@@ -120,7 +120,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val impossibleCommand = "让页面飞起来"
-        val actionDescription = textToAction.generateWebDriverAction(impossibleCommand, driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking(impossibleCommand, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
@@ -135,7 +135,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val contradictoryCommand = "点击搜索按钮但不要点击任何东西"
-        val actionDescription = textToAction.generateWebDriverAction(contradictoryCommand, driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking(contradictoryCommand, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
@@ -158,7 +158,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         )
 
         vagueCommands.forEach { command ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -178,7 +178,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         )
 
         ambiguousCommands.forEach { command ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -192,7 +192,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
     fun `When page has no interactive elements then handle gracefully`() = runEnhancedWebDriverTest { driver ->
         driver.navigateTo("about:blank")
 
-        val actionDescription = textToAction.generateWebDriverAction("点击按钮", driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking("点击按钮", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
@@ -214,7 +214,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         )
 
         malformedCommands.forEach { command ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -237,7 +237,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         )
 
         specificCommands.forEach { command ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -257,7 +257,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
         // Make 5 rapid calls
         repeat(5) {
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
             results.add(actionDescription)
         }
 
@@ -285,7 +285,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         )
 
         mixedCommands.forEach { command ->
-            val actionDescription = textToAction.generateWebDriverAction(command, driver)
+            val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
@@ -303,7 +303,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val longText = "a".repeat(1000) // 1000 character string
         val command = "在搜索框输入 '$longText'"
 
-        val actionDescription = textToAction.generateWebDriverAction(command, driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
@@ -317,7 +317,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverAction("点击搜索按钮", driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking("点击搜索按钮", driver)
 
         assertNotNull(actionDescription)
 
@@ -337,7 +337,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverAction("点击搜索按钮", driver)
+        val actionDescription = textToAction.generateWebDriverActionBlocking("点击搜索按钮", driver)
 
         assertNotNull(actionDescription)
         assertNotNull(actionDescription.modelResponse, "Model response should not be null")

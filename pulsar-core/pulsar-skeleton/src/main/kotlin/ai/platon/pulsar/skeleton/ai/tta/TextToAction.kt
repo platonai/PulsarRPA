@@ -45,12 +45,12 @@ open class TextToAction(val conf: ImmutableConfig) {
             .render(mapOf("webDriverSourceCode" to webDriverSourceCode))
     }
 
-    open fun generateWebDriverAction(
+    open fun generateWebDriverActionBlocking(
         instruction: String,
         driver: WebDriver,
         screenshotB64: String? = null,
     ): ActionDescription {
-        return runBlocking { generateWebDriverActionDeferred(instruction, driver, screenshotB64) }
+        return runBlocking { generateWebDriverAction(instruction, driver, screenshotB64) }
     }
 
     /**
@@ -60,7 +60,7 @@ open class TextToAction(val conf: ImmutableConfig) {
      * @param driver The driver to use to collect the context, such as interactive elements
      * @return The action description
      * */
-    open suspend fun generateWebDriverActionDeferred(
+    open suspend fun generateWebDriverAction(
         instruction: String,
         driver: WebDriver,
         screenshotB64: String? = null,
@@ -68,7 +68,7 @@ open class TextToAction(val conf: ImmutableConfig) {
         try {
             val interactiveElements = extractInteractiveElements(driver)
 
-            return generateWebDriverActionDeferred(instruction, interactiveElements, screenshotB64)
+            return generateWebDriverAction(instruction, interactiveElements, screenshotB64)
         } catch (e: Exception) {
             val errorResponse = ModelResponse(
                 """
@@ -88,7 +88,7 @@ open class TextToAction(val conf: ImmutableConfig) {
      * @param driver The driver to use to collect the context, such as interactive elements
      * @return The action description
      * */
-    open fun generateWebDriverAction(
+    open fun generateWebDriverActionBlocking(
         instruction: String,
         interactiveElements: List<InteractiveElement> = listOf(),
         screenshotB64: String? = null
@@ -98,7 +98,7 @@ open class TextToAction(val conf: ImmutableConfig) {
         }
     }
 
-    open suspend fun generateWebDriverActionDeferred(
+    open suspend fun generateWebDriverAction(
         instruction: String,
         interactiveElements: List<InteractiveElement> = listOf(),
         screenshotB64: String? = null
