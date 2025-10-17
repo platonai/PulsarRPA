@@ -69,7 +69,7 @@ class PulsarPerceptiveAgent(
         val startTime = Instant.now()
         val sessionId = uuid.toString()
 
-        return executeWithRetry(action, sessionId, startTime)
+        return resolveProblemWithRetry(action, sessionId, startTime)
     }
 
     override suspend fun act(action: String): ActResult {
@@ -442,12 +442,12 @@ class PulsarPerceptiveAgent(
      * Enhanced execution with comprehensive error handling and retry mechanisms
      * Returns the final summary with enhanced error handling.
      */
-    private suspend fun executeWithRetry(action: ActionOptions, sessionId: String, startTime: Instant): ActResult {
+    private suspend fun resolveProblemWithRetry(action: ActionOptions, sessionId: String, startTime: Instant): ActResult {
         var lastError: Exception? = null
 
         for (attempt in 0..config.maxRetries) {
             try {
-                return executeInternal(action, sessionId, startTime, attempt)
+                return doResolveProblem(action, sessionId, startTime, attempt)
             } catch (e: PerceptiveAgentError.TransientError) {
                 lastError = e
                 logError("Transient error on attempt ${'$'}{attempt + 1}", e, sessionId)
@@ -485,7 +485,7 @@ class PulsarPerceptiveAgent(
      * Main execution logic with enhanced error handling and monitoring.
      * Returns the final summary with enhanced error handling.
      */
-    private suspend fun executeInternal(
+    private suspend fun doResolveProblem(
         action: ActionOptions,
         sessionId: String,
         startTime: Instant,
@@ -569,10 +569,10 @@ class PulsarPerceptiveAgent(
                 consecutiveNoOps = 0
 
                 // Execute the tool call with enhanced error handling
-                val execSummary = executeToolCallWithRetry(toolCall, stepActionResult, step, stepContext)
+                val execSummary = doExecuteToolCall(toolCall, stepActionResult, step, stepContext)
 
                 if (execSummary != null) {
-                    addToHistory("#${'$'}step ${'$'}{execSummary}")
+                    addToHistory("#$step $execSummary")
                     updatePerformanceMetrics(step, stepStartTime, true)
                     logStructured("Step completed successfully", stepContext, mapOf("summary" to execSummary))
                 } else {
@@ -765,7 +765,7 @@ class PulsarPerceptiveAgent(
     /**
      * Executes tool call with enhanced error handling and validation
      */
-    private suspend fun executeToolCallWithRetry(
+    private suspend fun doExecuteToolCall(
         toolCall: ToolCall,
         action: ActionDescription,
         step: Int,
