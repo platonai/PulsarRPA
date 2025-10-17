@@ -43,6 +43,13 @@
             <artifactId>pulsar-rest</artifactId>
         </dependency>
 
+        <!-- Ensure browser DOM service & debug utilities are available to tests -->
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-browser</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
