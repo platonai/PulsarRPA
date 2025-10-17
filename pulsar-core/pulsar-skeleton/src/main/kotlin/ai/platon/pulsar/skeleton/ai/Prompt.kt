@@ -105,6 +105,18 @@ Print null or an empty string if no new information is found.
         return ChatMessage(role = "system", content = content)
     }
 
+    fun enhanceExtractUserInstruction(instruction: String? = null): String {
+        if (instruction.isNullOrBlank()) {
+            return if (isCN) {
+                "从网页中提取关键数据结构"
+            } else {
+                "Extract key structured data from the page"
+            }
+        }
+
+        return instruction
+    }
+
     fun buildExtractDomContent(domText: String, params: ExtractParams): String {
         // Inject schema hint to strongly guide JSON output
         val hintCN = "你必须返回一个严格符合以下JSON Schema的有效JSON对象。不要包含任何额外说明。"
@@ -119,24 +131,20 @@ Print null or an empty string if no new information is found.
         }
     }
 
-    fun buildExtractUserPrompt(
-        instruction: String,
-        domContent: String
-    ): ChatMessage {
+    fun buildExtractUserPrompt(instruction: String, domContent: String): ChatMessage {
         val instructionLabel = if (isCN) "指令: " else "Instruction: "
         val domLabel = if (isCN) "DOM: " else "DOM: "
 
         val sb = StringBuilder()
             .append(instructionLabel)
+            .append('\n')
             .append(instruction)
             .append('\n')
             .append(domLabel)
+            .append('\n')
             .append(domContent)
 
-        return ChatMessage(
-            role = "user",
-            content = sb.toString(),
-        )
+        return ChatMessage(role = "user", content = sb.toString())
     }
 
     private val metadataSystemPromptCN: String = """
