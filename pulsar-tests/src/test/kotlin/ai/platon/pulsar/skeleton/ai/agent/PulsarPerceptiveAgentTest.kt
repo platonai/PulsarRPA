@@ -1,6 +1,7 @@
 package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.WebDriverTestBase
+import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.ai.detail.AgentConfig
@@ -171,7 +172,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given interactive page When observe called Then should return actionable elements`() {
             assumeLLMConfigured()
 
-            runWebDriverTest(interactiveDynamicURL) { driver ->
+            runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
                 val results = runBlocking {
@@ -197,7 +198,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given observe options When observe called Then should respect options`() {
             assumeLLMConfigured()
 
-            runWebDriverTest(interactiveDynamicURL) { driver ->
+            runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = PulsarPerceptiveAgent(driver)
 
                 val options = ObserveOptions(
@@ -205,9 +206,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     returnAction = false
                 )
 
-                val results = runBlocking {
-                    agent.observe(options)
-                }
+                val results = agent.observe(options)
 
                 assertNotNull(results)
 

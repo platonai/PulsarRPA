@@ -97,7 +97,7 @@ open class WebDriverService(
         }
     }
 
-    open suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 1) {
+    open suspend fun open(url: String, driver: WebDriver, scrollCount: Int = 3) {
         driver.navigateTo(url)
         driver.waitForNavigation()
         var n = scrollCount

@@ -32,7 +32,7 @@ class ChromeCdpDomService(
     @Volatile
     private var lastDomByBackend: Map<Int, DOMTreeNodeEx> = emptyMap()
 
-    override fun getAllTrees(target: PageTarget, options: SnapshotOptions): TargetAllTrees {
+    override fun getAllTrees(target: PageTarget, options: SnapshotOptions): TargetDetailTrees {
         val startTime = System.currentTimeMillis()
         val timings = mutableMapOf<String, Long>()
 
@@ -100,7 +100,7 @@ class ChromeCdpDomService(
             enhancedAx.size, snapshotByBackendId.size, devicePixelRatio, timings
         )
 
-        return TargetAllTrees(
+        return TargetDetailTrees(
             domTree = dom,
             axTree = enhancedAx,
             snapshotByBackendId = snapshotByBackendId,
@@ -113,7 +113,7 @@ class ChromeCdpDomService(
         )
     }
 
-    override fun buildEnhancedDomTree(trees: TargetAllTrees): DOMTreeNodeEx {
+    override fun buildEnhancedDomTree(trees: TargetDetailTrees): DOMTreeNodeEx {
         val options = trees.options
         // Build ancestor map for XPath and hash generation
         val ancestorMap = buildAncestorMap(trees.domTree)
@@ -130,11 +130,7 @@ class ChromeCdpDomService(
         val stackingContextMap = buildStackingContextMap(trees.snapshotByBackendId)
 
         // Merge trees recursively with enhanced metrics
-        fun merge(
-            node: DOMTreeNodeEx,
-            ancestors: List<DOMTreeNodeEx>,
-            depth: Int = 0
-        ): DOMTreeNodeEx {
+        fun merge(node: DOMTreeNodeEx, ancestors: List<DOMTreeNodeEx>, depth: Int = 0): DOMTreeNodeEx {
             val backendId = node.backendNodeId
 
             // Get snapshot data
@@ -205,7 +201,7 @@ class ChromeCdpDomService(
                 .getOrNull()
 
             // Merge children recursively with depth tracking
-            val merged = node.copy(
+            val mergedNode = node.copy(
                 snapshotNode = snap,
                 axNode = ax,
                 isScrollable = isScrollable,
@@ -217,12 +213,12 @@ class ChromeCdpDomService(
                 elementHash = elementHash,
                 parentBranchHash = parentBranchHash
             )
-            val newAncestors = ancestors + merged
+            val newAncestors = ancestors + mergedNode
             val mergedChildren = node.children.map { merge(it, newAncestors, depth + 1) }
             val mergedShadowRoots = node.shadowRoots.map { merge(it, newAncestors, depth + 1) }
             val mergedContentDocument = node.contentDocument?.let { merge(it, newAncestors, depth + 1) }
 
-            return merged.copy(
+            return mergedNode.copy(
                 children = mergedChildren,
                 shadowRoots = mergedShadowRoots,
                 contentDocument = mergedContentDocument
@@ -234,7 +230,7 @@ class ChromeCdpDomService(
         return merged
     }
 
-    override fun buildSimplifiedTree(root: DOMTreeNodeEx): SlimNode {
+    override fun buildSimplifiedSlimDOM(root: DOMTreeNodeEx): SlimNode {
         fun simplify(node: DOMTreeNodeEx): SlimNode {
             val simplifiedChildren = node.children.map { simplify(it) }
 
@@ -250,17 +246,17 @@ class ChromeCdpDomService(
         return simplify(root)
     }
 
-    override fun buildSlimDom(): SlimNode {
+    override fun buildSlimDOM(): SlimNode {
         val trees = getAllTrees()
-        return buildSlimDom(trees)
+        return buildSlimDOM(trees)
     }
 
-    override fun buildSlimDom(trees: TargetAllTrees): SlimNode {
+    override fun buildSlimDOM(trees: TargetDetailTrees): SlimNode {
         val enhanced = buildEnhancedDomTree(trees)
         val hasElements = enhanced.children.isNotEmpty() ||
                 enhanced.shadowRoots.isNotEmpty() ||
                 enhanced.contentDocument != null
-        val simplified = buildSimplifiedTree(enhanced)
+        val simplified = buildSimplifiedSlimDOM(enhanced)
 
         if (!hasElements) {
             // Write a lightweight diagnostic to help root cause empty DOM

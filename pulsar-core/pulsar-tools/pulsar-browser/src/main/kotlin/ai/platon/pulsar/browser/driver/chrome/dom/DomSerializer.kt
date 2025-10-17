@@ -32,10 +32,16 @@ object DomSerializer {
         options: SerializationOptions = SerializationOptions()
     ): DomLLMSerialization {
         val attrsList = includeAttributes.ifEmpty { DefaultIncludeAttributes.ATTRIBUTES }
-        val attrs = attrsList.map { it.lowercase() }.toSet()
+        val includeAttributes = attrsList.map { it.lowercase() }.toSet()
 
         val selectorMap = linkedMapOf<String, DOMTreeNodeEx>()
-        val serializable = buildSerializableEnhanced(root, attrs, emptyList(), selectorMap, options, includeOrder = attrsList.map { it.lowercase() })
+        val serializable = buildSerializableNode(
+            root,
+            includeAttributes,
+            emptyList(),
+            selectorMap, options,
+            depth = 1000,
+            includeOrder = attrsList.map { it.lowercase() })
         val json = mapper.writeValueAsString(serializable)
         return DomLLMSerialization(json = json, selectorMap = selectorMap)
     }
@@ -52,10 +58,7 @@ object DomSerializer {
         val preserveOriginalCasing: Boolean = false
     )
 
-    /**
-     * Enhanced buildSerializable with paint-order pruning and compound component detection.
-     */
-    private fun buildSerializableEnhanced(
+    private fun buildSerializableNode(
         node: SlimNode,
         includeAttributes: Set<String>,
         ancestors: List<DOMTreeNodeEx>,
@@ -93,7 +96,7 @@ object DomSerializer {
         // Recursively serialize children with enhanced logic (do not filter; prune per-node)
         val childAncestors = ancestors + node.originalNode
         val serializedChildren = node.children.map {
-            buildSerializableEnhanced(it, includeAttributes, childAncestors, selectorMap, options, depth + 1, includeOrder)
+            buildSerializableNode(it, includeAttributes, childAncestors, selectorMap, options, depth + 1, includeOrder)
         }
 
         return SerializableNode(

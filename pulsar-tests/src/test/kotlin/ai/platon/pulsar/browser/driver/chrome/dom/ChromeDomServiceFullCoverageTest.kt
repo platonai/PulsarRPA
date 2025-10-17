@@ -62,7 +62,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         println(DomDebug.summarize(enhancedRoot))
         assertTrue(enhancedRoot.children.isNotEmpty())
 
-        val simplified = service.buildSimplifiedTree(enhancedRoot)
+        val simplified = service.buildSimplifiedSlimDOM(enhancedRoot)
         // Print SlimNode summary and basic tree stats
         println(DomDebug.summarize(simplified))
         assertTrue(simplified.children.isNotEmpty())

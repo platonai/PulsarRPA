@@ -43,7 +43,7 @@ data class SnapshotOptions(
  * Result from collecting all trees (DOM, AX, Snapshot) for a target.
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
-data class TargetAllTrees(
+data class TargetDetailTrees(
     val snapshot: Map<String, Any>? = null,
     @get:JsonProperty("dom_tree") @param:JsonProperty("dom_tree")
     val domTree: DOMTreeNodeEx = DOMTreeNodeEx(),
