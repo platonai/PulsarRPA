@@ -27,10 +27,12 @@ class MessageWriter(
         const val WARN = 2
         const val INFO = 3
         const val DEBUG = 4
+
         /**
          * The default level for file log messages.
          */
         var DEFAULT_LOG_LEVEL = INFO
+
         /**
          * The default maximum trace file size. It is currently 512 MB. Additionally,
          * there could be a .1, .2, ... file of the same size.
@@ -65,6 +67,8 @@ class MessageWriter(
     var writingError: Boolean = false
 
     var closeCount = 0
+
+    fun write(s: Any) = write(s.toString())
 
     fun write(s: String) {
         // Do not write if the writer has been closed explicitly
