@@ -572,8 +572,8 @@
                     <forkCount>1</forkCount>
                     <reuseForks>true</reuseForks>
                     <!-- Enable byte-buddy-agent -->
-                    <!--suppress UnresolvedMavenProperty -->
-                    <argLine>${argLine} -XX:+EnableDynamicAgentLoading</argLine>
+                    <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+                    <useModulePath>false</useModulePath>
                 </configuration>
 
                 <dependencies>
