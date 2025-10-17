@@ -16,10 +16,14 @@ interface DomService {
      */
     fun buildEnhancedDomTree(trees: TargetAllTrees): DOMTreeNodeEx
 
+    fun buildSlimNodeTree(): SlimNode
+
+    fun buildSlimNodeTree(trees: TargetAllTrees): SlimNode
+
     /**
      * Serialize SimplifiedNode tree for LLM consumption.
      */
-    fun serializeForLLM(root: SlimNode, includeAttributes: List<String> = emptyList()): DomLLMSerialization
+    fun serialize(root: SlimNode, includeAttributes: List<String> = emptyList()): DomLLMSerialization
 
     /**
      * Find an element by various criteria (CSS selector, XPath, element hash).

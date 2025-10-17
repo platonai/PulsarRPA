@@ -3,8 +3,11 @@ package ai.platon.pulsar.browser.driver.chrome.dom
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.AccessibilityHandler.AccessibilityTreeResult
 import ai.platon.pulsar.browser.driver.chrome.dom.model.*
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
 import com.github.kklisura.cdt.protocol.v2023.types.accessibility.AXNode
+import java.nio.file.Files
+import java.time.Instant
 import kotlin.math.abs
 
 /**
@@ -168,19 +171,37 @@ class ChromeCdpDomService(
 
             // Calculate XPath
             val xPath = runCatching { XPathUtils.generateXPath(node, ancestors, siblingMap) }
-                .onFailure { e -> tracer?.debug("XPath generation failed | nodeId={} | err={} ", node.nodeId, e.toString()) }
+                .onFailure { e ->
+                    tracer?.debug(
+                        "XPath generation failed | nodeId={} | err={} ",
+                        node.nodeId,
+                        e.toString()
+                    )
+                }
                 .getOrElse { null }
 
             // Calculate hashes with enhanced logic
             val parentBranchHash = if (ancestors.isNotEmpty()) {
                 runCatching { HashUtils.parentBranchHash(ancestors) }
-                    .onFailure { e -> tracer?.debug("Parent branch hash failed | nodeId={} | err={} ", node.nodeId, e.toString()) }
+                    .onFailure { e ->
+                        tracer?.debug(
+                            "Parent branch hash failed | nodeId={} | err={} ",
+                            node.nodeId,
+                            e.toString()
+                        )
+                    }
                     .getOrNull()
             } else {
                 null
             }
             val elementHash = runCatching { HashUtils.elementHash(node, parentBranchHash) }
-                .onFailure { e -> tracer?.debug("Element hash failed | nodeId={} | err={} ", node.nodeId, e.toString()) }
+                .onFailure { e ->
+                    tracer?.debug(
+                        "Element hash failed | nodeId={} | err={} ",
+                        node.nodeId,
+                        e.toString()
+                    )
+                }
                 .getOrNull()
 
             // Merge children recursively with depth tracking
@@ -229,7 +250,43 @@ class ChromeCdpDomService(
         return simplify(root)
     }
 
-    override fun serializeForLLM(root: SlimNode, includeAttributes: List<String>): DomLLMSerialization {
+    override fun buildSlimNodeTree(): SlimNode {
+        val trees = getAllTrees()
+        return buildSlimNodeTree(trees)
+    }
+
+    override fun buildSlimNodeTree(trees: TargetAllTrees): SlimNode {
+        val enhanced = buildEnhancedDomTree(trees)
+        val hasElements = enhanced.children.isNotEmpty() ||
+                enhanced.shadowRoots.isNotEmpty() ||
+                enhanced.contentDocument != null
+        val simplified = buildSimplifiedTree(enhanced)
+
+        if (!hasElements) {
+            // Write a lightweight diagnostic to help root cause empty DOM
+            runCatching {
+                val diagnostics = mapOf(
+                    "timestamp" to Instant.now().toString(),
+                    "reason" to "Empty DOM tree collected",
+                    "devicePixelRatio" to trees.devicePixelRatio,
+                    "axNodeCount" to trees.axTree.size,
+                    "snapshotEntryCount" to trees.snapshotByBackendId.size,
+                    "timingsMs" to trees.cdpTiming
+                )
+                val dir = AppPaths.get("logs", "chat-model").toFile()
+                if (!dir.exists()) dir.mkdirs()
+                val out = dir.resolve("domservice-diagnostics.json")
+                Files.writeString(out.toPath(), diagnostics.toString() + System.lineSeparator(),
+                    java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND)
+            }.onFailure { e -> logger.warn("Failed to write DOM diagnostics | {}", e.toString()) }
+
+            throw IllegalStateException("Empty DOM tree collected (AX=${trees.axTree.size}, SNAP=${trees.snapshotByBackendId.size}). See logs/chat-model/domservice-diagnostics.json")
+        }
+
+        return simplified
+    }
+
+    override fun serialize(root: SlimNode, includeAttributes: List<String>): DomLLMSerialization {
         // Use enhanced serialization with default options
         val options = DomSerializer.SerializationOptions(
             enablePaintOrderPruning = true,

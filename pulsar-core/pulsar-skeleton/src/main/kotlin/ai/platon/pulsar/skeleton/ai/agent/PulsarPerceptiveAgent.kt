@@ -42,6 +42,7 @@ class PulsarPerceptiveAgent(
 
     private val tta by lazy { TextToAction(conf) }
     private val inference by lazy { InferenceEngine(driver, tta.chatModel) }
+    private val domService get() = inference.domService
     private val promptBuilder = BrowserUsePromptBuilder()
 
     // Enhanced state management
@@ -187,13 +188,14 @@ class PulsarPerceptiveAgent(
         logExtractStart(instruction, requestId)
 
         val schemaJson = buildSchemaJsonFromMap(options.schema)
-        val domElements = inference.buildSlimNodeTree()
+        val domElements = domService.buildSlimNodeTree()
+        val domJson = domService.serialize(domElements).json
 
         return try {
             val resultNode = inference.extract(
                 ExtractParams(
                     instruction = instruction,
-                    domElements = domElements,
+                    domElements = listOf(domJson),
                     schema = schemaJson,
                     requestId = requestId,
                     logInferenceToFile = config.enableStructuredLogging
@@ -222,18 +224,21 @@ class PulsarPerceptiveAgent(
     }
 
     private suspend fun doObserve(options: ObserveOptions): List<ObserveResult> {
+        val returnAction = options.returnAction ?: true
+
         val instruction = options.instruction?.takeIf { it.isNotBlank() } ?: "Understand the page and list actionable elements"
         val requestId = UUID.randomUUID().toString()
         logObserveStart(instruction, requestId)
 
-        val domElements = inference.buildSlimNodeTree()
-        val returnAction = options.returnAction ?: true
+        val allTrees = inference.domService.getAllTrees()
+        val domElements = inference.domService.buildSlimNodeTree(allTrees)
+        val domJson = inference.domService.serialize(domElements).json
 
         return try {
             val internal = inference.observe(
                 ObserveParams(
                     instruction = instruction,
-                    domElements = inference.domService.serializeForLLM(domElements).json,
+                    domElements = listOf(domJson),
                     requestId = requestId,
                     returnAction = returnAction,
                     logInferenceToFile = config.enableStructuredLogging,
@@ -294,11 +299,13 @@ class PulsarPerceptiveAgent(
         // 3) Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
         val requestId = UUID.randomUUID().toString()
         val results: List<ObserveResult> = try {
-            val domElements = inference.buildSlimNodeTree()
+            val domElements = domService.buildSlimNodeTree()
+            val domJson = domService.serialize(domElements).json
+
             val internal = inference.observe(
                 ObserveParams(
                     instruction = instruction,
-                    domElements = domElements,
+                    domElements = listOf(domJson),
                     requestId = requestId,
                     returnAction = true,
                     logInferenceToFile = config.enableStructuredLogging,
@@ -478,7 +485,7 @@ class PulsarPerceptiveAgent(
                 val stepContext = context.copy(stepNumber = step, actionType = "step")
 
                 // Extract interactive elements each step (could be optimized via diffing later)
-                val domElements2 = inference.buildSlimNodeTree()
+                val domElements2 = domService.buildSlimNodeTree()
                 val domElements = tta.extractInteractiveElementsDeferred(driver)
 
                 logStructured(

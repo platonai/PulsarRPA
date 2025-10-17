@@ -329,44 +329,6 @@ class InferenceEngine(
         )
     }
 
-    fun buildSlimNodeTree(): SlimNode {
-        val trees = domService.getAllTrees()
-        val enhanced = domService.buildEnhancedDomTree(trees)
-        val hasElements = enhanced.children.isNotEmpty() ||
-                enhanced.shadowRoots.isNotEmpty() ||
-                enhanced.contentDocument != null
-        val simplified = domService.buildSimplifiedTree(enhanced)
-        // val serialized = domService.serializeForLLM(simplified)
-
-        if (!hasElements) {
-            // Write a lightweight diagnostic to help root cause empty DOM
-            runCatching {
-                val diagnostics = mapOf(
-                    "timestamp" to Instant.now().toString(),
-                    "reason" to "Empty DOM tree collected",
-                    "devicePixelRatio" to trees.devicePixelRatio,
-                    "axNodeCount" to trees.axTree.size,
-                    "snapshotEntryCount" to trees.snapshotByBackendId.size,
-                    "timingsMs" to trees.cdpTiming
-                )
-                val dir = AppPaths.get("logs", "chat-model").toFile()
-                if (!dir.exists()) dir.mkdirs()
-                val out = dir.resolve("domservice-diagnostics.json")
-                Files.writeString(out.toPath(), diagnostics.toString() + System.lineSeparator(),
-                    java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.APPEND)
-            }.onFailure { e -> logger.warn("Failed to write DOM diagnostics | {}", e.toString()) }
-
-            throw IllegalStateException("Empty DOM tree collected (AX=${trees.axTree.size}, SNAP=${trees.snapshotByBackendId.size}). See logs/chat-model/domservice-diagnostics.json")
-        }
-
-//        val json = serialized.json
-//        if (json.isBlank()) {
-//            throw IllegalStateException("Serialized DOM JSON is blank")
-//        }
-
-        return simplified
-    }
-
     // ----------------------------------- Helpers -----------------------------------
     private fun parseObserveElements(root: JsonNode, returnAction: Boolean): List<ObserveElement> {
         // Determine the array of items to read
