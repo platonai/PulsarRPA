@@ -88,15 +88,15 @@ class InferenceEngine(
         val temperature = if (isGPT5) 1.0 else 0.1
 
         // 1) Extraction call -----------------------------------------------------------------
-        val extractSystem = promptBuilder.buildExtractSystemPrompt(params.userProvidedInstructions)
-        val extractUser = promptBuilder.buildExtractUserPrompt(
+        val systemMsg = promptBuilder.buildExtractSystemPrompt(params.userProvidedInstructions)
+        val userMsg = promptBuilder.buildExtractUserPrompt(
             params.instruction,
             // Inject schema hint to strongly guide JSON output
             promptBuilder.buildExtractDomContent(domText, params)
         )
 
-        val extractMessages = listOf(extractSystem, extractUser)
-        var extractCallFile = ""
+        val messages = listOf(systemMsg, userMsg)
+        var callFile = ""
         var extractCallTs = ""
         if (params.logInferenceToFile) {
             val (file, ts) = writeTimestampedTxtFile(
@@ -105,15 +105,16 @@ class InferenceEngine(
                 payload = mapOf(
                     "requestId" to params.requestId,
                     "modelCall" to "extract",
-                    "messages" to extractMessages,
+                    "messages" to messages,
                 )
             )
-            extractCallFile = file; extractCallTs = ts
+            callFile = file
+            extractCallTs = ts
         }
 
         val t0 = System.currentTimeMillis()
-        val systemMessage = SystemMessage.systemMessage(extractSystem.content.toString())
-        val userMessage = UserMessage.userMessage(extractUser.content.toString())
+        val systemMessage = SystemMessage.systemMessage(systemMsg.content.toString())
+        val userMessage = UserMessage.userMessage(userMsg.content.toString())
         val chatRequest = ChatRequest.builder()
             .messages(systemMessage, userMessage)
             // .temperature(temperature) // use the provider default currently
@@ -121,14 +122,14 @@ class InferenceEngine(
         val extractResp: ChatResponse = chatModel.langChainChat(chatRequest)
         val t1 = System.currentTimeMillis()
 
-        val extractText = extractResp.aiMessage().text().trim()
+        val messageText = extractResp.aiMessage().text().trim()
         val usage1 = LLMUsage(
             prompt_tokens = extractResp.tokenUsage().inputTokenCount(),
             completion_tokens = extractResp.tokenUsage().outputTokenCount(),
         )
 
-        var extractedNode: ObjectNode = runCatching {
-            mapper.readTree(extractText) as? ObjectNode ?: JsonNodeFactory.instance.objectNode()
+        val extractedNode: ObjectNode = runCatching {
+            mapper.readTree(messageText) as? ObjectNode ?: JsonNodeFactory.instance.objectNode()
         }.getOrElse { JsonNodeFactory.instance.objectNode() }
 
         var extractRespFile = ""
@@ -139,7 +140,7 @@ class InferenceEngine(
                 payload = mapOf(
                     "requestId" to params.requestId,
                     "modelResponse" to "extract",
-                    "rawResponse" to safeJsonPreview(extractText)
+                    "rawResponse" to safeJsonPreview(messageText)
                 )
             ).first
 
@@ -148,7 +149,7 @@ class InferenceEngine(
                 entry = mapOf(
                     "extract_inference_type" to "extract",
                     "timestamp" to extractCallTs,
-                    "LLM_input_file" to extractCallFile,
+                    "LLM_input_file" to callFile,
                     "LLM_output_file" to extractRespFile,
                     "prompt_tokens" to usage1.prompt_tokens,
                     "completion_tokens" to usage1.completion_tokens,
