@@ -12,12 +12,16 @@ import java.util.concurrent.atomic.AtomicLong
 import kotlin.io.path.isRegularFile
 import kotlin.reflect.KClass
 
+class TmpFile(val fileName: String) {
+    val path = AppPaths.getProcTmpTmpDirectory("").resolve(fileName)
+}
+
 /**
  * A simple log system
  */
 class MessageWriter(
     val filePath: Path,
-    var levelFile: Int = DEFAULT_LOG_LEVEL
+    var level: Int = DEFAULT_LOG_LEVEL
 ): AutoCloseable {
 
     companion object {
@@ -44,6 +48,14 @@ class MessageWriter(
         var IDLE_TIMEOUT = Duration.ofMinutes(5)
 
         private val ID_SUPPLIER = AtomicLong()
+
+        fun writeOnce(path: Path, content: Any, level: Int = DEFAULT_LOG_LEVEL) {
+            MessageWriter(path, level).use { it.write(content) }
+        }
+
+        fun writeOnce(file: TmpFile, content: Any, level: Int = DEFAULT_LOG_LEVEL) {
+            MessageWriter(file, level).use { it.write(content) }
+        }
     }
 
     private val logger = LoggerFactory.getLogger(MessageWriter::class.java)
@@ -68,30 +80,34 @@ class MessageWriter(
 
     var closeCount = 0
 
+    constructor(file: TmpFile, level: Int = DEFAULT_LOG_LEVEL): this(file.path, level)
+
     fun write(s: Any) = write(s.toString())
 
     fun write(s: String) {
         // Do not write if the writer has been closed explicitly
-        if (closed.get()) return
-        writeFile(s)
+        when {
+            closed.get() -> return
+            else -> writeFile(s)
+        }
     }
 
     fun write(level: Int, clazz: KClass<*>, s: String, t: Throwable? = null) {
         // Do not write if the writer has been closed explicitly
-        if (closed.get()) return
-        if (level > this.levelFile) {
-            return
+        when {
+            closed.get() -> return
+            level > this.level -> return
+            else -> write(level, clazz.simpleName ?: "", s, t)
         }
-        write(level, clazz.simpleName?:"", s, t)
     }
 
     fun write(level: Int, module: String, s: String, t: Throwable? = null) {
         // Do not write if the writer has been closed explicitly
-        if (closed.get()) return
-        if (level > this.levelFile) {
-            return
+        when {
+            closed.get() -> return
+            level > this.level -> return
+            else -> writeFile(format(module, s), t)
         }
-        writeFile(format(module, s), t)
     }
 
     fun flush() {

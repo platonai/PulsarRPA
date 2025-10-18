@@ -186,21 +186,22 @@ class PulsarPerceptiveAgent(
     }
 
     override suspend fun extract(options: ExtractOptions): ExtractResult {
-        val instruction = promptBuilder.enhanceInitialExtractUserInstruction(options.instruction)
+        val instruction = promptBuilder.initExtractUserInstruction(options.instruction)
         val requestId = UUID.randomUUID().toString()
         logExtractStart(instruction, requestId)
 
         val schemaJson = buildSchemaJsonFromMap(options.schema)
+        val domState = getDOMState()
+
+        val params = ExtractParams(
+            instruction = instruction,
+            domElements = domState.json,
+            schema = schemaJson,
+            requestId = requestId,
+            logInferenceToFile = config.enableStructuredLogging
+        )
 
         return try {
-            val params = ExtractParams(
-                instruction = instruction,
-                domElements = listOf(getDOMState().json),
-                schema = schemaJson,
-                requestId = requestId,
-                logInferenceToFile = config.enableStructuredLogging
-            )
-
             val resultNode = inference.extract(params)
             addHistoryExtract(instruction, requestId, true)
             ExtractResult(success = true, message = "OK", data = resultNode)
@@ -224,7 +225,7 @@ class PulsarPerceptiveAgent(
         return doObserve(options)
     }
 
-    private fun getDOMState(): DOMState {
+    private suspend fun getDOMState(): DOMState {
         val snapshotOptions = SnapshotOptions(
             maxDepth = 1000,
             includeAX = true,
@@ -257,18 +258,19 @@ class PulsarPerceptiveAgent(
     }
 
     private suspend fun doObserve(options: ObserveOptions): List<ObserveResult> {
-        val instruction = promptBuilder.enhanceInitialObserveUserInstruction(options.instruction)
+        val instruction = promptBuilder.initObserveUserInstruction(options.instruction)
 
+        val domState = getDOMState()
         val params = ObserveParams(
             instruction = instruction,
-            domElements = getDOMState().json,
+            domElements = domState.json,
             requestId = UUID.randomUUID().toString(),
             returnAction = options.returnAction ?: true,
             logInferenceToFile = config.enableStructuredLogging,
             fromAct = false
         )
 
-        return doObserve1(instruction, params)
+        return doObserve1(instruction, params, domState)
     }
 
     private suspend fun doObserveAct(action: ActionOptions): ActResult {
@@ -284,16 +286,17 @@ class PulsarPerceptiveAgent(
         }
 
         // 3) Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
+        val domState = getDOMState()
         val params = ObserveParams(
             instruction = instruction,
-            domElements = getDOMState().json,
+            domElements = domState.json,
             requestId = UUID.randomUUID().toString(),
             returnAction = true,
             logInferenceToFile = config.enableStructuredLogging,
             fromAct = true,
         )
 
-        val results: List<ObserveResult> = doObserve1(instruction, params)
+        val results: List<ObserveResult> = doObserve1(instruction, params, domState)
 
         if (results.isEmpty()) {
             val msg = "doObserveAct: No actionable element found"
@@ -325,7 +328,7 @@ class PulsarPerceptiveAgent(
         return execResult.copy(action = action.action)
     }
 
-    private suspend fun doObserve1(instruction: String, params: ObserveParams): List<ObserveResult> {
+    private suspend fun doObserve1(instruction: String, params: ObserveParams, domState: DOMState): List<ObserveResult> {
         val requestId: String = params.requestId
 
         logObserveStart(instruction, requestId)
@@ -333,10 +336,12 @@ class PulsarPerceptiveAgent(
         return try {
             val internalResults = inference.observe(params)
             val results = internalResults.elements.map { el ->
+                // The format of elementId: `\d+-\d+`
+                val xpath = domState.selectorMap[el.elementId]
                 ObserveResult(
-                    selector = "node:${el.elementId}",
+                    selector = "xpath:$xpath",
                     description = el.description,
-                    backendNodeId = null,
+                    backendNodeId = el.elementId.split("-").firstOrNull()?.toIntOrNull(),
                     method = el.method?.ifBlank { null },
                     arguments = el.arguments?.takeIf { it.isNotEmpty() }
                 )

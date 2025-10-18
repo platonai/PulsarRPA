@@ -3,6 +3,7 @@ package ai.platon.pulsar.skeleton.ai.agent
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
+import ai.platon.pulsar.skeleton.ai.ChatMessage
 import ai.platon.pulsar.skeleton.ai.PromptBuilder
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -24,8 +25,8 @@ import java.util.*
 
 // ----------------------------------- Data models -----------------------------------
 data class LLMUsage(
-    val prompt_tokens: Int = 0,
-    val completion_tokens: Int = 0,
+    val promptTokens: Int = 0,
+    val completionTokens: Int = 0,
 )
 
 data class Metadata(val progress: String = "", val completed: Boolean = false)
@@ -39,14 +40,14 @@ data class ObserveElement(
 
 data class InternalObserveResult(
     val elements: List<ObserveElement>,
-    val prompt_tokens: Int,
-    val completion_tokens: Int,
-    val inference_time_ms: Long,
+    val promptTokens: Int,
+    val completionTokens: Int,
+    val inferenceTimeMs: Long,
 )
 
 data class ExtractParams(
     val instruction: String,
-    val domElements: List<String>,
+    val domElements: String,
     /** JSON Schema string describing the desired extraction output */
     val schema: String,
     val chunksSeen: Int = 0,
@@ -73,6 +74,7 @@ class InferenceEngine(
 ) {
     private val logger = getLogger(this)
     private val promptBuilder = PromptBuilder(promptLocale)
+
     // Reuse a single ObjectMapper for JSON parsing within this class
     private val mapper = ObjectMapper()
 
@@ -84,14 +86,12 @@ class InferenceEngine(
      *   - prompt_tokens, completion_tokens, inference_time_ms
      */
     suspend fun extract(params: ExtractParams): ObjectNode {
-        val domText = params.domElements.joinToString("\n\n")
-
         // 1) Extraction call -----------------------------------------------------------------
         val systemMsg = promptBuilder.buildExtractSystemPrompt(params.userProvidedInstructions)
         val userMsg = promptBuilder.buildExtractUserPrompt(
             params.instruction,
             // Inject schema hint to strongly guide JSON output
-            promptBuilder.buildExtractDomContent(domText, params)
+            promptBuilder.buildExtractDomContent(params.domElements, params)
         )
 
         val messages = listOf(systemMsg, userMsg)
@@ -110,10 +110,7 @@ class InferenceEngine(
             extractCallTs = ts
         }
 
-        val (extractResp, extractElapsedMs) = callChat(
-            systemContent = systemMsg.content.toString(),
-            userContent = userMsg.content.toString()
-        )
+        val (extractResp, extractElapsedMs) = doChat(systemMsg, userMsg)
 
         val messageText = extractResp.aiMessage().text().trim()
         val usage1 = toUsage(extractResp)
@@ -141,8 +138,8 @@ class InferenceEngine(
                     "timestamp" to extractCallTs,
                     "LLM_input_file" to callFile,
                     "LLM_output_file" to extractRespFile,
-                    "prompt_tokens" to usage1.prompt_tokens,
-                    "completion_tokens" to usage1.completion_tokens,
+                    "prompt_tokens" to usage1.promptTokens,
+                    "completion_tokens" to usage1.completionTokens,
                     "inference_time_ms" to extractElapsedMs
                 )
             )
@@ -172,10 +169,7 @@ class InferenceEngine(
             metadataCallFile = file; metadataCallTs = ts
         }
 
-        val (metadataResp, metadataElapsedMs) = callChat(
-            systemContent = metadataSystem.content.toString(),
-            userContent = metadataUser.content.toString()
-        )
+        val (metadataResp, metadataElapsedMs) = doChat(metadataSystem, metadataUser)
 
         val usage2 = toUsage(metadataResp)
 
@@ -206,16 +200,16 @@ class InferenceEngine(
                     "timestamp" to metadataCallTs,
                     "LLM_input_file" to metadataCallFile,
                     "LLM_output_file" to metadataRespFile,
-                    "prompt_tokens" to usage2.prompt_tokens,
-                    "completion_tokens" to usage2.completion_tokens,
+                    "prompt_tokens" to usage2.promptTokens,
+                    "completion_tokens" to usage2.completionTokens,
                     "inference_time_ms" to metadataElapsedMs
                 )
             )
         }
 
         // 3) Merge & return ------------------------------------------------------------------
-        val totalPrompt = (usage1.prompt_tokens) + (usage2.prompt_tokens)
-        val totalCompletion = (usage1.completion_tokens) + (usage2.completion_tokens)
+        val totalPrompt = (usage1.promptTokens) + (usage2.promptTokens)
+        val totalCompletion = (usage1.completionTokens) + (usage2.completionTokens)
         val totalTime = metadataElapsedMs + extractElapsedMs
 
         val result: ObjectNode = (extractedNode.deepCopy()).apply {
@@ -248,13 +242,11 @@ class InferenceEngine(
                 messages = listOf(systemMsg, userMsg),
                 enabled = true
             )
-            callFile = f; callTs = ts
+            callFile = f
+            callTs = ts
         }
 
-        val (resp, elapsedMs) = callChat(
-            systemContent = systemMsg.content.toString(),
-            userContent = userMsg.content.toString()
-        )
+        val (resp, elapsedMs) = doChat(systemMsg, userMsg)
         val usage = toUsage(resp)
 
         val raw = resp.aiMessage().text().trim()
@@ -283,8 +275,8 @@ class InferenceEngine(
                     "timestamp" to callTs,
                     "LLM_input_file" to callFile,
                     "LLM_output_file" to respFile,
-                    "prompt_tokens" to usage.prompt_tokens,
-                    "completion_tokens" to usage.completion_tokens,
+                    "prompt_tokens" to usage.promptTokens,
+                    "completion_tokens" to usage.completionTokens,
                     "inference_time_ms" to elapsedMs
                 )
             )
@@ -292,9 +284,9 @@ class InferenceEngine(
 
         return InternalObserveResult(
             elements = elements,
-            prompt_tokens = usage.prompt_tokens,
-            completion_tokens = usage.completion_tokens,
-            inference_time_ms = elapsedMs
+            promptTokens = usage.promptTokens,
+            completionTokens = usage.completionTokens,
+            inferenceTimeMs = elapsedMs
         )
     }
 
@@ -311,6 +303,7 @@ class InferenceEngine(
                 tmp.add(single)
                 tmp
             }
+
             else -> JsonNodeFactory.instance.arrayNode()
         }
 
@@ -406,21 +399,37 @@ class InferenceEngine(
         )
     }
 
-    private suspend fun callChat(systemContent: String, userContent: String): Pair<ChatResponse, Long> {
+    private suspend fun doChat(systemMessage: ChatMessage, userMessage: ChatMessage): Pair<ChatResponse, Long> {
+        return doChat(SystemMessage.systemMessage(systemMessage.content), UserMessage.userMessage(userMessage.content))
+    }
+
+    private suspend fun doChat(systemContent: String, userContent: String): Pair<ChatResponse, Long> {
         val systemMessage = SystemMessage.systemMessage(systemContent)
         val userMessage = UserMessage.userMessage(userContent)
+
+        return doChat(systemMessage, userMessage)
+    }
+
+    private suspend fun doChat(systemMessage: SystemMessage, userMessage: UserMessage): Pair<ChatResponse, Long> {
+        val temperature = 0.1
         val chatRequest = ChatRequest.builder()
             .messages(systemMessage, userMessage)
             // use provider default temperature
+//            .temperature(temperature)
+            .topP(1.0)
+            .frequencyPenalty(0.0)
+            .presencePenalty(0.0)
             .build()
+
         val t0 = System.currentTimeMillis()
         val resp: ChatResponse = chatModel.langChainChat(chatRequest)
         val t1 = System.currentTimeMillis()
+
         return resp to (t1 - t0)
     }
 
     private fun toUsage(resp: ChatResponse): LLMUsage = LLMUsage(
-        prompt_tokens = resp.tokenUsage().inputTokenCount(),
-        completion_tokens = resp.tokenUsage().outputTokenCount(),
+        promptTokens = resp.tokenUsage().inputTokenCount(),
+        completionTokens = resp.tokenUsage().outputTokenCount(),
     )
 }

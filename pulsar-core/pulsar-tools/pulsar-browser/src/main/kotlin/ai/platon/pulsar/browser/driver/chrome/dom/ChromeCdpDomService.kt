@@ -3,13 +3,10 @@ package ai.platon.pulsar.browser.driver.chrome.dom
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.AccessibilityHandler.AccessibilityTreeResult
 import ai.platon.pulsar.browser.driver.chrome.dom.model.*
-import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.MessageWriter
+import ai.platon.pulsar.common.TmpFile
 import ai.platon.pulsar.common.getLogger
 import com.github.kklisura.cdt.protocol.v2023.types.accessibility.AXNode
-import java.nio.file.Files
-import java.nio.file.Paths
-import java.nio.file.StandardOpenOption
 import java.time.Instant
 import kotlin.math.abs
 
@@ -35,7 +32,7 @@ class ChromeCdpDomService(
     @Volatile
     private var lastDomByBackend: Map<Int, DOMTreeNodeEx> = emptyMap()
 
-    override fun getMultiDOMTrees(target: PageTarget, options: SnapshotOptions): TargetDetailTrees {
+    override suspend fun getMultiDOMTrees(target: PageTarget, options: SnapshotOptions): TargetDetailTrees {
         val startTime = System.currentTimeMillis()
         val timings = mutableMapOf<String, Long>()
 
@@ -233,6 +230,39 @@ class ChromeCdpDomService(
         return merged
     }
 
+    override suspend fun buildSlimDOM(): SlimNode {
+        val trees = getMultiDOMTrees()
+        return buildSlimDOM(trees)
+    }
+
+    override suspend fun buildSlimDOM(trees: TargetDetailTrees): SlimNode {
+        val enhanced = buildEnhancedDomTree(trees)
+        val hasElements = enhanced.children.isNotEmpty() ||
+                enhanced.shadowRoots.isNotEmpty() ||
+                enhanced.contentDocument != null
+        val simplified = SlimTreeBuilder(enhanced).buildSimplifiedSlimDOM()
+
+        if (!hasElements || simplified == null) {
+            // Write a lightweight diagnostic to help root cause empty DOM
+            runCatching {
+                val diagnostics = mapOf(
+                    "timestamp" to Instant.now().toString(),
+                    "reason" to "Empty DOM tree collected",
+                    "devicePixelRatio" to trees.devicePixelRatio,
+                    "axNodeCount" to trees.axTree.size,
+                    "snapshotEntryCount" to trees.snapshotByBackendId.size,
+                    "timingsMs" to trees.cdpTiming
+                )
+
+                MessageWriter.writeOnce(TmpFile("dom-service-diagnostics.json"), diagnostics)
+            }.onFailure { e -> logger.warn("Failed to write DOM diagnostics | {}", e.toString()) }
+
+            throw IllegalStateException("Empty DOM tree collected (AX=${trees.axTree.size}, SNAP=${trees.snapshotByBackendId.size}). See logs/chat-model/domservice-diagnostics.json")
+        }
+
+        return simplified
+    }
+
     override fun buildSimplifiedSlimDOM(root: DOMTreeNodeEx): SlimNode {
         fun simplify(node: DOMTreeNodeEx): SlimNode {
             val simplifiedChildren = node.children.map { simplify(it) }
@@ -247,40 +277,6 @@ class ChromeCdpDomService(
         }
 
         return simplify(root)
-    }
-
-    override fun buildSlimDOM(): SlimNode {
-        val trees = getMultiDOMTrees()
-        return buildSlimDOM(trees)
-    }
-
-    override fun buildSlimDOM(trees: TargetDetailTrees): SlimNode {
-        val enhanced = buildEnhancedDomTree(trees)
-        val hasElements = enhanced.children.isNotEmpty() ||
-                enhanced.shadowRoots.isNotEmpty() ||
-                enhanced.contentDocument != null
-        val simplified = AccessibleElementsSerializer(enhanced).buildSimplifiedSlimDOM()
-
-        if (!hasElements || simplified == null) {
-            // Write a lightweight diagnostic to help root cause empty DOM
-            runCatching {
-                val diagnostics = mapOf(
-                    "timestamp" to Instant.now().toString(),
-                    "reason" to "Empty DOM tree collected",
-                    "devicePixelRatio" to trees.devicePixelRatio,
-                    "axNodeCount" to trees.axTree.size,
-                    "snapshotEntryCount" to trees.snapshotByBackendId.size,
-                    "timingsMs" to trees.cdpTiming
-                )
-
-                val out = AppPaths.getProcTmpDirectory("dom-service-diagnostics.json")
-                MessageWriter(out).use { it.write(diagnostics) }
-            }.onFailure { e -> logger.warn("Failed to write DOM diagnostics | {}", e.toString()) }
-
-            throw IllegalStateException("Empty DOM tree collected (AX=${trees.axTree.size}, SNAP=${trees.snapshotByBackendId.size}). See logs/chat-model/domservice-diagnostics.json")
-        }
-
-        return simplified
     }
 
     override fun serialize(root: SlimNode, includeAttributes: List<String>): DOMState {

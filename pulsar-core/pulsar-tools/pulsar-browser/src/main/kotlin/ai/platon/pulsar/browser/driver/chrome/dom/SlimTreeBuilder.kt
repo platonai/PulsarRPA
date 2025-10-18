@@ -14,7 +14,7 @@ import kotlin.math.min
  * - Apply bounding box filtering with propagating bounds (mark excluded_by_parent)
  * - Assign interactive indices for visible+interactive elements only
  */
-class AccessibleElementsSerializer(
+class SlimTreeBuilder(
     private val root: DOMTreeNodeEx,
     private val previousBackendNodeIds: Set<Int> = emptySet(),
     private val enableBBoxFiltering: Boolean = true,
@@ -50,7 +50,6 @@ class AccessibleElementsSerializer(
 
     private var interactiveCounter = 1
 
-    /** Entry point */
     fun buildSimplifiedSlimDOM(): SlimNode? {
         val simplified = createSimplifiedTree(root) ?: return null
         val optimized = optimizeTree(simplified)

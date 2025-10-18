@@ -225,9 +225,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     returnAction = true
                 )
 
-                val results = runBlocking {
-                    agent.observe(options)
-                }
+                val results = agent.observe(options)
 
                 assertNotNull(results)
                 // Some results might have methods/arguments

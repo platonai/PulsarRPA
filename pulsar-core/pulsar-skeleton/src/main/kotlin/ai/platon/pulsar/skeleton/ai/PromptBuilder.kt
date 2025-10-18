@@ -6,8 +6,8 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.util.*
 
 data class ChatMessage(
-    val role: String, // "system" | "user" | "assistant"
-    val content: Any // String or List<ChatMessageImageContent | ChatMessageTextContent>
+    val role: String,
+    val content: String
 )
 
 class PromptBuilder(val locale: Locale = Locale.CHINESE) {
@@ -84,7 +84,7 @@ Print null or an empty string if no new information is found.
         return ChatMessage(role = "system", content = content)
     }
 
-    fun enhanceInitialExtractUserInstruction(instruction: String? = null): String {
+    fun initExtractUserInstruction(instruction: String? = null): String {
         if (instruction.isNullOrBlank()) {
             return if (isCN) {
                 "从网页中提取关键数据结构"
@@ -243,7 +243,7 @@ Return an array of elements that match the instruction if they exist, otherwise 
         return ChatMessage(role = "system", content = content)
     }
 
-    fun enhanceInitialObserveUserInstruction(instruction: String?): String {
+    fun initObserveUserInstruction(instruction: String?): String {
         return when {
             !instruction.isNullOrBlank() -> instruction
             isCN -> """

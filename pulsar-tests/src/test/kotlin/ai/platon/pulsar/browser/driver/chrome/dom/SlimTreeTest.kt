@@ -12,9 +12,9 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertIs
 
-class AccessibleElementsSerializerRealWebTest : WebDriverTestBase() {
+class SlimTreeTest : WebDriverTestBase() {
 
-    private fun collectEnhancedRoot(service: ChromeCdpDomService, options: SnapshotOptions): DOMTreeNodeEx {
+    private suspend fun collectEnhancedRoot(service: ChromeCdpDomService, options: SnapshotOptions): DOMTreeNodeEx {
         repeat(3) { attempt ->
             val t = service.getMultiDOMTrees(target = PageTarget(), options = options)
             // Best-effort summary for diagnostics
@@ -58,7 +58,7 @@ class AccessibleElementsSerializerRealWebTest : WebDriverTestBase() {
         println(DomDebug.summarize(enhancedRoot))
         assertTrue(enhancedRoot.children.isNotEmpty(), "Enhanced root should have children")
 
-        val simplified = AccessibleElementsSerializer(enhancedRoot).buildSimplifiedSlimDOM()
+        val simplified = SlimTreeBuilder(enhancedRoot).buildSimplifiedSlimDOM()
         assertNotNull(simplified, "Simplified Slim DOM should not be null")
         simplified!!
         println(DomDebug.summarize(simplified))
@@ -143,7 +143,7 @@ class AccessibleElementsSerializerRealWebTest : WebDriverTestBase() {
         collectBackendIds(enhancedRoot)
         assertTrue(allBackendIds.isNotEmpty(), "Expected some backend node IDs in the enhanced DOM")
 
-        val simplifiedInitial = AccessibleElementsSerializer(enhancedRoot).buildSimplifiedSlimDOM()
+        val simplifiedInitial = SlimTreeBuilder(enhancedRoot).buildSimplifiedSlimDOM()
         assertNotNull(simplifiedInitial)
         val nodesInitial = flattenSlim(simplifiedInitial!!)
         // With empty previous set, nodes that have backend IDs should be considered new (best-effort)
@@ -151,7 +151,7 @@ class AccessibleElementsSerializerRealWebTest : WebDriverTestBase() {
         assertTrue(anyNew, "Expected at least one node marked isNew on first build")
 
         // Build again with previous IDs supplied: nodes should now be marked as not new
-        val simplifiedSecond = AccessibleElementsSerializer(enhancedRoot, previousBackendNodeIds = allBackendIds).buildSimplifiedSlimDOM()
+        val simplifiedSecond = SlimTreeBuilder(enhancedRoot, previousBackendNodeIds = allBackendIds).buildSimplifiedSlimDOM()
         assertNotNull(simplifiedSecond)
         val nodesSecond = flattenSlim(simplifiedSecond!!)
         nodesSecond.forEach { n ->
@@ -200,7 +200,7 @@ class AccessibleElementsSerializerRealWebTest : WebDriverTestBase() {
         val enhancedRoot = collectEnhancedRoot(service, options)
         assertTrue(enhancedRoot.children.isNotEmpty())
 
-        val simplified = AccessibleElementsSerializer(enhancedRoot).buildSimplifiedSlimDOM()
+        val simplified = SlimTreeBuilder(enhancedRoot).buildSimplifiedSlimDOM()
         assertNotNull(simplified)
         val flat = flattenSlim(simplified!!)
 

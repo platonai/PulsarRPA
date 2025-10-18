@@ -25,7 +25,7 @@ class AccessibleElementsSerializerTest {
         )
         val root = parent.copy(children = listOf(childInside))
 
-        val slim = AccessibleElementsSerializer(root, enableBBoxFiltering = true).buildSimplifiedSlimDOM()
+        val slim = SlimTreeBuilder(root, enableBBoxFiltering = true).buildSimplifiedSlimDOM()
         assertNotNull(slim)
         val childSlim = slim!!.children.firstOrNull()
         assertNotNull(childSlim)
@@ -56,7 +56,7 @@ class AccessibleElementsSerializerTest {
             children = listOf(btn1, btn2)
         )
 
-        val slim = AccessibleElementsSerializer(root, enableBBoxFiltering = false).buildSimplifiedSlimDOM()
+        val slim = SlimTreeBuilder(root, enableBBoxFiltering = false).buildSimplifiedSlimDOM()
         assertNotNull(slim)
 
         // Serialize to build selector map with index:* entries
@@ -93,7 +93,7 @@ class AccessibleElementsSerializerTest {
         )
         val rootWithChild = root.copy(children = listOf(invisibleParent))
 
-        val slim = AccessibleElementsSerializer(rootWithChild, enableBBoxFiltering = false).buildSimplifiedSlimDOM()
+        val slim = SlimTreeBuilder(rootWithChild, enableBBoxFiltering = false).buildSimplifiedSlimDOM()
         assertNotNull(slim)
         // After createSimplifiedTree, the text child is pruned; then optimizeTree should drop the invisible parent
         val child = slim!!.children.firstOrNull()
