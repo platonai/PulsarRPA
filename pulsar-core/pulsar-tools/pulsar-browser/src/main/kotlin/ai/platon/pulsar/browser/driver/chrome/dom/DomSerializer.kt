@@ -3,7 +3,7 @@ package ai.platon.pulsar.browser.driver.chrome.dom
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMRect
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DefaultIncludeAttributes
-import ai.platon.pulsar.browser.driver.chrome.dom.model.SlimNode
+import ai.platon.pulsar.browser.driver.chrome.dom.model.TinyNode
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -26,7 +26,7 @@ object DomSerializer {
      * @return JSON string
      */
     fun serialize(
-        root: SlimNode,
+        root: TinyNode,
         includeAttributes: List<String> = emptyList(),
         options: SerializationOptions = SerializationOptions()
     ): DOMState {
@@ -59,7 +59,7 @@ object DomSerializer {
     )
 
     private fun buildSerializableNode(
-        node: SlimNode,
+        node: TinyNode,
         includeAttributes: Set<String>,
         ancestors: List<DOMTreeNodeEx>,
         selectorMap: MutableMap<String, DOMTreeNodeEx>,
@@ -119,7 +119,7 @@ object DomSerializer {
     /**
      * Determine if a node should be pruned based on paint order.
      */
-    private fun shouldPruneByPaintOrder(node: SlimNode, options: SerializationOptions): Boolean {
+    private fun shouldPruneByPaintOrder(node: TinyNode, options: SerializationOptions): Boolean {
         val paintOrder = node.originalNode.snapshotNode?.paintOrder ?: return false
         return paintOrder > options.maxPaintOrderThreshold
     }
@@ -127,7 +127,7 @@ object DomSerializer {
     /**
      * Detect if a node represents a compound component.
      */
-    private fun detectCompoundComponent(node: SlimNode, options: SerializationOptions): Boolean {
+    private fun detectCompoundComponent(node: TinyNode, options: SerializationOptions): Boolean {
         val originalNode = node.originalNode
         val tag = originalNode.nodeName.lowercase()
 
@@ -172,7 +172,7 @@ object DomSerializer {
      * Create a pruned node with minimal information for high paint-order elements.
      */
     private fun createPrunedNode(
-        node: SlimNode,
+        node: TinyNode,
         ancestors: List<DOMTreeNodeEx>,
         selectorMap: MutableMap<String, DOMTreeNodeEx>
     ): SerializableNode {

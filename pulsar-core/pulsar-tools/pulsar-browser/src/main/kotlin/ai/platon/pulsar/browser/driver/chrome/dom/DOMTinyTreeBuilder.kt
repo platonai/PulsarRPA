@@ -3,7 +3,7 @@ package ai.platon.pulsar.browser.driver.chrome.dom
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMRect
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.NodeType
-import ai.platon.pulsar.browser.driver.chrome.dom.model.SlimNode
+import ai.platon.pulsar.browser.driver.chrome.dom.model.TinyNode
 import kotlin.math.max
 import kotlin.math.min
 
@@ -14,7 +14,7 @@ import kotlin.math.min
  * - Apply bounding box filtering with propagating bounds (mark excluded_by_parent)
  * - Assign interactive indices for visible+interactive elements only
  */
-class SlimTreeBuilder(
+class DOMTinyTreeBuilder(
     private val root: DOMTreeNodeEx,
     private val previousBackendNodeIds: Set<Int> = emptySet(),
     private val enableBBoxFiltering: Boolean = true,
@@ -50,26 +50,26 @@ class SlimTreeBuilder(
 
     private var interactiveCounter = 1
 
-    fun buildSimplifiedSlimDOM(): SlimNode? {
-        val simplified = createSimplifiedTree(root) ?: return null
+    fun buildTinyTree(): TinyNode? {
+        val simplified = createTinyTree(root) ?: return null
         val optimized = optimizeTree(simplified)
         val filtered = if (enableBBoxFiltering) applyBoundingBoxFiltering(optimized) else optimized
         return assignInteractiveIndices(filtered)
     }
 
     /** Create simplified tree with key decisions: skip disabled tags, include iframe/frame content, shadow DOM. */
-    private fun createSimplifiedTree(node: DOMTreeNodeEx, depth: Int = 0): SlimNode? {
+    private fun createTinyTree(node: DOMTreeNodeEx, depth: Int = 0): TinyNode? {
         return when (node.nodeType) {
             NodeType.DOCUMENT_NODE -> {
                 // Return first non-null simplified child among all children and shadow roots
-                node.children.asSequence().mapNotNull { createSimplifiedTree(it, depth + 1) }.firstOrNull()
-                    ?: node.shadowRoots.asSequence().mapNotNull { createSimplifiedTree(it, depth + 1) }.firstOrNull()
+                node.children.asSequence().mapNotNull { createTinyTree(it, depth + 1) }.firstOrNull()
+                    ?: node.shadowRoots.asSequence().mapNotNull { createTinyTree(it, depth + 1) }.firstOrNull()
             }
 
             NodeType.DOCUMENT_FRAGMENT_NODE -> {
                 // Shadow DOM fragment - always include to preserve shadow content
-                val children = (node.children + node.shadowRoots).mapNotNull { createSimplifiedTree(it, depth + 1) }
-                SlimNode(
+                val children = (node.children + node.shadowRoots).mapNotNull { createTinyTree(it, depth + 1) }
+                TinyNode(
                     originalNode = node,
                     children = children,
                     shouldDisplay = true,
@@ -86,8 +86,8 @@ class SlimTreeBuilder(
                 // iframe/frame: include content document children
                 if (node.nodeName.equals("IFRAME", true) || node.nodeName.equals("FRAME", true)) {
                     val doc = node.contentDocument
-                    val children = doc?.children?.mapNotNull { createSimplifiedTree(it, depth + 1) } ?: emptyList()
-                    return SlimNode(
+                    val children = doc?.children?.mapNotNull { createTinyTree(it, depth + 1) } ?: emptyList()
+                    return TinyNode(
                         originalNode = node,
                         children = children,
                         shouldDisplay = true,
@@ -109,8 +109,8 @@ class SlimTreeBuilder(
 
                 // Include if meaningful
                 if (isVisible || isScrollable || node.children.isNotEmpty() || hasShadowContent) {
-                    val children = (node.children + node.shadowRoots).mapNotNull { createSimplifiedTree(it, depth + 1) }
-                    return SlimNode(
+                    val children = (node.children + node.shadowRoots).mapNotNull { createTinyTree(it, depth + 1) }
+                    return TinyNode(
                         originalNode = node,
                         children = children,
                         shouldDisplay = true,
@@ -125,7 +125,7 @@ class SlimTreeBuilder(
                 val visible = node.snapshotNode != null && node.isVisible == true
                 val text = node.nodeValue.trim()
                 if (visible && text.length > 1) {
-                    SlimNode(
+                    TinyNode(
                         originalNode = node,
                         children = emptyList(),
                         shouldDisplay = true,
@@ -139,7 +139,7 @@ class SlimTreeBuilder(
     }
 
     /** Remove non-meaningful parents: keep if visible or scrollable or is text or has children */
-    private fun optimizeTree(node: SlimNode?): SlimNode? {
+    private fun optimizeTree(node: TinyNode?): TinyNode? {
         node ?: return null
         val optimizedChildren = node.children.mapNotNull { optimizeTree(it) }
         val newNode = node.copy(children = optimizedChildren)
@@ -154,12 +154,12 @@ class SlimTreeBuilder(
     }
 
     /** Apply bounding-box filtering with propagating parents; mark excluded_by_parent on contained children. */
-    private fun applyBoundingBoxFiltering(node: SlimNode?): SlimNode? {
+    private fun applyBoundingBoxFiltering(node: TinyNode?): TinyNode? {
         node ?: return null
         return filterRecursive(node, activeBounds = null, depth = 0)
     }
 
-    private fun filterRecursive(node: SlimNode, activeBounds: PropagatingBounds?, depth: Int): SlimNode {
+    private fun filterRecursive(node: TinyNode, activeBounds: PropagatingBounds?, depth: Int): TinyNode {
         var excluded = false
         // Exclude if sufficiently contained in active bounds
         if (activeBounds != null && shouldExcludeChild(node, activeBounds)) {
@@ -178,7 +178,7 @@ class SlimTreeBuilder(
         return node.copy(children = newChildren, excludedByParent = excluded)
     }
 
-    private fun shouldExcludeChild(node: SlimNode, activeBounds: PropagatingBounds): Boolean {
+    private fun shouldExcludeChild(node: TinyNode, activeBounds: PropagatingBounds): Boolean {
         val original = node.originalNode
         if (original.nodeType == NodeType.TEXT_NODE) return false
         val childBounds = original.snapshotNode?.bounds ?: return false
@@ -219,12 +219,12 @@ class SlimTreeBuilder(
     }
 
     /** Assign interactive indices in DFS order to nodes that are visible + interactive and not excluded/ignored. */
-    private fun assignInteractiveIndices(node: SlimNode?): SlimNode? {
+    private fun assignInteractiveIndices(node: TinyNode?): TinyNode? {
         node ?: return null
         return assignRecursive(node)
     }
 
-    private fun assignRecursive(node: SlimNode): SlimNode {
+    private fun assignRecursive(node: TinyNode): TinyNode {
         // Compute this node's index if qualifies
         val qualifies = !node.excludedByParent && !node.ignoredByPaintOrder &&
                 (node.originalNode.isInteractable == true) && (node.originalNode.isVisible == true)

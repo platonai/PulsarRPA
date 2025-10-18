@@ -24,6 +24,41 @@ enum class NodeType(val value: Int) {
 }
 
 /**
+ * Static attributes used for element hashing.
+ */
+object StaticAttributes {
+    val ATTRIBUTES = setOf(
+        "class", "id", "name", "type", "placeholder", "aria-label", "title",
+        "role", "data-testid", "data-test", "data-cy", "data-selenium",
+        "for", "required", "disabled", "readonly", "checked", "selected",
+        "multiple", "href", "target", "rel", "aria-describedby",
+        "aria-labelledby", "aria-controls", "aria-owns", "aria-live",
+        "aria-atomic", "aria-busy", "aria-disabled", "aria-hidden",
+        "aria-pressed", "aria-checked", "aria-selected", "tabindex",
+        "alt", "src", "lang", "itemscope", "itemtype", "itemprop",
+        "pseudo", "aria-valuemin", "aria-valuemax", "aria-valuenow",
+        "aria-placeholder"
+    )
+}
+
+/**
+ * Default attributes to include in LLM serialization.
+ */
+object DefaultIncludeAttributes {
+    val ATTRIBUTES = listOf(
+        "title", "type", "checked", "id", "name", "role", "value",
+        "placeholder", "data-date-format", "alt", "aria-label",
+        "aria-expanded", "data-state", "aria-checked", "aria-valuemin",
+        "aria-valuemax", "aria-valuenow", "aria-placeholder", "pattern",
+        "min", "max", "minlength", "maxlength", "step", "pseudo",
+        "checked", "selected", "expanded", "pressed", "disabled",
+        "invalid", "valuemin", "valuemax", "valuenow", "keyshortcuts",
+        "haspopup", "multiselectable", "required", "valuetext", "level",
+        "busy", "live", "ax_name"
+    )
+}
+
+/**
  * DOM rectangle with coordinates.
  */
 data class DOMRect(
@@ -146,9 +181,9 @@ data class DOMTreeNodeEx(
 /**
  * Simplified node for LLM serialization.
  */
-data class SlimNode(
+data class TinyNode(
     val originalNode: DOMTreeNodeEx,
-    val children: List<SlimNode> = emptyList(),
+    val children: List<TinyNode> = emptyList(),
     val shouldDisplay: Boolean = true,
     val interactiveIndex: Int? = null,
     val isNew: Boolean = false,
@@ -168,38 +203,3 @@ data class DOMInteractedElement(
     val isVisible: Boolean? = null,
     val isInteractable: Boolean? = null
 )
-
-/**
- * Static attributes used for element hashing.
- */
-object StaticAttributes {
-    val ATTRIBUTES = setOf(
-        "class", "id", "name", "type", "placeholder", "aria-label", "title",
-        "role", "data-testid", "data-test", "data-cy", "data-selenium",
-        "for", "required", "disabled", "readonly", "checked", "selected",
-        "multiple", "href", "target", "rel", "aria-describedby",
-        "aria-labelledby", "aria-controls", "aria-owns", "aria-live",
-        "aria-atomic", "aria-busy", "aria-disabled", "aria-hidden",
-        "aria-pressed", "aria-checked", "aria-selected", "tabindex",
-        "alt", "src", "lang", "itemscope", "itemtype", "itemprop",
-        "pseudo", "aria-valuemin", "aria-valuemax", "aria-valuenow",
-        "aria-placeholder"
-    )
-}
-
-/**
- * Default attributes to include in LLM serialization.
- */
-object DefaultIncludeAttributes {
-    val ATTRIBUTES = listOf(
-        "title", "type", "checked", "id", "name", "role", "value",
-        "placeholder", "data-date-format", "alt", "aria-label",
-        "aria-expanded", "data-state", "aria-checked", "aria-valuemin",
-        "aria-valuemax", "aria-valuenow", "aria-placeholder", "pattern",
-        "min", "max", "minlength", "maxlength", "step", "pseudo",
-        "checked", "selected", "expanded", "pressed", "disabled",
-        "invalid", "valuemin", "valuemax", "valuenow", "keyshortcuts",
-        "haspopup", "multiselectable", "required", "valuetext", "level",
-        "busy", "live", "ax_name"
-    )
-}

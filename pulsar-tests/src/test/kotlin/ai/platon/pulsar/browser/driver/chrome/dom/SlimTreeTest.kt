@@ -4,8 +4,7 @@ import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.NodeType
-import ai.platon.pulsar.browser.driver.chrome.dom.model.PageTarget
-import ai.platon.pulsar.browser.driver.chrome.dom.model.SlimNode
+import ai.platon.pulsar.browser.driver.chrome.dom.model.TinyNode
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import org.junit.jupiter.api.Assertions.*
@@ -14,9 +13,9 @@ import kotlin.test.assertIs
 
 class SlimTreeTest : WebDriverTestBase() {
 
-    private fun flattenSlim(root: SlimNode): List<SlimNode> {
-        val out = ArrayList<SlimNode>()
-        fun dfs(n: SlimNode) {
+    private fun flattenSlim(root: TinyNode): List<TinyNode> {
+        val out = ArrayList<TinyNode>()
+        fun dfs(n: TinyNode) {
             out.add(n)
             n.children.forEach { dfs(it) }
         }
@@ -46,7 +45,7 @@ class SlimTreeTest : WebDriverTestBase() {
         println(DomDebug.summarize(enhancedRoot))
         assertTrue(enhancedRoot.children.isNotEmpty(), "Enhanced root should have children")
 
-        val simplified = SlimTreeBuilder(enhancedRoot).buildSimplifiedSlimDOM()
+        val simplified = DOMTinyTreeBuilder(enhancedRoot).buildTinyTree()
         assertNotNull(simplified, "Simplified Slim DOM should not be null")
         simplified!!
         println(DomDebug.summarize(simplified))
@@ -131,7 +130,7 @@ class SlimTreeTest : WebDriverTestBase() {
         collectBackendIds(enhancedRoot)
         assertTrue(allBackendIds.isNotEmpty(), "Expected some backend node IDs in the enhanced DOM")
 
-        val simplifiedInitial = SlimTreeBuilder(enhancedRoot).buildSimplifiedSlimDOM()
+        val simplifiedInitial = DOMTinyTreeBuilder(enhancedRoot).buildTinyTree()
         assertNotNull(simplifiedInitial)
         val nodesInitial = flattenSlim(simplifiedInitial!!)
         // With empty previous set, nodes that have backend IDs should be considered new (best-effort)
@@ -139,7 +138,7 @@ class SlimTreeTest : WebDriverTestBase() {
         assertTrue(anyNew, "Expected at least one node marked isNew on first build")
 
         // Build again with previous IDs supplied: nodes should now be marked as not new
-        val simplifiedSecond = SlimTreeBuilder(enhancedRoot, previousBackendNodeIds = allBackendIds).buildSimplifiedSlimDOM()
+        val simplifiedSecond = DOMTinyTreeBuilder(enhancedRoot, previousBackendNodeIds = allBackendIds).buildTinyTree()
         assertNotNull(simplifiedSecond)
         val nodesSecond = flattenSlim(simplifiedSecond!!)
         nodesSecond.forEach { n ->
@@ -188,7 +187,7 @@ class SlimTreeTest : WebDriverTestBase() {
         val enhancedRoot = collectEnhancedRoot(service, options)
         assertTrue(enhancedRoot.children.isNotEmpty())
 
-        val simplified = SlimTreeBuilder(enhancedRoot).buildSimplifiedSlimDOM()
+        val simplified = DOMTinyTreeBuilder(enhancedRoot).buildTinyTree()
         assertNotNull(simplified)
         val flat = flattenSlim(simplified!!)
 

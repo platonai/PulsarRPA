@@ -4,7 +4,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.*
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
-class AccessibleElementsSerializerTest {
+class DOMTinyTreeBuilderTest {
 
     @Test
     fun `bbox filtering excludes contained non-exception children`() {
@@ -25,7 +25,7 @@ class AccessibleElementsSerializerTest {
         )
         val root = parent.copy(children = listOf(childInside))
 
-        val slim = SlimTreeBuilder(root, enableBBoxFiltering = true).buildSimplifiedSlimDOM()
+        val slim = DOMTinyTreeBuilder(root, enableBBoxFiltering = true).buildTinyTree()
         assertNotNull(slim)
         val childSlim = slim!!.children.firstOrNull()
         assertNotNull(childSlim)
@@ -56,11 +56,11 @@ class AccessibleElementsSerializerTest {
             children = listOf(btn1, btn2)
         )
 
-        val slim = SlimTreeBuilder(root, enableBBoxFiltering = false).buildSimplifiedSlimDOM()
-        assertNotNull(slim)
+        val tree = DOMTinyTreeBuilder(root, enableBBoxFiltering = false).buildTinyTree()
+        assertNotNull(tree)
 
         // Serialize to build selector map with index:* entries
-        val state = DomSerializer.serialize(slim!!)
+        val state = DomSerializer.serialize(tree!!)
         val keys = state.selectorMap.keys
         assertTrue(keys.any { it == "index:1" }, "Selector map should include index:1")
         assertTrue(keys.any { it == "index:2" }, "Selector map should include index:2")
@@ -93,10 +93,10 @@ class AccessibleElementsSerializerTest {
         )
         val rootWithChild = root.copy(children = listOf(invisibleParent))
 
-        val slim = SlimTreeBuilder(rootWithChild, enableBBoxFiltering = false).buildSimplifiedSlimDOM()
-        assertNotNull(slim)
+        val tree = DOMTinyTreeBuilder(rootWithChild, enableBBoxFiltering = false).buildTinyTree()
+        assertNotNull(tree)
         // After createSimplifiedTree, the text child is pruned; then optimizeTree should drop the invisible parent
-        val child = slim!!.children.firstOrNull()
+        val child = tree!!.children.firstOrNull()
         assertNull(child, "Invisible non-scrollable parent with no kept children should be pruned by optimizeTree")
     }
 }

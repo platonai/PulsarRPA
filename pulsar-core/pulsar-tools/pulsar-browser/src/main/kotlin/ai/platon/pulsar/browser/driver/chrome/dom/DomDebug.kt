@@ -34,11 +34,11 @@ object DomDebug {
         return TreeStats(maxDepth, count, leaves)
     }
 
-    fun stats(root: SlimNode): TreeStats {
+    fun stats(root: TinyNode): TreeStats {
         var maxDepth = 0
         var count = 0
         var leaves = 0
-        fun dfs(n: SlimNode, d: Int) {
+        fun dfs(n: TinyNode, d: Int) {
             count++
             if (d > maxDepth) maxDepth = d
             if (n.children.isEmpty()) leaves++
@@ -97,7 +97,7 @@ object DomDebug {
         }
     }
 
-    fun summarize(root: SlimNode): String {
+    fun summarize(root: TinyNode): String {
         val s = stats(root)
         val original = root.originalNode
         val hashShort = original.elementHash?.take(12)

@@ -4,14 +4,14 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMRect
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.NodeType
-import ai.platon.pulsar.browser.driver.chrome.dom.model.SlimNode
+import ai.platon.pulsar.browser.driver.chrome.dom.model.TinyNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-class DomLLMSerializerTest {
+class DomSerializerTest {
     private val mapper = jacksonObjectMapper()
 
     @Test
@@ -29,9 +29,9 @@ class DomLLMSerializerTest {
             elementHash = "root-hash"
         )
 
-        val root = SlimNode(
+        val root = TinyNode(
             originalNode = rootOriginal,
-            children = listOf(SlimNode(originalNode = childOriginal))
+            children = listOf(TinyNode(originalNode = childOriginal))
         )
 
         val result = DomSerializer.serialize(root, listOf("data-id", "aria-label"))
@@ -70,9 +70,9 @@ class DomLLMSerializerTest {
             elementHash = "body-hash"
         )
 
-        val simplified = SlimNode(
+        val simplified = TinyNode(
             originalNode = rootOriginal,
-            children = listOf(SlimNode(originalNode = scrollableNode))
+            children = listOf(TinyNode(originalNode = scrollableNode))
         )
 
         val result = DomSerializer.serialize(simplified)
@@ -107,11 +107,11 @@ class DomLLMSerializerTest {
             elementHash = "body-hash"
         )
 
-        val simplified = SlimNode(
+        val simplified = TinyNode(
             originalNode = rootOriginal,
             children = listOf(
-                SlimNode(originalNode = highPaintOrderNode),
-                SlimNode(originalNode = normalNode)
+                TinyNode(originalNode = highPaintOrderNode),
+                TinyNode(originalNode = normalNode)
             )
         )
 
@@ -148,12 +148,12 @@ class DomLLMSerializerTest {
             elementHash = "body-hash"
         )
 
-        val simplified = SlimNode(
+        val simplified = TinyNode(
             originalNode = rootOriginal,
             children = listOf(
-                SlimNode(
+                TinyNode(
                     originalNode = listNode,
-                    children = List(5) { SlimNode(originalNode = listItem) } // 5 children to meet threshold
+                    children = List(5) { TinyNode(originalNode = listItem) } // 5 children to meet threshold
                 )
             )
         )
@@ -183,7 +183,7 @@ class DomLLMSerializerTest {
             )
         )
 
-        val simplified = SlimNode(originalNode = node)
+        val simplified = TinyNode(originalNode = node)
 
         val options = DomSerializer.SerializationOptions(
             enableAttributeCasingAlignment = true,
@@ -209,7 +209,7 @@ class DomLLMSerializerTest {
             backendNodeId = 12345
         )
 
-        val simplified = SlimNode(originalNode = node)
+        val simplified = TinyNode(originalNode = node)
 
         val result = DomSerializer.serialize(simplified)
 
@@ -235,7 +235,7 @@ class DomLLMSerializerTest {
             elementHash = "custom-hash"
         )
 
-        val simplified = SlimNode(originalNode = node)
+        val simplified = TinyNode(originalNode = node)
 
         val options = DomSerializer.SerializationOptions(
             preserveOriginalCasing = true
@@ -252,7 +252,7 @@ class DomLLMSerializerTest {
         val levels = 30
 
         // Build a deep chain of SlimNodes: node-1 -> node-2 -> ... -> node-29 -> node-30(leaf)
-        var leaf: SlimNode = SlimNode(
+        var leaf: TinyNode = TinyNode(
             originalNode = DOMTreeNodeEx(
                 nodeId = levels,
                 nodeName = "SPAN",
@@ -265,7 +265,7 @@ class DomLLMSerializerTest {
                 nodeName = "DIV",
                 elementHash = "node-$i"
             )
-            leaf = SlimNode(
+            leaf = TinyNode(
                 originalNode = parentOriginal,
                 children = listOf(leaf)
             )

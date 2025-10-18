@@ -232,17 +232,17 @@ class ChromeCdpDomService(
         return merged
     }
 
-    override suspend fun buildSlimDOM(): SlimNode {
+    override suspend fun buildSlimDOM(): TinyNode {
         val trees = getMultiDOMTrees()
         return buildSlimDOM(trees)
     }
 
-    override suspend fun buildSlimDOM(trees: TargetMultiTrees): SlimNode {
+    override suspend fun buildSlimDOM(trees: TargetMultiTrees): TinyNode {
         val enhanced = buildEnhancedDomTree(trees)
         val hasElements = enhanced.children.isNotEmpty() ||
                 enhanced.shadowRoots.isNotEmpty() ||
                 enhanced.contentDocument != null
-        val simplified = SlimTreeBuilder(enhanced).buildSimplifiedSlimDOM()
+        val simplified = DOMTinyTreeBuilder(enhanced).buildTinyTree()
 
         if (!hasElements || simplified == null) {
             // Write a lightweight diagnostic to help root cause empty DOM
@@ -262,11 +262,11 @@ class ChromeCdpDomService(
         return simplified
     }
 
-    override fun buildSimplifiedSlimDOM(root: DOMTreeNodeEx): SlimNode {
-        fun simplify(node: DOMTreeNodeEx): SlimNode {
+    override fun buildSimplifiedSlimDOM(root: DOMTreeNodeEx): TinyNode {
+        fun simplify(node: DOMTreeNodeEx): TinyNode {
             val simplifiedChildren = node.children.map { simplify(it) }
 
-            return SlimNode(
+            return TinyNode(
                 originalNode = node,
                 children = simplifiedChildren,
                 shouldDisplay = node.nodeType == NodeType.ELEMENT_NODE ||
@@ -278,7 +278,7 @@ class ChromeCdpDomService(
         return simplify(root)
     }
 
-    override fun serialize(root: SlimNode, includeAttributes: List<String>): DOMState {
+    override fun serialize(root: TinyNode, includeAttributes: List<String>): DOMState {
         // Use enhanced serialization with default options
         val options = DomSerializer.SerializationOptions(
             enablePaintOrderPruning = true,
