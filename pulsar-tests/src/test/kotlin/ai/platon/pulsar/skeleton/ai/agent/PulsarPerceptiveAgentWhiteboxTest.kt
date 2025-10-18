@@ -20,7 +20,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
 
     @Test
     fun `parseOperatorResponse should parse valid tool_calls JSON without LLM`() = runEnhancedWebDriverTest { driver ->
-        val agent = PulsarPerceptiveAgent(driver, config = AgentConfig(enableStructuredLogging = false))
+        val agent = BrowserPerceptiveAgent(driver, config = AgentConfig(enableStructuredLogging = false))
 
         val json = """
             {
@@ -49,7 +49,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
 
     @Test
     fun `isSafeUrl should allow http and https and block others`() = runEnhancedWebDriverTest { driver ->
-        val agent = PulsarPerceptiveAgent(driver)
+        val agent = BrowserPerceptiveAgent(driver)
         val m = getMethod(agent, "isSafeUrl", String::class.java)
 
         fun ok(u: String) = m.invoke(agent, u) as Boolean
@@ -66,7 +66,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
 
     @Test
     fun `buildExecutionMessage should append screenshot marker when present`() = runEnhancedWebDriverTest { driver ->
-        val agent = PulsarPerceptiveAgent(driver)
+        val agent = BrowserPerceptiveAgent(driver)
         val m = getMethod(agent, "buildExecutionMessage", String::class.java, String::class.java, String::class.java)
 
         val withShot = m.invoke(agent, "SYS", "USER", "b64data") as String
@@ -81,7 +81,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
     @Test
     fun `calculateRetryDelay should grow exponentially and respect cap`() = runEnhancedWebDriverTest { driver ->
         val config = AgentConfig(baseRetryDelayMs = 100, maxRetryDelayMs = 1000)
-        val agent = PulsarPerceptiveAgent(driver, config = config)
+        val agent = BrowserPerceptiveAgent(driver, config = config)
         val m = getMethod(agent, "calculateRetryDelay", Int::class.javaPrimitiveType!!)
 
         val d0 = m.invoke(agent, 0) as Long
@@ -96,7 +96,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
 
     @Test
     fun `validateNavigateTo should enforce URL safety`() = runEnhancedWebDriverTest { driver ->
-        val agent = PulsarPerceptiveAgent(driver)
+        val agent = BrowserPerceptiveAgent(driver)
         val m = getMethod(agent, "validateNavigateTo", Map::class.java)
 
         fun ok(url: String) = m.invoke(agent, mapOf("url" to url)) as Boolean
@@ -109,7 +109,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
 
     @Test
     fun `validateElementAction should require non-blank reasonable selector`() = runEnhancedWebDriverTest { driver ->
-        val agent = PulsarPerceptiveAgent(driver)
+        val agent = BrowserPerceptiveAgent(driver)
         val m = getMethod(agent, "validateElementAction", Map::class.java)
 
         fun ok(sel: String?) = m.invoke(agent, mapOf("selector" to sel)) as Boolean
@@ -124,7 +124,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
 
     @Test
     fun `validateWaitForNavigation should enforce timeout range and url length`() = runEnhancedWebDriverTest { driver ->
-        val agent = PulsarPerceptiveAgent(driver)
+        val agent = BrowserPerceptiveAgent(driver)
         val m = getMethod(agent, "validateWaitForNavigation", Map::class.java)
 
         fun ok(oldUrl: String, timeout: Long) =
@@ -139,7 +139,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
 
     @Test
     fun `calculateConsecutiveNoOpDelay grows linearly with cap`() = runEnhancedWebDriverTest { driver ->
-        val agent = PulsarPerceptiveAgent(driver)
+        val agent = BrowserPerceptiveAgent(driver)
         val m = getMethod(agent, "calculateConsecutiveNoOpDelay", Int::class.javaPrimitiveType!!)
 
         val d1 = m.invoke(agent, 1) as Long
@@ -152,7 +152,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
 
     @Test
     fun `jsonElementToKotlin converts primitives arrays and objects`() = runEnhancedWebDriverTest { driver ->
-        val agent = PulsarPerceptiveAgent(driver)
+        val agent = BrowserPerceptiveAgent(driver)
         val m = getMethod(agent, "jsonElementToKotlin", com.google.gson.JsonElement::class.java)
         val parser = com.google.gson.JsonParser()
 

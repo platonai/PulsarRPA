@@ -33,7 +33,7 @@ import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
 import kotlin.math.pow
 
-class PulsarPerceptiveAgent(
+class BrowserPerceptiveAgent(
     val driver: WebDriver,
     val maxSteps: Int = 100,
     val config: AgentConfig = AgentConfig(maxSteps = maxSteps)

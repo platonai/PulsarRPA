@@ -1,7 +1,7 @@
 package ai.platon.pulsar.skeleton.ai
 
 import ai.platon.pulsar.WebDriverTestBase
-import ai.platon.pulsar.skeleton.ai.agent.PulsarPerceptiveAgent
+import ai.platon.pulsar.skeleton.ai.agent.BrowserPerceptiveAgent
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.ChatModelFactory
 import org.junit.jupiter.api.Assertions.assertTrue
@@ -36,7 +36,7 @@ class PulsarAgentExtractObserveE2ETest : WebDriverTestBase() {
     fun `Given interactive page When observe Then get actionable elements`() = runEnhancedWebDriverTest(testURL) { driver ->
         assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping observe E2E test")
 
-        val agent = PulsarPerceptiveAgent(driver)
+        val agent = BrowserPerceptiveAgent(driver)
         val observed = agent.observe("Understand the page and list actionable elements")
 
         assertTrue(observed.isNotEmpty(), "Observed elements should not be empty")
@@ -57,7 +57,7 @@ class PulsarAgentExtractObserveE2ETest : WebDriverTestBase() {
     fun `Given interactive page When extract Then get structured data`() = runEnhancedWebDriverTest(testURL) { driver ->
         assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping extract E2E test")
 
-        val agent = PulsarPerceptiveAgent(driver)
+        val agent = BrowserPerceptiveAgent(driver)
         val result = agent.extract("Extract key structured data from the page")
 
         assertTrue(result.success, "Extract should succeed")

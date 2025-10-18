@@ -19,7 +19,7 @@ import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.InstructionResult
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
-import ai.platon.pulsar.skeleton.ai.agent.PulsarPerceptiveAgent
+import ai.platon.pulsar.skeleton.ai.agent.BrowserPerceptiveAgent
 import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
@@ -538,7 +538,7 @@ abstract class AbstractPulsarSession(
 
     override suspend fun act(action: ActionOptions): PerceptiveAgent {
         val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`: session.bind(driver)" }
-        val agent = PulsarPerceptiveAgent(driver)
+        val agent = BrowserPerceptiveAgent(driver)
 
         agent.act(action)
 

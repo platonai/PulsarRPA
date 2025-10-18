@@ -31,7 +31,7 @@ class PulsarPerceptiveAgentActObserveTests {
             )
         }
 
-        val agent = PulsarPerceptiveAgent(driver, config = AgentConfig(enablePreActionValidation = true))
+        val agent = BrowserPerceptiveAgent(driver, config = AgentConfig(enablePreActionValidation = true))
         val observe = ObserveResult(
             selector = "node:123-45",
             description = "Click button",
@@ -61,7 +61,7 @@ class PulsarPerceptiveAgentActObserveTests {
         }
 
         // Disable pre-action validation to focus on mapping only
-        val agent = PulsarPerceptiveAgent(driver, config = AgentConfig(enablePreActionValidation = false))
+        val agent = BrowserPerceptiveAgent(driver, config = AgentConfig(enablePreActionValidation = false))
         val url = "https://example.com/path?q=1"
         val observe = ObserveResult(
             selector = "irrelevant",

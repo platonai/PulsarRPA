@@ -43,7 +43,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Test
         fun `Given default config When agent created Then should have valid uuid and empty history`() {
             runEnhancedWebDriverTest { driver ->
-                val agent = PulsarPerceptiveAgent(driver)
+                val agent = BrowserPerceptiveAgent(driver)
 
                 assertNotNull(agent.uuid)
                 assertTrue(agent.history.isEmpty())
@@ -59,7 +59,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     maxRetries = 2,
                     consecutiveNoOpLimit = 3
                 )
-                val agent = PulsarPerceptiveAgent(driver, config = customConfig)
+                val agent = BrowserPerceptiveAgent(driver, config = customConfig)
 
                 assertNotNull(agent.uuid)
                 assertTrue(agent.history.isEmpty())
@@ -77,7 +77,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
             assumeLLMConfigured()
 
             runWebDriverTest(interactiveDynamicURL) { driver ->
-                val agent = PulsarPerceptiveAgent(driver)
+                val agent = BrowserPerceptiveAgent(driver)
 
                 val result = agent.extract("Extract the page title and main content")
 
@@ -97,7 +97,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
             assumeLLMConfigured()
 
             runWebDriverTest(interactiveDynamicURL) { driver ->
-                val agent = PulsarPerceptiveAgent(driver)
+                val agent = BrowserPerceptiveAgent(driver)
 
                 val customSchema = mapOf(
                     "title" to "string - page title",
@@ -127,7 +127,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
             assumeLLMConfigured()
 
             runWebDriverTest(interactiveDynamicURL) { driver ->
-                val agent = PulsarPerceptiveAgent(driver)
+                val agent = BrowserPerceptiveAgent(driver)
 
                 val result = runBlocking {
                     agent.extract("")
@@ -146,7 +146,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     driver.navigateTo("about:blank")
                 }
 
-                val agent = PulsarPerceptiveAgent(driver)
+                val agent = BrowserPerceptiveAgent(driver)
 
                 val result = runBlocking {
                     agent.extract("Extract data")
@@ -168,7 +168,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
             assumeLLMConfigured()
 
             runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
-                val agent = PulsarPerceptiveAgent(driver)
+                val agent = BrowserPerceptiveAgent(driver)
 
                 val results = runBlocking {
                     agent.observe("List all interactive elements on this page")
@@ -194,7 +194,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
             assumeLLMConfigured()
 
             runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
-                val agent = PulsarPerceptiveAgent(driver)
+                val agent = BrowserPerceptiveAgent(driver)
 
                 val options = ObserveOptions(
                     instruction = "Find all buttons",
@@ -218,7 +218,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
             assumeLLMConfigured()
 
             runWebDriverTest(interactiveDynamicURL) { driver ->
-                val agent = PulsarPerceptiveAgent(driver)
+                val agent = BrowserPerceptiveAgent(driver)
 
                 val options = ObserveOptions(
                     instruction = "Find clickable elements",
@@ -238,7 +238,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
             assumeLLMConfigured()
 
             runWebDriverTest(interactiveDynamicURL) { driver ->
-                val agent = PulsarPerceptiveAgent(driver)
+                val agent = BrowserPerceptiveAgent(driver)
 
                 val results = runBlocking {
                     agent.observe("")
@@ -259,7 +259,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
             assumeLLMConfigured()
 
             runWebDriverTest(actMockSiteHomeURL) { driver ->
-                val agent = PulsarPerceptiveAgent(driver)
+                val agent = BrowserPerceptiveAgent(driver)
 
                 val result = agent.act("Click the search button")
 
@@ -274,7 +274,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
             assumeLLMConfigured()
 
             runWebDriverTest(actMockSiteHomeURL) { driver ->
-                val agent = PulsarPerceptiveAgent(driver)
+                val agent = BrowserPerceptiveAgent(driver)
 
                 val options = ActionOptions(
                     action = "Navigate to the home page"
@@ -290,7 +290,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Test
         fun `Given act execution When history updated Then toString should reflect latest state`() {
             runWebDriverTest(actMockSiteHomeURL) { driver ->
-                val agent = PulsarPerceptiveAgent(driver)
+                val agent = BrowserPerceptiveAgent(driver)
 
                 // Initially empty
                 assertTrue(agent.toString().contains("no history"))
@@ -313,7 +313,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Test
         fun `Given invalid URL When navigate fails Then should handle gracefully`() {
             runEnhancedWebDriverTest { driver ->
-                val agent = PulsarPerceptiveAgent(driver)
+                val agent = BrowserPerceptiveAgent(driver)
 
                 // This should not throw but handle errors internally
                 val result = runBlocking {
@@ -335,7 +335,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     maxRetries = 1,
                     maxSteps = 5
                 )
-                val agent = PulsarPerceptiveAgent(driver, config = config)
+                val agent = BrowserPerceptiveAgent(driver, config = config)
 
                 // Navigate to blank page which may cause issues
                 runBlocking {
@@ -360,7 +360,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
             assumeLLMConfigured()
 
             runWebDriverTest(interactiveDynamicURL) { driver ->
-                val agent = PulsarPerceptiveAgent(driver)
+                val agent = BrowserPerceptiveAgent(driver)
 
                 val initialHistorySize = agent.history.size
 
@@ -375,7 +375,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Test
         fun `Given agent with history When toString called Then should show latest entry`() {
             runWebDriverTest(interactiveDynamicURL) { driver ->
-                val agent = PulsarPerceptiveAgent(driver)
+                val agent = BrowserPerceptiveAgent(driver)
 
                 if (agent.history.isEmpty()) {
                     assertTrue(agent.toString().contains("no history"))
@@ -397,8 +397,8 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 val config1 = AgentConfig(maxSteps = 10)
                 val config2 = AgentConfig(maxSteps = 100)
 
-                val agent1 = PulsarPerceptiveAgent(driver, maxSteps = 10, config = config1)
-                val agent2 = PulsarPerceptiveAgent(driver, maxSteps = 100, config = config2)
+                val agent1 = BrowserPerceptiveAgent(driver, maxSteps = 10, config = config1)
+                val agent2 = BrowserPerceptiveAgent(driver, maxSteps = 100, config = config2)
 
                 assertNotNull(agent1)
                 assertNotNull(agent2)
@@ -413,7 +413,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     enablePerformanceMetrics = true
                 )
 
-                val agent = PulsarPerceptiveAgent(driver, config = config)
+                val agent = BrowserPerceptiveAgent(driver, config = config)
 
                 assertNotNull(agent)
             }
@@ -428,7 +428,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     maxRetryDelayMs = 5000
                 )
 
-                val agent = PulsarPerceptiveAgent(driver, config = config)
+                val agent = BrowserPerceptiveAgent(driver, config = config)
 
                 assertNotNull(agent)
             }
@@ -441,7 +441,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     enablePreActionValidation = true
                 )
 
-                val agent = PulsarPerceptiveAgent(driver, config = config)
+                val agent = BrowserPerceptiveAgent(driver, config = config)
 
                 assertNotNull(agent)
             }
@@ -459,7 +459,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
             assumeLLMConfigured()
 
             runWebDriverTest(interactiveDynamicURL) { driver ->
-                val agent = PulsarPerceptiveAgent(driver)
+                val agent = BrowserPerceptiveAgent(driver)
 
                 val startTime = System.currentTimeMillis()
 
@@ -485,7 +485,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     maxHistorySize = 20
                 )
 
-                val agent = PulsarPerceptiveAgent(driver, config = config)
+                val agent = BrowserPerceptiveAgent(driver, config = config)
 
                 assertNotNull(agent)
 

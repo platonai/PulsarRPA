@@ -84,7 +84,7 @@ object DomSerializer {
         }
 
         // Add to selector map with multiple keys for enhanced lookup
-        addToEnhancedSelectorMap(node.originalNode, selectorMap)
+        addToMultiSelectorMap(node.originalNode, selectorMap)
         // Also add interactive index mapping if present on SlimNode
         node.interactiveIndex?.let { idx ->
             selectorMap.putIfAbsent("index:$idx", node.originalNode)
@@ -198,7 +198,7 @@ object DomSerializer {
         )
 
         // Add to selector map with enhanced lookup keys
-        addToEnhancedSelectorMap(node.originalNode, selectorMap)
+        addToMultiSelectorMap(node.originalNode, selectorMap)
 
         return SerializableNode(
             shouldDisplay = false, // Pruned nodes are not displayed
@@ -472,7 +472,7 @@ object DomSerializer {
      * Add node to enhanced selector map with multiple lookup keys.
      * Supports element hash, XPath, and backend node ID for comprehensive element lookup.
      */
-    private fun addToEnhancedSelectorMap(
+    private fun addToMultiSelectorMap(
         node: DOMTreeNodeEx,
         selectorMap: MutableMap<String, DOMTreeNodeEx>
     ) {
