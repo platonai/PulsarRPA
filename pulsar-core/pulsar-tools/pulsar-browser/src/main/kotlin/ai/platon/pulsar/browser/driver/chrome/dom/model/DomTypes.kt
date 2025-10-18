@@ -29,7 +29,7 @@ data class SnapshotOptions(
  */
 data class TargetMultiTrees(
     val snapshot: Map<String, Any>? = null,
-    val domTree: DOMTreeNodeEx = DOMTreeNodeEx(),
+    val domTree: DOMTreeEx = DOMTreeEx(),
     val axTree: List<AXNodeEx> = emptyList(),
     val devicePixelRatio: Double = 1.0,
     val cdpTiming: Map<String, Long> = emptyMap(),

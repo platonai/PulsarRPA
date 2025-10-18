@@ -178,6 +178,8 @@ data class DOMTreeNodeEx(
     val interactiveIndex: Int? = null
 )
 
+typealias DOMTreeEx = DOMTreeNodeEx
+
 /**
  * Simplified node for LLM serialization.
  */
