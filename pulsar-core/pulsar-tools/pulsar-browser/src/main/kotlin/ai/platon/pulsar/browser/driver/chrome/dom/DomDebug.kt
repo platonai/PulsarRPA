@@ -50,7 +50,7 @@ object DomDebug {
 
     // ----- Summaries -----
 
-    fun summarize(trees: TargetDetailTrees): String {
+    fun summarize(trees: TargetMultiTrees): String {
         val s = stats(trees.domTree)
         return buildString {
             appendLine("TargetAllTrees")

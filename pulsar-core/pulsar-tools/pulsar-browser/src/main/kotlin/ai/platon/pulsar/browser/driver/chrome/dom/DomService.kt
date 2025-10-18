@@ -9,12 +9,12 @@ interface DomService {
     /**
      * Collect all trees (DOM, AX, Snapshot) for the given target.
      */
-    suspend fun getMultiDOMTrees(target: PageTarget = PageTarget(), options: SnapshotOptions = SnapshotOptions()): TargetDetailTrees
+    suspend fun getMultiDOMTrees(target: PageTarget = PageTarget(), options: SnapshotOptions = SnapshotOptions()): TargetMultiTrees
 
     /**
      * Build the enhanced DOM tree by merging DOM, AX, and Snapshot data.
      */
-    fun buildEnhancedDomTree(trees: TargetDetailTrees): DOMTreeNodeEx
+    fun buildEnhancedDomTree(trees: TargetMultiTrees): DOMTreeNodeEx
 
     /**
      * Find an element by various criteria (CSS selector, XPath, element hash).
@@ -33,7 +33,7 @@ interface DomService {
 
     suspend fun buildSlimDOM(): SlimNode
 
-    suspend fun buildSlimDOM(trees: TargetDetailTrees): SlimNode
+    suspend fun buildSlimDOM(trees: TargetMultiTrees): SlimNode
 
     /**
      * Serialize SimplifiedNode tree for LLM consumption.

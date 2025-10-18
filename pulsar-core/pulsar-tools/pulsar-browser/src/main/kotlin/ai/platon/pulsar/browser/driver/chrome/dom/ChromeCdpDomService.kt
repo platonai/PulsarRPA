@@ -33,7 +33,7 @@ class ChromeCdpDomService(
     @Volatile
     private var lastDomByBackend: Map<Int, DOMTreeNodeEx> = emptyMap()
 
-    override suspend fun getMultiDOMTrees(target: PageTarget, options: SnapshotOptions): TargetDetailTrees {
+    override suspend fun getMultiDOMTrees(target: PageTarget, options: SnapshotOptions): TargetMultiTrees {
         val startTime = System.currentTimeMillis()
         val timings = mutableMapOf<String, Long>()
 
@@ -44,7 +44,7 @@ class ChromeCdpDomService(
                 accessibility.getFullAXTreeRecursive(target.frameId, depth = null)
             }.onFailure { e ->
                 logger.warn("AX tree collection failed | frameId={} | err={}", target.frameId, e.toString())
-                tracer?.debug("AX tree exception", e)
+                tracer?.trace("AX tree exception", e)
             }.getOrDefault(AccessibilityTreeResult.EMPTY)
             timings["ax_tree"] = System.currentTimeMillis() - axStart
             result
@@ -55,7 +55,7 @@ class ChromeCdpDomService(
         val dom = runCatching { domTree.getDocument(target, options.maxDepth) }
             .onFailure { e ->
                 logger.warn("DOM tree collection failed | frameId={} | err={}", target.frameId, e.toString())
-                tracer?.debug("DOM tree exception", e)
+                tracer?.trace("DOM tree exception", e)
             }
             .getOrElse { DOMTreeNodeEx() }
         val domByBackend = runCatching { domTree.lastBackendNodeLookup() }.getOrDefault(emptyMap())
@@ -73,7 +73,7 @@ class ChromeCdpDomService(
                 )
             }.onFailure { e ->
                 logger.warn("Snapshot collection failed | err={} ", e.toString())
-                tracer?.debug("Snapshot exception", e)
+                tracer?.trace("Snapshot exception", e)
             }.getOrDefault(emptyMap())
         } else {
             emptyMap()
@@ -96,12 +96,12 @@ class ChromeCdpDomService(
 
         timings["total"] = System.currentTimeMillis() - startTime
 
-        tracer?.debug(
+        tracer?.trace(
             "Trees collected | axNodes={} snapEntries={} dpr={} timingsMs={} ",
             enhancedAx.size, snapshotByBackendId.size, devicePixelRatio, timings
         )
 
-        return TargetDetailTrees(
+        return TargetMultiTrees(
             domTree = dom,
             axTree = enhancedAx,
             snapshotByBackendId = snapshotByBackendId,
@@ -114,7 +114,7 @@ class ChromeCdpDomService(
         )
     }
 
-    override fun buildEnhancedDomTree(trees: TargetDetailTrees): DOMTreeNodeEx {
+    override fun buildEnhancedDomTree(trees: TargetMultiTrees): DOMTreeNodeEx {
         val options = trees.options
         // Build ancestor map for XPath and hash generation
         val ancestorMap = buildAncestorMap(trees.domTree)
@@ -169,7 +169,7 @@ class ChromeCdpDomService(
             // Calculate XPath
             val xPath = runCatching { XPathUtils.generateXPath(node, ancestors, siblingMap) }
                 .onFailure { e ->
-                    tracer?.debug(
+                    tracer?.trace(
                         "XPath generation failed | nodeId={} | err={} ",
                         node.nodeId,
                         e.toString()
@@ -181,7 +181,7 @@ class ChromeCdpDomService(
             val parentBranchHash = if (ancestors.isNotEmpty()) {
                 runCatching { HashUtils.parentBranchHash(ancestors) }
                     .onFailure { e ->
-                        tracer?.debug(
+                        tracer?.trace(
                             "Parent branch hash failed | nodeId={} | err={} ",
                             node.nodeId,
                             e.toString()
@@ -194,7 +194,7 @@ class ChromeCdpDomService(
 
             val elementHash = runCatching { HashUtils.elementHash(node, parentBranchHash) }
                 .onFailure { e ->
-                    tracer?.debug(
+                    tracer?.trace(
                         "Element hash failed | nodeId={} | err={} ",
                         node.nodeId,
                         e.toString()
@@ -237,7 +237,7 @@ class ChromeCdpDomService(
         return buildSlimDOM(trees)
     }
 
-    override suspend fun buildSlimDOM(trees: TargetDetailTrees): SlimNode {
+    override suspend fun buildSlimDOM(trees: TargetMultiTrees): SlimNode {
         val enhanced = buildEnhancedDomTree(trees)
         val hasElements = enhanced.children.isNotEmpty() ||
                 enhanced.shadowRoots.isNotEmpty() ||
