@@ -3,7 +3,7 @@ package ai.platon.pulsar.skeleton.ai.agent
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
-import ai.platon.pulsar.skeleton.ai.BrowserUsePromptBuilder
+import ai.platon.pulsar.skeleton.ai.PromptBuilder
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.JsonNode
@@ -58,7 +58,7 @@ data class ExtractParams(
 
 data class ObserveParams(
     val instruction: String,
-    val domElements: List<String>,
+    val domElements: String,
     val requestId: String = UUID.randomUUID().toString(),
     val userProvidedInstructions: String? = null,
     val returnAction: Boolean = false,
@@ -72,7 +72,7 @@ class InferenceEngine(
     private val promptLocale: Locale = Locale.CHINESE,
 ) {
     private val logger = getLogger(this)
-    private val promptBuilder = BrowserUsePromptBuilder(promptLocale)
+    private val promptBuilder = PromptBuilder(promptLocale)
     // Reuse a single ObjectMapper for JSON parsing within this class
     private val mapper = ObjectMapper()
 

@@ -46,7 +46,7 @@ class PulsarPerceptiveAgent(
     private val tta by lazy { TextToAction(conf) }
     private val inference by lazy { InferenceEngine(driver, tta.chatModel) }
     private val domService get() = inference.domService
-    private val promptBuilder = BrowserUsePromptBuilder()
+    private val promptBuilder = PromptBuilder()
 
     // Enhanced state management
     private val _history = mutableListOf<String>()
@@ -82,7 +82,7 @@ class PulsarPerceptiveAgent(
      * Returns the final summary with enhanced error handling.
      */
     override suspend fun act(action: ActionOptions): ActResult {
-        return observeAct(action)
+        return doObserveAct(action)
     }
 
     override suspend fun act(observe: ObserveResult): ActResult {
@@ -186,22 +186,22 @@ class PulsarPerceptiveAgent(
     }
 
     override suspend fun extract(options: ExtractOptions): ExtractResult {
-        val instruction = promptBuilder.enhanceExtractUserInstruction(options.instruction)
+        val instruction = promptBuilder.enhanceInitialExtractUserInstruction(options.instruction)
         val requestId = UUID.randomUUID().toString()
         logExtractStart(instruction, requestId)
 
         val schemaJson = buildSchemaJsonFromMap(options.schema)
 
         return try {
-            val resultNode = inference.extract(
-                ExtractParams(
-                    instruction = instruction,
-                    domElements = listOf(getDOMState().json),
-                    schema = schemaJson,
-                    requestId = requestId,
-                    logInferenceToFile = config.enableStructuredLogging
-                )
+            val params = ExtractParams(
+                instruction = instruction,
+                domElements = listOf(getDOMState().json),
+                schema = schemaJson,
+                requestId = requestId,
+                logInferenceToFile = config.enableStructuredLogging
             )
+
+            val resultNode = inference.extract(params)
             addHistoryExtract(instruction, requestId, true)
             ExtractResult(success = true, message = "OK", data = resultNode)
         } catch (e: Exception) {
@@ -257,107 +257,46 @@ class PulsarPerceptiveAgent(
     }
 
     private suspend fun doObserve(options: ObserveOptions): List<ObserveResult> {
-        val instruction =
-            options.instruction?.takeIf { it.isNotBlank() } ?: "Understand the page and list actionable elements"
-        val requestId = UUID.randomUUID().toString()
-        logObserveStart(instruction, requestId)
+        val instruction = promptBuilder.enhanceInitialObserveUserInstruction(options.instruction)
 
-        val returnAction = options.returnAction ?: true
+        val params = ObserveParams(
+            instruction = instruction,
+            domElements = getDOMState().json,
+            requestId = UUID.randomUUID().toString(),
+            returnAction = options.returnAction ?: true,
+            logInferenceToFile = config.enableStructuredLogging,
+            fromAct = false
+        )
 
-        return try {
-            val internal = inference.observe(
-                ObserveParams(
-                    instruction = instruction,
-                    domElements = listOf(getDOMState().json),
-                    requestId = requestId,
-                    returnAction = returnAction,
-                    logInferenceToFile = config.enableStructuredLogging,
-                    fromAct = false
-                )
-            )
-
-            val results = internal.elements.map { el ->
-                ObserveResult(
-                    selector = "node:${el.elementId}",
-                    description = el.description,
-                    backendNodeId = null,
-                    method = el.method?.ifBlank { null },
-                    arguments = el.arguments?.takeIf { it.isNotEmpty() }
-                )
-            }
-
-            addHistoryObserve(instruction, requestId, results.size, results.isNotEmpty())
-            results
-        } catch (e: Exception) {
-            logger.error("observe.error requestId={} msg={}", requestId.take(8), e.message, e)
-            addHistoryObserve(instruction, requestId, 0, false)
-            // Final safeguard fallback on exception
-            val interactive = runCatching { tta.extractInteractiveElementsDeferred(driver) }.getOrElse { emptyList() }
-            if (interactive.isNotEmpty()) {
-                return interactive.map { ie ->
-                    val label = listOfNotNull(
-                        ie.text.takeIf { it.isNotBlank() }?.take(80),
-                        ie.placeholder?.takeIf { it.isNotBlank() }?.let { "placeholder=\"$it\"" },
-                        ie.type?.takeIf { it.isNotBlank() }?.let { "type=$it" },
-                        ie.tagName.takeIf { it.isNotBlank() }?.lowercase()
-                    ).joinToString(" | ").ifBlank { ie.selector.take(100) }
-                    ObserveResult(
-                        selector = ie.selector,
-                        description = label,
-                        backendNodeId = null,
-                        method = null,
-                        arguments = null
-                    )
-                }
-            }
-            emptyList()
-        }
+        return doObserve1(instruction, params)
     }
 
-    private suspend fun observeAct(action: ActionOptions): ActResult {
+    private suspend fun doObserveAct(action: ActionOptions): ActResult {
         // 1) Build instruction for action-oriented observe
         val toolCalls = ToolCallExecutor.SUPPORTED_TOOL_CALLS
         val instruction = promptBuilder.buildActObservePrompt(action.action, toolCalls, action.variables)
 
         // 2) Optional settle wait before observing DOM (if provided)
-        val settleMs = action.domSettleTimeoutMs?.toLong()?.coerceAtLeast(0L)
-        if (settleMs != null && settleMs > 0) {
+        val settleMs = action.domSettleTimeoutMs?.toLong()?.coerceAtLeast(0L) ?: 0L
+        if (settleMs > 0) {
             runCatching { driver.delay(settleMs) }
                 .onFailure { e -> logger.warn("observeAct: domSettleTimeoutMs delay failed | {}", e.toString()) }
         }
 
         // 3) Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
-        val requestId = UUID.randomUUID().toString()
-        val results: List<ObserveResult> = try {
-            val internal = inference.observe(
-                ObserveParams(
-                    instruction = instruction,
-                    domElements = listOf(getDOMState().json),
-                    requestId = requestId,
-                    returnAction = true,
-                    logInferenceToFile = config.enableStructuredLogging,
-                    fromAct = true,
-                )
-            )
-            val mapped = internal.elements.map { el ->
-                ObserveResult(
-                    selector = "node:${el.elementId}",
-                    description = el.description,
-                    backendNodeId = null,
-                    method = el.method?.ifBlank { null },
-                    arguments = el.arguments?.takeIf { it.isNotEmpty() }
-                )
-            }
-            addHistoryObserve(instruction, requestId, mapped.size, mapped.isNotEmpty())
-            mapped
-        } catch (e: Exception) {
-            logger.error("observeAct.observe.error requestId={} msg={}", requestId.take(8), e.message, e)
-            addHistoryObserve(instruction, requestId, 0, false)
-            emptyList()
-        }
+        val params = ObserveParams(
+            instruction = instruction,
+            domElements = getDOMState().json,
+            requestId = UUID.randomUUID().toString(),
+            returnAction = true,
+            logInferenceToFile = config.enableStructuredLogging,
+            fromAct = true,
+        )
+
+        val results: List<ObserveResult> = doObserve1(instruction, params)
 
         if (results.isEmpty()) {
-            val msg = "observeAct: No actionable element found"
+            val msg = "doObserveAct: No actionable element found"
             addToHistory(msg)
             return ActResult(false, msg, action = action.action)
         }
@@ -380,10 +319,35 @@ class PulsarPerceptiveAgent(
         val maybeNavMethod = method in ToolCallExecutor.MAY_NAVIGATE_ACTIONS
         if (timeoutMs != null && maybeNavMethod && execResult.success) {
             runCatching { driver.waitForNavigation(oldUrl, timeoutMs) }
-                .onFailure { e -> logger.warn("observeAct: waitForNavigation failed | {}", e.toString()) }
+                .onFailure { e -> logger.info("observeAct: waitForNavigation failed | {}", e.message) }
         }
 
         return execResult.copy(action = action.action)
+    }
+
+    private suspend fun doObserve1(instruction: String, params: ObserveParams): List<ObserveResult> {
+        val requestId: String = params.requestId
+
+        logObserveStart(instruction, requestId)
+
+        return try {
+            val internalResults = inference.observe(params)
+            val results = internalResults.elements.map { el ->
+                ObserveResult(
+                    selector = "node:${el.elementId}",
+                    description = el.description,
+                    backendNodeId = null,
+                    method = el.method?.ifBlank { null },
+                    arguments = el.arguments?.takeIf { it.isNotEmpty() }
+                )
+            }
+            addHistoryObserve(instruction, requestId, results.size, results.isNotEmpty())
+            results
+        } catch (e: Exception) {
+            logger.error("observeAct.observe.error requestId={} msg={}", requestId.take(8), e.message, e)
+            addHistoryObserve(instruction, requestId, 0, false)
+            emptyList()
+        }
     }
 
     /** Default rich extraction schema (JSON Schema string) */
@@ -442,7 +406,11 @@ class PulsarPerceptiveAgent(
      * Enhanced execution with comprehensive error handling and retry mechanisms
      * Returns the final summary with enhanced error handling.
      */
-    private suspend fun resolveProblemWithRetry(action: ActionOptions, sessionId: String, startTime: Instant): ActResult {
+    private suspend fun resolveProblemWithRetry(
+        action: ActionOptions,
+        sessionId: String,
+        startTime: Instant
+    ): ActResult {
         var lastError: Exception? = null
 
         for (attempt in 0..config.maxRetries) {

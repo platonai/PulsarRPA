@@ -5,33 +5,12 @@ import ai.platon.pulsar.skeleton.ai.agent.ObserveParams
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.util.*
 
-// Kotlin equivalent of prompt.ts utilities
-
 data class ChatMessage(
     val role: String, // "system" | "user" | "assistant"
     val content: Any // String or List<ChatMessageImageContent | ChatMessageTextContent>
 )
 
-data class ChatMessageImageContent(
-    val type: String,
-    val image_url: ImageUrl? = null,
-    val text: String? = null,
-    val source: Source? = null,
-) {
-    data class ImageUrl(val url: String)
-    data class Source(
-        val type: String,
-        val media_type: String,
-        val data: String,
-    )
-}
-
-data class ChatMessageTextContent(
-    val type: String,
-    val text: String,
-)
-
-class BrowserUsePromptBuilder(val locale: Locale = Locale.CHINESE) {
+class PromptBuilder(val locale: Locale = Locale.CHINESE) {
 
     val isCN = locale in listOf(Locale.CHINESE, Locale.SIMPLIFIED_CHINESE, Locale.TRADITIONAL_CHINESE)
 
@@ -105,7 +84,7 @@ Print null or an empty string if no new information is found.
         return ChatMessage(role = "system", content = content)
     }
 
-    fun enhanceExtractUserInstruction(instruction: String? = null): String {
+    fun enhanceInitialExtractUserInstruction(instruction: String? = null): String {
         if (instruction.isNullOrBlank()) {
             return if (isCN) {
                 "从网页中提取关键数据结构"
@@ -168,7 +147,7 @@ Strictly abide by the following criteria:
 """.trimIndent()
 
     fun buildMetadataSystemPrompt(): ChatMessage {
-        val content = if (locale == Locale.CHINESE) metadataSystemPromptCN else metadataSystemPromptEN
+        val content = if (isCN) metadataSystemPromptCN else metadataSystemPromptEN
         return ChatMessage(
             role = "system",
             content = content,
@@ -210,12 +189,9 @@ chunksTotal: $chunksTotal
 
     // observe
     fun buildObserveDomText(params: ObserveParams, schemaHint: Boolean = false): String {
-        val domText = params.domElements.joinToString("\n\n")
-
-        // suspend fun observe(params: ObserveParams): InternalObserveResult {
         // Build dynamic schema hint for the LLM (prompt-enforced)
         if (!schemaHint) {
-            return domText
+            return params.domElements
         }
 
         val schemaHintText = buildString {
@@ -234,7 +210,7 @@ chunksTotal: $chunksTotal
             }
         }
 
-        return domText + "\n\n" + schemaHintText
+        return params.domElements + "\n\n" + schemaHintText
     }
 
     // observe
@@ -260,11 +236,27 @@ You will be given:
 Return an array of elements that match the instruction if they exist, otherwise return an empty array.
 """.trimIndent()
 
-        val observeSystemPrompt = if (locale == Locale.CHINESE) observeSystemPromptCN else observeSystemPromptEN
+        val observeSystemPrompt = if (isCN) observeSystemPromptCN else observeSystemPromptEN
         val extra = buildUserInstructionsString(userProvidedInstructions)
         val content = if (extra.isNotBlank()) "$observeSystemPrompt\n\n$extra" else observeSystemPrompt
 
         return ChatMessage(role = "system", content = content)
+    }
+
+    fun enhanceInitialObserveUserInstruction(instruction: String?): String {
+        return when {
+            !instruction.isNullOrBlank() -> instruction
+            isCN -> """
+                Find elements that can be used for any future actions in the page. These may be navigation links,
+                related pages, section/subsection links, buttons, or other interactive elements.
+                Be comprehensive: if there are multiple elements that may be relevant for future actions, return all of them.
+                """.trimIndent()
+            else -> """
+                Find elements that can be used for any future actions in the page. These may be navigation links,
+                related pages, section/subsection links, buttons, or other interactive elements.
+                Be comprehensive: if there are multiple elements that may be relevant for future actions, return all of them.
+                """.trimIndent()
+        }
     }
 
     fun buildObserveUserMessage(instruction: String, domElements: String): ChatMessage {
@@ -280,7 +272,7 @@ Accessibility Tree:
 $domElements
 """.trim()
 
-        val content = if (locale == Locale.CHINESE) contentCN else contentEN
+        val content = if (isCN) contentCN else contentEN
         return ChatMessage(role = "user", content = content)
     }
 
@@ -390,7 +382,7 @@ $goal
 6. Only use `close` when the task is genuinely complete or impossible to achieve
 """.trimIndent()
 
-        val content = if (locale == Locale.CHINESE) contentCN else contentEN
+        val content = if (isCN) contentCN else contentEN
 
         return ChatMessage(
             role = "system",

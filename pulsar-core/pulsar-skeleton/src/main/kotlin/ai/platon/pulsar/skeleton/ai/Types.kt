@@ -3,6 +3,7 @@ package ai.platon.pulsar.skeleton.ai
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.detail.InteractiveElement
 import com.fasterxml.jackson.databind.JsonNode
+import java.util.UUID
 
 data class ActionDescription(
     val functionCalls: List<String>,
