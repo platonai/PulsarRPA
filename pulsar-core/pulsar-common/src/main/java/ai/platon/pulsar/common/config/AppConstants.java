@@ -121,6 +121,10 @@ public interface AppConstants {
     String PULSAR_ATTR_ELEMENT_NODE_DATA = "nd";
 
     // Browser use tool
+    /**
+     * Deprecated, use ai.platon.pulsar.browser.driver.chrome.dom.DomService instead.
+     * */
+    @Deprecated
     String BROWSER_INTERACTIVE_ELEMENTS_SELECTOR = "a, button, input, select, textarea, " +
                 "[role='button'], [role='link'], [onclick], [onmousedown], [onmouseup]";
 
