@@ -31,8 +31,10 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.ceil
 import kotlin.math.min
 import kotlin.math.pow
+import kotlin.math.roundToInt
 
 class BrowserPerceptiveAgent(
     val driver: WebDriver,
@@ -200,10 +202,14 @@ class BrowserPerceptiveAgent(
         return try {
             val browserState = getBrowserState()
 
+            val totalHeight = browserState.basicState.scrollState.totalHeight
+            val viewportHeight = browserState.basicState.scrollState.viewport.height
             val params = ExtractParams(
                 instruction = instruction,
                 browserState = browserState,
                 schema = schemaJson,
+                chunksSeen = 0,
+                chunksTotal = ceil(totalHeight / viewportHeight).roundToInt(),
                 requestId = requestId,
                 logInferenceToFile = config.enableStructuredLogging
             )
@@ -260,13 +266,16 @@ class BrowserPerceptiveAgent(
             fromAct = false
         )
 
-        return doObserve1(instruction, params, browserState)
+        return doObserve1(params, browserState)
     }
 
     private suspend fun doObserveAct(action: ActionOptions): ActResult {
         // 1) Build instruction for action-oriented observe
         val toolCalls = ToolCallExecutor.SUPPORTED_TOOL_CALLS
         val instruction = promptBuilder.buildActObservePrompt(action.action, toolCalls, action.variables)
+        require(instruction.contains("click")) {
+            "Instruction must contains tool list for action: $action"
+        }
 
         // 2) Optional settle wait before observing DOM (if provided)
         val settleMs = action.domSettleTimeoutMs?.toLong()?.coerceAtLeast(0L) ?: 0L
@@ -286,7 +295,7 @@ class BrowserPerceptiveAgent(
             fromAct = true,
         )
 
-        val results: List<ObserveResult> = doObserve1(instruction, params, browserState)
+        val results: List<ObserveResult> = doObserve1(params, browserState)
 
         if (results.isEmpty()) {
             val msg = "doObserveAct: No actionable element found"
@@ -319,12 +328,12 @@ class BrowserPerceptiveAgent(
         return execResult.copy(action = action.action)
     }
 
-    private suspend fun doObserve1(
-        instruction: String, params: ObserveParams, browserState: BrowserState
-    ): List<ObserveResult> {
+    private suspend fun doObserve1(params: ObserveParams, browserState: BrowserState): List<ObserveResult> {
         val requestId: String = params.requestId
 
-        logObserveStart(instruction, requestId)
+        // params.instruction:
+        // "Find the most relevant element to perform an action on given the following action ..."
+        logObserveStart(params.instruction, requestId)
 
         return try {
             val internalResults = inference.observe(params)
@@ -335,20 +344,21 @@ class BrowserPerceptiveAgent(
                 // val xpathKeys = keys.count { it.startsWith("xpath:") }
                 // val backendKeys = keys.count { it.startsWith("backend:") }
                 // val nodeKeys = keys.count { it.startsWith("node:") }
-                val xpath = browserState.domState.selectorMap[el.elementId]
+                // val elementHash = keys.count { it.startsWith("hash:") }
+                val xpath = browserState.domState.selectorMap[el.xpath]
                 ObserveResult(
                     selector = "xpath:$xpath",
                     description = el.description,
-                    backendNodeId = el.elementId.split("-").firstOrNull()?.toIntOrNull(),
+                    backendNodeId = el.backendNodeId,
                     method = el.method?.ifBlank { null },
                     arguments = el.arguments?.takeIf { it.isNotEmpty() }
                 )
             }
-            addHistoryObserve(instruction, requestId, results.size, results.isNotEmpty())
+            addHistoryObserve(params.instruction, requestId, results.size, results.isNotEmpty())
             results
         } catch (e: Exception) {
             logger.error("observeAct.observe.error requestId={} msg={}", requestId.take(8), e.message, e)
-            addHistoryObserve(instruction, requestId, 0, false)
+            addHistoryObserve(params.instruction, requestId, 0, false)
             emptyList()
         }
     }

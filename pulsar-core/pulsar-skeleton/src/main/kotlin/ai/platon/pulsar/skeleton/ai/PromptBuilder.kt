@@ -3,12 +3,11 @@ package ai.platon.pulsar.skeleton.ai
 import ai.platon.pulsar.browser.driver.chrome.dom.PulsarDOMSerializer
 import ai.platon.pulsar.skeleton.ai.agent.ExtractParams
 import ai.platon.pulsar.skeleton.ai.agent.ObserveParams
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.util.*
 
 class PromptBuilder(val locale: Locale = Locale.CHINESE) {
 
-    data class ChatMessage(
+    data class SimpleMessage(
         val role: String,
         val content: String
     )
@@ -40,9 +39,7 @@ $userProvidedInstructions
     }
 
     // extract
-    fun buildExtractSystemPrompt(
-        userProvidedInstructions: String? = null,
-    ): ChatMessage {
+    fun buildExtractSystemPrompt(userProvidedInstructions: String? = null): SimpleMessage {
         val baseInstructionCN = """你正在代表用户提取内容。
 如果用户要求你提取“列表”信息或“全部”信息，
 你必须提取用户请求的所有信息。
@@ -82,7 +79,7 @@ Print null or an empty string if no new information is found.
 
         val content = "$baseInstruction\n$instructions\n$additionalInstructions\n$userInstructions"
 
-        return ChatMessage(role = "system", content = content)
+        return SimpleMessage(role = "system", content = content)
     }
 
     fun initExtractUserInstruction(instruction: String? = null): String {
@@ -112,7 +109,7 @@ Print null or an empty string if no new information is found.
         }
     }
 
-    fun buildExtractUserPrompt(instruction: String, domContent: String): ChatMessage {
+    fun buildExtractUserPrompt(instruction: String, domContent: String): SimpleMessage {
         val instructionLabel = if (isCN) "指令: " else "Instruction: "
         val domLabel = if (isCN) "DOM: " else "DOM: "
 
@@ -125,7 +122,7 @@ Print null or an empty string if no new information is found.
             .append('\n')
             .append(domContent)
 
-        return ChatMessage(role = "user", content = sb.toString())
+        return SimpleMessage(role = "user", content = sb.toString())
     }
 
     private val metadataSystemPromptCN: String = """
@@ -136,6 +133,7 @@ Print null or an empty string if no new information is found.
 2. 只有在以下两个条件同时成立时，才将完成状态设为 false：
    - 指令尚未被满足
    - 仍然有剩余分片需要处理（chunksTotal > chunksSeen）
+每个 chunk 表示一屏网页内容，第一屏对应第一个 chunk。
 """.trimIndent()
 
     private val metadataSystemPromptEN: String = """
@@ -146,11 +144,12 @@ Strictly abide by the following criteria:
 2. Only set completion status to false if BOTH of these conditions are true:
    - The instruction has not been satisfied yet
    - There are still chunks left to process (chunksTotal > chunksSeen)
+Each chunk corresponds to one viewport-sized section of the page (the first chunk is the first screen).
 """.trimIndent()
 
-    fun buildMetadataSystemPrompt(): ChatMessage {
+    fun buildMetadataSystemPrompt(): SimpleMessage {
         val content = if (isCN) metadataSystemPromptCN else metadataSystemPromptEN
-        return ChatMessage(
+        return SimpleMessage(
             role = "system",
             content = content,
         )
@@ -161,14 +160,8 @@ Strictly abide by the following criteria:
         extractionResponse: Any,
         chunksSeen: Int,
         chunksTotal: Int,
-    ): ChatMessage {
-        val mapper = jacksonObjectMapper()
-        val extractedJson = runCatching {
-            mapper.writerWithDefaultPrettyPrinter().writeValueAsString(extractionResponse)
-        }.getOrElse { _ ->
-            // Fallback to toString if serialization fails
-            extractionResponse.toString()
-        }
+    ): SimpleMessage {
+        val extractedJson = PulsarDOMSerializer.mapper.writeValueAsString(extractionResponse)
 
         val content = if (isCN) {
             """
@@ -186,37 +179,11 @@ chunksTotal: $chunksTotal
 """.trim()
         }
 
-        return ChatMessage(role = "user", content = content)
+        return SimpleMessage(role = "user", content = content)
     }
 
     // observe
-    fun buildObserveSchemaHint(params: ObserveParams, schemaHint: Boolean = false): String {
-        // Build dynamic schema hint for the LLM (prompt-enforced)
-        if (!schemaHint) {
-            return ""
-        }
-
-        val hint = buildString {
-            if (isCN) {
-                append("""你必须返回一个与以下模式匹配的有效 JSON 对象: { "elements": [ { "elementId": string, "description": string""")
-                if (params.returnAction) {
-                    append(""", "method": string, "arguments": [string]""")
-                }
-                append(" } ] } 。elementId 必须遵循 'number-number' 格式，且不得包含方括号。不要包含任何额外文本。")
-            } else {
-                append("""You MUST respond with a valid JSON object matching this schema: { "elements": [ { "elementId": string, "description": string""")
-                if (params.returnAction) {
-                    append(""", "method": string, "arguments": [string]""")
-                }
-                append(" } ] } . The elementId must follow the 'number-number' format and MUST NOT include square brackets. Do not include any extra text.")
-            }
-        }
-
-        return hint
-    }
-
-    // observe
-    fun buildObserveSystemPrompt(userProvidedInstructions: String? = null): ChatMessage {
+    fun buildObserveSystemPrompt(userProvidedInstructions: String? = null): SimpleMessage {
         fun observeSystemPromptCN() = """
 你正在通过根据用户希望观察的页面内容来查找元素，帮助用户实现浏览器操作自动化。
 你将获得：
@@ -240,30 +207,36 @@ Return an array of elements that match the instruction if they exist, otherwise 
         val extra = buildUserInstructionsString(userProvidedInstructions)
         val content = if (extra.isNotBlank()) "$observeSystemPrompt\n\n$extra" else observeSystemPrompt
 
-        return ChatMessage(role = "system", content = content)
+        return SimpleMessage(role = "system", content = content)
     }
 
     fun initObserveUserInstruction(instruction: String?): String {
         return when {
             !instruction.isNullOrBlank() -> instruction
             isCN -> """
-                Find elements that can be used for any future actions in the page. These may be navigation links,
-                related pages, section/subsection links, buttons, or other interactive elements.
-                Be comprehensive: if there are multiple elements that may be relevant for future actions, return all of them.
+查找页面中可用于后续任何操作的元素，包括导航链接、相关页面链接、章节/子章节链接、按钮或其他交互元素。
+请尽可能全面：如果存在多个可能与未来操作相关的元素，需全部返回。
                 """.trimIndent()
 
             else -> """
-                Find elements that can be used for any future actions in the page. These may be navigation links,
-                related pages, section/subsection links, buttons, or other interactive elements.
-                Be comprehensive: if there are multiple elements that may be relevant for future actions, return all of them.
+Find elements that can be used for any future actions in the page. These may be navigation links,
+related pages, section/subsection links, buttons, or other interactive elements.
+Be comprehensive: if there are multiple elements that may be relevant for future actions, return all of them.
                 """.trimIndent()
         }
     }
 
-    fun buildObserveUserMessage(instruction: String, params: ObserveParams): ChatMessage {
+    /**
+     * Build observe user message. The message includes:
+     * - an instruction
+     * - the accessibility tree
+     * - the current browser state
+     * - the response's schema requirement
+     * */
+    fun buildObserveUserMessage(instruction: String, params: ObserveParams): SimpleMessage {
         val browserStateJson = PulsarDOMSerializer.mapper.writeValueAsString(params.browserState.basicState)
 
-        val schemaHint = buildObserveSchemaHint(params, schemaHint = true)
+        val schemaHint = buildObserveSchemaContract(params)
         fun contentCN() = """
 指令: $instruction
 
@@ -293,16 +266,53 @@ $schemaHint
             else -> contentEN()
         }
 
-        return ChatMessage(role = "user", content = content)
+        return SimpleMessage(role = "user", content = content)
+    }
+
+    // observe
+    private fun buildObserveSchemaContract(params: ObserveParams): String {
+        // Build schema hint for the LLM (prompt-enforced)
+
+        val actionFields = if (params.returnAction) {
+            """, "method": string, "arguments": [string]"""
+        } else ""
+
+        val schema = """
+{
+  "elements": [
+    {
+      "frameId: string,
+      "backendNodeId": number,
+      "elementHash": string,
+      "xpath": string,
+      "description": string$actionFields
+    }
+  ]
+}
+"""
+
+        return if (isCN) {
+            """
+你必须返回一个与以下模式匹配的有效 JSON 对象：
+$schema
+
+不要包含任何额外文本。
+""".trimIndent()
+        } else {
+            """
+You MUST respond with a valid JSON object matching this schema:
+$schema
+
+Do not include any extra text.
+""".trimIndent()
+        }
     }
 
     /**
      * Builds the instruction for the observeAct method to find the most relevant element for an action
      */
     fun buildActObservePrompt(
-        action: String,
-        toolCalls: List<String>,
-        variables: Map<String, String>? = null,
+        action: String, toolCalls: List<String>, variables: Map<String, String>? = null
     ): String {
         // Base instruction
         val instruction = if (isCN) {
@@ -336,7 +346,7 @@ ONLY return one action. If multiple actions are relevant, return the most releva
         return instruction
     }
 
-    fun buildOperatorSystemPrompt(goal: String): ChatMessage {
+    fun buildOperatorSystemPrompt(goal: String): SimpleMessage {
         val contentCN = """
 你是一名通用型代理，负责通过在页面上执行操作，在多次模型调用中完成用户的目标。
 
@@ -404,7 +414,7 @@ $goal
 
         val content = if (isCN) contentCN else contentEN
 
-        return ChatMessage(
+        return SimpleMessage(
             role = "system",
             content = content,
         )

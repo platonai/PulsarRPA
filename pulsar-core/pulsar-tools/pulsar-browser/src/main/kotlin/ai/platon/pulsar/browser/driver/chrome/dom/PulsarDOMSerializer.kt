@@ -518,12 +518,10 @@ data class DOMState(
 data class ClientInfo(
     val timeZone: TimeZone,
     val locale: Locale,
-    val userAgent: String? = null,
-    val devicePixelRatio: Double? = null,
-    val viewportWidth: Int? = null,
-    val viewportHeight: Int? = null,
-    val screenWidth: Int? = null,
-    val screenHeight: Int? = null,
+    val viewportWidth: Int,
+    val viewportHeight: Int,
+    val screenWidth: Int,
+    val screenHeight: Int
 )
 
 data class FullClientInfo(
@@ -555,7 +553,8 @@ data class ScrollState(
     val x: Double,
     val y: Double,
     val viewport: Dimension,
-    val scrollYRatio: Double
+    val totalHeight: Double,
+    val scrollYRatio: Double,
 )
 
 data class BrowserBasicState(

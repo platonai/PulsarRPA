@@ -322,6 +322,7 @@ class ChromeCdpDomService(
             x = scrollX,
             y = scrollY,
             viewport = Dimension(viewportWidth, viewportHeight),
+            totalHeight = totalHeight,
             scrollYRatio = scrollYRatio
         )
 
@@ -338,17 +339,9 @@ class ChromeCdpDomService(
         val locale = runCatching { if (langTag != null) Locale.forLanguageTag(langTag) else Locale.getDefault() }
             .getOrDefault(Locale.getDefault())
 
-        // Additional client fields
-        val userAgent = runCatching {
-            devTools.runtime.evaluate("navigator.userAgent")?.result?.value?.toString()
-        }.getOrNull()
-        val devicePixelRatio = runCatching { getDevicePixelRatio() }.getOrDefault(1.0)
-
         val clientInfo = ClientInfo(
             timeZone = timeZone,
             locale = locale,
-            userAgent = userAgent,
-            devicePixelRatio = devicePixelRatio,
             viewportWidth = viewportWidth,
             viewportHeight = viewportHeight,
             screenWidth = screenWidth,

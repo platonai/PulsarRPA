@@ -32,7 +32,10 @@ data class LLMUsage(
 data class Metadata(val progress: String = "", val completed: Boolean = false)
 
 data class ObserveElement(
-    val elementId: String,
+    val frameId: String,
+    val backendNodeId: Int,
+    val elementHash: String,
+    val xpath: String,
     val description: String,
     val method: String? = null,
     val arguments: List<String>? = null,
@@ -309,11 +312,10 @@ class InferenceEngine(
         val result = mutableListOf<ObserveElement>()
         for (i in 0 until arr.size()) {
             val el: JsonNode = arr.get(i)
-            var id = el.path("elementId").asText("")
-            // Normalize: strip surrounding brackets if present
-            if (id.startsWith("[") && id.endsWith("]") && id.length > 2) {
-                id = id.substring(1, id.length - 1)
-            }
+            val frameId = el.path("frameId").asText("")
+            val backendNodeId = el.path("backendNodeId").asInt(0)
+            val elementHash = el.path("elementHash").asText("")
+            val xpath = el.path("xpath").asText("")
             val desc = el.path("description").asText("")
             val baseMethod = el.path("method").asText(null)
             val argsNode = el.path("arguments")
@@ -321,21 +323,16 @@ class InferenceEngine(
                 argsNode.map { it.asText("") }
             } else null
 
-            val item = if (returnAction) {
-                ObserveElement(
-                    elementId = id,
+            val item = ObserveElement(
+                    frameId = frameId,
+                    backendNodeId = backendNodeId,
+                    elementHash = elementHash,
+                    xpath = xpath,
                     description = desc,
-                    method = baseMethod ?: "",
-                    arguments = args ?: emptyList(),
+                    method = baseMethod.takeIf { returnAction },
+                    arguments = args.takeIf { returnAction }
                 )
-            } else {
-                ObserveElement(
-                    elementId = id,
-                    description = desc,
-                    method = null,
-                    arguments = null,
-                )
-            }
+
             result.add(item)
         }
         return result
@@ -399,7 +396,7 @@ class InferenceEngine(
     }
 
     private suspend fun doLangChainChat(
-        systemMessage: PromptBuilder.ChatMessage, userMessage: PromptBuilder.ChatMessage
+        systemMessage: PromptBuilder.SimpleMessage, userMessage: PromptBuilder.SimpleMessage
     ): Pair<ChatResponse, Long> {
         return doLangChainChat(
             SystemMessage.systemMessage(systemMessage.content),
