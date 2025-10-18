@@ -180,26 +180,14 @@ class ChromeCdpDomService(
             // Calculate hashes with enhanced logic
             val parentBranchHash = if (ancestors.isNotEmpty()) {
                 runCatching { HashUtils.parentBranchHash(ancestors) }
-                    .onFailure { e ->
-                        tracer?.trace(
-                            "Parent branch hash failed | nodeId={} | err={} ",
-                            node.nodeId,
-                            e.toString()
-                        )
-                    }
+                    .onFailure { tracer?.trace("Parent branch hash failed | nodeId={} | {} ", node.nodeId, it.toString())}
                     .getOrNull()
             } else {
                 null
             }
 
             val elementHash = runCatching { HashUtils.elementHash(node, parentBranchHash) }
-                .onFailure { e ->
-                    tracer?.trace(
-                        "Element hash failed | nodeId={} | err={} ",
-                        node.nodeId,
-                        e.toString()
-                    )
-                }
+                .onFailure { tracer?.trace("Element hash failed | nodeId={} | {} ", node.nodeId, it.toString()) }
                 .getOrNull()
 
             // Merge children recursively with depth tracking
@@ -232,19 +220,19 @@ class ChromeCdpDomService(
         return merged
     }
 
-    override suspend fun buildSlimDOM(): TinyNode {
+    override suspend fun buildTinyTree(): TinyNode {
         val trees = getMultiDOMTrees()
-        return buildSlimDOM(trees)
+        return buildTinyTree(trees)
     }
 
-    override suspend fun buildSlimDOM(trees: TargetMultiTrees): TinyNode {
+    override suspend fun buildTinyTree(trees: TargetMultiTrees): TinyNode {
         val enhanced = buildEnhancedDomTree(trees)
         val hasElements = enhanced.children.isNotEmpty() ||
                 enhanced.shadowRoots.isNotEmpty() ||
                 enhanced.contentDocument != null
-        val simplified = DOMTinyTreeBuilder(enhanced).buildTinyTree()
+        val tinyTree = DOMTinyTreeBuilder(enhanced).build()
 
-        if (!hasElements || simplified == null) {
+        if (!hasElements || tinyTree == null) {
             // Write a lightweight diagnostic to help root cause empty DOM
             val diagnostics = Gson().toJson(mapOf(
                 "timestamp" to Instant.now().toString(),
@@ -259,7 +247,7 @@ class ChromeCdpDomService(
             throw IllegalStateException("Empty DOM tree collected (AX=${trees.axTree.size}, SNAP=${trees.snapshotByBackendId.size}). See logs/chat-model/domservice-diagnostics.json")
         }
 
-        return simplified
+        return tinyTree
     }
 
     override fun buildSimplifiedSlimDOM(root: DOMTreeNodeEx): TinyNode {
@@ -588,7 +576,9 @@ class ChromeCdpDomService(
         }
 
         // Check cursor style
-        return snap.cursorStyle?.equals("pointer", ignoreCase = true)
+        if (snap.cursorStyle?.equals("pointer", ignoreCase = true) == true) return true
+
+        return ClickableElementDetector().isInteractive(node)
     }
 
     /**

@@ -243,7 +243,7 @@ class PulsarPerceptiveAgent(
             logger.debug("allTrees summary: \n{}", DomDebug.summarize(allTrees))
         }
 
-        val slimDOM = domService.buildSlimDOM(allTrees)
+        val slimDOM = domService.buildTinyTree(allTrees)
         if (logger.isDebugEnabled) {
             logger.debug("slimDOM summary: \n{}", DomDebug.summarize(slimDOM))
         }

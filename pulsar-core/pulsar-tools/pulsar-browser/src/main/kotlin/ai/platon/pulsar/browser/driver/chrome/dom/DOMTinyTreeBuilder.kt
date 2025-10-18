@@ -50,7 +50,7 @@ class DOMTinyTreeBuilder(
 
     private var interactiveCounter = 1
 
-    fun buildTinyTree(): TinyNode? {
+    fun build(): TinyNode? {
         val simplified = createTinyTree(root) ?: return null
         val optimized = optimizeTree(simplified)
         val filtered = if (enableBBoxFiltering) applyBoundingBoxFiltering(optimized) else optimized

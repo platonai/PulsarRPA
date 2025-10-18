@@ -4,8 +4,35 @@ This guide centralizes all test-related practices for Browser4. The main AI Copi
 
 - Repository type: Multi-module Maven (use Maven wrapper)
 - Primary language: Kotlin with Java interop
-- OS note (Windows cmd.exe): Use Windows-friendly quotes for properties and test globs
-  - Examples: `-D"dot.sperated.parameter=quoted"`, `-Dtest="*E2ETest*"`
+
+Notes for Windows (cmd.exe):
+- Quote `-D` properties, e.g. `-D"dot.sperated.parameter=quoted"`
+- When running tests with the `-am` parameter, add `-D"surefire.failIfNoSpecifiedTests=false"`
+
+Test Command Examples for Windows (cmd.exe)
+
+```shell
+mvnw.cmd -v
+mvnw.cmd -pl pulsar-tests -Dtest="*E2ETest*" test
+mvnw.cmd -pl pulsar-tests -Dtest="*ChromeDomServiceE2ETest*" test -D"dot.sperated.parameter=quoted"
+
+mvnw.cmd -pl pulsar-tests -Dtest=ChromeDomServiceFullCoverageTest test
+# Failed: mvnw.cmd -pl pulsar-tests -am -Dtest=ChromeDomServiceFullCoverageTest test
+
+cmd /c D:\Browser4\mvnw.cmd -q -DskipTests package
+cmd /c D:\Browser4\mvnw.cmd -q -pl pulsar-tests -am -DskipTests test-compile
+
+cd /d D:\Browser4 && mvnw.cmd -q -DskipTests compile
+# Failed: cd /d D:\Browser4 && mvnw.cmd -q -DskipTests compile
+
+mvnw.cmd -q -pl pulsar-core/pulsar-skeleton -am -DskipTests package
+mvnw.cmd -pl pulsar-core/pulsar-skeleton -am -DskipTests -B package
+
+cd D:\Browser4 && mvnw.cmd -pl pulsar-tests -Dtest="ai.platon.pulsar.skeleton.ai.PulsarAgentExtractObserveE2ETest" test -DskipITs
+# Failed: cd /d D:\Browser4 && mvnw.cmd -pl pulsar-tests -am -Dtest=ai.platon.pulsar.skeleton.ai.PulsarAgentExtractObserveE2ETest test -DskipITs
+
+cmd /c "cd /d D:\Browser4 && mvnw.cmd -pl pulsar-core/pulsar-tools/pulsar-browser -Dtest=HashUtilsTests test"
+```
 
 ---
 
@@ -143,7 +170,7 @@ Cross-platform examples using Maven wrapper:
 
 ## 11. Benchmarks
 
-For microbenchmarks, use the dedicated JMH module `pulsar-benchmarks`.
+For micro benchmarks, use the dedicated JMH module `pulsar-benchmarks`.
 
 Build and run:
 ```

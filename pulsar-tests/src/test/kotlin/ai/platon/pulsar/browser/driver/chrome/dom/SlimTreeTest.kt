@@ -45,7 +45,7 @@ class SlimTreeTest : WebDriverTestBase() {
         println(DomDebug.summarize(enhancedRoot))
         assertTrue(enhancedRoot.children.isNotEmpty(), "Enhanced root should have children")
 
-        val simplified = DOMTinyTreeBuilder(enhancedRoot).buildTinyTree()
+        val simplified = DOMTinyTreeBuilder(enhancedRoot).build()
         assertNotNull(simplified, "Simplified Slim DOM should not be null")
         simplified!!
         println(DomDebug.summarize(simplified))
@@ -130,7 +130,7 @@ class SlimTreeTest : WebDriverTestBase() {
         collectBackendIds(enhancedRoot)
         assertTrue(allBackendIds.isNotEmpty(), "Expected some backend node IDs in the enhanced DOM")
 
-        val simplifiedInitial = DOMTinyTreeBuilder(enhancedRoot).buildTinyTree()
+        val simplifiedInitial = DOMTinyTreeBuilder(enhancedRoot).build()
         assertNotNull(simplifiedInitial)
         val nodesInitial = flattenSlim(simplifiedInitial!!)
         // With empty previous set, nodes that have backend IDs should be considered new (best-effort)
@@ -138,7 +138,7 @@ class SlimTreeTest : WebDriverTestBase() {
         assertTrue(anyNew, "Expected at least one node marked isNew on first build")
 
         // Build again with previous IDs supplied: nodes should now be marked as not new
-        val simplifiedSecond = DOMTinyTreeBuilder(enhancedRoot, previousBackendNodeIds = allBackendIds).buildTinyTree()
+        val simplifiedSecond = DOMTinyTreeBuilder(enhancedRoot, previousBackendNodeIds = allBackendIds).build()
         assertNotNull(simplifiedSecond)
         val nodesSecond = flattenSlim(simplifiedSecond!!)
         nodesSecond.forEach { n ->
@@ -187,7 +187,7 @@ class SlimTreeTest : WebDriverTestBase() {
         val enhancedRoot = collectEnhancedRoot(service, options)
         assertTrue(enhancedRoot.children.isNotEmpty())
 
-        val simplified = DOMTinyTreeBuilder(enhancedRoot).buildTinyTree()
+        val simplified = DOMTinyTreeBuilder(enhancedRoot).build()
         assertNotNull(simplified)
         val flat = flattenSlim(simplified!!)
 

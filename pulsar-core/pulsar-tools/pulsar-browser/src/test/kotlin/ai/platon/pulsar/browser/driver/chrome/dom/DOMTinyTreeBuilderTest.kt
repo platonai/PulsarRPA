@@ -25,7 +25,7 @@ class DOMTinyTreeBuilderTest {
         )
         val root = parent.copy(children = listOf(childInside))
 
-        val slim = DOMTinyTreeBuilder(root, enableBBoxFiltering = true).buildTinyTree()
+        val slim = DOMTinyTreeBuilder(root, enableBBoxFiltering = true).build()
         assertNotNull(slim)
         val childSlim = slim!!.children.firstOrNull()
         assertNotNull(childSlim)
@@ -56,7 +56,7 @@ class DOMTinyTreeBuilderTest {
             children = listOf(btn1, btn2)
         )
 
-        val tree = DOMTinyTreeBuilder(root, enableBBoxFiltering = false).buildTinyTree()
+        val tree = DOMTinyTreeBuilder(root, enableBBoxFiltering = false).build()
         assertNotNull(tree)
 
         // Serialize to build selector map with index:* entries
@@ -93,7 +93,7 @@ class DOMTinyTreeBuilderTest {
         )
         val rootWithChild = root.copy(children = listOf(invisibleParent))
 
-        val tree = DOMTinyTreeBuilder(rootWithChild, enableBBoxFiltering = false).buildTinyTree()
+        val tree = DOMTinyTreeBuilder(rootWithChild, enableBBoxFiltering = false).build()
         assertNotNull(tree)
         // After createSimplifiedTree, the text child is pruned; then optimizeTree should drop the invisible parent
         val child = tree!!.children.firstOrNull()

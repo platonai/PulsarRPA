@@ -31,9 +31,9 @@ interface DomService {
      */
     fun buildSimplifiedSlimDOM(root: DOMTreeNodeEx): TinyNode
 
-    suspend fun buildSlimDOM(): TinyNode
+    suspend fun buildTinyTree(): TinyNode
 
-    suspend fun buildSlimDOM(trees: TargetMultiTrees): TinyNode
+    suspend fun buildTinyTree(trees: TargetMultiTrees): TinyNode
 
     /**
      * Serialize SimplifiedNode tree for LLM consumption.
