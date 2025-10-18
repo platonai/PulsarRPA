@@ -33,7 +33,7 @@ interface DomService {
 
     suspend fun buildTinyTree(): TinyTree
 
-    suspend fun buildTinyTree(trees: TargetMultiTrees): TinyTree
+    fun buildTinyTree(trees: TargetMultiTrees): TinyTree
 
     /**
      * Serialize SimplifiedNode tree for LLM consumption.

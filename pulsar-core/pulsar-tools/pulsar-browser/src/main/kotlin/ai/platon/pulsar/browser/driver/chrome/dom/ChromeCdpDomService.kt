@@ -168,23 +168,15 @@ class ChromeCdpDomService(
 
             // Calculate XPath
             val xPath = runCatching { XPathUtils.generateXPath(node, ancestors, siblingMap) }
-                .onFailure { e ->
-                    tracer?.trace(
-                        "XPath generation failed | nodeId={} | err={} ",
-                        node.nodeId,
-                        e.toString()
-                    )
-                }
-                .getOrElse { null }
+                .onFailure { tracer?.trace("XPath generation failed | nodeId={} | {} ", node.nodeId, it.toString()) }
+                .getOrNull()
 
             // Calculate hashes with enhanced logic
             val parentBranchHash = if (ancestors.isNotEmpty()) {
                 runCatching { HashUtils.parentBranchHash(ancestors) }
                     .onFailure { tracer?.trace("Parent branch hash failed | nodeId={} | {} ", node.nodeId, it.toString())}
                     .getOrNull()
-            } else {
-                null
-            }
+            } else null
 
             val elementHash = runCatching { HashUtils.elementHash(node, parentBranchHash) }
                 .onFailure { tracer?.trace("Element hash failed | nodeId={} | {} ", node.nodeId, it.toString()) }
@@ -203,6 +195,7 @@ class ChromeCdpDomService(
                 elementHash = elementHash,
                 parentBranchHash = parentBranchHash
             )
+
             val newAncestors = ancestors + mergedNode
             val mergedChildren = node.children.map { merge(it, newAncestors, depth + 1) }
             val mergedShadowRoots = node.shadowRoots.map { merge(it, newAncestors, depth + 1) }
@@ -225,7 +218,7 @@ class ChromeCdpDomService(
         return buildTinyTree(trees)
     }
 
-    override suspend fun buildTinyTree(trees: TargetMultiTrees): TinyTree {
+    override fun buildTinyTree(trees: TargetMultiTrees): TinyTree {
         val enhanced = buildEnhancedDomTree(trees)
         val hasElements = enhanced.children.isNotEmpty() ||
                 enhanced.shadowRoots.isNotEmpty() ||

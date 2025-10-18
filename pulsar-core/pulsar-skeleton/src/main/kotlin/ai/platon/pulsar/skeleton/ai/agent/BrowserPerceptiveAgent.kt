@@ -61,6 +61,11 @@ class BrowserPerceptiveAgent(
     override val uuid = UUID.randomUUID()
     override val history: List<String> get() = _history
 
+    override suspend fun resolve(instruction: String): ActResult {
+        val opts = ActionOptions(action = instruction)
+        return resolve(opts)
+    }
+
     /**
      * Run `observe -> act -> observe -> act -> ...` loop to resolve the problem.
      * */
@@ -243,12 +248,12 @@ class BrowserPerceptiveAgent(
             logger.debug("allTrees summary: \n{}", DomDebug.summarize(allTrees))
         }
 
-        val slimDOM = domService.buildTinyTree(allTrees)
+        val tinyTree = domService.buildTinyTree(allTrees)
         if (logger.isDebugEnabled) {
-            logger.debug("slimDOM summary: \n{}", DomDebug.summarize(slimDOM))
+            logger.debug("tinyTree summary: \n{}", DomDebug.summarize(tinyTree))
         }
 
-        val domState = domService.serialize(slimDOM)
+        val domState = domService.serialize(tinyTree)
         if (logger.isDebugEnabled) {
             logger.debug("domState summary: \n{}", DomDebug.summarize(domState))
             logger.debug("domState.json: \nlength: {}\n{}", domState.json.length, domState.json)
@@ -492,7 +497,7 @@ class BrowserPerceptiveAgent(
                 val stepContext = context.copy(stepNumber = step, actionType = "step")
 
                 // Extract interactive elements each step (could be optimized via diffing later)
-                // val slimDOM = domService.buildSlimDOM()
+                // val tinyTree = domService.buildtinyTree()
                 val domState = getDOMState()
                 // val domElements = tta.extractInteractiveElementsDeferred(driver)
 

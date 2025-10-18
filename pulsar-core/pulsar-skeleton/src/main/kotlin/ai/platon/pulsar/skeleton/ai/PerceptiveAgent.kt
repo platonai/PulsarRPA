@@ -59,12 +59,20 @@ interface PerceptiveAgent {
     val uuid: UUID
     val history: List<String>
 
+    /**
+     * Run `observe -> act -> observe -> act -> ...` loop to resolve the problem.
+     * */
+    suspend fun resolve(instruction: String): ActResult
+    /**
+     * Run `observe -> act -> observe -> act -> ...` loop to resolve the problem.
+     * */
     suspend fun resolve(action: ActionOptions): ActResult
+
+    suspend fun observe(instruction: String): List<ObserveResult>
+    suspend fun observe(options: ObserveOptions): List<ObserveResult>
     suspend fun act(action: String): ActResult
     suspend fun act(action: ActionOptions): ActResult
     suspend fun act(observe: ObserveResult): ActResult
     suspend fun extract(instruction: String): ExtractResult
     suspend fun extract(options: ExtractOptions): ExtractResult
-    suspend fun observe(instruction: String): List<ObserveResult>
-    suspend fun observe(options: ObserveOptions): List<ObserveResult>
 }
