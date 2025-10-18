@@ -5,12 +5,12 @@ import ai.platon.pulsar.skeleton.ai.agent.ObserveParams
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.util.*
 
-data class ChatMessage(
-    val role: String,
-    val content: String
-)
-
 class PromptBuilder(val locale: Locale = Locale.CHINESE) {
+
+    data class ChatMessage(
+        val role: String,
+        val content: String
+    )
 
     val isCN = locale in listOf(Locale.CHINESE, Locale.SIMPLIFIED_CHINESE, Locale.TRADITIONAL_CHINESE)
 

@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.TmpFile
 import ai.platon.pulsar.common.getLogger
 import com.github.kklisura.cdt.protocol.v2023.types.accessibility.AXNode
+import com.google.gson.Gson
 import java.time.Instant
 import kotlin.math.abs
 
@@ -190,6 +191,7 @@ class ChromeCdpDomService(
             } else {
                 null
             }
+
             val elementHash = runCatching { HashUtils.elementHash(node, parentBranchHash) }
                 .onFailure { e ->
                     tracer?.debug(
@@ -244,18 +246,15 @@ class ChromeCdpDomService(
 
         if (!hasElements || simplified == null) {
             // Write a lightweight diagnostic to help root cause empty DOM
-            runCatching {
-                val diagnostics = mapOf(
-                    "timestamp" to Instant.now().toString(),
-                    "reason" to "Empty DOM tree collected",
-                    "devicePixelRatio" to trees.devicePixelRatio,
-                    "axNodeCount" to trees.axTree.size,
-                    "snapshotEntryCount" to trees.snapshotByBackendId.size,
-                    "timingsMs" to trees.cdpTiming
-                )
-
-                MessageWriter.writeOnce(TmpFile("dom-service-diagnostics.json"), diagnostics)
-            }.onFailure { e -> logger.warn("Failed to write DOM diagnostics | {}", e.toString()) }
+            val diagnostics = Gson().toJson(mapOf(
+                "timestamp" to Instant.now().toString(),
+                "reason" to "Empty DOM tree collected",
+                "devicePixelRatio" to trees.devicePixelRatio,
+                "axNodeCount" to trees.axTree.size,
+                "snapshotEntryCount" to trees.snapshotByBackendId.size,
+                "timingsMs" to trees.cdpTiming
+            ))
+            MessageWriter.writeOnce(TmpFile("dom-service-diagnostics.json"), diagnostics)
 
             throw IllegalStateException("Empty DOM tree collected (AX=${trees.axTree.size}, SNAP=${trees.snapshotByBackendId.size}). See logs/chat-model/domservice-diagnostics.json")
         }

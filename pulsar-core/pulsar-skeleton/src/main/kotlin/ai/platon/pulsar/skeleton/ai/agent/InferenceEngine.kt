@@ -3,7 +3,6 @@ package ai.platon.pulsar.skeleton.ai.agent
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
-import ai.platon.pulsar.skeleton.ai.ChatMessage
 import ai.platon.pulsar.skeleton.ai.PromptBuilder
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -110,7 +109,7 @@ class InferenceEngine(
             extractCallTs = ts
         }
 
-        val (extractResp, extractElapsedMs) = doChat(systemMsg, userMsg)
+        val (extractResp, extractElapsedMs) = doLangChainChat(systemMsg, userMsg)
 
         val messageText = extractResp.aiMessage().text().trim()
         val usage1 = toUsage(extractResp)
@@ -169,7 +168,7 @@ class InferenceEngine(
             metadataCallFile = file; metadataCallTs = ts
         }
 
-        val (metadataResp, metadataElapsedMs) = doChat(metadataSystem, metadataUser)
+        val (metadataResp, metadataElapsedMs) = doLangChainChat(metadataSystem, metadataUser)
 
         val usage2 = toUsage(metadataResp)
 
@@ -246,7 +245,7 @@ class InferenceEngine(
             callTs = ts
         }
 
-        val (resp, elapsedMs) = doChat(systemMsg, userMsg)
+        val (resp, elapsedMs) = doLangChainChat(systemMsg, userMsg)
         val usage = toUsage(resp)
 
         val raw = resp.aiMessage().text().trim()
@@ -399,18 +398,16 @@ class InferenceEngine(
         )
     }
 
-    private suspend fun doChat(systemMessage: ChatMessage, userMessage: ChatMessage): Pair<ChatResponse, Long> {
-        return doChat(SystemMessage.systemMessage(systemMessage.content), UserMessage.userMessage(userMessage.content))
+    private suspend fun doLangChainChat(
+        systemMessage: PromptBuilder.ChatMessage, userMessage: PromptBuilder.ChatMessage
+    ): Pair<ChatResponse, Long> {
+        return doLangChainChat(
+            SystemMessage.systemMessage(systemMessage.content),
+            UserMessage.userMessage(userMessage.content)
+        )
     }
 
-    private suspend fun doChat(systemContent: String, userContent: String): Pair<ChatResponse, Long> {
-        val systemMessage = SystemMessage.systemMessage(systemContent)
-        val userMessage = UserMessage.userMessage(userContent)
-
-        return doChat(systemMessage, userMessage)
-    }
-
-    private suspend fun doChat(systemMessage: SystemMessage, userMessage: UserMessage): Pair<ChatResponse, Long> {
+    private suspend fun doLangChainChat(systemMessage: SystemMessage, userMessage: UserMessage): Pair<ChatResponse, Long> {
         val temperature = 0.1
         val chatRequest = ChatRequest.builder()
             .messages(systemMessage, userMessage)
