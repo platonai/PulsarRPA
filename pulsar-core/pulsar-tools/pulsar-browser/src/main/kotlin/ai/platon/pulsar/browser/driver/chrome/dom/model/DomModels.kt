@@ -193,6 +193,8 @@ data class TinyNode(
     val isCompoundComponent: Boolean = false
 )
 
+typealias TinyTree = TinyNode
+
 /**
  * DOM interacted element for agent interaction.
  */

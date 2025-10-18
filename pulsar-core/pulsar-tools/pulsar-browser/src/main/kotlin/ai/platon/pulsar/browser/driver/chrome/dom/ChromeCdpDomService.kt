@@ -220,12 +220,12 @@ class ChromeCdpDomService(
         return merged
     }
 
-    override suspend fun buildTinyTree(): TinyNode {
+    override suspend fun buildTinyTree(): TinyTree {
         val trees = getMultiDOMTrees()
         return buildTinyTree(trees)
     }
 
-    override suspend fun buildTinyTree(trees: TargetMultiTrees): TinyNode {
+    override suspend fun buildTinyTree(trees: TargetMultiTrees): TinyTree {
         val enhanced = buildEnhancedDomTree(trees)
         val hasElements = enhanced.children.isNotEmpty() ||
                 enhanced.shadowRoots.isNotEmpty() ||
@@ -250,7 +250,7 @@ class ChromeCdpDomService(
         return tinyTree
     }
 
-    override fun buildSimplifiedSlimDOM(root: DOMTreeNodeEx): TinyNode {
+    override fun buildTinyTree(root: DOMTreeNodeEx): TinyNode {
         fun simplify(node: DOMTreeNodeEx): TinyNode {
             val simplifiedChildren = node.children.map { simplify(it) }
 

@@ -72,7 +72,7 @@ class ChromeDomServiceE2ETest : WebDriverTestBase() {
         assertTrue(trees.cdpTiming.isNotEmpty(), "cdpTiming should record phases")
 
         val enhancedRoot = service.buildEnhancedDomTree(trees)
-        val simplified = service.buildSimplifiedSlimDOM(enhancedRoot)
+        val simplified = service.buildTinyTree(enhancedRoot)
         val llm = service.serialize(simplified)
 
         assertTrue { enhancedRoot.children.isNotEmpty() }

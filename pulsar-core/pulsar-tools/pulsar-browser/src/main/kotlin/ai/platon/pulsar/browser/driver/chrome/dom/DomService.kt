@@ -29,14 +29,14 @@ interface DomService {
     /**
      * Build simplified node tree from enhanced DOM tree.
      */
-    fun buildSimplifiedSlimDOM(root: DOMTreeNodeEx): TinyNode
+    fun buildTinyTree(root: DOMTreeNodeEx): TinyTree
 
-    suspend fun buildTinyTree(): TinyNode
+    suspend fun buildTinyTree(): TinyTree
 
-    suspend fun buildTinyTree(trees: TargetMultiTrees): TinyNode
+    suspend fun buildTinyTree(trees: TargetMultiTrees): TinyTree
 
     /**
      * Serialize SimplifiedNode tree for LLM consumption.
      */
-    fun serialize(root: TinyNode, includeAttributes: List<String> = emptyList()): DOMState
+    fun serialize(root: TinyTree, includeAttributes: List<String> = emptyList()): DOMState
 }

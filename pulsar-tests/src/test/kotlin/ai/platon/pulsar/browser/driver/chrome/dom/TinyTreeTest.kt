@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import kotlin.test.assertIs
 
-class SlimTreeTest : WebDriverTestBase() {
+class TinyTreeTest : WebDriverTestBase() {
 
     private fun flattenSlim(root: TinyNode): List<TinyNode> {
         val out = ArrayList<TinyNode>()
@@ -24,7 +24,7 @@ class SlimTreeTest : WebDriverTestBase() {
     }
 
     @Test
-    fun `SimplifiedSlimDOM invariants on interactive-dynamic page`() = runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
+    fun `DOMTinyTreeBuilder invariants on interactive-dynamic page`() = runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
         val devTools = driver.implementation as RemoteDevTools
         val service = ChromeCdpDomService(devTools)
@@ -45,13 +45,13 @@ class SlimTreeTest : WebDriverTestBase() {
         println(DomDebug.summarize(enhancedRoot))
         assertTrue(enhancedRoot.children.isNotEmpty(), "Enhanced root should have children")
 
-        val simplified = DOMTinyTreeBuilder(enhancedRoot).build()
-        assertNotNull(simplified, "Simplified Slim DOM should not be null")
-        simplified!!
-        println(DomDebug.summarize(simplified))
-        assertTrue(simplified.children.isNotEmpty(), "Simplified Slim DOM should have children")
+        val tinyTree = DOMTinyTreeBuilder(enhancedRoot).build()
+        assertNotNull(tinyTree, "Simplified Slim DOM should not be null")
+        tinyTree!!
+        println(DomDebug.summarize(tinyTree))
+        assertTrue(tinyTree.children.isNotEmpty(), "Simplified Slim DOM should have children")
 
-        val all = flattenSlim(simplified)
+        val all = flattenSlim(tinyTree)
         // There should be at least one interactive element on example.com (links)
         val interactiveIndices = all.mapNotNull { it.interactiveIndex }
         assertTrue(interactiveIndices.isNotEmpty(), "Expected at least one interactive element with index")
