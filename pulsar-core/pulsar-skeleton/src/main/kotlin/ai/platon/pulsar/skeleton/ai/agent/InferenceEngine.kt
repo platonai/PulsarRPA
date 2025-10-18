@@ -1,5 +1,6 @@
 package ai.platon.pulsar.skeleton.ai.agent
 
+import ai.platon.pulsar.browser.driver.chrome.dom.BrowserState
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
@@ -46,7 +47,7 @@ data class InternalObserveResult(
 
 data class ExtractParams(
     val instruction: String,
-    val domElements: String,
+    val browserState: BrowserState,
     /** JSON Schema string describing the desired extraction output */
     val schema: String,
     val chunksSeen: Int = 0,
@@ -58,7 +59,7 @@ data class ExtractParams(
 
 data class ObserveParams(
     val instruction: String,
-    val domElements: String,
+    val browserState: BrowserState,
     val requestId: String = UUID.randomUUID().toString(),
     val userProvidedInstructions: String? = null,
     val returnAction: Boolean = false,
@@ -90,7 +91,7 @@ class InferenceEngine(
         val userMsg = promptBuilder.buildExtractUserPrompt(
             params.instruction,
             // Inject schema hint to strongly guide JSON output
-            promptBuilder.buildExtractDomContent(params.domElements, params)
+            promptBuilder.buildExtractDomContent(params.browserState.domState.json, params)
         )
 
         val messages = listOf(systemMsg, userMsg)
@@ -226,8 +227,7 @@ class InferenceEngine(
     suspend fun observe(params: ObserveParams): InternalObserveResult {
         // Build dynamic schema hint for the LLM (prompt-enforced)
         val systemMsg = promptBuilder.buildObserveSystemPrompt(params.userProvidedInstructions)
-        val domText = promptBuilder.buildObserveDomText(params, schemaHint = true)
-        val userMsg = promptBuilder.buildObserveUserMessage(params.instruction, domText)
+        val userMsg = promptBuilder.buildObserveUserMessage(params.instruction, params.browserState)
 
         val prefix = if (params.fromAct) "act" else "observe"
         var callFile = ""

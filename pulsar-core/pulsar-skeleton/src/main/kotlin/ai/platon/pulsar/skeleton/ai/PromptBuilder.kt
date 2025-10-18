@@ -3,6 +3,7 @@ package ai.platon.pulsar.skeleton.ai
 import ai.platon.pulsar.skeleton.ai.agent.ExtractParams
 import ai.platon.pulsar.skeleton.ai.agent.ObserveParams
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import org.codehaus.jackson.map.ObjectMapper
 import java.util.*
 
 class PromptBuilder(val locale: Locale = Locale.CHINESE) {
@@ -99,7 +100,8 @@ Print null or an empty string if no new information is found.
     fun buildExtractDomContent(domText: String, params: ExtractParams): String {
         // Inject schema hint to strongly guide JSON output
         val hintCN = "你必须返回一个严格符合以下JSON Schema的有效JSON对象。不要包含任何额外说明。"
-        val hintEN = "You MUST respond with a valid JSON object that strictly conforms to the following JSON Schema. Do not include any extra commentary."
+        val hintEN =
+            "You MUST respond with a valid JSON object that strictly conforms to the following JSON Schema. Do not include any extra commentary."
         val hint = if (isCN) hintCN else hintEN
 
         return buildString {
@@ -188,13 +190,13 @@ chunksTotal: $chunksTotal
     }
 
     // observe
-    fun buildObserveDomText(params: ObserveParams, schemaHint: Boolean = false): String {
+    fun buildObserveSchemaHint(params: ObserveParams, schemaHint: Boolean = false): String {
         // Build dynamic schema hint for the LLM (prompt-enforced)
         if (!schemaHint) {
-            return params.domElements
+            return ""
         }
 
-        val schemaHintText = buildString {
+        val hint = buildString {
             if (isCN) {
                 append("""你必须返回一个与以下模式匹配的有效 JSON 对象: { "elements": [ { "elementId": string, "description": string""")
                 if (params.returnAction) {
@@ -210,23 +212,23 @@ chunksTotal: $chunksTotal
             }
         }
 
-        return params.domElements + "\n\n" + schemaHintText
+        return hint
     }
 
     // observe
     fun buildObserveSystemPrompt(
         userProvidedInstructions: String? = null
     ): ChatMessage {
-        val observeSystemPromptCN = """
+        fun observeSystemPromptCN() = """
 你正在通过根据用户希望观察的页面内容来查找元素，帮助用户实现浏览器操作自动化。
 你将获得：
 - 一条关于待观察元素的指令
 - 一个展示页面语义结构的分层无障碍树（accessibility tree）。该树是DOM（文档对象模型）与无障碍树的混合体。
 
 如果存在符合指令的元素，则返回这些元素的数组；否则返回空数组。
-""".trimIndent()
+"""
 
-        val observeSystemPromptEN = """
+        fun observeSystemPromptEN() = """
 You are helping the user automate the browser by finding elements based on what the user wants to observe in the page.
 
 You will be given:
@@ -234,9 +236,9 @@ You will be given:
 - a hierarchical accessibility tree showing the semantic structure of the page. The tree is a hybrid of the DOM and the accessibility tree.
 
 Return an array of elements that match the instruction if they exist, otherwise return an empty array.
-""".trimIndent()
+"""
 
-        val observeSystemPrompt = if (isCN) observeSystemPromptCN else observeSystemPromptEN
+        val observeSystemPrompt = if (isCN) observeSystemPromptCN() else observeSystemPromptEN()
         val extra = buildUserInstructionsString(userProvidedInstructions)
         val content = if (extra.isNotBlank()) "$observeSystemPrompt\n\n$extra" else observeSystemPrompt
 
@@ -251,6 +253,7 @@ Return an array of elements that match the instruction if they exist, otherwise 
                 related pages, section/subsection links, buttons, or other interactive elements.
                 Be comprehensive: if there are multiple elements that may be relevant for future actions, return all of them.
                 """.trimIndent()
+
             else -> """
                 Find elements that can be used for any future actions in the page. These may be navigation links,
                 related pages, section/subsection links, buttons, or other interactive elements.
@@ -259,20 +262,39 @@ Return an array of elements that match the instruction if they exist, otherwise 
         }
     }
 
-    fun buildObserveUserMessage(instruction: String, domElements: String): ChatMessage {
-        val contentCN = """
+    fun buildObserveUserMessage(instruction: String, params: ObserveParams): ChatMessage {
+        val browserStateJson = ObjectMapper().writeValueAsString(params.browserState.basicState)
+
+        val schemaHint = buildObserveSchemaHint(params, schemaHint = true)
+        fun contentCN() = """
 指令: $instruction
+
 无障碍树(Accessibility Tree):
-$domElements
-""".trim()
+${params.browserState.domState.json}
 
-        val contentEN = """
+当前浏览器状态：
+$browserStateJson
+
+$schemaHint
+"""
+
+        fun contentEN() = """
 instruction: $instruction
-Accessibility Tree:
-$domElements
-""".trim()
 
-        val content = if (isCN) contentCN else contentEN
+Accessibility Tree:
+${params.browserState.domState.json}
+
+Current Browser State:
+$browserStateJson
+
+$schemaHint
+"""
+
+        val content = when {
+            isCN -> contentCN()
+            else -> contentEN()
+        }
+
         return ChatMessage(role = "user", content = content)
     }
 

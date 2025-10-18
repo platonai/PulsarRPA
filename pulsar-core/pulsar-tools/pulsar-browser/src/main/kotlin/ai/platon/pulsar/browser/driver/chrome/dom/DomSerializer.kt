@@ -7,8 +7,8 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.TinyNode
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.github.kklisura.cdt.protocol.v2023.types.page.Viewport
 import com.ibm.icu.util.TimeZone
+import java.awt.Dimension
 import java.util.*
 
 /**
@@ -516,15 +516,19 @@ data class ClientInfo(
 data class ScrollState(
     val x: Double,
     val y: Double,
-    val viewport: Viewport,
+    val viewport: Dimension,
     val scrollYRatio: Double
 )
 
-data class BrowserState(
+data class BrowserBasicState(
     val url: String,
     val goBackUrl: String,
     val goForwardUrl: String,
     val clientInfo: ClientInfo,
-    val scrollState: ScrollState,
+    val scrollState: ScrollState
+)
+
+data class BrowserState(
+    val basicState: BrowserBasicState,
     val domState: DOMState
 )

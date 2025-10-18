@@ -1,5 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome.dom
 
+import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.AccessibilityHandler.AccessibilityTreeResult
 import ai.platon.pulsar.browser.driver.chrome.dom.model.*
@@ -8,7 +9,10 @@ import ai.platon.pulsar.common.TmpFile
 import ai.platon.pulsar.common.getLogger
 import com.github.kklisura.cdt.protocol.v2023.types.accessibility.AXNode
 import com.google.gson.Gson
+import com.ibm.icu.util.TimeZone
+import java.awt.Dimension
 import java.time.Instant
+import java.util.Locale
 import kotlin.math.abs
 
 /**
@@ -269,8 +273,45 @@ class ChromeCdpDomService(
         return DomSerializer.serialize(root, includeAttributes, options)
     }
 
-    override fun buildBrowserState(domState: DOMState): BrowserState {
-        TODO("implement this")
+    override suspend fun buildBrowserState(domState: DOMState): BrowserState {
+        val url = devTools.dom.document.documentURL
+
+        // TODO: implement ScrollState calculation
+        val mockScrollState = ScrollState(0.0, 0.0, Dimension(0, 0), 0.0)
+        // TODO: give me some suggestion to how to use collect the client info
+        val clientInfo = ClientInfo(TimeZone.getDefault(), Locale.getDefault())
+        // TODO: implement goBackUrl and goForwardUrl
+        val basicState = BrowserBasicState(
+            url,
+            "",
+            "",
+            clientInfo,
+            mockScrollState
+        )
+
+        return BrowserState(basicState, domState)
+    }
+
+    override suspend fun getBrowserState(snapshotOptions: SnapshotOptions): BrowserState {
+        val allTrees = getMultiDOMTrees(options = snapshotOptions)
+        if (logger.isDebugEnabled) {
+            logger.debug("allTrees summary: \n{}", DomDebug.summarize(allTrees))
+        }
+
+        val tinyTree = buildTinyTree(allTrees)
+        if (logger.isDebugEnabled) {
+            logger.debug("tinyTree summary: \n{}", DomDebug.summarize(tinyTree))
+        }
+
+        val domState = buildDOMState(tinyTree)
+        if (logger.isDebugEnabled) {
+            logger.debug("browserState summary: \n{}", DomDebug.summarize(domState))
+            logger.debug("browserState.json: \nlength: {}\n{}", domState.json.length, domState.json)
+        }
+
+        val browserState = buildBrowserState(domState)
+
+        return browserState
     }
 
     override fun findElement(ref: ElementRefCriteria): DOMTreeNodeEx? {

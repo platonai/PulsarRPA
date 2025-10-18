@@ -40,5 +40,7 @@ interface DomService {
      */
     fun buildDOMState(root: TinyTree, includeAttributes: List<String> = emptyList()): DOMState
 
-    fun buildBrowserState(domState: DOMState): BrowserState
+    suspend fun buildBrowserState(domState: DOMState): BrowserState
+
+    suspend fun getBrowserState(snapshotOptions: SnapshotOptions): BrowserState
 }

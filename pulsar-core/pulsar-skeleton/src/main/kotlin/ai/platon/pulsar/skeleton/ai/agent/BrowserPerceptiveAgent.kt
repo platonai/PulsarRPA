@@ -1,5 +1,6 @@
 package ai.platon.pulsar.skeleton.ai.agent
 
+import ai.platon.pulsar.browser.driver.chrome.dom.BrowserState
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMState
 import ai.platon.pulsar.browser.driver.chrome.dom.DomDebug
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
@@ -196,17 +197,17 @@ class BrowserPerceptiveAgent(
         logExtractStart(instruction, requestId)
 
         val schemaJson = buildSchemaJsonFromMap(options.schema)
-        val domState = getDOMState()
-
-        val params = ExtractParams(
-            instruction = instruction,
-            domElements = domState.json,
-            schema = schemaJson,
-            requestId = requestId,
-            logInferenceToFile = config.enableStructuredLogging
-        )
-
         return try {
+            val browserState = getBrowserState()
+
+            val params = ExtractParams(
+                instruction = instruction,
+                browserState = browserState,
+                schema = schemaJson,
+                requestId = requestId,
+                logInferenceToFile = config.enableStructuredLogging
+            )
+
             val resultNode = inference.extract(params)
             addHistoryExtract(instruction, requestId, true)
             ExtractResult(success = true, message = "OK", data = resultNode)
@@ -230,7 +231,7 @@ class BrowserPerceptiveAgent(
         return doObserve(options)
     }
 
-    private suspend fun getDOMState(): DOMState {
+    private suspend fun getBrowserState(): BrowserState {
         val snapshotOptions = SnapshotOptions(
             maxDepth = 1000,
             includeAX = true,
@@ -243,39 +244,23 @@ class BrowserPerceptiveAgent(
             includeInteractivity = true
         )
 
-        val allTrees = domService.getMultiDOMTrees(options = snapshotOptions)
-        if (logger.isDebugEnabled) {
-            logger.debug("allTrees summary: \n{}", DomDebug.summarize(allTrees))
-        }
-
-        val tinyTree = domService.buildTinyTree(allTrees)
-        if (logger.isDebugEnabled) {
-            logger.debug("tinyTree summary: \n{}", DomDebug.summarize(tinyTree))
-        }
-
-        val domState = domService.buildDOMState(tinyTree)
-        if (logger.isDebugEnabled) {
-            logger.debug("domState summary: \n{}", DomDebug.summarize(domState))
-            logger.debug("domState.json: \nlength: {}\n{}", domState.json.length, domState.json)
-        }
-
-        return domState
+        return domService.getBrowserState(snapshotOptions)
     }
 
     private suspend fun doObserve(options: ObserveOptions): List<ObserveResult> {
         val instruction = promptBuilder.initObserveUserInstruction(options.instruction)
 
-        val domState = getDOMState()
+        val browserState = getBrowserState()
         val params = ObserveParams(
             instruction = instruction,
-            domElements = domState.json,
+            browserState = browserState,
             requestId = UUID.randomUUID().toString(),
             returnAction = options.returnAction ?: true,
             logInferenceToFile = config.enableStructuredLogging,
             fromAct = false
         )
 
-        return doObserve1(instruction, params, domState)
+        return doObserve1(instruction, params, browserState)
     }
 
     private suspend fun doObserveAct(action: ActionOptions): ActResult {
@@ -286,22 +271,22 @@ class BrowserPerceptiveAgent(
         // 2) Optional settle wait before observing DOM (if provided)
         val settleMs = action.domSettleTimeoutMs?.toLong()?.coerceAtLeast(0L) ?: 0L
         if (settleMs > 0) {
-            runCatching { driver.delay(settleMs) }
-                .onFailure { e -> logger.warn("observeAct: domSettleTimeoutMs delay failed | {}", e.toString()) }
+            // TODO: wait for dom settle
+            driver.delay(settleMs)
         }
 
         // 3) Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
-        val domState = getDOMState()
+        val browserState = getBrowserState()
         val params = ObserveParams(
             instruction = instruction,
-            domElements = domState.json,
+            browserState = browserState,
             requestId = UUID.randomUUID().toString(),
             returnAction = true,
             logInferenceToFile = config.enableStructuredLogging,
             fromAct = true,
         )
 
-        val results: List<ObserveResult> = doObserve1(instruction, params, domState)
+        val results: List<ObserveResult> = doObserve1(instruction, params, browserState)
 
         if (results.isEmpty()) {
             val msg = "doObserveAct: No actionable element found"
@@ -319,13 +304,14 @@ class BrowserPerceptiveAgent(
         }
 
         // 5) Execute action, and optionally wait for navigation if caller provided timeoutMs
-        val oldUrl = runCatching { driver.currentUrl() }.getOrDefault("")
+        val oldUrl = driver.currentUrl()
         val execResult = act(chosen)
 
         // If a timeout is provided and the action likely triggers navigation, wait for navigation
         val timeoutMs = action.timeoutMs?.toLong()?.takeIf { it > 0 }
         val maybeNavMethod = method in ToolCallExecutor.MAY_NAVIGATE_ACTIONS
         if (timeoutMs != null && maybeNavMethod && execResult.success) {
+            // TODO: may not navigate
             runCatching { driver.waitForNavigation(oldUrl, timeoutMs) }
                 .onFailure { e -> logger.info("observeAct: waitForNavigation failed | {}", e.message) }
         }
@@ -333,7 +319,9 @@ class BrowserPerceptiveAgent(
         return execResult.copy(action = action.action)
     }
 
-    private suspend fun doObserve1(instruction: String, params: ObserveParams, domState: DOMState): List<ObserveResult> {
+    private suspend fun doObserve1(
+        instruction: String, params: ObserveParams, browserState: BrowserState
+    ): List<ObserveResult> {
         val requestId: String = params.requestId
 
         logObserveStart(instruction, requestId)
@@ -347,7 +335,7 @@ class BrowserPerceptiveAgent(
                 // val xpathKeys = keys.count { it.startsWith("xpath:") }
                 // val backendKeys = keys.count { it.startsWith("backend:") }
                 // val nodeKeys = keys.count { it.startsWith("node:") }
-                val xpath = domState.selectorMap[el.elementId]
+                val xpath = browserState.domState.selectorMap[el.elementId]
                 ObserveResult(
                     selector = "xpath:$xpath",
                     description = el.description,
@@ -498,15 +486,15 @@ class BrowserPerceptiveAgent(
 
                 // Extract interactive elements each step (could be optimized via diffing later)
                 // val tinyTree = domService.buildtinyTree()
-                val domState = getDOMState()
-                // val domElements = tta.extractInteractiveElementsDeferred(driver)
+                val browserState = getBrowserState()
+                // val browserState = tta.extractInteractiveElementsDeferred(driver)
 
                 logStructured(
                     "Executing step", stepContext, mapOf(
                         "step" to step,
                         "maxSteps" to config.maxSteps,
                         "consecutiveNoOps" to consecutiveNoOps,
-                        "domStateSummary" to DomDebug.summarize(domState)
+                        "domStateSummary" to DomDebug.summarize(browserState.domState)
                     )
                 )
 
@@ -516,7 +504,7 @@ class BrowserPerceptiveAgent(
                 }
 
                 val screenshotB64 = captureScreenshotWithRetry(stepContext)
-                val userMsg = buildUserMessage(overallGoal, domState)
+                val userMsg = buildUserMessage(overallGoal, browserState)
 
                 // message: agent guide + overall goal + last action summary + current context message
                 val message = buildExecutionMessage(systemMsg, userMsg, screenshotB64)
@@ -1005,10 +993,10 @@ class BrowserPerceptiveAgent(
         }
     }
 
-    private suspend fun buildUserMessage(instruction: String, domState: DOMState): String {
+    private suspend fun buildUserMessage(instruction: String, browserState: BrowserState): String {
         val currentUrl = getCurrentUrl()
         val his = if (_history.isEmpty()) "(无)" else _history.takeLast(min(8, _history.size)).joinToString("\n")
-        val interactiveSummary = domState.json
+        val interactiveSummary = browserState.domState.json
         return """
 此前动作摘要：
 $his
