@@ -337,6 +337,11 @@ class PulsarPerceptiveAgent(
             val internalResults = inference.observe(params)
             val results = internalResults.elements.map { el ->
                 // The format of elementId: `\d+-\d+`
+
+                // Multi selectors are supported:
+                // val xpathKeys = keys.count { it.startsWith("xpath:") }
+                // val backendKeys = keys.count { it.startsWith("backend:") }
+                // val nodeKeys = keys.count { it.startsWith("node:") }
                 val xpath = domState.selectorMap[el.elementId]
                 ObserveResult(
                     selector = "xpath:$xpath",

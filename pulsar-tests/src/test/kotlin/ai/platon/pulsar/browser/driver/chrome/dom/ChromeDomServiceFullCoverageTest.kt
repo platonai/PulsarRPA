@@ -44,7 +44,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         // Prepare a deterministic dynamic state (virtual list -> scrollable container, images are added on DOMContentLoaded)
         runCatching { devTools.runtime.evaluate("generateLargeList(100)") }
 
-        fun collectRoot(): DOMTreeNodeEx {
+        suspend fun collectRoot(): DOMTreeNodeEx {
             repeat(3) { attempt ->
                 val t = service.getMultiDOMTrees(target = PageTarget(), options = options)
                 // Print TargetAllTrees summary once per attempt (last one will be the most recent)
@@ -94,7 +94,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
             includeInteractivity = true
         )
 
-        fun collectRoot(): DOMTreeNodeEx {
+        suspend fun collectRoot(): DOMTreeNodeEx {
             repeat(3) { attempt ->
                 val t = service.getMultiDOMTrees(target = PageTarget(), options = options)
                 println(DomDebug.summarize(t))
@@ -232,7 +232,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         }
         assertTrue(hasContainer, "Expected #virtualScrollContainer to be present after generateLargeList(1000)")
 
-        fun collectRoot(): DOMTreeNodeEx {
+        suspend fun collectRoot(): DOMTreeNodeEx {
             repeat(3) { attempt ->
                 val t = service.getMultiDOMTrees(target = PageTarget(), options = options)
                 println(DomDebug.summarize(t))
@@ -310,7 +310,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
             includeInteractivity = true
         )
 
-        fun collectRoot(): DOMTreeNodeEx {
+        suspend fun collectRoot(): DOMTreeNodeEx {
             repeat(3) { attempt ->
                 val t = service.getMultiDOMTrees(target = PageTarget(), options = options)
                 println(DomDebug.summarize(t))
