@@ -14,18 +14,6 @@ import kotlin.test.assertIs
 
 class SlimTreeTest : WebDriverTestBase() {
 
-    private suspend fun collectEnhancedRoot(service: ChromeCdpDomService, options: SnapshotOptions): DOMTreeNodeEx {
-        repeat(3) { attempt ->
-            val t = service.getMultiDOMTrees(target = PageTarget(), options = options)
-            // Best-effort summary for diagnostics
-            println(DomDebug.summarize(t))
-            val r = service.buildEnhancedDomTree(t)
-            if (r.children.isNotEmpty() || attempt == 2) return r
-            Thread.sleep(300)
-        }
-        return service.buildEnhancedDomTree(service.getMultiDOMTrees(PageTarget(), options))
-    }
-
     private fun flattenSlim(root: SlimNode): List<SlimNode> {
         val out = ArrayList<SlimNode>()
         fun dfs(n: SlimNode) {

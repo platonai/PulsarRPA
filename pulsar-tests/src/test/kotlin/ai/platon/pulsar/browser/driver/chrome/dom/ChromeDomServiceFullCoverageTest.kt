@@ -14,15 +14,6 @@ import kotlin.test.assertIs
 class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
     private val testURL get() = "$generatedAssetsBaseURL/interactive-dynamic.html"
 
-    // Helper to DFS find the first node by id in the enhanced tree
-    private fun findNodeById(root: DOMTreeNodeEx, id: String): DOMTreeNodeEx? {
-        if (root.attributes["id"] == id) return root
-        root.children.forEach { findNodeById(it, id)?.let { return it } }
-        root.shadowRoots.forEach { findNodeById(it, id)?.let { return it } }
-        root.contentDocument?.let { findNodeById(it, id)?.let { return it } }
-        return null
-    }
-
     @Test
     fun `Get trees, build and serialize end-to-end with assertions`() = runEnhancedWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
@@ -44,20 +35,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         // Prepare a deterministic dynamic state (virtual list -> scrollable container, images are added on DOMContentLoaded)
         runCatching { devTools.runtime.evaluate("generateLargeList(100)") }
 
-        suspend fun collectRoot(): DOMTreeNodeEx {
-            repeat(3) { attempt ->
-                val t = service.getMultiDOMTrees(target = PageTarget(), options = options)
-                // Print TargetAllTrees summary once per attempt (last one will be the most recent)
-                println(DomDebug.summarize(t))
-                val r = service.buildEnhancedDomTree(t)
-                if (r.children.isNotEmpty() || attempt == 2) return r
-                Thread.sleep(300)
-            }
-            // Unreachable
-            return service.buildEnhancedDomTree(service.getMultiDOMTrees(PageTarget(), options))
-        }
-
-        val enhancedRoot = collectRoot()
+        val enhancedRoot = collectEnhancedRoot(service, options)
         // Print enhanced DOMTreeNodeEx summary and basic tree stats
         println(DomDebug.summarize(enhancedRoot))
         assertTrue(enhancedRoot.children.isNotEmpty())
@@ -232,18 +210,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         }
         assertTrue(hasContainer, "Expected #virtualScrollContainer to be present after generateLargeList(1000)")
 
-        suspend fun collectRoot(): DOMTreeNodeEx {
-            repeat(3) { attempt ->
-                val t = service.getMultiDOMTrees(target = PageTarget(), options = options)
-                println(DomDebug.summarize(t))
-                val r = service.buildEnhancedDomTree(t)
-                if (r.children.isNotEmpty() || attempt == 2) return r
-                Thread.sleep(300)
-            }
-            val allTrees = service.getMultiDOMTrees(PageTarget(), options)
-            return service.buildEnhancedDomTree(allTrees)
-        }
-        val root = collectRoot()
+        val root = collectEnhancedRoot(service, options)
         println(DomDebug.summarize(root))
         assertNotNull(root)
 
@@ -310,17 +277,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
             includeInteractivity = true
         )
 
-        suspend fun collectRoot(): DOMTreeNodeEx {
-            repeat(3) { attempt ->
-                val t = service.getMultiDOMTrees(target = PageTarget(), options = options)
-                println(DomDebug.summarize(t))
-                val r = service.buildEnhancedDomTree(t)
-                if (r.children.isNotEmpty() || attempt == 2) return r
-                Thread.sleep(300)
-            }
-            return service.buildEnhancedDomTree(service.getMultiDOMTrees(PageTarget(), options))
-        }
-        val root = collectRoot()
+        val root = collectEnhancedRoot(service, options)
         println(DomDebug.summarize(root))
 
         val dynamic = service.findElement(ElementRefCriteria(cssSelector = "#dynamicContent"))

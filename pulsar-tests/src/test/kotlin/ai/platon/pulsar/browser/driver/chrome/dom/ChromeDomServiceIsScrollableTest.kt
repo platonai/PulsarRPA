@@ -15,25 +15,6 @@ import kotlin.test.fail
 class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
     private val testURL get() = "$generatedAssetsBaseURL/interactive-dynamic.html"
 
-    // Helper to DFS find the first node by id in the enhanced tree
-    private fun findNodeById(root: DOMTreeNodeEx, id: String): DOMTreeNodeEx? {
-        if (root.attributes["id"] == id) return root
-        root.children.forEach { findNodeById(it, id)?.let { return it } }
-        root.shadowRoots.forEach { findNodeById(it, id)?.let { return it } }
-        root.contentDocument?.let { findNodeById(it, id)?.let { return it } }
-        return null
-    }
-
-    private fun collectRoot(service: ChromeCdpDomService, options: SnapshotOptions): DOMTreeNodeEx {
-        repeat(3) { attempt ->
-            val t = service.getMultiDOMTrees(target = PageTarget(), options = options)
-            val r = service.buildEnhancedDomTree(t)
-            if (r.children.isNotEmpty() || attempt == 2) return r
-            Thread.sleep(300)
-        }
-        return service.buildEnhancedDomTree(service.getMultiDOMTrees(PageTarget(), options))
-    }
-
     @Test
     fun `isScrollable basics - regular elements and overflow hidden`() = runEnhancedWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
@@ -103,7 +84,7 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
         waitExists("scroll_basic")
         waitExists("scroll_hidden")
 
-        val root = collectRoot(service, options)
+        val root = collectEnhancedRoot(service, options)
 
         val basic = service.findElement(ElementRefCriteria(cssSelector = "#scroll_basic"))
             ?: findNodeById(root, "scroll_basic")
@@ -156,7 +137,7 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
         )
 
         // Case 1: No overflow set => expect body isScrollable == false (strict rule)
-        var root = collectRoot(service, baseOptions)
+        var root = collectEnhancedRoot(service, baseOptions)
         var body = service.findElement(ElementRefCriteria(cssSelector = "body"))
             ?: findNodeById(root, "body")
         assertNotNull(body)
@@ -167,7 +148,7 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
             devTools.runtime.evaluate(
                 "document.documentElement.style.overflow='auto'; document.body.style.overflow='auto'; true;")
         }
-        root = collectRoot(service, baseOptions)
+        root = collectEnhancedRoot(service, baseOptions)
         body = service.findElement(ElementRefCriteria(cssSelector = "body"))
             ?: findNodeById(root, "body")
         val html = service.findElement(ElementRefCriteria(cssSelector = "html"))
@@ -279,7 +260,7 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
         }
         listOf("outer_same","inner_same","outer_diff","inner_diff").forEach { waitExists(it) }
 
-        val root = collectRoot(service, options)
+        val root = collectEnhancedRoot(service, options)
 
         val outerSame = service.findElement(ElementRefCriteria(cssSelector = "#outer_same"))
             ?: findNodeById(root, "outer_same")
@@ -351,7 +332,7 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
             Thread.sleep(100)
         }
 
-        val root = collectRoot(service, options)
+        val root = collectEnhancedRoot(service, options)
         val node = service.findElement(ElementRefCriteria(cssSelector = "#scroll_disabled"))
             ?: findNodeById(root, "scroll_disabled")
         assertNotNull(node)
