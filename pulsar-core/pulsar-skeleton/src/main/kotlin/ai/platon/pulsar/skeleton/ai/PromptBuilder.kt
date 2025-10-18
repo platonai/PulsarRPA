@@ -281,7 +281,7 @@ $schemaHint
 {
   "elements": [
     {
-      "frameId: string,
+      "frameId": string,
       "backendNodeId": number,
       "elementHash": string,
       "xpath": string,
