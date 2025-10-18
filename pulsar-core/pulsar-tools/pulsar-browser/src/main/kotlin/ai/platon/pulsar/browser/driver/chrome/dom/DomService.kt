@@ -43,4 +43,9 @@ interface DomService {
     suspend fun buildBrowserState(domState: DOMState): BrowserState
 
     suspend fun getBrowserState(snapshotOptions: SnapshotOptions): BrowserState
+
+    /**
+     * Compute a rich client profile from the active browser context.
+     */
+    suspend fun computeFullClientInfo(): FullClientInfo
 }

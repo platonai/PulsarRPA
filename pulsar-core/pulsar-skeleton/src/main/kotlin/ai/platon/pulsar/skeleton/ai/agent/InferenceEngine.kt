@@ -227,7 +227,7 @@ class InferenceEngine(
     suspend fun observe(params: ObserveParams): InternalObserveResult {
         // Build dynamic schema hint for the LLM (prompt-enforced)
         val systemMsg = promptBuilder.buildObserveSystemPrompt(params.userProvidedInstructions)
-        val userMsg = promptBuilder.buildObserveUserMessage(params.instruction, params.browserState)
+        val userMsg = promptBuilder.buildObserveUserMessage(params.instruction, params)
 
         val prefix = if (params.fromAct) "act" else "observe"
         var callFile = ""

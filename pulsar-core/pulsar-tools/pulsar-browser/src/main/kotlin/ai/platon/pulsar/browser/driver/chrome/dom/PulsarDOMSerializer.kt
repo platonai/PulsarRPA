@@ -4,8 +4,10 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMRect
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DefaultIncludeAttributes
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TinyNode
+import ai.platon.pulsar.common.serialize.json.Double2Serializer
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.ibm.icu.util.TimeZone
 import java.awt.Dimension
@@ -14,9 +16,14 @@ import java.util.*
 /**
  * Serializer for DOM trees optimized for LLM consumption.
  */
-object DomSerializer {
-    private val mapper: ObjectMapper = jacksonObjectMapper().apply {
+object PulsarDOMSerializer {
+    val mapper: ObjectMapper = jacksonObjectMapper().apply {
         setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        val module = SimpleModule().apply {
+            addSerializer(Double::class.java, Double2Serializer())
+            addSerializer(Double::class.javaPrimitiveType, Double2Serializer())
+        }
+        registerModule(module)
     }
 
     /**
@@ -511,6 +518,37 @@ data class DOMState(
 data class ClientInfo(
     val timeZone: TimeZone,
     val locale: Locale,
+    val userAgent: String? = null,
+    val devicePixelRatio: Double? = null,
+    val viewportWidth: Int? = null,
+    val viewportHeight: Int? = null,
+    val screenWidth: Int? = null,
+    val screenHeight: Int? = null,
+)
+
+data class FullClientInfo(
+    val timeZone: TimeZone,
+    val locale: Locale,
+    val userAgent: String? = null,
+    val devicePixelRatio: Double? = null,
+    val viewportWidth: Int? = null,
+    val viewportHeight: Int? = null,
+    val screenWidth: Int? = null,
+    val screenHeight: Int? = null,
+    val colorDepth: Int? = null,
+    val hardwareConcurrency: Int? = null,
+    val deviceMemoryGB: Double? = null,
+    val onLine: Boolean? = null,
+    val networkEffectiveType: String? = null,
+    val saveData: Boolean? = null,
+    val prefersDarkMode: Boolean? = null,
+    val prefersReducedMotion: Boolean? = null,
+    val isSecureContext: Boolean? = null,
+    val crossOriginIsolated: Boolean? = null,
+    val doNotTrack: String? = null,
+    val webdriver: Boolean? = null,
+    val historyLength: Int? = null,
+    val visibilityState: String? = null,
 )
 
 data class ScrollState(

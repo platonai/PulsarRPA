@@ -1,6 +1,5 @@
 package ai.platon.pulsar.browser.driver.chrome.dom
 
-import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.AccessibilityHandler.AccessibilityTreeResult
 import ai.platon.pulsar.browser.driver.chrome.dom.model.*
@@ -265,53 +264,181 @@ class ChromeCdpDomService(
 
     override fun buildDOMState(root: TinyNode, includeAttributes: List<String>): DOMState {
         // Use enhanced serialization with default options
-        val options = DomSerializer.SerializationOptions(
+        val options = PulsarDOMSerializer.SerializationOptions(
             enablePaintOrderPruning = true,
             enableCompoundComponentDetection = true,
             enableAttributeCasingAlignment = true
         )
-        return DomSerializer.serialize(root, includeAttributes, options)
+        return PulsarDOMSerializer.serialize(root, includeAttributes, options)
     }
 
     override suspend fun buildBrowserState(domState: DOMState): BrowserState {
-        val url = devTools.dom.document.documentURL
+        // URL from DOM domain (resilient)
+        val url = runCatching { devTools.dom.document.documentURL }.getOrDefault("")
 
-        // TODO: implement ScrollState calculation
-        val mockScrollState = ScrollState(0.0, 0.0, Dimension(0, 0), 0.0)
-        // TODO: give me some suggestion to how to use collect the client info
-        val clientInfo = ClientInfo(TimeZone.getDefault(), Locale.getDefault())
-        // TODO: implement goBackUrl and goForwardUrl
+        // Navigation history for back/forward URLs (resilient)
+        val (goBackUrl, goForwardUrl) = runCatching {
+            val history = devTools.page.navigationHistory
+            val currentIndex = history?.currentIndex ?: -1
+            val entries = history?.entries ?: emptyList()
+            val back = entries.getOrNull(currentIndex - 1)?.url ?: ""
+            val forward = entries.getOrNull(currentIndex + 1)?.url ?: ""
+            back to forward
+        }.getOrElse { "" to "" }
+
+        // Helper to evaluate numeric JS safely
+        fun evalDouble(expr: String): Double? {
+            return try {
+                val evaluation = devTools.runtime.evaluate(expr)
+                val result = evaluation?.result
+                result?.value?.toString()?.toDoubleOrNull()
+                    ?: result?.unserializableValue?.toDoubleOrNull()
+            } catch (e: Exception) {
+                tracer?.trace("Evaluation error | expr={} | err={}", expr, e.toString())
+                null
+            }
+        }
+        fun evalInt(expr: String): Int? = evalDouble(expr)?.toInt()
+
+        // Scroll positions and viewport size (resilient)
+        val scrollX = evalDouble("window.scrollX || window.pageXOffset || 0") ?: 0.0
+        val scrollY = evalDouble("window.scrollY || window.pageYOffset || 0") ?: 0.0
+        val viewportWidth = (evalDouble("window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth || 0") ?: 0.0).toInt()
+        val viewportHeight = (evalDouble("window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight || 0") ?: 0.0).toInt()
+
+        // Screen dimensions
+        val screenWidth = evalInt("(window.screen && window.screen.width) || 0") ?: 0
+        val screenHeight = evalInt("(window.screen && window.screen.height) || 0") ?: 0
+
+        // Compute max vertical scroll and ratio
+        val totalHeight = evalDouble("(document.scrollingElement || document.documentElement || document.body).scrollHeight")
+            ?: viewportHeight.toDouble()
+        val clientHeight = evalDouble("(document.scrollingElement || document.documentElement || document.body).clientHeight")
+            ?: viewportHeight.toDouble()
+        val maxScrollY = (totalHeight - clientHeight).let { if (it.isFinite() && it > 0) it else 0.0 }
+        val scrollYRatio = if (maxScrollY > 0) (scrollY / maxScrollY).coerceIn(0.0, 1.0) else 0.0
+
+        val scrollState = ScrollState(
+            x = scrollX,
+            y = scrollY,
+            viewport = Dimension(viewportWidth, viewportHeight),
+            scrollYRatio = scrollYRatio
+        )
+
+        // Client info from browser (fallback to system defaults)
+        val tzId = runCatching {
+            devTools.runtime.evaluate("Intl.DateTimeFormat().resolvedOptions().timeZone")?.result?.value?.toString()
+        }.getOrNull()?.takeIf { it.isNotBlank() }
+        val timeZone = runCatching { if (tzId != null) TimeZone.getTimeZone(tzId) else TimeZone.getDefault() }
+            .getOrDefault(TimeZone.getDefault())
+
+        val langTag = runCatching {
+            devTools.runtime.evaluate("navigator.language || (navigator.languages && navigator.languages[0]) || ''")?.result?.value?.toString()
+        }.getOrNull()?.takeIf { it.isNotBlank() }
+        val locale = runCatching { if (langTag != null) Locale.forLanguageTag(langTag) else Locale.getDefault() }
+            .getOrDefault(Locale.getDefault())
+
+        // Additional client fields
+        val userAgent = runCatching {
+            devTools.runtime.evaluate("navigator.userAgent")?.result?.value?.toString()
+        }.getOrNull()
+        val devicePixelRatio = runCatching { getDevicePixelRatio() }.getOrDefault(1.0)
+
+        val clientInfo = ClientInfo(
+            timeZone = timeZone,
+            locale = locale,
+            userAgent = userAgent,
+            devicePixelRatio = devicePixelRatio,
+            viewportWidth = viewportWidth,
+            viewportHeight = viewportHeight,
+            screenWidth = screenWidth,
+            screenHeight = screenHeight
+        )
+
         val basicState = BrowserBasicState(
-            url,
-            "",
-            "",
-            clientInfo,
-            mockScrollState
+            url = url,
+            goBackUrl = goBackUrl,
+            goForwardUrl = goForwardUrl,
+            clientInfo = clientInfo,
+            scrollState = scrollState
         )
 
         return BrowserState(basicState, domState)
     }
 
-    override suspend fun getBrowserState(snapshotOptions: SnapshotOptions): BrowserState {
-        val allTrees = getMultiDOMTrees(options = snapshotOptions)
-        if (logger.isDebugEnabled) {
-            logger.debug("allTrees summary: \n{}", DomDebug.summarize(allTrees))
-        }
+    override suspend fun computeFullClientInfo(): FullClientInfo {
+        // Helpers
+        fun evalString(expr: String): String? = try {
+            devTools.runtime.evaluate(expr)?.result?.value?.toString()
+        } catch (_: Exception) { null }
+        fun evalDouble(expr: String): Double? = try {
+            val res = devTools.runtime.evaluate(expr)?.result
+            res?.value?.toString()?.toDoubleOrNull() ?: res?.unserializableValue?.toDoubleOrNull()
+        } catch (_: Exception) { null }
+        fun evalInt(expr: String): Int? = evalDouble(expr)?.toInt()
+        fun evalBoolean(expr: String): Boolean? = try {
+            val v = devTools.runtime.evaluate(expr)?.result?.value
+            when (v) {
+                is Boolean -> v
+                is String -> v.equals("true", true)
+                is Number -> v.toInt() != 0
+                else -> null
+            }
+        } catch (_: Exception) { null }
 
-        val tinyTree = buildTinyTree(allTrees)
-        if (logger.isDebugEnabled) {
-            logger.debug("tinyTree summary: \n{}", DomDebug.summarize(tinyTree))
-        }
+        val tzId = evalString("Intl.DateTimeFormat().resolvedOptions().timeZone")
+        val timeZone = runCatching { if (!tzId.isNullOrBlank()) TimeZone.getTimeZone(tzId) else TimeZone.getDefault() }
+            .getOrDefault(TimeZone.getDefault())
 
-        val domState = buildDOMState(tinyTree)
-        if (logger.isDebugEnabled) {
-            logger.debug("browserState summary: \n{}", DomDebug.summarize(domState))
-            logger.debug("browserState.json: \nlength: {}\n{}", domState.json.length, domState.json)
-        }
+        val langTag = evalString("navigator.language || (navigator.languages && navigator.languages[0]) || ''")
+        val locale = runCatching { if (!langTag.isNullOrBlank()) Locale.forLanguageTag(langTag) else Locale.getDefault() }
+            .getOrDefault(Locale.getDefault())
 
-        val browserState = buildBrowserState(domState)
+        val userAgent = evalString("navigator.userAgent")
+        val devicePixelRatio = runCatching { getDevicePixelRatio() }.getOrDefault(1.0)
+        val viewportWidth = evalInt("window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth || 0")
+        val viewportHeight = evalInt("window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight || 0")
+        val screenWidth = evalInt("(window.screen && window.screen.width) || 0")
+        val screenHeight = evalInt("(window.screen && window.screen.height) || 0")
+        val colorDepth = evalInt("(window.screen && (screen.colorDepth || screen.pixelDepth)) || 0")
+        val hardwareConcurrency = evalInt("navigator.hardwareConcurrency || 0")
+        val deviceMemoryGB = evalDouble("navigator.deviceMemory || 0")
+        val onLine = evalBoolean("navigator.onLine")
+        val networkEffectiveType = evalString("(navigator.connection && navigator.connection.effectiveType) || ''")
+        val saveData = evalBoolean("(navigator.connection && navigator.connection.saveData) || false")
+        val prefersDarkMode = evalBoolean("(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) || false")
+        val prefersReducedMotion = evalBoolean("(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || false")
+        val isSecureContext = evalBoolean("isSecureContext")
+        val crossOriginIsolated = evalBoolean("crossOriginIsolated")
+        val doNotTrack = evalString("navigator.doNotTrack || ''")
+        val webdriver = evalBoolean("navigator.webdriver || false")
+        val historyLength = evalInt("history.length || 0")
+        val visibilityState = evalString("document.visibilityState || ''")
 
-        return browserState
+        return FullClientInfo(
+            timeZone = timeZone,
+            locale = locale,
+            userAgent = userAgent,
+            devicePixelRatio = devicePixelRatio,
+            viewportWidth = viewportWidth,
+            viewportHeight = viewportHeight,
+            screenWidth = screenWidth,
+            screenHeight = screenHeight,
+            colorDepth = colorDepth,
+            hardwareConcurrency = hardwareConcurrency,
+            deviceMemoryGB = deviceMemoryGB,
+            onLine = onLine,
+            networkEffectiveType = networkEffectiveType,
+            saveData = saveData,
+            prefersDarkMode = prefersDarkMode,
+            prefersReducedMotion = prefersReducedMotion,
+            isSecureContext = isSecureContext,
+            crossOriginIsolated = crossOriginIsolated,
+            doNotTrack = doNotTrack,
+            webdriver = webdriver,
+            historyLength = historyLength,
+            visibilityState = visibilityState,
+        )
     }
 
     override fun findElement(ref: ElementRefCriteria): DOMTreeNodeEx? {
@@ -633,6 +760,26 @@ class ChromeCdpDomService(
         // Lower stacking context values mean higher z-index
         val stackingFactor = (stackingContext ?: 0) * 1000
         return paintOrder + stackingFactor
+    }
+
+    override suspend fun getBrowserState(snapshotOptions: SnapshotOptions): BrowserState {
+        val allTrees = getMultiDOMTrees(options = snapshotOptions)
+        if (logger.isDebugEnabled) {
+            logger.debug("allTrees summary: \n{}", DomDebug.summarize(allTrees))
+        }
+
+        val tinyTree = buildTinyTree(allTrees)
+        if (logger.isDebugEnabled) {
+            logger.debug("tinyTree summary: \n{}", DomDebug.summarize(tinyTree))
+        }
+
+        val domState = buildDOMState(tinyTree)
+        if (logger.isDebugEnabled) {
+            logger.debug("browserState summary: \n{}", DomDebug.summarize(domState))
+            logger.debug("browserState.json: \nlength: {}\n{}", domState.json.length, domState.json)
+        }
+
+        return buildBrowserState(domState)
     }
 }
 

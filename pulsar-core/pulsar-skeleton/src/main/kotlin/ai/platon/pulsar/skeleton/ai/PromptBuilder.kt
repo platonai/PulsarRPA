@@ -1,9 +1,9 @@
 package ai.platon.pulsar.skeleton.ai
 
+import ai.platon.pulsar.browser.driver.chrome.dom.PulsarDOMSerializer
 import ai.platon.pulsar.skeleton.ai.agent.ExtractParams
 import ai.platon.pulsar.skeleton.ai.agent.ObserveParams
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import org.codehaus.jackson.map.ObjectMapper
 import java.util.*
 
 class PromptBuilder(val locale: Locale = Locale.CHINESE) {
@@ -216,9 +216,7 @@ chunksTotal: $chunksTotal
     }
 
     // observe
-    fun buildObserveSystemPrompt(
-        userProvidedInstructions: String? = null
-    ): ChatMessage {
+    fun buildObserveSystemPrompt(userProvidedInstructions: String? = null): ChatMessage {
         fun observeSystemPromptCN() = """
 你正在通过根据用户希望观察的页面内容来查找元素，帮助用户实现浏览器操作自动化。
 你将获得：
@@ -263,7 +261,7 @@ Return an array of elements that match the instruction if they exist, otherwise 
     }
 
     fun buildObserveUserMessage(instruction: String, params: ObserveParams): ChatMessage {
-        val browserStateJson = ObjectMapper().writeValueAsString(params.browserState.basicState)
+        val browserStateJson = PulsarDOMSerializer.mapper.writeValueAsString(params.browserState.basicState)
 
         val schemaHint = buildObserveSchemaHint(params, schemaHint = true)
         fun contentCN() = """

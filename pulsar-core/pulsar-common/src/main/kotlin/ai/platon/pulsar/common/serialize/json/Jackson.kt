@@ -1,11 +1,12 @@
 package ai.platon.pulsar.common.serialize.json
 
+import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import java.math.RoundingMode
+import java.text.DecimalFormat
 
 /**
  * jacksonObjectMapper with support:
@@ -29,3 +30,17 @@ fun pulsarObjectMapper(): ObjectMapper = jacksonObjectMapper()
  * */
 fun prettyPulsarObjectMapper(): ObjectMapper = pulsarObjectMapper()
     .configure(SerializationFeature.INDENT_OUTPUT, true)
+
+class Double2Serializer : JsonSerializer<Double>() {
+    private val df = DecimalFormat("#.##").apply {
+        roundingMode = RoundingMode.HALF_UP
+    }
+
+    override fun serialize(value: Double?, gen: JsonGenerator, serializers: SerializerProvider) {
+        if (value == null) {
+            gen.writeNull()
+        } else {
+            gen.writeNumber(df.format(value).toDouble())
+        }
+    }
+}
