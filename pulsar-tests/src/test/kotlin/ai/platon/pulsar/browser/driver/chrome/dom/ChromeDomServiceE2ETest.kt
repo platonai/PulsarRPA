@@ -73,7 +73,7 @@ class ChromeDomServiceE2ETest : WebDriverTestBase() {
 
         val enhancedRoot = service.buildEnhancedDomTree(trees)
         val simplified = service.buildTinyTree(enhancedRoot)
-        val llm = service.serialize(simplified)
+        val llm = service.buildDOMState(simplified)
 
         assertTrue { enhancedRoot.children.isNotEmpty() }
         kotlin.test.assertTrue { simplified.children.isNotEmpty() }

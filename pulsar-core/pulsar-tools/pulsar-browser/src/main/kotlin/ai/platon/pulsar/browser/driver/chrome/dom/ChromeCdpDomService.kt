@@ -259,7 +259,7 @@ class ChromeCdpDomService(
         return simplify(root)
     }
 
-    override fun serialize(root: TinyNode, includeAttributes: List<String>): DOMState {
+    override fun buildDOMState(root: TinyNode, includeAttributes: List<String>): DOMState {
         // Use enhanced serialization with default options
         val options = DomSerializer.SerializationOptions(
             enablePaintOrderPruning = true,
@@ -267,6 +267,10 @@ class ChromeCdpDomService(
             enableAttributeCasingAlignment = true
         )
         return DomSerializer.serialize(root, includeAttributes, options)
+    }
+
+    override fun buildBrowserState(domState: DOMState): BrowserState {
+        TODO("implement this")
     }
 
     override fun findElement(ref: ElementRefCriteria): DOMTreeNodeEx? {

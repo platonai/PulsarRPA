@@ -38,5 +38,7 @@ interface DomService {
     /**
      * Serialize SimplifiedNode tree for LLM consumption.
      */
-    fun serialize(root: TinyTree, includeAttributes: List<String> = emptyList()): DOMState
+    fun buildDOMState(root: TinyTree, includeAttributes: List<String> = emptyList()): DOMState
+
+    fun buildBrowserState(domState: DOMState): BrowserState
 }

@@ -253,7 +253,7 @@ class BrowserPerceptiveAgent(
             logger.debug("tinyTree summary: \n{}", DomDebug.summarize(tinyTree))
         }
 
-        val domState = domService.serialize(tinyTree)
+        val domState = domService.buildDOMState(tinyTree)
         if (logger.isDebugEnabled) {
             logger.debug("domState summary: \n{}", DomDebug.summarize(domState))
             logger.debug("domState.json: \nlength: {}\n{}", domState.json.length, domState.json)

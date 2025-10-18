@@ -45,7 +45,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         println(DomDebug.summarize(simplified))
         assertTrue(simplified.children.isNotEmpty())
 
-        val llm = service.serialize(simplified)
+        val llm = service.buildDOMState(simplified)
         assertTrue(llm.json.length > 100)
         assertTrue(llm.selectorMap.isNotEmpty())
 
