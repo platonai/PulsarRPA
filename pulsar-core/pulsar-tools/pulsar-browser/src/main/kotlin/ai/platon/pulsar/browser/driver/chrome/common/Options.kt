@@ -7,7 +7,7 @@ import java.time.Duration
  * The launch config
  * */
 class LauncherOptions(
-    val browserSettings: BrowserSettings = BrowserSettings(),
+    val settings: BrowserSettings = BrowserSettings(),
     var supervisorProcess: String? = null,
     val supervisorProcessArgs: MutableList<String> = mutableListOf()
 ) {
@@ -39,9 +39,6 @@ annotation class ChromeParameter(val value: String)
  * @property proxyServer The proxy server to use for the connection.
  * */
 class ChromeOptions(
-    // user data dir is set as a constructor parameter of ChromeLauncher
-//        @ChromeParameter("user-data-dir")
-//        var userDataDir: Path = AppPaths.CHROME_TMP_DIR,
     /**
      * The proxy server to use for the connection.
      *

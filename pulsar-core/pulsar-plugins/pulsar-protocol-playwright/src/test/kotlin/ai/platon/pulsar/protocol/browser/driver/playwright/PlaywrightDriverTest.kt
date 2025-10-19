@@ -37,7 +37,7 @@ class PlaywrightDriverTest {
 
         assertEquals("PLAYWRIGHT_CHROME", browserId.browserType.name)
 
-        launcherOptions.browserSettings.confuser.reset()
+        launcherOptions.settings.confuser.reset()
         browser = PlaywrightBrowserLauncher().launch(browserId, launcherOptions, chromeOptions)
         driver = browser.newDriver()
     }
