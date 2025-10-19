@@ -1,5 +1,6 @@
 package ai.platon.pulsar.rest.api.controller
 
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.AppPaths
 import java.nio.file.Path
 import java.time.OffsetDateTime
@@ -37,9 +38,10 @@ object TestResourceHelper {
             }
         }
 
-        println("Generated test files, size: ${testPaths.size}")
+        logPrintln("Generated test files, size: ${testPaths.size}")
 
         return testPaths
     }
 
 }
+

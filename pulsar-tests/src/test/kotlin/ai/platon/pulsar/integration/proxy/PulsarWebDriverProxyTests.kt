@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.proxy.impl.ProxyHubLoader
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -41,7 +42,7 @@ class PulsarWebDriverProxyTests : WebDriverTestBase() {
         System.setProperty(ProxyHubLoader.Companion.PROXY_HUB_URL, proxyHubUrl)
 
         proxyLoader.loadProxies().toCollection(proxies)
-        println(proxies)
+        logPrintln(proxies)
 
         Assumptions.assumeTrue(proxies.isNotEmpty())
         browserId.setProxy(proxies.random())
@@ -49,7 +50,7 @@ class PulsarWebDriverProxyTests : WebDriverTestBase() {
 
     @AfterTest
     fun tearDown() {
-        runCatching { FileUtils.deleteDirectory(browserId.userDataDir.toFile()) }.onFailure { println(it.brief()) }
+        runCatching { FileUtils.deleteDirectory(browserId.userDataDir.toFile()) }.onFailure { logPrintln(it.brief()) }
     }
 
     @Test
@@ -105,3 +106,4 @@ class PulsarWebDriverProxyTests : WebDriverTestBase() {
         }
     }
 }
+

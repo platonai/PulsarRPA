@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.urls.URLUtils
 import java.net.Proxy
 import java.net.URL
@@ -10,15 +11,15 @@ import kotlin.test.*
  * Created by vincent on 17-1-14.
  */
 class TestProxyEntry {
-    
+
     @Test
     fun testProxySchema() {
         val proxy = ProxyEntry("127.0.0.1", 10808, "abc", "abc", Proxy.Type.SOCKS)
-        // println(proxy.toURI())
+        // logPrintln(proxy.toURI())
         assertEquals("socks", proxy.protocol)
         assertEquals("socks://abc:abc@127.0.0.1:10808", proxy.toURI().toString())
     }
-    
+
     @Test
     fun testTestUrls() {
         ResourceLoader
@@ -27,13 +28,13 @@ class TestProxyEntry {
         assertTrue(ProxyEntry.TEST_URLS.isNotEmpty())
         assertTrue(URL("http://www.dongqiudi.com") in ProxyEntry.TEST_URLS)
     }
-    
+
     @Test
     fun testParseProxyEntry1() {
         val proxy = ProxyEntry.parse("43.157.119.224:21697")
-        println(proxy)
+        logPrintln(proxy)
     }
-    
+
     @Test
     fun testParseProxyEntry2() {
         val proxies = arrayOf(
@@ -65,3 +66,4 @@ class TestProxyEntry {
         }
     }
 }
+

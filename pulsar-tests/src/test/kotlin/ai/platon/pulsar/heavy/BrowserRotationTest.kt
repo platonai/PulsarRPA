@@ -8,6 +8,7 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.crawl.CrawlLoop
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import kotlinx.coroutines.delay
 import org.junit.jupiter.api.AfterEach
@@ -106,7 +107,7 @@ class BrowserRotationTest : MassiveTestBase() {
             val readableState = browser.readableState
             val display = browser.id.display
             if (size >= 30) {
-                println("Closing browser #$display, served $size pages | $readableState | ${browser.id.contextDir}")
+                logPrintln("Closing browser #$display, served $size pages | $readableState | ${browser.id.contextDir}")
                 browser.close()
             }
         }
@@ -114,3 +115,4 @@ class BrowserRotationTest : MassiveTestBase() {
         return link
     }
 }
+

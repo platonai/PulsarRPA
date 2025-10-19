@@ -4,6 +4,7 @@ import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.js.JsUtils
 import ai.platon.pulsar.common.sleepSeconds
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import org.apache.commons.lang3.StringUtils
 import kotlin.test.*
@@ -35,7 +36,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     suspend fun evaluateExpressions(driver: WebDriver, type: String) {
         expressions.forEach { expression ->
             val detail = driver.evaluateDetail(expression)
-            println(String.format("%-6s%-40s%s", type, expression, detail))
+            logPrintln(String.format("%-6s%-40s%s", type, expression, detail))
         }
     }
 
@@ -52,7 +53,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         val code = """__pulsar_utils__.getConfig()"""
 
         val result = driver.evaluateDetail(code)
-        println(result)
+        logPrintln(result)
         assertNotNull(result)
         assertNull(result.value)
         assertNull(result.exception)
@@ -61,14 +62,14 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         // assertEquals(2, result)
 
         val result2 = driver.evaluateValueDetail(code)
-        println(result2)
+        logPrintln(result2)
         assertNotNull(result2)
         assertNull(result2.exception)
         assertNull(result2.className)
         assertNull(result2.description)
         val value2 = result2.value
         assertNotNull(value2)
-        // println(value2::class.qualifiedName)
+        // logPrintln(value2::class.qualifiedName)
         assertEquals("java.util.LinkedHashMap", value2::class.qualifiedName)
         assertTrue { value2 is Map<*, *> }
         value2 as Map<*, *>
@@ -76,7 +77,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
 
         val propertyNames = value2["propertyNames"]
         assertNotNull(propertyNames)
-        // println(propertyNames::class.qualifiedName)
+        // logPrintln(propertyNames::class.qualifiedName)
         assertEquals("java.util.ArrayList", propertyNames::class.qualifiedName)
         assertTrue { propertyNames is List<*> }
     }
@@ -112,7 +113,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         // so it's an empty expressions sent to the browser
 
         val result2 = driver.evaluateValueDetail(JsUtils.toIIFE(code2))
-        println(result2)
+        logPrintln(result2)
         assertNotNull(result2)
         val exception = result2.exception
         assertNull(exception)
@@ -140,7 +141,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         driver.fill(selector, text)
 
         val detail = driver.evaluateDetail("document.querySelector('$selector')")
-        println(detail)
+        logPrintln(detail)
 
         val inputValue = driver.selectFirstPropertyValueOrNull(selector, "value")
 
@@ -173,7 +174,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         val selector = "input"
 
         val propValues = driver.selectPropertyValueAll(selector, "tagName")
-        println(propValues)
+        logPrintln(propValues)
         assertEquals(listOf("INPUT", "INPUT", "INPUT"), propValues)
     }
 
@@ -196,7 +197,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         driver.setPropertyAll(selector, propName, text)
 
         val propValues = driver.selectPropertyValueAll(selector, propName)
-        println(propValues)
+        logPrintln(propValues)
         assertEquals(listOf(text, text, text), propValues)
     }
 
@@ -204,7 +205,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     fun `test deleteCookies`() = runEnhancedWebDriverTest("$assetsPBaseURL/cookie.html", browser) { driver ->
         var cookies = driver.getCookies()
 
-        println(cookies.toString())
+        logPrintln(cookies.toString())
 
         assertTrue(cookies.toString()) { cookies.isNotEmpty() }
         val cookie = cookies[0]
@@ -224,7 +225,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     fun `test clearBrowserCookies`() = runEnhancedWebDriverTest("$assetsPBaseURL/cookie.html", browser) { driver ->
         var cookies = driver.getCookies()
 
-        println(cookies.toString())
+        logPrintln(cookies.toString())
 
         assertTrue(cookies.toString()) { cookies.isNotEmpty() }
         val cookie = cookies[0]
@@ -243,7 +244,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     fun `test buildDomTree`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
         var buildDomTreeJs = ResourceLoader.readString("js/build_dom_tree.js")
         buildDomTreeJs = buildDomTreeJs.trimEnd { it.isWhitespace() || it == ';' }
-        // println(StringUtils.abbreviateMiddle(buildDomTreeJs, "...", 500))
+        // logPrintln(StringUtils.abbreviateMiddle(buildDomTreeJs, "...", 500))
 
         val expression = """
                 ($buildDomTreeJs)()
@@ -251,7 +252,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         val evaluation = driver.evaluateValueDetail(expression)
         assertNotNull(evaluation)
         evaluation.description = null
-        println(StringUtils.abbreviateMiddle(evaluation.toString(), "...", 500))
+        logPrintln(StringUtils.abbreviateMiddle(evaluation.toString(), "...", 500))
         val value = evaluation.value
         assertNotNull(value)
         value as Map<*, *>
@@ -261,7 +262,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         assertNotNull(map)
         map as Map<*, *>
         val node = map["0"]
-        println(node)
+        logPrintln(node)
         assertNotNull(node)
 
         sleepSeconds(10)
@@ -287,7 +288,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     fun `when open a CSV TXT page then script is not injected`() = runWebDriverTest(csvTextUrl) { driver ->
         expressions.forEach { expression ->
             val detail = driver.evaluateDetail(expression)
-            println(String.format("%-10s %-40s %s", "CSV TXT", expression, detail))
+            logPrintln(String.format("%-10s %-40s %s", "CSV TXT", expression, detail))
         }
 
         val nullExpressions = """
@@ -301,3 +302,4 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         }
     }
 }
+

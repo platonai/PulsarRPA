@@ -1,5 +1,6 @@
 package ai.platon.pulsar.ql.h2.udfs
 
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.ql.TestBase
 import kotlin.test.*
 import kotlin.test.assertTrue
@@ -34,7 +35,7 @@ from load_and_select('$productDetailUrl', ':root');
 
         val document = session.parse(page)
         document.select("#wayfinding-breadcrumbs_container ul li a").forEach {
-            println("href: " + it.attr("abs:href"))
+            logPrintln("href: " + it.attr("abs:href"))
         }
 
         val sql = """
@@ -49,3 +50,4 @@ from load_and_select('$url', ':root');
         assertTrue(rs.next())
     }
 }
+

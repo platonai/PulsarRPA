@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.math.geometric.str2
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.math.geometric.testAlignment
 import java.awt.Rectangle
 
@@ -28,10 +29,11 @@ class TestGeometrics {
 
         val b = r1.intersects(r2)
         require(!b)
-        println("intersects: $b")
+        logPrintln("intersects: $b")
 
         // so it should return a empty rectangle
         val r = r1.intersection(r2)
-        println(r.str2)
+        logPrintln(r.str2)
     }
 }
+

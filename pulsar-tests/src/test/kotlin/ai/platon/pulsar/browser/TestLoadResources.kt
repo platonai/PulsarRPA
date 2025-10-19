@@ -2,6 +2,7 @@ package ai.platon.pulsar.browser
 
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.urls.URLUtils
 import org.apache.commons.lang3.StringUtils
 import kotlin.test.*
@@ -38,7 +39,7 @@ class TestLoadResources: WebDriverTestBase() {
             val content = page.contentAsString.asSequence()
                 .filter { Strings.isCJK(it) }.take(100)
                 .joinToString("")
-            println("$i.\t" + page.contentLength + "\t" + content)
+            logPrintln("$i.\t" + page.contentLength + "\t" + content)
 
             assertTrue(resourceUrl) { page.fetchCount > 0 }
             assertTrue(resourceUrl) { page.protocolStatus.isSuccess }
@@ -60,14 +61,14 @@ class TestLoadResources: WebDriverTestBase() {
         assertNotNull(headers)
         assertNotNull(body)
 
-        // println(body)
+        // logPrintln(body)
 
         assertContains(body, "Disallow", ignoreCase = true,
             message = "Disallow should be in body: >>>\n${StringUtils.abbreviateMiddle(body, "...", 100)}\n<<<")
 
 //        val cookies = response.entries.joinToString("; ") { it.key + "=" + it.value }
-//        println(cookies)
-        // headers.forEach { (name, value) -> println("$name: $value") }
+//        logPrintln(cookies)
+        // headers.forEach { (name, value) -> logPrintln("$name: $value") }
         assertContains(headers.toString(), "Content-Type", ignoreCase = true,
             message = "Content-Type should be in headers: >>>\n$headers\n<<<")
     }
@@ -86,14 +87,15 @@ class TestLoadResources: WebDriverTestBase() {
         val body = response.body()
         assertNotNull(body)
 
-//        println(body)
+//        logPrintln(body)
         assertContains(body, "Disallow")
         // check cookies and headers
         val cookies = response.cookies().entries.joinToString("; ") { it.key + "=" + it.value }
-        println(cookies)
-        response.headers().forEach { (name, value) -> println("$name: $value") }
+        logPrintln(cookies)
+        response.headers().forEach { (name, value) -> logPrintln("$name: $value") }
 
         assertContains(headers.toString(), "Content-Type", ignoreCase = true,
             message = "Content-Type should be in headers: >>>\n$headers\n<<<")
     }
 }
+

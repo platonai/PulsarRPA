@@ -1,5 +1,6 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -29,7 +30,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
-        println("Generated actions: $actions")
+        logPrintln("Generated actions: $actions")
 
         // Should generate defensive checks before clicking
         val hasExistsCheck = actions.any { action ->
@@ -56,7 +57,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
-        println("Generated actions: $actions")
+        logPrintln("Generated actions: $actions")
 
         // Should include existence verification before filling
         val hasExistsCheck = actions.any { action ->
@@ -80,7 +81,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
-        println("Generated actions: $actions")
+        logPrintln("Generated actions: $actions")
 
         // Should include waiting, visibility check, and interaction
         val hasWaitAction = actions.any { action ->
@@ -108,7 +109,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
-        println("Generated actions: $actions")
+        logPrintln("Generated actions: $actions")
 
         // Should include navigation and waiting
         val hasNavigateAction = actions.any { action ->
@@ -131,7 +132,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
-        println("Generated actions: $actions")
+        logPrintln("Generated actions: $actions")
 
         // Should include click and navigation wait
         val hasClickAction = actions.any { action ->
@@ -157,7 +158,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
-        println("Generated actions: $actions")
+        logPrintln("Generated actions: $actions")
 
         // Should include back and forward navigation
         val hasGoBackAction = actions.any { action ->
@@ -183,7 +184,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
-        println("Generated actions: $actions")
+        logPrintln("Generated actions: $actions")
 
         // Should include existence check, visibility check, fill, and focus
         val hasExistsCheck = actions.any { action ->
@@ -213,7 +214,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
-        println("Generated actions: $actions")
+        logPrintln("Generated actions: $actions")
 
         // Should include navigation wait, existence check, click, and navigation wait
         val hasWaitForNavigationAction = actions.any { action ->
@@ -240,7 +241,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
-        println("Generated actions: $actions")
+        logPrintln("Generated actions: $actions")
 
         // Should include scroll, focus, and fill
         val hasScrollAction = actions.any { action ->
@@ -269,7 +270,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
-        println("Generated actions: $actions")
+        logPrintln("Generated actions: $actions")
 
         // Should include visibility checks and interaction
         val hasVisibilityCheck = actions.any { action ->
@@ -293,7 +294,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
-        println("Generated actions: $actions")
+        logPrintln("Generated actions: $actions")
 
         // Should include navigation check, existence check, and scroll
         val hasWaitForNavigationAction = actions.any { action ->
@@ -310,3 +311,4 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
             "Should generate navigation wait, exists check, and/or scroll actions")
     }
 }
+

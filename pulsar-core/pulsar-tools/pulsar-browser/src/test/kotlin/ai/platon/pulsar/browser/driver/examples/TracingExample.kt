@@ -28,7 +28,7 @@ class TracingExample: BrowserExampleBase() {
         tracing.onTracingComplete {
             // Dump tracing to file.
             val path = Paths.get("/tmp/tracing.json")
-            println("Tracing completed! Dumping to $path")
+            logPrintln("Tracing completed! Dumping to $path")
             dump(path, dataCollectedList)
             devTools.close()
         }

@@ -2,6 +2,7 @@ package ai.platon.pulsar.skeleton.crawl.common.options
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.common.options.PulsarOptions
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.skeleton.common.options.WeightedKeywordsConverter
 import com.beust.jcommander.DynamicParameter
 import com.beust.jcommander.JCommander
@@ -160,7 +161,7 @@ class TestJCommander {
         assertEquals(cmd2.instances.size.toLong(), 2)
         // Notice: the official document says: there are problems to strip "\""
         assertEquals("\"ul li > a[href~=item]\"", cmd2.instances[1])
-        // System.out.println(String.join(" | ", argv));
+        // System.out.logPrintln(String.join(" | ", argv));
     }
 
     @Test
@@ -179,3 +180,4 @@ class TestJCommander {
         assertEquals(answer["a"], question["a"])
     }
 }
+

@@ -12,47 +12,47 @@ import kotlin.test.*
  * Introduced in: MongoDB Java Driver 3.7 and later.
  * */
 class MongoClientNewTest : MongoTestBase() {
-    
+
     @Test
     fun testGetCollectionName() {
         // Use the database (for example, get a collection)
-        println("Connected to the database: " + database.name)
+        logPrintln("Connected to the database: " + database.name)
         assertNotNull(database)
         assertEquals(databaseName, database.name)
     }
-    
+
     @Test
     fun `when querying a document using cursor then it works`() {
         val document: Document = Document("name", "John Doe")
             .append("age", 30)
             .append("city", "New York")
-        
+
         collection.insertOne(document)
-        
+
         val cursor = collection.find().iterator()
-        
+
         cursor.use {
             while (it.hasNext()) {
                 val json = it.next().toJson()
-                println(json)
+                logPrintln(json)
                 assertTrue { json.contains("New York") }
             }
         }
     }
-    
+
     @Test
     fun `when inserting a document into MongoDB then it should be inserted successfully`() {
         val document: Document = Document("name", "John Doe")
             .append("age", 30)
             .append("city", "New York")
-        
+
         collection.insertOne(document)
-        println("Document inserted")
+        logPrintln("Document inserted")
     }
-    
+
     @Test
     fun `when deleting a document then it should be deleted successfully`() {
         collection.deleteOne(Filters.eq("name", "John Doe"))
-        println("Document deleted")
+        logPrintln("Document deleted")
     }
 }

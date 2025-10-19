@@ -1,5 +1,6 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -38,7 +39,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
                 "Should generate exactly one action for valid command"
             )
             val action = actionDescription.functionCalls.first()
-            println("Multiple buttons - Generated action: $action")
+            logPrintln("Multiple buttons - Generated action: $action")
             assertTrue(
                 action.contains("click") || action.contains("driver.click"),
                 "Should generate click action"
@@ -55,7 +56,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        println("Multiple links - Generated action: $action")
+        logPrintln("Multiple links - Generated action: $action")
         assertTrue(
             action.contains("click") || action.contains("driver.click"),
             "Should generate click action for link"
@@ -77,7 +78,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
                 "Should generate exactly one action for valid command"
             )
             val action = actionDescription.functionCalls.first()
-            println("Multiple inputs - Generated action: $action")
+            logPrintln("Multiple inputs - Generated action: $action")
             assertTrue(
                 action.contains("fill") || action.contains("driver.fill") ||
                         action.contains("type") || action.contains("driver.type"),
@@ -97,7 +98,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        println("Position-based selection - Generated action: $action")
+        logPrintln("Position-based selection - Generated action: $action")
         assertTrue(
             action.contains("click") || action.contains("driver.click"),
             "Should generate click action for positioned element"
@@ -114,7 +115,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        println("Context-based selection - Generated action: $action")
+        logPrintln("Context-based selection - Generated action: $action")
         assertTrue(
             action.contains("fill") || action.contains("driver.fill") ||
                     action.contains("type") || action.contains("driver.type"),
@@ -135,7 +136,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        println("data-testid selection - Generated action: $action")
+        logPrintln("data-testid selection - Generated action: $action")
         assertTrue(
             action.contains("click") || action.contains("driver.click"),
             "Should generate click action for data-testid element"
@@ -159,7 +160,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
                 "Should generate exactly one action for valid command"
             )
             val action = actionDescription.functionCalls.first()
-            println("ARIA label selection - Generated action: $action")
+            logPrintln("ARIA label selection - Generated action: $action")
             assertTrue(
                 action.contains("click") || action.contains("driver.click"),
                 "Should generate click action for ARIA labeled element"
@@ -178,7 +179,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        println("Placeholder-based selection - Generated action: $action")
+        logPrintln("Placeholder-based selection - Generated action: $action")
         assertTrue(
             action.contains("fill") || action.contains("driver.fill") ||
                     action.contains("type") || action.contains("driver.type"),
@@ -198,7 +199,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        println("Text-based button selection - Generated action: $action")
+        logPrintln("Text-based button selection - Generated action: $action")
         assertTrue(
             action.contains("click") || action.contains("driver.click"),
             "Should generate click action for text-based button selection"
@@ -215,7 +216,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        println("Link text selection - Generated action: $action")
+        logPrintln("Link text selection - Generated action: $action")
         assertTrue(
             action.contains("click") || action.contains("driver.click"),
             "Should generate click action for link text selection"
@@ -239,7 +240,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
                 "Should generate exactly one action for valid command"
             )
             val action = actionDescription.functionCalls.first()
-            println("Input type selection - Generated action: $action")
+            logPrintln("Input type selection - Generated action: $action")
             assertTrue(
                 action.contains("fill") || action.contains("driver.fill") ||
                         action.contains("type") || action.contains("driver.type"),
@@ -257,7 +258,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        println("Password field selection - Generated action: $action")
+        logPrintln("Password field selection - Generated action: $action")
         assertTrue(
             action.contains("fill") || action.contains("driver.fill") ||
                     action.contains("type") || action.contains("driver.type"),
@@ -277,7 +278,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        println("Class-based selection - Generated action: $action")
+        logPrintln("Class-based selection - Generated action: $action")
         assertTrue(
             action.contains("click") || action.contains("driver.click"),
             "Should generate click action for class-based selection"
@@ -301,7 +302,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
                 "Should generate exactly one action for valid command"
             )
             val action = actionDescription.functionCalls.first()
-            println("Section-based selection - Generated action: $action")
+            logPrintln("Section-based selection - Generated action: $action")
             assertTrue(
                 action.contains("click") || action.contains("driver.click"),
                 "Should generate click action for section-based selection"
@@ -318,8 +319,8 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("点击搜索按钮", driver)
 
         assertNotNull(actionDescription)
-        println("Selected element: ${actionDescription.selectedElement}")
-        println("Function calls: ${actionDescription.functionCalls}")
+        logPrintln("Selected element: ${actionDescription.selectedElement}")
+        logPrintln("Function calls: ${actionDescription.functionCalls}")
 
         // The selectedElement should be populated when an element is found
         // Note: It might be null if no suitable element is found, which is acceptable
@@ -340,10 +341,11 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        println("Most appropriate element selection - Generated action: $action")
+        logPrintln("Most appropriate element selection - Generated action: $action")
         assertTrue(
             action.contains("click") || action.contains("driver.click"),
             "Should generate click action for most appropriate element"
         )
     }
 }
+

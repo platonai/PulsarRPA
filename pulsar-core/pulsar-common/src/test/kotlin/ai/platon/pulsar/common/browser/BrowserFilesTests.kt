@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common.browser
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.sleepMillis
 import java.nio.file.Files
 import java.nio.file.Path
@@ -24,7 +25,7 @@ class BrowserFilesTests {
         Files.createDirectories(tempContextBaseDir)
         assertTrue { Files.exists(tempContextBaseDir) }
     }
-    
+
     @AfterTest
     fun tearDown() {
 //        FileUtils.deleteDirectory(groupBaseDir.toFile())
@@ -33,7 +34,7 @@ class BrowserFilesTests {
 //        FileUtils.deleteDirectory(tempGroupBaseDir.toFile())
 //        assertTrue { !Files.exists(tempGroupBaseDir) }
     }
-    
+
     @Test
     fun `when deleteTemporaryUserDataDirWithLock then userDataDir is deleted`() {
         val userDataDir = tempContextGroupDir.resolve("user_data_dir")
@@ -59,7 +60,7 @@ class BrowserFilesTests {
     @Test
     fun `when computeNextSequentialContextDir then next sequential context dir is created`() {
         val path = BrowserFiles.computeNextSequentialContextDir(group)
-        // println(path)
+        // logPrintln(path)
         assertTrue("directory should exists: $contextBaseDir") { Files.exists(contextBaseDir) }
         assertTrue("directory should exists: $path") { Files.exists(path) }
     }
@@ -79,7 +80,7 @@ class BrowserFilesTests {
             assertFalse { Files.exists(contextBaseDir.resolve("cx.$it")) }
         }
     }
-    
+
     private fun deleteTemporaryUserDataDirWithLock(userDataDir: Path) {
         // Arrange
         val expiry = Duration.ofSeconds(0)
@@ -95,9 +96,10 @@ class BrowserFilesTests {
         // The parent of a context dir is the group dir
         val group = contextDir.parent.fileName.toString()
         BrowserFiles.deleteTemporaryUserDataDirWithLock(group, userDataDir, expiry)
-        
+
         // Assert
         assertTrue { Files.exists(pidFile) } // PID file is not deleted
         assertFalse { Files.exists(userDataDir) } // user data dir is deleted
     }
 }
+

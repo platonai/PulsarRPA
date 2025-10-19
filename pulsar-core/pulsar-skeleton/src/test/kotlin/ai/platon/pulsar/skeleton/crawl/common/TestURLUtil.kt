@@ -10,6 +10,7 @@ import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.getDomainName
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.getDomainSuffix
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.getHostBatches
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.toASCII
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.toUNICODE
 import java.net.URL
 import kotlin.test.*
@@ -105,7 +106,7 @@ class TestURLUtil {
     fun testGetHostBatches() {
         var url = URL("http://subdomain.example.edu.tr")
         var batches = getHostBatches(url)
-        println(batches.joinToString())
+        logPrintln(batches.joinToString())
         assertEquals("subdomain", batches[0])
         assertEquals("example", batches[1])
         assertEquals("edu", batches[2])
@@ -223,3 +224,4 @@ class TestURLUtil {
         private val targets = arrayOf(arrayOf("g", "http://a/b/c/g"), arrayOf("./g", "http://a/b/c/g"), arrayOf("g/", "http://a/b/c/g/"), arrayOf("/g", "http://a/g"), arrayOf("//g", "http://g"), arrayOf("?y", "http://a/b/c/d;p?y"), arrayOf("g?y", "http://a/b/c/g?y"), arrayOf("#s", "http://a/b/c/d;p?q#s"), arrayOf("g#s", "http://a/b/c/g#s"), arrayOf("g?y#s", "http://a/b/c/g?y#s"), arrayOf(";x", "http://a/b/c/;x"), arrayOf("g;x", "http://a/b/c/g;x"), arrayOf("g;x?y#s", "http://a/b/c/g;x?y#s"), arrayOf("", "http://a/b/c/d;p?q"), arrayOf(".", "http://a/b/c/"), arrayOf("./", "http://a/b/c/"), arrayOf("..", "http://a/b/"), arrayOf("../", "http://a/b/"), arrayOf("../g", "http://a/b/g"), arrayOf("src", "http://a/"), arrayOf("../../", "http://a/"), arrayOf("../../g", "http://a/g"))
     }
 }
+

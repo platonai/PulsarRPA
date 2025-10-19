@@ -10,7 +10,7 @@ import kotlin.test.*
 class TestRuntimes {
     @Test
     fun testEnv() {
-        println(System.getenv("USER"))
+        logPrintln(System.getenv("USER"))
     }
 
     @Test
@@ -30,10 +30,10 @@ class TestRuntimes {
     @Test
     fun testDeleteBrokenSymbolicLinksUsingBash() {
         if (SystemUtils.IS_OS_WINDOWS) {
-            System.err.println("Files.createSymbolicLink failed on Windows")
+            System.err.logPrintln("Files.createSymbolicLink failed on Windows")
             return
         }
-        
+
         val tmp = AppPaths.getTmp("test")
         val file = tmp.resolve(RandomStringUtils.randomAlphabetic(5))
         Files.createDirectories(file.parent)
@@ -85,10 +85,10 @@ class TestRuntimes {
     fun testUnallocatedDiskSpaces() {
         FileSystems.getDefault().fileStores.forEach {
             try {
-                println(String.format("%-30s%-10s%-20s%s", it.name(), it.type(),
+                logPrintln(String.format("%-30s%-10s%-20s%s", it.name(), it.type(),
                     Strings.compactFormat(it.unallocatedSpace), Strings.compactFormat(it.totalSpace)))
             } catch (e: Exception) {
-                println(e.message)
+                logPrintln(e.message)
             }
         }
 

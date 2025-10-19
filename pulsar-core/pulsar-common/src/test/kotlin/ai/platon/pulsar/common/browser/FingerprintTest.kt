@@ -2,6 +2,7 @@ package ai.platon.pulsar.common.browser
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.proxy.ProxyEntry
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -124,7 +125,7 @@ class FingerprintTest {
         f2 = Fingerprint(BrowserType.PULSAR_CHROME, "127.0.0.2")
         assertTrue { f1 < f2 }
 
-        // println("Compare with username ...")
+        // logPrintln("Compare with username ...")
         f1 = Fingerprint(BrowserType.PULSAR_CHROME, "127.0.0.1", "sa")
         f2 = Fingerprint(BrowserType.PULSAR_CHROME, "127.0.0.1", "sb")
         assertTrue { f1 < f2 }
@@ -186,3 +187,4 @@ class FingerprintTest {
         }
     }
 }
+

@@ -15,6 +15,6 @@ class WebDriver2JsonProtocolTests: TTATestBase() {
 
         val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
-        println(response.content)
+        logPrintln(response.content)
     }
 }

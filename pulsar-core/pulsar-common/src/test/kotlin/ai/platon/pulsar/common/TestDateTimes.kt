@@ -3,6 +3,7 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.DateTimes.format
 import ai.platon.pulsar.common.DateTimes.now
 import ai.platon.pulsar.common.DateTimes.parseDuration
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import org.apache.commons.lang3.math.NumberUtils
 import org.apache.commons.lang3.time.DateFormatUtils
@@ -57,28 +58,28 @@ class TestDateTimes {
         time = time.plus(1, ChronoUnit.DAYS)
         // Convert back to instant, again, no time zone offset.
         val output = time.atZone(ZoneOffset.ofHours(0)).toInstant()
-        println(output)
+        logPrintln(output)
         val ldt = LocalDateTime.ofInstant(Instant.now().truncatedTo(ChronoUnit.MINUTES), zoneId)
-        println(ldt)
+        logPrintln(ldt)
         val middleNight = LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
-        println("middle night local date time : $middleNight")
-        println("middle night instance : " + Instant.now().truncatedTo(ChronoUnit.DAYS))
-        println("duration : " + Duration.between(LocalDateTime.now(), middleNight.plus(1, ChronoUnit.DAYS)))
+        logPrintln("middle night local date time : $middleNight")
+        logPrintln("middle night instance : " + Instant.now().truncatedTo(ChronoUnit.DAYS))
+        logPrintln("duration : " + Duration.between(LocalDateTime.now(), middleNight.plus(1, ChronoUnit.DAYS)))
     }
 
     @Test
     fun testEpoch() {
         val now = Instant.now()
-        println(now.epochSecond)
-        println(now.epochSecond / 60)
+        logPrintln(now.epochSecond)
+        logPrintln(now.epochSecond / 60)
         assertTrue { now.epochSecond < Int.MAX_VALUE }
     }
 
     @Test
     fun testDoomsday() {
         val doomsday = DateTimes.doomsday
-        println(doomsday.epochSecond)
-        println(doomsday.epochSecond / 60)
+        logPrintln(doomsday.epochSecond)
+        logPrintln(doomsday.epochSecond / 60)
         assertTrue { doomsday.epochSecond > Int.MAX_VALUE }
         assertTrue { doomsday.epochSecond < Long.MAX_VALUE }
         assertTrue { doomsday.toEpochMilli() < Long.MAX_VALUE }
@@ -86,13 +87,13 @@ class TestDateTimes {
 
     @Test
     fun testChronoFields() {
-        // println(instant.getLong(ChronoField.MILLI_OF_SECOND))
+        // logPrintln(instant.getLong(ChronoField.MILLI_OF_SECOND))
         assertEquals(520, instant.getLong(ChronoField.MILLI_OF_SECOND))
 
-        // println(date.getLong(ChronoField.ALIGNED_DAY_OF_WEEK_IN_MONTH))
+        // logPrintln(date.getLong(ChronoField.ALIGNED_DAY_OF_WEEK_IN_MONTH))
         assertEquals(7, date.getLong(ChronoField.ALIGNED_DAY_OF_WEEK_IN_MONTH))
 
-        // println(dateTime.getLong(ChronoField.MINUTE_OF_DAY))
+        // logPrintln(dateTime.getLong(ChronoField.MINUTE_OF_DAY))
         assertEquals(30, dateTime.getLong(ChronoField.MINUTE_OF_DAY))
     }
 
@@ -100,20 +101,20 @@ class TestDateTimes {
     fun testDateTimeFormatter() {
         var time = LocalDateTime.ofInstant(Instant.EPOCH, ZoneOffset.ofHours(0))
         var formatted = DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(time)
-        println(formatted)
+        logPrintln(formatted)
         time = LocalDateTime.ofInstant(Instant.EPOCH, ZoneOffset.ofHours(0))
         formatted = DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(time)
-        println(formatted)
-        println(format(0))
+        logPrintln(formatted)
+        logPrintln(format(0))
         formatted = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
             .withZone(ZoneId.systemDefault())
             .format(Instant.now())
-        println(formatted)
-        println(format(Instant.now(), "yyyy-MM-dd HH:mm:ss"))
-        println(now("yyyy/MM/dd"))
+        logPrintln(formatted)
+        logPrintln(format(Instant.now(), "yyyy-MM-dd HH:mm:ss"))
+        logPrintln(now("yyyy/MM/dd"))
         val t = NumberUtils.toInt(format(Instant.now(), "yyyyMMddHH"), 0)
         assertTrue(t > 0)
-        println(t)
+        logPrintln(t)
     }
 
     @Test
@@ -155,7 +156,7 @@ class TestDateTimes {
     fun testTimeZone() {
         val defaultZoneId = ZoneId.systemDefault()
         if (defaultZoneId.id != "Asia/Shanghai") {
-            println("Only test time zone when the system time zone is Asia/Shanghai")
+            logPrintln("Only test time zone when the system time zone is Asia/Shanghai")
             return
         }
 
@@ -165,80 +166,80 @@ class TestDateTimes {
         assertEquals("Asia/Shanghai", tz.id)
         assertFalse(tz.useDaylightTime())
 
-        // println(tz)
+        // logPrintln(tz)
         val offset = tz.rawOffset
         assertEquals(28800000, offset)
 
-        // println(offset)
-//        println(TimeZone.getDefault().id)
-//        println(ZoneId.systemDefault().id)
+        // logPrintln(offset)
+//        logPrintln(TimeZone.getDefault().id)
+//        logPrintln(ZoneId.systemDefault().id)
 
         val zoneId = DateTimes.zoneId
         assertEquals("Asia/Shanghai", tz.id)
         assertEquals(ZoneOffset.of("+08:00"), DateTimes.zoneOffset)
-        // println(DateTimes.zoneOffset)
+        // logPrintln(DateTimes.zoneOffset)
     }
 
     @Test
     fun testDuration() {
         val epoch = Instant.EPOCH
         val gap = Duration.between(epoch, instant)
-        // println(gap.toDays())
+        // logPrintln(gap.toDays())
         assertEquals(18738, gap.toDays())
-        // println(gap)
+        // logPrintln(gap)
         assertEquals("PT449712H30M59.52S", gap.toString())
         val days = ChronoUnit.DAYS.between(epoch, instant)
-//        println(days)
+//        logPrintln(days)
         assertEquals(18738, days)
-        println(Duration.ofDays(365 * 100.toLong()).seconds)
-        println(Duration.ofMinutes(60).toMillis())
-        println(
+        logPrintln(Duration.ofDays(365 * 100.toLong()).seconds)
+        logPrintln(Duration.ofMinutes(60).toMillis())
+        logPrintln(
             DurationFormatUtils.formatDuration(
                 gap.toMillis(),
                 "d\' days \'H\' hours \'m\' minutes \'s\' seconds\'"
             )
         )
-        println(DurationFormatUtils.formatDuration(gap.toMillis(), "d\'days\' H:mm:ss"))
+        logPrintln(DurationFormatUtils.formatDuration(gap.toMillis(), "d\'days\' H:mm:ss"))
         val durationToMidnight = Duration.between(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS), LocalDateTime.now())
-        println(durationToMidnight.plusDays(1))
+        logPrintln(durationToMidnight.plusDays(1))
         assertEquals(Duration.ofSeconds(1), parseDuration("PT1S", Duration.ZERO))
     }
 
     @Test
     fun testTemporalDefaultRange() {
         val p = Period.ofDays(30)
-        println(p)
+        logPrintln(p)
 
         var r = date.range(ChronoField.DAY_OF_MONTH)
-        println("DAY_OF_MONTH: $r")
+        logPrintln("DAY_OF_MONTH: $r")
 
         r = date.range(ChronoField.DAY_OF_WEEK)
-        println("DAY_OF_WEEK: $r")
+        logPrintln("DAY_OF_WEEK: $r")
 
         r = date.range(ChronoField.YEAR)
-        println("YEAR: $r")
+        logPrintln("YEAR: $r")
 
         r = date.range(ChronoField.DAY_OF_YEAR)
-        println("DAY_OF_YEAR: $r")
+        logPrintln("DAY_OF_YEAR: $r")
 
         r = date.range(ChronoField.YEAR_OF_ERA)
-        println("YEAR_OF_ERA: $r")
+        logPrintln("YEAR_OF_ERA: $r")
 
         r = date.range(ChronoField.EPOCH_DAY)
-        println("EPOCH_DAY: $r")
+        logPrintln("EPOCH_DAY: $r")
 
         r = date.range(ChronoField.PROLEPTIC_MONTH)
-        println("PROLEPTIC_MONTH: $r")
+        logPrintln("PROLEPTIC_MONTH: $r")
 
         r = date.range(ChronoField.ERA)
-        println("ERA: $r")
+        logPrintln("ERA: $r")
     }
 
     @Test
     fun testTemporalRange() {
         // kotlin general range
         val range = dateTime.rangeTo(dateTime + Duration.ofSeconds(3600))
-        println(range)
+        logPrintln(range)
         assertTrue { dateTime in range }
     }
 
@@ -248,18 +249,18 @@ class TestDateTimes {
 
         val date = Date()
         dateString = DateFormatUtils.format(date, DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.pattern)
-        println(dateString)
+        logPrintln(dateString)
         dateString = DateTimeFormatter.ISO_INSTANT.format(date.toInstant())
-        println(dateString)
+        logPrintln(dateString)
         val now = Instant.now()
-        println(now)
+        logPrintln(now)
         val ldt = LocalDateTime.now()
-        println(ldt)
+        logPrintln(ldt)
 
         val timestamp = 0L
         val fmt = "yyyyMMddHHmmss"
         val d = SimpleDateFormat(fmt).format(Date(timestamp))
-        println(d)
+        logPrintln(d)
     }
 
     @Ignore("A fix is required: unable to parse the date: Sat May 27 12:21:42 CST 2017")
@@ -274,9 +275,9 @@ class TestDateTimes {
                 DateFormatUtils.ISO_8601_EXTENDED_DATETIME_TIME_ZONE_FORMAT.pattern,
                 TimeZone.getTimeZone("PRC")
             )
-            println(dateString)
+            logPrintln(dateString)
             dateString = DateTimeFormatter.ISO_INSTANT.format(date.toInstant())
-            println(dateString)
+            logPrintln(dateString)
         } catch (e: ParseException) {
             e.printStackTrace()
         }
@@ -331,7 +332,7 @@ class TestDateTimes {
         cost3 = Instant.now().toEpochMilli() - start.toEpochMilli()
         assertTrue(cost <= cost2)
         assertTrue(cost2 < cost3, "System.currentTimeMillis() should be faster then Instant.now()")
-        println("$cost, $cost2, $cost3")
+        logPrintln("$cost, $cost2, $cost3")
     }
 
     @Test
@@ -341,3 +342,4 @@ class TestDateTimes {
         assertTrue { DateTimes.isExpired(startTime, expiry) }
     }
 }
+

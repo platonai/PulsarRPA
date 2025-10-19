@@ -9,6 +9,7 @@ import ai.platon.pulsar.rest.api.TestHelper.PRODUCT_LIST_URL
 import ai.platon.pulsar.rest.api.common.MockEcServerTestBase
 import ai.platon.pulsar.rest.api.config.MockEcServerConfiguration
 import ai.platon.pulsar.rest.api.entities.CommandRequest
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.rest.api.entities.PromptRequest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
@@ -84,7 +85,7 @@ class ConversationServiceTest : MockEcServerTestBase() {
         val prompt = API_COMMAND_PROMPT1
 
         val request = runBlocking { conversationService.normalizePlainCommand(prompt) }
-        println(prettyPulsarObjectMapper().writeValueAsString(request).toString())
+        logPrintln(prettyPulsarObjectMapper().writeValueAsString(request).toString())
         assertNotNull(request)
         verifyPromptRequestL2(request)
     }
@@ -94,7 +95,7 @@ class ConversationServiceTest : MockEcServerTestBase() {
         val prompt = API_COMMAND_PROMPT2
 
         val request = runBlocking { conversationService.normalizePlainCommand(prompt) }
-        println(prettyPulsarObjectMapper().writeValueAsString(request).toString())
+        logPrintln(prettyPulsarObjectMapper().writeValueAsString(request).toString())
         assertNotNull(request)
         verifyPromptRequestL2(request)
     }
@@ -151,7 +152,7 @@ from load_and_select(@url, 'body');
         val prompt = API_COMMAND_PROMPT3
 
         val request = runBlocking { conversationService.normalizePlainCommand(prompt) }
-        println(prettyPulsarObjectMapper().writeValueAsString(request).toString())
+        logPrintln(prettyPulsarObjectMapper().writeValueAsString(request).toString())
         assertNotNull(request)
         verifyPromptRequestL2(request)
     }
@@ -207,7 +208,7 @@ Page summary prompt: Provide a brief introduction of this product.
         val request = PromptRequest(PRODUCT_LIST_URL, "Tell me something about the page")
 
         val response = runBlocking { conversationService.chat(request) }
-        println(response.toString())
+        logPrintln(response.toString())
         assertTrue { response.isNotEmpty() }
     }
 
@@ -224,7 +225,7 @@ Page summary prompt: Provide a brief introduction of this product.
         )
 
         val response = runBlocking { conversationService.chat(request) }
-        println(response.toString())
+        logPrintln(response.toString())
         assertTrue { response.isNotEmpty() }
     }
 
@@ -250,7 +251,7 @@ Page summary prompt: Provide a brief introduction of this product.
 
         try {
             val markdown = runBlocking { conversationService.convertResponseToMarkdown(response) }
-            println(markdown.toString())
+            logPrintln(markdown.toString())
         } catch (e: Exception) {
             e.printStackTrace()
         }
@@ -265,3 +266,4 @@ Page summary prompt: Provide a brief introduction of this product.
         assertNotNull(request.onPageReadyActions)
     }
 }
+

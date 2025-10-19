@@ -3,6 +3,7 @@ package ai.platon.pulsar.skeleton.crawl.common.options
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.OptionUtils
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.skeleton.common.options.PulsarOptions
 import com.google.common.collect.Lists
 import kotlin.test.Test
@@ -59,7 +60,7 @@ class TestPulsarOptions {
     @Test
     fun testOptionHelp() {
         LoadOptions.helpList.forEach {
-            println(it)
+            logPrintln(it)
         }
     }
 
@@ -115,3 +116,4 @@ class TestPulsarOptions {
         private val linkFilterCommandLine2 = "-amin 5 -amax 50 -umin 50 -umax 200"
     }
 }
+

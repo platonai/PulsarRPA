@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.DateTimes.parseInstant
 import com.google.common.collect.Lists
 import org.apache.commons.lang3.time.DateUtils
@@ -21,8 +22,8 @@ class TestDateTimeDetector {
         val t = "2017-02-06T02:15:11.174Z"
         val dateTime = parseInstant(t, Instant.EPOCH)
         assertEquals(t, DateTimeFormatter.ISO_INSTANT.format(dateTime))
-        //    System.out.println(dateTime);
-//    System.out.println(Instant.parse(t));
+        //    System.out.logPrintln(dateTime);
+//    System.out.logPrintln(Instant.parse(t));
     }
 
     @Test
@@ -66,7 +67,7 @@ class TestDateTimeDetector {
     @Throws(ParseException::class)
     fun testParseYearMonth() {
         val yearMonth = YearMonth.parse("2015-12")
-        // System.out.println(yearMonth.atDay(1).atStartOfDay());
+        // System.out.logPrintln(yearMonth.atDay(1).atStartOfDay());
         assertEquals("2015-12-01T00:00", yearMonth.atDay(1).atStartOfDay().toString())
     }
 
@@ -111,7 +112,7 @@ class TestDateTimeDetector {
             val monthString = String.format("%02d", i)
             val date = LocalDateTime.parse("2015-$monthString-02T00:00:00").atZone(ZoneId.systemDefault()).toInstant()
             val monthName = Month.values()[i - 1].getDisplayName(TextStyle.FULL, Locale.getDefault())
-            // println("$monthName " + "M".repeat(monthName.length) + " dd, yyyy")
+            // logPrintln("$monthName " + "M".repeat(monthName.length) + " dd, yyyy")
             assertEquals(date, DateUtils.parseDate("$monthName 02, 2015", pattern).toInstant())
         }
     }
@@ -133,10 +134,10 @@ class TestDateTimeDetector {
         val localDate = zonedDateTime.toLocalDate()
         val localDateTime = zonedDateTime.toLocalDateTime()
 
-        println(instant)
-        println(zonedDateTime)
-        println(localDate)
-        println(localDateTime)
+        logPrintln(instant)
+        logPrintln(zonedDateTime)
+        logPrintln(localDate)
+        logPrintln(localDateTime)
 
         val texts = mapOf(
             "2021-04-15T13:04:00.840771700Z" to instant,
@@ -144,7 +145,7 @@ class TestDateTimeDetector {
             "2021-04-15T21:04:00.840771700" to localDateTime
         )
 
-        texts.map { DateTimeDetector().detectDateTime(it.key) to it.value }.forEach { println(it) }
+        texts.map { DateTimeDetector().detectDateTime(it.key) to it.value }.forEach { logPrintln(it) }
     }
 
     @Test
@@ -212,7 +213,7 @@ class TestDateTimeDetector {
 //    texts.add("2016-11-15 14:00 来源：新华社\n当前，各地大力推进精准扶贫...。但记者采访发现，仍有一些贫困村在落实扶贫政策时“撒芝麻盐”。");
         for (text in texts) {
             val dateTime = detector.detectDateTime(text)
-            // System.out.println(dateTime);
+            // System.out.logPrintln(dateTime);
             assertNotNull(dateTime, text)
             assertTrue(detector.containsOldDate(text, 1, zoneId), "$text, $dateTime")
         }
@@ -244,3 +245,4 @@ class TestDateTimeDetector {
         }
     }
 }
+

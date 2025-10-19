@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.persist.model.ActiveDOMMessage
 import ai.platon.pulsar.persist.model.ActiveDOMMetadata
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlin.test.*
@@ -15,10 +16,10 @@ class PulsarWebDriverMockSite2Tests : WebDriverTestBase() {
 
     protected suspend fun computeActiveDOMMetadata(driver: WebDriver): ActiveDOMMetadata {
         val detail = driver.evaluateDetail("JSON.stringify(__pulsar_utils__.computeMetadata())")
-        println(detail)
+        logPrintln(detail)
         assertNotNull(detail)
         assertNotNull(detail.value)
-        println(detail.value)
+        logPrintln(detail.value)
         val data = requireNotNull(detail.value?.toString())
         return pulsarObjectMapper().readValue(data)
     }
@@ -44,11 +45,11 @@ class PulsarWebDriverMockSite2Tests : WebDriverTestBase() {
     @Test
     fun `when open a HTML page then script is injected`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
         var detail = driver.evaluateDetail("typeof(window)")
-        println(detail)
+        logPrintln(detail)
         // assertNotNull(detail?.value)
 
         detail = driver.evaluateDetail("typeof(document)")
-        println(detail)
+        logPrintln(detail)
         // assertNotNull(detail?.value)
 
         val r = driver.evaluate("__pulsar_utils__.add(1, 1)")
@@ -57,13 +58,13 @@ class PulsarWebDriverMockSite2Tests : WebDriverTestBase() {
         detail = driver.evaluateDetail("JSON.stringify(__pulsar_CONFIGS)")
         val value = detail?.value?.toString()
         assertNotNull(value)
-        println(value)
+        logPrintln(value)
         assertTrue { value.contains("viewPortWidth") }
 
         detail = driver.evaluateDetail("JSON.stringify(__pulsar_utils__.getConfig())")
         val value2 = detail?.value?.toString()
         assertNotNull(value2)
-        println(value2)
+        logPrintln(value2)
         assertTrue { value2.contains("viewPortWidth") }
     }
 
@@ -71,10 +72,10 @@ class PulsarWebDriverMockSite2Tests : WebDriverTestBase() {
     fun `open a HTML page and compute metadata`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
         driver.evaluate("__pulsar_utils__.scrollToMiddle()")
         var detail = driver.evaluateDetail("__pulsar_utils__.compute()")
-        println(detail)
+        logPrintln(detail)
 
         detail = driver.evaluateDetail("__pulsar_utils__.getActiveDomMessage()")
-        println(detail)
+        logPrintln(detail)
         val data = detail?.value?.toString()
         assertNotNull(data)
 
@@ -85,7 +86,7 @@ class PulsarWebDriverMockSite2Tests : WebDriverTestBase() {
 
         val metadata = message.metadata
         assertNotNull(metadata)
-        println(prettyPulsarObjectMapper().writeValueAsString(metadata))
+        logPrintln(prettyPulsarObjectMapper().writeValueAsString(metadata))
         assertEquals(1920, metadata.viewPortWidth)
         assertEquals(1080, metadata.viewPortHeight)
         // Assumptions.assumeTrue(metadata.scrollTop > metadata.viewPortHeight)
@@ -154,7 +155,7 @@ class PulsarWebDriverMockSite2Tests : WebDriverTestBase() {
 
         val variables = nodeVariables.split(",").map { it.trim('\"') }
 
-        println(variables)
+        logPrintln(variables)
 
         val pulsarVariables = variables.filter { it.contains("__pulsar_") }
         assertTrue { pulsarVariables.isEmpty() }
@@ -163,3 +164,4 @@ class PulsarWebDriverMockSite2Tests : WebDriverTestBase() {
         assertEquals("function", result)
     }
 }
+

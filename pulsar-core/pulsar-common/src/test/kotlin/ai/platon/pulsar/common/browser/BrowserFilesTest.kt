@@ -17,14 +17,14 @@ class BrowserFilesTest {
     fun tearDown() {
         // BrowserFiles.deleteTemporaryUserDataDirWithLock(AppPaths.CONTEXT_TMP_DIR, Duration.ofSeconds(0))
     }
-    
+
     @Test
     fun computeRandomTmpContextDir() {
         val paths = ConcurrentHashMap<String, Path>()
         repeat(20) {
             executor.submit {
                 val path = BrowserFiles.computeRandomTmpContextDir()
-                // println(path)
+                // logPrintln(path)
                 paths[path.fileName.toString()] = path
                 Files.createDirectory(path)
             }

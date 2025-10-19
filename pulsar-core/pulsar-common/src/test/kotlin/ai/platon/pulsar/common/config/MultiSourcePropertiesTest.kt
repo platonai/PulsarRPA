@@ -119,7 +119,7 @@ class MultiSourcePropertiesTest {
     fun testToString() {
         config["key1"] = "value1"
         config["key2"] = "value2"
-        // println(config.toString())
+        // logPrintln(config.toString())
         assertEquals("[]", config.toString())
         // assertTrue(config.toString().contains("key1") && config.toString().contains("key2"))
     }

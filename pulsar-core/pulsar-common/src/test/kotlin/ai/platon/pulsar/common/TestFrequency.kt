@@ -24,32 +24,32 @@ class TestFrequency {
     fun testFrequency() {
         val freq = Frequency<String>()
         freq.addAll(listOf("a", "a", "b", "a", "b", "a", "c", "d"))
-        println("iteration: ")
+        logPrintln("iteration: ")
         freq.forEachIndexed { i, s -> print("$s\t") }
         assertEquals("a,a,a,a,b,b,c,d", freq.joinToString(","))
-        println("\nentry set: ")
-        freq.entrySet().also { println(it) }
+        logPrintln("\nentry set: ")
+        freq.entrySet().also { logPrintln(it) }
         assertEquals("[a x 4, b x 2, c, d]", freq.entrySet().toString())
-        println("\nelement set: ")
-        freq.elementSet().also { println(it) }
+        logPrintln("\nelement set: ")
+        freq.elementSet().also { logPrintln(it) }
         assertEquals("[a, b, c, d]", freq.elementSet().toString())
 
-        println("\nsize: ${freq.size}")
+        logPrintln("\nsize: ${freq.size}")
         assertEquals(4, freq.size)
-        println("\ntotal frequency: ${freq.totalFrequency}")
+        logPrintln("\ntotal frequency: ${freq.totalFrequency}")
         assertEquals(8, freq.totalFrequency)
-        println("\nmode: ${freq.mode}")
+        logPrintln("\nmode: ${freq.mode}")
         assertEquals("a", freq.mode)
-        println("\nmodes: ${freq.modes}")
+        logPrintln("\nmodes: ${freq.modes}")
         assertEquals("[a, b, c, d]", freq.modes.toString())
 
-        println("\ncumulative frequency: ")
-        freq.elementSet().associateBy({ it }) { freq.cumulativeFrequencyOf(it) }.also { println(it) }
+        logPrintln("\ncumulative frequency: ")
+        freq.elementSet().associateBy({ it }) { freq.cumulativeFrequencyOf(it) }.also { logPrintln(it) }
 
-        println("\npercentage: ")
-        freq.elementSet().associateBy({ it }) { freq.percentageOf(it) }.also { println(it) }
-        println("\ncumulative percentage: ")
-        freq.elementSet().associateBy({ it }) { freq.cumulativePercentageOf(it) }.also { println(it) }
+        logPrintln("\npercentage: ")
+        freq.elementSet().associateBy({ it }) { freq.percentageOf(it) }.also { logPrintln(it) }
+        logPrintln("\ncumulative percentage: ")
+        freq.elementSet().associateBy({ it }) { freq.cumulativePercentageOf(it) }.also { logPrintln(it) }
     }
 
     @Test
@@ -63,8 +63,8 @@ class TestFrequency {
         }
         freq.add(-1)
 
-//        println(freq.entrySet().joinToString())
-//        println(freq.elementSet().joinToString())
+//        logPrintln(freq.entrySet().joinToString())
+//        logPrintln(freq.elementSet().joinToString())
     }
 
     @Test
@@ -92,8 +92,8 @@ class TestFrequency {
         IntRange(1, 10).forEach {  i ->
             repeat(i) { frequency.add("$i") }
         }
-//        println(frequency.toString())
-//        println(frequency.toPString())
+//        logPrintln(frequency.toString())
+//        logPrintln(frequency.toPString())
         // Probability string
         assertEquals("1:0.02\t2:0.04\t3:0.05\t4:0.07\t5:0.09\t6:0.11\t7:0.13\t8:0.15\t9:0.16\t10:0.18",
             frequency.toPString())
@@ -112,14 +112,14 @@ class TestFrequency {
 
         listOf(1, 2, 3, 4, 5, 9, 10).forEach {  v ->
             val a = freq.cumulativeFrequencyOf(v)
-            println("CF: $v -> $a")
+            logPrintln("CF: $v -> $a")
         }
 
-        println(freq.toPString("PString:\n"))
+        logPrintln(freq.toPString("PString:\n"))
 
-        println(freq.toReport("Report:\n"))
+        logPrintln(freq.toReport("Report:\n"))
 
-        println("String:\n$freq")
+        logPrintln("String:\n$freq")
     }
 
     @Test
@@ -133,14 +133,14 @@ class TestFrequency {
 
         listOf(1, 2, 3, 4, 5, 9, 10).forEach {  v ->
             val a = freq.cumulativePercentageOf(v)
-            println("Cum Pct: $v -> $a")
+            logPrintln("Cum Pct: $v -> $a")
         }
 
-        println(freq.toPString("PString:\n"))
+        logPrintln(freq.toPString("PString:\n"))
 
-        println(freq.toReport("Report:\n"))
+        logPrintln(freq.toReport("Report:\n"))
 
-        println("String:\n$freq")
+        logPrintln("String:\n$freq")
     }
 
     @Test
@@ -152,14 +152,14 @@ class TestFrequency {
             }
         }
 
-//        println(freq.toString())
+//        logPrintln(freq.toString())
         val freqThreshold = 5.0
         freq.trimStart(freqThreshold)
-//        println(freq.toString())
-//        println(freq.leastEntry.count)
+//        logPrintln(freq.toString())
+//        logPrintln(freq.leastEntry.count)
         assertTrue(freq.leastEntry.count > freqThreshold - 0.1, "Count of least entry: " + freq.leastEntry.count)
     }
-    
+
     @Test
     fun testFrequencyTrimStartPercentage() {
         val freq = Frequency<Int>()

@@ -3,6 +3,7 @@ package ai.platon.pulsar.app.api.controller
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.rest.api.entities.*
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.test.BasicTestHelper
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
@@ -64,7 +65,7 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
 
         assertThat(response.statusCode.value()).isEqualTo(200)
         // assertThat(response.body).isNotNull
-        println(response.body)
+        logPrintln(response.body)
     }
 
     @Order(30)
@@ -81,11 +82,11 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
         assertThat(response.statusCode.value()).isEqualTo(200)
         assertThat(response.body).isNotNull
         assertThat(response.body!!.size).isGreaterThan(0)
-        println("Screenshot captured successfully, size: ${response.body!!.size} bytes")
+        logPrintln("Screenshot captured successfully, size: ${response.body!!.size} bytes")
 
         val exportPath = AppPaths.getRandomProcTmpTmpPath("screenshot-", ".jpg")
         Files.write(exportPath, response.body!!, StandardOpenOption.CREATE, StandardOpenOption.WRITE)
-        println("Screenshot saved to: $exportPath")
+        logPrintln("Screenshot saved to: $exportPath")
 
         // Verify the file was created and has content
         assertThat(Files.exists(exportPath)).isTrue()
@@ -101,7 +102,8 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
         val response = restTemplate.exchange(
             "$baseUri/api/spa/extract", HttpMethod.GET, request, Any::class.java
         )
-        println(response.body)
+        logPrintln(response.body)
         assertThat(response.statusCode.value()).isEqualTo(200)
     }
 }
+

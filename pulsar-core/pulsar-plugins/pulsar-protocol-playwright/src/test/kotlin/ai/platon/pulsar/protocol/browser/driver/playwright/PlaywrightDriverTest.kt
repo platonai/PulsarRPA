@@ -5,6 +5,7 @@ import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.Runtimes
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
@@ -58,7 +59,7 @@ class PlaywrightDriverTest {
             driver.navigateTo(url)
             val text = driver.selectFirstTextOrNull("body")
             assertNotNull(text)
-            println(">>>\n" + text?.substring(0, 100) + "\n<<<")
+            logPrintln(">>>\n" + text?.substring(0, 100) + "\n<<<")
         }
     }
 
@@ -71,7 +72,7 @@ class PlaywrightDriverTest {
             driver.waitForNavigation()
             val text = driver.selectFirstTextOrNull("body")
             assertNotNull(text)
-            println(">>>\n" + text.substring(0, 100) + "\n<<<")
+            logPrintln(">>>\n" + text.substring(0, 100) + "\n<<<")
         }
     }
 
@@ -118,21 +119,21 @@ class PlaywrightDriverTest {
             assertEquals(2, result)
 
             result = driver.evaluate("typeof(window)")
-            println("typeof(window) -> $result")
+            logPrintln("typeof(window) -> $result")
             assertEquals("object", result)
 
 
             result = driver.evaluate("typeof(__test_utils__)")
-            println("typeof(__test_utils__) -> $result")
+            logPrintln("typeof(__test_utils__) -> $result")
             assertEquals("object", result)
 
 
             result = driver.evaluate("typeof(__pulsar_)")
-            println("typeof(__pulsar_) -> $result")
+            logPrintln("typeof(__pulsar_) -> $result")
             assertEquals("function", result)
 
             result = driver.evaluate("__pulsar_utils__.add(1, 2)")
-            println(result)
+            logPrintln(result)
             assertEquals(3, result)
         }
     }
@@ -147,7 +148,7 @@ class PlaywrightDriverTest {
             driver.navigateTo("https://www.hua.com/")
             driver.waitForSelector("body")
             val result = driver.evaluate(expression)
-            println(result)
+            logPrintln(result)
         }
     }
 
@@ -171,14 +172,15 @@ class PlaywrightDriverTest {
 
     private fun navigateTo(url: String, driver: PlaywrightDriver) {
         runBlocking {
-            println("Navigating - $url")
+            logPrintln("Navigating - $url")
             driver.navigateTo(url)
             driver.waitForSelector("body")
             val text = driver.selectFirstTextOrNull("body")?.trim()
                 ?.replace("\\s+".toRegex(), " ")
             assertNotNull(text)
             val start = text.length / 2
-            println(">>>\n" + text.substring(start, start + 100) + "\n<<<")
+            logPrintln(">>>\n" + text.substring(start, start + 100) + "\n<<<")
         }
     }
 }
+

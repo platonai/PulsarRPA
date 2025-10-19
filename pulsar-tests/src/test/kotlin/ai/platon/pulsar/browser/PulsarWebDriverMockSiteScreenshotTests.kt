@@ -2,6 +2,7 @@ package ai.platon.pulsar.browser
 
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.common.AppFiles
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.AppPaths
 import kotlinx.coroutines.delay
 import java.io.IOException
@@ -40,7 +41,7 @@ class PulsarWebDriverMockSiteScreenshotTests : WebDriverTestBase() {
         }
 
         if (paths.isNotEmpty()) {
-            println(String.format("%d screenshots are saved | %s", paths.size, paths[0].parent))
+            logPrintln(String.format("%d screenshots are saved | %s", paths.size, paths[0].parent))
         }
     }
 
@@ -48,7 +49,7 @@ class PulsarWebDriverMockSiteScreenshotTests : WebDriverTestBase() {
 //    fun testDragAndHold() = runWebDriverTest(walmartUrl, browser) { driver ->
 //        // TODO: FIXME: dragAndHold not working on walmart.com
 //        val result = driver.evaluate("__pulsar_utils__.doForAllFrames('HOLD', 'ME')")
-//        println(result)
+//        logPrintln(result)
 //    }
 
     @Throws(IOException::class)
@@ -58,3 +59,4 @@ class PulsarWebDriverMockSiteScreenshotTests : WebDriverTestBase() {
         return AppFiles.saveTo(bytes, path, true)
     }
 }
+

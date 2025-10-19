@@ -18,7 +18,7 @@ class ConfigTest {
         mutableConfig[n1] = v1
         val conf = VolatileConfig(mutableConfig)
         assertEquals(v1, conf[n1])
-        // println(StringUtils.join(conf.getStrings(n1), ", "))
+        // logPrintln(StringUtils.join(conf.getStrings(n1), ", "))
         assertEquals(4, conf.getStrings(n1).size)
     }
 
@@ -50,7 +50,7 @@ class ConfigTest {
         conf["test.collection"] = "a\nb,\nc,\nd"
         assertEquals(3, conf.getTrimmedStringCollection("test.collection").size.toLong())
 //        conf.getTrimmedStringCollection("test.collection").stream().map { l: String -> l + " -> " + l.length }
-//            .forEach { x: String? -> println(x) }
+//            .forEach { x: String? -> logPrintln(x) }
         conf["test.collection"] = "a,\nb,\nc,\nd"
         assertEquals(4, conf.getTrimmedStringCollection("test.collection").size.toLong())
     }

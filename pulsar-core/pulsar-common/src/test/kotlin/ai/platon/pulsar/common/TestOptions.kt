@@ -1,6 +1,7 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.options.OptionUtils
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.options.OptionUtils.OPTION_REGEX
 import kotlin.test.*
 
@@ -19,8 +20,8 @@ class TestOptions {
         val regex = names.joinToString("|").toRegex()
         val values = linkString.split(regex)
 
-        // println("Regex: $regex")
-        values.forEach { println(it) }
+        // logPrintln("Regex: $regex")
+        values.forEach { logPrintln(it) }
         // assertTrue { "" }
     }
 
@@ -34,8 +35,8 @@ class TestOptions {
         val regex = "-\\w+".toRegex()
         val values = linkString.split(regex)
 
-        // println("Regex: $regex")
-        values.forEach { println(it) }
+        // logPrintln("Regex: $regex")
+        values.forEach { logPrintln(it) }
     }
 
     @Test
@@ -47,7 +48,7 @@ class TestOptions {
 
         val argv = OptionUtils.translateCommandline(linkString)
 
-        // argv.forEach { println(it) }
+        // argv.forEach { logPrintln(it) }
         assertEquals("-text", argv[1])
         assertEquals(text, argv[2])
         assertEquals("-args", argv[3])
@@ -74,9 +75,9 @@ class TestOptions {
                 val result = "-label$OPTION_REGEX".toRegex().find(args)
                 assertNotNull(result)
 
-//                println("$args")
-//                result.groups.forEach { println(it) }
-//                println()
+//                logPrintln("$args")
+//                result.groups.forEach { logPrintln(it) }
+//                logPrintln()
 
                 assertEquals(2, result.groups.size)
                 assertEquals(label, result.groupValues[1])
@@ -92,3 +93,4 @@ class TestOptions {
         }
     }
 }
+

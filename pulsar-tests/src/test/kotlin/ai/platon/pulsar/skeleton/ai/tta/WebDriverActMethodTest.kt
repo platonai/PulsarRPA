@@ -1,5 +1,6 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -242,11 +243,12 @@ class WebDriverActMethodTest : TextToActionTestBase() {
                 assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action for: $prompt")
                 assertTrue(result.functionCalls.size <= 1, "Should generate at most one action for: $prompt")
 
-                println("Prompt: $prompt")
-                println("Function calls: ${result.functionCalls}")
-                println("Model response: ${result.modelResponse.content}")
-                println("---")
+                logPrintln("Prompt: $prompt")
+                logPrintln("Function calls: ${result.functionCalls}")
+                logPrintln("Model response: ${result.modelResponse.content}")
+                logPrintln("---")
             }
         }
     }
 }
+

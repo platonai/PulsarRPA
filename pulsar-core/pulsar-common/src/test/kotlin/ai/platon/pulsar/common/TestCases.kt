@@ -50,13 +50,13 @@ class TestCases {
                 numbers.add(k)
             }
         }
-        println(numbers)
+        logPrintln(numbers)
         assertTrue { 21 in numbers }
         assertTrue { 61 in numbers }
         assertTrue { 201 in numbers }
         assertTrue { 561 in numbers }
     }
-    
+
     @Test
     fun testIfEmpty() {
         val s = ""
@@ -65,18 +65,18 @@ class TestCases {
         assertTrue { s.ifEmpty { "empty" } == "empty" }
         assertTrue { s.ifBlank { "blank" } == "blank" }
     }
-    
+
     @Test
     fun testReturnInIfEmpty() {
         val s = ""
         var result = s.ifEmpty { return }
         assertTrue { result == "This will never happen" }
-        
-        println("Will return to the caller")
+
+        logPrintln("Will return to the caller")
         result = s.ifEmpty { return@testReturnInIfEmpty }
         assertTrue { result == "This will never happen" }
     }
-    
+
     @Test
     fun testOptional() {
         val s1 = Optional.ofNullable("hello")
@@ -126,14 +126,14 @@ class TestCases {
         val numbers = listOf(391, 392, 393, 394, 395, 396, 397, 398, 399)
         val s = numbers.map { (it + 2.5).toInt() / 5 * 5 }
         assertContentEquals(listOf(390, 390, 395, 395, 395, 395, 395, 400, 400), s)
-        // println(s)
+        // logPrintln(s)
 
         val s2 = numbers.map { (it.toDouble() / 5).roundToInt() * 5 }
         assertContentEquals(listOf(390, 390, 395, 395, 395, 395, 395, 400, 400), s2)
-        // println(s2)
+        // logPrintln(s2)
 
         val s3 = doubleArrayOf(0.5, 0.61, 1.0, 1.3, 1.5, 2.0, 2.8, 3.0).map { floor(it) }
-        // println(s3)
+        // logPrintln(s3)
         assertContentEquals(listOf(0.0, 0.0, 1.0, 1.0, 1.0, 2.0, 2.0, 3.0), s3)
     }
 
@@ -155,16 +155,16 @@ class TestCases {
 
         text = "￥669.00"
 
-        // println(String.format("%10s%10s%10s%10s", "a", *arrayOf("b", "c", "d")))
+        // logPrintln(String.format("%10s%10s%10s%10s", "a", *arrayOf("b", "c", "d")))
 
-        // println(arrayOf("").joinToString(";"))
+        // logPrintln(arrayOf("").joinToString(";"))
     }
 
     @Test
     fun testStripSpecialChars() {
         val text = " hell\uE60Do\uDF21world "
 
-        // text.forEachIndexed { i, it -> println("$i.\t$it -> ${StringUtil.isActuallyWhitespace(it.toInt())}") }
+        // text.forEachIndexed { i, it -> logPrintln("$i.\t$it -> ${StringUtil.isActuallyWhitespace(it.toInt())}") }
 
         assertEquals("helloworld", Strings.removeNonCJKChar(text))
 
@@ -184,7 +184,7 @@ class TestCases {
         val rgb = 0x996600
         val rgb2 = Color(rgb).rgb
         val rgb3 = Color(rgb2, true).rgb
-        println("$rgb\t$rgb2\t$rgb3")
+        logPrintln("$rgb\t$rgb2\t$rgb3")
         assertEquals(rgb3, rgb2)
 
         val mask = ALPHA_MASK
@@ -208,7 +208,7 @@ class TestCases {
             a = i
         }
         require(a == 1)
-        IntRange(1, 10).toList().also { println(it) }
+        IntRange(1, 10).toList().also { logPrintln(it) }
     }
 
     @Test
@@ -224,8 +224,8 @@ class TestCases {
         // upper 1.5*IQR whisker
         val whisker = (q3 + 1.5 * iqr).toInt()
 
-//        println(ds)
-//        println("$q1\t$q2\t$q3\t$q4\twhisker:$whisker")
+//        logPrintln(ds)
+//        logPrintln("$q1\t$q2\t$q3\t$q4\twhisker:$whisker")
 
         assertEquals(2, ds.n)
         assertEquals(100.0, ds.min)

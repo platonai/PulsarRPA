@@ -12,7 +12,7 @@ class TestProtocolStatus {
         assertTrue(status.isRetry(RetryScope.PRIVACY, Exception::class.java))
 
         val e = Exception()
-        println(e.javaClass.name)
-        println(Exception::javaClass.toString())
+        logPrintln(e.javaClass.name)
+        logPrintln(Exception::javaClass.toString())
     }
 }

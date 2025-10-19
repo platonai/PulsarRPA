@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.persist.model.ActiveDOMMessage
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import kotlinx.coroutines.delay
 import org.junit.jupiter.api.Assumptions
@@ -75,11 +76,11 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     @Test
     fun `when open a HTML page then script is injected`() = runEnhancedWebDriverTest(e2eOriginUrl, browser) { driver ->
         var detail = driver.evaluateDetail("typeof(window)")
-        println(detail)
+        logPrintln(detail)
         // assertNotNull(detail?.value)
 
         detail = driver.evaluateDetail("typeof(document)")
-        println(detail)
+        logPrintln(detail)
         // assertNotNull(detail?.value)
 
         val r = driver.evaluate("__pulsar_utils__.add(1, 1)")
@@ -88,13 +89,13 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
         detail = driver.evaluateDetail("JSON.stringify(__pulsar_CONFIGS)")
         val value = detail?.value?.toString()
         assertNotNull(value)
-        println(value)
+        logPrintln(value)
         assertTrue { value.contains("viewPortWidth") }
 
         detail = driver.evaluateDetail("JSON.stringify(__pulsar_utils__.getConfig())")
         val value2 = detail?.value?.toString()
         assertNotNull(value2)
-        println(value2)
+        logPrintln(value2)
         assertTrue { value2.contains("viewPortWidth") }
     }
 
@@ -102,10 +103,10 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     fun `open a HTML page and compute metadata`() = runEnhancedWebDriverTest(e2eOriginUrl, browser) { driver ->
         driver.evaluate("__pulsar_utils__.scrollToMiddle()")
         var detail = driver.evaluateDetail("__pulsar_utils__.compute()")
-        println(detail)
+        logPrintln(detail)
 
         detail = driver.evaluateDetail("__pulsar_utils__.getActiveDomMessage()")
-        println(detail)
+        logPrintln(detail)
         val data = detail?.value?.toString()
         assertNotNull(data)
 
@@ -116,7 +117,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
 
         val metadata = message.metadata
         assertNotNull(metadata)
-        println(prettyPulsarObjectMapper().writeValueAsString(metadata))
+        logPrintln(prettyPulsarObjectMapper().writeValueAsString(metadata))
         assertEquals(1920, metadata.viewPortWidth)
         assertEquals(1080, metadata.viewPortHeight)
         // Assumptions.assumeTrue(metadata.scrollTop > metadata.viewPortHeight)
@@ -133,18 +134,18 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
         val selector = "body a[href]"
         driver.waitForSelector(selector)
 
-        println("Selecting attributes: ")
+        logPrintln("Selecting attributes: ")
 
         var links = driver.selectAttributeAll(selector, "href")
         assertTrue { links.isNotEmpty() }
 
-        println("Top 10 href: ")
-        links.take(10).forEach { println(it) }
+        logPrintln("Top 10 href: ")
+        links.take(10).forEach { logPrintln(it) }
 
         links = driver.selectAttributeAll(selector, "abs:href")
-        println("NOTE: abs:href not supported by WebDriver.selectAttributeXXX()")
-        println("Abs:href: ")
-        links.forEach { println(it) }
+        logPrintln("NOTE: abs:href not supported by WebDriver.selectAttributeXXX()")
+        logPrintln("Abs:href: ")
+        links.forEach { logPrintln(it) }
         // assertTrue { links.isEmpty() }
     }
 
@@ -162,8 +163,8 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
 
         // expected url like: https://www.amazon.com/stores/Apple/page/77D9E1F7-0337-4282-9DB6-B6B8FB2DC98D?ref_=ast_bln
         val currentUrl = driver.currentUrl()
-        println("The page should be redirected")
-        println("Current url: $currentUrl")
+        logPrintln("The page should be redirected")
+        logPrintln("Current url: $currentUrl")
 
         val pageSource = driver.pageSource()
         Assumptions.assumeTrue { (pageSource?.length ?: 0) > 1000 }
@@ -176,7 +177,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     @Test
     fun testClickNthAnchor() = runEnhancedWebDriverTest(e2eOriginUrl, browser) { driver ->
         driver.clickNthAnchor(100, "body")
-//        println(href)
+//        logPrintln(href)
 
         driver.waitForNavigation()
         driver.waitForSelector("body")
@@ -199,7 +200,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     fun testMouseWheel() = runEnhancedWebDriverTest(e2eOriginUrl, browser) { driver ->
         driver.mouseWheelDown(5)
         val box = driver.boundingBox("body")
-        println(box)
+        logPrintln(box)
         assertNotNull(box)
 
         delay(3000)
@@ -207,7 +208,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
         driver.mouseWheelUp(5)
 
         val box2 = driver.boundingBox("body")
-        println(box2)
+        logPrintln(box2)
         assertNotNull(box2)
         // assertTrue { box2.height > box.height }
     }
@@ -220,19 +221,19 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
         assertTrue { driver.exists("#productTitle") }
 
         var text = driver.selectFirstTextOrNull("#productTitle")
-        println("Product title: $text")
+        logPrintln("Product title: $text")
 
         // val selector = "#nav-search input[placeholder*=Search]"
         val selector = "form input[type=text]"
         text = driver.selectFirstAttributeOrNull(selector, "placeholder")
-        println("Search bar - placeholder - 1 - driver.selectFirstAttributeOrNull() : <$text>")
+        logPrintln("Search bar - placeholder - 1 - driver.selectFirstAttributeOrNull() : <$text>")
         assertTrue("Placeholder should not be empty") { !text.isNullOrBlank() }
         text = driver.selectAttributeAll(selector, "placeholder").joinToString()
-        println("Search bar - placeholder - 2 - driver.selectAttributeAll() : <$text>")
+        logPrintln("Search bar - placeholder - 2 - driver.selectAttributeAll() : <$text>")
         assertTrue("Placeholder should not be empty") { !text.isNullOrBlank() }
 
         text = driver.selectAttributeAll(selector, "value").joinToString()
-        println("Search bar value (should be empty) - 1: <$text>")
+        logPrintln("Search bar value (should be empty) - 1: <$text>")
         assertEquals("", text)
 
         "Mate".forEach { ch ->
@@ -243,25 +244,25 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
 
         delay(1000)
 
-        MessageFormat.format("{0} key pressed {0}", PopularEmoji.SPARKLES).also { println(it) }
+        MessageFormat.format("{0} key pressed {0}", PopularEmoji.SPARKLES).also { logPrintln(it) }
 
         var evaluate = driver.evaluateDetail("document.querySelector('$selector').value")
-        println("Search bar evaluate result - driver.evaluateDetail() : $evaluate")
-        println("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
+        logPrintln("Search bar evaluate result - driver.evaluateDetail() : $evaluate")
+        logPrintln("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
         // assertEquals("Mate60", evaluate?.value)
 
         text = driver.selectAttributeAll(selector, "value").joinToString()
-        println("Search bar value - 3 - selectAttributeAll() : <$text>")
+        logPrintln("Search bar value - 3 - selectAttributeAll() : <$text>")
 //            assertEquals("Mate60", text)
 
         val html = driver.outerHTML(selector)
-        println("Search bar html: >>>\n$html\n<<<")
+        logPrintln("Search bar html: >>>\n$html\n<<<")
         assertNotNull(html)
         // assertTrue { html.contains("Mate60") }
 
         evaluate = driver.evaluateDetail("document.querySelector('$selector').value")
-        println("Search bar evaluate result - driver.evaluateDetail() : >>>\n$evaluate\n<<<")
-        println("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
+        logPrintln("Search bar evaluate result - driver.evaluateDetail() : >>>\n$evaluate\n<<<")
+        logPrintln("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
         // assertEquals("Mate60", evaluate?.value)
 
         // TODO: FIXME: enter seems not working
@@ -278,42 +279,42 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
         assertTrue { driver.exists("#productTitle") }
 
         var text = driver.selectFirstTextOrNull("#productTitle")
-        println("Product title: $text")
+        logPrintln("Product title: $text")
 
         // val selector = "#nav-search input[placeholder*=Search]"
         val selector = "form input[type=text]"
         text = driver.selectFirstAttributeOrNull(selector, "placeholder")
-        println("Search bar - placeholder - 1 - driver.selectFirstAttributeOrNull() : <$text>")
+        logPrintln("Search bar - placeholder - 1 - driver.selectFirstAttributeOrNull() : <$text>")
         assertTrue("Placeholder should not be empty") { !text.isNullOrBlank() }
         text = driver.selectAttributeAll(selector, "placeholder").joinToString()
-        println("Search bar - placeholder - 2 - driver.selectAttributeAll() : <$text>")
+        logPrintln("Search bar - placeholder - 2 - driver.selectAttributeAll() : <$text>")
         assertTrue("Placeholder should not be empty") { !text.isNullOrBlank() }
 
         text = driver.selectAttributeAll(selector, "value").joinToString()
-        println("Search bar value (should be empty) - 1: <$text>")
+        logPrintln("Search bar value (should be empty) - 1: <$text>")
         assertEquals("", text)
 
         driver.type(selector, "Mate60")
 
-        MessageFormat.format("{0} text typed {0}", PopularEmoji.SPARKLES).also { println(it) }
+        MessageFormat.format("{0} text typed {0}", PopularEmoji.SPARKLES).also { logPrintln(it) }
 
         var evaluate = driver.evaluateDetail("document.querySelector('$selector').value")
-        println("Search bar evaluate result - driver.evaluateDetail() : $evaluate")
-        println("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
+        logPrintln("Search bar evaluate result - driver.evaluateDetail() : $evaluate")
+        logPrintln("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
         assertEquals("Mate60", evaluate?.value)
 
         text = driver.selectAttributeAll(selector, "value").joinToString()
-        println("Search bar value - 3: $text")
+        logPrintln("Search bar value - 3: $text")
 //            assertEquals("Mate60", text)
 
         val html = driver.outerHTML(selector)
-        println("Search bar html: $html")
+        logPrintln("Search bar html: $html")
         assertNotNull(html)
 // assertTrue { html.contains("Mate60") }
 
         evaluate = driver.evaluateDetail("document.querySelector('$selector').value")
-        println("Search bar evaluate result - driver.evaluateDetail() : $evaluate")
-        println("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
+        logPrintln("Search bar evaluate result - driver.evaluateDetail() : $evaluate")
+        logPrintln("Search bar value - driver.evaluateDetail() : <${evaluate?.value}>")
         assertEquals("Mate60", evaluate?.value)
 
         val lastUrl = driver.currentUrl()
@@ -324,7 +325,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
         // assertTrue { driver.currentUrl() != lastUrl }
         val currentUrl = driver.currentUrl()
         Assumptions.assumingThat(currentUrl != lastUrl) {
-            println("Current url: $currentUrl, last url: $lastUrl")
+            logPrintln("Current url: $currentUrl, last url: $lastUrl")
         }
     }
 
@@ -350,7 +351,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
         }
 
         if (paths.isNotEmpty()) {
-            println(String.format("%d screenshots are saved | %s", paths.size, paths[0].parent))
+            logPrintln(String.format("%d screenshots are saved | %s", paths.size, paths[0].parent))
         }
 
         // assertTrue { paths.isNotEmpty() }
@@ -360,7 +361,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     fun testDragAndHold() = runEnhancedWebDriverTest(walmartUrl, browser) { driver ->
         // TODO: FIXME: dragAndHold not working on walmart.com
         val result = driver.evaluate("__pulsar_utils__.doForAllFrames('HOLD', 'ME')")
-        println(result)
+        logPrintln(result)
     }
 
     @Test
@@ -368,7 +369,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
         driver.mouseWheelDown(5)
         val box = driver.boundingBox("body")
         // RectD(x=0.0, y=-600.0, width=1912.0, height=10538.828125)
-        println(box)
+        logPrintln(box)
         assertNotNull(box)
 
         delay(3000)
@@ -377,28 +378,28 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
 
         val box2 = driver.boundingBox("body")
         // RectD(x=0.0, y=-150.0, width=1912.0, height=10538.828125)
-        println(box2)
+        logPrintln(box2)
         assertNotNull(box2)
 
         var jsFun = "__pulsar_utils__.queryClientRects"
         var bodyInfo = driver.evaluate("$jsFun('body')")?.toString() ?: "unexpected"
         // [{0 0 1912 10538.8}, ]
-        println("queryClientRects: $bodyInfo")
+        logPrintln("queryClientRects: $bodyInfo")
 
         jsFun = "__pulsar_utils__.queryClientRect"
         bodyInfo = driver.evaluate("$jsFun('body')")?.toString() ?: "unexpected"
         // [{0 0 1912 10538.8}, ]
-        println("queryClientRect: $bodyInfo")
+        logPrintln("queryClientRect: $bodyInfo")
 
         jsFun = "document.body.scrollWidth"
         bodyInfo = driver.evaluate("$jsFun('body')")?.toString() ?: "unexpected"
         // [{0 0 1912 10538.8}, ]
-        println("body.scrollWidth: $bodyInfo")
+        logPrintln("body.scrollWidth: $bodyInfo")
 
         jsFun = "document.body.clientWidth"
         bodyInfo = driver.evaluate("$jsFun('body')")?.toString() ?: "unexpected"
         // [{0 0 1912 10538.8}, ]
-        println("body.clientWidth: $bodyInfo")
+        logPrintln("body.clientWidth: $bodyInfo")
     }
 
     @Throws(IOException::class)
@@ -408,3 +409,4 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
         return AppFiles.saveTo(bytes, path, true)
     }
 }
+

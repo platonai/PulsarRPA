@@ -14,7 +14,7 @@ class SParserTest1 {
         parser.set("a\nb,\nc,\nd")
         assertEquals(3, parser.trimmedStringCollection.size.toLong())
         parser.trimmedStringCollection.stream().map { l: String -> l + " -> " + l.length }
-            .forEach { x: String? -> println(x) }
+            .forEach { x: String? -> logPrintln(x) }
         parser.set("a,\nb,\nc,\nd")
         assertEquals(4, parser.trimmedStringCollection.size.toLong())
     }

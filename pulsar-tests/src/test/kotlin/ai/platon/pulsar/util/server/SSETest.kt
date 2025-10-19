@@ -26,12 +26,12 @@ fun main() {
     client.newCall(request).execute().use { response ->
         if (!response.isSuccessful) error("Unexpected code $response")
         val body = response.body?.string()?.trim() ?: error("No response body")
-        println("Submit response: $body")
+        logPrintln("Submit response: $body")
         // Parse uuid from ScrapeResponse JSON
         val regex = "\"uuid\"\\s*:\\s*\"([^\"]+)\"".toRegex()
         uuid = regex.find(body)?.groupValues?.get(1) ?: error("No UUID in response")
     }
-    println("Submitted, UUID: $uuid")
+    logPrintln("Submitted, UUID: $uuid")
 
     // 2. Connect to SSE stream
     val sseRequest = Request.Builder()
@@ -45,12 +45,12 @@ fun main() {
             val line = source.readUtf8Line() ?: break
             if (line.startsWith("data:")) {
                 val json = line.removePrefix("data:").trim()
-                println("SSE Event: $json")
+                logPrintln("SSE Event: $json")
                 // Optionally, parse statusCode to determine completion
                 val codeRegex = "\"statusCode\"\\s*:\\s*(\\d+)".toRegex()
                 val code = codeRegex.find(json)?.groupValues?.get(1)?.toIntOrNull()
                 if (code == 200 || code == 500) {
-                    println("Stream finished with statusCode: $code")
+                    logPrintln("Stream finished with statusCode: $code")
                     break
                 }
             }

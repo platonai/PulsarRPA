@@ -1,6 +1,7 @@
 package ai.platon.pulsar.ql
 
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.ql.h2.DomToH2Queries
 import java.util.concurrent.Executors
 import kotlin.test.Test
@@ -25,7 +26,7 @@ class TestDomToH2Queries: TestBase() {
 
         val limit = 20
         val pages = DomToH2Queries.loadOutPages(session, url, restrictCss, 1, limit)
-        pages.map { it.url }.distinct().forEachIndexed { i, url -> println("$i.\t$url") }
+        pages.map { it.url }.distinct().forEachIndexed { i, url -> logPrintln("$i.\t$url") }
         assertTrue("Page size: " + pages.size) { pages.size <= limit }
     }
 
@@ -38,7 +39,7 @@ class TestDomToH2Queries: TestBase() {
         val futures = IntRange(1, parallel).map {
             executor.submit<Collection<WebPage>> {
                 val pages = DomToH2Queries.loadOutPages(session, url, restrictCss, 1, limit)
-                pages.map { it.url }.distinct().forEachIndexed { i, url -> println("$i.\t$url") }
+                pages.map { it.url }.distinct().forEachIndexed { i, url -> logPrintln("$i.\t$url") }
                 assertTrue("Page size: " + pages.size) { pages.size <= limit }
                 pages
             }
@@ -51,3 +52,4 @@ class TestDomToH2Queries: TestBase() {
         }
     }
 }
+

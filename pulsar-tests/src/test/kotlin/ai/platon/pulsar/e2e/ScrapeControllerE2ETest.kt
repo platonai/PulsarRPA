@@ -1,6 +1,7 @@
 package ai.platon.pulsar.e2e
 
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.integration.rest.IntegrationTestBase
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -14,13 +15,13 @@ class ScrapeControllerE2ETest : IntegrationTestBase() {
     fun testScraping(url: String) {
         val result = scrape(url)
         assertTrue(result != null, "Result should not be null | $url")
-        println(pulsarObjectMapper().writeValueAsString(result))
+        logPrintln(pulsarObjectMapper().writeValueAsString(result))
     }
 
     fun testLLMScraping(url: String) {
         val result = llmScrape(url)?.resultSet
         assertTrue(result != null, "Result should not be null | $url")
-        println(result)
+        logPrintln(result)
     }
 
     @Test
@@ -38,3 +39,4 @@ class ScrapeControllerE2ETest : IntegrationTestBase() {
         testLLMScraping("https://www.amazon.com/dp/B08PP5MSVB")
     }
 }
+

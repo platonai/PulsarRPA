@@ -9,14 +9,14 @@ class LogRequestsExample: BrowserExampleBase() {
         page.enable()
 
         network.onRequestWillBeSent { event ->
-            println(String.format("request: [%s] %s\n", event.request.method, event.request.url))
+            logPrintln(String.format("request: [%s] %s\n", event.request.method, event.request.url))
         }
 
         network.onResponseReceived { event ->
             if ("application/json" == event.response.mimeType) {
-                println(String.format("response: [%s] %s", event.response.mimeType, event.response.url))
+                logPrintln(String.format("response: [%s] %s", event.response.mimeType, event.response.url))
                 if ("listChildrenCategoryWithNologin.do" in event.response.url) {
-                    println(event.response.serviceWorkerResponseSource)
+                    logPrintln(event.response.serviceWorkerResponseSource)
                 }
             }
         }

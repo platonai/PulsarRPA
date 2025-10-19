@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.browser.BrowserFiles
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import com.google.gson.Gson
 import kotlin.test.Test
@@ -18,15 +19,15 @@ class TestChromeImplLauncher {
     @Test
     fun testRegex3() {
         val text = """
-            |xvfb-run -a -e /dev/stdout -s "-screen 0 1920x1080x24" /usr/bin/google-chrome-stable 
-            |--proxy-server=119.49.122.242:4224 --disable-gpu --hide-scrollbars --remote-debugging-port=0 
-            |--no-default-browser-check --no-first-run --no-startup-window --mute-audio 
-            |--disable-background-networking --disable-background-timer-throttling 
-            |--disable-client-side-phishing-detection --disable-hang-monitor 
-            |--disable-popup-blocking --disable-prompt-on-repost --disable-sync --disable-translate 
-            |--disable-blink-features=AutomationControlled --metrics-recording-only 
-            |--safebrowsing-disable-auto-update --no-sandbox --ignore-certificate-errors 
-            |--window-size=1920,1080 --pageLoadStrategy=none --throwExceptionOnScriptError=true 
+            |xvfb-run -a -e /dev/stdout -s "-screen 0 1920x1080x24" /usr/bin/google-chrome-stable
+            |--proxy-server=119.49.122.242:4224 --disable-gpu --hide-scrollbars --remote-debugging-port=0
+            |--no-default-browser-check --no-first-run --no-startup-window --mute-audio
+            |--disable-background-networking --disable-background-timer-throttling
+            |--disable-client-side-phishing-detection --disable-hang-monitor
+            |--disable-popup-blocking --disable-prompt-on-repost --disable-sync --disable-translate
+            |--disable-blink-features=AutomationControlled --metrics-recording-only
+            |--safebrowsing-disable-auto-update --no-sandbox --ignore-certificate-errors
+            |--window-size=1920,1080 --pageLoadStrategy=none --throwExceptionOnScriptError=true
             |--user-data-dir=/home/vincent/tmp/pulsar-vincent/context/cx.2zmmAe40/pulsar_chrome
         """.trimMargin().replace("\n", " ")
 
@@ -44,20 +45,21 @@ class TestChromeImplLauncher {
         val launcher = ChromeLauncher(userDataDir, options = LauncherOptions())
         launcher.use {
             val chrome = launcher.launch(launchOptions)
-            
+
             val version = chrome.version
             val tab = chrome.createTab("https://www.baidu.com")
             val versionString = Gson().toJson(chrome.version)
             assertTrue(!chrome.version.browser.isNullOrBlank())
             assertTrue(versionString.contains("Mozilla"))
-            
-            println("Tab id: " + tab.id)
-            println("Protocol version: " + version.protocolVersion)
-            println("Browser version" + version.browser)
-            
-            println(prettyPulsarObjectMapper().writeValueAsString(tab))
-            println(prettyPulsarObjectMapper().writeValueAsString(chrome.version))
-            println(versionString)
+
+            logPrintln("Tab id: " + tab.id)
+            logPrintln("Protocol version: " + version.protocolVersion)
+            logPrintln("Browser version" + version.browser)
+
+            logPrintln(prettyPulsarObjectMapper().writeValueAsString(tab))
+            logPrintln(prettyPulsarObjectMapper().writeValueAsString(chrome.version))
+            logPrintln(versionString)
         }
     }
 }
+

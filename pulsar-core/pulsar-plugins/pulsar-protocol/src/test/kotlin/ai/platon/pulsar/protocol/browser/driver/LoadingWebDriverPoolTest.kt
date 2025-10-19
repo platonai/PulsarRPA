@@ -11,6 +11,7 @@ import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
@@ -54,9 +55,9 @@ class LoadingWebDriverPoolTest {
             val driver = pool.poll()
 
             if (driver is PlaywrightDriver) {
-                println("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver.guid} | ${driver::class.qualifiedName}")
+                logPrintln("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver.guid} | ${driver::class.qualifiedName}")
             } else {
-                println("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver::class.qualifiedName}")
+                logPrintln("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver::class.qualifiedName}")
             }
 
             runBlocking {
@@ -80,21 +81,21 @@ class LoadingWebDriverPoolTest {
                 continue
             }
 
-            println("$i. Round $i polling a driver")
+            logPrintln("$i. Round $i polling a driver")
             val driver = pool.poll()
             drivers += driver
 
             if (driver is PlaywrightDriver) {
-                println("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver.guid} | ${driver::class.qualifiedName}")
+                logPrintln("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver.guid} | ${driver::class.qualifiedName}")
             } else {
-                println("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver::class.qualifiedName}")
+                logPrintln("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver::class.qualifiedName}")
             }
 
             executor.submit {
                 val url = seeds.random()
                 navigateTo(url, driver)
 
-                println("Navigated, put driver #${driver.id} | $url")
+                logPrintln("Navigated, put driver #${driver.id} | $url")
                 pool.put(driver)
             }
         }
@@ -103,7 +104,7 @@ class LoadingWebDriverPoolTest {
     }
 
     private fun navigateTo(url: String, driver: WebDriver) {
-        println("Navigating to $url")
+        logPrintln("Navigating to $url")
 
         runBlocking {
             try {
@@ -116,3 +117,4 @@ class LoadingWebDriverPoolTest {
         }
     }
 }
+

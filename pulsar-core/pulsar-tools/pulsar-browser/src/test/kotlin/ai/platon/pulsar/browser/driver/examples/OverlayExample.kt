@@ -53,7 +53,7 @@ class OverlayExample: BrowserExampleBase() {
 //        Thread.sleep(5000)
         val obj = overlay.getHighlightObjectForTest(nodeId)
         val json = GsonBuilder().setPrettyPrinting().create().toJson(obj)
-        println(json)
+        logPrintln(json)
     }
 }
 

@@ -2,6 +2,7 @@ package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.skeleton.ai.ActionDescription
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -43,9 +44,9 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for complex: $command")
 
-            println("Complex workflow command: $command")
-            println("Generated action: ${actionDescription.functionCalls}")
-            println("Model response: ${actionDescription.modelResponse.content}")
+            logPrintln("Complex workflow command: $command")
+            logPrintln("Generated action: ${actionDescription.functionCalls}")
+            logPrintln("Model response: ${actionDescription.modelResponse.content}")
 
             // Should handle complex instructions in some way
 
@@ -72,8 +73,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for conditional: $command")
 
-            println("Conditional command: $command")
-            println("Generated action: ${actionDescription.functionCalls}")
+            logPrintln("Conditional command: $command")
+            logPrintln("Generated action: ${actionDescription.functionCalls}")
 
             // Should handle conditional logic
 
@@ -103,9 +104,9 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
 
-            println("Context-aware command: $command (expected: $expectedContext)")
-            println("Generated action: ${actionDescription.functionCalls}")
-            println("Selected element: ${actionDescription.selectedElement}")
+            logPrintln("Context-aware command: $command (expected: $expectedContext)")
+            logPrintln("Generated action: ${actionDescription.functionCalls}")
+            logPrintln("Selected element: ${actionDescription.selectedElement}")
                 val action = actionDescription.functionCalls.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
         }
@@ -130,9 +131,9 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
 
-            println("Spatial command: $command (expected: $expectedPosition)")
-            println("Generated action: ${actionDescription.functionCalls}")
-            println("Selected element: ${actionDescription.selectedElement}")
+            logPrintln("Spatial command: $command (expected: $expectedPosition)")
+            logPrintln("Generated action: ${actionDescription.functionCalls}")
+            logPrintln("Selected element: ${actionDescription.selectedElement}")
                 val action = actionDescription.functionCalls.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
         }
@@ -162,9 +163,9 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertTrue(actionDescription.functionCalls.size <= 1, "Should handle malformed command: '$command'")
 
-            println("Malformed command: '$command'")
-            println("Generated action: ${actionDescription.functionCalls}")
-            println("Model response state: ${actionDescription.modelResponse.state}")
+            logPrintln("Malformed command: '$command'")
+            logPrintln("Generated action: ${actionDescription.functionCalls}")
+            logPrintln("Model response state: ${actionDescription.modelResponse.state}")
 
             // Should not crash and should return some response
             assertNotNull(actionDescription.modelResponse, "Should have model response")
@@ -189,8 +190,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertTrue(actionDescription.functionCalls.size <= 1, "Should handle contradictory command: $command")
 
-            println("Contradictory command: $command")
-            println("Generated action: ${actionDescription.functionCalls}")
+            logPrintln("Contradictory command: $command")
+            logPrintln("Generated action: ${actionDescription.functionCalls}")
 
             // Should handle contradictions in some way
 
@@ -220,9 +221,9 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertTrue(actionDescription.functionCalls.size <= 1, "Should handle very long command")
 
-        println("Very long command length: ${veryLongCommand.length}")
-        println("Generated action: ${actionDescription.functionCalls}")
-        println("Model response length: ${actionDescription.modelResponse.content.length}")
+        logPrintln("Very long command length: ${veryLongCommand.length}")
+        logPrintln("Generated action: ${actionDescription.functionCalls}")
+        logPrintln("Model response length: ${actionDescription.modelResponse.content.length}")
 
         // Should handle long commands without crashing
         assertNotNull(actionDescription.modelResponse, "Should have model response")
@@ -247,8 +248,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertTrue(actionDescription.functionCalls.size <= 1, "Should handle Unicode command: $command")
 
-            println("Unicode command: $command")
-            println("Generated action: ${actionDescription.functionCalls}")
+            logPrintln("Unicode command: $command")
+            logPrintln("Generated action: ${actionDescription.functionCalls}")
 
             // Should handle Unicode characters
 
@@ -277,8 +278,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertTrue(actionDescription.functionCalls.size <= 1, "Should handle $language command: $command")
 
-            println("$language command: $command")
-            println("Generated action: ${actionDescription.functionCalls}")
+            logPrintln("$language command: $command")
+            logPrintln("Generated action: ${actionDescription.functionCalls}")
                 val action = actionDescription.functionCalls.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
         }
@@ -301,7 +302,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         }
 
         results.forEachIndexed { index, result ->
-            println("Rapid execution ${index + 1}: ${result.functionCalls}")
+            logPrintln("Rapid execution ${index + 1}: ${result.functionCalls}")
             assertNotNull(result, "Should have result for execution ${index + 1}")
             assertTrue(result.functionCalls.size <= 1, "Should generate at most one action")
         }
@@ -332,8 +333,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertTrue(actionDescription.functionCalls.size <= 1, "Should handle timing command: $command")
 
-            println("Timing command: $command")
-            println("Generated action: ${actionDescription.functionCalls}")
+            logPrintln("Timing command: $command")
+            logPrintln("Generated action: ${actionDescription.functionCalls}")
                 val action = actionDescription.functionCalls.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
         }
@@ -359,8 +360,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertTrue(actionDescription.functionCalls.size <= 1, "Should handle validation command: $command")
 
-            println("Validation command: $command (type: $expectedType)")
-            println("Generated action: ${actionDescription.functionCalls}")
+            logPrintln("Validation command: $command (type: $expectedType)")
+            logPrintln("Generated action: ${actionDescription.functionCalls}")
                 val action = actionDescription.functionCalls.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
         }
@@ -377,13 +378,13 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking(testCommand, driver)
 
         // Analyze the response structure
-        println("=== RESPONSE ANALYSIS ===")
-        println("Command: $testCommand")
-        println("Function calls: ${actionDescription.functionCalls}")
-        println("Number of function calls: ${actionDescription.functionCalls.size}")
-        println("Model response state: ${actionDescription.modelResponse.state}")
-        println("Model response content length: ${actionDescription.modelResponse.content.length}")
-        println("Selected element: ${actionDescription.selectedElement}")
+        logPrintln("=== RESPONSE ANALYSIS ===")
+        logPrintln("Command: $testCommand")
+        logPrintln("Function calls: ${actionDescription.functionCalls}")
+        logPrintln("Number of function calls: ${actionDescription.functionCalls.size}")
+        logPrintln("Model response state: ${actionDescription.modelResponse.state}")
+        logPrintln("Model response content length: ${actionDescription.modelResponse.content.length}")
+        logPrintln("Selected element: ${actionDescription.selectedElement}")
 
         // Validate response structure
         assertNotNull(actionDescription.functionCalls, "Function calls should not be null")
@@ -406,3 +407,4 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         )
     }
 }
+

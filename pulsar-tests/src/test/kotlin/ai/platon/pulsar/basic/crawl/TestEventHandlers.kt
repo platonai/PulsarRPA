@@ -2,6 +2,7 @@ package ai.platon.pulsar.basic.crawl
 
 import ai.platon.pulsar.basic.MockDegeneratedListenableHyperlink
 import ai.platon.pulsar.basic.MockListenableHyperlink
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.basic.TestBase
 import org.junit.jupiter.api.Tag
 import kotlin.test.Ignore
@@ -36,7 +37,7 @@ class TestEventHandlers : TestBase() {
         assertTrue(url.isDone())
 
         url.triggeredEvents.forEach {
-            println(it)
+            logPrintln(it)
         }
 
         assertContentEquals(url.expectedEvents, url.triggeredEvents)
@@ -53,7 +54,7 @@ class TestEventHandlers : TestBase() {
         url.await()
 
         url.triggeredEvents.forEach {
-            println(it)
+            logPrintln(it)
         }
 
         assertContentEquals(url.expectedEvents, url.triggeredEvents)
@@ -61,3 +62,4 @@ class TestEventHandlers : TestBase() {
         logger.info("Tested - whenLoadDegeneratedLink_ThenEventsAreTriggered")
     }
 }
+

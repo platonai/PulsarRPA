@@ -2,6 +2,7 @@ package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.skeleton.ai.ActionDescription
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -30,7 +31,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-        println("Empty command generated: ${actionDescription.functionCalls}")
+        logPrintln("Empty command generated: ${actionDescription.functionCalls}")
     }
 
     @Test
@@ -42,7 +43,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-        println("Blank command generated: ${actionDescription.functionCalls}")
+        logPrintln("Blank command generated: ${actionDescription.functionCalls}")
     }
 
     @Test
@@ -55,7 +56,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-        println("Long command generated: ${actionDescription.functionCalls}")
+        logPrintln("Long command generated: ${actionDescription.functionCalls}")
     }
 
     // ===== Tests for special characters and encoding =====
@@ -70,7 +71,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-        println("Special characters command generated: ${actionDescription.functionCalls}")
+        logPrintln("Special characters command generated: ${actionDescription.functionCalls}")
     }
 
     @Test
@@ -83,7 +84,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-        println("Unicode command generated: ${actionDescription.functionCalls}")
+        logPrintln("Unicode command generated: ${actionDescription.functionCalls}")
     }
 
     @Test
@@ -96,7 +97,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-        println("Quoted command generated: ${actionDescription.functionCalls}")
+        logPrintln("Quoted command generated: ${actionDescription.functionCalls}")
     }
 
     // ===== Tests for impossible requests =====
@@ -111,7 +112,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-        println("Impossible element request generated: ${actionDescription.functionCalls}")
+        logPrintln("Impossible element request generated: ${actionDescription.functionCalls}")
     }
 
     @Test
@@ -124,7 +125,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-        println("Impossible action request generated: ${actionDescription.functionCalls}")
+        logPrintln("Impossible action request generated: ${actionDescription.functionCalls}")
     }
 
     // ===== Tests for contradictory requests =====
@@ -139,7 +140,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-        println("Contradictory command generated: ${actionDescription.functionCalls}")
+        logPrintln("Contradictory command generated: ${actionDescription.functionCalls}")
     }
 
     // ===== Tests for ambiguous requests =====
@@ -162,7 +163,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
-            println("Vague command '$command' generated: ${actionDescription.functionCalls}")
+            logPrintln("Vague command '$command' generated: ${actionDescription.functionCalls}")
         }
     }
 
@@ -182,7 +183,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
-            println("Ambiguous command '$command' generated: ${actionDescription.functionCalls}")
+            logPrintln("Ambiguous command '$command' generated: ${actionDescription.functionCalls}")
         }
     }
 
@@ -196,7 +197,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-        println("No elements page generated: ${actionDescription.functionCalls}")
+        logPrintln("No elements page generated: ${actionDescription.functionCalls}")
     }
 
     // ===== Tests for malformed commands =====
@@ -218,7 +219,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
-            println("Malformed command '$command' generated: ${actionDescription.functionCalls}")
+            logPrintln("Malformed command '$command' generated: ${actionDescription.functionCalls}")
         }
     }
 
@@ -241,7 +242,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
-            println("Specific command '$command' generated: ${actionDescription.functionCalls}")
+            logPrintln("Specific command '$command' generated: ${actionDescription.functionCalls}")
         }
     }
 
@@ -267,7 +268,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
             assertTrue(result.functionCalls.size <= 1, "Each rapid call should generate at most one action")
         }
 
-        println("Rapid calls generated consistent results: ${results.map { it.functionCalls }}")
+        logPrintln("Rapid calls generated consistent results: ${results.map { it.functionCalls }}")
     }
 
     // ===== Tests for mixed language commands =====
@@ -289,7 +290,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
-            println("Mixed language command '$command' generated: ${actionDescription.functionCalls}")
+            logPrintln("Mixed language command '$command' generated: ${actionDescription.functionCalls}")
         }
     }
 
@@ -307,7 +308,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-        println("Long text command generated: ${actionDescription.functionCalls}")
+        logPrintln("Long text command generated: ${actionDescription.functionCalls}")
     }
 
     // ===== Tests for selectedElement field validation =====
@@ -326,7 +327,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
             assertTrue(element.id.isNotBlank() || element.selector.isNotBlank(),
                       "Selected element should have id or selector")
             assertTrue(element.tagName.isNotBlank(), "Selected element should have tag name")
-            println("Selected element validation passed: ${element.tagName} with selector ${element.selector}")
+            logPrintln("Selected element validation passed: ${element.tagName} with selector ${element.selector}")
         }
     }
 
@@ -347,6 +348,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
                       "Model response content should not be blank")
         }
 
-        println("Model response validation passed: ${actionDescription.modelResponse}")
+        logPrintln("Model response validation passed: ${actionDescription.modelResponse}")
     }
 }
+

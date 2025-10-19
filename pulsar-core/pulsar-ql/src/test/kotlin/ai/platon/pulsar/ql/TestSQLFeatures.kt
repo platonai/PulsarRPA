@@ -1,5 +1,6 @@
 package ai.platon.pulsar.ql
 
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.ql.context.AbstractSQLContext
 import kotlin.test.Test
 
@@ -89,14 +90,14 @@ class TestSQLFeatures : TestBase() {
 
         while (rs.next()) {
             print(rs.getString(1) + " " + rs.getString(2))
-            println()
+            logPrintln()
         }
 
         if (state.moreResults) {
-            println("moreResults")
+            logPrintln("moreResults")
             while (rs.next()) {
                 print(rs.getString(1) + " " + rs.getString(2))
-                println()
+                logPrintln()
             }
         }
 
@@ -143,3 +144,4 @@ class TestSQLFeatures : TestBase() {
         query(("SELECT a,b FROM table(a INT=(1, 2, 3, 4), b CHAR=('x', 'y', 'w', 'z')) " + "WHERE a>0 AND b IN ('x', 'y')"))
     }
 }
+

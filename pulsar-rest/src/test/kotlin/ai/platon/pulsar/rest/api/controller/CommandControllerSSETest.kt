@@ -1,5 +1,6 @@
 package ai.platon.pulsar.rest.api.controller
 
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.rest.api.entities.CommandRequest
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -31,7 +32,7 @@ class CommandControllerSSETest : ScrapeControllerTestBase() {
         )
 
         val id = restTemplate.postForObject("$baseUri/api/commands", request, String::class.java)
-        println("id: $id")
+        logPrintln("id: $id")
         assertNotNull(id)
 
         receiveSSE(id)
@@ -54,7 +55,7 @@ class CommandControllerSSETest : ScrapeControllerTestBase() {
         )
 
         val id = restTemplate.postForObject("$baseUri/api/commands", request, String::class.java)
-        println("id: $id")
+        logPrintln("id: $id")
         assertNotNull(id)
 
         receiveSSE(id)
@@ -74,9 +75,10 @@ class CommandControllerSSETest : ScrapeControllerTestBase() {
             BufferedReader(inputStream).lineSequence().forEach { line ->
                 if (line.startsWith("data:")) {
                     val data = line.removePrefix("data:").trim()
-                    println("[${LocalTime.now()}] $data")
+                    logPrintln("[${LocalTime.now()}] $data")
                 }
             }
         }
     }
 }
+

@@ -3,6 +3,7 @@ package ai.platon.pulsar.basic.component
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.skeleton.crawl.component.LoadComponent
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.basic.TestBase
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.asFlow
@@ -77,7 +78,7 @@ class LoadComponentTests: TestBase() {
         val future = loadComponent.loadAsync(normURL)
         assertFalse(future.isCancelled)
         assertFalse(future.isDone)
-        future.thenAccept { println(it.url) }
+        future.thenAccept { logPrintln(it.url) }
         val page = future.get()
         assertTrue(future.isDone)
         assertEquals(url, page.url)
@@ -104,7 +105,7 @@ class LoadComponentTests: TestBase() {
         normUrls.asFlow()
             .map { loadComponent.loadDeferred(it) }
             .onEach { resultUrls.add(it.url) }
-            .onEach { println("Loaded in flow with size ${it.contentLength} | $it") }
+            .onEach { logPrintln("Loaded in flow with size ${it.contentLength} | $it") }
             .map { it.contentLength }
             .collect()
 
@@ -122,15 +123,16 @@ class LoadComponentTests: TestBase() {
         options.eventHandlers.loadEventHandlers.onLoaded.addLast { page ->
             launch {
                 channel.send(page)
-                MessageFormat.format("SEND ► page {0} | {1}", page.id, page.url).also { println(it) }
+                MessageFormat.format("SEND ► page {0} | {1}", page.id, page.url).also { logPrintln(it) }
             }
         }
         session.submitAll(testUrls, options)
 
         repeat(testUrls.size) {
             val page = channel.receive()
-            MessageFormat.format("RECV ◀ page {0} | {1}", page.id, page.url).also { println(it) }
+            MessageFormat.format("RECV ◀ page {0} | {1}", page.id, page.url).also { logPrintln(it) }
         }
-        println("Done!")
+        logPrintln("Done!")
     }
 }
+

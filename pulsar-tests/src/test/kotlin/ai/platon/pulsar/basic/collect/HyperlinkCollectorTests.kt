@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.sleep
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.skeleton.common.collect.HyperlinkCollector
 import ai.platon.pulsar.skeleton.common.collect.PeriodicalLocalFileHyperlinkCollector
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.basic.TestBase
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
@@ -83,7 +84,7 @@ class HyperlinkCollectorTests: TestBase() {
             collector.collectTo(sink)
 
             if (i % 100 == 0) {
-                println(
+                logPrintln(
                     "$i.\tRound ${collector.round} " +
                             "expected collected: ${collector.counters.collected}, actual collected: ${sink.size}, " +
                             "total hyperlinks: ${collector.hyperlinks.size}"
@@ -102,3 +103,4 @@ class HyperlinkCollectorTests: TestBase() {
         assertTrue { sink.isNotEmpty() }
     }
 }
+

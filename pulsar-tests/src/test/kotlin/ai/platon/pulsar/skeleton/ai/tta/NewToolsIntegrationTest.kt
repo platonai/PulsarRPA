@@ -1,5 +1,6 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -34,7 +35,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
         val action = actionDescription.functionCalls.first()
-        println("Generated action: $action")
+        logPrintln("Generated action: $action")
         assertTrue(action.contains("exists") || action.contains("driver.exists"),
             "Should generate exists action")
         assertTrue(action.contains("搜索") || action.contains("button") || action.contains("search"),
@@ -51,7 +52,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
         val action = actionDescription.functionCalls.first()
-        println("Generated action: $action")
+        logPrintln("Generated action: $action")
         assertTrue(action.contains("exists") || action.contains("driver.exists"),
             "Should generate exists action")
     }
@@ -68,7 +69,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
         val action = actionDescription.functionCalls.first()
-        println("Generated action: $action")
+        logPrintln("Generated action: $action")
         assertTrue(action.contains("isVisible") || action.contains("driver.isVisible"),
             "Should generate isVisible action")
         assertTrue(action.contains("input") || action.contains("搜索") || action.contains("search"),
@@ -85,7 +86,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
         val action = actionDescription.functionCalls.first()
-        println("Generated action: $action")
+        logPrintln("Generated action: $action")
         assertTrue(action.contains("isVisible") || action.contains("driver.isVisible"),
             "Should generate isVisible action")
     }
@@ -102,7 +103,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
         val action = actionDescription.functionCalls.first()
-        println("Generated action: $action")
+        logPrintln("Generated action: $action")
         assertTrue(action.contains("focus") || action.contains("driver.focus"),
             "Should generate focus action")
         assertTrue(action.contains("input") || action.contains("搜索") || action.contains("search"),
@@ -119,7 +120,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
         val action = actionDescription.functionCalls.first()
-        println("Generated action: $action")
+        logPrintln("Generated action: $action")
         assertTrue(action.contains("focus") || action.contains("driver.focus"),
             "Should generate focus action")
         assertTrue(action.contains("button") || action.contains("提交") || action.contains("submit"),
@@ -138,7 +139,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
         val action = actionDescription.functionCalls.first()
-        println("Generated action: $action")
+        logPrintln("Generated action: $action")
         assertTrue(action.contains("scrollTo") || action.contains("driver.scrollTo"),
             "Should generate scrollTo action")
         assertTrue(action.contains("form") || action.contains("表单") || action.contains("底部"),
@@ -155,7 +156,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
         val action = actionDescription.functionCalls.first()
-        println("Generated action: $action")
+        logPrintln("Generated action: $action")
         assertTrue(action.contains("scrollTo") || action.contains("driver.scrollTo"),
             "Should generate scrollTo action")
         assertTrue(action.contains("h2") || action.contains("section") || action.contains("Section 2"),
@@ -174,7 +175,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         assertNotNull(actionDescription)
         // This might generate multiple actions: click + waitForNavigation
         val actions = actionDescription.functionCalls
-        println("Generated actions: $actions")
+        logPrintln("Generated actions: $actions")
 
         // Check if any action contains waitForNavigation
         val hasWaitForNavigation = actions.any { action ->
@@ -192,7 +193,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
-        println("Generated actions: $actions")
+        logPrintln("Generated actions: $actions")
 
         // Check if any action contains waitForNavigation
         val hasWaitForNavigation = actions.any { action ->
@@ -213,7 +214,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
         val action = actionDescription.functionCalls.first()
-        println("Generated action: $action")
+        logPrintln("Generated action: $action")
         assertTrue(action.contains("goBack") || action.contains("driver.goBack"),
             "Should generate goBack action")
     }
@@ -228,7 +229,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
         val action = actionDescription.functionCalls.first()
-        println("Generated action: $action")
+        logPrintln("Generated action: $action")
         assertTrue(action.contains("goForward") || action.contains("driver.goForward"),
             "Should generate goForward action")
     }
@@ -244,7 +245,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
-        println("Generated actions: $actions")
+        logPrintln("Generated actions: $actions")
 
         // Should generate conditional logic with exists check
         val hasExistsCheck = actions.any { action ->
@@ -267,7 +268,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
-        println("Generated actions: $actions")
+        logPrintln("Generated actions: $actions")
 
         // Should include wait and then interaction
         val hasWaitAction = actions.any { action ->
@@ -292,7 +293,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
-        println("Generated actions: $actions")
+        logPrintln("Generated actions: $actions")
 
         // Should include visibility check and click
         val hasVisibilityCheck = actions.any { action ->
@@ -314,7 +315,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         val actions = actionDescription.functionCalls
-        println("Generated actions: $actions")
+        logPrintln("Generated actions: $actions")
 
         // Should include focus and then interaction
         val hasFocusAction = actions.any { action ->
@@ -328,3 +329,4 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         assertTrue(hasFocusAction || hasFillAction, "Should generate focus and/or fill actions")
     }
 }
+

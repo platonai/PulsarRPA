@@ -11,6 +11,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.skeleton.common.collect.LocalFileHyperlinkCollector
 import org.apache.commons.collections4.map.MultiValueMap
 import kotlin.test.*
@@ -61,19 +62,19 @@ class TestDataCollectors : TestBase() {
         }
         assertEquals(urlPool.orderedCaches.size, collectors.size)
         assertTrue { collectors.first().priority < collectors.last().priority }
-//        collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
+//        collectors.sortedBy { it.priority }.forEach { logPrintln("$it ${it.priority}") }
 
-        println("Adding another normal collector ...")
+        logPrintln("Adding another normal collector ...")
         val priority = Priority13.NORMAL.value
         val normalCollector = UrlCacheCollector(urlPool.normalCache)
         collectors += normalCollector
         assertEquals(2, collectors.count { it.priority == priority })
-//        collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
+//        collectors.sortedBy { it.priority }.forEach { logPrintln("$it ${it.priority}") }
 
         val normalCollector2 = LocalFileHyperlinkCollector(Paths.get("/tmp/non-exist"), priority)
         collectors += normalCollector2
         assertEquals(3, collectors.count { it.priority == priority })
-//        collectors.sortedBy { it.priority }.forEach { println("$it ${it.priority}") }
+//        collectors.sortedBy { it.priority }.forEach { logPrintln("$it ${it.priority}") }
     }
 
     @Test
@@ -85,20 +86,20 @@ class TestDataCollectors : TestBase() {
         }
         assertEquals(urlPool.orderedCaches.size, collectors.keys.size)
 //        assertTrue { collectors.first().priority < collectors.last().priority }
-        collectors.keys.sorted().forEach { p -> println("$p ${collectors[p]}") }
+        collectors.keys.sorted().forEach { p -> logPrintln("$p ${collectors[p]}") }
 
-        println("Adding 2nd normal collector ...")
+        logPrintln("Adding 2nd normal collector ...")
         val priority = Priority13.NORMAL.value
         val normalCollector = UrlCacheCollector(urlPool.normalCache)
         collectors[priority] = normalCollector
         assertEquals(2, collectors.size(priority))
-        collectors.keys.sorted().forEach { p -> println("$p ${collectors[p]}") }
+        collectors.keys.sorted().forEach { p -> logPrintln("$p ${collectors[p]}") }
 
-        println("Adding 3rd normal collector ...")
+        logPrintln("Adding 3rd normal collector ...")
         val normalCollector2 = LocalFileHyperlinkCollector(Paths.get("/tmp/non-exist"), priority)
         collectors[priority] = normalCollector2
         assertEquals(3, collectors.size(priority))
-        collectors.keys.sorted().forEach { p -> println("$p ${collectors[p]}") }
+        collectors.keys.sorted().forEach { p -> logPrintln("$p ${collectors[p]}") }
     }
 
     @Test
@@ -127,3 +128,4 @@ class TestDataCollectors : TestBase() {
         assertTrue { cache.nonReentrantQueue.isEmpty() }
     }
 }
+

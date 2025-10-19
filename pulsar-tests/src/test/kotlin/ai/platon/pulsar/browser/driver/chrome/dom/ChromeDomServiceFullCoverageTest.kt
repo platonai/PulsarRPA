@@ -6,6 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.ElementRefCriteria
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.PageTarget
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -37,12 +38,12 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
 
         val enhancedRoot = collectEnhancedRoot(service, options)
         // Print enhanced DOMTreeNodeEx summary and basic tree stats
-        println(DomDebug.summarize(enhancedRoot))
+        logPrintln(DomDebug.summarize(enhancedRoot))
         assertTrue(enhancedRoot.children.isNotEmpty())
 
         val simplified = service.buildTinyTree(enhancedRoot)
         // Print SlimNode summary and basic tree stats
-        println(DomDebug.summarize(simplified))
+        logPrintln(DomDebug.summarize(simplified))
         assertTrue(simplified.children.isNotEmpty())
 
         val llm = service.buildDOMState(simplified)
@@ -75,7 +76,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         suspend fun collectRoot(): DOMTreeNodeEx {
             repeat(3) { attempt ->
                 val t = service.getMultiDOMTrees(target = PageTarget(), options = options)
-                println(DomDebug.summarize(t))
+                logPrintln(DomDebug.summarize(t))
                 val r = service.buildEnhancedDomTree(t)
                 if (r.children.isNotEmpty() || attempt == 2) return r
                 Thread.sleep(300)
@@ -84,7 +85,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         }
         val root = collectRoot()
         assertNotNull(root)
-        println(DomDebug.summarize(root))
+        logPrintln(DomDebug.summarize(root))
 
         // Try CSS by id first
         var target = service.findElement(ElementRefCriteria(cssSelector = "#loadingContainer"))
@@ -93,7 +94,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         val direct = findNodeById(root, "loadingContainer")
         assertNotNull(direct)
         requireNotNull(direct)
-        println(DomDebug.summarize(direct))
+        logPrintln(DomDebug.summarize(direct))
 
         val viaXPath = direct.xpath?.let { service.findElement(ElementRefCriteria(xPath = it)) }
         target = viaXPath ?: direct.elementHash?.let { service.findElement(ElementRefCriteria(elementHash = it)) }
@@ -137,7 +138,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
 
         // Convert to interacted element (should include hash)
         val interacted = service.toInteractedElement(t)
-        println(DomDebug.summarize(interacted))
+        logPrintln(DomDebug.summarize(interacted))
         assertTrue(interacted.elementHash.isNotBlank())
     }
 
@@ -160,12 +161,12 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         )
 
         val trees = service.getMultiDOMTrees(PageTarget(), options)
-        println(DomDebug.summarize(trees))
+        logPrintln(DomDebug.summarize(trees))
         assertTrue(trees.snapshotByBackendId.isEmpty())
         assertTrue(trees.axTree.isEmpty())
 
         val root = service.buildEnhancedDomTree(trees)
-        println(DomDebug.summarize(root))
+        logPrintln(DomDebug.summarize(root))
         assertTrue(root.children.isNotEmpty())
 
         // Pick a common element and assert minimal fields
@@ -211,14 +212,14 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         assertTrue(hasContainer, "Expected #virtualScrollContainer to be present after generateLargeList(1000)")
 
         val root = collectEnhancedRoot(service, options)
-        println(DomDebug.summarize(root))
+        logPrintln(DomDebug.summarize(root))
         assertNotNull(root)
 
         // Locate scroll container by CSS, fallback to DFS by id
         var scrollContainer = service.findElement(ElementRefCriteria(cssSelector = "#virtualScrollContainer"))
         assertNotNull(scrollContainer, "Expected scroll container to be found and resolved")
         requireNotNull(scrollContainer)
-        println(DomDebug.summarize(scrollContainer))
+        logPrintln(DomDebug.summarize(scrollContainer))
         assertEquals(true, scrollContainer.isScrollable, "Expected #virtualScrollContainer to be marked scrollable")
 
         val direct = findNodeById(root, "virtualScrollContainer")
@@ -241,7 +242,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         // Always verify interactivity by tag-based path
         val anyVirtualBtn = service.findElement(ElementRefCriteria(cssSelector = "button"))
         assertNotNull(anyVirtualBtn)
-        println(anyVirtualBtn?.let { DomDebug.summarize(it) })
+        logPrintln(anyVirtualBtn?.let { DomDebug.summarize(it) })
         assertEquals(true, anyVirtualBtn!!.isInteractable)
     }
 
@@ -278,15 +279,16 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         )
 
         val root = collectEnhancedRoot(service, options)
-        println(DomDebug.summarize(root))
+        logPrintln(DomDebug.summarize(root))
 
         val dynamic = service.findElement(ElementRefCriteria(cssSelector = "#dynamicContent"))
             ?: findNodeById(root, "dynamicContent")
         assertNotNull(dynamic, "Expected #dynamicContent to exist in DOM")
         val klass = dynamic!!.attributes["class"] ?: ""
-        println(DomDebug.summarize(dynamic))
+        logPrintln(DomDebug.summarize(dynamic))
 
         // Hard assertion: ensure 'loaded' class is present in the enhanced DOM snapshot as well
         assertTrue(klass.split(" ").contains("loaded"), "Expected #dynamicContent to have 'loaded' class in enhanced DOM snapshot")
     }
 }
+

@@ -3,6 +3,7 @@ package ai.platon.pulsar.skeleton.crawl.common.urls
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.skeleton.common.urls.CombinedUrlNormalizer
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
 import com.google.gson.GsonBuilder
 import kotlin.test.Test
@@ -41,10 +42,10 @@ class HyperlinkTests {
         val u1 = Hyperlink(UrlCommon.urlString1)
         val gson = GsonBuilder().create()
         val json = gson.toJson(u1)
-        println(json)
+        logPrintln(json)
         assertTrue { json.contains(UrlCommon.urlString1) }
         val u2 = gson.fromJson(json, Hyperlink::class.java)
-        println(u2)
+        logPrintln(u2)
         assertEquals(UrlCommon.urlString1, u2.url)
     }
 
@@ -54,10 +55,10 @@ class HyperlinkTests {
             referrer = "http://bar.tt/", href = "http://foo.com/sp?se=1")
         val gson = GsonBuilder().create()
         val json = gson.toJson(u1.data())
-        println(json)
+        logPrintln(json)
         assertTrue { json.contains(UrlCommon.urlString1) }
         val u2 = gson.fromJson(json, HyperlinkDatum::class.java)
-        println(u2)
+        logPrintln(u2)
         assertEquals(u1.url, u2.url)
         assertEquals(u1.text, u2.text)
         assertEquals(u1.args, u2.args)
@@ -104,3 +105,4 @@ class HyperlinkTests {
         assertEquals(u1.href, normUrl1.href?.toString())
     }
 }
+

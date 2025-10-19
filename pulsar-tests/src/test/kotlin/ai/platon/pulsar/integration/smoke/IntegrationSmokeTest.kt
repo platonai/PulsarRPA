@@ -10,15 +10,15 @@ import kotlin.test.Test
 class IntegrationSmokeTest {
     @LocalServerPort
     val port = 0
-    
+
     @Autowired
     lateinit var restTemplate: TestRestTemplate
-    
+
     val jsonUrl get() = "http://localhost:$port/json"
-    
+
     @Test
     fun `when access json API then ok`() {
         val response = restTemplate.getForObject(jsonUrl, String::class.java)
-        println(response)
+        logPrintln(response)
     }
 }

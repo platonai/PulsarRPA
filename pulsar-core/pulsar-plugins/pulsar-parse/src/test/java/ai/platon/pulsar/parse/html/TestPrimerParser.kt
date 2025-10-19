@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.skeleton.crawl.parse.html.PrimerParser
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import org.apache.html.dom.HTMLDocumentImpl
 import org.cyberneko.html.parsers.DOMFragmentParser
@@ -189,9 +190,10 @@ class TestPrimerParser {
                 testBaseHrefURLs[i] = URL(testBaseHrefs[i])
             } catch (e: Exception) {
                 // assertTrue("caught exception: $e", false)
-                println(e.stringify())
+                logPrintln(e.stringify())
             }
             testDOMs[i] = node
         }
     }
 }
+

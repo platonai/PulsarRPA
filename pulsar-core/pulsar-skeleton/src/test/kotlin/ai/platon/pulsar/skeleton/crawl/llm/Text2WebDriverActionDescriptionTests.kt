@@ -13,20 +13,20 @@ class Text2WebDriverActionDescriptionTests: TTATestBase() {
     fun checkTokenUsage() {
         lastResponse?.let { TestHelper.checkTokenUsage(it) }
     }
-    
+
     @Test
     fun `When ask to open a web page then generate correct kotlin code`() {
         val prompt = """
 如何打开一个网页？
         """.trimIndent()
-        
+
         val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
-        println(response.content)
+        logPrintln(response.content)
 
         assertTrue { listOf(".navigateTo", ".open").any { response.content.contains(it) } }
     }
-    
+
     @Test
     fun `When ask to open a web page and scroll then generate correct kotlin code`() {
         val prompt = """
@@ -35,7 +35,7 @@ class Text2WebDriverActionDescriptionTests: TTATestBase() {
 
         val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
-        println(response.content)
+        logPrintln(response.content)
 
         assertTrue { response.content.contains(".scrollToMiddle") }
     }
@@ -48,7 +48,7 @@ class Text2WebDriverActionDescriptionTests: TTATestBase() {
 
         val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
-        println(response.content)
+        logPrintln(response.content)
 
         val content = response.content
         assertTrue { content.contains(".scrollToMiddle") }

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.heavy
 
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.ql.context.SQLContexts
 import java.nio.file.Path
 import java.time.Duration
@@ -16,10 +17,10 @@ open class MassiveTestBase {
             val clazzName = this.javaClass.simpleName
             val propertyName = "${clazzName}_TestFileCount"
 
-            println("------------- Massive Task Test Message -----------------")
-            println("Set system property $propertyName to enable the massive test")
-            println("For example: -D$propertyName=10000")
-            println("---------------------------------------------------------")
+            logPrintln("------------- Massive Task Test Message -----------------")
+            logPrintln("Set system property $propertyName to enable the massive test")
+            logPrintln("For example: -D$propertyName=10000")
+            logPrintln("---------------------------------------------------------")
 
             return System.getProperty(propertyName)?.toInt() ?: 0
         }
@@ -68,6 +69,7 @@ open class MassiveTestBase {
     fun tearDown() {
         val endTime = LocalDateTime.now()
         val duration = Duration.between(startTime, endTime)
-        println("Test finished, duration: $duration")
+        logPrintln("Test finished, duration: $duration")
     }
 }
+

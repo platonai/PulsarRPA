@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.apache.commons.lang3.StringUtils
 import java.io.IOException
@@ -71,11 +72,11 @@ class TestString {
         val matcher: Matcher
         //        matcher = PATTERN_RECT.matcher(text);
 //        if (matcher.find()) {
-//          System.out.println(matcher.group(0));
-//          System.out.println(matcher.group(1) + matcher.group(2));
-//          System.out.println(matcher.group(3) + matcher.group(4));
-//          System.out.println(matcher.group(5) + matcher.group(6));
-//          System.out.println(matcher.group(7) + matcher.group(8));
+//          System.out.logPrintln(matcher.group(0));
+//          System.out.logPrintln(matcher.group(1) + matcher.group(2));
+//          System.out.logPrintln(matcher.group(3) + matcher.group(4));
+//          System.out.logPrintln(matcher.group(5) + matcher.group(6));
+//          System.out.logPrintln(matcher.group(7) + matcher.group(8));
 //        }
         text = "*,*,230,420"
         val REGEX_RECT = "([+-])?(\\*|\\d+),([+-])?(\\*|\\d+),([+-])?(\\*|\\d+),([+-])?(\\*|\\d+)"
@@ -143,12 +144,12 @@ class TestString {
     fun testPricePattern() {
         val text = "￥799.00 (降价通知)"
         // text = text.replaceAll("¥|,|'", "");
-// System.out.println(text);
+// System.out.logPrintln(text);
         val matcher = Strings.PRICE_PATTERN.matcher(text)
         var count = 0
         while (matcher.find()) {
             count++
-            // System.out.println("Found Price : " + count + " : " + matcher.start() + " - " + matcher.end() + ", " + matcher.group());
+            // System.out.logPrintln("Found Price : " + count + " : " + matcher.start() + " - " + matcher.end() + ", " + matcher.group());
         }
         assertTrue(count > 0)
     }
@@ -156,8 +157,8 @@ class TestString {
     @Test
     fun testParseVersion() {
         // assertTrue(Math.abs(StringUtil.tryParseDouble("0.2.0") - 0.2) < 0.0000001);
-//    System.out.println(Lists.newArrayList("0.2.0".split("\\.")));
-//    System.out.println("0.2.0".split("\\.").length);
+//    System.out.logPrintln(Lists.newArrayList("0.2.0".split("\\.")));
+//    System.out.logPrintln("0.2.0".split("\\.").length);
         assertEquals(3, "0.2.0".split(".").size)
     }
 
@@ -187,7 +188,7 @@ class TestString {
             "天王表 正品热卖 \uE004主要职责：  OK"
         )
         for (text in texts) {
-            println(Strings.removeNonCJKChar(text, Strings.DEFAULT_KEEP_CHARS))
+            logPrintln(Strings.removeNonCJKChar(text, Strings.DEFAULT_KEEP_CHARS))
         }
     }
 
@@ -216,7 +217,7 @@ class TestString {
         )
 
         for (text in mainlyChineseTexts) {
-            println(
+            logPrintln(
                 Strings.countChinese(text).toString() + "/" + text.length
                         + "=" + Strings.countChinese(text) * 1.0 / text.length + "\t" + text
             )
@@ -240,7 +241,7 @@ class TestString {
         assertEquals("http://t.tt/", parts[0])
         s = "ld,-o,-s,-w:hello,-a:b,-c"
         val options = StringUtils.replaceChars(s, ":,", Strings.padding[2]).split(" ").toTypedArray()
-        println(StringUtils.join(options, " "))
+        logPrintln(StringUtils.join(options, " "))
     }
 
     @Test
@@ -281,10 +282,10 @@ class TestString {
         assertEquals(kvs, Strings.parseKvs("a=1 b=2 c=3"))
         assertEquals(kvs, Strings.parseKvs("a:1\nb:2\tc:3", ":"))
         assertTrue(Strings.parseKvs("abcd1234*&#$").isEmpty())
-        println(Strings.parseKvs("a=1 b=2 c=3 c=4  d e f"))
-        println(SParser.wrap("a=1 b=2 c=3,c=4 d e f").getKvs("="))
-        println(SParser.wrap("a=1 b=2 c=3 c=4,d= e f").getKvs("="))
-        println(SParser.wrap("").kvs)
+        logPrintln(Strings.parseKvs("a=1 b=2 c=3 c=4  d e f"))
+        logPrintln(SParser.wrap("a=1 b=2 c=3,c=4 d e f").getKvs("="))
+        logPrintln(SParser.wrap("a=1 b=2 c=3 c=4,d= e f").getKvs("="))
+        logPrintln(SParser.wrap("").kvs)
         val kvs2 = arrayOf(
             "a=1 b=2 c=3,c=4 d e f",
             "a=1 b=2 c=3 c=4 d= e f",
@@ -408,13 +409,14 @@ class TestString {
         val s = "409.7 219.3 864 411.8|12|16, 3, f"
         val base64 = Base64.getEncoder().encodeToString(s.toByteArray())
         assertEquals("NDA5LjcgMjE5LjMgODY0IDQxMS44fDEyfDE2LCAzLCBm", base64)
-        println(base64)
+        logPrintln(base64)
         val decoded = String(Base64.getDecoder().decode(base64))
         assertEquals(s, decoded)
 
         val s2 = "409.7 219.3 864 411.8"
         val base64_2 = Base64.getEncoder().encodeToString(s2.toByteArray())
         assertEquals("NDA5LjcgMjE5LjMgODY0IDQxMS44", base64_2)
-        println(base64_2)
+        logPrintln(base64_2)
     }
 }
+

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import kotlinx.coroutines.delay
 import kotlin.test.Test
@@ -23,24 +24,24 @@ class TestReflection {
         emitter.on1(BarEvents.onWillDoADelayed) { delay(1) }
 
         emitter.listeners().forEach { obj ->
-//            println("=========== Java Class: ")
-//            println(obj.javaClass)
-//            println("Superclass: " + obj.javaClass.superclass)
+//            logPrintln("=========== Java Class: ")
+//            logPrintln(obj.javaClass)
+//            logPrintln("Superclass: " + obj.javaClass.superclass)
 //
-//            println("----------- methods: ")
+//            logPrintln("----------- methods: ")
 
             obj.javaClass.methods.forEach { method ->
                 val name = method.name
                 val fullName = method.toString()
 
-//                println(name)
-//                println(fullName)
-//                println("Invokable?: " + MethodReflect.isInvokable(method))
-//                println("NormalInvokable?: " + MethodReflect.isNormalInvokable(method))
-//                println("SuspendInvokable?: " + MethodReflect.isSuspendInvokable(method))
+//                logPrintln(name)
+//                logPrintln(fullName)
+//                logPrintln("Invokable?: " + MethodReflect.isInvokable(method))
+//                logPrintln("NormalInvokable?: " + MethodReflect.isNormalInvokable(method))
+//                logPrintln("SuspendInvokable?: " + MethodReflect.isSuspendInvokable(method))
 //                method.parameters.forEach {
-//                    println(it.name + "\t" + it.type + "\t" + it.type.name)
-//                    println("Type: " + it.type.name + "\t" + it.type.canonicalName + "\t")
+//                    logPrintln(it.name + "\t" + it.type + "\t" + it.type.name)
+//                    logPrintln("Type: " + it.type.name + "\t" + it.type.canonicalName + "\t")
 //                }
             }
         }
@@ -61,3 +62,4 @@ class TestReflection {
         assertTrue { ClassReflect.isSuspendInvokable(method2.javaClass) }
     }
 }
+

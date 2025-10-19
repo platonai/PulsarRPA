@@ -11,11 +11,11 @@ class ConfigSourceLogger(private val env: ConfigurableEnvironment) {
 
     @EventListener(ApplicationReadyEvent::class)
     fun logPropertySources() {
-        println(Paths.get(".").toAbsolutePath())
+        logPrintln(Paths.get(".").toAbsolutePath())
 
-        println("=== Spring Boot Property Sources ===")
+        logPrintln("=== Spring Boot Property Sources ===")
         env.propertySources.forEach { ps ->
-            println("Source: ${ps.name} ${ps.source}")
+            logPrintln("Source: ${ps.name} ${ps.source}")
         }
     }
 }

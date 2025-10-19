@@ -1,5 +1,6 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
+import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
@@ -36,7 +37,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
         val prompt = "从当前页面提取所有可交互的元素"
         val response = textToAction.generateWebDriverActionBlocking(prompt, driver)
 
-        println("Element extraction response: ${response.modelResponse.content}")
+        logPrintln("Element extraction response: ${response.modelResponse.content}")
 
         // Verify response contains information about element extraction
         assertTrue(
@@ -65,7 +66,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
                 val prompt = "分析$pageUrl 页面中的可交互元素"
                 val response = textToAction.generateWebDriverActionBlocking(prompt, driver)
 
-                println("Page $pageUrl analysis: ${response.modelResponse.content}")
+                logPrintln("Page $pageUrl analysis: ${response.modelResponse.content}")
 
                 // Verify response mentions page analysis
                 assertTrue(
@@ -87,7 +88,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
         val prompt = "分析页面中元素的定位和尺寸信息"
         val response = textToAction.generateWebDriverActionBlocking(prompt, driver)
 
-        println("Bounds analysis response: ${response.modelResponse.content}")
+        logPrintln("Bounds analysis response: ${response.modelResponse.content}")
 
         // Should mention positioning or bounds
         assertTrue(
@@ -109,7 +110,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
         val prompt = "分析页面中元素的可见性状态"
         val response = textToAction.generateWebDriverActionBlocking(prompt, driver)
 
-        println("Visibility analysis response: ${response.modelResponse.content}")
+        logPrintln("Visibility analysis response: ${response.modelResponse.content}")
 
         // Should mention visibility
         assertTrue(
@@ -131,7 +132,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
         val prompt = "生成页面中元素的详细描述信息"
         val response = textToAction.generateWebDriverActionBlocking(prompt, driver)
 
-        println("Description generation response: ${response.modelResponse.content}")
+        logPrintln("Description generation response: ${response.modelResponse.content}")
 
         // Should mention element descriptions
         assertTrue(
@@ -153,7 +154,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
         val prompt = "分析页面中元素的选择器生成逻辑"
         val response = textToAction.generateWebDriverActionBlocking(prompt, driver)
 
-        println("Selector generation response: ${response.modelResponse.content}")
+        logPrintln("Selector generation response: ${response.modelResponse.content}")
 
         // Should mention selectors
         assertTrue(
@@ -175,7 +176,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
         val prompt = "测试页面动态内容的交互功能"
         val response = textToAction.generateWebDriverActionBlocking(prompt, driver)
 
-        println("Dynamic content response: ${response.modelResponse.content}")
+        logPrintln("Dynamic content response: ${response.modelResponse.content}")
 
         // Should mention dynamic content or interaction
         assertTrue(
@@ -197,7 +198,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
         val prompt = "分析页面中隐藏元素的显示和隐藏逻辑"
         val response = textToAction.generateWebDriverActionBlocking(prompt, driver)
 
-        println("Hidden elements response: ${response.modelResponse.content}")
+        logPrintln("Hidden elements response: ${response.modelResponse.content}")
 
         // Should mention hidden elements or toggle functionality
         assertTrue(
@@ -220,7 +221,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
         val prompt = "测试JavaScript资源加载和功能执行"
         val response = textToAction.generateWebDriverActionBlocking(prompt, listOf())
 
-        println("Resource loading test response: ${response.modelResponse.content}")
+        logPrintln("Resource loading test response: ${response.modelResponse.content}")
 
         // Should generate some response indicating functionality works
         assertTrue(response.modelResponse.content.isNotBlank(), "Should generate response for resource loading test")
@@ -237,9 +238,9 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
         val endTime = System.currentTimeMillis()
 
         val processingTime = endTime - startTime
-        println("Complex page analysis took ${processingTime}ms")
+        logPrintln("Complex page analysis took ${processingTime}ms")
 
-        println("Performance analysis response: ${response.modelResponse.content}")
+        logPrintln("Performance analysis response: ${response.modelResponse.content}")
 
         // Should complete in reasonable time and mention performance
         assertTrue(processingTime < 5000, "Should complete within 5 seconds")
@@ -254,3 +255,4 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
         )
     }
 }
+
