@@ -1,6 +1,8 @@
 package ai.platon.pulsar.agentic.context
 
 import ai.platon.pulsar.agentic.AgenticSession
+import ai.platon.pulsar.browser.common.DisplayMode
+import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import org.springframework.context.ApplicationContext
@@ -32,6 +34,32 @@ object AgenticContexts {
 
     @Synchronized
     fun getOrCreateSession(settings: PulsarSettings = PulsarSettings()): AgenticSession = create().getOrCreateSession(settings)
+
+    @Synchronized
+    fun createSession(
+        isSPA: Boolean? = null,
+        headless: Boolean = false,
+        maxBrowsers: Int? = null,
+        maxOpenTabs: Int? = null,
+        interactSettings: InteractSettings? = null,
+    ): AgenticSession {
+        val displayMode = if (headless) DisplayMode.HEADLESS else null
+        val settings = PulsarSettings(isSPA, displayMode, maxBrowsers, maxOpenTabs, interactSettings)
+        return createSession(settings)
+    }
+
+    @Synchronized
+    fun getOrCreateSession(
+        isSPA: Boolean? = null,
+        headless: Boolean = false,
+        maxBrowsers: Int? = null,
+        maxOpenTabs: Int? = null,
+        interactSettings: InteractSettings? = null,
+    ): AgenticSession {
+        val displayMode = if (headless) DisplayMode.HEADLESS else null
+        val settings = PulsarSettings(isSPA, displayMode, maxBrowsers, maxOpenTabs, interactSettings)
+        return getOrCreateSession(settings)
+    }
 
     @Throws(InterruptedException::class)
     fun await() = PulsarContexts.await()

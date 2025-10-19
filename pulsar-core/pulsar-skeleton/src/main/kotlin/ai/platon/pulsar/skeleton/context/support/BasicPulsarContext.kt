@@ -1,5 +1,6 @@
 package ai.platon.pulsar.skeleton.context.support
 
+import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.session.BasicPulsarSession
 import org.springframework.context.support.AbstractApplicationContext
 
@@ -16,5 +17,10 @@ open class BasicPulsarContext(
     override fun createSession(): BasicPulsarSession {
         val session = BasicPulsarSession(this, configuration.toVolatileConfig())
         return session.also { sessions[it.id] = it }
+    }
+
+    @Throws(Exception::class)
+    override fun createSession(settings: PulsarSettings): BasicPulsarSession {
+        return createSession().also { settings.overrideConfiguration(it.sessionConfig) }
     }
 }
