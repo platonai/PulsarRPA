@@ -1,11 +1,13 @@
-
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.AppPaths
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.SystemUtils
 import java.nio.file.FileSystems
 import java.nio.file.Files
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class TestRuntimes {
     @Test
@@ -30,11 +32,11 @@ class TestRuntimes {
     @Test
     fun testDeleteBrokenSymbolicLinksUsingBash() {
         if (SystemUtils.IS_OS_WINDOWS) {
-            System.err.logPrintln("Files.createSymbolicLink failed on Windows")
+            System.err.println("Files.createSymbolicLink failed on Windows")
             return
         }
 
-        val tmp = AppPaths.getTmp("test")
+        val tmp = AppPaths.getTmpDirectory("test")
         val file = tmp.resolve(RandomStringUtils.randomAlphabetic(5))
         Files.createDirectories(file.parent)
         Files.writeString(file, "to be deleted")
@@ -59,7 +61,7 @@ class TestRuntimes {
 
     @Test
     fun testDeleteBrokenSymbolicLinksUsingJava() {
-        val tmpDir = AppPaths.getTmp("test")
+        val tmpDir = AppPaths.getTmpDirectory("test")
         val file = tmpDir.resolve(RandomStringUtils.randomAlphabetic(5))
         Files.createDirectories(file.parent)
         Files.writeString(file, "to be deleted")
@@ -85,8 +87,12 @@ class TestRuntimes {
     fun testUnallocatedDiskSpaces() {
         FileSystems.getDefault().fileStores.forEach {
             try {
-                logPrintln(String.format("%-30s%-10s%-20s%s", it.name(), it.type(),
-                    Strings.compactFormat(it.unallocatedSpace), Strings.compactFormat(it.totalSpace)))
+                logPrintln(
+                    String.format(
+                        "%-30s%-10s%-20s%s", it.name(), it.type(),
+                        Strings.compactFormat(it.unallocatedSpace), Strings.compactFormat(it.totalSpace)
+                    )
+                )
             } catch (e: Exception) {
                 logPrintln(e.message)
             }
