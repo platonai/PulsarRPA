@@ -72,7 +72,7 @@ abstract class AbstractAgenticSession(
     id: Long = generateNextInProcessId()
 ): AbstractPulsarSession(context, sessionConfig, id = id), AgenticSession
 
-internal class InternalAgenticExecutor(
+internal class InternalAgentExecutor(
     val driver: WebDriver,
     val conf: ImmutableConfig
 ) {
@@ -141,23 +141,23 @@ open class BasicAgenticSession(
 
     override suspend fun act(action: ActionOptions): PerceptiveAgent {
         val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`: session.bind(driver)" }
-        return InternalAgenticExecutor(driver, sessionConfig).act(action)
+        return InternalAgentExecutor(driver, sessionConfig).act(action)
     }
 
     override suspend fun performAct(action: ActionDescription): InstructionResult {
         val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `performAct`" }
-        return InternalAgenticExecutor(driver, sessionConfig).performAct(action)
+        return InternalAgentExecutor(driver, sessionConfig).performAct(action)
     }
 
     override suspend fun execute(action: ActionDescription): InstructionResult {
         val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `execute`" }
-        return InternalAgenticExecutor(driver, sessionConfig).execute(action)
+        return InternalAgentExecutor(driver, sessionConfig).execute(action)
     }
 
     @Deprecated("Use act instead", replaceWith = ReplaceWith("act(action)"))
     override suspend fun instruct(prompt: String): InstructionResult {
         val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `instruct`" }
-        return InternalAgenticExecutor(driver, sessionConfig).instruct(prompt)
+        return InternalAgentExecutor(driver, sessionConfig).instruct(prompt)
     }
 }
 
@@ -173,23 +173,23 @@ open class AbstractAgenticQLSession(
 
     override suspend fun act(action: ActionOptions): PerceptiveAgent {
         val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`: session.bind(driver)" }
-        return InternalAgenticExecutor(driver, sessionConfig).act(action)
+        return InternalAgentExecutor(driver, sessionConfig).act(action)
     }
 
     override suspend fun performAct(action: ActionDescription): InstructionResult {
         val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `performAct`" }
-        return InternalAgenticExecutor(driver, sessionConfig).performAct(action)
+        return InternalAgentExecutor(driver, sessionConfig).performAct(action)
     }
 
     override suspend fun execute(action: ActionDescription): InstructionResult {
         val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `execute`" }
-        return InternalAgenticExecutor(driver, sessionConfig).execute(action)
+        return InternalAgentExecutor(driver, sessionConfig).execute(action)
     }
 
     @Deprecated("Use act instead", replaceWith = ReplaceWith("act(action)"))
     override suspend fun instruct(prompt: String): InstructionResult {
         val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `instruct`" }
-        return InternalAgenticExecutor(driver, sessionConfig).instruct(prompt)
+        return InternalAgentExecutor(driver, sessionConfig).instruct(prompt)
     }
 }
 
