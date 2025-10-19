@@ -10,8 +10,6 @@ import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
-import ai.platon.pulsar.skeleton.ai.internal.ActionDescription
-import ai.platon.pulsar.skeleton.ai.internal.InstructionResult
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.context.PulsarContext
@@ -2290,28 +2288,6 @@ interface PulsarSession : AutoCloseable {
      */
     @Beta
     suspend fun act(action: ActionOptions): PerceptiveAgent
-
-    /**
-     * Perform an action described by [action].
-     *
-     * @param action The action description that describes the action to be performed by the webdriver.
-     * @return The response from the model, though in this implementation, the return value is not explicitly used.
-     */
-    @Beta
-    suspend fun performAct(action: ActionDescription): InstructionResult
-
-    @Beta
-    suspend fun execute(action: ActionDescription): InstructionResult
-
-    /**
-     * Instructs the webdriver to perform a series of actions based on the given prompt.
-     * This function converts the prompt into a sequence of webdriver actions, which are then executed.
-     *
-     * @param prompt The textual prompt that describes the actions to be performed by the webdriver.
-     * @return The response from the model, though in this implementation, the return value is not explicitly used.
-     */
-    @Deprecated("Use resolve instead", ReplaceWith("resolve(action)"))
-    suspend fun instruct(prompt: String): InstructionResult
 
     /**
      * Exports the content of a webpage to a file.

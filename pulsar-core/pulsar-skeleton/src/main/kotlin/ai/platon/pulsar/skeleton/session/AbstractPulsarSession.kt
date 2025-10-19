@@ -17,8 +17,6 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
-import ai.platon.pulsar.skeleton.ai.internal.ActionDescription
-import ai.platon.pulsar.skeleton.ai.internal.InstructionResult
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
@@ -537,29 +535,6 @@ Use AgenticSession for agentic actions:
 ```
 val session = AgenticContexts.createSession()
 session.act(action)
-```
-        """.trimIndent()
-        throw NotSupportedException(message)
-    }
-
-    override suspend fun performAct(action: ActionDescription): InstructionResult {
-        val message = """
-Use AgenticSession for agentic actions:
-```
-val session = AgenticContexts.createSession()
-session.performAct(action)
-```
-        """.trimIndent()
-        throw NotSupportedException(message)
-    }
-
-    @Deprecated("Use act instead", replaceWith = ReplaceWith("act(action)"))
-    override suspend fun instruct(prompt: String): InstructionResult {
-        val message = """
-Use AgenticSession for agentic actions:
-```
-val session = AgenticContexts.createSession()
-session.instruct(prompt)
 ```
         """.trimIndent()
         throw NotSupportedException(message)

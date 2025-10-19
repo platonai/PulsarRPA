@@ -1,20 +1,25 @@
 package ai.platon.pulsar.agentic
 
 import ai.platon.pulsar.agentic.ai.agent.BrowserPerceptiveAgent
+import ai.platon.pulsar.agentic.ai.tta.ActionDescription
+import ai.platon.pulsar.agentic.ai.tta.InstructionResult
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
-import ai.platon.pulsar.ql.SQLSession
+import ai.platon.pulsar.agentic.context.AbstractAgenticContext
+import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.ql.SessionConfig
 import ai.platon.pulsar.ql.h2.AbstractH2SQLSession
 import ai.platon.pulsar.ql.h2.H2SessionDelegate
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
-import ai.platon.pulsar.agentic.ai.tta.ActionDescription
-import ai.platon.pulsar.agentic.ai.tta.InstructionResult
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.skeleton.session.AbstractPulsarSession
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import com.google.common.annotations.Beta
 
-interface AgenticSession: SQLSession {
+interface AgenticSession: PulsarSession {
 
     /**
      * Executes an action described by the given string.
@@ -45,10 +50,10 @@ interface AgenticSession: SQLSession {
      * @return The response from the model, though in this implementation, the return value is not explicitly used.
      */
     @Beta
-    override suspend fun performAct(action: ActionDescription): InstructionResult
+    suspend fun performAct(action: ActionDescription): InstructionResult
 
     @Beta
-    override suspend fun execute(action: ActionDescription): InstructionResult
+    suspend fun execute(action: ActionDescription): InstructionResult
 
     /**
      * Instructs the webdriver to perform a series of actions based on the given prompt.
@@ -58,21 +63,24 @@ interface AgenticSession: SQLSession {
      * @return The response from the model, though in this implementation, the return value is not explicitly used.
      */
     @Deprecated("Use act instead", ReplaceWith("multiAct(action)"))
-    override suspend fun instruct(prompt: String): InstructionResult
+    suspend fun instruct(prompt: String): InstructionResult
 }
 
-open class AbstractAgenticSession(
+abstract class AbstractAgenticSession(
     context: AbstractPulsarContext,
-    sessionDelegate: H2SessionDelegate,
-    config: SessionConfig
-) : AbstractH2SQLSession(context, sessionDelegate, config), AgenticSession {
+    sessionConfig: VolatileConfig,
+    id: Long = generateNextInProcessId()
+): AbstractPulsarSession(context, sessionConfig, id = id), AgenticSession
 
-    override suspend fun act(action: String): PerceptiveAgent {
+internal class InternalAgenticExecutor(
+    val driver: WebDriver,
+    val conf: ImmutableConfig
+) {
+    suspend fun act(action: String): PerceptiveAgent {
         return act(ActionOptions(action = action))
     }
 
-    override suspend fun act(action: ActionOptions): PerceptiveAgent {
-        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`: session.bind(driver)" }
+    suspend fun act(action: ActionOptions): PerceptiveAgent {
         val agent = BrowserPerceptiveAgent(driver)
 
         agent.act(action)
@@ -80,8 +88,7 @@ open class AbstractAgenticSession(
         return agent
     }
 
-    override suspend fun performAct(action: ActionDescription): InstructionResult {
-        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `performAct`" }
+    suspend fun performAct(action: ActionDescription): InstructionResult {
         if (action.functionCalls.isEmpty()) {
             return InstructionResult(listOf(), listOf(), action.modelResponse)
         }
@@ -95,8 +102,7 @@ open class AbstractAgenticSession(
         return InstructionResult(action.functionCalls, functionResults, action.modelResponse)
     }
 
-    override suspend fun execute(action: ActionDescription): InstructionResult {
-        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `execute`" }
+    suspend fun execute(action: ActionDescription): InstructionResult {
         if (action.functionCalls.isEmpty()) {
             return InstructionResult(listOf(), listOf(), action.modelResponse)
         }
@@ -107,11 +113,9 @@ open class AbstractAgenticSession(
     }
 
     @Deprecated("Use act instead", replaceWith = ReplaceWith("act(action)"))
-    override suspend fun instruct(prompt: String): InstructionResult {
-        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`" }
-
+    suspend fun instruct(prompt: String): InstructionResult {
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
-        val tta = TextToAction(sessionConfig)
+        val tta = TextToAction(conf)
 
         val actions = tta.generateWebDriverActionsWithToolCallSpecsDeferred(prompt)
 
@@ -125,8 +129,72 @@ open class AbstractAgenticSession(
     }
 }
 
-open class DefaultAgenticSession(
+open class BasicAgenticSession(
+    context: AbstractAgenticContext,
+    sessionConfig: VolatileConfig,
+    id: Long = generateNextInProcessId()
+) : AbstractAgenticSession(context, sessionConfig, id) {
+
+    override suspend fun act(action: String): PerceptiveAgent {
+        return act(ActionOptions(action = action))
+    }
+
+    override suspend fun act(action: ActionOptions): PerceptiveAgent {
+        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`: session.bind(driver)" }
+        return InternalAgenticExecutor(driver, sessionConfig).act(action)
+    }
+
+    override suspend fun performAct(action: ActionDescription): InstructionResult {
+        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `performAct`" }
+        return InternalAgenticExecutor(driver, sessionConfig).performAct(action)
+    }
+
+    override suspend fun execute(action: ActionDescription): InstructionResult {
+        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `execute`" }
+        return InternalAgenticExecutor(driver, sessionConfig).execute(action)
+    }
+
+    @Deprecated("Use act instead", replaceWith = ReplaceWith("act(action)"))
+    override suspend fun instruct(prompt: String): InstructionResult {
+        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `instruct`" }
+        return InternalAgenticExecutor(driver, sessionConfig).instruct(prompt)
+    }
+}
+
+open class AbstractAgenticQLSession(
     context: AbstractPulsarContext,
     sessionDelegate: H2SessionDelegate,
     config: SessionConfig
-) : AbstractAgenticSession(context, sessionDelegate, config)
+) : AbstractH2SQLSession(context, sessionDelegate, config), AgenticSession {
+
+    override suspend fun act(action: String): PerceptiveAgent {
+        return act(ActionOptions(action = action))
+    }
+
+    override suspend fun act(action: ActionOptions): PerceptiveAgent {
+        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`: session.bind(driver)" }
+        return InternalAgenticExecutor(driver, sessionConfig).act(action)
+    }
+
+    override suspend fun performAct(action: ActionDescription): InstructionResult {
+        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `performAct`" }
+        return InternalAgenticExecutor(driver, sessionConfig).performAct(action)
+    }
+
+    override suspend fun execute(action: ActionDescription): InstructionResult {
+        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `execute`" }
+        return InternalAgenticExecutor(driver, sessionConfig).execute(action)
+    }
+
+    @Deprecated("Use act instead", replaceWith = ReplaceWith("act(action)"))
+    override suspend fun instruct(prompt: String): InstructionResult {
+        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `instruct`" }
+        return InternalAgenticExecutor(driver, sessionConfig).instruct(prompt)
+    }
+}
+
+open class AgenticQLSession(
+    context: AbstractPulsarContext,
+    sessionDelegate: H2SessionDelegate,
+    config: SessionConfig
+) : AbstractAgenticQLSession(context, sessionDelegate, config)

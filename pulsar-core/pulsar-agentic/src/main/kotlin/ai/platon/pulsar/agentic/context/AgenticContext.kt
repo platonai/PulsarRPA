@@ -1,23 +1,24 @@
 package ai.platon.pulsar.agentic.context
 
-import ai.platon.pulsar.agentic.DefaultAgenticSession
+import ai.platon.pulsar.agentic.AgenticQLSession
 import ai.platon.pulsar.agentic.AgenticSession
+import ai.platon.pulsar.agentic.BasicAgenticSession
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.ql.SQLSession
 import ai.platon.pulsar.ql.SessionConfig
 import ai.platon.pulsar.ql.SessionDelegate
 import ai.platon.pulsar.ql.context.AbstractH2SQLContext
 import ai.platon.pulsar.ql.context.SQLContext
 import ai.platon.pulsar.ql.h2.H2SessionDelegate
 import ai.platon.pulsar.skeleton.session.BasicPulsarSession
-import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.springframework.context.support.AbstractApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 
 interface AgenticContext : SQLContext {
     @Throws(Exception::class)
-    override fun createSession(sessionDelegate: SessionDelegate): AgenticSession
+    override fun createSession(sessionDelegate: SessionDelegate): SQLSession
 }
 
 abstract class AbstractAgenticContext(
@@ -31,19 +32,19 @@ abstract class AbstractAgenticContext(
      * > **NOTE:** The session is not a SQLSession, use [execute], [executeQuery] to access [ai.platon.pulsar.ql.SQLSession].
      * */
     @Throws(Exception::class)
-    override fun createSession(): PulsarSession {
-        val session = BasicPulsarSession(this, configuration.toVolatileConfig())
+    override fun createSession(): AgenticSession {
+        val session = BasicAgenticSession(this, configuration.toVolatileConfig())
         return session.also { sessions[it.id] = it }
     }
 
     @Throws(Exception::class)
-    override fun createSession(sessionDelegate: SessionDelegate): AgenticSession {
+    override fun createSession(sessionDelegate: SessionDelegate): SQLSession {
         require(sessionDelegate is H2SessionDelegate)
         val session = sqlSessions.computeIfAbsent(sessionDelegate.id) {
-            DefaultAgenticSession(this, sessionDelegate, SessionConfig(sessionDelegate, configuration))
+            AgenticQLSession(this, sessionDelegate, SessionConfig(sessionDelegate, configuration))
         }
         logger.info("AgenticQLSession is created | #{}/{}/{}", session.id, sessionDelegate.id, id)
-        return session as DefaultAgenticSession
+        return session as AgenticQLSession
     }
 }
 
