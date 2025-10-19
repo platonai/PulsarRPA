@@ -199,8 +199,34 @@ fun warnForClose(target: Any, t: Throwable, message: String, vararg args: Any?) 
     }
 }
 
-fun printLog(o: Any?) {
-    if (System.getProperty("log.print.enabled") == "true") {
-        println(o)
+fun logPrintln() {
+    if (System.getProperty("log.print.enabled") != "true") {
+        return
+    }
+
+    println()
+}
+
+fun logPrintln(o: Any?) {
+    if (System.getProperty("log.print.enabled") != "true") {
+        return
+    }
+
+    when (o) {
+        null -> println(o)
+        is Boolean -> println(o)
+        is Byte -> println(o)
+        is Short -> println(o)
+        is Int -> println(o)
+        is Long -> println(o)
+        is Float -> println(o)
+        is Double -> println(o)
+        is Char -> println(o)
+        is UByte -> println(o)
+        is UShort -> println(o)
+        is UInt -> println(o)
+        is ULong -> println(o)
+        is String -> println(o)
+        else -> println(o)
     }
 }
