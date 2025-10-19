@@ -1,4 +1,4 @@
-package ai.platon.pulsar.agentic.ai.detail
+package ai.platon.pulsar.agentic.ai.agent
 
 import java.time.Instant
 

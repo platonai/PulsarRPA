@@ -2,10 +2,10 @@ package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.ai.internal.ActionDescription
-import ai.platon.pulsar.skeleton.ai.internal.ElementBounds
-import ai.platon.pulsar.skeleton.ai.internal.InstructionResult
-import ai.platon.pulsar.skeleton.ai.internal.InteractiveElement
+import ai.platon.pulsar.agentic.ai.tta.ActionDescription
+import ai.platon.pulsar.agentic.ai.tta.ElementBounds
+import ai.platon.pulsar.agentic.ai.tta.InstructionResult
+import ai.platon.pulsar.agentic.ai.tta.InteractiveElement
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

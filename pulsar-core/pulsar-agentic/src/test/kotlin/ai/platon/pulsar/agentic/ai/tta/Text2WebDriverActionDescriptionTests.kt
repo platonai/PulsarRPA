@@ -1,4 +1,4 @@
-package ai.platon.pulsar.skeleton.crawl.llm
+package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.common.printlnPro
 import org.junit.jupiter.api.Tag

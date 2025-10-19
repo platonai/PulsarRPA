@@ -1,10 +1,6 @@
 package ai.platon.pulsar.agentic.ai.agent
 
 import ai.platon.pulsar.agentic.ai.PromptBuilder
-import ai.platon.pulsar.agentic.ai.detail.AgentConfig
-import ai.platon.pulsar.agentic.ai.detail.ExecutionContext
-import ai.platon.pulsar.agentic.ai.detail.PerceptiveAgentError
-import ai.platon.pulsar.agentic.ai.detail.PerformanceMetrics
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.browser.driver.chrome.dom.BrowserState
 import ai.platon.pulsar.browser.driver.chrome.dom.DomDebug
@@ -14,9 +10,9 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.*
-import ai.platon.pulsar.skeleton.ai.internal.ActionDescription
-import ai.platon.pulsar.skeleton.ai.internal.InstructionResult
-import ai.platon.pulsar.skeleton.ai.internal.InteractiveElement
+import ai.platon.pulsar.agentic.ai.tta.ActionDescription
+import ai.platon.pulsar.agentic.ai.tta.InstructionResult
+import ai.platon.pulsar.agentic.ai.tta.InteractiveElement
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver

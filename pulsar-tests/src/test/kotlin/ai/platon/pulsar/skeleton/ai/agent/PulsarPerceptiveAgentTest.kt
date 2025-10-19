@@ -2,7 +2,7 @@ package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.agentic.ai.agent.BrowserPerceptiveAgent
-import ai.platon.pulsar.agentic.ai.detail.AgentConfig
+import ai.platon.pulsar.agentic.ai.agent.AgentConfig
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.ExtractOptions

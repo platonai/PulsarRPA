@@ -1,4 +1,4 @@
-package ai.platon.pulsar.skeleton.ai.internal
+package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.external.ModelResponse
 

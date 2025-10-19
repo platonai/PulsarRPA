@@ -1,12 +1,11 @@
-package ai.platon.pulsar.skeleton.crawl.llm
+package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.ai.tta.TextToAction
-import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
@@ -45,4 +44,3 @@ open class TTATestBase {
         }
     }
 }
-

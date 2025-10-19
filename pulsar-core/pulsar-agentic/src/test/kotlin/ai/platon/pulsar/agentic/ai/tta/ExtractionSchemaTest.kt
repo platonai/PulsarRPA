@@ -1,7 +1,12 @@
-package ai.platon.pulsar.skeleton.ai.agent
+package ai.platon.pulsar.agentic.ai.tta
 
+import ai.platon.pulsar.agentic.ai.agent.ExtractionField
+import ai.platon.pulsar.agentic.ai.agent.ExtractionSchema
+import ai.platon.pulsar.agentic.ai.agent.legacyMapToExtractionSchema
 import com.fasterxml.jackson.databind.ObjectMapper
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertFalse
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class ExtractionSchemaTest {
@@ -16,13 +21,13 @@ class ExtractionSchemaTest {
         val json = schema.toJsonSchema()
         val root = mapper.readTree(json)
 
-        assertEquals("object", root.get("type").asText())
+        Assertions.assertEquals("object", root.get("type").asText())
         val props = root.get("properties")
         assertTrue(props.has("title"))
-        assertEquals("string", props.get("title").get("type").asText())
-        assertEquals("The title", props.get("title").get("description").asText())
+        Assertions.assertEquals("string", props.get("title").get("type").asText())
+        Assertions.assertEquals("The title", props.get("title").get("description").asText())
         val required = root.get("required")
-        assertNotNull(required)
+        Assertions.assertNotNull(required)
         assertTrue(required.any { it.asText() == "title" })
     }
 
@@ -46,17 +51,17 @@ class ExtractionSchemaTest {
         val root = mapper.readTree(schema.toJsonSchema())
 
         val product = root.get("properties").get("product")
-        assertEquals("object", product.get("type").asText())
+        Assertions.assertEquals("object", product.get("type").asText())
         val variants = product.get("properties").get("variants")
-        assertEquals("array", variants.get("type").asText())
+        Assertions.assertEquals("array", variants.get("type").asText())
         val items = variants.get("items")
-        assertEquals("object", items.get("type").asText())
+        Assertions.assertEquals("object", items.get("type").asText())
         val itemProps = items.get("properties")
         assertTrue(itemProps.has("name"))
         assertTrue(itemProps.has("sku"))
         // child required list should include 'name' only
         val childReq = items.get("required")
-        assertNotNull(childReq)
+        Assertions.assertNotNull(childReq)
         assertTrue(childReq.any { it.asText() == "name" })
         assertFalse(childReq.any { it.asText() == "sku" })
     }
@@ -71,8 +76,8 @@ class ExtractionSchemaTest {
         val schema = ExtractionSchema(listOf(field))
         val root = mapper.readTree(schema.toJsonSchema())
         val tags = root.get("properties").get("tags")
-        assertEquals("array", tags.get("type").asText())
-        assertEquals("string", tags.get("items").get("type").asText())
+        Assertions.assertEquals("array", tags.get("type").asText())
+        Assertions.assertEquals("string", tags.get("items").get("type").asText())
     }
 
     @Test
@@ -85,10 +90,9 @@ class ExtractionSchemaTest {
         val root = mapper.readTree(schema.toJsonSchema())
 
         val props = root.get("properties")
-        assertEquals("Title text", props.get("title").get("description").asText())
-        assertEquals("Price number", props.get("price").get("description").asText())
+        Assertions.assertEquals("Title text", props.get("title").get("description").asText())
+        Assertions.assertEquals("Price number", props.get("price").get("description").asText())
         // no required array expected since legacy fields are optional by default
         assertFalse(root.has("required"))
     }
 }
-

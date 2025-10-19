@@ -8,11 +8,10 @@ import ai.platon.pulsar.ql.h2.AbstractH2SQLSession
 import ai.platon.pulsar.ql.h2.H2SessionDelegate
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
-import ai.platon.pulsar.skeleton.ai.internal.ActionDescription
-import ai.platon.pulsar.skeleton.ai.internal.InstructionResult
+import ai.platon.pulsar.agentic.ai.tta.ActionDescription
+import ai.platon.pulsar.agentic.ai.tta.InstructionResult
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
 import com.google.common.annotations.Beta
 
 interface AgenticSession: SQLSession {
