@@ -18,7 +18,7 @@ package ai.platon.pulsar.protocol.browser.emulator.impl
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.AppConstants.VAR_ATTACH
+import ai.platon.pulsar.common.config.AppConstants.VAR_CAPTURE
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.persist.AbstractWebPage
@@ -420,10 +420,10 @@ open class InteractiveBrowserEmulator(
         // TODO: a better flag to specify whether to attach or navigate
         val page = fetchTask.page
         require(page is AbstractWebPage)
-        val attach = page.hasVar(VAR_ATTACH) || page.hasVar("connect")
+        val attach = page.hasVar(VAR_CAPTURE)
         val interactResult = if (attach) {
             driver.ignoreDOMFeatures = true
-            switchTo(navigateTask, driver, browserSettings)
+            captureLivePage(navigateTask, driver, browserSettings)
         } else {
             navigateAndInteract(navigateTask, driver, browserSettings)
         }
@@ -506,7 +506,7 @@ open class InteractiveBrowserEmulator(
     }
 
     @Throws(NavigateTaskCancellationException::class, WebDriverException::class)
-    private suspend fun switchTo(
+    private suspend fun captureLivePage(
         task: NavigateTask,
         driver: WebDriver,
         settings: BrowserSettings,
@@ -554,7 +554,6 @@ open class InteractiveBrowserEmulator(
         emit1(EmulateEvents.willCheckDocumentState, page, driver)
 
         val hasScript = waitForJavascriptInjected(task, result)
-
         if (hasScript) {
             // Wait until the document is actually ready, or timeout.
             waitForDocumentFullyLoaded(task, result)

@@ -32,8 +32,7 @@ public interface AppConstants {
     String YES_STRING = "y";
 
     String VAR_REFRESH = "refresh";
-    String VAR_CONNECT = "connect";
-    String VAR_ATTACH = "attach";
+    String VAR_CAPTURE = "capture";
 
     /**
      * An example of the shortest url
