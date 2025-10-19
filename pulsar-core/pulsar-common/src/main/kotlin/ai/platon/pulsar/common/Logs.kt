@@ -74,7 +74,7 @@ fun warnInterruptible(target: Any, t: Throwable, message: String?, vararg args: 
     } catch (t2: Throwable) {
         catastrophicError(t2, message1, *args)
     }
-    
+
     if (t is InterruptedException) {
         // Preserve interrupt status
         Thread.currentThread().interrupt()
@@ -178,7 +178,7 @@ fun warnForClose(target: Any, t: Throwable, message: String, vararg args: Any?) 
     if (t is InterruptedException) {
         // Preserve interrupt status
         Thread.currentThread().interrupt()
-        
+
         val message2 = """
                  * <p><em>Implementers of AutoClosable interface are strongly advised
                  * to not have the {@code close} method throw {@link
@@ -193,9 +193,14 @@ fun warnForClose(target: Any, t: Throwable, message: String, vararg args: Any?) 
                  * exception to be suppressed, the {@code AutoCloseable.close}
                  * method should not throw it.
         """
-        
+
         logger?.warn(message2)
         logger?.warn(t.stringify())
     }
 }
 
+fun printLog(o: Any?) {
+    if (System.getProperty("log.print.enabled") == "true") {
+        println(o)
+    }
+}
