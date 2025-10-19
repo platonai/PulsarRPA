@@ -6,7 +6,7 @@ import kotlin.io.path.readText
 
 fun main() {
     val root = ProjectUtils.findProjectRootDir()!!
-    val importDirective = "import ai.platon.pulsar.common.logPrintln()"
+    val importDirective = "import ai.platon.pulsar.common.logPrintln"
 
     Files.walk(root).filter { it.toString().contains("src/test/kotlin") }
         .filter { it.fileName.toString().endsWith(".kt") }.forEach { path ->
