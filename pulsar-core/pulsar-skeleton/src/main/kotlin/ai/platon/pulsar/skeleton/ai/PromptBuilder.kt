@@ -161,7 +161,7 @@ Each chunk corresponds to one viewport-sized section of the page (the first chun
         chunksSeen: Int,
         chunksTotal: Int,
     ): SimpleMessage {
-        val extractedJson = PulsarDOMSerializer.mapper.writeValueAsString(extractionResponse)
+        val extractedJson = PulsarDOMSerializer.MAPPER.writeValueAsString(extractionResponse)
 
         val content = if (isCN) {
             """
@@ -234,31 +234,45 @@ Be comprehensive: if there are multiple elements that may be relevant for future
      * - the response's schema requirement
      * */
     fun buildObserveUserMessage(instruction: String, params: ObserveParams): SimpleMessage {
-        val browserStateJson = PulsarDOMSerializer.mapper.writeValueAsString(params.browserState.basicState)
+        val browserStateJson = PulsarDOMSerializer.MAPPER.writeValueAsString(params.browserState.basicState)
 
-        val schemaHint = buildObserveSchemaContract(params)
+        val schemaContract = buildObserveSchemaContract(params)
         fun contentCN() = """
 指令: $instruction
 
-无障碍树(Accessibility Tree):
+## 无障碍树(Accessibility Tree):
 ${params.browserState.domState.json}
 
-当前浏览器状态：
+## 无障碍树说明：
+- 对于每个节点的布尔（boolean）属性，若未显式赋值或值为 null，则一律视为 false。涉及的属性包括但不限于：`isScrollable`, `isVisible`, `isInteractable`, `shouldDisplay`, `ignoredByPaintOrder`, `excludedByParent`, `isCompoundComponent` 等。
+- 对于坐标和尺寸，若未显式赋值或值为 null，则一律视为 0。涉及的属性包括但不限于：`clientRects`, `scrollRects`, `bounds`。
+
+## 当前浏览器状态
 $browserStateJson
 
-$schemaHint
+$schemaContract
 """
 
         fun contentEN() = """
 instruction: $instruction
 
-Accessibility Tree:
+## Accessibility Tree:
 ${params.browserState.domState.json}
 
-Current Browser State:
+## Accessibility Tree Specification
+
+### Boolean Attributes:
+For each node's boolean attributes, if no explicit value is assigned or the value is null, it will be treated as false by default.
+The affected attributes include but are not limited to:
+`isScrollable`, `isVisible`, `isInteractable`, `shouldDisplay`, `ignoredByPaintOrder`, `excludedByParent`, `isCompoundComponent`, etc.
+### Coordinate & Dimension Attributes:
+For coordinate and size-related attributes, if no explicit value is assigned or the value is null, it will be treated as 0 by default.
+The affected attributes include but are not limited to: `clientRects`, `scrollRects`, `bounds`.
+
+## Current Browser State
 $browserStateJson
 
-$schemaHint
+$schemaContract
 """
 
         val content = when {
@@ -281,29 +295,30 @@ $schemaHint
 {
   "elements": [
     {
-      "frameId": string,
-      "backendNodeId": number,
-      "elementHash": string,
-      "xpath": string,
+      "locator": string,
       "description": string$actionFields
     }
   ]
 }
-"""
+""".replace("\n", " ").replace("\\s+".toRegex(), " ")
 
         return if (isCN) {
             """
+## Schema 要求
 你必须返回一个与以下模式匹配的有效 JSON 对象：
 $schema
 
-不要包含任何额外文本。
+- 保证 `locator` 与无障碍树节点属性保持一致
+- 禁止包含任何额外文本
 """.trimIndent()
         } else {
             """
+## Schema Contract
 You MUST respond with a valid JSON object matching this schema:
 $schema
 
-Do not include any extra text.
+- The locator must be identical to the corresponding accessibility tree node attributes
+- Must not include any extra text
 """.trimIndent()
         }
     }

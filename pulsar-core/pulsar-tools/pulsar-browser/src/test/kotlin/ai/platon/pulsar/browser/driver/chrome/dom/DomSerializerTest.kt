@@ -205,7 +205,7 @@ class DomSerializerTest {
             nodeId = 8,
             nodeName = "BUTTON",
             elementHash = "button-hash",
-            xPath = "/html/body/div[1]/button[2]",
+            xpath = "/html/body/div[1]/button[2]",
             backendNodeId = 12345
         )
 

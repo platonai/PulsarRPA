@@ -95,7 +95,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         requireNotNull(direct)
         println(DomDebug.summarize(direct))
 
-        val viaXPath = direct.xPath?.let { service.findElement(ElementRefCriteria(xPath = it)) }
+        val viaXPath = direct.xpath?.let { service.findElement(ElementRefCriteria(xPath = it)) }
         target = viaXPath ?: direct.elementHash?.let { service.findElement(ElementRefCriteria(elementHash = it)) }
         assertNotNull(target)
 
@@ -110,7 +110,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
 
         // Obtain stable references from the resolved node
         val t = requireNotNull(target) { "Expected a non-null target element" }
-        val xPath = t.xPath
+        val xPath = t.xpath
         val backendId = t.backendNodeId
         val elementHash = t.elementHash
 
@@ -225,7 +225,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         assertNotNull(direct)
         requireNotNull(direct)
 
-        val xPath = direct.xPath
+        val xPath = direct.xpath
         assertNotNull(xPath)
 
         scrollContainer = service.findElement(ElementRefCriteria(xPath = xPath))

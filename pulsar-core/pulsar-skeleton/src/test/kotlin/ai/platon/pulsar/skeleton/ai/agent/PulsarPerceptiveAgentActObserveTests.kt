@@ -33,7 +33,7 @@ class PulsarPerceptiveAgentActObserveTests {
 
         val agent = BrowserPerceptiveAgent(driver, config = AgentConfig(enablePreActionValidation = true))
         val observe = ObserveResult(
-            selector = "node:123-45",
+            locator = "node:123-45",
             description = "Click button",
             method = "click",
             arguments = emptyList()
@@ -64,7 +64,7 @@ class PulsarPerceptiveAgentActObserveTests {
         val agent = BrowserPerceptiveAgent(driver, config = AgentConfig(enablePreActionValidation = false))
         val url = "https://example.com/path?q=1"
         val observe = ObserveResult(
-            selector = "irrelevant",
+            locator = "irrelevant",
             description = "Go to page",
             method = "navigateTo",
             arguments = listOf(url)

@@ -178,7 +178,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 assertTrue(results.isNotEmpty(), "Should find interactive elements")
 
                 results.forEach { result ->
-                    assertNotNull(result.selector, "Selector should not be null")
+                    assertNotNull(result.locator, "Selector should not be null")
                     assertTrue(result.description.isNotBlank(), "Description should not be blank")
                 }
 

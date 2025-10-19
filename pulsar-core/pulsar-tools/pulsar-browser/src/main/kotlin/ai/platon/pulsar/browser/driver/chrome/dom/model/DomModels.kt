@@ -188,7 +188,7 @@ data class DOMTreeNodeEx(
     val axNode: AXNodeEx? = null,
 
     // XPath and hash
-    val xPath: String? = null,
+    val xpath: String? = null,
     val elementHash: String? = null,
     val parentBranchHash: String? = null,
 

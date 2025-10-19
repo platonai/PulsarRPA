@@ -49,18 +49,21 @@ object PulsarDOMSerializer {
         collectFrameIds(root, frameIdSet)
 
         val frameIds = frameIdSet.toList()
-        val selectorMap = linkedMapOf<String, DOMTreeNodeEx>()
+        // Build a new LocatorMap for optimized element lookup
+        val locatorMap = LocatorMap()
         val serializable = buildSerializableNode(
             root,
             includeAttributes,
             emptyList(),
-            selectorMap,
+            locatorMap,
             frameIds,
             options,
             depth = 0,
             includeOrder = attrsList.map { it.lowercase() })
         val json = MAPPER.writeValueAsString(serializable)
-        return DOMState(json = json, selectorMap = selectorMap, frameIds = frameIds)
+        // Export legacy selector map view for backward compatibility and diagnostics/tests
+        val legacySelectorMap = locatorMap.toLegacyStringMap()
+        return DOMState(json = json, selectorMap = legacySelectorMap, frameIds = frameIds, locatorMap = locatorMap)
     }
 
     private fun collectFrameIds(root: TinyNode, frameIds: MutableSet<String>) {
@@ -86,7 +89,7 @@ object PulsarDOMSerializer {
         node: TinyNode,
         includeAttributes: Set<String>,
         ancestors: List<DOMTreeNodeEx>,
-        selectorMap: MutableMap<String, DOMTreeNodeEx>,
+        locatorMap: LocatorMap,
         frameIds: List<String>,
         options: SerializationOptions,
         depth: Int = 0,
@@ -95,7 +98,7 @@ object PulsarDOMSerializer {
         // Apply paint-order pruning if enabled
         if (options.enablePaintOrderPruning && shouldPruneByPaintOrder(node, options)) {
             // Return a pruned node with minimal information
-            return createPrunedNode(node, ancestors, selectorMap, frameIds)
+            return createPrunedNode(node, ancestors, locatorMap, frameIds)
         }
 
         // Clean original node with enhanced attribute casing alignment
@@ -109,10 +112,10 @@ object PulsarDOMSerializer {
         }
 
         // Add to selector map with multiple keys for enhanced lookup
-        addToMultiSelectorMap(node.originalNode, selectorMap)
+        addToLocatorMap(node.originalNode, locatorMap)
         // Also add interactive index mapping if present on SlimNode
         node.interactiveIndex?.let { idx ->
-            selectorMap.putIfAbsent("index:$idx", node.originalNode)
+            locatorMap.add(LocatorType.INDEX, idx.toString(), node.originalNode)
         }
 
         // Detect compound components if enabled
@@ -125,7 +128,7 @@ object PulsarDOMSerializer {
         // Recursively serialize children with enhanced logic (do not filter; prune per-node)
         val childAncestors = ancestors + node.originalNode
         val serializedChildren = node.children.map {
-            buildSerializableNode(it, includeAttributes, childAncestors, selectorMap, frameIds, options, depth + 1, includeOrder)
+            buildSerializableNode(it, includeAttributes, childAncestors, locatorMap, frameIds, options, depth + 1, includeOrder)
         }
 
         return SerializableNode(
@@ -199,7 +202,7 @@ object PulsarDOMSerializer {
     private fun createPrunedNode(
         node: TinyNode,
         ancestors: List<DOMTreeNodeEx>,
-        selectorMap: MutableMap<String, DOMTreeNodeEx>,
+        locatorMap: LocatorMap,
         frameIds: List<String>,
     ): SerializableNode {
         val prunedOriginal = CleanedOriginalNode(
@@ -215,7 +218,7 @@ object PulsarDOMSerializer {
             isScrollable = null,
             isVisible = null,
             isInteractable = null,
-            xpath = node.originalNode.xPath,
+            xpath = node.originalNode.xpath,
             elementHash = node.originalNode.elementHash,
             interactiveIndex = node.originalNode.interactiveIndex,
             bounds = null, // No bounds for pruned nodes
@@ -225,7 +228,7 @@ object PulsarDOMSerializer {
         )
 
         // Add to selector map with enhanced lookup keys
-        addToMultiSelectorMap(node.originalNode, selectorMap)
+        addToLocatorMap(node.originalNode, locatorMap)
 
         return SerializableNode(
             shouldDisplay = null, // Pruned nodes are not displayed
@@ -337,7 +340,7 @@ object PulsarDOMSerializer {
             isScrollable = node.isScrollable?.takeIf { it },
             isVisible = node.isVisible?.takeIf { it },
             isInteractable = node.isInteractable?.takeIf { it },
-            xpath = node.xPath,
+            xpath = node.xpath,
             elementHash = node.elementHash,
             interactiveIndex = node.interactiveIndex,
             bounds = bounds?.compact(),
@@ -442,7 +445,7 @@ object PulsarDOMSerializer {
             isScrollable = node.isScrollable,
             isVisible = node.isVisible,
             isInteractable = node.isInteractable,
-            xpath = node.xPath,
+            xpath = node.xpath,
             elementHash = node.elementHash,
             interactiveIndex = node.interactiveIndex,
             bounds = bounds?.compact(),
@@ -506,32 +509,39 @@ object PulsarDOMSerializer {
     )
 
     /**
-     * Add node to enhanced selector map with multiple lookup keys.
-     * Supports element hash, XPath, and backend node ID for comprehensive element lookup.
+     * Add node to enhanced selector map with multiple lookup keys (via LocatorMap).
+     * Supports element hash, XPath, backend node ID, frame/backend combo and node ID for comprehensive element lookup.
      */
-    private fun addToMultiSelectorMap(
+    private fun addToLocatorMap(
         node: DOMTreeNodeEx,
-        selectorMap: MutableMap<String, DOMTreeNodeEx>
+        locatorMap: LocatorMap
     ) {
         // Add by element hash (primary key)
-        node.elementHash?.let { hash ->
-            selectorMap.putIfAbsent(hash, node)
+        node.elementHash?.takeIf { it.isNotBlank() }?.let { h ->
+            locatorMap.add(LocatorType.HASH, h, node)
         }
 
         // Add by XPath (secondary key)
-        node.xPath?.let { xpath ->
-            if (xpath.isNotBlank()) {
-                selectorMap.putIfAbsent("xpath:$xpath", node)
-            }
+        node.xpath?.takeIf { it.isNotBlank() }?.let { xp ->
+            locatorMap.add(LocatorType.XPATH, xp, node)
         }
 
+        val frameId = node.frameId
+        val backendNodeId = node.backendNodeId
+
         // Add by backend node ID (tertiary key)
-        node.backendNodeId?.let { backendId ->
-            selectorMap.putIfAbsent("backend:$backendId", node)
+        backendNodeId?.let { bn ->
+            locatorMap.add(LocatorType.BACKEND_NODE_ID, bn.toString(), node)
+        }
+
+        // Add by `$frameId/$backendNodeId` as node ID
+        if (frameId != null && backendNodeId != null) {
+            val selector = "$frameId/$backendNodeId"
+            locatorMap.add(LocatorType.FRAME_BACKEND_NODE_ID, selector, node)
         }
 
         // Add by node ID (fallback key)
-        selectorMap.putIfAbsent("node:${node.nodeId}", node)
+        locatorMap.add(LocatorType.NODE_ID, node.nodeId.toString(), node)
     }
 
     private fun createNodeLocator(node: DOMTreeNodeEx, frameIds: List<String>): String {
@@ -541,12 +551,75 @@ object PulsarDOMSerializer {
     }
 }
 
+enum class LocatorType(val value: String) {
+    HASH("hash"),
+    XPATH("xpath"),
+    BACKEND_NODE_ID("backend"),
+    FRAME_BACKEND_NODE_ID("fbn"),
+    NODE_ID("node"),
+    INDEX("index");
+
+    override fun toString() = value
+}
+
+data class Locator(
+    val type: LocatorType,
+    val selector: String,
+) {
+    override fun toString(): String = "${type}:${selector}"
+}
+
+class LocatorMap {
+    private val map = mutableMapOf<Locator, DOMTreeNodeEx>()
+
+    fun add(type: LocatorType, selector: String, node: DOMTreeNodeEx) {
+        map.putIfAbsent(Locator(type, selector), node)
+    }
+
+    fun select(locator: Locator): DOMTreeNodeEx? {
+        return map[locator]
+    }
+
+    fun select(key: String): DOMTreeNodeEx? {
+        // Support legacy string keys like plain hash, and prefixed forms like xpath:, backend:, node:, index:
+        // Try prefixed first
+        val colon = key.indexOf(':')
+        if (colon > 0) {
+            val typeStr = key.substring(0, colon)
+            val selector = key.substring(colon + 1)
+            val type = LocatorType.values().firstOrNull { it.value == typeStr }
+            if (type != null) return select(Locator(type, selector))
+        }
+        // Fallback: treat as element hash without prefix
+        return map.entries.firstOrNull { it.key.type == LocatorType.HASH && it.key.selector == key }?.value
+    }
+
+    fun toLegacyStringMap(): Map<String, DOMTreeNodeEx> {
+        // Preserve insertion order similar to linkedMapOf in previous implementation
+        val out = LinkedHashMap<String, DOMTreeNodeEx>(map.size)
+        map.forEach { (k, v) ->
+            val legacyKey = when (k.type) {
+                LocatorType.HASH -> k.selector // no prefix for hash for backward compatibility
+                LocatorType.XPATH -> "xpath:${k.selector}"
+                LocatorType.BACKEND_NODE_ID -> "backend:${k.selector}"
+                LocatorType.FRAME_BACKEND_NODE_ID -> "fbn:${k.selector}"
+                LocatorType.NODE_ID -> "node:${k.selector}"
+                LocatorType.INDEX -> "index:${k.selector}"
+            }
+            out.putIfAbsent(legacyKey, v)
+        }
+        return out
+    }
+}
+
 // Keep the serialization result as a top-level data class for reuse
 
 data class DOMState(
     val json: String,
     val selectorMap: Map<String, DOMTreeNodeEx>,
-    val frameIds: List<String>
+    val frameIds: List<String>,
+    // Expose new optimized locator map alongside legacy map
+    val locatorMap: LocatorMap? = null
 )
 
 data class ClientInfo(

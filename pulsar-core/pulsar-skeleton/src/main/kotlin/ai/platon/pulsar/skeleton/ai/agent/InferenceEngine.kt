@@ -32,10 +32,7 @@ data class LLMUsage(
 data class Metadata(val progress: String = "", val completed: Boolean = false)
 
 data class ObserveElement(
-    val frameId: String,
-    val backendNodeId: Int,
-    val elementHash: String,
-    val xpath: String,
+    val locator: String,
     val description: String,
     val method: String? = null,
     val arguments: List<String>? = null,
@@ -312,10 +309,7 @@ class InferenceEngine(
         val result = mutableListOf<ObserveElement>()
         for (i in 0 until arr.size()) {
             val el: JsonNode = arr.get(i)
-            val frameId = el.path("frameId").asText("")
-            val backendNodeId = el.path("backendNodeId").asInt(0)
-            val elementHash = el.path("elementHash").asText("")
-            val xpath = el.path("xpath").asText("")
+            val locator = el.path("locator").asText("")
             val desc = el.path("description").asText("")
             val baseMethod = el.path("method").asText(null)
             val argsNode = el.path("arguments")
@@ -324,14 +318,11 @@ class InferenceEngine(
             } else null
 
             val item = ObserveElement(
-                    frameId = frameId,
-                    backendNodeId = backendNodeId,
-                    elementHash = elementHash,
-                    xpath = xpath,
-                    description = desc,
-                    method = baseMethod.takeIf { returnAction },
-                    arguments = args.takeIf { returnAction }
-                )
+                locator = locator,
+                description = desc,
+                method = baseMethod.takeIf { returnAction },
+                arguments = args.takeIf { returnAction }
+            )
 
             result.add(item)
         }
@@ -404,7 +395,10 @@ class InferenceEngine(
         )
     }
 
-    private suspend fun doLangChainChat(systemMessage: SystemMessage, userMessage: UserMessage): Pair<ChatResponse, Long> {
+    private suspend fun doLangChainChat(
+        systemMessage: SystemMessage,
+        userMessage: UserMessage
+    ): Pair<ChatResponse, Long> {
         val temperature = 0.1
         val chatRequest = ChatRequest.builder()
             .messages(systemMessage, userMessage)

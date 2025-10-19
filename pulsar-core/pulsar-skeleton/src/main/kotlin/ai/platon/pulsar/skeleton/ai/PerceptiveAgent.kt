@@ -48,7 +48,7 @@ data class ObserveOptions(
 )
 
 data class ObserveResult(
-    val selector: String,
+    val locator: String,
     val description: String,
     val backendNodeId: Int? = null,
     val method: String? = null,

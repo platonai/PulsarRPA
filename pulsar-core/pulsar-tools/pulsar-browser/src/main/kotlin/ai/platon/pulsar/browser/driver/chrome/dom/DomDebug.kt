@@ -70,7 +70,7 @@ object DomDebug {
         val klass = attrs["class"]?.let { "." + it.split(Regex("\\s+")).take(2).joinToString(".") } ?: ""
         val label = (node.nodeName.ifBlank { "?" } + id + klass).trim()
         val hashShort = node.elementHash?.take(12) ?: ""
-        val xPathShort = node.xPath?.takeLast(40) ?: ""
+        val xPathShort = node.xpath?.takeLast(40) ?: ""
         val counts =
             if (includeTreeStats) stats(node).toString() else "children=${node.children.size} shadowRoots=${node.shadowRoots.size} contentDocument=${node.contentDocument != null}"
         return buildString {
@@ -124,7 +124,7 @@ object DomDebug {
         val interactable = uniqueNodes.count { it.isInteractable == true }
         val visible = uniqueNodes.count { it.isVisible == true }
         val scrollable = uniqueNodes.count { it.isScrollable == true }
-        val withXPath = uniqueNodes.count { !it.xPath.isNullOrBlank() }
+        val withXPath = uniqueNodes.count { !it.xpath.isNullOrBlank() }
         val withHash = uniqueNodes.count { !it.elementHash.isNullOrBlank() }
         val withSnapshot = uniqueNodes.count { it.snapshotNode != null }
         val withBounds = uniqueNodes.count { it.snapshotNode?.clientRects != null || it.snapshotNode?.absoluteBounds != null || it.absolutePosition != null }

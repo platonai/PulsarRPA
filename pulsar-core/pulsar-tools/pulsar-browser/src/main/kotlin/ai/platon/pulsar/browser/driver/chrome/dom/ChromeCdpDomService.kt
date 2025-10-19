@@ -194,7 +194,7 @@ class ChromeCdpDomService(
                 isInteractable = isInteractable,
                 interactiveIndex = interactiveIndex,
                 absolutePosition = absolutePosition,
-                xPath = xPath,
+                xpath = xPath,
                 elementHash = elementHash,
                 parentBranchHash = parentBranchHash
             )
@@ -459,7 +459,7 @@ class ChromeCdpDomService(
             var found: DOMTreeNodeEx? = null
             fun dfs(n: DOMTreeNodeEx) {
                 if (found != null) return
-                if (n.xPath == xpath) {
+                if (n.xpath == xpath) {
                     found = n
                     return
                 }
@@ -531,7 +531,7 @@ class ChromeCdpDomService(
     override fun toInteractedElement(node: DOMTreeNodeEx): DOMInteractedElement {
         return DOMInteractedElement(
             elementHash = node.elementHash ?: HashUtils.simpleElementHash(node),
-            xPath = node.xPath,
+            xPath = node.xpath,
             bounds = node.snapshotNode?.clientRects,
             isVisible = node.isVisible,
             isInteractable = node.isInteractable

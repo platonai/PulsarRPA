@@ -1,7 +1,6 @@
 package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.browser.driver.chrome.dom.BrowserState
-import ai.platon.pulsar.browser.driver.chrome.dom.DOMState
 import ai.platon.pulsar.browser.driver.chrome.dom.DomDebug
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
@@ -95,7 +94,7 @@ class BrowserPerceptiveAgent(
 
     override suspend fun act(observe: ObserveResult): ActResult {
         val method = observe.method?.trim().orEmpty()
-        val selector = observe.selector.trim()
+        val selector = observe.locator.trim()
         val argsList = observe.arguments ?: emptyList()
 
         if (method.isBlank()) {
@@ -261,7 +260,7 @@ class BrowserPerceptiveAgent(
             instruction = instruction,
             browserState = browserState,
             requestId = UUID.randomUUID().toString(),
-            returnAction = options.returnAction ?: true,
+            returnAction = options.returnAction ?: false,
             logInferenceToFile = config.enableStructuredLogging,
             fromAct = false
         )
@@ -280,7 +279,7 @@ class BrowserPerceptiveAgent(
         // 2) Optional settle wait before observing DOM (if provided)
         val settleMs = action.domSettleTimeoutMs?.toLong()?.coerceAtLeast(0L) ?: 0L
         if (settleMs > 0) {
-            // TODO: wait for dom settle
+            // TODO: wait for dom settle by checking network activity, DOM change, field change, etc
             driver.delay(settleMs)
         }
 
@@ -321,8 +320,10 @@ class BrowserPerceptiveAgent(
         val maybeNavMethod = method in ToolCallExecutor.MAY_NAVIGATE_ACTIONS
         if (timeoutMs != null && maybeNavMethod && execResult.success) {
             // TODO: may not navigate
-            runCatching { driver.waitForNavigation(oldUrl, timeoutMs) }
-                .onFailure { e -> logger.info("observeAct: waitForNavigation failed | {}", e.message) }
+            val remainingTime = driver.waitForNavigation(oldUrl, timeoutMs)
+            if (remainingTime <= 0) {
+                logger.info("Timeout to wait for navigation | $action")
+            }
         }
 
         return execResult.copy(action = action.action)
@@ -337,21 +338,27 @@ class BrowserPerceptiveAgent(
 
         return try {
             val internalResults = inference.observe(params)
-            val results = internalResults.elements.map { el ->
-                // The format of elementId: `\d+-\d+`
+            val results = internalResults.elements.map { ele ->
+                // The format of elementId: `\d+/\d+`
 
-                // Multi selectors are supported:
-                // val xpathKeys = keys.count { it.startsWith("xpath:") }
-                // val backendKeys = keys.count { it.startsWith("backend:") }
-                // val nodeKeys = keys.count { it.startsWith("node:") }
-                // val elementHash = keys.count { it.startsWith("hash:") }
-                val xpath = browserState.domState.selectorMap[el.xpath]
+                // Multi selectors are supported: `xpath:`, `backend:`, `node:`, `hash:`
+                val locator = ele.locator
+                val frameIdIndex = locator.substringBefore("/").toIntOrNull()
+                val backendNodeId = locator.substringAfterLast("/").toIntOrNull()
+                val frameId = frameIdIndex?.let { browserState.domState.frameIds[it] }
+                val fbnLocator = "fbn:$frameId/$backendNodeId"
+                val node = browserState.domState.selectorMap[fbnLocator]
+                if (node == null) {
+                    logger.warn("Failed retrieving backend node | {} | {}", fbnLocator, ele)
+                }
+                // Use xpath here
+                val xpathLocator = node?.xpath?.let { "xpath:$it" } ?: ""
                 ObserveResult(
-                    selector = "xpath:$xpath",
-                    description = el.description,
-                    backendNodeId = el.backendNodeId,
-                    method = el.method?.ifBlank { null },
-                    arguments = el.arguments?.takeIf { it.isNotEmpty() }
+                    locator = xpathLocator,
+                    description = ele.description,
+                    backendNodeId = backendNodeId,
+                    method = ele.method?.ifBlank { null },
+                    arguments = ele.arguments?.takeIf { it.isNotEmpty() }
                 )
             }
             addHistoryObserve(params.instruction, requestId, results.size, results.isNotEmpty())

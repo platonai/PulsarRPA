@@ -17,3 +17,8 @@ Read root README-AI.md and `devdocs/copilot/test-guide.md` for guidelines
   - use real page `interactive-dynamic.html`
   - read `interactive-dynamic.html` to design the tests
   - write tests with the same pattern with `ChromeDomServiceIsScrollableTest`
+
+### implement ChromeCdpDomService#buildBrowserState
+
+### When serialize object to json in pulsar-browser module, always Round to two decimal places
+
