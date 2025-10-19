@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples.llm
 
+import ai.platon.pulsar.agentic.context.AgenticContexts
 import ai.platon.pulsar.skeleton.PulsarSettings
-import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.event.impl.DefaultPageEventHandlers
 import kotlinx.coroutines.delay
 import java.time.OffsetDateTime
@@ -14,7 +14,7 @@ fun main() {
     // Enable Single Page Application mode to avoid timeout
     PulsarSettings.withDefaultBrowser().withSPA()
 
-    val session = PulsarContexts.createSession()
+    val session = AgenticContexts.createSession()
     val url = "https://www.amazon.com/dp/B08PP5MSVB"
 
     val prompts = """

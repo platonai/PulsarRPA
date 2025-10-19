@@ -17,15 +17,16 @@ fun main() {
     be.onFeatureComputed.addLast { _, driver ->
         var result = driver.evaluate("__custom_utils__.minus(10, 3)")
         println(result)
+        require(result == 7)
 
         result = driver.evaluate("__pulsar_utils__.add(10, 3)")
         println(result)
-//        require(result == 7)
+        require(result == 13)
 
         driver.evaluate("__custom_utils__.addCustomEventListeners()")
     }
 
     session.load("https://www.amazon.com/dp/B08PP5MSVB", options)
-    
+
     readlnOrNull()
 }
