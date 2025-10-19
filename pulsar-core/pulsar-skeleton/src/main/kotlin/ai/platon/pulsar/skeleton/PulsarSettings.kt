@@ -45,7 +45,7 @@ import ai.platon.pulsar.common.config.MutableConfig
  * 3. Set the system to work with single page application
  * */
 data class PulsarSettings(
-    val isSPA: Boolean? = null,
+    val spa: Boolean? = null,
     val displayMode: DisplayMode? = null,
     val maxBrowsers: Int? = null,
     val maxOpenTabs: Int? = null,
@@ -70,7 +70,7 @@ data class PulsarSettings(
         }
         maxBrowsers?.let { maxBrowserContexts(maxBrowsers) }
         maxOpenTabs?.let { maxOpenTabs(maxOpenTabs, conf) }
-        isSPA?.takeIf { it }?.let { withSPA(conf) }
+        spa?.takeIf { it }?.let { withSPA(conf) }
         interactSettings?.let { withInteractSettings(interactSettings, conf) }
     }
 

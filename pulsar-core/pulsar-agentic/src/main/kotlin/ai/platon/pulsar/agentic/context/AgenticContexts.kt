@@ -37,27 +37,27 @@ object AgenticContexts {
 
     @Synchronized
     fun createSession(
-        isSPA: Boolean? = null,
+        spa: Boolean? = null,
         headless: Boolean = false,
         maxBrowsers: Int? = null,
         maxOpenTabs: Int? = null,
         interactSettings: InteractSettings? = null,
     ): AgenticSession {
         val displayMode = if (headless) DisplayMode.HEADLESS else null
-        val settings = PulsarSettings(isSPA, displayMode, maxBrowsers, maxOpenTabs, interactSettings)
+        val settings = PulsarSettings(spa, displayMode, maxBrowsers, maxOpenTabs, interactSettings)
         return createSession(settings)
     }
 
     @Synchronized
     fun getOrCreateSession(
-        isSPA: Boolean? = null,
+        spa: Boolean? = null,
         headless: Boolean = false,
         maxBrowsers: Int? = null,
         maxOpenTabs: Int? = null,
         interactSettings: InteractSettings? = null,
     ): AgenticSession {
         val displayMode = if (headless) DisplayMode.HEADLESS else null
-        val settings = PulsarSettings(isSPA, displayMode, maxBrowsers, maxOpenTabs, interactSettings)
+        val settings = PulsarSettings(spa, displayMode, maxBrowsers, maxOpenTabs, interactSettings)
         return getOrCreateSession(settings)
     }
 
