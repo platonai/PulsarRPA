@@ -264,6 +264,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 val result = agent.act("Click the search button")
 
                 assertNotNull(result)
+                kotlin.test.assertEquals("click", result.action)
                 assertTrue(agent.history.isNotEmpty())
             }
         }
@@ -463,10 +464,8 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
                 val startTime = System.currentTimeMillis()
 
-                runBlocking {
-                    repeat(3) {
-                        agent.observe("Find interactive elements")
-                    }
+                repeat(3) {
+                    agent.observe("Find interactive elements")
                 }
 
                 val duration = System.currentTimeMillis() - startTime

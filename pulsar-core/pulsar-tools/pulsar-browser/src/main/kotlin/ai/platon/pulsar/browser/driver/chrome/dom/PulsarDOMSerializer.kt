@@ -1,15 +1,15 @@
 package ai.platon.pulsar.browser.driver.chrome.dom
 
-import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMRect
+import ai.platon.pulsar.browser.driver.chrome.dom.model.CompactRect
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DefaultIncludeAttributes
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TinyNode
 import ai.platon.pulsar.common.serialize.json.Double2Serializer
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.ibm.icu.util.TimeZone
 import java.awt.Dimension
 import java.util.*
 
@@ -17,7 +17,7 @@ import java.util.*
  * Serializer for DOM trees optimized for LLM consumption.
  */
 object PulsarDOMSerializer {
-    val mapper: ObjectMapper = jacksonObjectMapper().apply {
+    val MAPPER: ObjectMapper = jacksonObjectMapper().apply {
         setSerializationInclusion(JsonInclude.Include.NON_NULL)
         val module = SimpleModule().apply {
             addSerializer(Double::class.java, Double2Serializer())
@@ -52,7 +52,7 @@ object PulsarDOMSerializer {
             options,
             depth = 0,
             includeOrder = attrsList.map { it.lowercase() })
-        val json = mapper.writeValueAsString(serializable)
+        val json = MAPPER.writeValueAsString(serializable)
         return DOMState(json = json, selectorMap = selectorMap)
     }
 
@@ -114,15 +114,15 @@ object PulsarDOMSerializer {
         }
 
         return SerializableNode(
-            shouldDisplay = node.shouldDisplay,
+            shouldDisplay = node.shouldDisplay.takeIf { it },
             interactiveIndex = node.interactiveIndex,
-            ignoredByPaintOrder = node.ignoredByPaintOrder,
-            excludedByParent = node.excludedByParent,
-            isCompoundComponent = isCompoundComponent,
+            ignoredByPaintOrder = node.ignoredByPaintOrder.takeIf { it },
+            excludedByParent = node.excludedByParent.takeIf { it },
+            isCompoundComponent = isCompoundComponent.takeIf { it },
             originalNode = cleanedOriginal,
-            children = serializedChildren,
-            shouldShowScrollInfo = if (showScrollInfo) true else null,
-            scrollInfoText = scrollInfoText
+            children = serializedChildren.takeIf { it.isNotEmpty() },
+            shouldShowScrollInfo = showScrollInfo.takeIf { it },
+            scrollInfoText = scrollInfoText?.takeIf { it.isNotEmpty() },
         )
     }
 
@@ -187,6 +187,7 @@ object PulsarDOMSerializer {
         selectorMap: MutableMap<String, DOMTreeNodeEx>
     ): SerializableNode {
         val prunedOriginal = CleanedOriginalNode(
+            locator = "${node.originalNode.frameId}-${node.originalNode.backendNodeId}",
             nodeId = node.originalNode.nodeId,
             backendNodeId = node.originalNode.backendNodeId,
             nodeType = node.originalNode.nodeType.value,
@@ -198,7 +199,7 @@ object PulsarDOMSerializer {
             isScrollable = null,
             isVisible = null,
             isInteractable = null,
-            xPath = node.originalNode.xPath,
+            xpath = node.originalNode.xPath,
             elementHash = node.originalNode.elementHash,
             interactiveIndex = node.originalNode.interactiveIndex,
             bounds = null, // No bounds for pruned nodes
@@ -211,13 +212,13 @@ object PulsarDOMSerializer {
         addToMultiSelectorMap(node.originalNode, selectorMap)
 
         return SerializableNode(
-            shouldDisplay = false, // Pruned nodes are not displayed
+            shouldDisplay = null, // Pruned nodes are not displayed
             interactiveIndex = node.interactiveIndex,
             ignoredByPaintOrder = true, // Mark as ignored by paint order
-            excludedByParent = node.excludedByParent,
-            isCompoundComponent = false,
+            excludedByParent = node.excludedByParent.takeIf { it },
+            isCompoundComponent = null,
             originalNode = prunedOriginal,
-            children = emptyList(), // No children for pruned nodes
+            children = null, // No children for pruned nodes
             shouldShowScrollInfo = null,
             scrollInfoText = null
         )
@@ -307,6 +308,7 @@ object PulsarDOMSerializer {
         val stackingContexts = snapshot?.stackingContexts
 
         return CleanedOriginalNode(
+            locator = "${node.frameId}-${node.backendNodeId}",
             nodeId = node.nodeId,
             backendNodeId = node.backendNodeId,
             nodeType = node.nodeType.value,
@@ -315,16 +317,16 @@ object PulsarDOMSerializer {
             attributes = merged.takeIf { it.isNotEmpty() },
             frameId = node.frameId,
             sessionId = node.sessionId,
-            isScrollable = node.isScrollable,
-            isVisible = node.isVisible,
-            isInteractable = node.isInteractable,
-            xPath = node.xPath,
+            isScrollable = node.isScrollable?.takeIf { it },
+            isVisible = node.isVisible?.takeIf { it },
+            isInteractable = node.isInteractable?.takeIf { it },
+            xpath = node.xPath,
             elementHash = node.elementHash,
             interactiveIndex = node.interactiveIndex,
-            bounds = bounds,
-            clientRects = clientRects,
-            scrollRects = scrollRects,
-            absoluteBounds = absoluteBounds,
+            bounds = bounds?.compact(),
+            clientRects = clientRects?.compact(),
+            scrollRects = scrollRects?.compact(),
+            absoluteBounds = absoluteBounds?.compact(),
             paintOrder = paintOrder,
             stackingContexts = stackingContexts,
             // contentDocument is cleaned recursively if present
@@ -410,6 +412,7 @@ object PulsarDOMSerializer {
         val scrollRects = snapshot?.scrollRects
 
         return CleanedOriginalNode(
+            locator = "${node.frameId}-${node.backendNodeId}",
             nodeId = node.nodeId,
             backendNodeId = node.backendNodeId,
             nodeType = node.nodeType.value,
@@ -421,12 +424,12 @@ object PulsarDOMSerializer {
             isScrollable = node.isScrollable,
             isVisible = node.isVisible,
             isInteractable = node.isInteractable,
-            xPath = node.xPath,
+            xpath = node.xPath,
             elementHash = node.elementHash,
             interactiveIndex = node.interactiveIndex,
-            bounds = bounds,
-            clientRects = clientRects,
-            scrollRects = scrollRects,
+            bounds = bounds?.compact(),
+            clientRects = clientRects?.compact(),
+            scrollRects = scrollRects?.compact(),
             // contentDocument is cleaned recursively if present
             contentDocument = node.contentDocument?.let { cleanOriginalNode(it, includeAttributes) }
         )
@@ -437,13 +440,13 @@ object PulsarDOMSerializer {
      * Enhanced with compound component marking and paint order information.
      */
     private data class SerializableNode(
-        val shouldDisplay: Boolean,
+        val shouldDisplay: Boolean?,
         val interactiveIndex: Int?,
-        val ignoredByPaintOrder: Boolean,
-        val excludedByParent: Boolean,
+        val ignoredByPaintOrder: Boolean?,
+        val excludedByParent: Boolean?,
         val isCompoundComponent: Boolean? = null,
         val originalNode: CleanedOriginalNode,
-        val children: List<SerializableNode>,
+        val children: List<SerializableNode>?,
         val shouldShowScrollInfo: Boolean?,
         val scrollInfoText: String?
     )
@@ -453,25 +456,31 @@ object PulsarDOMSerializer {
      * Enhanced with additional snapshot information for LLM consumption.
      * This prevents duplication since SimplifiedNode.children already contains them.
      */
+    @JsonIgnoreProperties(value = ["nodeId", "backendNodeId", "frameId", "xpath", "elementHash"])
     private data class CleanedOriginalNode(
+        /**
+         * Locator format: `frameId-backendNodeId`
+         * */
+        val locator: String,
+        val frameId: String?,
+        val xpath: String?,
+        val elementHash: String?,
         val nodeId: Int,
         val backendNodeId: Int?,
+
         val nodeType: Int,
         val nodeName: String,
         val nodeValue: String?,
         val attributes: Map<String, Any>?,
-        val frameId: String?,
         val sessionId: String?,
         val isScrollable: Boolean?,
         val isVisible: Boolean?,
         val isInteractable: Boolean?,
-        val xPath: String?,
-        val elementHash: String?,
         val interactiveIndex: Int?,
-        val bounds: DOMRect?,
-        val clientRects: DOMRect?,
-        val scrollRects: DOMRect?,
-        val absoluteBounds: DOMRect? = null,
+        val bounds: CompactRect?,
+        val clientRects: CompactRect?,
+        val scrollRects: CompactRect?,
+        val absoluteBounds: CompactRect? = null,
         val paintOrder: Int? = null,
         val stackingContexts: Int? = null,
         val contentDocument: CleanedOriginalNode?
@@ -516,7 +525,8 @@ data class DOMState(
 )
 
 data class ClientInfo(
-    val timeZone: TimeZone,
+    // "Asia/Shanghai"
+    val timeZone: String,
     val locale: Locale,
     val viewportWidth: Int,
     val viewportHeight: Int,
@@ -525,7 +535,7 @@ data class ClientInfo(
 )
 
 data class FullClientInfo(
-    val timeZone: TimeZone,
+    val timeZone: String,
     val locale: Locale,
     val userAgent: String? = null,
     val devicePixelRatio: Double? = null,

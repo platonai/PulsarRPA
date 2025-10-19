@@ -1,5 +1,7 @@
 package ai.platon.pulsar.browser.driver.chrome.dom.model
 
+import com.fasterxml.jackson.annotation.JsonIgnore
+
 /**
  * DOM node types based on the DOM specification.
  */
@@ -58,6 +60,17 @@ object DefaultIncludeAttributes {
     )
 }
 
+data class CompactRect(
+    val x: Double? = null,
+    val y: Double? = null,
+    val width: Double? = null,
+    val height: Double? = null
+) {
+    fun toDOMRect(): DOMRect {
+        return DOMRect(x?:0.0, y?:0.0, width?:0.0, height?:0.0)
+    }
+}
+
 /**
  * DOM rectangle with coordinates.
  */
@@ -67,6 +80,11 @@ data class DOMRect(
     val width: Double,
     val height: Double
 ) {
+    fun compact(): CompactRect {
+        return CompactRect(x.takeIf { it != 0.0 }, y.takeIf { it != 0.0 },
+            width.takeIf { it != 0.0 }, height.takeIf { it != 0.0 })
+    }
+
     fun intersects(other: DOMRect): Boolean {
         return x < other.x + other.width &&
                 x + width > other.x &&
@@ -142,6 +160,7 @@ data class SnapshotNodeEx(
  */
 data class DOMTreeNodeEx(
     // DOM Node data
+    @JsonIgnore
     val nodeId: Int = 0,
     val backendNodeId: Int? = null,
     val nodeType: NodeType = NodeType.ELEMENT_NODE,

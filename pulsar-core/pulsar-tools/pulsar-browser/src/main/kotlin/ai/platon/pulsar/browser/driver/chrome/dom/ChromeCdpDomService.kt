@@ -340,7 +340,7 @@ class ChromeCdpDomService(
             .getOrDefault(Locale.getDefault())
 
         val clientInfo = ClientInfo(
-            timeZone = timeZone,
+            timeZone = timeZone.id,
             locale = locale,
             viewportWidth = viewportWidth,
             viewportHeight = viewportHeight,
@@ -409,7 +409,7 @@ class ChromeCdpDomService(
         val visibilityState = evalString("document.visibilityState || ''")
 
         return FullClientInfo(
-            timeZone = timeZone,
+            timeZone = timeZone.id,
             locale = locale,
             userAgent = userAgent,
             devicePixelRatio = devicePixelRatio,
