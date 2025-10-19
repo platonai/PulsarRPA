@@ -21,6 +21,7 @@ object PulsarDOMSerializer {
         setSerializationInclusion(JsonInclude.Include.NON_NULL)
         val module = SimpleModule().apply {
             addSerializer(Double::class.java, Double2Serializer())
+            // Keep double value length minimal
             addSerializer(Double::class.javaPrimitiveType, Double2Serializer())
         }
         registerModule(module)
@@ -43,17 +44,30 @@ object PulsarDOMSerializer {
         val attrsList = includeAttributes.ifEmpty { DefaultIncludeAttributes.ATTRIBUTES }
         val includeAttributes = attrsList.map { it.lowercase() }.toSet()
 
+        val frameIdSet = mutableSetOf<String>()
+        // Traverse root to collect all frame ids
+        collectFrameIds(root, frameIdSet)
+
+        val frameIds = frameIdSet.toList()
         val selectorMap = linkedMapOf<String, DOMTreeNodeEx>()
         val serializable = buildSerializableNode(
             root,
             includeAttributes,
             emptyList(),
             selectorMap,
+            frameIds,
             options,
             depth = 0,
             includeOrder = attrsList.map { it.lowercase() })
         val json = MAPPER.writeValueAsString(serializable)
-        return DOMState(json = json, selectorMap = selectorMap)
+        return DOMState(json = json, selectorMap = selectorMap, frameIds = frameIds)
+    }
+
+    private fun collectFrameIds(root: TinyNode, frameIds: MutableSet<String>) {
+        root.originalNode.frameId?.let { frameIds.add(it) }
+        root.children.forEach {
+            collectFrameIds(it, frameIds)
+        }
     }
 
     /**
@@ -73,6 +87,7 @@ object PulsarDOMSerializer {
         includeAttributes: Set<String>,
         ancestors: List<DOMTreeNodeEx>,
         selectorMap: MutableMap<String, DOMTreeNodeEx>,
+        frameIds: List<String>,
         options: SerializationOptions,
         depth: Int = 0,
         includeOrder: List<String> = emptyList()
@@ -80,11 +95,11 @@ object PulsarDOMSerializer {
         // Apply paint-order pruning if enabled
         if (options.enablePaintOrderPruning && shouldPruneByPaintOrder(node, options)) {
             // Return a pruned node with minimal information
-            return createPrunedNode(node, ancestors, selectorMap)
+            return createPrunedNode(node, ancestors, selectorMap, frameIds)
         }
 
         // Clean original node with enhanced attribute casing alignment
-        val cleanedOriginal = cleanOriginalNodeEnhanced(node.originalNode, includeAttributes, options, includeOrder)
+        val cleanedOriginal = cleanOriginalNodeEnhanced(node.originalNode, includeAttributes, options, includeOrder, frameIds)
 
         val showScrollInfo = ScrollUtils.shouldShowScrollInfo(node.originalNode, ancestors)
         val scrollInfoText = if (showScrollInfo) {
@@ -110,7 +125,7 @@ object PulsarDOMSerializer {
         // Recursively serialize children with enhanced logic (do not filter; prune per-node)
         val childAncestors = ancestors + node.originalNode
         val serializedChildren = node.children.map {
-            buildSerializableNode(it, includeAttributes, childAncestors, selectorMap, options, depth + 1, includeOrder)
+            buildSerializableNode(it, includeAttributes, childAncestors, selectorMap, frameIds, options, depth + 1, includeOrder)
         }
 
         return SerializableNode(
@@ -184,16 +199,17 @@ object PulsarDOMSerializer {
     private fun createPrunedNode(
         node: TinyNode,
         ancestors: List<DOMTreeNodeEx>,
-        selectorMap: MutableMap<String, DOMTreeNodeEx>
+        selectorMap: MutableMap<String, DOMTreeNodeEx>,
+        frameIds: List<String>,
     ): SerializableNode {
         val prunedOriginal = CleanedOriginalNode(
-            locator = "${node.originalNode.frameId}-${node.originalNode.backendNodeId}",
+            locator = createNodeLocator(node.originalNode, frameIds),
             nodeId = node.originalNode.nodeId,
             backendNodeId = node.originalNode.backendNodeId,
             nodeType = node.originalNode.nodeType.value,
             nodeName = node.originalNode.nodeName.lowercase(),
             nodeValue = node.originalNode.nodeValue.takeIf { it.isNotEmpty() },
-            attributes = emptyMap(), // Minimal attributes for pruned nodes
+            attributes = null, // Minimal attributes for pruned nodes
             frameId = node.originalNode.frameId,
             sessionId = node.originalNode.sessionId,
             isScrollable = null,
@@ -231,7 +247,8 @@ object PulsarDOMSerializer {
         node: DOMTreeNodeEx,
         includeAttributes: Set<String>,
         options: SerializationOptions,
-        includeOrder: List<String>
+        includeOrder: List<String>,
+        frameIds: List<String>,
     ): CleanedOriginalNode {
         // Filter attributes with enhanced casing alignment
         val filteredAttrs: Map<String, String> = if (options.enableAttributeCasingAlignment) {
@@ -308,7 +325,7 @@ object PulsarDOMSerializer {
         val stackingContexts = snapshot?.stackingContexts
 
         return CleanedOriginalNode(
-            locator = "${node.frameId}-${node.backendNodeId}",
+            locator = createNodeLocator(node, frameIds),
             nodeId = node.nodeId,
             backendNodeId = node.backendNodeId,
             nodeType = node.nodeType.value,
@@ -330,7 +347,7 @@ object PulsarDOMSerializer {
             paintOrder = paintOrder,
             stackingContexts = stackingContexts,
             // contentDocument is cleaned recursively if present
-            contentDocument = node.contentDocument?.let { cleanOriginalNodeEnhanced(it, includeAttributes, options, includeOrder) }
+            contentDocument = node.contentDocument?.let { cleanOriginalNodeEnhanced(it, includeAttributes, options, includeOrder, frameIds) }
         )
     }
 
@@ -382,7 +399,8 @@ object PulsarDOMSerializer {
 
     private fun cleanOriginalNode(
         node: DOMTreeNodeEx,
-        includeAttributes: Set<String>
+        includeAttributes: Set<String>,
+        frameIds: List<String>,
     ): CleanedOriginalNode {
         // Filter attributes
         val filteredAttrs = node.attributes.filterKeys { key ->
@@ -412,7 +430,7 @@ object PulsarDOMSerializer {
         val scrollRects = snapshot?.scrollRects
 
         return CleanedOriginalNode(
-            locator = "${node.frameId}-${node.backendNodeId}",
+            locator = createNodeLocator(node, frameIds),
             nodeId = node.nodeId,
             backendNodeId = node.backendNodeId,
             nodeType = node.nodeType.value,
@@ -431,7 +449,7 @@ object PulsarDOMSerializer {
             clientRects = clientRects?.compact(),
             scrollRects = scrollRects?.compact(),
             // contentDocument is cleaned recursively if present
-            contentDocument = node.contentDocument?.let { cleanOriginalNode(it, includeAttributes) }
+            contentDocument = node.contentDocument?.let { cleanOriginalNode(it, includeAttributes, frameIds) }
         )
     }
 
@@ -459,7 +477,7 @@ object PulsarDOMSerializer {
     @JsonIgnoreProperties(value = ["nodeId", "backendNodeId", "frameId", "xpath", "elementHash"])
     private data class CleanedOriginalNode(
         /**
-         * Locator format: `frameId-backendNodeId`
+         * Locator format: `frameIndex/backendNodeId`
          * */
         val locator: String,
         val frameId: String?,
@@ -515,13 +533,20 @@ object PulsarDOMSerializer {
         // Add by node ID (fallback key)
         selectorMap.putIfAbsent("node:${node.nodeId}", node)
     }
+
+    private fun createNodeLocator(node: DOMTreeNodeEx, frameIds: List<String>): String {
+        // Returns -1 if the list does not contain element.
+        val index = frameIds.indexOf(node.frameId)
+        return "$index/${node.backendNodeId}"
+    }
 }
 
 // Keep the serialization result as a top-level data class for reuse
 
 data class DOMState(
     val json: String,
-    val selectorMap: Map<String, DOMTreeNodeEx>
+    val selectorMap: Map<String, DOMTreeNodeEx>,
+    val frameIds: List<String>
 )
 
 data class ClientInfo(
