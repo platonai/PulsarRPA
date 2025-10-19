@@ -1,6 +1,6 @@
 # Tool Guide For AI
 
-## mvn
+## Maven usage
 
 Windows:
 
@@ -25,4 +25,7 @@ cd D:\Browser4 && mvnw.cmd -pl pulsar-tests -Dtest="ai.platon.pulsar.skeleton.ai
 # Failed: cd /d D:\Browser4 && mvnw.cmd -pl pulsar-tests -am -Dtest=ai.platon.pulsar.skeleton.ai.PulsarAgentExtractObserveE2ETest test -DskipITs
 
 cmd /c "cd /d D:\Browser4 && mvnw.cmd -pl pulsar-core/pulsar-tools/pulsar-browser -Dtest=HashUtilsTests test"
+
+D:\Browser4\mvnw.cmd -pl pulsar-tests -Dtest="PulsarPerceptiveAgentTest" -D"surefire.excludedGroups=" test
 ```
+

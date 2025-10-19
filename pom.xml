@@ -567,7 +567,7 @@
                     <!--
 
                     -->
-                    <excludedGroups>TimeConsumingTest,ExternalServiceTest,IntegrationTest,E2ETest,HeavyTest,TestInfraCheck</excludedGroups>
+                    <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                     <!-- All tests are in the same JVM process -->
                     <forkCount>1</forkCount>
                     <reuseForks>true</reuseForks>
@@ -876,6 +876,7 @@
         <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
 
         <junit5.version>5.12.1</junit5.version>
+        <surefire.excludedGroups>TimeConsumingTest,ExternalServiceTest,IntegrationTest,E2ETest,HeavyTest,TestInfraCheck</surefire.excludedGroups>
 <!--        <kotlin.version>2.2.20</kotlin.version>-->
 <!--        <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>-->
 <!--        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>-->
