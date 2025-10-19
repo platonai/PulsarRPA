@@ -43,6 +43,9 @@ object DateTimes {
     val PATH_SAFE_FORMAT_3 = SimpleDateFormat("MMdd.HHmm")
     val PATH_SAFE_FORMAT_4 = SimpleDateFormat("MMdd.HHmmss")
 
+    val PATH_SAFE_FORMAT_10 = SimpleDateFormat("yyyyMMdd.HHmmss")
+    val PATH_SAFE_FORMAT_12 = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss")
+
     // inaccurate date time
     const val HOURS_PER_DAY = 24L
     const val HOURS_PER_MONTH = HOURS_PER_DAY * 30
