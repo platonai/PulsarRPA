@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common.browser
 
-enum class BrowserContextMode {
+enum class BrowserProfileMode {
     DEFAULT,
     SYSTEM_DEFAULT,
     PROTOTYPE,
@@ -9,11 +9,11 @@ enum class BrowserContextMode {
 
     companion object {
         @JvmStatic
-        fun fromString(name: String?): BrowserContextMode {
+        fun fromString(name: String?): BrowserProfileMode {
             return if (name.isNullOrEmpty()) {
                 DEFAULT
             } else try {
-                BrowserContextMode.valueOf(name.uppercase())
+                BrowserProfileMode.valueOf(name.uppercase())
             } catch (e: Throwable) {
                 DEFAULT
             }

@@ -2,7 +2,7 @@ package ai.platon.pulsar.app.api.controller
 
 import ai.platon.pulsar.boot.autoconfigure.PulsarContextConfiguration
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.browser.BrowserContextMode
+import ai.platon.pulsar.common.browser.BrowserProfileMode
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.session.BasicPulsarSession
 import ai.platon.pulsar.skeleton.session.PulsarSession
@@ -48,7 +48,7 @@ class IntegrationTestBase {
     @BeforeTest
     fun setup() {
         assertTrue("Session should be BasicPulsarSession, actual ${session.javaClass}") { session is BasicPulsarSession }
-        BrowserSettings.withBrowserContextMode(BrowserContextMode.TEMPORARY)
+        BrowserSettings.withBrowserContextMode(BrowserProfileMode.TEMPORARY)
     }
 
     // 自定义 RestTemplateBuilder 以设置超时时间

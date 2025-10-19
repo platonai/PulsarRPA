@@ -2,7 +2,7 @@ package ai.platon.pulsar.browser.common
 
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.browser.BrowserContextMode
+import ai.platon.pulsar.common.browser.BrowserProfileMode
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.*
@@ -57,31 +57,31 @@ open class BrowserSettings constructor(
         fun overrideBrowserContextMode(conf: ImmutableConfig): Companion {
             val modeString = conf[BROWSER_CONTEXT_MODE]?.uppercase()
             val browserType = conf.getEnum(BROWSER_TYPE, BrowserType.DEFAULT)
-            val mode = BrowserContextMode.fromString(modeString)
+            val mode = BrowserProfileMode.fromString(modeString)
             return withBrowserContextMode(mode, browserType)
         }
 
         @JvmStatic
-        fun withBrowserContextMode(contextMode: BrowserContextMode): Companion = withBrowserContextMode(contextMode, BrowserType.DEFAULT)
+        fun withBrowserContextMode(contextMode: BrowserProfileMode): Companion = withBrowserContextMode(contextMode, BrowserType.DEFAULT)
 
         @JvmStatic
-        fun withBrowserContextMode(contextMode: BrowserContextMode, browserType: BrowserType): Companion {
+        fun withBrowserContextMode(contextMode: BrowserProfileMode, browserType: BrowserType): Companion {
             System.setProperty(BROWSER_CONTEXT_MODE, contextMode.name)
 
             when (contextMode) {
-                BrowserContextMode.SYSTEM_DEFAULT -> {
+                BrowserProfileMode.SYSTEM_DEFAULT -> {
                     withSystemDefaultBrowserInternal(browserType)
                 }
-                BrowserContextMode.DEFAULT -> {
+                BrowserProfileMode.DEFAULT -> {
                     withDefaultBrowserInternal(browserType)
                 }
-                BrowserContextMode.PROTOTYPE -> {
+                BrowserProfileMode.PROTOTYPE -> {
                     withPrototypeBrowserInternal(browserType)
                 }
-                BrowserContextMode.TEMPORARY -> {
+                BrowserProfileMode.TEMPORARY -> {
                     withTemporaryBrowserInternal(browserType)
                 }
-                BrowserContextMode.SEQUENTIAL -> {
+                BrowserProfileMode.SEQUENTIAL -> {
                     withSequentialBrowsersInternal(browserType, 10)
                 }
             }

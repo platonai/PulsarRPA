@@ -1,7 +1,7 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.privacy
 
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.browser.BrowserContextMode
+import ai.platon.pulsar.common.browser.BrowserProfileMode
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_CONTEXT_NUMBER
@@ -79,7 +79,7 @@ data class BrowserProfile(
 
         fun createSystemDefault(browserType: BrowserType): BrowserProfile {
             throttlingLogger.info("You are creating a SYSTEM_DEFAULT browser context, force set max browser number to be 1")
-            BrowserSettings.withBrowserContextMode(BrowserContextMode.SYSTEM_DEFAULT, browserType)
+            BrowserSettings.withBrowserContextMode(BrowserProfileMode.SYSTEM_DEFAULT, browserType)
             require(System.getProperty(BROWSER_CONTEXT_NUMBER).toIntOrNull() == 1)
             require(System.getProperty(PRIVACY_AGENT_GENERATOR_CLASS).contains("SystemDefaultPrivacyAgentGenerator"))
             return create(browserType, PrivacyContext.SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER)
@@ -92,7 +92,7 @@ data class BrowserProfile(
         fun createDefault(browserType: BrowserType): BrowserProfile {
             throttlingLogger.info("You are creating a DEFAULT browser context, force set max browser number to be 1")
 
-            BrowserSettings.withBrowserContextMode(BrowserContextMode.DEFAULT, browserType)
+            BrowserSettings.withBrowserContextMode(BrowserProfileMode.DEFAULT, browserType)
             require(System.getProperty(BROWSER_CONTEXT_NUMBER).toIntOrNull() == 1)
             require(System.getProperty(PRIVACY_AGENT_GENERATOR_CLASS).contains("DefaultPrivacyAgentGenerator"))
             return create(browserType, PrivacyContext.DEFAULT_CONTEXT_DIR)
@@ -105,7 +105,7 @@ data class BrowserProfile(
         fun createPrototype(browserType: BrowserType): BrowserProfile {
             throttlingLogger.info("You are creating a PROTOTYPE browser context, force set max browser number to be 1")
 
-            BrowserSettings.withBrowserContextMode(BrowserContextMode.PROTOTYPE, browserType)
+            BrowserSettings.withBrowserContextMode(BrowserProfileMode.PROTOTYPE, browserType)
             require(System.getProperty(BROWSER_CONTEXT_NUMBER).toIntOrNull() == 1)
             require(System.getProperty(PRIVACY_AGENT_GENERATOR_CLASS).contains("PrototypePrivacyAgentGenerator"))
             return create(browserType, PrivacyContext.PROTOTYPE_CONTEXT_DIR)
@@ -114,14 +114,14 @@ data class BrowserProfile(
         fun createNextSequential() = createNextSequential(BrowserType.PULSAR_CHROME)
 
         fun createNextSequential(browserType: BrowserType): BrowserProfile {
-            BrowserSettings.withBrowserContextMode(BrowserContextMode.SEQUENTIAL, browserType)
+            BrowserSettings.withBrowserContextMode(BrowserProfileMode.SEQUENTIAL, browserType)
             return create(browserType, PrivacyContext.NEXT_SEQUENTIAL_CONTEXT_DIR)
         }
 
         fun createRandomTemp() = createRandomTemp(BrowserType.PULSAR_CHROME)
 
         fun createRandomTemp(browserType: BrowserType): BrowserProfile {
-            BrowserSettings.withBrowserContextMode(BrowserContextMode.TEMPORARY, browserType)
+            BrowserSettings.withBrowserContextMode(BrowserProfileMode.TEMPORARY, browserType)
             return create(browserType, PrivacyContext.createRandom(browserType))
         }
     }

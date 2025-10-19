@@ -1,14 +1,12 @@
 package ai.platon.pulsar.skeleton
 
-import ai.platon.pulsar.browser.common.BlockRule
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.DisplayMode
 import ai.platon.pulsar.browser.common.InteractSettings
-import ai.platon.pulsar.common.browser.BrowserContextMode
+import ai.platon.pulsar.common.browser.BrowserProfileMode
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.InteractLevel
 import ai.platon.pulsar.common.config.CapabilityTypes.*
-import dev.langchain4j.model.chat.ChatModel
 
 /**
  * The [PulsarSettings] class defines a convenient interface to control the behavior of Browser4.
@@ -43,25 +41,20 @@ import dev.langchain4j.model.chat.ChatModel
  * 3. Set the system to work with single page application
  * */
 data class PulsarSettings(
-    val browserContextMode: BrowserContextMode = BrowserContextMode.DEFAULT,
-    val browserType: BrowserType = BrowserType.DEFAULT,
-    val displayMode: DisplayMode = DisplayMode.GUI,
-    val maxBrowsers: Int = Int.MAX_VALUE,
-    val maxOpenTabs: Int = Int.MAX_VALUE,
-    val supervisorProcess: String? = null,
-    val supervisorProcessArgs: String? = null,
-    val isSPA: Boolean = false,
-    val interactSettings: InteractSettings = InteractSettings.DEFAULT,
-    val blockRule: BlockRule? = null,
-    val chatModel: ChatModel? = null,
+    val browserProfileMode: BrowserProfileMode? = null,
+    val displayMode: DisplayMode? = null,
+    val maxBrowsers: Int? = null,
+    val maxOpenTabs: Int? = null,
+    val isSPA: Boolean? = null,
+    val interactSettings: InteractSettings? = null,
 ) {
     companion object {
         @JvmStatic
-        fun withBrowserContextMode(contextMode: BrowserContextMode): Companion =
+        fun withBrowserContextMode(contextMode: BrowserProfileMode): Companion =
             withBrowserContextMode(contextMode, BrowserType.DEFAULT)
 
         @JvmStatic
-        fun withBrowserContextMode(contextMode: BrowserContextMode, browserType: BrowserType): Companion {
+        fun withBrowserContextMode(contextMode: BrowserProfileMode, browserType: BrowserType): Companion {
             BrowserSettings.withBrowserContextMode(contextMode, browserType)
             return PulsarSettings
         }
@@ -77,7 +70,7 @@ data class PulsarSettings(
          * Any change to the browser will be kept.
          * */
         @JvmStatic
-        fun withSystemDefaultBrowser() = withBrowserContextMode(BrowserContextMode.DEFAULT, BrowserType.DEFAULT)
+        fun withSystemDefaultBrowser() = withBrowserContextMode(BrowserProfileMode.DEFAULT, BrowserType.DEFAULT)
 
         /**
          * Use the system's default browser with the given type, so Browser4 visits websites just like you do.
@@ -85,7 +78,7 @@ data class PulsarSettings(
          * */
         @JvmStatic
         fun withSystemDefaultBrowser(browserType: BrowserType): Companion {
-            return withBrowserContextMode(BrowserContextMode.SYSTEM_DEFAULT, browserType)
+            return withBrowserContextMode(BrowserProfileMode.SYSTEM_DEFAULT, browserType)
         }
 
         /**
@@ -93,7 +86,7 @@ data class PulsarSettings(
          * Any modifications made to the browser will be preserved, including the cookies, history, etc.
          * */
         @JvmStatic
-        fun withDefaultBrowser() = withBrowserContextMode(BrowserContextMode.DEFAULT, BrowserType.DEFAULT)
+        fun withDefaultBrowser() = withBrowserContextMode(BrowserProfileMode.DEFAULT, BrowserType.DEFAULT)
 
         /**
          * Use the default browser which has an isolated profile and user data directory.
@@ -103,7 +96,7 @@ data class PulsarSettings(
          * */
         @JvmStatic
         fun withDefaultBrowser(browserType: BrowserType): Companion {
-            return withBrowserContextMode(BrowserContextMode.DEFAULT, browserType)
+            return withBrowserContextMode(BrowserProfileMode.DEFAULT, browserType)
         }
 
         /**
@@ -112,7 +105,7 @@ data class PulsarSettings(
          * Sequential and temporary browsers will inherit the environment from the prototype browser.
          */
         @JvmStatic
-        fun withPrototypeBrowser() = withBrowserContextMode(BrowserContextMode.PROTOTYPE, BrowserType.DEFAULT)
+        fun withPrototypeBrowser() = withBrowserContextMode(BrowserProfileMode.PROTOTYPE, BrowserType.DEFAULT)
 
         /**
          * Use the specified browser with the prototype environment.
@@ -121,7 +114,7 @@ data class PulsarSettings(
          * */
         @JvmStatic
         fun withPrototypeBrowser(browserType: BrowserType): Companion {
-            return withBrowserContextMode(BrowserContextMode.PROTOTYPE, browserType)
+            return withBrowserContextMode(BrowserProfileMode.PROTOTYPE, browserType)
         }
 
         /**
@@ -167,7 +160,7 @@ data class PulsarSettings(
          * */
         @JvmStatic
         fun withTemporaryBrowser(): Companion {
-            return withBrowserContextMode(BrowserContextMode.TEMPORARY, BrowserType.DEFAULT)
+            return withBrowserContextMode(BrowserProfileMode.TEMPORARY, BrowserType.DEFAULT)
         }
 
         /**
@@ -176,7 +169,7 @@ data class PulsarSettings(
          * */
         @JvmStatic
         fun withTemporaryBrowser(browserType: BrowserType) =
-            withBrowserContextMode(BrowserContextMode.TEMPORARY, browserType)
+            withBrowserContextMode(BrowserProfileMode.TEMPORARY, browserType)
 
         /**
          * Launch the browser in GUI mode.
@@ -244,8 +237,14 @@ data class PulsarSettings(
          * To collect SPA data, the execution needs to have no timeout limit.
          * */
         @JvmStatic
-        fun withSPA(): Companion {
+        fun withSPA() = withSinglePageApplication()
 
+        /**
+         * Tell the system to work with single page application.
+         * To collect SPA data, the execution needs to have no timeout limit.
+         * */
+        @JvmStatic
+        fun withSinglePageApplication(): Companion {
             BrowserSettings.withSPA()
             return PulsarSettings
         }
@@ -461,7 +460,7 @@ data class PulsarSettings(
 
             // Set the provided API key as a system property for global access.
             System.setProperty(LLM_API_KEY, key)
-            
+
             return PulsarSettings
         }
     }

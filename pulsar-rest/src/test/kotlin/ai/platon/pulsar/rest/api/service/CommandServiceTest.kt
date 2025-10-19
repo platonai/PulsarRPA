@@ -2,7 +2,7 @@ package ai.platon.pulsar.rest.api.service
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.browser.BrowserContextMode
+import ai.platon.pulsar.common.browser.BrowserProfileMode
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.ChatModelFactory
@@ -38,7 +38,7 @@ class CommandServiceTest : MockEcServerTestBase() {
     override fun setup() {
         super.setup() // Call parent setup to verify mock server is running
         Assumptions.assumeTrue(ChatModelFactory.isModelConfigured(conf))
-        BrowserSettings.withBrowserContextMode(BrowserContextMode.TEMPORARY)
+        BrowserSettings.withBrowserContextMode(BrowserProfileMode.TEMPORARY)
     }
 
     @Test

@@ -13,7 +13,6 @@ import ai.platon.pulsar.ql.context.AbstractH2SQLContext
 import ai.platon.pulsar.ql.context.SQLContext
 import ai.platon.pulsar.ql.h2.H2SessionDelegate
 import ai.platon.pulsar.skeleton.session.BasicPulsarSession
-import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.springframework.context.support.AbstractApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 

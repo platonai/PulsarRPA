@@ -2,7 +2,7 @@ package ai.platon.pulsar.heavy
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.common.browser.BrowserContextMode
+import ai.platon.pulsar.common.browser.BrowserProfileMode
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -13,7 +13,7 @@ import ai.platon.pulsar.persist.WebPage
  * Demonstrates continuous crawls.
  * */
 fun main() {
-    BrowserSettings.withBrowserContextMode(BrowserContextMode.SEQUENTIAL)
+    BrowserSettings.withBrowserContextMode(BrowserProfileMode.SEQUENTIAL)
 
     val topN = 10
     val topN2 = 10
