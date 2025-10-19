@@ -1,4 +1,4 @@
-package ai.platon.pulsar.skeleton.ai.tta
+package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ai.llm.PromptTemplate
@@ -8,9 +8,9 @@ import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
-import ai.platon.pulsar.skeleton.ai.ActionDescription
-import ai.platon.pulsar.skeleton.ai.detail.ElementBounds
-import ai.platon.pulsar.skeleton.ai.detail.InteractiveElement
+import ai.platon.pulsar.skeleton.ai.internal.ActionDescription
+import ai.platon.pulsar.skeleton.ai.internal.ElementBounds
+import ai.platon.pulsar.skeleton.ai.internal.InteractiveElement
 import ai.platon.pulsar.skeleton.common.llm.LLMUtils
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor

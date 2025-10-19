@@ -1,6 +1,6 @@
 package ai.platon.pulsar.agentic.context
 
-import ai.platon.pulsar.agentic.QLAgenticSession
+import ai.platon.pulsar.agentic.DefaultAgenticSession
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.CapabilityTypes
@@ -40,10 +40,10 @@ abstract class AbstractAgenticContext(
     override fun createSession(sessionDelegate: SessionDelegate): AgenticSession {
         require(sessionDelegate is H2SessionDelegate)
         val session = sqlSessions.computeIfAbsent(sessionDelegate.id) {
-            QLAgenticSession(this, sessionDelegate, SessionConfig(sessionDelegate, configuration))
+            DefaultAgenticSession(this, sessionDelegate, SessionConfig(sessionDelegate, configuration))
         }
         logger.info("AgenticQLSession is created | #{}/{}/{}", session.id, sessionDelegate.id, id)
-        return session as QLAgenticSession
+        return session as DefaultAgenticSession
     }
 }
 

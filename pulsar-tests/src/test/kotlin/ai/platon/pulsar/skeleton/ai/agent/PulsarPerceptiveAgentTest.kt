@@ -1,9 +1,12 @@
 package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.WebDriverTestBase
+import ai.platon.pulsar.agentic.ai.agent.BrowserPerceptiveAgent
+import ai.platon.pulsar.agentic.ai.detail.AgentConfig
 import ai.platon.pulsar.external.ChatModelFactory
-import ai.platon.pulsar.skeleton.ai.*
-import ai.platon.pulsar.skeleton.ai.detail.AgentConfig
+import ai.platon.pulsar.skeleton.ai.ActionOptions
+import ai.platon.pulsar.skeleton.ai.ExtractOptions
+import ai.platon.pulsar.skeleton.ai.ObserveOptions
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.runBlocking

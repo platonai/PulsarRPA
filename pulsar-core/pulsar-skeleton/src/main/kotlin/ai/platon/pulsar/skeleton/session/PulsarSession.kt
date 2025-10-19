@@ -8,10 +8,10 @@ import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.ActionOptions
-import ai.platon.pulsar.skeleton.ai.InstructionResult
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
+import ai.platon.pulsar.skeleton.ai.internal.ActionDescription
+import ai.platon.pulsar.skeleton.ai.internal.InstructionResult
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.context.PulsarContext
@@ -2273,19 +2273,19 @@ interface PulsarSession : AutoCloseable {
      * Each step in the plan uses at most one tool.
      *
      * @param action A string describing the action to be performed.
-     * @return A [PerceptiveAgent] instance that executes the action.
+     * @return A [ai.platon.pulsar.skeleton.ai.PerceptiveAgent] instance that executes the action.
      * @throws Exception if the action cannot be performed or if an error occurs during execution.
      */
     @Beta
     suspend fun act(action: String): PerceptiveAgent
 
     /**
-     * Executes an action described by the given [ActionOptions].
+     * Executes an action described by the given [ai.platon.pulsar.skeleton.ai.ActionOptions].
      * An agent will be created to analyze the action and generate a step-by-step plan to perform it.
      * Each step in the plan uses at most one tool.
      *
-     * @param action An [ActionOptions] object describing the action to be performed.
-     * @return A [PerceptiveAgent] instance that executes the action.
+     * @param action An [ai.platon.pulsar.skeleton.ai.ActionOptions] object describing the action to be performed.
+     * @return A [ai.platon.pulsar.skeleton.ai.PerceptiveAgent] instance that executes the action.
      * @throws Exception if the action cannot be performed or if an error occurs during execution.
      */
     @Beta
@@ -2300,6 +2300,9 @@ interface PulsarSession : AutoCloseable {
     @Beta
     suspend fun performAct(action: ActionDescription): InstructionResult
 
+    @Beta
+    suspend fun execute(action: ActionDescription): InstructionResult
+
     /**
      * Instructs the webdriver to perform a series of actions based on the given prompt.
      * This function converts the prompt into a sequence of webdriver actions, which are then executed.
@@ -2307,7 +2310,7 @@ interface PulsarSession : AutoCloseable {
      * @param prompt The textual prompt that describes the actions to be performed by the webdriver.
      * @return The response from the model, though in this implementation, the return value is not explicitly used.
      */
-    @Deprecated("Use act instead", ReplaceWith("multiAct(action)"))
+    @Deprecated("Use resolve instead", ReplaceWith("resolve(action)"))
     suspend fun instruct(prompt: String): InstructionResult
 
     /**

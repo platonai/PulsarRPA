@@ -4,12 +4,12 @@ import ai.platon.pulsar.agentic.context.AgenticContexts
 import kotlinx.coroutines.runBlocking
 
 class InstructionsExample {
-    val context = AgenticContexts.create()
-    val driver = context.browserFactory.launchDefaultBrowser().newDriver()
+    val session = AgenticContexts.getOrCreateSession()
+    val driver = session.context.launchDefaultBrowser().newDriver()
 
     suspend fun run() {
         driver.navigateTo("https://news.ycombinator.com/news")
-        driver.act("search for 'browser'")
+        session.act("search for 'browser'")
     }
 }
 

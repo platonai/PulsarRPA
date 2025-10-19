@@ -1,10 +1,10 @@
-package ai.platon.pulsar.skeleton.ai.agent
+package ai.platon.pulsar.agentic.ai.agent
 
 import ai.platon.pulsar.browser.driver.chrome.dom.BrowserState
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
-import ai.platon.pulsar.skeleton.ai.PromptBuilder
+import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.JsonNode

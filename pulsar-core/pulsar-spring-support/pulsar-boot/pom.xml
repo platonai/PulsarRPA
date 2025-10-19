@@ -59,5 +59,9 @@
             <version>${spring-boot.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-agentic</artifactId>
+        </dependency>
     </dependencies>
 </project>

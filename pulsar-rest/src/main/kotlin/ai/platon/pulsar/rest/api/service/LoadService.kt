@@ -44,7 +44,7 @@ class LoadService {
         val actions = request.actions
         if (actions != null) {
             be.onDocumentFullyLoaded.addLast { page, driver ->
-                actions.forEach { driver.instruct(it) }
+                actions.forEach { session.instruct(it) }
             }
         }
 
@@ -61,11 +61,11 @@ class LoadService {
         val be = options.eventHandlers.browseEventHandlers
 
         request.onBrowserLaunchedActions?.let { actions -> be.onBrowserLaunched.addLast { page, driver ->
-            actions.forEach { driver.instruct(it) }
+            actions.forEach { session.instruct(it) }
         } }
 
         request.onPageReadyActions?.let { actions -> be.onDocumentFullyLoaded.addLast { page, driver ->
-            actions.forEach { driver.instruct(it) }
+            actions.forEach { session.instruct(it) }
         } }
 
 //        request.actionsOnDidInteract?.let { actions -> be.onDidInteract.addLast { page, driver ->

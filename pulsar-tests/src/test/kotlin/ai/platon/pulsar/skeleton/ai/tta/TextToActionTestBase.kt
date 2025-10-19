@@ -1,6 +1,7 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.WebDriverTestBase
+import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.external.BrowserChatModel

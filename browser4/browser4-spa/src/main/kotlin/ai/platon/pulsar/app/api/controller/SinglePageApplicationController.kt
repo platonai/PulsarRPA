@@ -144,7 +144,7 @@ class SinglePageApplicationController(
      * @return 200 OK with empty body on success; 500 if no active driver is present.
      */
     @PostMapping("/act")
-    fun act(@RequestBody request: ActRequest): ResponseEntity<Any> {
+    suspend fun act(@RequestBody request: ActRequest): ResponseEntity<Any> {
         val driver = activeDriver
         if (driver == null) {
             val status = CommandStatus.failed(ResourceStatus.SC_SERVICE_UNAVAILABLE)
@@ -153,7 +153,7 @@ class SinglePageApplicationController(
         }
 
         return try {
-            val result = runBlocking { driver.act(request.act) }
+            val result = session.act(request.act)
 
             val status = CommandStatus(
                 "",

@@ -1,8 +1,8 @@
-package ai.platon.pulsar.skeleton.ai
+package ai.platon.pulsar.agentic.ai
 
 import ai.platon.pulsar.browser.driver.chrome.dom.PulsarDOMSerializer
-import ai.platon.pulsar.skeleton.ai.agent.ExtractParams
-import ai.platon.pulsar.skeleton.ai.agent.ObserveParams
+import ai.platon.pulsar.agentic.ai.agent.ExtractParams
+import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import java.util.*
 
 class PromptBuilder(val locale: Locale = Locale.CHINESE) {

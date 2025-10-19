@@ -8,10 +8,6 @@ import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.dom.nodes.GeoAnchor
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.ai.ActionDescription
-import ai.platon.pulsar.skeleton.ai.ActionOptions
-import ai.platon.pulsar.skeleton.ai.InstructionResult
-import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import com.google.common.annotations.Beta
 import org.jsoup.Connection
 import java.io.Closeable
@@ -305,6 +301,7 @@ interface WebDriver : Closeable {
      */
     @Throws(WebDriverException::class)
     suspend fun goForward()
+
     /**
      * Returns a string representing the current URL that the browser is looking at. The current url is always
      * the main frame's `document.documentURI` if the browser succeed to return it, and is displayed in the browser's
@@ -411,37 +408,6 @@ interface WebDriver : Closeable {
     suspend fun chat(prompt: String, selector: String): ModelResponse
 
     /**
-     * Create an AI agent to resolve the action requirement.
-     */
-    @Throws(WebDriverException::class)
-    @Beta
-    suspend fun act(action: String): PerceptiveAgent
-
-    /**
-     * Create an AI agent to resolve the action requirement.
-     */
-    @Throws(WebDriverException::class)
-    @Beta
-    suspend fun act(action: ActionOptions): PerceptiveAgent
-
-    /**
-     * Perform a model-generated action described by [action]. Executes (possibly multiple) low-level driver operations
-     * and returns an [InstructionResult] containing both tool calls and their outcomes.
-     */
-    @Throws(WebDriverException::class)
-    suspend fun execute(action: ActionDescription): InstructionResult
-
-    /**
-     * Instructs the webdriver to perform a series of actions based on the given prompt.
-     * This function converts the prompt into a sequence of webdriver actions, which are then executed.
-     *
-     * @param prompt The textual prompt that describes the actions to be performed by the webdriver.
-     * @return The response from the model, though in this implementation, the return value is not explicitly used.
-     */
-    @Throws(WebDriverException::class)
-    suspend fun instruct(prompt: String): InstructionResult
-
-    /**
      * Returns the cookies of the current page.
      *
      * ```kotlin
@@ -453,9 +419,11 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun getCookies(): List<Map<String, String>>
 
-    @Deprecated("Use deleteCookies(name, url, domain, path) instead." +
-            "[deleteCookies] (3/5) | code: -32602, At least one of the url and domain needs to be specified",
-        ReplaceWith("driver.deleteCookies(name, url, domain, path)"))
+    @Deprecated(
+        "Use deleteCookies(name, url, domain, path) instead." +
+                "[deleteCookies] (3/5) | code: -32602, At least one of the url and domain needs to be specified",
+        ReplaceWith("driver.deleteCookies(name, url, domain, path)")
+    )
     @Throws(WebDriverException::class)
     suspend fun deleteCookies(name: String)
 
@@ -1228,12 +1196,6 @@ interface WebDriver : Closeable {
     suspend fun setAttributeAll(selector: String, attrName: String, attrValue: String)
 
 
-
-
-
-
-
-
     /**
      * Returns the node's property value, the node is located by [selector], the property is [propName].
      *
@@ -1266,7 +1228,12 @@ interface WebDriver : Closeable {
      * @return The property values of the nodes.
      * */
     @Throws(WebDriverException::class)
-    suspend fun selectPropertyValueAll(selector: String, propName: String, start: Int = 0, limit: Int = 10000): List<String>
+    suspend fun selectPropertyValueAll(
+        selector: String,
+        propName: String,
+        start: Int = 0,
+        limit: Int = 10000
+    ): List<String>
 
     /**
      * Set the property of an element located by [selector].
@@ -1295,14 +1262,6 @@ interface WebDriver : Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun setPropertyAll(selector: String, propName: String, propValue: String)
-
-
-
-
-
-
-
-
 
 
     /**

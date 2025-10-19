@@ -405,20 +405,6 @@ class ToolCallExecutor {
                 driver.pageSource()
             }
 
-            "chat" -> {
-                // Interact with AI model about a specific element
-                if (args.size >= 2) {
-                    driver.chat(args[0], args[1])
-                } else {
-                    null
-                }
-            }
-
-            "instruct" -> {
-                // Execute AI-assisted browser automation
-                if (args.isNotEmpty()) driver.instruct(args[0]) else null
-            }
-
             "getCookies" -> {
                 // Get all cookies from the current page
                 driver.getCookies()

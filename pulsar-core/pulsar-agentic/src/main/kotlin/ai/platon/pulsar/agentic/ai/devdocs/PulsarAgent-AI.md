@@ -12,7 +12,7 @@ Before starting development, ensure you understand:
 
 ## 🎯 Overview
 
-[PerceptiveAgent.kt](../PerceptiveAgent.kt) is an enterprise-grade multi-round planning executor that enables AI models to perform
+[PerceptiveAgent.kt](../../../../../../../../../../pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/ai/PerceptiveAgent.kt) is an enterprise-grade multi-round planning executor that enables AI models to perform
 web automation through screenshot observation and historical action analysis. It plans and executes atomic
 actions step-by-step until the target is achieved.
 

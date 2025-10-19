@@ -15,12 +15,10 @@ import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
-import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.ActionOptions
-import ai.platon.pulsar.skeleton.ai.InstructionResult
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
-import ai.platon.pulsar.skeleton.ai.agent.BrowserPerceptiveAgent
-import ai.platon.pulsar.skeleton.ai.tta.TextToAction
+import ai.platon.pulsar.skeleton.ai.internal.ActionDescription
+import ai.platon.pulsar.skeleton.ai.internal.InstructionResult
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
@@ -28,7 +26,6 @@ import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
@@ -532,50 +529,40 @@ abstract class AbstractPulsarSession(
                 "\n\nThere is the text content of the selected element:\n\n\n" + element.text()
     )
 
-    override suspend fun act(action: String): PerceptiveAgent {
-        return act(ActionOptions(action = action))
-    }
+    override suspend fun act(action: String) = act(ActionOptions(action = action))
 
     override suspend fun act(action: ActionOptions): PerceptiveAgent {
-        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`: session.bind(driver)" }
-        val agent = BrowserPerceptiveAgent(driver)
-
-        agent.act(action)
-
-        return agent
+        val message = """
+Use AgenticSession for agentic actions:
+```
+val session = AgenticContexts.createSession()
+session.act(action)
+```
+        """.trimIndent()
+        throw NotSupportedException(message)
     }
 
     override suspend fun performAct(action: ActionDescription): InstructionResult {
-        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `performAct`" }
-        if (action.functionCalls.isEmpty()) {
-            return InstructionResult(listOf(), listOf(), action.modelResponse)
-        }
-        val functionCalls = action.functionCalls
-
-        // Dispatches and executes each action using a SimpleCommandDispatcher.
-        val dispatcher = ToolCallExecutor()
-        val functionResults = functionCalls.map { action ->
-            dispatcher.execute(action, driver)
-        }
-        return InstructionResult(action.functionCalls, functionResults, action.modelResponse)
+        val message = """
+Use AgenticSession for agentic actions:
+```
+val session = AgenticContexts.createSession()
+session.performAct(action)
+```
+        """.trimIndent()
+        throw NotSupportedException(message)
     }
 
     @Deprecated("Use act instead", replaceWith = ReplaceWith("act(action)"))
     override suspend fun instruct(prompt: String): InstructionResult {
-        val driver = requireNotNull(boundDriver) { "Bind a WebDriver to use `act`" }
-
-        // Converts the prompt into a sequence of webdriver actions using TextToAction.
-        val tta = TextToAction(sessionConfig)
-
-        val actions = tta.generateWebDriverActionsWithToolCallSpecsDeferred(prompt)
-
-        // Dispatches and executes each action using a SimpleCommandDispatcher.
-        val dispatcher = ToolCallExecutor()
-        val functionResults = actions.functionCalls.map { action ->
-            dispatcher.execute(action, driver)
-        }
-
-        return InstructionResult(actions.functionCalls, functionResults, actions.modelResponse)
+        val message = """
+Use AgenticSession for agentic actions:
+```
+val session = AgenticContexts.createSession()
+session.instruct(prompt)
+```
+        """.trimIndent()
+        throw NotSupportedException(message)
     }
 
     override fun data(name: String): Any? = let { dataCache[name] }
