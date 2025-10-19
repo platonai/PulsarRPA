@@ -1,5 +1,6 @@
 package ai.platon.pulsar.app.api.controller
 
+import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.getLogger
@@ -36,7 +37,7 @@ import kotlin.concurrent.withLock
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
 class SinglePageApplicationController(
-    val session: PulsarSession,
+    val session: AgenticSession,
     val commandService: CommandService,
 ) {
     private val logger = getLogger(SinglePageApplicationController::class)

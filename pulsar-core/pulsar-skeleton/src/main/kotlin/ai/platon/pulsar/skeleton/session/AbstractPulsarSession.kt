@@ -527,19 +527,6 @@ abstract class AbstractPulsarSession(
                 "\n\nThere is the text content of the selected element:\n\n\n" + element.text()
     )
 
-    override suspend fun act(action: String) = act(ActionOptions(action = action))
-
-    override suspend fun act(action: ActionOptions): PerceptiveAgent {
-        val message = """
-Use AgenticSession for agentic actions:
-```
-val session = AgenticContexts.createSession()
-session.act(action)
-```
-        """.trimIndent()
-        throw NotSupportedException(message)
-    }
-
     override fun data(name: String): Any? = let { dataCache[name] }
 
     override fun data(name: String, value: Any) = run { dataCache[name] = value }

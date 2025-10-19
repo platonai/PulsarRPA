@@ -1,5 +1,6 @@
 package ai.platon.pulsar
 
+import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.persist.WebDb
@@ -17,7 +18,7 @@ class TestWebSiteAccess {
     lateinit var conf: ImmutableConfig
 
     @Autowired
-    lateinit var session: PulsarSession
+    lateinit var session: AgenticSession
 
     @Value("\${server.port}")
     val port: Int = 18080

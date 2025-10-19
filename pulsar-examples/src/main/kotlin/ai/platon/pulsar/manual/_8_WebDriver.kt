@@ -1,13 +1,13 @@
 package ai.platon.pulsar.manual
 
+import ai.platon.pulsar.agentic.AgenticSession
+import ai.platon.pulsar.agentic.context.AgenticContexts
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
-import ai.platon.pulsar.skeleton.context.PulsarContexts.createSession
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.slf4j.LoggerFactory
 
-internal class WebDriverDemo(private val session: PulsarSession = createSession()) {
+internal class WebDriverDemo(private val session: AgenticSession = AgenticContexts.createSession()) {
     private val logger = LoggerFactory.getLogger(this.javaClass)
 
     private val searchBoxSelector = ".form input[type=text]"
@@ -114,7 +114,7 @@ fun main() {
 
     val url = "https://www.amazon.com/dp/B08PP5MSVB"
     val args = "-refresh -parse"
-    val session = createSession()
+    val session = AgenticContexts.createSession()
     val crawler = WebDriverDemo(session)
     session.load(url, crawler.options(args))
 }

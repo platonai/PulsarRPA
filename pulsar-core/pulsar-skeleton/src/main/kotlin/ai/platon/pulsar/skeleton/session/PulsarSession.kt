@@ -2265,29 +2265,6 @@ interface PulsarSession : AutoCloseable {
       * @return The response from the AI model encapsulated in a [ModelResponse] object.
       */
      suspend fun chat(prompt: String, element: Element): ModelResponse
-    /**
-     * Executes an action described by the given string.
-     * An agent will be created to analyze the action and generate a step-by-step plan to perform it.
-     * Each step in the plan uses at most one tool.
-     *
-     * @param action A string describing the action to be performed.
-     * @return A [ai.platon.pulsar.skeleton.ai.PerceptiveAgent] instance that executes the action.
-     * @throws Exception if the action cannot be performed or if an error occurs during execution.
-     */
-    @Beta
-    suspend fun act(action: String): PerceptiveAgent
-
-    /**
-     * Executes an action described by the given [ai.platon.pulsar.skeleton.ai.ActionOptions].
-     * An agent will be created to analyze the action and generate a step-by-step plan to perform it.
-     * Each step in the plan uses at most one tool.
-     *
-     * @param action An [ai.platon.pulsar.skeleton.ai.ActionOptions] object describing the action to be performed.
-     * @return A [ai.platon.pulsar.skeleton.ai.PerceptiveAgent] instance that executes the action.
-     * @throws Exception if the action cannot be performed or if an error occurs during execution.
-     */
-    @Beta
-    suspend fun act(action: ActionOptions): PerceptiveAgent
 
     /**
      * Exports the content of a webpage to a file.

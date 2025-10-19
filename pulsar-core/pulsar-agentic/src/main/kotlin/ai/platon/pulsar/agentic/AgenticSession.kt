@@ -30,7 +30,7 @@ interface AgenticSession: PulsarSession {
      * @return A [ai.platon.pulsar.skeleton.ai.PerceptiveAgent] instance that executes the action.
      * @throws Exception if the action cannot be performed or if an error occurs during execution.
      */
-    override suspend fun act(action: String): PerceptiveAgent
+    suspend fun act(action: String): PerceptiveAgent
 
     /**
      * Executes an action described by the given [ai.platon.pulsar.skeleton.ai.ActionOptions].
@@ -41,7 +41,7 @@ interface AgenticSession: PulsarSession {
      * @return A [ai.platon.pulsar.skeleton.ai.PerceptiveAgent] instance that executes the action.
      * @throws Exception if the action cannot be performed or if an error occurs during execution.
      */
-    override suspend fun act(action: ActionOptions): PerceptiveAgent
+    suspend fun act(action: ActionOptions): PerceptiveAgent
 
     /**
      * Perform an action described by [action].
