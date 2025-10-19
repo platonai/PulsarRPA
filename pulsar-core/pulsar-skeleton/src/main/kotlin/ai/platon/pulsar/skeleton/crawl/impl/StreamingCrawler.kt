@@ -210,8 +210,7 @@ open class StreamingCrawler(
      * The maximum number of open tabs allowed in each open browser.
      * */
     val numMaxOpenTabs: Int get() {
-        val c = sessionConfig.getWithFallback(BROWSER_MAX_OPEN_TABS, BROWSER_MAX_ACTIVE_TABS)
-            ?.toIntOrNull() ?: DEFAULT_BROWSER_MAX_OPEN_TABS
+        val c = sessionConfig.get(BROWSER_MAX_OPEN_TABS)?.toIntOrNull() ?: DEFAULT_BROWSER_MAX_OPEN_TABS
         return c.coerceAtMost(50)
     }
 

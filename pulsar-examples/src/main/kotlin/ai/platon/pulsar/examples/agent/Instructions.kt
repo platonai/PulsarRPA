@@ -8,7 +8,7 @@ class InstructionsExample {
         PulsarSettings.withSPA()
     }
 
-    val session = AgenticContexts.getOrCreateSession()
+    val session = AgenticContexts.getOrCreateSession(PulsarSettings(isSPA = true))
     val driver = session.context.launchDefaultBrowser().newDriver()
 
     suspend fun run() {

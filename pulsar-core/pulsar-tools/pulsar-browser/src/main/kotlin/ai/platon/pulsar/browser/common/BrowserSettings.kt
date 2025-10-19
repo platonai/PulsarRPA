@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.*
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import java.net.URI
 import java.time.Duration
@@ -44,45 +45,54 @@ open class BrowserSettings constructor(
          * Specify the browser type to fetch webpages.
          * */
         @JvmStatic
-        fun withBrowser(browserType: BrowserType): Companion {
+        fun withBrowser(browserType: BrowserType, conf: MutableConfig? = null): Companion {
             if (browserType == BrowserType.PLAYWRIGHT_CHROME) {
                 System.err.println("Warning: PLAYWRIGHT is not thread safe! @see https://playwright.dev/java/docs/multithreading")
             }
 
-            System.setProperty(BROWSER_TYPE, browserType.name)
+            if (conf == null) {
+                System.setProperty(BROWSER_TYPE, browserType.name)
+            } else {
+                conf[BROWSER_TYPE] = browserType.name
+            }
             return BrowserSettings
         }
 
         @JvmStatic
-        fun overrideBrowserContextMode(conf: ImmutableConfig): Companion {
-            val modeString = conf[BROWSER_CONTEXT_MODE]?.uppercase()
-            val browserType = conf.getEnum(BROWSER_TYPE, BrowserType.DEFAULT)
+        fun overrideBrowserContextMode(ic: ImmutableConfig, conf: MutableConfig? = null): Companion {
+            val modeString = ic[BROWSER_CONTEXT_MODE]?.uppercase()
+            val browserType = ic.getEnum(BROWSER_TYPE, BrowserType.DEFAULT)
             val mode = BrowserProfileMode.fromString(modeString)
-            return withBrowserContextMode(mode, browserType)
+            return withBrowserContextMode(mode, browserType, conf)
         }
 
         @JvmStatic
-        fun withBrowserContextMode(contextMode: BrowserProfileMode): Companion = withBrowserContextMode(contextMode, BrowserType.DEFAULT)
+        fun withBrowserContextMode(contextMode: BrowserProfileMode, conf: MutableConfig? = null): Companion =
+            withBrowserContextMode(contextMode, BrowserType.DEFAULT, conf)
 
         @JvmStatic
-        fun withBrowserContextMode(contextMode: BrowserProfileMode, browserType: BrowserType): Companion {
-            System.setProperty(BROWSER_CONTEXT_MODE, contextMode.name)
+        fun withBrowserContextMode(contextMode: BrowserProfileMode, browserType: BrowserType, conf: MutableConfig? = null): Companion {
+            if (conf == null) {
+                System.setProperty(BROWSER_CONTEXT_MODE, contextMode.name)
+            } else {
+                conf[BROWSER_CONTEXT_MODE] = contextMode.name
+            }
 
             when (contextMode) {
                 BrowserProfileMode.SYSTEM_DEFAULT -> {
-                    withSystemDefaultBrowserInternal(browserType)
+                    withSystemDefaultBrowserInternal(browserType, conf)
                 }
                 BrowserProfileMode.DEFAULT -> {
-                    withDefaultBrowserInternal(browserType)
+                    withDefaultBrowserInternal(browserType, conf)
                 }
                 BrowserProfileMode.PROTOTYPE -> {
-                    withPrototypeBrowserInternal(browserType)
+                    withPrototypeBrowserInternal(browserType, conf)
                 }
                 BrowserProfileMode.TEMPORARY -> {
-                    withTemporaryBrowserInternal(browserType)
+                    withTemporaryBrowserInternal(browserType, conf)
                 }
                 BrowserProfileMode.SEQUENTIAL -> {
-                    withSequentialBrowsersInternal(browserType, 10)
+                    withSequentialBrowsersInternal(browserType, 10, conf)
                 }
             }
 
@@ -90,100 +100,110 @@ open class BrowserSettings constructor(
         }
 
         @JvmStatic
-        fun withSystemDefaultBrowser() = withSystemDefaultBrowserInternal(BrowserType.PULSAR_CHROME)
+        fun withSystemDefaultBrowser(conf: MutableConfig? = null) = withSystemDefaultBrowserInternal(BrowserType.PULSAR_CHROME, conf)
 
-        private fun withSystemDefaultBrowserInternal(browserType: BrowserType): Companion {
+        private fun withSystemDefaultBrowserInternal(browserType: BrowserType, conf: MutableConfig? = null): Companion {
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.SystemDefaultPrivacyAgentGenerator"
-            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
-            withBrowser(browserType).maxBrowserContexts(1).maxOpenTabs(50).withSPA()
+            if (conf == null) {
+                System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
+            } else {
+                conf[PRIVACY_AGENT_GENERATOR_CLASS] = clazz
+            }
+            withBrowser(browserType, conf).maxBrowserContexts(1, conf).maxOpenTabs(50).withSPA(conf)
             return BrowserSettings
         }
 
         @JvmStatic
-        fun withDefaultBrowser() = withDefaultBrowserInternal(BrowserType.PULSAR_CHROME)
+        fun withDefaultBrowser(conf: MutableConfig? = null) = withDefaultBrowserInternal(BrowserType.PULSAR_CHROME, conf)
 
-        private fun withDefaultBrowserInternal(browserType: BrowserType): Companion {
+        private fun withDefaultBrowserInternal(browserType: BrowserType, conf: MutableConfig? = null): Companion {
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.DefaultPrivacyAgentGenerator"
-            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
-            withBrowser(browserType).maxBrowserContexts(1).maxOpenTabs(50).withSPA()
+            if (conf == null) {
+                System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
+            } else {
+                conf[PRIVACY_AGENT_GENERATOR_CLASS] = clazz
+            }
+            withBrowser(browserType, conf).maxBrowserContexts(1, conf).maxOpenTabs(50).withSPA(conf)
             return BrowserSettings
         }
 
         @JvmStatic
-        fun withPrototypeBrowser() = withPrototypeBrowserInternal(BrowserType.PULSAR_CHROME)
+        fun withPrototypeBrowser(conf: MutableConfig? = null) = withPrototypeBrowserInternal(BrowserType.PULSAR_CHROME, conf)
 
-        private fun withPrototypeBrowserInternal(browserType: BrowserType): Companion {
+        private fun withPrototypeBrowserInternal(browserType: BrowserType, conf: MutableConfig? = null): Companion {
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrototypePrivacyAgentGenerator"
-            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
-            withBrowser(browserType).maxBrowserContexts(1).maxOpenTabs(50).withSPA()
+            if (conf == null) {
+                System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
+            } else {
+                conf[PRIVACY_AGENT_GENERATOR_CLASS] = clazz
+            }
+            withBrowser(browserType, conf).maxBrowserContexts(1, conf).maxOpenTabs(50).withSPA(conf)
             return BrowserSettings
         }
 
         @JvmStatic
-        fun withSequentialBrowsers(): Companion = withSequentialBrowsersInternal(BrowserType.PULSAR_CHROME, 10)
+        fun withSequentialBrowsers(conf: MutableConfig? = null): Companion = withSequentialBrowsersInternal(BrowserType.PULSAR_CHROME, 10, conf)
 
-        fun withSequentialBrowsers(maxAgents: Int): Companion {
-            return withSequentialBrowsersInternal(BrowserType.PULSAR_CHROME, maxAgents)
+        fun withSequentialBrowsers(maxAgents: Int, conf: MutableConfig? = null): Companion {
+            return withSequentialBrowsersInternal(BrowserType.PULSAR_CHROME, maxAgents, conf)
         }
 
-        fun withSequentialBrowsers(browserType: BrowserType, maxAgents: Int): Companion {
-            return withSequentialBrowsersInternal(browserType, maxAgents)
+        fun withSequentialBrowsers(browserType: BrowserType, maxAgents: Int, conf: MutableConfig? = null): Companion {
+            return withSequentialBrowsersInternal(browserType, maxAgents, conf)
         }
 
-        private fun withSequentialBrowsersInternal(browserType: BrowserType, maxAgents: Int): Companion {
-            withBrowser(browserType)
-            System.setProperty(BROWSER_CONTEXT_MODE, "SEQUENTIAL")
-            System.setProperty(MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER, "$maxAgents")
+        private fun withSequentialBrowsersInternal(browserType: BrowserType, maxAgents: Int, conf: MutableConfig? = null): Companion {
+            withBrowser(browserType, conf)
+            if (conf == null) {
+                System.setProperty(BROWSER_CONTEXT_MODE, "SEQUENTIAL")
+                System.setProperty(MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER, "$maxAgents")
+            } else {
+                conf[BROWSER_CONTEXT_MODE] = "SEQUENTIAL"
+                conf[MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER] = "$maxAgents"
+            }
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.SequentialPrivacyAgentGenerator"
-            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
+            if (conf == null) {
+                System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
+            } else {
+                conf[PRIVACY_AGENT_GENERATOR_CLASS] = clazz
+            }
             return BrowserSettings
         }
 
-        private fun withTemporaryBrowserInternal(browserType: BrowserType): Companion {
+        private fun withTemporaryBrowserInternal(browserType: BrowserType, conf: MutableConfig? = null): Companion {
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.RandomPrivacyAgentGenerator"
-            System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
-            withBrowser(browserType)
+            if (conf == null) {
+                System.setProperty(PRIVACY_AGENT_GENERATOR_CLASS, clazz)
+            } else {
+                conf[PRIVACY_AGENT_GENERATOR_CLASS] = clazz
+            }
+            withBrowser(browserType, conf)
             return BrowserSettings
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
         /**
          * Launch the browser in GUI mode.
          * */
         @JvmStatic
-        fun withGUI(): Companion {
+        fun withGUI(conf: MutableConfig? = null): Companion {
             if (Runtimes.hasOnlyHeadlessBrowser()) {
                 logger.warn("The current environment has no GUI support, fallback to headless mode")
-                headless()
+                headless(conf)
                 return BrowserSettings
             }
 
             listOf(
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS,
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS
-            ).forEach { System.clearProperty(it) }
+            ).forEach {
+                if (conf == null) System.clearProperty(it) else conf.unset(it)
+            }
 
-            System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.GUI.name)
+            if (conf == null) {
+                System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.GUI.name)
+            } else {
+                conf[BROWSER_DISPLAY_MODE] = DisplayMode.GUI.name
+            }
 
             return BrowserSettings
         }
@@ -192,19 +212,23 @@ open class BrowserSettings constructor(
          * Launch the browser in GUI mode.
          * */
         @JvmStatic
-        fun headed() = withGUI()
+        fun headed(conf: MutableConfig? = null) = withGUI(conf)
 
         /**
          * Launch the browser in headless mode.
          * */
         @JvmStatic
-        fun headless(): Companion {
+        fun headless(conf: MutableConfig? = null): Companion {
             listOf(
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS,
                 BROWSER_LAUNCH_SUPERVISOR_PROCESS_ARGS
-            ).forEach { System.clearProperty(it) }
+            ).forEach { if (conf == null) System.clearProperty(it) else conf.unset(it) }
 
-            System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.HEADLESS.name)
+            if (conf == null) {
+                System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.HEADLESS.name)
+            } else {
+                conf[BROWSER_DISPLAY_MODE] = DisplayMode.HEADLESS.name
+            }
 
             return BrowserSettings
         }
@@ -213,20 +237,24 @@ open class BrowserSettings constructor(
          * Launch the browser in supervised mode.
          * */
         @JvmStatic
-        fun supervised(): Companion {
-            System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.SUPERVISED.name)
+        fun supervised(conf: MutableConfig? = null): Companion {
+            if (conf == null) {
+                System.setProperty(BROWSER_DISPLAY_MODE, DisplayMode.SUPERVISED.name)
+            } else {
+                conf[BROWSER_DISPLAY_MODE] = DisplayMode.SUPERVISED.name
+            }
             return BrowserSettings
         }
 
         @Deprecated("Use maxBrowserContexts instead", ReplaceWith("BrowserSettings.maxBrowserContexts(n)" ))
         @JvmStatic
-        fun maxBrowsers(n: Int): Companion = maxBrowserContexts(n)
+        fun maxBrowsers(n: Int, conf: MutableConfig? = null): Companion = maxBrowserContexts(n, conf)
 
         /**
          * Set the max number of browser contexts, each browser context has a separate profile.
          * */
         @JvmStatic
-        fun maxBrowserContexts(n: Int): Companion {
+        fun maxBrowserContexts(n: Int, conf: MutableConfig? = null): Companion {
             if (n <= 0) {
                 throw IllegalArgumentException("The number of browser contexts has to be greater than 0")
             }
@@ -235,8 +263,13 @@ open class BrowserSettings constructor(
             }
 
             // PRIVACY_CONTEXT_NUMBER is deprecated, use BROWSER_CONTEXT_NUMBER instead
-            System.setProperty(PRIVACY_CONTEXT_NUMBER, "$n")
-            System.setProperty(BROWSER_CONTEXT_NUMBER, "$n")
+            if (conf == null) {
+                System.setProperty(PRIVACY_CONTEXT_NUMBER, "$n")
+                System.setProperty(BROWSER_CONTEXT_NUMBER, "$n")
+            } else {
+                conf[PRIVACY_CONTEXT_NUMBER] = "$n"
+                conf[BROWSER_CONTEXT_NUMBER] = "$n"
+            }
 
             return BrowserSettings
         }
@@ -247,7 +280,6 @@ open class BrowserSettings constructor(
             require(n > 0) { "The number of open tabs has to be > 0" }
             require(n <= 50) { "The number of open tabs has to be <= 50" }
 
-            System.setProperty(BROWSER_MAX_ACTIVE_TABS, "$n")
             System.setProperty(BROWSER_MAX_OPEN_TABS, "$n")
             return BrowserSettings
         }
@@ -256,10 +288,16 @@ open class BrowserSettings constructor(
          * To collect SPA data, the execution needs to have no timeout limit.
          * */
         @JvmStatic
-        fun withSPA(): Companion {
-            System.setProperty(FETCH_TASK_TIMEOUT, Duration.ofDays(1000).toString())
-            System.setProperty(PRIVACY_CONTEXT_IDLE_TIMEOUT, Duration.ofDays(1000).toString())
-            System.setProperty(BROWSER_SPA_MODE, "true")
+        fun withSPA(conf: MutableConfig? = null): Companion {
+            if (conf == null) {
+                System.setProperty(FETCH_TASK_TIMEOUT, Duration.ofDays(1000).toString())
+                System.setProperty(PRIVACY_CONTEXT_IDLE_TIMEOUT, Duration.ofDays(1000).toString())
+                System.setProperty(BROWSER_SPA_MODE, "true")
+            } else {
+                conf[FETCH_TASK_TIMEOUT] = Duration.ofDays(1000).toString()
+                conf[PRIVACY_CONTEXT_IDLE_TIMEOUT] = Duration.ofDays(1000).toString()
+                conf[BROWSER_SPA_MODE] = "true"
+            }
             return BrowserSettings
         }
         /**
@@ -274,8 +312,12 @@ open class BrowserSettings constructor(
          * resources matching the rules will be blocked by the browser.
          * */
         @JvmStatic
-        fun enableUrlBlocking(): Companion {
-            System.setProperty(BROWSER_RESOURCE_BLOCK_PROBABILITY, "1.0")
+        fun enableUrlBlocking(conf: MutableConfig? = null): Companion {
+            if (conf == null) {
+                System.setProperty(BROWSER_RESOURCE_BLOCK_PROBABILITY, "1.0")
+            } else {
+                conf[BROWSER_RESOURCE_BLOCK_PROBABILITY] = "1.0"
+            }
             return BrowserSettings
         }
         /**
@@ -283,25 +325,33 @@ open class BrowserSettings constructor(
          * The probability must be in [0, 1].
          * */
         @JvmStatic
-        fun enableUrlBlocking(probability: Float): Companion {
+        fun enableUrlBlocking(probability: Float, conf: MutableConfig? = null): Companion {
             require(probability in 0.0f..1.0f)
-            System.setProperty(BROWSER_RESOURCE_BLOCK_PROBABILITY, "$probability")
+            if (conf == null) {
+                System.setProperty(BROWSER_RESOURCE_BLOCK_PROBABILITY, "$probability")
+            } else {
+                conf[BROWSER_RESOURCE_BLOCK_PROBABILITY] = "$probability"
+            }
             return BrowserSettings
         }
         /**
          * Disable url blocking. If url blocking is disabled, blocking rules are ignored.
          * */
         @JvmStatic
-        fun disableUrlBlocking(): Companion {
-            System.setProperty(BROWSER_RESOURCE_BLOCK_PROBABILITY, "0.0")
+        fun disableUrlBlocking(conf: MutableConfig? = null): Companion {
+            if (conf == null) {
+                System.setProperty(BROWSER_RESOURCE_BLOCK_PROBABILITY, "0.0")
+            } else {
+                conf[BROWSER_RESOURCE_BLOCK_PROBABILITY] = "0.0"
+            }
             return BrowserSettings
         }
         /**
          * Block all images.
          * */
         @JvmStatic
-        fun blockImages(): Companion {
-            enableUrlBlocking()
+        fun blockImages(conf: MutableConfig? = null): Companion {
+            enableUrlBlocking(conf)
             return BrowserSettings
         }
         /**
@@ -311,8 +361,12 @@ open class BrowserSettings constructor(
          * the visits will be blocked.
          * */
         @JvmStatic
-        fun enableUserAgentOverriding(): Companion {
-            System.setProperty(BROWSER_ENABLE_UA_OVERRIDING, "true")
+        fun enableUserAgentOverriding(conf: MutableConfig? = null): Companion {
+            if (conf == null) {
+                System.setProperty(BROWSER_ENABLE_UA_OVERRIDING, "true")
+            } else {
+                conf[BROWSER_ENABLE_UA_OVERRIDING] = "true"
+            }
             return BrowserSettings
         }
         /**
@@ -322,8 +376,12 @@ open class BrowserSettings constructor(
          * the visits will be blocked.
          * */
         @JvmStatic
-        fun disableUserAgentOverriding(): Companion {
-            System.setProperty(BROWSER_ENABLE_UA_OVERRIDING, "false")
+        fun disableUserAgentOverriding(conf: MutableConfig? = null): Companion {
+            if (conf == null) {
+                System.setProperty(BROWSER_ENABLE_UA_OVERRIDING, "false")
+            } else {
+                conf[BROWSER_ENABLE_UA_OVERRIDING] = "false"
+            }
             return BrowserSettings
         }
         /**
@@ -336,8 +394,12 @@ open class BrowserSettings constructor(
          * * C:\Users\pereg\AppData\Local\Temp\pulsar-pereg\cache\web\default\pulsar_chrome\OK\amazon-com
          * */
         @JvmStatic
-        fun enableOriginalPageContentAutoExporting(): Companion {
-            System.setProperty(FETCH_PAGE_AUTO_EXPORT_LIMIT, Int.MAX_VALUE.toString())
+        fun enableOriginalPageContentAutoExporting(conf: MutableConfig? = null): Companion {
+            if (conf == null) {
+                System.setProperty(FETCH_PAGE_AUTO_EXPORT_LIMIT, Int.MAX_VALUE.toString())
+            } else {
+                conf[FETCH_PAGE_AUTO_EXPORT_LIMIT] = Int.MAX_VALUE.toString()
+            }
             return this
         }
         /**
@@ -350,16 +412,24 @@ open class BrowserSettings constructor(
          * * C:\Users\pereg\AppData\Local\Temp\pulsar-pereg\cache\web\default\pulsar_chrome\OK\amazon-com
          * */
         @JvmStatic
-        fun enableOriginalPageContentAutoExporting(limit: Int): Companion {
-            System.setProperty(FETCH_PAGE_AUTO_EXPORT_LIMIT, limit.toString())
+        fun enableOriginalPageContentAutoExporting(limit: Int, conf: MutableConfig? = null): Companion {
+            if (conf == null) {
+                System.setProperty(FETCH_PAGE_AUTO_EXPORT_LIMIT, limit.toString())
+            } else {
+                conf[FETCH_PAGE_AUTO_EXPORT_LIMIT] = limit.toString()
+            }
             return this
         }
         /**
          * Disable original page content exporting.
          * */
         @JvmStatic
-        fun disableOriginalPageContentAutoExporting(): Companion {
-            System.setProperty(FETCH_PAGE_AUTO_EXPORT_LIMIT, "0")
+        fun disableOriginalPageContentAutoExporting(conf: MutableConfig? = null): Companion {
+            if (conf == null) {
+                System.setProperty(FETCH_PAGE_AUTO_EXPORT_LIMIT, "0")
+            } else {
+                conf[FETCH_PAGE_AUTO_EXPORT_LIMIT] = "0"
+            }
             return this
         }
     }

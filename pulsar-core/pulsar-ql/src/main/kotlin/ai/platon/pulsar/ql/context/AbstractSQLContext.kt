@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.sql.SQLUtils
 import ai.platon.pulsar.ql.AbstractSQLSession
 import ai.platon.pulsar.ql.SQLSession
 import ai.platon.pulsar.ql.SessionDelegate
+import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
@@ -71,7 +72,7 @@ abstract class AbstractSQLContext(
         val normURL = super.normalize(url, options, toItemOption)
         return NormURL(SQLUtils.unsanitizeUrl(normURL.spec), normURL.options, hrefSpec = normURL.hrefSpec)
     }
-    
+
     @Throws(Exception::class)
     override fun execute(sql: String) {
         val conn = connectionPool.poll() ?: randomConnection
@@ -95,7 +96,7 @@ abstract class AbstractSQLContext(
             conn.takeUnless { it.isClosed }?.let { connectionPool.add(conn) }
         }
     }
-    
+
     @Throws(Exception::class)
     override fun run(block: (Connection) -> Unit) {
         var conn = connectionPool.poll() ?: randomConnection
@@ -123,15 +124,17 @@ abstract class AbstractSQLContext(
             conn.takeUnless { it.isClosed }?.let { connectionPool.add(conn) }
         }
     }
-    
+
     @Throws(Exception::class)
     abstract override fun createSession(sessionDelegate: SessionDelegate): SQLSession
+
+    override fun createSession(settings: PulsarSettings) = createSession().also { settings.overrideConfiguration(it.sessionConfig)}
 
     override fun sessionCount(): Int {
         ensureRunning()
         return sqlSessions.size
     }
-    
+
     @Throws(Exception::class)
     override fun getSession(sessionInterface: SessionInterface): SQLSession {
         val h2session = sessionInterface as Session
@@ -168,26 +171,26 @@ abstract class AbstractSQLContext(
         }
 
         super.close()
-        
+
         AppContext.endTermination()
     }
-    
+
     private fun doClose1() {
         if (closed.compareAndSet(false, true)) {
             status = Status.CLOSING
-            
+
             // database engine will close the sessions
             sqlSessions.values.forEach { it.close() }
             sqlSessions.clear()
             connectionPool.forEach { it.close() }
             connectionPool.clear()
-            
+
             status = Status.CLOSED
-            
+
             // H2SessionFactory.shutdown()
         }
     }
-    
+
     private fun ensureRunning() {
         if (!isActive) {
             throw IllegalApplicationStateException("SQLContext is closed | #$id")

@@ -1,6 +1,7 @@
 package ai.platon.pulsar.agentic.context
 
 import ai.platon.pulsar.agentic.AgenticSession
+import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.AbstractApplicationContext
@@ -27,10 +28,10 @@ object AgenticContexts {
     fun create(contextLocation: String): AgenticContext = create(ClassPathXmlAgenticContext(contextLocation))
 
     @Synchronized
-    fun createSession(): AgenticSession = create().createSession()
+    fun createSession(settings: PulsarSettings = PulsarSettings()): AgenticSession = create().createSession(settings)
 
     @Synchronized
-    fun getOrCreateSession(): AgenticSession = create().getOrCreateSession()
+    fun getOrCreateSession(settings: PulsarSettings = PulsarSettings()): AgenticSession = create().getOrCreateSession(settings)
 
     @Throws(InterruptedException::class)
     fun await() = PulsarContexts.await()

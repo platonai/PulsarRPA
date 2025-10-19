@@ -7,6 +7,7 @@ import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.crawl.CrawlLoops
@@ -85,6 +86,16 @@ interface PulsarContext: java.lang.AutoCloseable {
      * Create a pulsar session
      * */
     fun getOrCreateSession(): PulsarSession
+
+    /**
+     * Create a pulsar session
+     * */
+    fun createSession(settings: PulsarSettings): PulsarSession
+
+    /**
+     * Create a pulsar session
+     * */
+    fun getOrCreateSession(settings: PulsarSettings): PulsarSession
 
     /**
      * Close a pulsar session
@@ -406,7 +417,7 @@ interface PulsarContext: java.lang.AutoCloseable {
      * Parse the WebPage using ParseComponent
      */
     fun parse(page: WebPage): FeaturedDocument?
-    
+
     /**
      * Chat with the AI model.
      *

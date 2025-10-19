@@ -47,8 +47,7 @@ class LoadingWebDriverPool constructor(
      * The max number of drivers the pool can hold
      * */
     val capacity: Int get() {
-        val c = immutableConfig.getWithFallback(BROWSER_MAX_OPEN_TABS, BROWSER_MAX_ACTIVE_TABS)
-            ?.toIntOrNull() ?: DEFAULT_BROWSER_MAX_OPEN_TABS
+        val c = immutableConfig.get(BROWSER_MAX_OPEN_TABS)?.toIntOrNull() ?: DEFAULT_BROWSER_MAX_OPEN_TABS
         return c.coerceAtMost(50)
     }
 

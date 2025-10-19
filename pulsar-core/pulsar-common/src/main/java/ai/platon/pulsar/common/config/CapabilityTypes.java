@@ -156,12 +156,6 @@ public interface CapabilityTypes {
     String CHROME_PATH = "chrome.path";
     /**
      * The max value of tabs a browser can open
-     * @deprecated use BROWSER_MAX_OPEN_TABS
-     */
-    @Deprecated(since = "3.0.4")
-    String BROWSER_MAX_ACTIVE_TABS = "browser.max.active.tabs";
-    /**
-     * The max value of tabs a browser can open
      */
     String BROWSER_MAX_OPEN_TABS = "browser.max.open.tabs";
     /**

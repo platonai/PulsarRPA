@@ -12,13 +12,17 @@ import ai.platon.pulsar.ql.SessionDelegate
 import ai.platon.pulsar.ql.context.AbstractH2SQLContext
 import ai.platon.pulsar.ql.context.SQLContext
 import ai.platon.pulsar.ql.h2.H2SessionDelegate
+import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.session.BasicPulsarSession
+import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.springframework.context.support.AbstractApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 
 interface AgenticContext : SQLContext {
     override fun createSession(): AgenticSession
     override fun getOrCreateSession(): AgenticSession
+    override fun createSession(settings: PulsarSettings): AgenticSession
+    override fun getOrCreateSession(settings: PulsarSettings): AgenticSession
     override fun createSession(sessionDelegate: SessionDelegate): SQLSession
 }
 
@@ -38,7 +42,11 @@ abstract class AbstractAgenticContext(
         return session.also { sessions[it.id] = it }
     }
 
+    override fun createSession(settings: PulsarSettings) = createSession().also { settings.overrideConfiguration(it.sessionConfig)}
+
     override fun getOrCreateSession(): AgenticSession = sessions.values.filterIsInstance<AgenticSession>().firstOrNull() ?: createSession()
+
+    override fun getOrCreateSession(settings: PulsarSettings): AgenticSession = sessions.values.filterIsInstance<AgenticSession>().firstOrNull() ?: createSession()
 
     @Throws(Exception::class)
     override fun createSession(sessionDelegate: SessionDelegate): SQLSession {

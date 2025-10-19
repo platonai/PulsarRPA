@@ -11,6 +11,7 @@ import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
+import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.CombinedUrlNormalizer
 import ai.platon.pulsar.skeleton.common.urls.NormURL
@@ -203,6 +204,10 @@ abstract class AbstractPulsarContext(
     abstract override fun createSession(): PulsarSession
 
     override fun getOrCreateSession(): PulsarSession = sessions.values.firstOrNull() ?: createSession()
+
+    abstract override fun createSession(settings: PulsarSettings): PulsarSession
+
+    override fun getOrCreateSession(settings: PulsarSettings): PulsarSession = sessions.values.firstOrNull() ?: createSession()
 
     /**
      * Close the given session
