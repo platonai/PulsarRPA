@@ -199,7 +199,10 @@ fun warnForClose(target: Any, t: Throwable, message: String, vararg args: Any?) 
     }
 }
 
-fun logPrintln() {
+/**
+ * A protected version for println which can be disabled.
+ * */
+fun printlnPro() {
     if (System.getProperty("log.print.enabled") != "true") {
         return
     }
@@ -207,7 +210,10 @@ fun logPrintln() {
     println()
 }
 
-fun logPrintln(o: Any?) {
+/**
+ * A protected version for println which can be disabled.
+ * */
+fun printlnPro(o: Any?) {
     if (System.getProperty("log.print.enabled") != "true") {
         return
     }

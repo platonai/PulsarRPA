@@ -2,7 +2,7 @@ package ai.platon.pulsar.browser
 
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.urls.URLUtils
 import org.apache.commons.lang3.StringUtils
 import kotlin.test.*
@@ -39,7 +39,7 @@ class TestLoadResources: WebDriverTestBase() {
             val content = page.contentAsString.asSequence()
                 .filter { Strings.isCJK(it) }.take(100)
                 .joinToString("")
-            logPrintln("$i.\t" + page.contentLength + "\t" + content)
+            printlnPro("$i.\t" + page.contentLength + "\t" + content)
 
             assertTrue(resourceUrl) { page.fetchCount > 0 }
             assertTrue(resourceUrl) { page.protocolStatus.isSuccess }
@@ -91,8 +91,8 @@ class TestLoadResources: WebDriverTestBase() {
         assertContains(body, "Disallow")
         // check cookies and headers
         val cookies = response.cookies().entries.joinToString("; ") { it.key + "=" + it.value }
-        logPrintln(cookies)
-        response.headers().forEach { (name, value) -> logPrintln("$name: $value") }
+        printlnPro(cookies)
+        response.headers().forEach { (name, value) -> printlnPro("$name: $value") }
 
         assertContains(headers.toString(), "Content-Type", ignoreCase = true,
             message = "Content-Type should be in headers: >>>\n$headers\n<<<")

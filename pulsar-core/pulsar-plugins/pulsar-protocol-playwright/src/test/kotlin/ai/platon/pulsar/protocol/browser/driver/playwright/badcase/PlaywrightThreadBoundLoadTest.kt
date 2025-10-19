@@ -2,7 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver.playwright.badcase
 
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightTestBase.Companion.BAD_PARALLELISM_WARNING
 import com.microsoft.playwright.BrowserType
 import com.microsoft.playwright.Page
@@ -61,7 +61,7 @@ class PlaywrightThreadBoundLoadTest {
         }
 
         private fun fetch0(url: String) {
-            logPrintln("$name \t Fetching one in ${tasks.size.inc()} | $url")
+            printlnPro("$name \t Fetching one in ${tasks.size.inc()} | $url")
 
             val asins = mutableListOf<String>()
             try {
@@ -73,19 +73,19 @@ class PlaywrightThreadBoundLoadTest {
                 page.navigate(url, navigateOptions)
                 page.waitForLoadState(LoadState.LOAD)
                 page.waitForSelector("div[data-asin]", Page.WaitForSelectorOptions().setTimeout(30_000.0))
-                logPrintln("$name \t ✅ Opened in tab ${page.hashCode()} | $url")
+                printlnPro("$name \t ✅ Opened in tab ${page.hashCode()} | $url")
                 sleepSeconds(1)
 
                 val elements = page.querySelectorAll("div[data-asin]")
                 elements.mapTo(asins) { it.getAttribute("data-asin") }
-                logPrintln(asins.joinToString())
+                printlnPro(asins.joinToString())
 
                 page.navigate("about:blank")
             } catch (e: Exception) {
                 if (asins.isEmpty()) {
-                    logPrintln("$name \t ❌ Failed to open $url: ${e.message}")
+                    printlnPro("$name \t ❌ Failed to open $url: ${e.message}")
                 } else {
-                    logPrintln("$name \t ASINs: ${asins.joinToString()}, error: ${e.message}")
+                    printlnPro("$name \t ASINs: ${asins.joinToString()}, error: ${e.message}")
                 }
             }
         }
@@ -130,25 +130,25 @@ class PlaywrightThreadBoundLoadTest {
                     it.join()
                 }
             } catch (e: Exception) {
-                logPrintln("❌ Error occurred: ${e.message}")
+                printlnPro("❌ Error occurred: ${e.message}")
             } finally {
                 // 关闭所有contexts
                 workers.forEach { worker ->
                     try {
                         worker.page.context().close()
                     } catch (e: Exception) {
-                        logPrintln("Error closing context: ${e.message}")
+                        printlnPro("Error closing context: ${e.message}")
                     }
                 }
             }
 
-            logPrintln("🎉 All requests completed.")
+            printlnPro("🎉 All requests completed.")
         }
     }
 }
 
 fun main() {
-    logPrintln(BAD_PARALLELISM_WARNING)
+    printlnPro(BAD_PARALLELISM_WARNING)
 
     PlaywrightThreadBoundLoadTest().run()
 }

@@ -11,7 +11,7 @@ import ai.platon.pulsar.rest.api.TestHelper
 import ai.platon.pulsar.rest.api.common.MockEcServerTestBase
 import ai.platon.pulsar.rest.api.config.MockEcServerConfiguration
 import ai.platon.pulsar.rest.api.entities.ScrapeRequest
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.rest.api.entities.ScrapeStatusRequest
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
@@ -57,7 +57,7 @@ class ScrapeServiceTests : MockEcServerTestBase() {
 
         val response = service.executeQuery(request)
         val records = response.resultSet
-        logPrintln(records.toString())
+        printlnPro(records.toString())
         assertNotNull(records)
 
         assertTrue { records.isNotEmpty() }
@@ -83,7 +83,7 @@ class ScrapeServiceTests : MockEcServerTestBase() {
         val actualUrl = records[0]["uri"].toString()
         assertTrue { actualUrl == productListURL }
 
-        logPrintln("Done scraping with load_and_select, used " + DateTimes.elapsedTime(startTime))
+        printlnPro("Done scraping with load_and_select, used " + DateTimes.elapsedTime(startTime))
     }
 
     @Test
@@ -94,7 +94,7 @@ class ScrapeServiceTests : MockEcServerTestBase() {
         val uuid = service.submitJob(request)
 
         assertTrue { uuid.isNotEmpty() }
-        logPrintln(uuid.toString())
+        printlnPro(uuid.toString())
 
         val scrapeStatusRequest = ScrapeStatusRequest(uuid)
         var status = service.getStatus(scrapeStatusRequest)
@@ -104,7 +104,7 @@ class ScrapeServiceTests : MockEcServerTestBase() {
             sleepSeconds(1)
             status = service.getStatus(scrapeStatusRequest)
         }
-        logPrintln(pulsarObjectMapper().writeValueAsString(status).toString())
+        printlnPro(pulsarObjectMapper().writeValueAsString(status).toString())
         assertTrue { i > 0 }
         assertEquals(200, status.statusCode)
     }
@@ -129,13 +129,13 @@ class ScrapeServiceTests : MockEcServerTestBase() {
         val records = response.resultSet
         assertNotNull(records)
 
-        logPrintln(prettyPulsarObjectMapper().writeValueAsString(response).toString())
+        printlnPro(prettyPulsarObjectMapper().writeValueAsString(response).toString())
 
         assertTrue { records.isNotEmpty() }
         val actualUrl = records[0]["url"].toString()
         assertTrue("URL not expected \nExpected: $productDetailURL\nActual: $actualUrl") { actualUrl == productDetailURL }
 
-        logPrintln("Done scraping with load_and_select, used " + DateTimes.elapsedTime(startTime))
+        printlnPro("Done scraping with load_and_select, used " + DateTimes.elapsedTime(startTime))
     }
 }
 

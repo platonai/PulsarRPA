@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.options.OptionUtils
-import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.options.OptionUtils.OPTION_REGEX
 import kotlin.test.*
 
@@ -21,7 +20,7 @@ class TestOptions {
         val values = linkString.split(regex)
 
         // logPrintln("Regex: $regex")
-        values.forEach { logPrintln(it) }
+        values.forEach { printlnPro(it) }
         // assertTrue { "" }
     }
 
@@ -36,7 +35,7 @@ class TestOptions {
         val values = linkString.split(regex)
 
         // logPrintln("Regex: $regex")
-        values.forEach { logPrintln(it) }
+        values.forEach { printlnPro(it) }
     }
 
     @Test

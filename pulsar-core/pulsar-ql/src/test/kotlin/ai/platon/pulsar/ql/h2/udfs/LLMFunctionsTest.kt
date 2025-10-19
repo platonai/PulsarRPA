@@ -2,7 +2,7 @@ package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.ql.TestBase
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
@@ -61,7 +61,7 @@ class LLMFunctionsTest : TestBase() {
     fun `Test extract with field descriptions and convert to json`() {
         query(sql) {
             val json = ResultSetUtils.toJson(it, prettyPrinting = true)
-            logPrintln(json)
+            printlnPro(json)
         }
     }
 }

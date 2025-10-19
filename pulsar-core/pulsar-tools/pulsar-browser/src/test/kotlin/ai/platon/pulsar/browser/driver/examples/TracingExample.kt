@@ -1,8 +1,8 @@
 package ai.platon.pulsar.browser.driver.examples
 
+import ai.platon.pulsar.common.printlnPro
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.kklisura.cdt.protocol.v2023.events.tracing.DataCollected
-import java.io.File
 import java.io.IOException
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -28,7 +28,7 @@ class TracingExample: BrowserExampleBase() {
         tracing.onTracingComplete {
             // Dump tracing to file.
             val path = Paths.get("/tmp/tracing.json")
-            logPrintln("Tracing completed! Dumping to $path")
+            printlnPro("Tracing completed! Dumping to $path")
             dump(path, dataCollectedList)
             devTools.close()
         }

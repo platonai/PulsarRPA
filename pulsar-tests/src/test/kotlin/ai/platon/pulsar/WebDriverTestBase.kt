@@ -3,7 +3,6 @@ package ai.platon.pulsar
 import ai.platon.pulsar.browser.FastWebDriverService
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.SimpleScriptConfuser
-import ai.platon.pulsar.browser.driver.chrome.dom.ChromeCdpDomService
 import ai.platon.pulsar.browser.driver.chrome.dom.DomDebug
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
@@ -14,7 +13,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
@@ -115,7 +114,7 @@ open class WebDriverTestBase : TestWebSiteAccess() {
         repeat(3) { attempt ->
             val t = service.getMultiDOMTrees(target = PageTarget(), options = options)
             // Best-effort summary for diagnostics
-            logPrintln(DomDebug.summarize(t))
+            printlnPro(DomDebug.summarize(t))
             val r = service.buildEnhancedDomTree(t)
             if (r.children.isNotEmpty() || attempt == 2) return r
             Thread.sleep(300)

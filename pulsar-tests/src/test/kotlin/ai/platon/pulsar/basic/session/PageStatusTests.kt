@@ -2,10 +2,9 @@ package ai.platon.pulsar.basic.session
 
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.skeleton.common.persist.ext.options
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.basic.TestBase
 import java.time.Instant
-import java.util.*
 import kotlin.test.*
 
 @Ignore("Failed to test, ignore temporary")
@@ -20,7 +19,7 @@ class PageStatusTests : TestBase() {
         val seconds = 5L
         val args = "-i ${seconds}s"
         var startTime = Instant.now()
-        logPrintln("Start time: $startTime")
+        printlnPro("Start time: $startTime")
 
         val page = session.load(url2, args = args)
         val prevFetchTime1 = page.prevFetchTime
@@ -64,14 +63,14 @@ class PageStatusTests : TestBase() {
         val args = "-i ${seconds}s"
         var options = session.options(args)
         var startTime = Instant.now()
-        logPrintln("Start time: $startTime")
+        printlnPro("Start time: $startTime")
 
         val page = session.load(url2, options)
         val prevFetchTime1 = page.prevFetchTime
         val fetchTime1 = page.fetchTime
         val fetchCount1 = page.fetchCount
 
-        logPrintln("Round 1 checking ....")
+        printlnPro("Round 1 checking ....")
         assertTrue("${page.protocolStatus}") { page.protocolStatus.isSuccess }
         assertTrue("Should be fetched for random url") { page.isFetched }
         assertTrue("Content should be updated for random url") { page.isContentUpdated }
@@ -89,7 +88,7 @@ class PageStatusTests : TestBase() {
         assertTrue { page.fetchCount > 1 }
         options = session.options().apply { expireAt = now.plusSeconds(seconds) }
 
-        logPrintln("Wait for 6 seconds so the page is expired .... | $options")
+        printlnPro("Wait for 6 seconds so the page is expired .... | $options")
         sleepSeconds(6)
         startTime = Instant.now()
         assertTrue("expireAt: ${options.expireAt} startTime: $startTime") {
@@ -103,7 +102,7 @@ class PageStatusTests : TestBase() {
         val fetchTime2 = page2.fetchTime
         val fetchCount2 = page2.fetchCount
 
-        logPrintln("Round 2 checking ....")
+        printlnPro("Round 2 checking ....")
         assertTrue { page.protocolStatus.isSuccess }
         assertTrue { page2.isFetched }
         assertTrue { page2.isContentUpdated }

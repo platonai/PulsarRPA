@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.common.sql.SQLTemplate
 import ai.platon.pulsar.ql.common.ResultSets
 import ai.platon.pulsar.ql.h2.addColumn
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import org.h2.value.ValueString
 import java.sql.Types
@@ -26,7 +26,7 @@ class TestResultSetPersistUtils {
         val b = arrayOf("a", "b", "c", "d")
         a.zip(b).map { arrayOf(it.first, it.second) }.forEach { rs.addRow(*it) }
         val fmt = ResultSetFormatter(rs)
-        logPrintln(fmt.toString())
+        printlnPro(fmt.toString())
     }
 
     @Test
@@ -85,7 +85,7 @@ class TestResultSetPersistUtils {
         }
 
         rs.beforeFirst()
-        logPrintln(ResultSetFormatter(rs, withHeader = true).toString())
+        printlnPro(ResultSetFormatter(rs, withHeader = true).toString())
 
         rs.beforeFirst()
         val newRs = ResultSetUtils.transpose(rs)
@@ -94,7 +94,7 @@ class TestResultSetPersistUtils {
             ++i
             assertEquals("C${i}R${i}", rs.getString("C1"))
         }
-        logPrintln(ResultSetFormatter(newRs, withHeader = true).toString())
+        printlnPro(ResultSetFormatter(newRs, withHeader = true).toString())
     }
 }
 

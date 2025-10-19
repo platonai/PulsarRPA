@@ -17,7 +17,7 @@
 package ai.platon.pulsar.common.urls
 
 import ai.platon.pulsar.common.urls.URLUtils.reverseUrl
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.urls.URLUtils.unreverseUrl
 import kotlin.test.*
 
@@ -44,7 +44,7 @@ class TestURLUtils {
 
     @Test
     fun testUnreverseUrl() {
-        logPrintln(unreverseUrl("com.sxrb.www:http/sxxww/zthj/xmtdt/6619357.shtml"))
+        printlnPro(unreverseUrl("com.sxrb.www:http/sxxww/zthj/xmtdt/6619357.shtml"))
         assertUnreverse(UrlCommon.reversedUrlString1, UrlCommon.urlString1)
         assertUnreverse(UrlCommon.reversedUrlString2, UrlCommon.urlString2)
         assertUnreverse(UrlCommon.reversedUrlString3, UrlCommon.urlString3)

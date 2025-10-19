@@ -4,7 +4,7 @@ import ai.platon.pulsar.skeleton.common.collect.FatLinkExtractor
 import ai.platon.pulsar.skeleton.common.collect.HyperlinkExtractor
 import ai.platon.pulsar.common.urls.sites.amazon.AmazonUrls
 import ai.platon.pulsar.common.urls.sites.amazon.AsinUrlNormalizer
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.basic.TestBase
 import kotlin.test.*
 import kotlin.test.assertEquals
@@ -22,7 +22,7 @@ class TestHyperlinkExtractors: TestBase() {
         val extractor = HyperlinkExtractor(page, document, "a[href~=/dp/]", normalizer)
         val links = extractor.extract()
 
-        links.forEach { logPrintln(it) }
+        links.forEach { printlnPro(it) }
         links.forEach {
             val asin = AmazonUrls.findAsin(it.url) ?: ""
             val href = it.href
@@ -44,7 +44,7 @@ class TestHyperlinkExtractors: TestBase() {
         assertEquals(portalUrl, fatLink.url)
 
         val tailLinks = fatLink.tailLinks
-        tailLinks.forEachIndexed { i, l -> logPrintln("$i. $l") }
+        tailLinks.forEachIndexed { i, l -> printlnPro("$i. $l") }
         tailLinks.forEach {
             val asin = AmazonUrls.findAsin(it.url) ?: "not-asin"
             assertTrue { asin in it.url }

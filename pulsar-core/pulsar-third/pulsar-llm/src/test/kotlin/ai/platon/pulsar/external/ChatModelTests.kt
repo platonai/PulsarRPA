@@ -2,7 +2,7 @@ package ai.platon.pulsar.external
 
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.dom.Documents
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
@@ -48,7 +48,7 @@ class ChatModelTests {
     fun `introduce model`() {
         val prompt = "introduce yourself, what can you do for me?"
         val response = runBlocking { model.call(prompt) }
-        logPrintln(response.content)
+        printlnPro(response.content)
 
         assertTrue { response.tokenUsage.inputTokenCount > 0 }
         assertTrue { response.tokenUsage.outputTokenCount > 0 }
@@ -62,7 +62,7 @@ class ChatModelTests {
 
         val prompt = "以下是一个电商网站的网页内容，找出商品标题、商品价格："
         val response = runBlocking { model.call(document, prompt) }
-        logPrintln(response.content)
+        printlnPro(response.content)
 
         assertTrue { response.tokenUsage.inputTokenCount > 0 }
         assertTrue { response.tokenUsage.outputTokenCount > 0 }
@@ -88,7 +88,7 @@ class ChatModelTests {
     （这里是商品评分）
         """.trimIndent()
         val response = runBlocking { model.callUmSm(text, prompt) }
-        logPrintln(response.content)
+        printlnPro(response.content)
 
         assertTrue { response.tokenUsage.inputTokenCount > 0 }
         assertTrue { response.tokenUsage.outputTokenCount > 0 }
@@ -99,7 +99,7 @@ class ChatModelTests {
     @Test
     fun `When ask LLM to analyze cluster then it responses with json`() {
         val response = runBlocking { model.call(clusterAnalysisPrompt) }
-        logPrintln(response.content)
+        printlnPro(response.content)
 
         assertTrue { response.tokenUsage.inputTokenCount > 0 }
         assertTrue { response.tokenUsage.outputTokenCount > 0 }

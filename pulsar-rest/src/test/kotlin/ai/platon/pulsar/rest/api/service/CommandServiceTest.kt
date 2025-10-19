@@ -9,7 +9,7 @@ import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.rest.api.TestHelper.PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.common.MockEcServerTestBase
 import ai.platon.pulsar.rest.api.config.MockEcServerConfiguration
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.rest.api.entities.CommandRequest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
@@ -70,7 +70,7 @@ class CommandServiceTest : MockEcServerTestBase() {
 
         val status = runBlocking { commandService.executeCommand(request) }
 
-        logPrintln(status)
+        printlnPro(status)
         Assumptions.assumeTrue(status.pageStatusCode == 200)
         Assumptions.assumeTrue(status.isDone)
         Assumptions.assumeTrue(status.statusCode == 200)
@@ -97,7 +97,7 @@ class CommandServiceTest : MockEcServerTestBase() {
 
         val status = runBlocking { commandService.executeCommand(request) }
 
-        logPrintln(status)
+        printlnPro(status)
         Assumptions.assumeTrue(status.pageStatusCode == 200)
         Assumptions.assumeTrue(status.isDone)
         Assumptions.assumeTrue(status.statusCode == 200)
@@ -127,7 +127,7 @@ class CommandServiceTest : MockEcServerTestBase() {
         assertNotNull(result)
         assertTrue { status.isDone }
 
-        logPrintln(result.pageSummary)
+        printlnPro(result.pageSummary)
 
         assertNull(result.fields)
         assertNull(result.xsqlResultSet)
@@ -142,7 +142,7 @@ class CommandServiceTest : MockEcServerTestBase() {
         )
 
         val status = runBlocking { commandService.executeCommand(request) }
-        logPrintln(prettyPulsarObjectMapper().writeValueAsString(status))
+        printlnPro(prettyPulsarObjectMapper().writeValueAsString(status))
         val result = status.commandResult
 
         Assumptions.assumeTrue(status.pageStatusCode == 200)
@@ -153,7 +153,7 @@ class CommandServiceTest : MockEcServerTestBase() {
         assertTrue { status.isDone }
 
         val fields = result.fields
-        logPrintln(fields)
+        printlnPro(fields)
 
         assertNull(result.pageSummary)
         assertNull(result.xsqlResultSet)
@@ -174,7 +174,7 @@ class CommandServiceTest : MockEcServerTestBase() {
         )
 
         val status = runBlocking { commandService.executeCommand(request) }
-        logPrintln(prettyPulsarObjectMapper().writeValueAsString(status))
+        printlnPro(prettyPulsarObjectMapper().writeValueAsString(status))
         val result = status.commandResult
 
         Assumptions.assumeTrue(status.pageStatusCode == 200)
@@ -185,7 +185,7 @@ class CommandServiceTest : MockEcServerTestBase() {
         assertTrue { status.isDone }
 
         val links = result.links
-        logPrintln(links)
+        printlnPro(links)
 
         assertNull(result.pageSummary)
         assertNull(result.xsqlResultSet)
@@ -214,7 +214,7 @@ class CommandServiceTest : MockEcServerTestBase() {
         )
 
         val status = runBlocking { commandService.executeCommand(request) }
-        logPrintln(prettyPulsarObjectMapper().writeValueAsString(status))
+        printlnPro(prettyPulsarObjectMapper().writeValueAsString(status))
         val result = status.commandResult
 
         Assumptions.assumeTrue(status.pageStatusCode == 200)
@@ -236,7 +236,7 @@ class CommandServiceTest : MockEcServerTestBase() {
         )
 
         val status = runBlocking { commandService.executeCommand(request) }
-        logPrintln(prettyPulsarObjectMapper().writeValueAsString(status))
+        printlnPro(prettyPulsarObjectMapper().writeValueAsString(status))
         val result = status.commandResult
 
         Assumptions.assumeTrue(status.pageStatusCode == 200)
@@ -247,7 +247,7 @@ class CommandServiceTest : MockEcServerTestBase() {
         assertTrue { status.isDone }
 
         val links = result.links
-        logPrintln(links)
+        printlnPro(links)
 
         assertNull(result.pageSummary)
         assertNull(result.xsqlResultSet)
@@ -261,7 +261,7 @@ class CommandServiceTest : MockEcServerTestBase() {
         val prompt = API_COMMAND_PROMPT1
 
         val status = runBlocking { commandService.executeCommand(prompt) }
-        logPrintln(prettyPulsarObjectMapper().writeValueAsString(status))
+        printlnPro(prettyPulsarObjectMapper().writeValueAsString(status))
         assertNotNull(status)
 
         Assumptions.assumeTrue(status.pageStatusCode == 200)
@@ -277,7 +277,7 @@ class CommandServiceTest : MockEcServerTestBase() {
         val prompt = API_COMMAND_PROMPT3
 
         val status = runBlocking { commandService.executeCommand(prompt) }
-        logPrintln(prettyPulsarObjectMapper().writeValueAsString(status))
+        printlnPro(prettyPulsarObjectMapper().writeValueAsString(status))
         assertNotNull(status)
 
         Assumptions.assumeTrue(status.pageStatusCode == 200)

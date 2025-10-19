@@ -4,7 +4,7 @@ import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.InstructionResult
 import ai.platon.pulsar.skeleton.ai.detail.ElementBounds
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.ai.detail.InteractiveElement
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -104,7 +104,7 @@ class TextToActionBasicTest {
         )
 
         val description = element.description
-        logPrintln("Element description: '$description'")
+        printlnPro("Element description: '$description'")
 
         // Basic structure verification
         assertTrue(description.contains("input"))

@@ -3,7 +3,7 @@ package ai.platon.pulsar.rest.api.controller
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.rest.api.TestHelper.PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.entities.CommandRequest
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.rest.api.entities.CommandStatus
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
@@ -29,7 +29,7 @@ class CommandControllerTest : ScrapeControllerTestBase() {
 
         val status = restTemplate.postForObject("$baseUri/api/commands", request, CommandStatus::class.java)
 
-        logPrintln(status)
+        printlnPro(status)
         Assumptions.assumeTrue(status.pageStatusCode == 200)
         Assumptions.assumeTrue(status.isDone)
         Assumptions.assumeTrue(status.statusCode == 200)
@@ -60,7 +60,7 @@ class CommandControllerTest : ScrapeControllerTestBase() {
 
         val status = restTemplate.postForObject("$baseUri/api/commands", request, CommandStatus::class.java)
 
-        logPrintln(status)
+        printlnPro(status)
         Assumptions.assumeTrue(status.pageStatusCode == 200)
         Assumptions.assumeTrue(status.isDone)
         Assumptions.assumeTrue(status.statusCode == 200)
@@ -82,7 +82,7 @@ class CommandControllerTest : ScrapeControllerTestBase() {
             mode = "sync",
         )
         val status = restTemplate.postForObject("$baseUri/api/commands", request, CommandStatus::class.java)
-        logPrintln(prettyPulsarObjectMapper().writeValueAsString(status))
+        printlnPro(prettyPulsarObjectMapper().writeValueAsString(status))
         val result = status.commandResult
 
         Assumptions.assumeTrue(status.pageStatusCode == 200)

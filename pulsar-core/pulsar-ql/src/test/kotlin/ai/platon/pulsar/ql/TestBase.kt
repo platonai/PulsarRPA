@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.SQLContexts
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.common.options.LoadOptionDefaults
 import org.junit.jupiter.api.Assumptions
 import org.slf4j.LoggerFactory
@@ -66,12 +66,12 @@ abstract class TestBase {
                     if (sql.uppercase(Locale.getDefault()).filter { it != '\n' }.trimIndent().matches(regex)) {
                         val rs = stat.executeQuery(sql)
                         if (printResult) {
-                            logPrintln(ResultSetFormatter(rs, withHeader = true))
+                            printlnPro(ResultSetFormatter(rs, withHeader = true))
                         }
                     } else {
                         val r = stat.execute(sql)
                         if (printResult) {
-                            logPrintln(r)
+                            printlnPro(r)
                         }
                     }
                     // SysProperties.serializeJavaObject = lastSerializeJavaObject
@@ -96,7 +96,7 @@ abstract class TestBase {
             val stat = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)
             val rs = stat.executeQuery(sql)
             if (printResult) {
-                logPrintln(ResultSetFormatter(rs, withHeader = true))
+                printlnPro(ResultSetFormatter(rs, withHeader = true))
             }
             history.add("${sql.trim { it.isWhitespace() }};")
             rs.beforeFirst()

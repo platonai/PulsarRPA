@@ -1,5 +1,6 @@
 package ai.platon.pulsar.skeleton.crawl.llm
 
+import ai.platon.pulsar.common.printlnPro
 import org.junit.jupiter.api.Tag
 import kotlin.test.Test
 
@@ -15,6 +16,6 @@ class WebDriver2JsonProtocolTests: TTATestBase() {
 
         val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
-        logPrintln(response.content)
+        printlnPro(response.content)
     }
 }

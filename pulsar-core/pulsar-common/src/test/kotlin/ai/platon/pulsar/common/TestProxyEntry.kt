@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.urls.URLUtils
 import java.net.Proxy
 import java.net.URL
@@ -32,7 +31,7 @@ class TestProxyEntry {
     @Test
     fun testParseProxyEntry1() {
         val proxy = ProxyEntry.parse("43.157.119.224:21697")
-        logPrintln(proxy)
+        printlnPro(proxy)
     }
 
     @Test

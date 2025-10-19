@@ -15,6 +15,6 @@ class TestNetUtils {
     @Test
     fun testLocalAddress() {
         val localHost = InetAddress.getLocalHost()
-        logPrintln(localHost)
+        printlnPro(localHost)
     }
 }

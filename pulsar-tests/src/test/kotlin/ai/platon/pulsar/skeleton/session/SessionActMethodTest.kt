@@ -4,7 +4,7 @@ import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.tta.TextToActionTestBase
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.*
@@ -120,7 +120,7 @@ class SessionActMethodTest : TextToActionTestBase() {
     fun testExtractArticleTitles() = runBlocking {
         val agent = session.act(ActionOptions("extract article titles and their hrefs from the main list"))
         val history = agent.history.joinToString("\n")
-        logPrintln(history)
+        printlnPro(history)
         assertTrue(history.contains("Show HN") || history.contains("Ask HN"), "History should contain extracted article titles")
     }
 }

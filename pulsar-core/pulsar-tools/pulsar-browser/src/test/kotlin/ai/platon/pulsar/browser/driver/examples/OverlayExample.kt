@@ -1,5 +1,6 @@
 package ai.platon.pulsar.browser.driver.examples
 
+import ai.platon.pulsar.common.printlnPro
 import com.github.kklisura.cdt.protocol.v2023.types.dom.RGBA
 import com.github.kklisura.cdt.protocol.v2023.types.overlay.HighlightConfig
 import com.google.gson.GsonBuilder
@@ -53,7 +54,7 @@ class OverlayExample: BrowserExampleBase() {
 //        Thread.sleep(5000)
         val obj = overlay.getHighlightObjectForTest(nodeId)
         val json = GsonBuilder().setPrettyPrinting().create().toJson(obj)
-        logPrintln(json)
+        printlnPro(json)
     }
 }
 

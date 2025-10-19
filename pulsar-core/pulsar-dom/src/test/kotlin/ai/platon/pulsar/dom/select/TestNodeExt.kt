@@ -1,7 +1,7 @@
 package ai.platon.pulsar.dom.select
 
 import ai.platon.pulsar.dom.nodes.node.ext.minimalCopy
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.dom.nodes.node.ext.slimCopy
 import org.jsoup.Jsoup
 import kotlin.test.*
@@ -17,7 +17,7 @@ class TestNodeExt {
     fun testSlimCopy() {
         val doc = Jsoup.parse("<a id=1 href='/foo'>One</a> <a id=2 href='https://dom.org'>Two</a>")
         val copy = doc.slimCopy()
-        logPrintln(copy.outerHtml())
+        printlnPro(copy.outerHtml())
     }
 
     @Test
@@ -31,7 +31,7 @@ class TestNodeExt {
         """.trimIndent())
         val copy = doc.minimalCopy()
 //        assertNull(copy.selectFirstOrNull("#only-one-child"))
-        logPrintln(copy.outerHtml())
+        printlnPro(copy.outerHtml())
     }
 }
 

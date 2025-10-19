@@ -2,7 +2,6 @@ package ai.platon.pulsar.skeleton.crawl.common.options
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.common.options.PulsarOptions
-import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.skeleton.common.options.WeightedKeywordsConverter
 import com.beust.jcommander.DynamicParameter
 import com.beust.jcommander.JCommander

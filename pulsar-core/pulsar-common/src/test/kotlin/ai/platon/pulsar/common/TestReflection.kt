@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import kotlinx.coroutines.delay
 import kotlin.test.Test

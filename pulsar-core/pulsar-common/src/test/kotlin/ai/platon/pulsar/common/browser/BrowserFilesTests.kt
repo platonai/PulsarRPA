@@ -1,7 +1,6 @@
 package ai.platon.pulsar.common.browser
 
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.sleepMillis
 import java.nio.file.Files
 import java.nio.file.Path

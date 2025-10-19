@@ -1,6 +1,6 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -36,7 +36,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
 
         val action = actionDescription.functionCalls.first()
-        logPrintln("Command: $command -> Generated action: $action")
+        printlnPro("Command: $command -> Generated action: $action")
         assertTrue(action.contains("fill") || action.contains("type"), "Should generate fill action")
         assertTrue(action.contains("name") || action.contains("#name"), "Should target the name input field")
     }
@@ -53,7 +53,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
 
         val action = actionDescription.functionCalls.first()
-        logPrintln("Command: $command -> Generated action: $action")
+        printlnPro("Command: $command -> Generated action: $action")
         assertTrue(action.contains("click") || action.contains("select"), "Should generate selection action")
         assertTrue(action.contains("colorSelect") || action.contains("#colorSelect"), "Should target the color select")
     }
@@ -70,7 +70,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
 
         val action = actionDescription.functionCalls.first()
-        logPrintln("Command: $command -> Generated action: $action")
+        printlnPro("Command: $command -> Generated action: $action")
         assertTrue(action.contains("click"), "Should generate click action")
         assertTrue(action.contains("button") || action.contains("Add"), "Should target button element")
     }
@@ -87,7 +87,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
 
         val action = actionDescription.functionCalls.first()
-        logPrintln("Command: $command -> Generated action: $action")
+        printlnPro("Command: $command -> Generated action: $action")
         assertTrue(action.contains("click"), "Should generate click action")
         assertTrue(action.contains("toggle") || action.contains("Toggle"), "Should target toggle button")
     }
@@ -104,7 +104,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
 
         val action = actionDescription.functionCalls.first()
-        logPrintln("Command: $command -> Generated action: $action")
+        printlnPro("Command: $command -> Generated action: $action")
         // Should handle the complex instruction somehow
         assertTrue(action.contains("fill") || action.contains("type") || action.contains("click"),
           "Should generate some interaction")
@@ -123,7 +123,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        logPrintln("Command: $command -> Generated action: $action")
+        printlnPro("Command: $command -> Generated action: $action")
         assertTrue(action.contains("fill") || action.contains("type"), "Should generate fill action")
         assertTrue(action.contains("nameInput") || action.contains("#nameInput"), "Should target name input")
     }
@@ -139,7 +139,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        logPrintln("Command: $command -> Generated action: $action")
+        printlnPro("Command: $command -> Generated action: $action")
         assertTrue(action.contains("click") || action.contains("select"), "Should generate selection action")
         assertTrue(action.contains("languageSelect") || action.contains("#languageSelect"), "Should target language select")
     }
@@ -155,7 +155,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        logPrintln("Command: $command -> Generated action: $action")
+        printlnPro("Command: $command -> Generated action: $action")
         assertTrue(action.contains("check") || action.contains("click"), "Should generate check or click action")
         assertTrue(action.contains("subscribeToggle") || action.contains("#subscribeToggle"), "Should target subscribe checkbox")
     }
@@ -171,7 +171,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        logPrintln("Command: $command -> Generated action: $action")
+        printlnPro("Command: $command -> Generated action: $action")
         assertTrue(action.contains("click"), "Should generate click action")
         assertTrue(action.contains("showSummary") || action.contains("button"), "Should target summary button")
     }
@@ -187,7 +187,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        logPrintln("Command: $command -> Generated action: $action")
+        printlnPro("Command: $command -> Generated action: $action")
         // Slider interaction might be handled differently
         assertTrue(action.contains("click") || action.contains("fill") || action.contains("evaluate"),
               "Should generate interaction for slider")
@@ -206,10 +206,10 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        logPrintln("Command: $command -> Generated action: $action")
+        printlnPro("Command: $command -> Generated action: $action")
         assertTrue(action.contains("click"), "Should generate click action")
         // Should disambiguate and select the user section save button
-        logPrintln("Selected element: ${actionDescription.selectedElement}")
+        printlnPro("Selected element: ${actionDescription.selectedElement}")
     }
 
     @Test
@@ -223,10 +223,10 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        logPrintln("Command: $command -> Generated action: $action")
+        printlnPro("Command: $command -> Generated action: $action")
         assertTrue(action.contains("click"), "Should generate click action")
         // Should disambiguate and select the product section save button
-        logPrintln("Selected element: ${actionDescription.selectedElement}")
+        printlnPro("Selected element: ${actionDescription.selectedElement}")
     }
 
     @Test
@@ -240,10 +240,10 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        logPrintln("Command: $command -> Generated action: $action")
+        printlnPro("Command: $command -> Generated action: $action")
         assertTrue(action.contains("click"), "Should generate click action")
         // Should use position context to select the top-right menu button
-        logPrintln("Selected element: ${actionDescription.selectedElement}")
+        printlnPro("Selected element: ${actionDescription.selectedElement}")
     }
 
     @Test
@@ -257,10 +257,10 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        logPrintln("Command: $command -> Generated action: $action")
+        printlnPro("Command: $command -> Generated action: $action")
         assertTrue(action.contains("fill") || action.contains("type"), "Should generate fill action")
         // Should disambiguate between billing and shipping forms
-        logPrintln("Selected element: ${actionDescription.selectedElement}")
+        printlnPro("Selected element: ${actionDescription.selectedElement}")
     }
 
     @Test
@@ -274,10 +274,10 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        logPrintln("Command: $command -> Generated action: $action")
+        printlnPro("Command: $command -> Generated action: $action")
         assertTrue(action.contains("fill") || action.contains("type"), "Should generate fill action")
         // Should select the product search field among multiple search fields
-        logPrintln("Selected element: ${actionDescription.selectedElement}")
+        printlnPro("Selected element: ${actionDescription.selectedElement}")
     }
 
     // ======== COMPLEX SCENARIO TESTS ========
@@ -294,8 +294,8 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
 
         // Should handle the complex instruction in some way (might pick the most important action)
-        logPrintln("Complex command: $command -> Generated: ${actionDescription.functionCalls}")
-        logPrintln("Model response: ${actionDescription.modelResponse.content}")
+        printlnPro("Complex command: $command -> Generated: ${actionDescription.functionCalls}")
+        printlnPro("Model response: ${actionDescription.modelResponse.content}")
     }
 
     @Test
@@ -309,10 +309,10 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
         val action = actionDescription.functionCalls.first()
-        logPrintln("Ambiguous command: $command -> Generated action: $action")
+        printlnPro("Ambiguous command: $command -> Generated action: $action")
         assertTrue(action.contains("click"), "Should generate click action")
         // Should select one of the edit buttons based on some logic
-        logPrintln("Selected element: ${actionDescription.selectedElement}")
+        printlnPro("Selected element: ${actionDescription.selectedElement}")
     }
 
     @Test
@@ -327,8 +327,8 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
 
         // Should handle non-existent elements gracefully
-        logPrintln("Non-existent element command: $command -> Generated: ${actionDescription.functionCalls}")
-        logPrintln("Model response: ${actionDescription.modelResponse.content}")
+        printlnPro("Non-existent element command: $command -> Generated: ${actionDescription.functionCalls}")
+        printlnPro("Model response: ${actionDescription.modelResponse.content}")
     }
 
     // ======== LANGUAGE AND CULTURAL TESTS ========
@@ -351,7 +351,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
         val action = actionDescription.functionCalls.first()
-        logPrintln("English command: $command -> Generated action: $action")
+        printlnPro("English command: $command -> Generated action: $action")
         }
     }
 
@@ -373,7 +373,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
         val action = actionDescription.functionCalls.first()
-        logPrintln("Mixed language command: $command -> Generated action: $action")
+        printlnPro("Mixed language command: $command -> Generated action: $action")
         }
     }
 
@@ -390,8 +390,8 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
 
-        logPrintln("Empty command -> Generated: ${actionDescription.functionCalls}")
-        logPrintln("Model response: ${actionDescription.modelResponse.content}")
+        printlnPro("Empty command -> Generated: ${actionDescription.functionCalls}")
+        printlnPro("Model response: ${actionDescription.modelResponse.content}")
     }
 
     @Test
@@ -405,8 +405,8 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
 
-        logPrintln("Very long command -> Generated: ${actionDescription.functionCalls}")
-        logPrintln("Model response length: ${actionDescription.modelResponse.content.length}")
+        printlnPro("Very long command -> Generated: ${actionDescription.functionCalls}")
+        printlnPro("Model response length: ${actionDescription.modelResponse.content.length}")
     }
 
     @Test
@@ -427,7 +427,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
         val action = actionDescription.functionCalls.first()
-        logPrintln("Special characters command: $command -> Generated action: $action")
+        printlnPro("Special characters command: $command -> Generated action: $action")
         }
     }
 }

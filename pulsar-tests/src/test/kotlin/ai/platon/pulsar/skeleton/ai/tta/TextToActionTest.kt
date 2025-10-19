@@ -1,6 +1,6 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -27,7 +27,7 @@ class TextToActionTest: TextToActionTestBase() {
 
         val actionDescription = textToAction.generateWebDriverActionBlocking(prompt, listOf())
         lastResponse = actionDescription.modelResponse
-        logPrintln(actionDescription.modelResponse.content)
+        printlnPro(actionDescription.modelResponse.content)
 
         assertTrue(actionDescription.modelResponse.content.contains("driver.click") || actionDescription.modelResponse.content.contains(".click("))
         assertTrue(actionDescription.modelResponse.content.contains("搜索") || actionDescription.modelResponse.content.contains("search"))
@@ -39,7 +39,7 @@ class TextToActionTest: TextToActionTestBase() {
 
         val actionDescription = textToAction.generateWebDriverActionBlocking(prompt, listOf())
         lastResponse = actionDescription.modelResponse
-        logPrintln(actionDescription.modelResponse.content)
+        printlnPro(actionDescription.modelResponse.content)
 
         assertTrue(actionDescription.modelResponse.content.contains("driver.fill") || actionDescription.modelResponse.content.contains(".fill("))
         assertTrue(actionDescription.modelResponse.content.contains("AI toys") || actionDescription.modelResponse.content.contains("搜索"))
@@ -51,7 +51,7 @@ class TextToActionTest: TextToActionTestBase() {
 
         val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
-        logPrintln(response.content)
+        printlnPro(response.content)
 
         assertTrue(response.content.contains("driver.scrollToMiddle") || response.content.contains(".scrollToMiddle"))
     }
@@ -62,7 +62,7 @@ class TextToActionTest: TextToActionTestBase() {
 
         val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
-        logPrintln(response.content)
+        printlnPro(response.content)
 
         assertTrue(response.content.contains("driver.waitForSelector") || response.content.contains(".waitForSelector"))
         assertTrue(response.content.contains("提交") || response.content.contains("submit"))
@@ -74,7 +74,7 @@ class TextToActionTest: TextToActionTestBase() {
 
         val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
-        logPrintln(response.content)
+        printlnPro(response.content)
 
         assertTrue(response.content.contains("driver.navigateTo") || response.content.contains(".navigateTo"))
         assertTrue(response.content.contains("example.com"))
@@ -88,7 +88,7 @@ class TextToActionTest: TextToActionTestBase() {
 
         val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
-        logPrintln(response.content)
+        printlnPro(response.content)
 
         val content = response.content
         assertTrue(content.contains("driver.navigateTo") || content.contains(".navigateTo"))
@@ -103,7 +103,7 @@ class TextToActionTest: TextToActionTestBase() {
 
         val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
-        logPrintln(response.content)
+        printlnPro(response.content)
 
         val content = response.content
         assertTrue(content.contains("driver.fill") || content.contains(".fill("))
@@ -116,7 +116,7 @@ class TextToActionTest: TextToActionTestBase() {
 
         val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
-        logPrintln(response.content)
+        printlnPro(response.content)
 
         assertTrue(response.content.contains("driver.check") || response.content.contains(".check("))
     }
@@ -127,7 +127,7 @@ class TextToActionTest: TextToActionTestBase() {
 
         val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
-        logPrintln(response.content)
+        printlnPro(response.content)
 
         val content = response.content
         assertTrue(content.contains("driver.click") || content.contains(".click("))
@@ -156,7 +156,7 @@ class TextToActionTest: TextToActionTestBase() {
 
         // Test that function calls are extracted from the response
         val functionCalls = actionDescription.functionCalls
-        logPrintln("Extracted function calls: $functionCalls")
+        printlnPro("Extracted function calls: $functionCalls")
 
         // The function calls should be related to the prompt
         assertTrue(functionCalls.any { it.contains("click") } || actionDescription.modelResponse.content.contains("click"))
@@ -179,10 +179,10 @@ class TextToActionTest: TextToActionTestBase() {
             assertNotNull(response)
             assertTrue(response.content.isNotBlank())
 
-            logPrintln("Prompt: $prompt")
-            logPrintln("Response contains '$expectedKeyword': ${response.content.lowercase().contains(expectedKeyword)}")
-            logPrintln("Response: ${response.content}")
-            logPrintln("---")
+            printlnPro("Prompt: $prompt")
+            printlnPro("Response contains '$expectedKeyword': ${response.content.lowercase().contains(expectedKeyword)}")
+            printlnPro("Response: ${response.content}")
+            printlnPro("---")
         }
     }
 
@@ -192,7 +192,7 @@ class TextToActionTest: TextToActionTestBase() {
 
         val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
-        logPrintln(response.content)
+        printlnPro(response.content)
 
         // Test that the response generates valid WebDriver command patterns
         val content = response.content

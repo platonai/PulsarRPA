@@ -2,7 +2,7 @@ package ai.platon.pulsar.browser
 
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.external.ChatModelFactory
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.delay
 import kotlin.test.Test
@@ -46,7 +46,7 @@ class WebDriverSimpleTests: WebDriverTestBase() {
         runEnhancedWebDriverTest(browser) { driver ->
             openEnhanced(productURL, driver)
             val response = driver.chat("Tell me something about this page", "#productTitle")
-            logPrintln(response)
+            printlnPro(response)
         }
     }
 

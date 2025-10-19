@@ -2,7 +2,7 @@ package ai.platon.pulsar.common.proxy
 
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.config.MutableConfig
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.proxy.impl.ProxyHubLoader
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
@@ -23,7 +23,7 @@ class ProxyHubLoaderTest {
     fun `test LoadProxies`() {
         conf[ProxyHubLoader.PROXY_HUB_URL] = proxyHubUrl
         val proxies = proxyLoader.loadProxies()
-        logPrintln(proxies)
+        printlnPro(proxies)
     }
 }
 

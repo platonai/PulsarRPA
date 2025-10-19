@@ -1,7 +1,7 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.external.ModelResponse
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -68,7 +68,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 // Check if the generated action is appropriate
 
                     val action = actionDescription.functionCalls.first()
-                    logPrintln("Prompt: $prompt -> Generated action: $action")
+                    printlnPro("Prompt: $prompt -> Generated action: $action")
                     assertTrue(action.contains("click") || action.contains("driver.click"), "Should generate click-related action")
             }
         }
@@ -93,7 +93,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 assertNotNull(actionDescription, "Should generate action for prompt: $prompt")
                 assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $prompt")
                     val action = actionDescription.functionCalls.first()
-                    logPrintln("Prompt: $prompt -> Generated action: $action")
+                    printlnPro("Prompt: $prompt -> Generated action: $action")
                     assertTrue(action.contains("fill") || action.contains("driver.fill") ||
                              action.contains("type") || action.contains("driver.type"),
                              "Should generate fill-related action")
@@ -117,7 +117,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 assertNotNull(actionDescription, "Should generate action for prompt: $prompt")
                 assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $prompt")
                     val action = actionDescription.functionCalls.first()
-                    logPrintln("Prompt: $prompt -> Generated action: $action")
+                    printlnPro("Prompt: $prompt -> Generated action: $action")
                     assertTrue(action.contains("navigateTo") || action.contains("driver.navigateTo"),
                              "Should generate navigation-related action")
             }
@@ -143,7 +143,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 assertNotNull(actionDescription, "Should generate action for prompt: $prompt")
                 assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $prompt")
                     val action = actionDescription.functionCalls.first()
-                    logPrintln("Prompt: $prompt -> Generated action: $action")
+                    printlnPro("Prompt: $prompt -> Generated action: $action")
                     assertTrue(action.contains("scroll") || action.contains("driver.scroll"),
                              "Should generate scroll-related action")
             }
@@ -169,7 +169,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 assertNotNull(actionDescription, "Should generate action for prompt: $prompt")
                 assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $prompt")
                     val action = actionDescription.functionCalls.first()
-                    logPrintln("Prompt: $prompt -> Generated action: $action")
+                    printlnPro("Prompt: $prompt -> Generated action: $action")
                     assertTrue(action.contains("waitFor") || action.contains("driver.waitFor"),
                              "Should generate wait-related action")
             }
@@ -195,7 +195,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 assertNotNull(actionDescription, "Should generate action for prompt: $prompt")
                 assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $prompt")
                     val action = actionDescription.functionCalls.first()
-                    logPrintln("Prompt: $prompt -> Generated action: $action")
+                    printlnPro("Prompt: $prompt -> Generated action: $action")
                     assertTrue(action.contains("check") || action.contains("driver.check") ||
                              action.contains("uncheck") || action.contains("driver.uncheck"),
                              "Should generate checkbox-related action")
@@ -248,7 +248,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 assertNotNull(actionDescription, "Should handle ambiguous prompt: $prompt")
                 assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for ambiguous: $prompt")
 
-                logPrintln("Ambiguous prompt: $prompt -> Generated: ${actionDescription.functionCalls}")
+                printlnPro("Ambiguous prompt: $prompt -> Generated: ${actionDescription.functionCalls}")
             }
         }
     }
@@ -266,8 +266,8 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             assertNotNull(actionDescription)
             // The selectedElement field should be populated when elements are found
             // Note: selectedElement might be null if no suitable element is found, which is acceptable
-            logPrintln("Selected element: ${actionDescription.selectedElement}")
-            logPrintln("Function calls: ${actionDescription.functionCalls}")
+            printlnPro("Selected element: ${actionDescription.selectedElement}")
+            printlnPro("Function calls: ${actionDescription.functionCalls}")
         }
     }
 
@@ -306,7 +306,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             // Test that the tool call parsing works correctly
 
                 val action = actionDescription.functionCalls.first()
-                logPrintln("Generated tool call style action: $action")
+                printlnPro("Generated tool call style action: $action")
 
                 // Should be a valid WebDriver method call
                 assertTrue(action.startsWith("driver.") || action.contains("driver."), "Should be a valid WebDriver call")
@@ -335,7 +335,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 assertNotNull(actionDescription, "Should handle $elementType element type for: $prompt")
                 assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $prompt")
 
-                logPrintln("Element type $elementType, prompt: $prompt -> Generated: ${actionDescription.functionCalls}")
+                printlnPro("Element type $elementType, prompt: $prompt -> Generated: ${actionDescription.functionCalls}")
             }
         }
     }
@@ -360,7 +360,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
                 assertNotNull(actionDescription, "Should handle Chinese prompt: $prompt")
                 assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $prompt")
 
-                logPrintln("Chinese prompt: $prompt -> Generated: ${actionDescription.functionCalls}")
+                printlnPro("Chinese prompt: $prompt -> Generated: ${actionDescription.functionCalls}")
             }
         }
     }

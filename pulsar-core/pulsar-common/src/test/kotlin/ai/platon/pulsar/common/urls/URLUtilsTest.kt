@@ -2,7 +2,7 @@ package ai.platon.pulsar.common.urls
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.config.AppConstants.BROWSER_SPECIFIC_URL_PREFIX
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -123,7 +123,7 @@ class URLUtilsTest {
     fun testNormalize_WindowsFileURI() {
         val filePath = "C:\\Users\\Vincent\\Documents"
         val uri = File(filePath).toURI()  // 自动转换为合法的 file:// URI
-        logPrintln(uri.toString()) // 输出 file:/C:/Users/Vincent/Documents
+        printlnPro(uri.toString()) // 输出 file:/C:/Users/Vincent/Documents
         assertEquals("file:/C:/Users/Vincent/Documents", uri.toString())
 
         // 注意：虽然 URI 标准中为绝对路径推荐 file:///C:/...，
@@ -159,7 +159,7 @@ class URLUtilsTest {
         // Test converting a browser protocol to URL
         val url = "chrome://settings"
         val expected = "$BROWSER_SPECIFIC_URL_PREFIX?url=${URLEncoder.encode(url, Charsets.UTF_8)}"
-        logPrintln(expected)
+        printlnPro(expected)
         assertEquals(expected, URLUtils.browserURLToStandardURL(url))
     }
 
@@ -188,8 +188,8 @@ class URLUtilsTest {
         val base64 = Base64.getUrlEncoder().encode(path.toString().toByteArray()).toString(Charsets.UTF_8)
         val expectedURL = "$expectedPrefix?path=$base64"
 
-        logPrintln(path)
-        logPrintln(result)
+        printlnPro(path)
+        printlnPro(result)
 
         assertEquals(expectedURL, result)
     }

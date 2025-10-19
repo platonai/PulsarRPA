@@ -2,7 +2,6 @@ package ai.platon.pulsar.common.browser
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.proxy.ProxyEntry
-import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test

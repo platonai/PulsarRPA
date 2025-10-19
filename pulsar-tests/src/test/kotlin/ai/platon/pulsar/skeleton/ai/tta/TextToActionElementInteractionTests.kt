@@ -1,6 +1,6 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -27,8 +27,8 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val interactiveElements = textToAction.extractInteractiveElements(driver)
-        logPrintln("Extracted ${interactiveElements.size} interactive elements")
-        interactiveElements.forEach { logPrintln(" - ${it.selector} [${it.tagName}] visible=${it.isVisible}") }
+        printlnPro("Extracted ${interactiveElements.size} interactive elements")
+        interactiveElements.forEach { printlnPro(" - ${it.selector} [${it.tagName}] visible=${it.isVisible}") }
 
         // All returned elements must be visible and one of allowed interactive tags
         val allowedTags = setOf("input", "select", "textarea", "button", "a")
@@ -74,7 +74,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
 
             val action = actionDescription.functionCalls.first()
-            logPrintln("Input command: $command -> Generated action: $action")
+            printlnPro("Input command: $command -> Generated action: $action")
             assertTrue(action.contains("fill") || action.contains("type"), "Should generate fill action")
             assertTrue(action.contains(expectedField), "Should target the name field")
         }
@@ -99,7 +99,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
 
             val action = actionDescription.functionCalls.first()
-            logPrintln("Number input command: $command -> Generated action: $action")
+            printlnPro("Number input command: $command -> Generated action: $action")
             assertTrue(action.contains("fill") || action.contains("type"), "Should generate fill action")
 
             // Should target one of the number fields
@@ -128,7 +128,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
-                logPrintln("Select command: $command -> Generated action: $action")
+                printlnPro("Select command: $command -> Generated action: $action")
                 assertTrue(action.contains("click") || action.contains("select"), "Should generate selection action")
                 assertTrue(action.contains(expectedField), "Should target the select field")
         }
@@ -152,7 +152,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
-                logPrintln("Language select command: $command -> Generated action: $action")
+                printlnPro("Language select command: $command -> Generated action: $action")
                 assertTrue(action.contains("click") || action.contains("select"), "Should generate selection action")
                 assertTrue(action.contains(expectedField), "Should target the language select")
         }
@@ -178,7 +178,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
-                logPrintln("Button click command: $command -> Generated action: $action")
+                printlnPro("Button click command: $command -> Generated action: $action")
                 assertTrue(action.contains("click"), "Should generate click action")
                 assertTrue(action.contains("button") || action.contains(expectedContext), "Should target button element")
         }
@@ -202,7 +202,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
-                logPrintln("Show summary command: $command -> Generated action: $action")
+                printlnPro("Show summary command: $command -> Generated action: $action")
                 assertTrue(action.contains("click"), "Should generate click action")
                 assertTrue(action.contains(expectedContext) || action.contains("button"), "Should target summary button")
         }
@@ -228,7 +228,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
-                logPrintln("Checkbox command: $command -> Generated action: $action")
+                printlnPro("Checkbox command: $command -> Generated action: $action")
                 assertTrue(action.contains(expectedAction) || action.contains("click"), "Should generate check or click action")
                 assertTrue(action.contains("subscribeToggle") || action.contains("checkbox"), "Should target subscribe checkbox")
         }
@@ -255,7 +255,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
-                logPrintln("Uncheck command: $command -> Generated action: $action")
+                printlnPro("Uncheck command: $command -> Generated action: $action")
                 assertTrue(action.contains(expectedAction) || action.contains("click"), "Should generate uncheck or click action")
                 assertTrue(action.contains("subscribeToggle") || action.contains("checkbox"), "Should target subscribe checkbox")
         }
@@ -281,7 +281,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
-                logPrintln("Slider command: $command -> Generated action: $action")
+                printlnPro("Slider command: $command -> Generated action: $action")
                 // Slider might be handled via click, fill, or JavaScript evaluation
                 assertTrue(action.contains("click") || action.contains("fill") || action.contains("evaluate"),
                           "Should generate interaction for slider")
@@ -308,7 +308,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
-                logPrintln("Form command: $command -> Generated action: $action")
+                printlnPro("Form command: $command -> Generated action: $action")
                 // Should handle the complex form instruction
                 assertTrue(action.contains("fill") || action.contains("click") || action.contains("check"),
                           "Should generate form interaction")
@@ -338,7 +338,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
-                logPrintln("Dynamic content command: $command -> Generated action: $action")
+                printlnPro("Dynamic content command: $command -> Generated action: $action")
                 assertTrue(action.contains("click"), "Should generate click action")
                 assertTrue(action.contains("toggle") || action.contains("button"), "Should target toggle button")
         }
@@ -364,7 +364,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
-                logPrintln("Scroll command: $command -> Generated action: $action")
+                printlnPro("Scroll command: $command -> Generated action: $action")
                 assertTrue(action.contains("scroll"), "Should generate scroll action")
                 assertTrue(action.contains(expectedAction), "Should generate correct scroll action")
         }
@@ -390,7 +390,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
-                logPrintln("Wait command: $command -> Generated action: $action")
+                printlnPro("Wait command: $command -> Generated action: $action")
                 assertTrue(action.contains("waitFor"), "Should generate wait action")
                 assertTrue(action.contains(expectedAction), "Should generate correct wait action")
         }
@@ -416,8 +416,8 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
 
-            logPrintln("Non-existent element command: $command -> Generated: ${actionDescription.functionCalls}")
-            logPrintln("Model response: ${actionDescription.modelResponse.content}")
+            printlnPro("Non-existent element command: $command -> Generated: ${actionDescription.functionCalls}")
+            printlnPro("Model response: ${actionDescription.modelResponse.content}")
 
             // Should handle non-existent elements gracefully - might generate empty function or fallback
             assertTrue(actionDescription.functionCalls.size <= 1, "Should handle non-existent elements gracefully")
@@ -442,10 +442,10 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
                 val action = actionDescription.functionCalls.first()
-                logPrintln("Ambiguous command: $command -> Generated action: $action")
+                printlnPro("Ambiguous command: $command -> Generated action: $action")
                 assertTrue(action.contains("click") || action.contains("fill"), "Should generate some action")
                 // Should select one of the available elements
-                logPrintln("Selected element: ${actionDescription.selectedElement}")
+                printlnPro("Selected element: ${actionDescription.selectedElement}")
         }
     }
 }

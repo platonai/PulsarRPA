@@ -1,6 +1,6 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -23,20 +23,20 @@ class TextToActionSimpleTest : TextToActionTestBase() {
 
             // Debug: Print interactive elements to see what's available
             val interactiveElements = textToAction.extractInteractiveElements(driver)
-            logPrintln("Extracted ${interactiveElements.size} interactive elements:")
+            printlnPro("Extracted ${interactiveElements.size} interactive elements:")
             interactiveElements.take(5).forEach { element ->
-                logPrintln("  - ${element.tagName}#${element.id}: '${element.text.take(30)}' selector: ${element.selector}")
+                printlnPro("  - ${element.tagName}#${element.id}: '${element.text.take(30)}' selector: ${element.selector}")
             }
 
             val actionDescription = textToAction.generateWebDriverActionBlocking(prompt, driver)
 
             assertNotNull(actionDescription)
-            logPrintln("Generated ${actionDescription.functionCalls.size} function calls")
-            logPrintln("Model response: ${actionDescription.modelResponse.content.take(200)}...")
+            printlnPro("Generated ${actionDescription.functionCalls.size} function calls")
+            printlnPro("Model response: ${actionDescription.modelResponse.content.take(200)}...")
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
 
             val action = actionDescription.functionCalls.first()
-            logPrintln("Generated action: $action")
+            printlnPro("Generated action: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click-related action")
         }
@@ -50,21 +50,21 @@ class TextToActionSimpleTest : TextToActionTestBase() {
 
             // Debug: Print interactive elements to see what's available
             val interactiveElements = textToAction.extractInteractiveElements(driver)
-            logPrintln("Extracted ${interactiveElements.size} interactive elements from interactive-1.html:")
+            printlnPro("Extracted ${interactiveElements.size} interactive elements from interactive-1.html:")
             interactiveElements.take(10).forEach { element ->
-                logPrintln("  - ${element.tagName}#${element.id}: '${element.text.take(30)}' selector: ${element.selector}")
+                printlnPro("  - ${element.tagName}#${element.id}: '${element.text.take(30)}' selector: ${element.selector}")
             }
 
             val actionDescription = textToAction.generateWebDriverActionBlocking("填写用户名 'testuser'", driver)
 
             assertNotNull(actionDescription)
-            logPrintln("Model response: ${actionDescription.modelResponse.content}")
+            printlnPro("Model response: ${actionDescription.modelResponse.content}")
 
             // For now, accept that we might get 0 function calls if no interactive elements are found
             // This is better than the previous conditional logic that masked bugs
             if (actionDescription.functionCalls.isEmpty()) {
-                logPrintln("WARNING: No function calls generated. This indicates the AI model couldn't determine an action.")
-                logPrintln("This is expected behavior when no interactive elements are available on the page.")
+                printlnPro("WARNING: No function calls generated. This indicates the AI model couldn't determine an action.")
+                printlnPro("This is expected behavior when no interactive elements are available on the page.")
                 // Don't fail the test - this is the correct behavior when no elements are found
                 return@runEnhancedWebDriverTest
             }
@@ -72,7 +72,7 @@ class TextToActionSimpleTest : TextToActionTestBase() {
             assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
 
             val action = actionDescription.functionCalls.first()
-            logPrintln("Generated action: $action")
+            printlnPro("Generated action: $action")
             assertTrue(action.contains("fill") || action.contains("driver.fill") ||
                       action.contains("type") || action.contains("driver.type"),
                       "Should generate fill-related action")

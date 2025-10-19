@@ -1,6 +1,6 @@
 package ai.platon.pulsar.browser.js.stagehand
 
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.WebDriverTestBase
 import kotlin.test.*
 
@@ -32,7 +32,7 @@ class PulsarWebDriverInjectedStagehandJSTests : WebDriverTestBase() {
     @Test
     fun `test getScrollableElementXpathsSync`() = runEnhancedWebDriverTest(testURL, browser) { driver ->
         val result = driver.evaluateValue("window.getScrollableElementXpathsSync()")
-        logPrintln(result)
+        printlnPro(result)
     }
 }
 

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.ql.context.AbstractSQLContext
 import kotlin.test.Test
 
@@ -90,14 +90,14 @@ class TestSQLFeatures : TestBase() {
 
         while (rs.next()) {
             print(rs.getString(1) + " " + rs.getString(2))
-            logPrintln()
+            printlnPro()
         }
 
         if (state.moreResults) {
-            logPrintln("moreResults")
+            printlnPro("moreResults")
             while (rs.next()) {
                 print(rs.getString(1) + " " + rs.getString(2))
-                logPrintln()
+                printlnPro()
             }
         }
 

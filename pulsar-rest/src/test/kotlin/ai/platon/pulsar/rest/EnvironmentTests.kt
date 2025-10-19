@@ -1,6 +1,6 @@
 package ai.platon.pulsar.rest
 
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.getLogger
 import org.springframework.boot.logging.logback.LogbackLoggingSystem
 import org.springframework.util.ClassUtils
@@ -14,7 +14,7 @@ class EnvironmentTests {
             "ch.qos.logback.classic.LoggerContext",
             LogbackLoggingSystem.Factory::class.java.classLoader
         )
-        logPrintln(PRESENT)
+        printlnPro(PRESENT)
 
         getLogger(this).info("Logging system works correctly")
     }

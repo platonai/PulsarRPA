@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.browser.Fingerprint
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.config.MutableConfig
 import org.apache.commons.io.FileUtils
 import org.junit.jupiter.api.AfterEach
@@ -37,7 +37,7 @@ class SequentialPrivacyAgentGeneratorTest {
 
     @AfterEach
     fun tearDown() {
-        kotlin.runCatching { FileUtils.deleteDirectory(contextBaseDir.toFile()) }.onFailure { logPrintln(it.brief()) }
+        kotlin.runCatching { FileUtils.deleteDirectory(contextBaseDir.toFile()) }.onFailure { printlnPro(it.brief()) }
     }
 
     @Test

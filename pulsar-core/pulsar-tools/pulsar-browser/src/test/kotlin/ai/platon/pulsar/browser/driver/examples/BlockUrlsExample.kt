@@ -1,7 +1,7 @@
 package ai.platon.pulsar.browser.driver.examples
 
 import ai.platon.pulsar.common.AppFiles
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.AppPaths
 import com.github.kklisura.cdt.protocol.v2023.events.page.*
 import com.google.gson.Gson
@@ -42,20 +42,20 @@ class BlockUrlsExample: BrowserExampleBase() {
             if (isMainFrame(event.frameId)) {
                 debugDocumentState(event)
             }
-            logPrintln("onFrameAttached - ${event.frameId}")
+            printlnPro("onFrameAttached - ${event.frameId}")
         }
 
         page.onFrameDetached { event: FrameDetached ->
             if (isMainFrame(event.frameId)) {
                 debugDocumentState(event)
             }
-            logPrintln("onFrameDetached - " + event.frameId)
+            printlnPro("onFrameDetached - " + event.frameId)
         }
 
         page.onFrameNavigated { event: FrameNavigated ->
             if (isMainFrame(event.frame.id)) {
                 debugDocumentState(event)
-                logPrintln(event.javaClass.simpleName + " - " + event.frame.id)
+                printlnPro(event.javaClass.simpleName + " - " + event.frame.id)
             }
         }
 
@@ -68,16 +68,16 @@ class BlockUrlsExample: BrowserExampleBase() {
 
         page.onFrameStoppedLoading { event: FrameStoppedLoading ->
             if (isMainFrame(event.frameId)) {
-                logPrintln("[main] onFrameStoppedLoading - ${event.frameId} - ${pageSource.length}")
+                printlnPro("[main] onFrameStoppedLoading - ${event.frameId} - ${pageSource.length}")
             } else {
-                logPrintln("onFrameStoppedLoading - ${event.frameId}")
+                printlnPro("onFrameStoppedLoading - ${event.frameId}")
             }
-            logPrintln()
+            printlnPro()
         }
 
         page.navigate(testUrl)
 
-        logPrintln(Gson().toJson(chrome.version))
+        printlnPro(Gson().toJson(chrome.version))
 
 //        readLine()
     }
@@ -88,7 +88,7 @@ class BlockUrlsExample: BrowserExampleBase() {
 
     private fun debugDocumentState(event: Any, message: String = "") {
         val evaluate = runtime.evaluate("document.readyState")
-        logPrintln("${event.javaClass.simpleName} ${evaluate.result.value} | message")
+        printlnPro("${event.javaClass.simpleName} ${evaluate.result.value} | message")
     }
 }
 

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.persist.mongo
 
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.NetUtil
 import shaded.org.bson.Document
 import org.junit.jupiter.api.*
@@ -48,7 +48,7 @@ open class MongoTestBase {
         // test if MongoDB is available, if not, skip the test
         try {
             val collections = mongoClient.getDatabase(databaseName).listCollectionNames()
-            collections.forEach { logPrintln(it) }
+            collections.forEach { printlnPro(it) }
         } catch (e: Exception) {
             Assumptions.assumeTrue(false, "MongoDB is not available: skip tests")
         }

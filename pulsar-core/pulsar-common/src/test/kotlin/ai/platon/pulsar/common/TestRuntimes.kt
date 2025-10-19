@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.AppPaths
 import org.apache.commons.lang3.RandomStringUtils
 import org.apache.commons.lang3.SystemUtils
 import java.nio.file.FileSystems
@@ -12,7 +11,7 @@ import kotlin.test.assertTrue
 class TestRuntimes {
     @Test
     fun testEnv() {
-        logPrintln(System.getenv("USER"))
+        printlnPro(System.getenv("USER"))
     }
 
     @Test
@@ -87,14 +86,14 @@ class TestRuntimes {
     fun testUnallocatedDiskSpaces() {
         FileSystems.getDefault().fileStores.forEach {
             try {
-                logPrintln(
+                printlnPro(
                     String.format(
                         "%-30s%-10s%-20s%s", it.name(), it.type(),
                         Strings.compactFormat(it.unallocatedSpace), Strings.compactFormat(it.totalSpace)
                     )
                 )
             } catch (e: Exception) {
-                logPrintln(e.message)
+                printlnPro(e.message)
             }
         }
 

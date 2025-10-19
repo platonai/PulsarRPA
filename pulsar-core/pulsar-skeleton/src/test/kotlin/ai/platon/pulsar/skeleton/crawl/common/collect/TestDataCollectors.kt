@@ -11,7 +11,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.common.collect.LocalFileHyperlinkCollector
 import org.apache.commons.collections4.map.MultiValueMap
 import kotlin.test.*
@@ -64,7 +64,7 @@ class TestDataCollectors : TestBase() {
         assertTrue { collectors.first().priority < collectors.last().priority }
 //        collectors.sortedBy { it.priority }.forEach { logPrintln("$it ${it.priority}") }
 
-        logPrintln("Adding another normal collector ...")
+        printlnPro("Adding another normal collector ...")
         val priority = Priority13.NORMAL.value
         val normalCollector = UrlCacheCollector(urlPool.normalCache)
         collectors += normalCollector
@@ -86,20 +86,20 @@ class TestDataCollectors : TestBase() {
         }
         assertEquals(urlPool.orderedCaches.size, collectors.keys.size)
 //        assertTrue { collectors.first().priority < collectors.last().priority }
-        collectors.keys.sorted().forEach { p -> logPrintln("$p ${collectors[p]}") }
+        collectors.keys.sorted().forEach { p -> printlnPro("$p ${collectors[p]}") }
 
-        logPrintln("Adding 2nd normal collector ...")
+        printlnPro("Adding 2nd normal collector ...")
         val priority = Priority13.NORMAL.value
         val normalCollector = UrlCacheCollector(urlPool.normalCache)
         collectors[priority] = normalCollector
         assertEquals(2, collectors.size(priority))
-        collectors.keys.sorted().forEach { p -> logPrintln("$p ${collectors[p]}") }
+        collectors.keys.sorted().forEach { p -> printlnPro("$p ${collectors[p]}") }
 
-        logPrintln("Adding 3rd normal collector ...")
+        printlnPro("Adding 3rd normal collector ...")
         val normalCollector2 = LocalFileHyperlinkCollector(Paths.get("/tmp/non-exist"), priority)
         collectors[priority] = normalCollector2
         assertEquals(3, collectors.size(priority))
-        collectors.keys.sorted().forEach { p -> logPrintln("$p ${collectors[p]}") }
+        collectors.keys.sorted().forEach { p -> printlnPro("$p ${collectors[p]}") }
     }
 
     @Test

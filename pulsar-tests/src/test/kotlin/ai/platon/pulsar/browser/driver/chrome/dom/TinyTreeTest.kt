@@ -6,7 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.NodeType
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TinyNode
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -43,13 +43,13 @@ class TinyTreeTest : WebDriverTestBase() {
         )
 
         val enhancedRoot = collectEnhancedRoot(service, options)
-        logPrintln(DomDebug.summarize(enhancedRoot))
+        printlnPro(DomDebug.summarize(enhancedRoot))
         assertTrue(enhancedRoot.children.isNotEmpty(), "Enhanced root should have children")
 
         val tinyTree = DOMTinyTreeBuilder(enhancedRoot).build()
         assertNotNull(tinyTree, "Simplified Slim DOM should not be null")
         tinyTree!!
-        logPrintln(DomDebug.summarize(tinyTree))
+        printlnPro(DomDebug.summarize(tinyTree))
         assertTrue(tinyTree.children.isNotEmpty(), "Simplified Slim DOM should have children")
 
         val all = flattenSlim(tinyTree)

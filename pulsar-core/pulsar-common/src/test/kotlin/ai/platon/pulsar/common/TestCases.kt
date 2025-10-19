@@ -1,19 +1,13 @@
 package ai.platon.pulsar.common
 
-import com.google.common.collect.TreeMultimap
 import com.google.common.net.InetAddresses
-import org.apache.commons.math3.distribution.NormalDistribution
-import org.apache.commons.math3.distribution.UniformIntegerDistribution
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
 import org.apache.commons.math3.util.Precision
 import java.awt.Color
 import java.math.BigInteger
-import java.time.Duration
-import java.time.Instant
 import java.util.*
 import kotlin.math.floor
 import kotlin.math.roundToInt
-import kotlin.random.Random
 import kotlin.test.*
 
 class TestCases {
@@ -50,7 +44,7 @@ class TestCases {
                 numbers.add(k)
             }
         }
-        logPrintln(numbers)
+        printlnPro(numbers)
         assertTrue { 21 in numbers }
         assertTrue { 61 in numbers }
         assertTrue { 201 in numbers }
@@ -72,7 +66,7 @@ class TestCases {
         var result = s.ifEmpty { return }
         assertTrue { result == "This will never happen" }
 
-        logPrintln("Will return to the caller")
+        printlnPro("Will return to the caller")
         result = s.ifEmpty { return@testReturnInIfEmpty }
         assertTrue { result == "This will never happen" }
     }
@@ -184,7 +178,7 @@ class TestCases {
         val rgb = 0x996600
         val rgb2 = Color(rgb).rgb
         val rgb3 = Color(rgb2, true).rgb
-        logPrintln("$rgb\t$rgb2\t$rgb3")
+        printlnPro("$rgb\t$rgb2\t$rgb3")
         assertEquals(rgb3, rgb2)
 
         val mask = ALPHA_MASK
@@ -208,7 +202,7 @@ class TestCases {
             a = i
         }
         require(a == 1)
-        IntRange(1, 10).toList().also { logPrintln(it) }
+        IntRange(1, 10).toList().also { printlnPro(it) }
     }
 
     @Test

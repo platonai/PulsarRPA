@@ -6,7 +6,7 @@ import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.rest.api.TestHelper.PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.common.MockEcServerTestBase
 import ai.platon.pulsar.rest.api.config.MockEcServerConfiguration
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.rest.api.entities.PromptRequest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
@@ -41,7 +41,7 @@ class ExtractServiceTest : MockEcServerTestBase() {
     fun `test extract`() {
         val request = PromptRequest(PRODUCT_DETAIL_URL, "title, price, images")
         val response = runBlocking { extractService.extract(request) }
-        logPrintln(response.toString())
+        printlnPro(response.toString())
         assertTrue { response.isNotEmpty() }
     }
 
@@ -58,7 +58,7 @@ class ExtractServiceTest : MockEcServerTestBase() {
         )
 
         val response = runBlocking { extractService.extract(request) }
-        logPrintln(response.toString())
+        printlnPro(response.toString())
         assertTrue { response.isNotEmpty() }
     }
 }

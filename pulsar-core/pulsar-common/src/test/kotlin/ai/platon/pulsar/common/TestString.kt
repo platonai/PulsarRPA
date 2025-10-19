@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.apache.commons.lang3.StringUtils
 import java.io.IOException
@@ -11,8 +10,6 @@ import java.util.Base64
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import java.util.stream.Collectors
-import java.util.stream.IntStream
-import java.util.stream.Stream
 import kotlin.test.*
 
 /**
@@ -188,7 +185,7 @@ class TestString {
             "天王表 正品热卖 \uE004主要职责：  OK"
         )
         for (text in texts) {
-            logPrintln(Strings.removeNonCJKChar(text, Strings.DEFAULT_KEEP_CHARS))
+            printlnPro(Strings.removeNonCJKChar(text, Strings.DEFAULT_KEEP_CHARS))
         }
     }
 
@@ -217,7 +214,7 @@ class TestString {
         )
 
         for (text in mainlyChineseTexts) {
-            logPrintln(
+            printlnPro(
                 Strings.countChinese(text).toString() + "/" + text.length
                         + "=" + Strings.countChinese(text) * 1.0 / text.length + "\t" + text
             )
@@ -241,7 +238,7 @@ class TestString {
         assertEquals("http://t.tt/", parts[0])
         s = "ld,-o,-s,-w:hello,-a:b,-c"
         val options = StringUtils.replaceChars(s, ":,", Strings.padding[2]).split(" ").toTypedArray()
-        logPrintln(StringUtils.join(options, " "))
+        printlnPro(StringUtils.join(options, " "))
     }
 
     @Test
@@ -282,10 +279,10 @@ class TestString {
         assertEquals(kvs, Strings.parseKvs("a=1 b=2 c=3"))
         assertEquals(kvs, Strings.parseKvs("a:1\nb:2\tc:3", ":"))
         assertTrue(Strings.parseKvs("abcd1234*&#$").isEmpty())
-        logPrintln(Strings.parseKvs("a=1 b=2 c=3 c=4  d e f"))
-        logPrintln(SParser.wrap("a=1 b=2 c=3,c=4 d e f").getKvs("="))
-        logPrintln(SParser.wrap("a=1 b=2 c=3 c=4,d= e f").getKvs("="))
-        logPrintln(SParser.wrap("").kvs)
+        printlnPro(Strings.parseKvs("a=1 b=2 c=3 c=4  d e f"))
+        printlnPro(SParser.wrap("a=1 b=2 c=3,c=4 d e f").getKvs("="))
+        printlnPro(SParser.wrap("a=1 b=2 c=3 c=4,d= e f").getKvs("="))
+        printlnPro(SParser.wrap("").kvs)
         val kvs2 = arrayOf(
             "a=1 b=2 c=3,c=4 d e f",
             "a=1 b=2 c=3 c=4 d= e f",
@@ -409,14 +406,14 @@ class TestString {
         val s = "409.7 219.3 864 411.8|12|16, 3, f"
         val base64 = Base64.getEncoder().encodeToString(s.toByteArray())
         assertEquals("NDA5LjcgMjE5LjMgODY0IDQxMS44fDEyfDE2LCAzLCBm", base64)
-        logPrintln(base64)
+        printlnPro(base64)
         val decoded = String(Base64.getDecoder().decode(base64))
         assertEquals(s, decoded)
 
         val s2 = "409.7 219.3 864 411.8"
         val base64_2 = Base64.getEncoder().encodeToString(s2.toByteArray())
         assertEquals("NDA5LjcgMjE5LjMgODY0IDQxMS44", base64_2)
-        logPrintln(base64_2)
+        printlnPro(base64_2)
     }
 }
 

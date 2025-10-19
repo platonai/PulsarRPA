@@ -1,5 +1,6 @@
 package ai.platon.pulsar.skeleton.crawl.llm
 
+import ai.platon.pulsar.common.printlnPro
 import org.junit.jupiter.api.Tag
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -22,7 +23,7 @@ class Text2WebDriverActionDescriptionTests: TTATestBase() {
 
         val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
-        logPrintln(response.content)
+        printlnPro(response.content)
 
         assertTrue { listOf(".navigateTo", ".open").any { response.content.contains(it) } }
     }
@@ -35,7 +36,7 @@ class Text2WebDriverActionDescriptionTests: TTATestBase() {
 
         val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
-        logPrintln(response.content)
+        printlnPro(response.content)
 
         assertTrue { response.content.contains(".scrollToMiddle") }
     }
@@ -48,7 +49,7 @@ class Text2WebDriverActionDescriptionTests: TTATestBase() {
 
         val response = textToAction.generateWebDriverActionsWithSourceCode(prompt)
         lastResponse = response
-        logPrintln(response.content)
+        printlnPro(response.content)
 
         val content = response.content
         assertTrue { content.contains(".scrollToMiddle") }

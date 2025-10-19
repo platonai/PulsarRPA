@@ -7,7 +7,7 @@ import ai.platon.pulsar.dom.nodes.node.ext.uniqueName
 import ai.platon.pulsar.ql.common.PulsarObjectSerializer
 import ai.platon.pulsar.ql.common.types.ValueDom
 import ai.platon.pulsar.ql.h2.H2Db
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.ql.h2.H2DbConfig
 import org.apache.commons.io.FileUtils
 import org.h2.engine.SysProperties
@@ -153,13 +153,13 @@ class TestJavaObjectSerializer : TestBase() {
         assertTrue { dom.element.uniqueName.contains("nfItem") }
 
         rs.beforeFirst()
-        logPrintln(ResultSetFormatter(rs).toString())
+        printlnPro(ResultSetFormatter(rs).toString())
 
-        logPrintln(sql)
-        logPrintln(SysProperties.serializeJavaObject)
-        logPrintln(JdbcUtils.serializer.javaClass.name)
+        printlnPro(sql)
+        printlnPro(SysProperties.serializeJavaObject)
+        printlnPro(JdbcUtils.serializer.javaClass.name)
 
-        logPrintln(dom.element.uniqueName)
+        printlnPro(dom.element.uniqueName)
     }
 
     @Ignore("Ignored temporary")
@@ -180,7 +180,7 @@ class TestJavaObjectSerializer : TestBase() {
 
         assertTrue(rs.next())
         val value = rs.getString(1)
-        logPrintln(value)
+        printlnPro(value)
         assertTrue(value.length > 1)
         assertTrue(SysProperties.serializeJavaObject)
         assertEquals("ai.platon.pulsar.ql.common.PulsarObjectSerializer", JdbcUtils.serializer.javaClass.name)

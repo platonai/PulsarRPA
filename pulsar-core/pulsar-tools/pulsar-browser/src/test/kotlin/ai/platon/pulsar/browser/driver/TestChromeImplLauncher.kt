@@ -4,7 +4,7 @@ import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.browser.BrowserFiles
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import com.google.gson.Gson
 import kotlin.test.Test
@@ -52,13 +52,13 @@ class TestChromeImplLauncher {
             assertTrue(!chrome.version.browser.isNullOrBlank())
             assertTrue(versionString.contains("Mozilla"))
 
-            logPrintln("Tab id: " + tab.id)
-            logPrintln("Protocol version: " + version.protocolVersion)
-            logPrintln("Browser version" + version.browser)
+            printlnPro("Tab id: " + tab.id)
+            printlnPro("Protocol version: " + version.protocolVersion)
+            printlnPro("Browser version" + version.browser)
 
-            logPrintln(prettyPulsarObjectMapper().writeValueAsString(tab))
-            logPrintln(prettyPulsarObjectMapper().writeValueAsString(chrome.version))
-            logPrintln(versionString)
+            printlnPro(prettyPulsarObjectMapper().writeValueAsString(tab))
+            printlnPro(prettyPulsarObjectMapper().writeValueAsString(chrome.version))
+            printlnPro(versionString)
         }
     }
 }

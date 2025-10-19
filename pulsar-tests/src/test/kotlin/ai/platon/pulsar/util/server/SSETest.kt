@@ -1,5 +1,6 @@
 package ai.platon.pulsar.util.server
 
+import ai.platon.pulsar.common.printlnPro
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -26,12 +27,12 @@ fun main() {
     client.newCall(request).execute().use { response ->
         if (!response.isSuccessful) error("Unexpected code $response")
         val body = response.body?.string()?.trim() ?: error("No response body")
-        logPrintln("Submit response: $body")
+        printlnPro("Submit response: $body")
         // Parse uuid from ScrapeResponse JSON
         val regex = "\"uuid\"\\s*:\\s*\"([^\"]+)\"".toRegex()
         uuid = regex.find(body)?.groupValues?.get(1) ?: error("No UUID in response")
     }
-    logPrintln("Submitted, UUID: $uuid")
+    printlnPro("Submitted, UUID: $uuid")
 
     // 2. Connect to SSE stream
     val sseRequest = Request.Builder()
@@ -45,12 +46,12 @@ fun main() {
             val line = source.readUtf8Line() ?: break
             if (line.startsWith("data:")) {
                 val json = line.removePrefix("data:").trim()
-                logPrintln("SSE Event: $json")
+                printlnPro("SSE Event: $json")
                 // Optionally, parse statusCode to determine completion
                 val codeRegex = "\"statusCode\"\\s*:\\s*(\\d+)".toRegex()
                 val code = codeRegex.find(json)?.groupValues?.get(1)?.toIntOrNull()
                 if (code == 200 || code == 500) {
-                    logPrintln("Stream finished with statusCode: $code")
+                    printlnPro("Stream finished with statusCode: $code")
                     break
                 }
             }

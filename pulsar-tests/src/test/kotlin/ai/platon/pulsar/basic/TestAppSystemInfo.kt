@@ -1,6 +1,6 @@
 package ai.platon.pulsar.basic
 
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.brief
 import kotlin.test.*
 import oshi.SystemInfo
@@ -19,18 +19,18 @@ class TestAppSystemInfo {
 
         runCatching {
             val versionInfo = si.operatingSystem.versionInfo
-            logPrintln("Operation system: $versionInfo")
-        }.onFailure { logPrintln(it.brief()) }
+            printlnPro("Operation system: $versionInfo")
+        }.onFailure { printlnPro(it.brief()) }
 
         runCatching {
             val processor = si.hardware.processor
-            logPrintln("Processor: $processor")
-        }.onFailure { logPrintln(it.brief()) }
+            printlnPro("Processor: $processor")
+        }.onFailure { printlnPro(it.brief()) }
 
         runCatching {
             val memory = si.hardware.memory
-            logPrintln("Memory: $memory")
-        }.onFailure { logPrintln(it.brief()) }
+            printlnPro("Memory: $memory")
+        }.onFailure { printlnPro(it.brief()) }
     }
 }
 

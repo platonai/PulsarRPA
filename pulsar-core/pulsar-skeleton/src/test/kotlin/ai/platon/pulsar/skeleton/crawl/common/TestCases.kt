@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.skeleton.common.options.LoadOptionDefaults
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.URLUtils.splitUrlArgs
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.persist.metadata.PageCategory
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
@@ -50,8 +50,8 @@ class TestCases {
             lines2.add(pattern)
         })
         Files.write(Paths.get("/tmp/regex-urlfilter.txt"), StringUtils.join(lines2, "\n").toByteArray())
-        logPrintln(lines2.size)
-        logPrintln(StringUtils.join(lines2, ","))
+        printlnPro(lines2.size)
+        printlnPro(StringUtils.join(lines2, ","))
     }
 
     @Test
@@ -62,7 +62,7 @@ class TestCases {
         ints[3] = "3"
         ints[4] = "4"
         ints[5] = "5"
-        logPrintln(ints.keys.iterator().next())
+        printlnPro(ints.keys.iterator().next())
     }
 
     @Test
@@ -70,7 +70,7 @@ class TestCases {
         val pageCategory = try {
             PageCategory.parse("APP")
         } catch (e: Throwable) {
-            logPrintln(e.localizedMessage)
+            printlnPro(e.localizedMessage)
             PageCategory.UNKNOWN
         }
         assertEquals(pageCategory, PageCategory.UNKNOWN)
@@ -88,7 +88,7 @@ class TestCases {
         val counter = AtomicInteger(100)
         val deleted = 10
         counter.addAndGet(-deleted)
-        logPrintln(counter)
+        printlnPro(counter)
     }
 
     @Test
@@ -120,11 +120,11 @@ class TestCases {
             "http://bank.cnfol.com/yinhanglicai/20160905/23418323.shtml"
         )
         // longer url comes first
-        urls.sortedByDescending { it.length }.forEach { logPrintln(it) }
-        urls.map { InternalURLUtil.getHostName(it) }.forEach { logPrintln(it) }
+        urls.sortedByDescending { it.length }.forEach { printlnPro(it) }
+        urls.map { InternalURLUtil.getHostName(it) }.forEach { printlnPro(it) }
         for (url in urls) {
             val u = URL(url)
-            logPrintln(u.hashCode().toString() + ", " + url.hashCode())
+            printlnPro(u.hashCode().toString() + ", " + url.hashCode())
         }
     }
 

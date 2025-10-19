@@ -1,7 +1,6 @@
 package ai.platon.pulsar.skeleton.common.proxy
 
 import ai.platon.pulsar.external.ChatModelFactory
-import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach

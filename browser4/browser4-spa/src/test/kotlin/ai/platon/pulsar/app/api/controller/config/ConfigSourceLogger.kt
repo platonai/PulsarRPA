@@ -1,5 +1,6 @@
 package ai.platon.pulsar.app.api.controller.config
 
+import ai.platon.pulsar.common.printlnPro
 import org.springframework.boot.context.event.ApplicationReadyEvent
 import org.springframework.context.event.EventListener
 import org.springframework.core.env.ConfigurableEnvironment
@@ -11,11 +12,11 @@ class ConfigSourceLogger(private val env: ConfigurableEnvironment) {
 
     @EventListener(ApplicationReadyEvent::class)
     fun logPropertySources() {
-        logPrintln(Paths.get(".").toAbsolutePath())
+        printlnPro(Paths.get(".").toAbsolutePath())
 
-        logPrintln("=== Spring Boot Property Sources ===")
+        printlnPro("=== Spring Boot Property Sources ===")
         env.propertySources.forEach { ps ->
-            logPrintln("Source: ${ps.name} ${ps.source}")
+            printlnPro("Source: ${ps.name} ${ps.source}")
         }
     }
 }

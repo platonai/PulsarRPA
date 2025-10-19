@@ -10,7 +10,7 @@ import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.event.AbstractCrawlEventHandlers
 import ai.platon.pulsar.skeleton.crawl.event.AbstractLoadEventHandlers
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.crawl.event.impl.DefaultPageEventHandlers
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
@@ -48,9 +48,9 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url, "") {
                     return@addFirst null
                 }
 
-                logPrintln("............onLoaded " + page.id)
+                printlnPro("............onLoaded " + page.id)
                 require(page is AbstractWebPage)
-                page.variables.variables.forEach { (t, u) -> logPrintln("$t $u") }
+                page.variables.variables.forEach { (t, u) -> printlnPro("$t $u") }
 
                 if (page.protocolStatus.isSuccess) {
                     assertTrue(page.isLoaded || page.isContentUpdated)
@@ -71,13 +71,13 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url, "") {
         init {
             onWillLoad.addFirst {
                 hyperlink.triggeredEvents.add("$seq. LoadEvent.onWillLoad")
-                logPrintln("............onWillLoad")
+                printlnPro("............onWillLoad")
                 it
             }
             onWillParseHTMLDocument.addFirst { page ->
                 hyperlink.triggeredEvents.add("$seq. LoadEvent.onWillParseHTMLDocument")
-                logPrintln("............onWillParseHTMLDocument " + page.id)
-                logPrintln("$this " + page.loadEventHandlers)
+                printlnPro("............onWillParseHTMLDocument " + page.id)
+                printlnPro("$this " + page.loadEventHandlers)
                 require(page is AbstractWebPage)
                 page.variables[VAR_IS_SCRAPE] = true
                 null
@@ -85,19 +85,19 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url, "") {
             onWillParseHTMLDocument.addFirst { page ->
                 hyperlink.triggeredEvents.add("$seq. LoadEvent.onWillParseHTMLDocument 2")
 //                assertSame(thisHandler, page.loadEvent)
-                logPrintln("............onWillParseHTMLDocument " + page.id)
+                printlnPro("............onWillParseHTMLDocument " + page.id)
             }
             onHTMLDocumentParsed.addFirst { page, document ->
                 hyperlink.triggeredEvents.add("$seq. LoadEvent.onHTMLDocumentParsed")
-                logPrintln("............onHTMLDocumentParsed " + page.id)
+                printlnPro("............onHTMLDocumentParsed " + page.id)
 //                assertSame(thisHandler, page.loadEvent)
                 require(page is AbstractWebPage)
                 assertTrue(page.hasVar(VAR_IS_SCRAPE))
             }
             onParsed.addFirst { page ->
                 hyperlink.triggeredEvents.add("$seq. LoadEvent.onParsed")
-                logPrintln("............onParsed " + page.id)
-                logPrintln("$thisHandler " + page.loadEventHandlers)
+                printlnPro("............onParsed " + page.id)
+                printlnPro("$thisHandler " + page.loadEventHandlers)
 //                assertSame(thisHandler, page.loadEvent)
             }
             onLoaded.addFirst { page ->

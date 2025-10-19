@@ -13,7 +13,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserProfile
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -94,8 +94,8 @@ class PrivacyContextManagerTests {
         val pc2 = privacyManager.tryGetNextReadyPrivacyContext(fingerprint)
         assertTrue { pc2.isActive }
         assertTrue { pc2.isReady }
-        logPrintln(pc.profile.contextDir)
-        logPrintln(pc2.profile.contextDir)
+        printlnPro(pc.profile.contextDir)
+        printlnPro(pc2.profile.contextDir)
         assertNotEquals(pc.profile, pc2.profile)
         assertNotEquals(pc, pc2)
         assertTrue { privacyManager.temporaryContexts.containsKey(pc2.profile) }

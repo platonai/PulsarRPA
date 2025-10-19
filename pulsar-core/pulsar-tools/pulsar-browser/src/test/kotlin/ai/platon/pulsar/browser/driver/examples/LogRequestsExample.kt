@@ -1,5 +1,7 @@
 package ai.platon.pulsar.browser.driver.examples
 
+import ai.platon.pulsar.common.printlnPro
+
 class LogRequestsExample: BrowserExampleBase() {
     override val testUrl: String = "https://www.stbchina.cn/"
 
@@ -9,14 +11,14 @@ class LogRequestsExample: BrowserExampleBase() {
         page.enable()
 
         network.onRequestWillBeSent { event ->
-            logPrintln(String.format("request: [%s] %s\n", event.request.method, event.request.url))
+            printlnPro(String.format("request: [%s] %s\n", event.request.method, event.request.url))
         }
 
         network.onResponseReceived { event ->
             if ("application/json" == event.response.mimeType) {
-                logPrintln(String.format("response: [%s] %s", event.response.mimeType, event.response.url))
+                printlnPro(String.format("response: [%s] %s", event.response.mimeType, event.response.url))
                 if ("listChildrenCategoryWithNologin.do" in event.response.url) {
-                    logPrintln(event.response.serviceWorkerResponseSource)
+                    printlnPro(event.response.serviceWorkerResponseSource)
                 }
             }
         }

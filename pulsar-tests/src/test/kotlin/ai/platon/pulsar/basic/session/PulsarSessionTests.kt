@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.AppConstants.LOCAL_FILE_BASE_URL
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.persist.model.WebPageFormatter
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.basic.TestBase
 import com.google.gson.Gson
 import java.nio.file.Files
@@ -48,11 +48,11 @@ class PulsarSessionTests: TestBase() {
         }
 
         if (page2 != null) {
-            logPrintln(WebPageFormatter(page2))
-            logPrintln(page2.vividLinks)
+            printlnPro(WebPageFormatter(page2))
+            printlnPro(page2.vividLinks)
             val gson = Gson()
-            logPrintln(gson.toJson(page2.activeDOMStatus))
-            logPrintln(gson.toJson(page2.activeDOMStatTrace))
+            printlnPro(gson.toJson(page2.activeDOMStatus))
+            printlnPro(gson.toJson(page2.activeDOMStatTrace))
         }
     }
 
@@ -63,15 +63,15 @@ class PulsarSessionTests: TestBase() {
         assertTrue { page.fetchCount > 0 }
         assertTrue { page.protocolStatus.isSuccess }
 
-        logPrintln(WebPageFormatter(page))
+        printlnPro(WebPageFormatter(page))
         val path = session.export(page)
-        logPrintln("Webpage exported | $path")
+        printlnPro("Webpage exported | $path")
     }
 
     @Test
     fun testLoadLocalFile() {
         val path = AppPaths.getTmpDirectory("test.html")
-        logPrintln(path)
+        printlnPro(path)
         val html = """
             <html>
             <head>

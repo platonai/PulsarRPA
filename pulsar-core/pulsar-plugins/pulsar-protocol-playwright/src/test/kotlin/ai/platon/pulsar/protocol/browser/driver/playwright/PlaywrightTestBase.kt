@@ -1,6 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver.playwright
 
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.Runtimes
 import com.microsoft.playwright.Playwright
 import org.junit.jupiter.api.*
@@ -61,12 +61,12 @@ open class PlaywrightTestBase {
     fun checkNodeJSAvailability() {
         var output = Runtimes.exec("node --version")
         // a typical version is v16.15.1
-        logPrintln(output.joinToString())
+        printlnPro(output.joinToString())
         Assumptions.assumeTrue({ output.size == 1 }, output.joinToString())
         Assumptions.assumeTrue({ output[0].startsWith("v") }, output.joinToString())
 
         output = Runtimes.exec("""node -e "console.log(1 + 1);" """)
-        logPrintln(output.joinToString())
+        printlnPro(output.joinToString())
         // not all node version supports the expression
         // Assumptions.assumeTrue { output[0] == "2" }
     }
@@ -74,7 +74,7 @@ open class PlaywrightTestBase {
     @BeforeEach
     fun checkPlaywrightAvailability() {
         val output = Runtimes.exec("playwright --version")
-        logPrintln(output.joinToString())
+        printlnPro(output.joinToString())
         Assumptions.assumeTrue { output.isNotEmpty() }
     }
 

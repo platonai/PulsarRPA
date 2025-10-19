@@ -1,5 +1,6 @@
 package ai.platon.pulsar.persist.mongo
 
+import ai.platon.pulsar.common.printlnPro
 import shaded.com.mongodb.client.model.Filters
 import shaded.org.bson.Document
 import kotlin.test.*
@@ -16,7 +17,7 @@ class MongoClientNewTest : MongoTestBase() {
     @Test
     fun testGetCollectionName() {
         // Use the database (for example, get a collection)
-        logPrintln("Connected to the database: " + database.name)
+        printlnPro("Connected to the database: " + database.name)
         assertNotNull(database)
         assertEquals(databaseName, database.name)
     }
@@ -34,7 +35,7 @@ class MongoClientNewTest : MongoTestBase() {
         cursor.use {
             while (it.hasNext()) {
                 val json = it.next().toJson()
-                logPrintln(json)
+                printlnPro(json)
                 assertTrue { json.contains("New York") }
             }
         }
@@ -47,12 +48,12 @@ class MongoClientNewTest : MongoTestBase() {
             .append("city", "New York")
 
         collection.insertOne(document)
-        logPrintln("Document inserted")
+        printlnPro("Document inserted")
     }
 
     @Test
     fun `when deleting a document then it should be deleted successfully`() {
         collection.deleteOne(Filters.eq("name", "John Doe"))
-        logPrintln("Document deleted")
+        printlnPro("Document deleted")
     }
 }

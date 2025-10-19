@@ -4,7 +4,7 @@ import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.ql.h2.udfs.LLMFunctions
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import org.assertj.core.api.Assumptions
 import org.junit.jupiter.api.Test
@@ -22,7 +22,7 @@ open class ScrapeControllerTests : ScrapeControllerTestBase() {
         val sql = requireNotNull(sqlTemplates[pageType]).createSQL(url)
 
         val response = restTemplate.postForObject("$baseUri/api/x/e", sql, ScrapeResponse::class.java)
-        logPrintln(response)
+        printlnPro(response)
     }
 
     /**
@@ -35,7 +35,7 @@ open class ScrapeControllerTests : ScrapeControllerTestBase() {
         val sql = requireNotNull(sqlTemplates[pageType]).createSQL(url)
 
         val uuid = restTemplate.postForObject("$baseUri/api/x/s", sql, String::class.java)
-        logPrintln("UUID: $uuid")
+        printlnPro("UUID: $uuid")
         assertNotNull(uuid)
 
         await(pageType, uuid, url)
@@ -52,7 +52,7 @@ open class ScrapeControllerTests : ScrapeControllerTestBase() {
         val sql = requireNotNull(sqlTemplates[pageType]).createSQL(url)
 
         val uuid = restTemplate.postForObject("$baseUri/api/x/s", sql, String::class.java)
-        logPrintln("UUID: $uuid")
+        printlnPro("UUID: $uuid")
         assertNotNull(uuid)
 
         await(pageType, uuid, url)
@@ -68,12 +68,12 @@ open class ScrapeControllerTests : ScrapeControllerTestBase() {
             val response = restTemplate.getForObject("$baseUri/api/x/status?uuid=$uuid", ScrapeResponse::class.java)
 
             if (tick % 10 == 0) {
-                logPrintln(pulsarObjectMapper().writeValueAsString(response))
+                printlnPro(pulsarObjectMapper().writeValueAsString(response))
             }
 
             if (response.isDone) {
-                logPrintln("response: ")
-                logPrintln(prettyPulsarObjectMapper().writeValueAsString(response))
+                printlnPro("response: ")
+                printlnPro(prettyPulsarObjectMapper().writeValueAsString(response))
 
                 // If the page content bytes is less than 20KB, it means the page is not loaded
                 Assumptions.assumeThat(response.pageContentBytes).isGreaterThan(20_000) // 20KB
@@ -82,7 +82,7 @@ open class ScrapeControllerTests : ScrapeControllerTestBase() {
                 records = response.resultSet
                 assertNotNull(records)
 
-                logPrintln("records: $records")
+                printlnPro("records: $records")
 
                 Assumptions.assumeThat(records).isNotEmpty
             }
@@ -92,8 +92,8 @@ open class ScrapeControllerTests : ScrapeControllerTestBase() {
         sleepSeconds(3)
 
         val response = restTemplate.getForObject("$baseUri/api/x/a/status?uuid=$uuid", ScrapeResponse::class.java)
-        logPrintln("Final scrape task status: ")
-        logPrintln(pulsarObjectMapper().writeValueAsString(response))
+        printlnPro("Final scrape task status: ")
+        printlnPro(pulsarObjectMapper().writeValueAsString(response))
 
         Assumptions.assumeThat(tick).isLessThanOrEqualTo(timeout)
     }

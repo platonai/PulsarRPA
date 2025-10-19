@@ -10,7 +10,7 @@ import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.getDomainName
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.getDomainSuffix
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.getHostBatches
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.toASCII
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.toUNICODE
 import java.net.URL
 import kotlin.test.*
@@ -106,7 +106,7 @@ class TestURLUtil {
     fun testGetHostBatches() {
         var url = URL("http://subdomain.example.edu.tr")
         var batches = getHostBatches(url)
-        logPrintln(batches.joinToString())
+        printlnPro(batches.joinToString())
         assertEquals("subdomain", batches[0])
         assertEquals("example", batches[1])
         assertEquals("edu", batches[2])

@@ -4,7 +4,7 @@ import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
@@ -76,12 +76,12 @@ class PulsarWebDriverCDPTests : WebDriverTestBase() {
 
                 devTools.dom.onAttributeModified { e ->
                     val message = MessageFormat.format("> {0}. node changed | {1} := {2}", e.nodeId, e.name, e.value)
-                    logPrintln(message)
+                    printlnPro(message)
                 }
 
                 devTools.console.enable()
                 devTools.console.onMessageAdded { e ->
-                    logPrintln(e.message)
+                    printlnPro(e.message)
                 }
 
                 openEnhanced(url, driver)

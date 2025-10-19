@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.logPrintln
 import ai.platon.pulsar.common.DateTimes.parseInstant
 import com.google.common.collect.Lists
 import org.apache.commons.lang3.time.DateUtils
@@ -134,10 +133,10 @@ class TestDateTimeDetector {
         val localDate = zonedDateTime.toLocalDate()
         val localDateTime = zonedDateTime.toLocalDateTime()
 
-        logPrintln(instant)
-        logPrintln(zonedDateTime)
-        logPrintln(localDate)
-        logPrintln(localDateTime)
+        printlnPro(instant)
+        printlnPro(zonedDateTime)
+        printlnPro(localDate)
+        printlnPro(localDateTime)
 
         val texts = mapOf(
             "2021-04-15T13:04:00.840771700Z" to instant,
@@ -145,7 +144,7 @@ class TestDateTimeDetector {
             "2021-04-15T21:04:00.840771700" to localDateTime
         )
 
-        texts.map { DateTimeDetector().detectDateTime(it.key) to it.value }.forEach { logPrintln(it) }
+        texts.map { DateTimeDetector().detectDateTime(it.key) to it.value }.forEach { printlnPro(it) }
     }
 
     @Test

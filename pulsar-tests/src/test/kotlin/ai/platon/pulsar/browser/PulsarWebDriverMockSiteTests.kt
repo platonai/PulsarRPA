@@ -4,7 +4,7 @@ import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.js.JsUtils
 import ai.platon.pulsar.common.sleepSeconds
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import org.apache.commons.lang3.StringUtils
 import kotlin.test.*
@@ -36,7 +36,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     suspend fun evaluateExpressions(driver: WebDriver, type: String) {
         expressions.forEach { expression ->
             val detail = driver.evaluateDetail(expression)
-            logPrintln(String.format("%-6s%-40s%s", type, expression, detail))
+            printlnPro(String.format("%-6s%-40s%s", type, expression, detail))
         }
     }
 
@@ -53,7 +53,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         val code = """__pulsar_utils__.getConfig()"""
 
         val result = driver.evaluateDetail(code)
-        logPrintln(result)
+        printlnPro(result)
         assertNotNull(result)
         assertNull(result.value)
         assertNull(result.exception)
@@ -62,7 +62,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         // assertEquals(2, result)
 
         val result2 = driver.evaluateValueDetail(code)
-        logPrintln(result2)
+        printlnPro(result2)
         assertNotNull(result2)
         assertNull(result2.exception)
         assertNull(result2.className)
@@ -113,7 +113,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         // so it's an empty expressions sent to the browser
 
         val result2 = driver.evaluateValueDetail(JsUtils.toIIFE(code2))
-        logPrintln(result2)
+        printlnPro(result2)
         assertNotNull(result2)
         val exception = result2.exception
         assertNull(exception)
@@ -141,7 +141,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         driver.fill(selector, text)
 
         val detail = driver.evaluateDetail("document.querySelector('$selector')")
-        logPrintln(detail)
+        printlnPro(detail)
 
         val inputValue = driver.selectFirstPropertyValueOrNull(selector, "value")
 
@@ -174,7 +174,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         val selector = "input"
 
         val propValues = driver.selectPropertyValueAll(selector, "tagName")
-        logPrintln(propValues)
+        printlnPro(propValues)
         assertEquals(listOf("INPUT", "INPUT", "INPUT"), propValues)
     }
 
@@ -197,7 +197,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         driver.setPropertyAll(selector, propName, text)
 
         val propValues = driver.selectPropertyValueAll(selector, propName)
-        logPrintln(propValues)
+        printlnPro(propValues)
         assertEquals(listOf(text, text, text), propValues)
     }
 
@@ -205,7 +205,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     fun `test deleteCookies`() = runEnhancedWebDriverTest("$assetsPBaseURL/cookie.html", browser) { driver ->
         var cookies = driver.getCookies()
 
-        logPrintln(cookies.toString())
+        printlnPro(cookies.toString())
 
         assertTrue(cookies.toString()) { cookies.isNotEmpty() }
         val cookie = cookies[0]
@@ -225,7 +225,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     fun `test clearBrowserCookies`() = runEnhancedWebDriverTest("$assetsPBaseURL/cookie.html", browser) { driver ->
         var cookies = driver.getCookies()
 
-        logPrintln(cookies.toString())
+        printlnPro(cookies.toString())
 
         assertTrue(cookies.toString()) { cookies.isNotEmpty() }
         val cookie = cookies[0]
@@ -252,7 +252,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         val evaluation = driver.evaluateValueDetail(expression)
         assertNotNull(evaluation)
         evaluation.description = null
-        logPrintln(StringUtils.abbreviateMiddle(evaluation.toString(), "...", 500))
+        printlnPro(StringUtils.abbreviateMiddle(evaluation.toString(), "...", 500))
         val value = evaluation.value
         assertNotNull(value)
         value as Map<*, *>
@@ -262,7 +262,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         assertNotNull(map)
         map as Map<*, *>
         val node = map["0"]
-        logPrintln(node)
+        printlnPro(node)
         assertNotNull(node)
 
         sleepSeconds(10)
@@ -288,7 +288,7 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     fun `when open a CSV TXT page then script is not injected`() = runWebDriverTest(csvTextUrl) { driver ->
         expressions.forEach { expression ->
             val detail = driver.evaluateDetail(expression)
-            logPrintln(String.format("%-10s %-40s %s", "CSV TXT", expression, detail))
+            printlnPro(String.format("%-10s %-40s %s", "CSV TXT", expression, detail))
         }
 
         val nullExpressions = """

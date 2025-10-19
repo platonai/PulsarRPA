@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.urls.URLUtils.reverseUrlOrEmpty
 import ai.platon.pulsar.persist.gora.generated.GWebPage
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.persist.model.GoraWebPage
 import com.google.common.collect.Lists
 import org.apache.avro.util.Utf8
@@ -58,7 +58,7 @@ class TestGoraStorage {
             return
         }
 
-        logPrintln("Test with store " + store::class)
+        printlnPro("Test with store " + store::class)
 
         val url = AppConstants.EXAMPLE_URL + "/" + Instant.now().toEpochMilli()
         var page = WebPageExt.newTestWebPage(url)
@@ -191,7 +191,7 @@ class TestGoraStorage {
         assertNotNull(page)
 
         assertTrue(page.liveLinks.isNotEmpty())
-        logPrintln(page.liveLinks.values.first().anchor.javaClass)
+        printlnPro(page.liveLinks.values.first().anchor.javaClass)
         assertTrue(page.liveLinks.values.first().anchor is Utf8)
 
         page.liveLinks.clear()

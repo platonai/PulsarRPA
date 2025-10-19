@@ -5,7 +5,7 @@ import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.context.PulsarContexts
-import ai.platon.pulsar.common.logPrintln
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.context.support.ContextDefaults
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.BeforeAll
@@ -50,8 +50,8 @@ class ChatTests {
         val model = conf.get("llm.name")
         val apiKey = conf.get("llm.apiKey")
 
-        logPrintln(model)
-        logPrintln(apiKey)
+        printlnPro(model)
+        printlnPro(apiKey)
 
         val model2 = session.configuration.get("llm.name")
         val apiKey2 = session.configuration.get("llm.apiKey")
@@ -65,7 +65,7 @@ class ChatTests {
         val prompt = "以下是一个电商网站的网页内容，找出商品标题和商品价格：$productText"
         val response = runBlocking { session.chat(prompt) }
         lastResponse = response
-        logPrintln(response.content)
+        printlnPro(response.content)
         assertTrue { response.content.isNotEmpty() }
         assertTrue { response.tokenUsage.inputTokenCount > 0 }
     }
@@ -76,7 +76,7 @@ class ChatTests {
         val prompt = "以下是一个电商网站的网页内容，找出商品标题、商品价格："
         val response = runBlocking { session.chat(prompt, document) }
         lastResponse = response
-        logPrintln(response.content)
+        printlnPro(response.content)
 
         assertTrue { response.tokenUsage.inputTokenCount > 0 }
         assertTrue { response.tokenUsage.outputTokenCount > 0 }
