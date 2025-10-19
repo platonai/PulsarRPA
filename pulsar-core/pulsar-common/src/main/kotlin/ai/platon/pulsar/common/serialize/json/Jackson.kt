@@ -8,6 +8,24 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.math.RoundingMode
 import java.text.DecimalFormat
 
+class Double2Serializer : JsonSerializer<Double>() {
+    private val df = DecimalFormat("#.##").apply {
+        roundingMode = RoundingMode.HALF_UP
+    }
+
+    override fun serialize(value: Double?, gen: JsonGenerator, serializers: SerializerProvider) {
+        if (value == null) {
+            gen.writeNull()
+        } else {
+            val s = df.format(value)
+            // remove tailing `0`,  remove tailing `.`
+
+            gen.writeNumber(s)
+        }
+    }
+}
+
+
 /**
  * jacksonObjectMapper with support:
  * 1. kotlin
@@ -30,17 +48,3 @@ fun pulsarObjectMapper(): ObjectMapper = jacksonObjectMapper()
  * */
 fun prettyPulsarObjectMapper(): ObjectMapper = pulsarObjectMapper()
     .configure(SerializationFeature.INDENT_OUTPUT, true)
-
-class Double2Serializer : JsonSerializer<Double>() {
-    private val df = DecimalFormat("#.##").apply {
-        roundingMode = RoundingMode.HALF_UP
-    }
-
-    override fun serialize(value: Double?, gen: JsonGenerator, serializers: SerializerProvider) {
-        if (value == null) {
-            gen.writeNull()
-        } else {
-            gen.writeNumber(df.format(value).toDouble())
-        }
-    }
-}

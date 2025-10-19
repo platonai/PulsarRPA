@@ -3,6 +3,7 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.DateTimes.format
 import ai.platon.pulsar.common.DateTimes.now
 import ai.platon.pulsar.common.DateTimes.parseDuration
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import org.apache.commons.lang3.math.NumberUtils
 import org.apache.commons.lang3.time.DateFormatUtils
 import org.apache.commons.lang3.time.DateUtils
@@ -161,16 +162,21 @@ class TestDateTimes {
         val now = LocalDateTime.now()
 
         val tz = TimeZone.getTimeZone("Asia/Shanghai")
-        println(tz)
+        assertEquals("Asia/Shanghai", tz.id)
+        assertFalse(tz.useDaylightTime())
+
+        // println(tz)
         val offset = tz.rawOffset
-        println(offset)
-        println(TimeZone.getDefault().id)
-        println(ZoneId.systemDefault().id)
+        assertEquals(28800000, offset)
+
+        // println(offset)
+//        println(TimeZone.getDefault().id)
+//        println(ZoneId.systemDefault().id)
 
         val zoneId = DateTimes.zoneId
         assertEquals("Asia/Shanghai", tz.id)
         assertEquals(ZoneOffset.of("+08:00"), DateTimes.zoneOffset)
-        println(DateTimes.zoneOffset)
+        // println(DateTimes.zoneOffset)
     }
 
     @Test
