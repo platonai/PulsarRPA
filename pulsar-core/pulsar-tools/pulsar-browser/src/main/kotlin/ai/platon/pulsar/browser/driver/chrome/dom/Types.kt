@@ -153,5 +153,4 @@ object DOMSerializer {
     fun toJson(browserState: BrowserState): String {
         return MAPPER.writeValueAsString(browserState)
     }
-
 }

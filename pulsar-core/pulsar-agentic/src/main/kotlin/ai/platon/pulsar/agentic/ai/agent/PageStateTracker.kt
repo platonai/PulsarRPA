@@ -1,6 +1,7 @@
 package ai.platon.pulsar.agentic.ai.agent
 
 import ai.platon.pulsar.browser.driver.chrome.dom.BrowserUseState
+import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.delay
@@ -34,7 +35,7 @@ class PageStateTracker(
     suspend fun calculatePageStateHash(browserUseState: BrowserUseState): Int {
         // Combine URL, DOM structure, and interactive elements for fingerprint
         val urlHash = runCatching { driver.currentUrl() }.getOrNull()?.hashCode() ?: 0
-        val domHash = browserUseState.domState.json.hashCode()
+        val domHash = DOMSerializer.toJson(browserUseState.domState.microTree).hashCode()
         val scrollHash = browserUseState.browserState.scrollState.hashCode()
 
         return (urlHash * 31 + domHash) * 31 + scrollHash
