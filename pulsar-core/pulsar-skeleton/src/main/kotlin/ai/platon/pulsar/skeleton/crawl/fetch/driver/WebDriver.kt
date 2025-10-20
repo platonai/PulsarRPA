@@ -1452,7 +1452,7 @@ interface WebDriver : Closeable {
      *
      * @param millis The amount of time to delay, in milliseconds.
      * */
-    suspend fun delay(millis: Long) = kotlinx.coroutines.delay(millis)
+    suspend fun delay(millis: Long = 1000) = kotlinx.coroutines.delay(millis)
 
     /**
      * Delay for a given amount of time.

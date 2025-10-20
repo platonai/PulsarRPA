@@ -668,7 +668,7 @@ clickNthAnchor(n: Int, rootSelector: String = "body")
 waitForNavigation(oldUrl: String = "", timeoutMillis: Long = 5000): Long
 goBack()
 goForward()
-delay(millis: Long)
+delay(millis: Long = 1000)
 stop()
     """
 
