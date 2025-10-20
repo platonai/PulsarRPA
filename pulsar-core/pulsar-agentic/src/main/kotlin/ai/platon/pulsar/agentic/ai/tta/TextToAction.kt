@@ -229,11 +229,22 @@ $AGENT_SYSTEM_PROMPT
                 if (!el.isJsonObject) return@mapNotNull null
                 val obj = el.asJsonObject
                 val name = obj.get("name")?.takeIf { it.isJsonPrimitive }?.asString ?: return@mapNotNull null
-                val argsObj: JsonObject = obj.getAsJsonObject("args") ?: JsonObject()
+
                 val args = mutableMapOf<String, Any?>()
-                for ((k, v) in argsObj.entrySet()) {
-                    args[k] = jsonElementToKotlin(v)
+                val argsEl = obj.get("args")
+                if (argsEl?.isJsonObject == true) {
+                    val argsObj: JsonObject = argsEl.asJsonObject
+                    for ((k, v) in argsObj.entrySet()) {
+                        args[k] = jsonElementToKotlin(v)
+                    }
+                } else if (argsEl?.isJsonArray == true) {
+                    val argsArr = argsEl.asJsonArray
+                    // Heuristic: if it's a list of strings, create numbered keys
+                    argsArr.forEachIndexed { index, jsonElement ->
+                        args["arg${index + 1}"] = jsonElementToKotlin(jsonElement)
+                    }
                 }
+
                 ToolCall("driver", name, args)
             }
         } catch (e: Exception) {
@@ -513,7 +524,7 @@ $AGENT_SYSTEM_PROMPT
 输出严格使用 JSON 字段：
 
 {
-  tool_calls: [ { name: string, args: [string] } ]
+  tool_calls: [ { name: string, args: [name: string, value: string] } ]
   taskComplete: boolean
 }
 

@@ -20,7 +20,7 @@ data class AgentConfig(
     val consecutiveNoOpLimit: Int = 5,
     val actionGenerationTimeoutMs: Long = 30000,
     val screenshotCaptureTimeoutMs: Long = 5000,
-    val enableStructuredLogging: Boolean = false,
+    val enableStructuredLogging: Boolean = true,
     val enableDebugMode: Boolean = false,
     val enablePerformanceMetrics: Boolean = true,
     val memoryCleanupIntervalSteps: Int = 50,
