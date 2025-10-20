@@ -32,3 +32,7 @@ Read root README-AI.md and `devdocs/copilot/test-guide.md` for guidelines
 
 1. 如果 selector 具有 `backend:` 前缀，则 `backend:` 后的部分为 `backendNodeId`，使用该 id 进行元素定位。
 2. 其他情况，保持现有逻辑不变，使用标准 css path 定位
+
+### CDP scrolling methods in PulsarWebDriver
+
+使用 CDP 方法实现 PulsarWebDriver 的 scroll 方法。
