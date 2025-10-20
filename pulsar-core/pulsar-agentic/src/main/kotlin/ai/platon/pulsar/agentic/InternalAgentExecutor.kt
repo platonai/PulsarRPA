@@ -56,7 +56,7 @@ internal class InternalAgentExecutor(
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
         val tta = TextToAction(conf)
 
-        val actions = tta.generateWithToolCallSpecsDeferred(prompt)
+        val actions = tta.generateWithToolCallSpecs(prompt)
 
         // Dispatches and executes each action using a SimpleCommandDispatcher.
         val dispatcher = ToolCallExecutor()

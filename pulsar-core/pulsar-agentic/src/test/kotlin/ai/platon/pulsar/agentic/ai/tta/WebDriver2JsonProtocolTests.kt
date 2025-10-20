@@ -1,6 +1,7 @@
 package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.common.printlnPro
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Tag
 import kotlin.test.Test
 
@@ -14,7 +15,7 @@ class WebDriver2JsonProtocolTests: TTATestBase() {
 你的任务是将WebDriver的操作转换为Json协议，以便在浏览器中执行。
         """.trimIndent()
 
-        val response = textToAction.generateWithSourceCode(prompt)
+        val response = runBlocking { textToAction.generateWithSourceCode(prompt) }
         lastResponse = response
         printlnPro(response.content)
     }

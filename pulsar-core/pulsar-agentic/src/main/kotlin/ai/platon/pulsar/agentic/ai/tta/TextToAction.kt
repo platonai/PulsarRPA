@@ -83,19 +83,10 @@ open class TextToAction(val conf: ImmutableConfig) {
         interactiveElements: List<InteractiveElement> = listOf(),
         screenshotB64: String? = null
     ): ActionDescription {
-        return generateWithToolCallSpecsDeferred(instruction, interactiveElements, screenshotB64, 1)
+        return generateWithToolCallSpecs(instruction, interactiveElements, screenshotB64, 1)
     }
 
-    open fun generateWithToolCallSpecs(
-        instruction: String,
-        interactiveElements: List<InteractiveElement> = listOf(),
-        screenshotB64: String? = null,
-        toolCallLimit: Int = 100,
-    ): ActionDescription {
-        return runBlocking { generateWithToolCallSpecsDeferred(instruction, interactiveElements, screenshotB64, toolCallLimit) }
-    }
-
-    open suspend fun generateWithToolCallSpecsDeferred(
+    open suspend fun generateWithToolCallSpecs(
         instruction: String,
         interactiveElements: List<InteractiveElement> = listOf(),
         screenshotB64: String? = null,
@@ -118,15 +109,7 @@ open class TextToAction(val conf: ImmutableConfig) {
     }
 
     @ExperimentalApi
-    open fun generateWithSourceCode(
-        command: String,
-        interactiveElements: List<InteractiveElement> = listOf()
-    ): ModelResponse {
-        return runBlocking { generateActionsFromSourceCodeDeferred(command, interactiveElements) }
-    }
-
-    @ExperimentalApi
-    open suspend fun generateActionsFromSourceCodeDeferred(
+    open suspend fun generateWithSourceCode(
         command: String,
         interactiveElements: List<InteractiveElement> = listOf()
     ): ModelResponse {
@@ -237,9 +220,11 @@ $AGENT_SYSTEM_PROMPT
                     val i = num.toInt()
                     if (d == i.toDouble()) i else d
                 }
+
                 else -> p.asString
             }
         }
+
         e.isJsonArray -> e.asJsonArray.map { jsonElementToKotlin(it) }
         e.isJsonObject -> e.asJsonObject.entrySet().associate { it.key to jsonElementToKotlin(it.value) }
         else -> null
@@ -262,6 +247,7 @@ $AGENT_SYSTEM_PROMPT
                         parseElementFromMap(item as? Map<String, Any?>)
                     }
                 }
+
                 is Map<*, *> -> {
                     // 如果返回的是单个对象，可能包含数组
                     val elements = jsResult["elements"] as? List<*>
@@ -269,6 +255,7 @@ $AGENT_SYSTEM_PROMPT
                         parseElementFromMap(item as? Map<String, Any?>)
                     } ?: emptyList()
                 }
+
                 is String -> {
                     // 如果返回的是 JSON 字符串，需要解析
                     return parseElementsFromJsonString(jsResult)
@@ -329,6 +316,7 @@ $AGENT_SYSTEM_PROMPT
                 val end = jsonString.lastIndexOf(']')
                 if (start >= 0 && end > start) jsonString.substring(start, end + 1) else jsonString
             }
+
             else -> jsonString
         }
 
@@ -336,7 +324,10 @@ $AGENT_SYSTEM_PROMPT
             val root = JsonParser.parseString(normalized)
             val arr = when {
                 root.isJsonArray -> root.asJsonArray
-                root.isJsonObject && root.asJsonObject.get("elements")?.isJsonArray == true -> root.asJsonObject.getAsJsonArray("elements")
+                root.isJsonObject && root.asJsonObject.get("elements")?.isJsonArray == true -> root.asJsonObject.getAsJsonArray(
+                    "elements"
+                )
+
                 else -> return emptyList()
             }
             arr.mapNotNull { el ->
@@ -597,11 +588,11 @@ suspend fun llmGeneratedFunction(session: PulsarSession) {
                 const parent = node.parentElement;
                 if (parent.id) {
                     const idx = Array.from(parent.children).filter(c => c.tagName === node.tagName).indexOf(node) + 1;
-                    path = parent.tagName.toLowerCase() + '#' + CSS.escape(parent.id) + ' > ' + node.tagName.toLowerCase() + `:nth-of-type(${ '$' }{idx})`;
+                    path = parent.tagName.toLowerCase() + '#' + CSS.escape(parent.id) + ' > ' + node.tagName.toLowerCase() + `:nth-of-type(${'$'}{idx})`;
                     break;
                 } else {
                     const idx = Array.from(parent.children).filter(c => c.tagName === node.tagName).indexOf(node) + 1;
-                    path = parent.tagName.toLowerCase() + ' > ' + node.tagName.toLowerCase() + `:nth-of-type(${ '$' }{idx})`;
+                    path = parent.tagName.toLowerCase() + ' > ' + node.tagName.toLowerCase() + `:nth-of-type(${'$'}{idx})`;
                 }
                 node = parent;
             }

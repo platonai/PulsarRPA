@@ -1,6 +1,7 @@
 package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.common.printlnPro
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Tag
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -21,7 +22,7 @@ class Text2WebDriverActionDescriptionTests: TTATestBase() {
 如何打开一个网页？
         """.trimIndent()
 
-        val response = textToAction.generateWithSourceCode(prompt)
+        val response = runBlocking { textToAction.generateWithSourceCode(prompt) }
         lastResponse = response
         printlnPro(response.content)
 
@@ -34,7 +35,7 @@ class Text2WebDriverActionDescriptionTests: TTATestBase() {
 打开一个网页，然后滚动到页面30%位置。
         """.trimIndent()
 
-        val response = textToAction.generateWithSourceCode(prompt)
+        val response = runBlocking { textToAction.generateWithSourceCode(prompt) }
         lastResponse = response
         printlnPro(response.content)
 
@@ -47,7 +48,7 @@ class Text2WebDriverActionDescriptionTests: TTATestBase() {
 打开一个网页，然后滚动到页面30%位置，然后滚动到页面顶部，最后截取页面快照。
         """.trimIndent()
 
-        val response = textToAction.generateWithSourceCode(prompt)
+        val response = runBlocking { textToAction.generateWithSourceCode(prompt) }
         lastResponse = response
         printlnPro(response.content)
 
