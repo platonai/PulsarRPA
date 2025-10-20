@@ -1,6 +1,7 @@
 package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCall
 
 data class InteractiveElement(
     val id: String,
@@ -37,25 +38,25 @@ data class ElementBounds(
 )
 
 data class ActionDescription(
-    val expressions: List<String>,
-    val selectedElement: InteractiveElement?,
+    @Deprecated("Use toolCall instead.", ReplaceWith("toolCall"))
+    val expressions: List<String> = emptyList(),
     val modelResponse: ModelResponse,
-) {
-    companion object {
-        val LLM_NOT_AVAILABLE = ActionDescription(listOf(), null, ModelResponse.LLM_NOT_AVAILABLE)
-    }
-}
+    val toolCall: ToolCall? = null,
+    val selectedElement: InteractiveElement? = null,
+)
 
 data class InstructionResult(
-    val functionCalls: List<String>,
+    val expressions: List<String>,
     val functionResults: List<Any?>,
     val modelResponse: ModelResponse,
+    val toolCall: List<ToolCall> = emptyList(),
 ) {
     companion object {
         val LLM_NOT_AVAILABLE = InstructionResult(
-            listOf(),
-            listOf(),
+            emptyList(),
+            emptyList(),
             modelResponse = ModelResponse.LLM_NOT_AVAILABLE,
+            emptyList(),
         )
     }
 }

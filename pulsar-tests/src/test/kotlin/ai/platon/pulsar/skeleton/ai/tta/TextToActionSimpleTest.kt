@@ -28,7 +28,7 @@ class TextToActionSimpleTest : TextToActionTestBase() {
                 printlnPro("  - ${element.tagName}#${element.id}: '${element.text.take(30)}' selector: ${element.selector}")
             }
 
-            val actionDescription = textToAction.generateWebDriverActionBlocking(prompt, driver)
+            val actionDescription = textToAction.generateBlocking(prompt, driver)
 
             assertNotNull(actionDescription)
             printlnPro("Generated ${actionDescription.expressions.size} function calls")
@@ -55,7 +55,7 @@ class TextToActionSimpleTest : TextToActionTestBase() {
                 printlnPro("  - ${element.tagName}#${element.id}: '${element.text.take(30)}' selector: ${element.selector}")
             }
 
-            val actionDescription = textToAction.generateWebDriverActionBlocking("填写用户名 'testuser'", driver)
+            val actionDescription = textToAction.generateBlocking("填写用户名 'testuser'", driver)
 
             assertNotNull(actionDescription)
             printlnPro("Model response: ${actionDescription.modelResponse.content}")

@@ -36,7 +36,7 @@ get the text of the element with id 'title'
                 session.bindDriver(driver)
                 val result = session.instruct(prompt)
                 println(result.modelResponse)
-                result.functionCalls.forEachIndexed { i, functionCall ->
+                result.expressions.forEachIndexed { i, functionCall ->
                     println()
                     println("> $functionCall")
                     val functionResult = result.functionResults.getOrNull(i)

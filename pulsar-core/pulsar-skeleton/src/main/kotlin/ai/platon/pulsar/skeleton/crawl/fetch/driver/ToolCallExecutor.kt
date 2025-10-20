@@ -779,12 +779,12 @@ stop()
 
             if (openIdx == -1 || closeIdx == -1 || closeIdx <= openIdx) return null
 
-            val header = s.substring(0, openIdx).trim()
+            val header = s.take(openIdx).trim()
             val argsRegion = s.substring(openIdx + 1, closeIdx)
 
             val dot = header.lastIndexOf('.')
             if (dot <= 0 || dot >= header.length - 1) return null
-            val objectName = header.substring(0, dot).trim()
+            val objectName = header.take(dot).trim()
             val functionName = header.substring(dot + 1).trim()
             if (objectName.isEmpty() || functionName.isEmpty()) return null
 
@@ -915,6 +915,7 @@ stop()
             .replace("\\", "\\\\")
             .replace("\"", "\\\"")
 
+        @Deprecated("deprecated")
         fun toolCallToExpression(tc: ToolCall): String? = when (tc.name) {
             // Navigation
             "navigateTo" -> tc.args["url"]?.toString()?.let { "driver.navigateTo(\"${it.esc()}\")" }

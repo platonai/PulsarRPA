@@ -1,6 +1,7 @@
 package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.ExperimentalApi
 import ai.platon.pulsar.common.ai.llm.PromptTemplate
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
@@ -42,14 +43,6 @@ open class TextToAction(val conf: ImmutableConfig) {
             .render(mapOf("webDriverSourceCode" to webDriverSourceCode))
     }
 
-    open fun generateWebDriverActionBlocking(
-        instruction: String,
-        driver: WebDriver,
-        screenshotB64: String? = null,
-    ): ActionDescription {
-        return runBlocking { generateWebDriverAction(instruction, driver, screenshotB64) }
-    }
-
     /**
      * Generate EXACT ONE WebDriver action with interactive elements.
      *
@@ -57,7 +50,7 @@ open class TextToAction(val conf: ImmutableConfig) {
      * @param driver The driver to use to collect the context, such as interactive elements
      * @return The action description
      * */
-    open suspend fun generateWebDriverAction(
+    open suspend fun generate(
         instruction: String,
         driver: WebDriver,
         screenshotB64: String? = null,
@@ -65,7 +58,7 @@ open class TextToAction(val conf: ImmutableConfig) {
         try {
             val interactiveElements = extractInteractiveElements(driver)
 
-            return generateWebDriverAction(instruction, interactiveElements, screenshotB64)
+            return generate(instruction, interactiveElements, screenshotB64)
         } catch (e: Exception) {
             val errorResponse = ModelResponse(
                 """
@@ -74,8 +67,24 @@ open class TextToAction(val conf: ImmutableConfig) {
                 }
             """.trimIndent(), ResponseState.OTHER
             )
-            return ActionDescription(emptyList(), null, errorResponse)
+            return ActionDescription(emptyList(), errorResponse, null, null)
         }
+    }
+
+    open suspend fun generate(
+        instruction: String,
+        interactiveElements: List<InteractiveElement> = listOf(),
+        screenshotB64: String? = null
+    ): ActionDescription {
+        return generateWithToolCallSpecsDeferred(instruction, interactiveElements, screenshotB64, 1)
+    }
+
+    open fun generateBlocking(
+        instruction: String,
+        driver: WebDriver,
+        screenshotB64: String? = null,
+    ): ActionDescription {
+        return runBlocking { generate(instruction, driver, screenshotB64) }
     }
 
     /**
@@ -85,34 +94,26 @@ open class TextToAction(val conf: ImmutableConfig) {
      * @param driver The driver to use to collect the context, such as interactive elements
      * @return The action description
      * */
-    open fun generateWebDriverActionBlocking(
+    open fun generateBlocking(
         instruction: String,
         interactiveElements: List<InteractiveElement> = listOf(),
         screenshotB64: String? = null
     ): ActionDescription {
         return runBlocking {
-            generateWebDriverActionsWithToolCallSpecsDeferred(instruction, interactiveElements, screenshotB64, 1)
+            generateWithToolCallSpecsDeferred(instruction, interactiveElements, screenshotB64, 1)
         }
     }
 
-    open suspend fun generateWebDriverAction(
-        instruction: String,
-        interactiveElements: List<InteractiveElement> = listOf(),
-        screenshotB64: String? = null
-    ): ActionDescription {
-        return generateWebDriverActionsWithToolCallSpecsDeferred(instruction, interactiveElements, screenshotB64, 1)
-    }
-
-    open fun generateWebDriverActionsWithToolCallSpecs(
+    open fun generateWithToolCallSpecs(
         instruction: String,
         interactiveElements: List<InteractiveElement> = listOf(),
         screenshotB64: String? = null,
         toolCallLimit: Int = 100,
     ): ActionDescription {
-        return runBlocking { generateWebDriverActionsWithToolCallSpecsDeferred(instruction, interactiveElements, screenshotB64, toolCallLimit) }
+        return runBlocking { generateWithToolCallSpecsDeferred(instruction, interactiveElements, screenshotB64, toolCallLimit) }
     }
 
-    open suspend fun generateWebDriverActionsWithToolCallSpecsDeferred(
+    open suspend fun generateWithToolCallSpecsDeferred(
         instruction: String,
         interactiveElements: List<InteractiveElement> = listOf(),
         screenshotB64: String? = null,
@@ -134,14 +135,16 @@ open class TextToAction(val conf: ImmutableConfig) {
         return modelResponseToActionDescription(response, toolCallLimit)
     }
 
-    open fun generateWebDriverActionsWithSourceCode(
+    @ExperimentalApi
+    open fun generateWithSourceCode(
         command: String,
         interactiveElements: List<InteractiveElement> = listOf()
     ): ModelResponse {
-        return runBlocking { generateWebDriverActionsWithSourceCodeDeferred(command, interactiveElements) }
+        return runBlocking { generateActionsFromSourceCodeDeferred(command, interactiveElements) }
     }
 
-    open suspend fun generateWebDriverActionsWithSourceCodeDeferred(
+    @ExperimentalApi
+    open suspend fun generateActionsFromSourceCodeDeferred(
         command: String,
         interactiveElements: List<InteractiveElement> = listOf()
     ): ModelResponse {
@@ -215,7 +218,7 @@ $AGENT_SYSTEM_PROMPT
         } else {
             response.content.split("\n").map { it.trim() }.filter { it.startsWith("driver.") && it.contains("(") }
         }
-        return ActionDescription(functionCalls, null, response)
+        return ActionDescription(functionCalls, response, null, null)
     }
 
     // Proper JSON parsing with Gson instead of ad-hoc regex

@@ -287,21 +287,21 @@ $schemaContract
     /**
      * Observe result schema:
      * ```json
-     * { "elements": [ { "selector": string, "description": string, "method": string, "arguments": [{"name": string, "value": string}] } ] }
+     * { "elements": [ { "locator": string, "description": string, "method": string, "arguments": [{"name": string, "value": string}] } ] }
      * ```
      * */
     private fun buildObserveResultSchemaContract(params: ObserveParams): String {
         // Build schema hint for the LLM (prompt-enforced)
 
         val actionFields = if (params.returnAction) {
-            """, "method": string, "arguments": [{"name": string, "value": string}]"""
+            """, "method": string, "arguments": [{"name": string, "value": string}] """
         } else ""
 
         val schema = """
 {
   "elements": [
     {
-      "selector": string,
+      "locator": string,
       "description": string$actionFields
     }
   ]
@@ -314,7 +314,8 @@ $schemaContract
 你必须返回一个与以下模式匹配的有效 JSON 对象：
 $schema
 
-- 保证 `locator` 与无障碍树节点属性保持一致
+- 保证 `locator` 与无障碍树节点属性一致
+- 不提供不能确定的参数
 - 禁止包含任何额外文本
 """.trimIndent()
         } else {
@@ -324,6 +325,7 @@ You MUST respond with a valid JSON object matching this schema:
 $schema
 
 - The locator must be identical to the corresponding accessibility tree node attributes
+- Do not provide parameters that cannot be determined
 - Must not include any extra text
 """.trimIndent()
         }
@@ -332,16 +334,17 @@ $schema
     /**
      * Builds the instruction for the observeAct method to find the most relevant element for an action
      */
-    fun buildActObservePrompt(
+    fun buildToolUsePrompt(
         action: String, toolCalls: List<String>, variables: Map<String, String>? = null
     ): String {
         // Base instruction
         val instruction = if (isCN) {
             """
-根据以下动作查找最相关的页面元素：$action。
-为该元素提供一个动作，支持的动作如下（Kotlin 语法）：
+根据以下动作查找最相关的页面元素：$action。为该元素提供一个工具来执行该动作。
 
-```
+## 支持的工具列表
+
+```kotlin
 ${toolCalls.joinToString("\n")}
 ```
 
@@ -352,9 +355,11 @@ ${toolCalls.joinToString("\n")}
         } else {
             """
 Find the most relevant element to perform an action on given the following action: $action.
-Provide an action for this element, supported actions (Kotlin syntax):
+Provide a tool to perform the action for this element.
 
-```
+## Supported Tool List
+
+```kotlin
 ${toolCalls.joinToString("\n")}
 ```
 
@@ -365,79 +370,5 @@ ONLY return one action. If multiple actions are relevant, return the most releva
         }
 
         return instruction
-    }
-
-    fun buildOperatorSystemPrompt(goal: String): SimpleMessage {
-        val contentCN = """
-你是一名通用型代理，负责通过在页面上执行操作，在多次模型调用中完成用户的目标。
-
-你将获得一个目标以及到目前为止所采取步骤的列表。你的任务是判断用户的目标是否已经完成，或者是否仍需要继续执行后续步骤。
-
-# 你当前的目标
-$goal
-
-# 重要：你必须使用提供的工具来执行操作。不要只描述你打算做什么——要实际调用合适的工具。
-
-# 可用工具及其使用时机：
-- `act`：用于与页面交互（点击、输入、导航等）
-- `extract`：用于从页面获取信息
-- `goto`：用于导航到指定 URL
-- `wait`：用于等待一段时间
-- `navback`：用于返回上一页
-- `refresh`：用于刷新当前页面
-- `close`：仅在任务完成或无法实现时使用
-- 外部工具：根据你的目标需要，可使用其他附加工具（例如搜索工具）
-
-# 重要指南
-1. 始终使用工具——不要只提供关于计划的文本响应
-2. 将复杂操作拆解为独立的原子步骤
-3. 对于 `act` 命令，每次只执行一个动作，例如：
-   - 对某个具体元素执行单次点击
-   - 在一个输入框中输入内容
-   - 选择一个选项
-4. 避免在一个指令中组合多个动作
-5. 如果需要多个动作，应将它们作为独立步骤依次执行
-6. 只有当任务真正完成或无法实现时才使用 `close`
-""".trimIndent()
-
-        val contentEN = """
-You are a general-purpose agent whose job is to accomplish the user's goal across multiple model calls by running actions on the page.
-
-You will be given a goal and a list of steps that have been taken so far. Your job is to determine if either the user's
-goal has been completed or if there are still steps that need to be taken.
-
-# Your current goal
-$goal
-
-# CRITICAL: You MUST use the provided tools to take actions. Do not just describe what you want to do - actually call the appropriate tools.
-
-# Available tools and when to use them:
-- `act`: Use this to interact with the page (click, type, navigate, etc.)
-- `extract`: Use this to get information from the page
-- `goto`: Use this to navigate to a specific URL
-- `wait`: Use this to wait for a period of time
-- `navback`: Use this to go back to the previous page
-- `refresh`: Use this to refresh the current page
-- `close`: Use this ONLY when the task is complete or cannot be achieved
-- External tools: Use any additional tools (like search tools) as needed for your goal
-
-# Important guidelines
-1. ALWAYS use tools - never just provide text responses about what you plan to do
-2. Break down complex actions into individual atomic steps
-3. For `act` commands, use only one action at a time, such as:
-   - Single click on a specific element
-   - Type into a single input field
-   - Select a single option
-4. Avoid combining multiple actions in one instruction
-5. If multiple actions are needed, they should be separate steps
-6. Only use `close` when the task is genuinely complete or impossible to achieve
-""".trimIndent()
-
-        val content = if (isCN) contentCN else contentEN
-
-        return SimpleMessage(
-            role = "system",
-            content = content,
-        )
     }
 }

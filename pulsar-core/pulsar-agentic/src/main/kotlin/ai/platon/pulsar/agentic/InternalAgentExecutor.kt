@@ -34,35 +34,29 @@ internal class InternalAgentExecutor(
     }
 
     suspend fun performAct(action: ActionDescription): InstructionResult {
-        if (action.expressions.isEmpty()) {
-            return InstructionResult(listOf(), listOf(), action.modelResponse)
+        if (action.expressions.isEmpty() && action.toolCall == null) {
+            return InstructionResult(listOf(), functionResults = listOf(), modelResponse = action.modelResponse)
         }
-        val functionCalls = action.expressions
 
-        // Dispatches and executes each action using a SimpleCommandDispatcher.
         val dispatcher = ToolCallExecutor()
-        val functionResults = functionCalls.map { action ->
-            dispatcher.execute(action, driver)
+        val result = if (action.toolCall != null) {
+            dispatcher.execute(action.toolCall, driver)
+        } else {
+            val functionCalls = action.expressions.take(1)
+            functionCalls.map { fc -> dispatcher.execute(fc, driver) }.firstOrNull()
         }
-        return InstructionResult(action.expressions, functionResults, action.modelResponse)
+
+        return InstructionResult(action.expressions, functionResults = listOf(result), modelResponse = action.modelResponse)
     }
 
-    suspend fun execute(action: ActionDescription): InstructionResult {
-        if (action.expressions.isEmpty()) {
-            return InstructionResult(listOf(), listOf(), action.modelResponse)
-        }
-        val functionCalls = action.expressions.take(1)
-        val dispatcher = ToolCallExecutor()
-        val functionResults = functionCalls.map { fc -> dispatcher.execute(fc, driver) }
-        return InstructionResult(action.expressions, functionResults, action.modelResponse)
-    }
+    suspend fun execute(action: ActionDescription) = performAct(action)
 
     @Deprecated("Use act instead", replaceWith = ReplaceWith("act(action)"))
     suspend fun instruct(prompt: String): InstructionResult {
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
         val tta = TextToAction(conf)
 
-        val actions = tta.generateWebDriverActionsWithToolCallSpecsDeferred(prompt)
+        val actions = tta.generateWithToolCallSpecsDeferred(prompt)
 
         // Dispatches and executes each action using a SimpleCommandDispatcher.
         val dispatcher = ToolCallExecutor()

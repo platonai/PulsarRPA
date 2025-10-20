@@ -121,8 +121,11 @@ class BrowserPerceptiveAgent(
 
         val domain = "driver"
         val methodName = method
+        val backendNodeId = observe.backendNodeId
+        // backend selector is supported since 20251020
+        val selector = observe.backendNodeId?.let { "backend:$backendNodeId" }
         if (methodName in selectorActions) {
-            val selector = locator?.absoluteSelector ?: toolArgs["selector"]?.toString()
+            // val selector = locator?.absoluteSelector ?: toolArgs["selector"]?.toString()
             toolArgs["selector"] = selector
             if (selector == null) {
                 val msg = "A selector is required for $locator | $observe"
@@ -182,18 +185,12 @@ class BrowserPerceptiveAgent(
             name = methodName,
             args = toolArgs
         )
-        val expression = ToolCallExecutor.toolCallToExpression(toolCall)
-        if (expression == null) {
-            val msg = "Can convert tool call to expression | $toolCall"
-            logger.warn("Invalid tool call | {}", msg)
-            return ActResult(false, msg, action = observe.description)
-        }
 
         // Execute via WebDriver dispatcher
         return try {
             val actionDesc = ActionDescription(
-                expressions = listOf(expression),
-                selectedElement = null,
+                expressions = listOf(),
+                toolCall = toolCall,
                 modelResponse = ModelResponse(
                     content = "ObserveResult action: ${observe.description}",
                     state = ResponseState.STOP
@@ -202,11 +199,11 @@ class BrowserPerceptiveAgent(
             execute(actionDesc)
 
             val msg = "Action [$methodName] executed on selector: $locator".trim()
-            addToHistory("observe.act -> $expression")
+            addToHistory("observe.act -> ${toolCall.name}")
             ActResult(
                 success = true,
                 message = msg,
-                action = expression
+                action = toolCall.name
             )
         } catch (e: Exception) {
             logError("observe.act execution failed", e, uuid.toString())
@@ -282,6 +279,17 @@ class BrowserPerceptiveAgent(
     }
 
     protected suspend fun execute(action: ActionDescription): InstructionResult {
+        val toolCall = action.toolCall
+        if (toolCall == null) {
+            return InstructionResult(listOf(), listOf(), action.modelResponse)
+        }
+
+        val dispatcher = ToolCallExecutor()
+        val result = dispatcher.execute(toolCall, driver)
+        return InstructionResult(action.expressions, listOf(result), action.modelResponse)
+    }
+
+    protected suspend fun executeLegacy(action: ActionDescription): InstructionResult {
         if (action.expressions.isEmpty()) {
             return InstructionResult(listOf(), listOf(), action.modelResponse)
         }
@@ -310,7 +318,7 @@ class BrowserPerceptiveAgent(
     private suspend fun doObserveAct(action: ActionOptions): ActResult {
         // 1) Build instruction for action-oriented observe
         val toolCalls = ToolCallExecutor.SUPPORTED_TOOL_CALLS
-        val instruction = promptBuilder.buildActObservePrompt(action.action, toolCalls, action.variables)
+        val instruction = promptBuilder.buildToolUsePrompt(action.action, toolCalls, action.variables)
         require(instruction.contains("click")) {
             "Instruction must contains tool list for action: $action"
         }
@@ -594,7 +602,7 @@ class BrowserPerceptiveAgent(
                 consecutiveNoOps = 0
 
                 // Execute the tool call with enhanced error handling
-                val execSummary = doExecuteToolCall(toolCall, stepActionResult, step, stepContext)
+                val execSummary = doExecuteToolCall(stepActionResult, step, stepContext)
 
                 if (execSummary != null) {
                     addToHistory("#$step $execSummary")
@@ -779,7 +787,7 @@ class BrowserPerceptiveAgent(
     ): ActionDescription? {
         return try {
             // Use overload supplying extracted elements to avoid re-extraction
-            tta.generateWebDriverAction(message, interactiveElements, screenshotB64)
+            tta.generate(message, interactiveElements, screenshotB64)
         } catch (e: Exception) {
             logError("Action generation failed", e, context.sessionId)
             consecutiveFailureCounter.incrementAndGet()
@@ -791,11 +799,11 @@ class BrowserPerceptiveAgent(
      * Executes tool call with enhanced error handling and validation
      */
     private suspend fun doExecuteToolCall(
-        toolCall: ToolCall,
         action: ActionDescription,
         step: Int,
         context: ExecutionContext
     ): String? {
+        val toolCall = requireNotNull(action.toolCall) { "Tool call is required" }
         if (config.enablePreActionValidation && !validateToolCall(toolCall)) {
             logStructured(
                 "Tool call validation failed",

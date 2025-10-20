@@ -20,7 +20,7 @@ class TextToActionBasicTest {
         val functionCalls = listOf("driver.click(\"#button\")")
         val modelResponse = ModelResponse("Test response", ai.platon.pulsar.external.ResponseState.STOP)
 
-        val actionDescription = ActionDescription(functionCalls, null, modelResponse)
+        val actionDescription = ActionDescription(functionCalls, modelResponse)
 
         assertNotNull(actionDescription)
         assertEquals(functionCalls, actionDescription.expressions)
@@ -32,7 +32,7 @@ class TextToActionBasicTest {
     fun `When ActionDescription is created with empty function calls then functionCalls is empty`() {
         val modelResponse = ModelResponse("Test response", ai.platon.pulsar.external.ResponseState.STOP)
 
-        val actionDescription = ActionDescription(emptyList(), null, modelResponse)
+        val actionDescription = ActionDescription(emptyList(), modelResponse)
 
         assertTrue(actionDescription.expressions.isEmpty())
         assertEquals(0, actionDescription.expressions.size)
@@ -47,7 +47,7 @@ class TextToActionBasicTest {
         val instructionResult = InstructionResult(functionCalls, functionResults, modelResponse)
 
         assertNotNull(instructionResult)
-        assertEquals(functionCalls, instructionResult.functionCalls)
+        assertEquals(functionCalls, instructionResult.expressions)
         assertEquals(functionResults, instructionResult.functionResults)
         assertEquals(modelResponse, instructionResult.modelResponse)
     }
@@ -56,7 +56,7 @@ class TextToActionBasicTest {
     fun `When LLM_NOT_AVAILABLE is used then it has correct structure`() {
         val llmNotAvailable = InstructionResult.LLM_NOT_AVAILABLE
 
-        assertTrue(llmNotAvailable.functionCalls.isEmpty())
+        assertTrue(llmNotAvailable.expressions.isEmpty())
         assertTrue(llmNotAvailable.functionResults.isEmpty())
         assertEquals("LLM not available", llmNotAvailable.modelResponse.content)
         assertEquals(ai.platon.pulsar.external.ResponseState.OTHER, llmNotAvailable.modelResponse.state)

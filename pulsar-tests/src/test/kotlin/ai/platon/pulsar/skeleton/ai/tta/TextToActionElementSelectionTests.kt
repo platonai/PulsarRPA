@@ -30,7 +30,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
             driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
             driver.waitForSelector("body")
 
-            val actionDescription = textToAction.generateWebDriverActionBlocking("点击第一个提交按钮", driver)
+            val actionDescription = textToAction.generateBlocking("点击第一个提交按钮", driver)
 
             assertNotNull(actionDescription)
             assertEquals(
@@ -51,7 +51,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverActionBlocking("点击关于链接", driver)
+        val actionDescription = textToAction.generateBlocking("点击关于链接", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -69,7 +69,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
             driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
             driver.waitForSelector("body")
 
-            val actionDescription = textToAction.generateWebDriverActionBlocking("填写邮箱地址", driver)
+            val actionDescription = textToAction.generateBlocking("填写邮箱地址", driver)
 
             assertNotNull(actionDescription)
             assertEquals(
@@ -93,7 +93,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverActionBlocking("点击顶部的搜索按钮", driver)
+        val actionDescription = textToAction.generateBlocking("点击顶部的搜索按钮", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -110,7 +110,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverActionBlocking("在表单中填写用户名", driver)
+        val actionDescription = textToAction.generateBlocking("在表单中填写用户名", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -131,7 +131,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val actionDescription =
-            textToAction.generateWebDriverActionBlocking("点击 data-testid 为 submit-primary 的按钮", driver)
+            textToAction.generateBlocking("点击 data-testid 为 submit-primary 的按钮", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -151,7 +151,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
             driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
             driver.waitForSelector("body")
 
-            val actionDescription = textToAction.generateWebDriverActionBlocking("点击 aria-label 为 主要提交 的按钮", driver)
+            val actionDescription = textToAction.generateBlocking("点击 aria-label 为 主要提交 的按钮", driver)
 
             assertNotNull(actionDescription)
             assertEquals(
@@ -174,7 +174,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverActionBlocking("填写带有占位符的输入框", driver)
+        val actionDescription = textToAction.generateBlocking("填写带有占位符的输入框", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -194,7 +194,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverActionBlocking("点击显示结果的按钮", driver)
+        val actionDescription = textToAction.generateBlocking("点击显示结果的按钮", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -211,7 +211,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverActionBlocking("点击联系我们的链接", driver)
+        val actionDescription = textToAction.generateBlocking("点击联系我们的链接", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -231,7 +231,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
             driver.navigateTo("$generatedAssetsBaseURL/tta/forms-advanced-test.html")
             driver.waitForSelector("body")
 
-            val actionDescription = textToAction.generateWebDriverActionBlocking("填写邮箱输入框", driver)
+            val actionDescription = textToAction.generateBlocking("填写邮箱输入框", driver)
 
             assertNotNull(actionDescription)
             assertEquals(
@@ -253,7 +253,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/forms-advanced-test.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverActionBlocking("输入密码", driver)
+        val actionDescription = textToAction.generateBlocking("输入密码", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -273,7 +273,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverActionBlocking("点击带有 primary 类的按钮", driver)
+        val actionDescription = textToAction.generateBlocking("点击带有 primary 类的按钮", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -293,7 +293,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
             driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
             driver.waitForSelector("body")
 
-            val actionDescription = textToAction.generateWebDriverActionBlocking("在第一个区域中点击按钮", driver)
+            val actionDescription = textToAction.generateBlocking("在第一个区域中点击按钮", driver)
 
             assertNotNull(actionDescription)
             assertEquals(
@@ -316,7 +316,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverActionBlocking("点击搜索按钮", driver)
+        val actionDescription = textToAction.generateBlocking("点击搜索按钮", driver)
 
         assertNotNull(actionDescription)
         printlnPro("Selected element: ${actionDescription.selectedElement}")
@@ -336,7 +336,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateWebDriverActionBlocking("点击主要的提交按钮", driver)
+        val actionDescription = textToAction.generateBlocking("点击主要的提交按钮", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")

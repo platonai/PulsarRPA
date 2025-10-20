@@ -33,7 +33,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
-            val result = tta.generateWebDriverActionBlocking(prompt)
+            val result = tta.generateBlocking(prompt)
 
             assertNotNull(result)
             // Must generate at least one function call
@@ -56,7 +56,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
-            val result = tta.generateWebDriverActionBlocking(prompt)
+            val result = tta.generateBlocking(prompt)
 
             assertNotNull(result)
             // Must generate at least one function call
@@ -75,7 +75,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
         val prompt = "打开网页 https://www.google.com"
 
         runEnhancedWebDriverTest { driver ->
-            val result = tta.generateWebDriverActionBlocking(prompt)
+            val result = tta.generateBlocking(prompt)
 
             assertNotNull(result)
             // Must generate at least one function call
@@ -98,7 +98,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
-            val result = tta.generateWebDriverActionBlocking(prompt)
+            val result = tta.generateBlocking(prompt)
 
             assertNotNull(result)
             // Must generate at least one function call
@@ -121,7 +121,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
-            val result = tta.generateWebDriverActionBlocking(prompt)
+            val result = tta.generateBlocking(prompt)
 
             assertNotNull(result)
             // Must generate at least one function call
@@ -144,7 +144,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
-            val result = tta.generateWebDriverActionBlocking(prompt)
+            val result = tta.generateBlocking(prompt)
 
             assertNotNull(result)
             // Must generate at least one function call
@@ -167,7 +167,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
-            val result = tta.generateWebDriverActionBlocking(prompt)
+            val result = tta.generateBlocking(prompt)
 
             assertNotNull(result)
             // Must generate at least one function call
@@ -186,7 +186,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
-            val result = tta.generateWebDriverActionBlocking(prompt)
+            val result = tta.generateBlocking(prompt)
 
             assertNotNull(result)
             // Must generate at least one function call
@@ -203,9 +203,9 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             driver.navigateTo(actMockSiteHomeURL)
             driver.waitForSelector("body")
 
-            val result1 = tta.generateWebDriverActionBlocking("点击搜索")
-            val result2 = tta.generateWebDriverActionBlocking("滚动页面")
-            val result3 = tta.generateWebDriverActionBlocking("等待元素")
+            val result1 = tta.generateBlocking("点击搜索")
+            val result2 = tta.generateBlocking("滚动页面")
+            val result3 = tta.generateBlocking("等待元素")
 
             // Each call should be independent
             assertNotNull(result1)
@@ -238,7 +238,7 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             driver.waitForSelector("body")
 
             testCases.forEach { (prompt, _) ->
-                val result = tta.generateWebDriverActionBlocking(prompt)
+                val result = tta.generateBlocking(prompt)
 
                 assertNotNull(result, "Result should not be null for prompt: $prompt")
                 assertTrue(result.expressions.isNotEmpty(), "Should generate at least one action for: $prompt")
