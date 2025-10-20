@@ -26,7 +26,18 @@ data class AgentConfig(
     val memoryCleanupIntervalSteps: Int = 50,
     val maxHistorySize: Int = 100,
     val enableAdaptiveDelays: Boolean = true,
-    val enablePreActionValidation: Boolean = true
+    val enablePreActionValidation: Boolean = true,
+    // New configuration options for fixes
+    val actTimeoutMs: Long = 30000,
+    val llmInferenceTimeoutMs: Long = 60000,
+    val maxResultsToTry: Int = 3,
+    val screenshotEveryNSteps: Int = 1,
+    val domSettleTimeoutMs: Long = 2000,
+    val domSettleCheckIntervalMs: Long = 100,
+    val allowLocalhost: Boolean = false,
+    val allowedPorts: Set<Int> = setOf(80, 443, 8080, 8443, 3000, 5000, 8000, 9000),
+    val maxSelectorLength: Int = 1000,
+    val denyUnknownActions: Boolean = true
 )
 
 /**
