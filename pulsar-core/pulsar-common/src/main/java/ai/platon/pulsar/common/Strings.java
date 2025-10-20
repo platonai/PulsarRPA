@@ -740,6 +740,11 @@ public final class Strings {
         return log.replaceAll("[\\s\\u00A0]+", " ").trim();
     }
 
+    public static String compactLog(String log, int maxWidth) {
+        if (log == null) return null;
+        return StringUtils.abbreviate(compactLog(log), maxWidth);
+    }
+
     /**
    * Formats a decimal number in its compact, readable form.
    *

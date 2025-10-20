@@ -1,5 +1,6 @@
 package ai.platon.pulsar.external.impl
 
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -248,7 +249,7 @@ open class CachedBrowserChatModel(
 
         val modelResponse = ModelResponse(response.aiMessage().text().trim(), state, tokenUsage)
         if (logger.isInfoEnabled) {
-            val log = StringUtils.abbreviate(modelResponse.content, 100).replace("\n", " ")
+            val log = Strings.compactLog(modelResponse.content, 100)
             logger.info(
                 "◀ Chat - token: {} | [len: {}] {}",
                 modelResponse.tokenUsage.totalTokenCount,
