@@ -40,9 +40,9 @@ interface DomService {
      */
     fun buildDOMState(root: TinyTree, includeAttributes: List<String> = emptyList()): DOMState
 
-    suspend fun buildBrowserState(domState: DOMState): BrowserState
+    suspend fun buildBrowserState(domState: DOMState): BrowserUseState
 
-    suspend fun getBrowserState(snapshotOptions: SnapshotOptions): BrowserState
+    suspend fun getActiveDOMState(snapshotOptions: SnapshotOptions): BrowserUseState
 
     /**
      * Compute a rich client profile from the active browser context.

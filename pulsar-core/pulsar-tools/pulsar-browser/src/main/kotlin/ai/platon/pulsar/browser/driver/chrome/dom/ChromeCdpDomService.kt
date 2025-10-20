@@ -36,6 +36,27 @@ class ChromeCdpDomService(
     @Volatile
     private var lastDomByBackend: Map<Int, DOMTreeNodeEx> = emptyMap()
 
+    override suspend fun getActiveDOMState(snapshotOptions: SnapshotOptions): BrowserUseState {
+        val allTrees = getMultiDOMTrees(options = snapshotOptions)
+        if (logger.isDebugEnabled) {
+            logger.debug("allTrees summary: \n{}", DomDebug.summarize(allTrees))
+        }
+
+        val tinyTree = buildTinyTree(allTrees)
+        if (logger.isDebugEnabled) {
+            logger.debug("tinyTree summary: \n{}", DomDebug.summarize(tinyTree))
+        }
+
+        val domState = buildDOMState(tinyTree)
+        if (logger.isDebugEnabled) {
+            val json = DOMStateBuilder.toJson(domState.microTree)
+            logger.debug("browserState summary: \n{}", DomDebug.summarize(domState))
+            logger.debug("browserState.json: \nlength: {}\n{}", json.length, json)
+        }
+
+        return buildBrowserState(domState)
+    }
+
     override suspend fun getMultiDOMTrees(target: PageTarget, options: SnapshotOptions): TargetMultiTrees {
         val startTime = System.currentTimeMillis()
         val timings = mutableMapOf<String, Long>()
@@ -264,7 +285,7 @@ class ChromeCdpDomService(
         return DOMStateBuilder.build(root, includeAttributes, options)
     }
 
-    override suspend fun buildBrowserState(domState: DOMState): BrowserState {
+    override suspend fun buildBrowserState(domState: DOMState): BrowserUseState {
         // URL from DOM domain (resilient)
         val url = runCatching { devTools.dom.document.documentURL }.getOrDefault("")
 
@@ -340,7 +361,7 @@ class ChromeCdpDomService(
             screenHeight = screenHeight
         )
 
-        val basicState = BrowserBasicState(
+        val basicState = BrowserState(
             url = url,
             goBackUrl = goBackUrl,
             goForwardUrl = goForwardUrl,
@@ -348,7 +369,7 @@ class ChromeCdpDomService(
             scrollState = scrollState
         )
 
-        return BrowserState(basicState, domState)
+        return BrowserUseState(basicState, domState)
     }
 
     override suspend fun computeFullClientInfo(): FullClientInfo {
@@ -745,27 +766,6 @@ class ChromeCdpDomService(
         // Lower stacking context values mean higher z-index
         val stackingFactor = (stackingContext ?: 0) * 1000
         return paintOrder + stackingFactor
-    }
-
-    override suspend fun getBrowserState(snapshotOptions: SnapshotOptions): BrowserState {
-        val allTrees = getMultiDOMTrees(options = snapshotOptions)
-        if (logger.isDebugEnabled) {
-            logger.debug("allTrees summary: \n{}", DomDebug.summarize(allTrees))
-        }
-
-        val tinyTree = buildTinyTree(allTrees)
-        if (logger.isDebugEnabled) {
-            logger.debug("tinyTree summary: \n{}", DomDebug.summarize(tinyTree))
-        }
-
-        val domState = buildDOMState(tinyTree)
-        if (logger.isDebugEnabled) {
-            val json = DOMStateBuilder.toJson(domState.compactTree)
-            logger.debug("browserState summary: \n{}", DomDebug.summarize(domState))
-            logger.debug("browserState.json: \nlength: {}\n{}", json.length, json)
-        }
-
-        return buildBrowserState(domState)
     }
 
     private fun getAccessibilityTree(target: PageTarget, options: SnapshotOptions): AccessibilityTreeResult {

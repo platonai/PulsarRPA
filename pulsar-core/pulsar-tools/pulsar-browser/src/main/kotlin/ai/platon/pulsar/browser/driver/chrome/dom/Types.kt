@@ -2,7 +2,12 @@ package ai.platon.pulsar.browser.driver.chrome.dom
 
 import ai.platon.pulsar.browser.driver.chrome.dom.model.CompactRect
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
+import ai.platon.pulsar.common.serialize.json.Double2Serializer
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.module.SimpleModule
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.awt.Dimension
 import java.util.*
 
@@ -12,7 +17,7 @@ import java.util.*
  * This prevents duplication since SimplifiedNode.children already contains them.
  */
 @JsonIgnoreProperties(value = ["nodeId", "backendNodeId", "frameId", "xpath", "elementHash"])
-data class CleanedDOMTreeNodeEx(
+data class CleanedDOMTreeNode(
     /**
      * Locator format: `frameIndex/backendNodeId`
      * */
@@ -38,7 +43,7 @@ data class CleanedDOMTreeNodeEx(
     val absoluteBounds: CompactRect? = null,
     val paintOrder: Int? = null,
     val stackingContexts: Int? = null,
-    val contentDocument: CleanedDOMTreeNodeEx?
+    val contentDocument: CleanedDOMTreeNode?
     // Note: children_nodes and shadow_roots are intentionally omitted
 )
 
@@ -46,25 +51,25 @@ data class CleanedDOMTreeNodeEx(
  * Serializable SimplifiedNode structure.
  * Enhanced with compound component marking and paint order information.
  */
-data class CompactDOMNode(
+data class MicroDOMTreeNode(
     val shouldDisplay: Boolean?,
     val interactiveIndex: Int?,
     val ignoredByPaintOrder: Boolean?,
     val excludedByParent: Boolean?,
     val isCompoundComponent: Boolean? = null,
-    val originalNode: CleanedDOMTreeNodeEx,
-    val children: List<CompactDOMNode>?,
+    val originalNode: CleanedDOMTreeNode,
+    val children: List<MicroDOMTreeNode>?,
     val shouldShowScrollInfo: Boolean?,
     val scrollInfoText: String?
 )
 
-typealias CompactDOMTree = CompactDOMNode
+typealias MicroDOMTree = MicroDOMTreeNode
 
 // Keep the serialization result as a top-level data class for reuse
 
 data class DOMState(
-    val compactTree: CompactDOMTree,
-    val interactiveNodes: List<CompactDOMNode>,
+    val microTree: MicroDOMTree,
+    val interactiveNodes: List<MicroDOMTreeNode>,
     val frameIds: List<String>,
     val selectorMap: Map<String, DOMTreeNodeEx>,
     val locatorMap: LocatorMap? = null
@@ -113,7 +118,7 @@ data class ScrollState(
     val scrollYRatio: Double,
 )
 
-data class BrowserBasicState(
+data class BrowserState(
     val url: String,
     val goBackUrl: String,
     val goForwardUrl: String,
@@ -121,7 +126,32 @@ data class BrowserBasicState(
     val scrollState: ScrollState
 )
 
-data class BrowserState(
-    val basicState: BrowserBasicState,
+data class BrowserUseState(
+    val browserState: BrowserState,
     val domState: DOMState
 )
+
+object DOMSerializer {
+    val MAPPER: ObjectMapper = jacksonObjectMapper().apply {
+        setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        val module = SimpleModule().apply {
+            addSerializer(Double::class.java, Double2Serializer())
+            // Keep double value length minimal
+            addSerializer(Double::class.javaPrimitiveType, Double2Serializer())
+        }
+        registerModule(module)
+    }
+
+    fun toJson(root: MicroDOMTree): String {
+        return MAPPER.writeValueAsString(root)
+    }
+
+    fun toJson(nodes: List<MicroDOMTreeNode>): String {
+        return MAPPER.writeValueAsString(nodes)
+    }
+
+    fun toJson(browserState: BrowserState): String {
+        return MAPPER.writeValueAsString(browserState)
+    }
+
+}

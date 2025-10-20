@@ -3,11 +3,10 @@ package ai.platon.pulsar.agentic.ai.agent
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.InstructionResult
-import ai.platon.pulsar.agentic.ai.tta.InteractiveElement
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
-import ai.platon.pulsar.browser.driver.chrome.dom.BrowserState
-import ai.platon.pulsar.browser.driver.chrome.dom.CompactDOMNode
-import ai.platon.pulsar.browser.driver.chrome.dom.DOMStateBuilder
+import ai.platon.pulsar.browser.driver.chrome.dom.BrowserUseState
+import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
+import ai.platon.pulsar.browser.driver.chrome.dom.MicroDOMTreeNode
 import ai.platon.pulsar.browser.driver.chrome.dom.DomDebug
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
@@ -246,13 +245,13 @@ class BrowserPerceptiveAgent(
 
         val schemaJson = buildSchemaJsonFromMap(options.schema)
         return try {
-            val browserState = getBrowserState()
+            val domState = getActiveDOMState()
 
-            val totalHeight = browserState.basicState.scrollState.totalHeight
-            val viewportHeight = browserState.basicState.scrollState.viewport.height
+            val totalHeight = domState.browserState.scrollState.totalHeight
+            val viewportHeight = domState.browserState.scrollState.viewport.height
             val params = ExtractParams(
                 instruction = instruction,
-                browserState = browserState,
+                browserUseState = domState,
                 schema = schemaJson,
                 chunksSeen = 0,
                 chunksTotal = ceil(totalHeight / viewportHeight).roundToInt(),
@@ -283,7 +282,7 @@ class BrowserPerceptiveAgent(
         return doObserve(options)
     }
 
-    private suspend fun getBrowserState(): BrowserState {
+    private suspend fun getActiveDOMState(): BrowserUseState {
         val snapshotOptions = SnapshotOptions(
             maxDepth = 1000,
             includeAX = true,
@@ -296,7 +295,7 @@ class BrowserPerceptiveAgent(
             includeInteractivity = true
         )
 
-        return domService.getBrowserState(snapshotOptions)
+        return domService.getActiveDOMState(snapshotOptions)
     }
 
     /**
@@ -350,10 +349,10 @@ class BrowserPerceptiveAgent(
     private suspend fun doObserve(options: ObserveOptions): List<ObserveResult> {
         val instruction = promptBuilder.initObserveUserInstruction(options.instruction)
 
-        val browserState = getBrowserState()
+        val browserState = getActiveDOMState()
         val params = ObserveParams(
             instruction = instruction,
-            browserState = browserState,
+            browserUseState = browserState,
             requestId = UUID.randomUUID().toString(),
             returnAction = options.returnAction ?: false,
             logInferenceToFile = config.enableStructuredLogging,
@@ -379,10 +378,10 @@ class BrowserPerceptiveAgent(
         }
 
         // 3) Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
-        val browserState = getBrowserState()
+        val browserState = getActiveDOMState()
         val params = ObserveParams(
             instruction = instruction,
-            browserState = browserState,
+            browserUseState = browserState,
             requestId = UUID.randomUUID().toString(),
             returnAction = true,
             logInferenceToFile = config.enableStructuredLogging,
@@ -448,7 +447,7 @@ class BrowserPerceptiveAgent(
         return ActResult(false, msg, action = action.action)
     }
 
-    private suspend fun doObserve1(params: ObserveParams, browserState: BrowserState): List<ObserveResult> {
+    private suspend fun doObserve1(params: ObserveParams, browserUseState: BrowserUseState): List<ObserveResult> {
         val requestId: String = params.requestId
 
         // params.instruction:
@@ -465,9 +464,9 @@ class BrowserPerceptiveAgent(
                 val selector = ele.selector.trim()
                 val frameIdIndex = selector.substringBefore("/").toIntOrNull()
                 val backendNodeId = selector.substringAfterLast("/").toIntOrNull()
-                val frameId = frameIdIndex?.let { browserState.domState.frameIds[it] }
+                val frameId = frameIdIndex?.let { browserUseState.domState.frameIds[it] }
                 val fbnLocator = "fbn:$frameId/$backendNodeId"
-                val node = browserState.domState.selectorMap[fbnLocator]
+                val node = browserUseState.domState.selectorMap[fbnLocator]
                 if (node == null) {
                     logger.warn("Failed retrieving backend node | {} | {}", fbnLocator, ele)
                 }
@@ -621,10 +620,8 @@ class BrowserPerceptiveAgent(
                 val stepStartTime = Instant.now()
                 val stepContext = context.copy(stepNumber = step, actionType = "step")
 
-                // Extract interactive elements each step (could be optimized via diffing later)
-                // val tinyTree = domService.buildtinyTree()
-                val browserState = getBrowserState()
-                // val browserState = tta.extractInteractiveElementsDeferred(driver)
+                // Extract interactive nodes each step (could be optimized via diffing later)
+                val browserState = getActiveDOMState()
 
                 // Medium Priority #10: Detect if page state hasn't changed
                 val unchangedCount = pageStateTracker.checkStateChange(browserState)
@@ -883,7 +880,7 @@ class BrowserPerceptiveAgent(
     private suspend fun generateStepActionWithRetry(
         message: String,
         context: ExecutionContext,
-        interactiveNodes: List<CompactDOMNode> = listOf(),
+        interactiveNodes: List<MicroDOMTreeNode> = listOf(),
         screenshotB64: String?
     ): ActionDescription? {
         return try {
@@ -1182,10 +1179,10 @@ class BrowserPerceptiveAgent(
         }
     }
 
-    private suspend fun buildUserMessage(instruction: String, browserState: BrowserState): String {
+    private suspend fun buildUserMessage(instruction: String, browserUseState: BrowserUseState): String {
         val currentUrl = getCurrentUrl()
         val his = if (_history.isEmpty()) "(无)" else _history.takeLast(min(8, _history.size)).joinToString("\n")
-        val interactiveNodesJson =  DOMStateBuilder.toJson(browserState.domState.interactiveNodes)
+        val interactiveNodesJson =  DOMSerializer.toJson(browserUseState.domState.interactiveNodes)
 
         return """
 此前动作摘要：

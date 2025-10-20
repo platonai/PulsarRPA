@@ -1,7 +1,6 @@
 package ai.platon.pulsar.agentic.ai.tta
 
-import ai.platon.pulsar.browser.driver.chrome.dom.BrowserState
-import ai.platon.pulsar.browser.driver.chrome.dom.CompactDOMNode
+import ai.platon.pulsar.browser.driver.chrome.dom.MicroDOMTreeNode
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMStateBuilder
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
@@ -61,7 +60,7 @@ open class TextToAction(
         driver: WebDriver,
         screenshotB64: String? = null,
     ): ActionDescription {
-        val browserState = (driver as PulsarWebDriver).domService.getBrowserState(SnapshotOptions())
+        val browserState = (driver as PulsarWebDriver).domService.getActiveDOMState(SnapshotOptions())
 
         return generate(instruction, browserState.domState.interactiveNodes, screenshotB64)
     }
@@ -76,7 +75,7 @@ open class TextToAction(
     @ExperimentalApi
     open suspend fun generate(
         instruction: String,
-        interactiveNodes: List<CompactDOMNode> = listOf(),
+        interactiveNodes: List<MicroDOMTreeNode> = listOf(),
         screenshotB64: String? = null
     ): ActionDescription {
         try {
@@ -96,7 +95,7 @@ open class TextToAction(
     @ExperimentalApi
     open suspend fun generateWithToolCallSpecs(
         instruction: String,
-        interactiveNodes: List<CompactDOMNode> = listOf(),
+        interactiveNodes: List<MicroDOMTreeNode> = listOf(),
         screenshotB64: String? = null,
         toolCallLimit: Int = 100,
     ): ActionDescription {
@@ -118,7 +117,7 @@ open class TextToAction(
     @ExperimentalApi
     open suspend fun generateWithSourceCode(
         command: String,
-        interactiveNodes: List<CompactDOMNode> = listOf()
+        interactiveNodes: List<MicroDOMTreeNode> = listOf()
     ): ModelResponse {
         val prompt = buildString {
             appendLine(webDriverSourceCodeUseMessage)
@@ -134,7 +133,7 @@ open class TextToAction(
         return chatModel.call(prompt)
     }
 
-    fun buildToolUsePrompt(interactiveNodes: List<CompactDOMNode>, toolCallLimit: Int = 100): String {
+    fun buildToolUsePrompt(interactiveNodes: List<MicroDOMTreeNode>, toolCallLimit: Int = 100): String {
         val json = DOMStateBuilder.toJson(interactiveNodes)
         val prompt = buildString {
             appendLine("每次最多调用 $toolCallLimit 个工具")

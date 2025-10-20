@@ -1,6 +1,6 @@
 package ai.platon.pulsar.agentic.ai.agent
 
-import ai.platon.pulsar.browser.driver.chrome.dom.BrowserState
+import ai.platon.pulsar.browser.driver.chrome.dom.BrowserUseState
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.delay
@@ -28,14 +28,14 @@ class PageStateTracker(
      * Calculate page state fingerprint for loop detection.
      * Combines URL, DOM structure, and scroll position into a single hash.
      *
-     * @param browserState The current browser state
+     * @param browserUseState The current browser state
      * @return Hash code representing the page state
      */
-    suspend fun calculatePageStateHash(browserState: BrowserState): Int {
+    suspend fun calculatePageStateHash(browserUseState: BrowserUseState): Int {
         // Combine URL, DOM structure, and interactive elements for fingerprint
         val urlHash = runCatching { driver.currentUrl() }.getOrNull()?.hashCode() ?: 0
-        val domHash = browserState.domState.json.hashCode()
-        val scrollHash = browserState.basicState.scrollState.hashCode()
+        val domHash = browserUseState.domState.json.hashCode()
+        val scrollHash = browserUseState.browserState.scrollState.hashCode()
 
         return (urlHash * 31 + domHash) * 31 + scrollHash
     }
@@ -44,11 +44,11 @@ class PageStateTracker(
      * Check if page state has changed since last check.
      * Tracks consecutive same-state occurrences for loop detection.
      *
-     * @param browserState The current browser state
+     * @param browserUseState The current browser state
      * @return Number of consecutive times the same state has been observed
      */
-    suspend fun checkStateChange(browserState: BrowserState): Int {
-        val currentStateHash = calculatePageStateHash(browserState)
+    suspend fun checkStateChange(browserUseState: BrowserUseState): Int {
+        val currentStateHash = calculatePageStateHash(browserUseState)
 
         if (currentStateHash == lastPageStateHash) {
             sameStateCount++

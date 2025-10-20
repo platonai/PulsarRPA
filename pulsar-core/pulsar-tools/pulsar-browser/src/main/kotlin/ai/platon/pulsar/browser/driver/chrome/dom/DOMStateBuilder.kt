@@ -3,26 +3,11 @@ package ai.platon.pulsar.browser.driver.chrome.dom
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DefaultIncludeAttributes
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TinyNode
-import ai.platon.pulsar.common.serialize.json.Double2Serializer
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.module.SimpleModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 
 /**
  * Serializer for DOM trees optimized for LLM consumption.
  */
 object DOMStateBuilder {
-    val MAPPER: ObjectMapper = jacksonObjectMapper().apply {
-        setSerializationInclusion(JsonInclude.Include.NON_NULL)
-        val module = SimpleModule().apply {
-            addSerializer(Double::class.java, Double2Serializer())
-            // Keep double value length minimal
-            addSerializer(Double::class.javaPrimitiveType, Double2Serializer())
-        }
-        registerModule(module)
-    }
-
     /**
      * Serialize SimplifiedNode tree to JSON string for LLM.
      * Enhanced with paint-order pruning, compound component marking, and attribute casing alignment.
@@ -57,7 +42,7 @@ object DOMStateBuilder {
             depth = 0,
             includeOrder = attrsList.map { it.lowercase() })
 
-        val interactiveNodes = mutableListOf<CompactDOMNode>()
+        val interactiveNodes = mutableListOf<MicroDOMTreeNode>()
         collectInteractiveNodes(compactTree, interactiveNodes)
 
         // Export legacy selector map view for backward compatibility and diagnostics/tests
@@ -65,15 +50,13 @@ object DOMStateBuilder {
         return DOMState(compactTree, interactiveNodes, frameIds, legacySelectorMap, locatorMap)
     }
 
-    fun toJson(root: CompactDOMTree): String {
-        return MAPPER.writeValueAsString(root)
-    }
+    @Deprecated("Use DOMSerializer.toJson(root) instead", ReplaceWith("DOMSerializer.toJson(root)"))
+    fun toJson(root: MicroDOMTree) = DOMSerializer.toJson(root)
 
-    fun toJson(nodes: List<CompactDOMNode>): String {
-        return MAPPER.writeValueAsString(nodes)
-    }
+    @Deprecated("Use DOMSerializer.toJson(nodes) instead", ReplaceWith("DOMSerializer.toJson(nodes)"))
+    fun toJson(nodes: List<MicroDOMTreeNode>) = DOMSerializer.toJson(nodes)
 
-    private fun collectInteractiveNodes(root: CompactDOMTree, interactiveNodes: MutableList<CompactDOMNode>) {
+    private fun collectInteractiveNodes(root: MicroDOMTree, interactiveNodes: MutableList<MicroDOMTreeNode>) {
         root.takeIf { it.interactiveIndex != null }?.let { interactiveNodes.add(it) }
         root.children?.forEach {
             collectInteractiveNodes(it, interactiveNodes)
@@ -108,7 +91,7 @@ object DOMStateBuilder {
         options: CompactOptions,
         depth: Int = 0,
         includeOrder: List<String> = emptyList()
-    ): CompactDOMNode {
+    ): MicroDOMTreeNode {
         // Apply paint-order pruning if enabled
         if (options.enablePaintOrderPruning && shouldPruneByPaintOrder(node, options)) {
             // Return a pruned node with minimal information
@@ -155,7 +138,7 @@ object DOMStateBuilder {
             )
         }
 
-        return CompactDOMNode(
+        return MicroDOMTreeNode(
             shouldDisplay = node.shouldDisplay.takeIf { it },
             interactiveIndex = node.interactiveIndex,
             ignoredByPaintOrder = node.ignoredByPaintOrder.takeIf { it },
@@ -236,8 +219,8 @@ object DOMStateBuilder {
         ancestors: List<DOMTreeNodeEx>,
         locatorMap: LocatorMap,
         frameIds: List<String>,
-    ): CompactDOMNode {
-        val prunedOriginal = CleanedDOMTreeNodeEx(
+    ): MicroDOMTreeNode {
+        val prunedOriginal = CleanedDOMTreeNode(
             locator = createNodeLocator(node.originalNode, frameIds),
             nodeId = node.originalNode.nodeId,
             backendNodeId = node.originalNode.backendNodeId,
@@ -262,7 +245,7 @@ object DOMStateBuilder {
         // Add to selector map with enhanced lookup keys
         addToLocatorMap(node.originalNode, locatorMap)
 
-        return CompactDOMNode(
+        return MicroDOMTreeNode(
             shouldDisplay = null, // Pruned nodes are not displayed
             interactiveIndex = node.interactiveIndex,
             ignoredByPaintOrder = true, // Mark as ignored by paint order
@@ -284,7 +267,7 @@ object DOMStateBuilder {
         options: CompactOptions,
         includeOrder: List<String>,
         frameIds: List<String>,
-    ): CleanedDOMTreeNodeEx {
+    ): CleanedDOMTreeNode {
         // Filter attributes with enhanced casing alignment
         val filteredAttrs: Map<String, String> = if (options.enableAttributeCasingAlignment) {
             alignAttributeCasing(node.attributes, includeAttributes, options)
@@ -360,7 +343,7 @@ object DOMStateBuilder {
         val paintOrder = snapshot?.paintOrder
         val stackingContexts = snapshot?.stackingContexts
 
-        return CleanedDOMTreeNodeEx(
+        return CleanedDOMTreeNode(
             locator = createNodeLocator(node, frameIds),
             nodeId = node.nodeId,
             backendNodeId = node.backendNodeId,
@@ -445,7 +428,7 @@ object DOMStateBuilder {
         node: DOMTreeNodeEx,
         includeAttributes: Set<String>,
         frameIds: List<String>,
-    ): CleanedDOMTreeNodeEx {
+    ): CleanedDOMTreeNode {
         // Filter attributes
         val filteredAttrs = node.attributes.filterKeys { key ->
             key.lowercase() in includeAttributes
@@ -473,7 +456,7 @@ object DOMStateBuilder {
         val clientRects = snapshot?.clientRects
         val scrollRects = snapshot?.scrollRects
 
-        return CleanedDOMTreeNodeEx(
+        return CleanedDOMTreeNode(
             locator = createNodeLocator(node, frameIds),
             nodeId = node.nodeId,
             backendNodeId = node.backendNodeId,

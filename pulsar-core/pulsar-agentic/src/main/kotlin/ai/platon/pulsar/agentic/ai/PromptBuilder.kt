@@ -1,8 +1,9 @@
 package ai.platon.pulsar.agentic.ai
 
-import ai.platon.pulsar.browser.driver.chrome.dom.DOMStateBuilder
 import ai.platon.pulsar.agentic.ai.agent.ExtractParams
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
+import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
+import ai.platon.pulsar.browser.driver.chrome.dom.DOMState
 import ai.platon.pulsar.common.Strings
 import java.util.*
 
@@ -95,7 +96,9 @@ Print null or an empty string if no new information is found.
         return instruction
     }
 
-    fun buildExtractDomContent(domText: String, params: ExtractParams): String {
+    fun buildExtractDomContent(domState: DOMState, params: ExtractParams): String {
+        val json = DOMSerializer.toJson(domState.microTree)
+
         // Inject schema hint to strongly guide JSON output
         val hintCN = "你必须返回一个严格符合以下JSON Schema的有效JSON对象。不要包含任何额外说明。"
         val hintEN =
@@ -103,7 +106,7 @@ Print null or an empty string if no new information is found.
         val hint = if (isCN) hintCN else hintEN
 
         return buildString {
-            append(domText)
+            append(json)
             append("\n\n$hint")
             append("\nJSON Schema:\n")
             append(params.schema)
@@ -162,7 +165,7 @@ Each chunk corresponds to one viewport-sized section of the page (the first chun
         chunksSeen: Int,
         chunksTotal: Int,
     ): SimpleMessage {
-        val extractedJson = DOMStateBuilder.MAPPER.writeValueAsString(extractionResponse)
+        val extractedJson = DOMSerializer.MAPPER.writeValueAsString(extractionResponse)
 
         val content = if (isCN) {
             """
@@ -235,8 +238,8 @@ Be comprehensive: if there are multiple elements that may be relevant for future
      * - the response's schema requirement
      * */
     fun buildObserveUserMessage(instruction: String, params: ObserveParams): SimpleMessage {
-        val browserStateJson = DOMStateBuilder.MAPPER.writeValueAsString(params.browserState.basicState)
-        val compactTreeJson =  DOMStateBuilder.toJson(params.browserState.domState.compactTree)
+        val browserStateJson = DOMSerializer.toJson(params.browserUseState.browserState)
+        val compactTreeJson = DOMSerializer.toJson(params.browserUseState.domState.microTree)
 
         val schemaContract = buildObserveResultSchemaContract(params)
         fun contentCN() = """

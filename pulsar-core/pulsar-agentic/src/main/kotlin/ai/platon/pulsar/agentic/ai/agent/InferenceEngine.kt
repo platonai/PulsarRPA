@@ -1,6 +1,6 @@
 package ai.platon.pulsar.agentic.ai.agent
 
-import ai.platon.pulsar.browser.driver.chrome.dom.BrowserState
+import ai.platon.pulsar.browser.driver.chrome.dom.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
@@ -47,7 +47,7 @@ data class InternalObserveResult(
 
 data class ExtractParams(
     val instruction: String,
-    val browserState: BrowserState,
+    val browserUseState: BrowserUseState,
     /** JSON Schema string describing the desired extraction output */
     val schema: String,
     val chunksSeen: Int = 0,
@@ -59,7 +59,7 @@ data class ExtractParams(
 
 data class ObserveParams(
     val instruction: String,
-    val browserState: BrowserState,
+    val browserUseState: BrowserUseState,
     val requestId: String = UUID.randomUUID().toString(),
     val userProvidedInstructions: String? = null,
     val returnAction: Boolean = false,
@@ -91,7 +91,7 @@ class InferenceEngine(
         val userMsg = promptBuilder.buildExtractUserPrompt(
             params.instruction,
             // Inject schema hint to strongly guide JSON output
-            promptBuilder.buildExtractDomContent(params.browserState.domState.json, params)
+            promptBuilder.buildExtractDomContent(params.browserUseState.domState, params)
         )
 
         val messages = listOf(systemMsg, userMsg)

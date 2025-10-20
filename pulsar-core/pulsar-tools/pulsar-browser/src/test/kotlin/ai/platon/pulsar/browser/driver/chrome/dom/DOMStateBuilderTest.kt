@@ -35,7 +35,7 @@ class DOMStateBuilderTest {
         )
 
         val result = DOMStateBuilder.build(root, listOf("data-id", "aria-label"))
-        val json = DOMStateBuilder.toJson(result.compactTree)
+        val json = DOMStateBuilder.toJson(result.microTree)
         val tree = mapper.readTree(json)
 
         val rootAttrs = tree.get("original_node").get("attributes")
@@ -77,7 +77,7 @@ class DOMStateBuilderTest {
         )
 
         val result = DOMStateBuilder.build(simplified)
-        val json = DOMStateBuilder.toJson(result.compactTree)
+        val json = DOMStateBuilder.toJson(result.microTree)
         val tree = mapper.readTree(json)
         val child = tree.get("children").first()
 
@@ -122,7 +122,7 @@ class DOMStateBuilderTest {
             maxPaintOrderThreshold = 1000
         )
         val result = DOMStateBuilder.build(simplified, emptyList(), options)
-        val json = DOMStateBuilder.toJson(result.compactTree)
+        val json = DOMStateBuilder.toJson(result.microTree)
         val tree = mapper.readTree(json)
 
         val children = tree.get("children")
@@ -166,7 +166,7 @@ class DOMStateBuilderTest {
             compoundComponentMinChildren = 3
         )
         val result = DOMStateBuilder.build(simplified, emptyList(), options)
-        val json = DOMStateBuilder.toJson(result.compactTree)
+        val json = DOMStateBuilder.toJson(result.microTree)
         val tree = mapper.readTree(json)
 
         val ulNode = tree.get("children").first()
@@ -194,7 +194,7 @@ class DOMStateBuilderTest {
             preserveOriginalCasing = false
         )
         val result = DOMStateBuilder.build(simplified, listOf("class", "for", "readonly", "customattr"), options)
-        val json = DOMStateBuilder.toJson(result.compactTree)
+        val json = DOMStateBuilder.toJson(result.microTree)
         val tree = mapper.readTree(json)
 
         val attrs = tree.get("original_node").get("attributes")
@@ -246,7 +246,7 @@ class DOMStateBuilderTest {
             preserveOriginalCasing = true
         )
         val result = DOMStateBuilder.build(simplified, emptyList(), options)
-        val json = DOMStateBuilder.toJson(result.compactTree)
+        val json = DOMStateBuilder.toJson(result.microTree)
         val tree = mapper.readTree(json)
 
         assertEquals("CustomElement", tree.get("original_node").get("node_name").asText(),
@@ -278,7 +278,7 @@ class DOMStateBuilderTest {
         }
 
         val result = DOMStateBuilder.build(leaf)
-        val json = DOMStateBuilder.toJson(result.compactTree)
+        val json = DOMStateBuilder.toJson(result.microTree)
         val tree = mapper.readTree(json)
 
         // Traverse down the first-child chain and count levels
