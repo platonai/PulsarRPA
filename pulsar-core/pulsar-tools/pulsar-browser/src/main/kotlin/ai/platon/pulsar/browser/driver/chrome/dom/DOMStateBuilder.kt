@@ -32,7 +32,7 @@ object DOMStateBuilder {
         val frameIds = frameIdSet.toList()
         // Build a new LocatorMap for optimized element lookup
         val locatorMap = LocatorMap()
-        val compactTree = buildCompactTree(
+        val microTree = buildMicroDOMTree(
             root,
             includeAttributes,
             emptyList(),
@@ -43,18 +43,15 @@ object DOMStateBuilder {
             includeOrder = attrsList.map { it.lowercase() })
 
         val interactiveNodes = mutableListOf<MicroDOMTreeNode>()
-        collectInteractiveNodes(compactTree, interactiveNodes)
+        collectInteractiveNodes(microTree, interactiveNodes)
 
         // Export legacy selector map view for backward compatibility and diagnostics/tests
         val legacySelectorMap = locatorMap.toStringMap()
-        return DOMState(compactTree, interactiveNodes, frameIds, legacySelectorMap, locatorMap)
+        return DOMState(microTree, interactiveNodes, frameIds, legacySelectorMap, locatorMap)
     }
 
     @Deprecated("Use DOMSerializer.toJson(root) instead", ReplaceWith("DOMSerializer.toJson(root)"))
     fun toJson(root: MicroDOMTree) = DOMSerializer.toJson(root)
-
-    @Deprecated("Use DOMSerializer.toJson(nodes) instead", ReplaceWith("DOMSerializer.toJson(nodes)"))
-    fun toJson(nodes: List<MicroDOMTreeNode>) = DOMSerializer.toJson(nodes)
 
     private fun collectInteractiveNodes(root: MicroDOMTree, interactiveNodes: MutableList<MicroDOMTreeNode>) {
         root.takeIf { it.interactiveIndex != null }?.let { interactiveNodes.add(it) }
@@ -82,7 +79,7 @@ object DOMStateBuilder {
         val preserveOriginalCasing: Boolean = false
     )
 
-    private fun buildCompactTree(
+    private fun buildMicroDOMTree(
         node: TinyNode,
         includeAttributes: Set<String>,
         ancestors: List<DOMTreeNodeEx>,
@@ -126,7 +123,7 @@ object DOMStateBuilder {
         // Recursively serialize children with enhanced logic (do not filter; prune per-node)
         val childAncestors = ancestors + node.originalNode
         val serializedChildren = node.children.map {
-            buildCompactTree(
+            buildMicroDOMTree(
                 it,
                 includeAttributes,
                 childAncestors,

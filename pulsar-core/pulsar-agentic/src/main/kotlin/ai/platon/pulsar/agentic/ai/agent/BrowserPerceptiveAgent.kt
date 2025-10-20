@@ -118,7 +118,6 @@ class BrowserPerceptiveAgent(
         }
     }
 
-
     override suspend fun act(observe: ObserveResult): ActResult {
         val method = observe.method?.trim().orEmpty()
         val locator = Locator.parse(observe.locator)
@@ -246,7 +245,7 @@ class BrowserPerceptiveAgent(
 
         val schemaJson = buildSchemaJsonFromMap(options.schema)
         return try {
-            val domState = getActiveDOMState()
+            val domState = getBrowserUseState()
 
             val totalHeight = domState.browserState.scrollState.totalHeight
             val viewportHeight = domState.browserState.scrollState.viewport.height
@@ -283,7 +282,7 @@ class BrowserPerceptiveAgent(
         return doObserve(options)
     }
 
-    private suspend fun getActiveDOMState(): BrowserUseState {
+    private suspend fun getBrowserUseState(): BrowserUseState {
         val snapshotOptions = SnapshotOptions(
             maxDepth = 1000,
             includeAX = true,
@@ -342,15 +341,14 @@ class BrowserPerceptiveAgent(
             return InstructionResult(listOf(), listOf(), action.modelResponse)
         }
 
-        val dispatcher = ToolCallExecutor()
-        val result = dispatcher.execute(toolCall, driver)
+        val result = toolCallExecutor.execute(toolCall, driver)
         return InstructionResult(action.expressions, listOf(result), action.modelResponse)
     }
 
     private suspend fun doObserve(options: ObserveOptions): List<ObserveResult> {
         val instruction = promptBuilder.initObserveUserInstruction(options.instruction)
 
-        val browserState = getActiveDOMState()
+        val browserState = getBrowserUseState()
         val params = ObserveParams(
             instruction = instruction,
             browserUseState = browserState,
@@ -379,7 +377,7 @@ class BrowserPerceptiveAgent(
         }
 
         // 3) Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
-        val browserState = getActiveDOMState()
+        val browserState = getBrowserUseState()
         val params = ObserveParams(
             instruction = instruction,
             browserUseState = browserState,
@@ -622,10 +620,10 @@ class BrowserPerceptiveAgent(
                 val stepContext = context.copy(stepNumber = step, actionType = "step")
 
                 // Extract interactive nodes each step (could be optimized via diffing later)
-                val browserState = getActiveDOMState()
+                val browserUseState = getBrowserUseState()
 
                 // Medium Priority #10: Detect if page state hasn't changed
-                val unchangedCount = pageStateTracker.checkStateChange(browserState)
+                val unchangedCount = pageStateTracker.checkStateChange(browserUseState)
                 if (unchangedCount >= 3) {
                     structuredLogger.log(
                         "Page state unchanged for $unchangedCount steps, potential loop detected",
@@ -639,7 +637,7 @@ class BrowserPerceptiveAgent(
                         "step" to step,
                         "maxSteps" to config.maxSteps,
                         "consecutiveNoOps" to consecutiveNoOps,
-                        "domStateSummary" to DomDebug.summarize(browserState.domState)
+                        "domStateSummary" to DomDebug.summarize(browserUseState.domState)
                     )
                 )
 
@@ -654,7 +652,7 @@ class BrowserPerceptiveAgent(
                 } else {
                     null
                 }
-                val userMsg = buildUserMessage(overallGoal, browserState)
+                val userMsg = buildUserMessage(overallGoal, browserUseState)
 
                 // instruction: agent guide + overall goal + last action summary + current context message
                 val instruction = buildExecutionMessage(systemMsg, userMsg, screenshotB64)

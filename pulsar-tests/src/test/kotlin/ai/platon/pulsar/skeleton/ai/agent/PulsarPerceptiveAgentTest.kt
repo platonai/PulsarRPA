@@ -145,15 +145,11 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         fun `Given extraction failure When extract called Then should return failure result`() {
             runEnhancedWebDriverTest { driver ->
                 // Navigate to a problematic page
-                runBlocking {
-                    driver.navigateTo("about:blank")
-                }
+                driver.navigateTo("about:blank")
 
                 val agent = BrowserPerceptiveAgent(driver)
 
-                val result = runBlocking {
-                    agent.extract("Extract data")
-                }
+                val result = agent.extract("Extract data")
 
                 // Should handle gracefully even on failure
                 assertNotNull(result)
