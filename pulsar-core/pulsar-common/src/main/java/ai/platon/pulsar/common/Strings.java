@@ -214,7 +214,6 @@ public final class Strings {
   }
 
   // 根据Unicode编码完美的判断中文汉字和符号
-
   public static boolean isChinese(char c) {
     Character.UnicodeBlock ub = Character.UnicodeBlock.of(c);
     return ub == Character.UnicodeBlock.CJK_UNIFIED_IDEOGRAPHS
@@ -228,7 +227,6 @@ public final class Strings {
   }
 
   // 完整的判断中文汉字和符号
-
   public static boolean isChinese(String text) {
     char[] ch = text.toCharArray();
     for (char c : ch) {
@@ -339,9 +337,9 @@ public final class Strings {
   }
 
   /**
-   * // 对字符串的头部和尾部：
-   * // 1. 仅保留英文字符、数字、汉字字符和keeps中的字符
-   * // 2. 去除网页空白：&nbsp;
+   * 对字符串的头部和尾部：
+   * 1. 仅保留英文字符、数字、汉字字符和keeps中的字符
+   * 2. 去除网页空白：&nbsp;
    */
   public static String trimNonChar(String text, String keeps) {
     int start = 0;
@@ -409,7 +407,6 @@ public final class Strings {
     return trimNonCJKChar(text, null);
   }
 
-
   /**
    * 对字符串的头部和尾部：
    * 1. 仅保留英文字符、数字、汉字字符和keeps中的字符
@@ -471,13 +468,6 @@ public final class Strings {
     }
 
     return builder.toString();
-  }
-
-  /**
-   * @deprecated use {@link #removeNonPrintableChar(String)} instead.
-   */
-  public static String stripNonPrintableChar1(String s) {
-    return removeNonPrintableChar(s);
   }
 
   public static boolean isPrintableUnicodeChar(char ch) {
@@ -572,11 +562,11 @@ public final class Strings {
   /**
    * See CaseFormat from Guava, for example, LOWER_UNDERSCORE.to(LOWER_CAMEL, str)
    */
-  public static String humanize(Class clazz, String suffix, String seperator) {
-    String text = StringUtils.join(clazz.getSimpleName().split("(?=\\p{Upper})"), seperator);
-    text = text.replaceAll("[-_]", seperator).toLowerCase().trim();
+  public static String humanize(Class clazz, String suffix, String separator) {
+    String text = StringUtils.join(clazz.getSimpleName().split("(?=\\p{Upper})"), separator);
+    text = text.replaceAll("[-_]", separator).toLowerCase().trim();
 
-    return text + seperator + suffix;
+    return text + separator + suffix;
   }
 
   public static int getLeadingInteger(String s, int defaultValue) {
@@ -702,8 +692,8 @@ public final class Strings {
     return defaultValue;
   }
 
-  public static boolean contains(String text, CharSequence... searchCharSequences) {
-    Validate.notNull(searchCharSequences);
+  public static boolean containsAll(String text, CharSequence... searchCharSequences) {
+      Objects.requireNonNull(text);
 
     for (CharSequence search : searchCharSequences) {
       if (!text.contains(search)) return false;
@@ -713,7 +703,7 @@ public final class Strings {
   }
 
   public static boolean containsAny(String text, CharSequence... searchCharSequences) {
-    Validate.notNull(searchCharSequences);
+      Objects.requireNonNull(text);
 
     for (CharSequence search : searchCharSequences) {
       if (text.contains(search)) return true;
@@ -723,7 +713,7 @@ public final class Strings {
   }
 
   public static boolean containsNone(String text, CharSequence... searchCharSequences) {
-    Validate.notNull(searchCharSequences);
+      Objects.requireNonNull(text);
 
     for (CharSequence search : searchCharSequences) {
       if (text.contains(search)) return false;
