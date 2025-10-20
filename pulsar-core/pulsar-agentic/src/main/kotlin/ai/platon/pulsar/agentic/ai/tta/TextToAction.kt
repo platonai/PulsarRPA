@@ -1,5 +1,8 @@
 package ai.platon.pulsar.agentic.ai.tta
 
+import ai.platon.pulsar.browser.driver.chrome.dom.BrowserState
+import ai.platon.pulsar.browser.driver.chrome.dom.CompactDOMNode
+import ai.platon.pulsar.browser.driver.chrome.dom.DOMStateBuilder
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ExperimentalApi
@@ -52,15 +55,32 @@ open class TextToAction(
      * @param driver The driver to use to collect the context, such as interactive elements
      * @return The action description
      * */
+    @ExperimentalApi
     open suspend fun generate(
         instruction: String,
         driver: WebDriver,
         screenshotB64: String? = null,
     ): ActionDescription {
-        try {
-            val elements = getInteractiveElements(driver)
+        val browserState = (driver as PulsarWebDriver).domService.getBrowserState(SnapshotOptions())
 
-            return generate(instruction, elements, screenshotB64)
+        return generate(instruction, browserState.domState.interactiveNodes, screenshotB64)
+    }
+
+    /**
+     * Generate EXACT ONE WebDriver action with interactive elements.
+     *
+     * @param instruction The action description with plain text
+     * @param driver The driver to use to collect the context, such as interactive elements
+     * @return The action description
+     * */
+    @ExperimentalApi
+    open suspend fun generate(
+        instruction: String,
+        interactiveNodes: List<CompactDOMNode> = listOf(),
+        screenshotB64: String? = null
+    ): ActionDescription {
+        try {
+            return generateWithToolCallSpecs(instruction, interactiveNodes, screenshotB64, 1)
         } catch (e: Exception) {
             val errorResponse = ModelResponse(
                 """
@@ -73,24 +93,10 @@ open class TextToAction(
         }
     }
 
-    /**
-     * Generate EXACT ONE WebDriver action with interactive elements.
-     *
-     * @param instruction The action description with plain text
-     * @param driver The driver to use to collect the context, such as interactive elements
-     * @return The action description
-     * */
-    open suspend fun generate(
-        instruction: String,
-        elements: List<InteractiveElement> = listOf(),
-        screenshotB64: String? = null
-    ): ActionDescription {
-        return generateWithToolCallSpecs(instruction, elements, screenshotB64, 1)
-    }
-
+    @ExperimentalApi
     open suspend fun generateWithToolCallSpecs(
         instruction: String,
-        elements: List<InteractiveElement> = listOf(),
+        interactiveNodes: List<CompactDOMNode> = listOf(),
         screenshotB64: String? = null,
         toolCallLimit: Int = 100,
     ): ActionDescription {
@@ -99,7 +105,7 @@ open class TextToAction(
             else -> buildOperatorSystemPrompt(instruction)
         }
 
-        val toolUsePrompt = buildToolUsePrompt(elements, toolCallLimit)
+        val toolUsePrompt = buildToolUsePrompt(interactiveNodes, toolCallLimit)
         val response = if (screenshotB64 != null) {
             chatModel.call(systemPrompt, toolUsePrompt, null, screenshotB64, "image/jpeg")
         } else {
@@ -112,14 +118,14 @@ open class TextToAction(
     @ExperimentalApi
     open suspend fun generateWithSourceCode(
         command: String,
-        elements: List<InteractiveElement> = listOf()
+        interactiveNodes: List<CompactDOMNode> = listOf()
     ): ModelResponse {
         val prompt = buildString {
             appendLine(webDriverSourceCodeUseMessage)
 
-            if (elements.isNotEmpty()) {
+            if (interactiveNodes.isNotEmpty()) {
                 appendLine("可交互元素列表：")
-                elements.forEach { appendLine(it) }
+                appendLine(DOMStateBuilder.toJson(interactiveNodes))
             }
 
             appendLine(command)
@@ -128,16 +134,14 @@ open class TextToAction(
         return chatModel.call(prompt)
     }
 
-    fun buildToolUsePrompt(
-        elements: List<InteractiveElement>,
-        toolCallLimit: Int = 100,
-    ): String {
+    fun buildToolUsePrompt(interactiveNodes: List<CompactDOMNode>, toolCallLimit: Int = 100): String {
+        val json = DOMStateBuilder.toJson(interactiveNodes)
         val prompt = buildString {
             appendLine("每次最多调用 $toolCallLimit 个工具")
 
-            if (elements.isNotEmpty()) {
+            if (json.isNotEmpty()) {
                 appendLine("可交互元素列表: ")
-                elements.forEach { e -> appendLine(e.toString()) }
+                appendLine(json)
             }
 
             appendLine()

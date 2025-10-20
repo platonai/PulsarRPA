@@ -46,25 +46,25 @@ data class CleanedDOMTreeNodeEx(
  * Serializable SimplifiedNode structure.
  * Enhanced with compound component marking and paint order information.
  */
-data class CompactDOMTreeNode(
+data class CompactDOMNode(
     val shouldDisplay: Boolean?,
     val interactiveIndex: Int?,
     val ignoredByPaintOrder: Boolean?,
     val excludedByParent: Boolean?,
     val isCompoundComponent: Boolean? = null,
     val originalNode: CleanedDOMTreeNodeEx,
-    val children: List<CompactDOMTreeNode>?,
+    val children: List<CompactDOMNode>?,
     val shouldShowScrollInfo: Boolean?,
     val scrollInfoText: String?
 )
 
-typealias CompactDOMTree = CompactDOMTreeNode
+typealias CompactDOMTree = CompactDOMNode
 
 // Keep the serialization result as a top-level data class for reuse
 
 data class DOMState(
-    val compactDOMTree: CompactDOMTree,
-    val json: String,
+    val compactTree: CompactDOMTree,
+    val interactiveNodes: List<CompactDOMNode>,
     val frameIds: List<String>,
     val selectorMap: Map<String, DOMTreeNodeEx>,
     val locatorMap: LocatorMap? = null

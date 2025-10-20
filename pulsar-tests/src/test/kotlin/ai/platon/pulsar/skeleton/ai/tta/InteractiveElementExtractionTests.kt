@@ -219,7 +219,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
         // Test basic functionality to ensure script loading works
         val prompt = "测试JavaScript资源加载和功能执行"
-        val response = runBlocking { textToAction.generate(prompt, listOf()) }
+        val response = runBlocking { textToAction.generate(prompt) }
 
         printlnPro("Resource loading test response: ${response.modelResponse.content}")
 

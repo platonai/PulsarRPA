@@ -11,7 +11,7 @@ import com.google.gson.Gson
 import com.ibm.icu.util.TimeZone
 import java.awt.Dimension
 import java.time.Instant
-import java.util.Locale
+import java.util.*
 import kotlin.math.abs
 
 /**
@@ -256,12 +256,12 @@ class ChromeCdpDomService(
 
     override fun buildDOMState(root: TinyNode, includeAttributes: List<String>): DOMState {
         // Use enhanced serialization with default options
-        val options = PulsarDOMSerializer.SerializationOptions(
+        val options = DOMStateBuilder.CompactOptions(
             enablePaintOrderPruning = true,
             enableCompoundComponentDetection = true,
             enableAttributeCasingAlignment = true
         )
-        return PulsarDOMSerializer.serialize(root, includeAttributes, options)
+        return DOMStateBuilder.build(root, includeAttributes, options)
     }
 
     override suspend fun buildBrowserState(domState: DOMState): BrowserState {
@@ -760,8 +760,9 @@ class ChromeCdpDomService(
 
         val domState = buildDOMState(tinyTree)
         if (logger.isDebugEnabled) {
+            val json = DOMStateBuilder.toJson(domState.compactTree)
             logger.debug("browserState summary: \n{}", DomDebug.summarize(domState))
-            logger.debug("browserState.json: \nlength: {}\n{}", domState.json.length, domState.json)
+            logger.debug("browserState.json: \nlength: {}\n{}", json.length, json)
         }
 
         return buildBrowserState(domState)

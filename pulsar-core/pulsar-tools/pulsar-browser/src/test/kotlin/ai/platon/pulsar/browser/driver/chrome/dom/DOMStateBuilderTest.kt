@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
-class DomSerializerTest {
+class DOMStateBuilderTest {
     private val mapper = jacksonObjectMapper()
 
     @Test
@@ -34,8 +34,9 @@ class DomSerializerTest {
             children = listOf(TinyNode(originalNode = childOriginal))
         )
 
-        val result = PulsarDOMSerializer.serialize(root, listOf("data-id", "aria-label"))
-        val tree = mapper.readTree(result.json)
+        val result = DOMStateBuilder.build(root, listOf("data-id", "aria-label"))
+        val json = DOMStateBuilder.toJson(result.compactTree)
+        val tree = mapper.readTree(json)
 
         val rootAttrs = tree.get("original_node").get("attributes")
         assertEquals(1, rootAttrs.size(), "Only whitelisted root attribute should be present")
@@ -75,8 +76,9 @@ class DomSerializerTest {
             children = listOf(TinyNode(originalNode = scrollableNode))
         )
 
-        val result = PulsarDOMSerializer.serialize(simplified)
-        val tree = mapper.readTree(result.json)
+        val result = DOMStateBuilder.build(simplified)
+        val json = DOMStateBuilder.toJson(result.compactTree)
+        val tree = mapper.readTree(json)
         val child = tree.get("children").first()
 
         assertNotNull(child.get("should_show_scroll_info"), "Scroll flag should be present when helper returns true")
@@ -115,12 +117,13 @@ class DomSerializerTest {
             )
         )
 
-        val options = PulsarDOMSerializer.SerializationOptions(
+        val options = DOMStateBuilder.CompactOptions(
             enablePaintOrderPruning = true,
             maxPaintOrderThreshold = 1000
         )
-        val result = PulsarDOMSerializer.serialize(simplified, emptyList(), options)
-        val tree = mapper.readTree(result.json)
+        val result = DOMStateBuilder.build(simplified, emptyList(), options)
+        val json = DOMStateBuilder.toJson(result.compactTree)
+        val tree = mapper.readTree(json)
 
         val children = tree.get("children")
         assertEquals(2, children.size()) // Both children should be present but high paint order should be pruned
@@ -158,12 +161,13 @@ class DomSerializerTest {
             )
         )
 
-        val options = PulsarDOMSerializer.SerializationOptions(
+        val options = DOMStateBuilder.CompactOptions(
             enableCompoundComponentDetection = true,
             compoundComponentMinChildren = 3
         )
-        val result = PulsarDOMSerializer.serialize(simplified, emptyList(), options)
-        val tree = mapper.readTree(result.json)
+        val result = DOMStateBuilder.build(simplified, emptyList(), options)
+        val json = DOMStateBuilder.toJson(result.compactTree)
+        val tree = mapper.readTree(json)
 
         val ulNode = tree.get("children").first()
         assertEquals(true, ulNode.get("is_compound_component").asBoolean(), "UL with multiple children should be detected as compound component")
@@ -185,12 +189,13 @@ class DomSerializerTest {
 
         val simplified = TinyNode(originalNode = node)
 
-        val options = PulsarDOMSerializer.SerializationOptions(
+        val options = DOMStateBuilder.CompactOptions(
             enableAttributeCasingAlignment = true,
             preserveOriginalCasing = false
         )
-        val result = PulsarDOMSerializer.serialize(simplified, listOf("class", "for", "readonly", "customattr"), options)
-        val tree = mapper.readTree(result.json)
+        val result = DOMStateBuilder.build(simplified, listOf("class", "for", "readonly", "customattr"), options)
+        val json = DOMStateBuilder.toJson(result.compactTree)
+        val tree = mapper.readTree(json)
 
         val attrs = tree.get("original_node").get("attributes")
         assertEquals("my-input", attrs.get("class").asText(), "className should be normalized to class")
@@ -211,7 +216,7 @@ class DomSerializerTest {
 
         val simplified = TinyNode(originalNode = node)
 
-        val result = PulsarDOMSerializer.serialize(simplified)
+        val result = DOMStateBuilder.build(simplified)
 
         // Check that all expected keys are present in the selector map
         assertTrue(result.selectorMap.containsKey("button-hash"), "Element hash key should be present")
@@ -237,11 +242,12 @@ class DomSerializerTest {
 
         val simplified = TinyNode(originalNode = node)
 
-        val options = PulsarDOMSerializer.SerializationOptions(
+        val options = DOMStateBuilder.CompactOptions(
             preserveOriginalCasing = true
         )
-        val result = PulsarDOMSerializer.serialize(simplified, emptyList(), options)
-        val tree = mapper.readTree(result.json)
+        val result = DOMStateBuilder.build(simplified, emptyList(), options)
+        val json = DOMStateBuilder.toJson(result.compactTree)
+        val tree = mapper.readTree(json)
 
         assertEquals("CustomElement", tree.get("original_node").get("node_name").asText(),
             "Original casing should be preserved when configured")
@@ -271,8 +277,9 @@ class DomSerializerTest {
             )
         }
 
-        val result = PulsarDOMSerializer.serialize(leaf)
-        val tree = mapper.readTree(result.json)
+        val result = DOMStateBuilder.build(leaf)
+        val json = DOMStateBuilder.toJson(result.compactTree)
+        val tree = mapper.readTree(json)
 
         // Traverse down the first-child chain and count levels
         var cursor = tree

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.agentic.ai
 
-import ai.platon.pulsar.browser.driver.chrome.dom.PulsarDOMSerializer
+import ai.platon.pulsar.browser.driver.chrome.dom.DOMStateBuilder
 import ai.platon.pulsar.agentic.ai.agent.ExtractParams
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.common.Strings
@@ -162,7 +162,7 @@ Each chunk corresponds to one viewport-sized section of the page (the first chun
         chunksSeen: Int,
         chunksTotal: Int,
     ): SimpleMessage {
-        val extractedJson = PulsarDOMSerializer.MAPPER.writeValueAsString(extractionResponse)
+        val extractedJson = DOMStateBuilder.MAPPER.writeValueAsString(extractionResponse)
 
         val content = if (isCN) {
             """
@@ -235,14 +235,15 @@ Be comprehensive: if there are multiple elements that may be relevant for future
      * - the response's schema requirement
      * */
     fun buildObserveUserMessage(instruction: String, params: ObserveParams): SimpleMessage {
-        val browserStateJson = PulsarDOMSerializer.MAPPER.writeValueAsString(params.browserState.basicState)
+        val browserStateJson = DOMStateBuilder.MAPPER.writeValueAsString(params.browserState.basicState)
+        val compactTreeJson =  DOMStateBuilder.toJson(params.browserState.domState.compactTree)
 
         val schemaContract = buildObserveResultSchemaContract(params)
         fun contentCN() = """
 指令: $instruction
 
 ## 无障碍树(Accessibility Tree):
-${params.browserState.domState.json}
+$compactTreeJson
 
 ## 无障碍树说明：
 - 对于每个节点的布尔（boolean）属性，若未显式赋值或值为 null，则一律视为 false。涉及的属性包括但不限于：`isScrollable`, `isVisible`, `isInteractable`, `shouldDisplay`, `ignoredByPaintOrder`, `excludedByParent`, `isCompoundComponent` 等。
@@ -258,7 +259,7 @@ $schemaContract
 instruction: $instruction
 
 ## Accessibility Tree:
-${params.browserState.domState.json}
+$compactTreeJson
 
 ## Accessibility Tree Specification
 

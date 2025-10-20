@@ -138,10 +138,11 @@ object DomDebug {
             return (name + id + klass).trim()
         }
         val sample = uniqueNodes.take(3).joinToString(", ") { labelOf(it) }
+        val json = DOMStateBuilder.toJson(state.compactTree)
 
         return buildString {
             appendLine("DOMState")
-            appendLine("- json.length=${state.json.length}")
+            appendLine("- json.length=${json.length}")
             appendLine("- selectorMap.entries=${totalEntries}")
             appendLine("- selectorMap.uniqueNodes=${uniqueCount} (hashKeys=${hashKeys}, xpathKeys=${xpathKeys}, backendKeys=${backendKeys}, nodeKeys=${nodeKeys})")
             appendLine("- nodes: interactable=${interactable}, visible=${visible}, scrollable=${scrollable}, withXPath=${withXPath}, withHash=${withHash}, withSnapshot=${withSnapshot}, withBounds=${withBounds}")

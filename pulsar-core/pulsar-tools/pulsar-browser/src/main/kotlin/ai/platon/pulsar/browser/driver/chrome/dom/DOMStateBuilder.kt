@@ -12,7 +12,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 /**
  * Serializer for DOM trees optimized for LLM consumption.
  */
-object PulsarDOMSerializer {
+object DOMStateBuilder {
     val MAPPER: ObjectMapper = jacksonObjectMapper().apply {
         setSerializationInclusion(JsonInclude.Include.NON_NULL)
         val module = SimpleModule().apply {
@@ -32,10 +32,10 @@ object PulsarDOMSerializer {
      * @param options Serialization options for enhanced features
      * @return JSON string
      */
-    fun serialize(
+    fun build(
         root: TinyNode,
         includeAttributes: List<String> = emptyList(),
-        options: SerializationOptions = SerializationOptions()
+        options: CompactOptions = CompactOptions()
     ): DOMState {
         val attrsList = includeAttributes.ifEmpty { DefaultIncludeAttributes.ATTRIBUTES }
         val includeAttributes = attrsList.map { it.lowercase() }.toSet()
@@ -47,7 +47,7 @@ object PulsarDOMSerializer {
         val frameIds = frameIdSet.toList()
         // Build a new LocatorMap for optimized element lookup
         val locatorMap = LocatorMap()
-        val compactDOMTree = buildSerializableNode(
+        val compactTree = buildCompactTree(
             root,
             includeAttributes,
             emptyList(),
@@ -56,10 +56,28 @@ object PulsarDOMSerializer {
             options,
             depth = 0,
             includeOrder = attrsList.map { it.lowercase() })
-        val json = MAPPER.writeValueAsString(compactDOMTree)
+
+        val interactiveNodes = mutableListOf<CompactDOMNode>()
+        collectInteractiveNodes(compactTree, interactiveNodes)
+
         // Export legacy selector map view for backward compatibility and diagnostics/tests
         val legacySelectorMap = locatorMap.toStringMap()
-        return DOMState(compactDOMTree, json, frameIds, legacySelectorMap, locatorMap)
+        return DOMState(compactTree, interactiveNodes, frameIds, legacySelectorMap, locatorMap)
+    }
+
+    fun toJson(root: CompactDOMTree): String {
+        return MAPPER.writeValueAsString(root)
+    }
+
+    fun toJson(nodes: List<CompactDOMNode>): String {
+        return MAPPER.writeValueAsString(nodes)
+    }
+
+    private fun collectInteractiveNodes(root: CompactDOMTree, interactiveNodes: MutableList<CompactDOMNode>) {
+        root.takeIf { it.interactiveIndex != null }?.let { interactiveNodes.add(it) }
+        root.children?.forEach {
+            collectInteractiveNodes(it, interactiveNodes)
+        }
     }
 
     private fun collectFrameIds(root: TinyNode, frameIds: MutableSet<String>) {
@@ -72,7 +90,7 @@ object PulsarDOMSerializer {
     /**
      * Options for enhanced LLM serialization.
      */
-    data class SerializationOptions(
+    data class CompactOptions(
         val enablePaintOrderPruning: Boolean = true,
         val enableCompoundComponentDetection: Boolean = true,
         val enableAttributeCasingAlignment: Boolean = true,
@@ -81,16 +99,16 @@ object PulsarDOMSerializer {
         val preserveOriginalCasing: Boolean = false
     )
 
-    private fun buildSerializableNode(
+    private fun buildCompactTree(
         node: TinyNode,
         includeAttributes: Set<String>,
         ancestors: List<DOMTreeNodeEx>,
         locatorMap: LocatorMap,
         frameIds: List<String>,
-        options: SerializationOptions,
+        options: CompactOptions,
         depth: Int = 0,
         includeOrder: List<String> = emptyList()
-    ): CompactDOMTreeNode {
+    ): CompactDOMNode {
         // Apply paint-order pruning if enabled
         if (options.enablePaintOrderPruning && shouldPruneByPaintOrder(node, options)) {
             // Return a pruned node with minimal information
@@ -125,7 +143,7 @@ object PulsarDOMSerializer {
         // Recursively serialize children with enhanced logic (do not filter; prune per-node)
         val childAncestors = ancestors + node.originalNode
         val serializedChildren = node.children.map {
-            buildSerializableNode(
+            buildCompactTree(
                 it,
                 includeAttributes,
                 childAncestors,
@@ -137,7 +155,7 @@ object PulsarDOMSerializer {
             )
         }
 
-        return CompactDOMTreeNode(
+        return CompactDOMNode(
             shouldDisplay = node.shouldDisplay.takeIf { it },
             interactiveIndex = node.interactiveIndex,
             ignoredByPaintOrder = node.ignoredByPaintOrder.takeIf { it },
@@ -153,7 +171,7 @@ object PulsarDOMSerializer {
     /**
      * Determine if a node should be pruned based on paint order.
      */
-    private fun shouldPruneByPaintOrder(node: TinyNode, options: SerializationOptions): Boolean {
+    private fun shouldPruneByPaintOrder(node: TinyNode, options: CompactOptions): Boolean {
         val paintOrder = node.originalNode.snapshotNode?.paintOrder ?: return false
         return paintOrder > options.maxPaintOrderThreshold
     }
@@ -161,7 +179,7 @@ object PulsarDOMSerializer {
     /**
      * Detect if a node represents a compound component.
      */
-    private fun detectCompoundComponent(node: TinyNode, options: SerializationOptions): Boolean {
+    private fun detectCompoundComponent(node: TinyNode, options: CompactOptions): Boolean {
         val originalNode = node.originalNode
         val tag = originalNode.nodeName.lowercase()
 
@@ -218,7 +236,7 @@ object PulsarDOMSerializer {
         ancestors: List<DOMTreeNodeEx>,
         locatorMap: LocatorMap,
         frameIds: List<String>,
-    ): CompactDOMTreeNode {
+    ): CompactDOMNode {
         val prunedOriginal = CleanedDOMTreeNodeEx(
             locator = createNodeLocator(node.originalNode, frameIds),
             nodeId = node.originalNode.nodeId,
@@ -244,7 +262,7 @@ object PulsarDOMSerializer {
         // Add to selector map with enhanced lookup keys
         addToLocatorMap(node.originalNode, locatorMap)
 
-        return CompactDOMTreeNode(
+        return CompactDOMNode(
             shouldDisplay = null, // Pruned nodes are not displayed
             interactiveIndex = node.interactiveIndex,
             ignoredByPaintOrder = true, // Mark as ignored by paint order
@@ -263,7 +281,7 @@ object PulsarDOMSerializer {
     private fun cleanOriginalNodeEnhanced(
         node: DOMTreeNodeEx,
         includeAttributes: Set<String>,
-        options: SerializationOptions,
+        options: CompactOptions,
         includeOrder: List<String>,
         frameIds: List<String>,
     ): CleanedDOMTreeNodeEx {
@@ -383,7 +401,7 @@ object PulsarDOMSerializer {
     private fun alignAttributeCasing(
         attributes: Map<String, String>,
         includeAttributes: Set<String>,
-        options: SerializationOptions
+        options: CompactOptions
     ): Map<String, String> {
         return attributes.mapNotNull { (key, value) ->
             val alignedKey = alignAttributeName(key, options)
@@ -398,7 +416,7 @@ object PulsarDOMSerializer {
     /**
      * Align attribute name casing for consistency with Python implementation.
      */
-    private fun alignAttributeName(attributeName: String, options: SerializationOptions): String {
+    private fun alignAttributeName(attributeName: String, options: CompactOptions): String {
         if (options.preserveOriginalCasing) return attributeName
 
         // Convert to lowercase for consistency

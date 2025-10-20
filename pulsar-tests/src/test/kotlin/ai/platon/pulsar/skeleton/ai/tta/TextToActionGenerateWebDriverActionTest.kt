@@ -208,7 +208,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
     fun `When generateWebDriverAction is called with empty elements then handle gracefully`() {
         val prompt = "点击按钮"
 
-        val actionDescription = runBlocking { textToAction.generate(prompt, listOf()) }
+        val actionDescription = runBlocking { textToAction.generate(prompt) }
 
         assertNotNull(actionDescription)
         // Should handle empty elements gracefully

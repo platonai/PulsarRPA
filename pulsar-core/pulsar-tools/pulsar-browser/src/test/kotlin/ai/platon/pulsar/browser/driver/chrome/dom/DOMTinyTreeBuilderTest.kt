@@ -60,7 +60,7 @@ class DOMTinyTreeBuilderTest {
         assertNotNull(tree)
 
         // Serialize to build selector map with index:* entries
-        val state = PulsarDOMSerializer.serialize(tree!!)
+        val state = DOMStateBuilder.build(tree!!)
         val keys = state.selectorMap.keys
         assertTrue(keys.any { it == "index:1" }, "Selector map should include index:1")
         assertTrue(keys.any { it == "index:2" }, "Selector map should include index:2")

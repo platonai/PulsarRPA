@@ -6,6 +6,8 @@ import ai.platon.pulsar.agentic.ai.tta.InstructionResult
 import ai.platon.pulsar.agentic.ai.tta.InteractiveElement
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.browser.driver.chrome.dom.BrowserState
+import ai.platon.pulsar.browser.driver.chrome.dom.CompactDOMNode
+import ai.platon.pulsar.browser.driver.chrome.dom.DOMStateBuilder
 import ai.platon.pulsar.browser.driver.chrome.dom.DomDebug
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
@@ -332,18 +334,6 @@ class BrowserPerceptiveAgent(
         }
 
         logger.debug("DOM settle timeout after ${timeoutMs}ms")
-    }
-
-    /**
-     * Medium Priority #10: Calculate page state fingerprint for loop detection
-     */
-    private suspend fun calculatePageStateHash(browserState: BrowserState): Int {
-        // Combine URL, DOM structure, and interactive elements for fingerprint
-        val urlHash = runCatching { driver.currentUrl() }.getOrNull()?.hashCode() ?: 0
-        val domHash = browserState.domState.json.hashCode()
-        val scrollHash = browserState.basicState.scrollState.hashCode()
-
-        return (urlHash * 31 + domHash) * 31 + scrollHash
     }
 
     protected suspend fun execute(action: ActionDescription): InstructionResult {
@@ -893,12 +883,12 @@ class BrowserPerceptiveAgent(
     private suspend fun generateStepActionWithRetry(
         message: String,
         context: ExecutionContext,
-        interactiveElements: List<InteractiveElement>,
+        interactiveNodes: List<CompactDOMNode> = listOf(),
         screenshotB64: String?
     ): ActionDescription? {
         return try {
             // Use overload supplying extracted elements to avoid re-extraction
-            tta.generate(message, interactiveElements, screenshotB64)
+            tta.generate(message, interactiveNodes, screenshotB64)
         } catch (e: Exception) {
             logError("Action generation failed", e, context.sessionId)
             consecutiveFailureCounter.incrementAndGet()
@@ -1195,13 +1185,14 @@ class BrowserPerceptiveAgent(
     private suspend fun buildUserMessage(instruction: String, browserState: BrowserState): String {
         val currentUrl = getCurrentUrl()
         val his = if (_history.isEmpty()) "(无)" else _history.takeLast(min(8, _history.size)).joinToString("\n")
-        val interactiveSummary = browserState.domState.json
+        val interactiveNodesJson =  DOMStateBuilder.toJson(browserState.domState.interactiveNodes)
+
         return """
 此前动作摘要：
 $his
 
 可交互元素：
-$interactiveSummary
+$interactiveNodesJson
 
 请基于当前页面截图、交互元素与历史动作，规划下一步（严格单步原子动作），若无法推进请输出空 tool_calls。
 当前目标：$instruction
