@@ -71,22 +71,6 @@ open class TextToAction(val conf: ImmutableConfig) {
         }
     }
 
-    open suspend fun generate(
-        instruction: String,
-        interactiveElements: List<InteractiveElement> = listOf(),
-        screenshotB64: String? = null
-    ): ActionDescription {
-        return generateWithToolCallSpecsDeferred(instruction, interactiveElements, screenshotB64, 1)
-    }
-
-    open fun generateBlocking(
-        instruction: String,
-        driver: WebDriver,
-        screenshotB64: String? = null,
-    ): ActionDescription {
-        return runBlocking { generate(instruction, driver, screenshotB64) }
-    }
-
     /**
      * Generate EXACT ONE WebDriver action with interactive elements.
      *
@@ -94,14 +78,12 @@ open class TextToAction(val conf: ImmutableConfig) {
      * @param driver The driver to use to collect the context, such as interactive elements
      * @return The action description
      * */
-    open fun generateBlocking(
+    open suspend fun generate(
         instruction: String,
         interactiveElements: List<InteractiveElement> = listOf(),
         screenshotB64: String? = null
     ): ActionDescription {
-        return runBlocking {
-            generateWithToolCallSpecsDeferred(instruction, interactiveElements, screenshotB64, 1)
-        }
+        return generateWithToolCallSpecsDeferred(instruction, interactiveElements, screenshotB64, 1)
     }
 
     open fun generateWithToolCallSpecs(
