@@ -431,15 +431,21 @@ class PulsarWebDriver(
                 page.scrollIntoViewIfNeeded(selector)
             } ?: return
 
-            val offset = OffsetD(4.0, 4.0)
+            // Use randomized offset like in click() for better anti-detection
+            val deltaOffsetX = 4.0 + Random.nextInt(4)
+            val deltaOffsetY = 4.0
+            val offset = OffsetD(deltaOffsetX, deltaOffsetY)
+            
             val p = pageAPI
             val d = domAPI
             if (p != null && d != null) {
                 rpc.invokeDeferred("dragAndDrop") {
-                    val point = ClickableDOM(p, d, nodeId, offset).clickablePoint().value
-                    if (point != null) {
-                        val point2 = PointD(point.x + deltaX, point.y + deltaY)
-                        mouse?.dragAndDrop(point, point2, randomDelayMillis("dragAndDrop"))
+                    val clickableDOM = ClickableDOM(p, d, nodeId, offset)
+                    val startPoint = clickableDOM.clickablePoint().value
+                    if (startPoint != null) {
+                        // Calculate target point relative to start point
+                        val targetPoint = PointD(startPoint.x + deltaX, startPoint.y + deltaY)
+                        mouse?.dragAndDrop(startPoint, targetPoint, randomDelayMillis("dragAndDrop"))
                     }
                     gap()
                 }

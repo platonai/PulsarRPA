@@ -22,6 +22,9 @@ class PageHandler(
     companion object {
         // see org.w3c.dom.Node.ELEMENT_NODE
         const val ELEMENT_NODE = 1
+        
+        // Backend node ID selector prefix
+        private const val BACKEND_NODE_PREFIX = "backend:"
     }
     
     private val logger = getLogger(this)
@@ -52,20 +55,49 @@ class PageHandler(
     }
     
     /**
-     * TODO: make sure the meaning of 0 node id
-     * */
+     * Queries for an element using a CSS selector or backend node ID.
+     * 
+     * Supports two selector formats:
+     * 1. CSS selector: "div.class", "#id", etc.
+     * 2. Backend node ID: "backend:123"
+     * 
+     * @param selector CSS selector or "backend:nodeId" format
+     * @return nodeId or null if not found
+     */
     @Throws(ChromeDriverException::class)
     fun querySelector(selector: String): Int? {
-        return querySelectorOrNull(selector)
+        return parseSelector(selector)
     }
     
+    /**
+     * Queries for all elements matching the selector.
+     * 
+     * Note: Backend node ID format ("backend:123") will return a single-element list
+     * containing that node, as backend node IDs reference a specific node.
+     * 
+     * @param selector CSS selector or "backend:nodeId" format
+     * @return List of nodeIds matching the selector
+     */
     @Throws(ChromeDriverException::class)
     fun querySelectorAll(selector: String): List<Int> {
+        // For backend node ID, return a single-element list
+        if (selector.startsWith(BACKEND_NODE_PREFIX)) {
+            val nodeId = parseSelector(selector)
+            return if (nodeId != null && nodeId > 0) listOf(nodeId) else listOf()
+        }
+        
+        // For regular selectors, use querySelectorAll
         return invokeOnElement(selector) { nodeId ->
             domAPI?.querySelectorAll(nodeId, selector)
         } ?: listOf()
     }
     
+    /**
+     * Gets all attributes for the element matching the selector.
+     * 
+     * @param selector CSS selector or "backend:nodeId" format
+     * @return Map of attribute name to value
+     */
     @Throws(ChromeDriverException::class)
     fun getAttributes(selector: String): Map<String, String> {
         return invokeOnElement(selector) { nodeId ->
@@ -73,6 +105,13 @@ class PageHandler(
         } ?: emptyMap()
     }
     
+    /**
+     * Gets a specific attribute value for the element matching the selector.
+     * 
+     * @param selector CSS selector or "backend:nodeId" format
+     * @param attrName Attribute name to retrieve
+     * @return Attribute value or null if not found
+     */
     @Throws(ChromeDriverException::class)
     fun getAttribute(selector: String, attrName: String) = invokeOnElement(selector) { getAttribute(it, attrName) }
     
@@ -97,8 +136,15 @@ class PageHandler(
      * TODO: too many requests, need to optimize
      * RobustRPC - Too many RPC failures: selectAttributeAll (6/5) | DOM Error while querying
      * 
-     * getAttributeAll performs a query + RPC per node (N+1). Batched attribute fetch via DOM.getAttributes or DOM.collectClassNamesFromSubtree-style calls would dramatically cut traffic.
-     * */
+     * getAttributeAll performs a query + RPC per node (N+1). Batched attribute fetch via DOM.getAttributes 
+     * or DOM.collectClassNamesFromSubtree-style calls would dramatically cut traffic.
+     * 
+     * @param selector CSS selector or "backend:nodeId" format
+     * @param attrName Attribute name to retrieve
+     * @param start Starting index (0-based)
+     * @param limit Maximum number of results
+     * @return List of attribute values
+     */
     @Throws(ChromeDriverException::class)
     fun getAttributeAll(selector: String, attrName: String, start: Int, limit: Int): List<String> {
         return querySelectorAll(selector).asSequence().drop(start).take(limit)
@@ -106,6 +152,12 @@ class PageHandler(
             .toList()
     }
     
+    /**
+     * Checks if the element matching the selector is visible.
+     * 
+     * @param selector CSS selector or "backend:nodeId" format
+     * @return true if visible, false otherwise
+     */
     @Throws(ChromeDriverException::class)
     fun visible(selector: String) = predicateOnElement(selector) { visible(it) }
     
@@ -137,31 +189,38 @@ class PageHandler(
      * This method fetches an element with `selector` and focuses it. If there's no
      * element matching `selector`, the method returns 0.
      *
-     * @param selector - A
-     * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors | selector }
-     * of an element to focus. If there are multiple elements satisfying the
-     * selector, the first will be focused.
-     * @returns  NodeId which resolves when the element matching selector is
-     * successfully focused. returns 0 if there is no element
-     * matching selector.
+     * Supports two selector formats:
+     * 1. CSS selector: "input#username"
+     * 2. Backend node ID: "backend:123"
+     *
+     * @param selector - A CSS selector or "backend:nodeId" format of an element to focus.
+     * If there are multiple elements satisfying the selector, the first will be focused.
+     * @returns NodeId which resolves when the element matching selector is
+     * successfully focused. Returns 0 if there is no element matching selector.
      */
     @Throws(ChromeDriverException::class)
     fun focusOnSelector(selector: String): Int {
-        val rootId = domAPI?.document?.nodeId ?: return 0
-        
-        val nodeId = domAPI?.querySelector(rootId, selector)
-        if (nodeId == 0) {
+        val nodeId = parseSelector(selector)
+        if (nodeId == null || nodeId == 0) {
             return 0
         }
 
-        domAPI?.focus(nodeId, rootId, null)
+        // Fix: Only use nodeId parameter, others should be null
+        domAPI?.focus(nodeId, null, null)
         
-        return nodeId ?: 0
+        return nodeId
     }
     
+    /**
+     * Scrolls the element into view if needed.
+     * 
+     * @param selector CSS selector or "backend:nodeId" format
+     * @param rect Optional rectangle to scroll into view
+     * @return nodeId of the element, or null if not found
+     */
     @Throws(ChromeDriverException::class)
     fun scrollIntoViewIfNeeded(selector: String, rect: Rect? = null): Int? {
-        val nodeId = querySelector(selector)
+        val nodeId = parseSelector(selector)
         if (nodeId == null || nodeId == 0) {
             logger.info("No node found for selector: $selector")
             return null
@@ -258,9 +317,68 @@ class PageHandler(
         } else null
     }
     
+    /**
+     * Parses the selector and returns the node ID.
+     * Supports two formats:
+     * 1. Regular CSS selector: returns nodeId via querySelector
+     * 2. Backend node ID selector: "backend:123" returns nodeId via resolveNode
+     * 
+     * @param selector CSS selector or "backend:nodeId" format
+     * @return nodeId or null if not found
+     */
+    @Throws(ChromeDriverException::class)
+    private fun parseSelector(selector: String): Int? {
+        // Check if it's a backend node ID selector
+        if (selector.startsWith(BACKEND_NODE_PREFIX)) {
+            val backendNodeIdStr = selector.substring(BACKEND_NODE_PREFIX.length)
+            val backendNodeId = backendNodeIdStr.toIntOrNull()
+            
+            if (backendNodeId == null) {
+                logger.warn("Invalid backend node ID format: {}", selector)
+                return null
+            }
+            
+            // Resolve backend node ID to nodeId
+            return resolveBackendNodeId(backendNodeId)
+        }
+        
+        // Regular CSS selector
+        return querySelectorOrNull(selector)
+    }
+    
+    /**
+     * Resolves a backend node ID to a regular node ID.
+     * 
+     * @param backendNodeId The backend node ID
+     * @return nodeId or null if resolution fails
+     */
+    @Throws(ChromeDriverException::class)
+    private fun resolveBackendNodeId(backendNodeId: Int): Int? {
+        return try {
+            // Use DOM.resolveNode to convert backendNodeId to a runtime object
+            val remoteObject = domAPI?.resolveNode(null, backendNodeId, null, null)
+            
+            if (remoteObject?.objectId == null) {
+                logger.warn("Failed to resolve backend node ID: {}", backendNodeId)
+                return null
+            }
+            
+            // Use DOM.requestNode to get the nodeId from the runtime object
+            val nodeId = domAPI?.requestNode(remoteObject.objectId)
+            
+            // Release the remote object to avoid memory leaks
+            runtimeAPI?.releaseObject(remoteObject.objectId)
+            
+            nodeId
+        } catch (e: Exception) {
+            logger.warn("Exception resolving backend node ID {}: {}", backendNodeId, e.message)
+            null
+        }
+    }
+    
     @Throws(ChromeDriverException::class)
     private fun <T> invokeOnElement(selector: String, action: (Int) -> T): T? {
-        val nodeId = querySelectorOrNull(selector)
+        val nodeId = parseSelector(selector)
         if (nodeId != null && nodeId > 0) {
             return action(nodeId)
         }
@@ -270,7 +388,7 @@ class PageHandler(
     
     @Throws(ChromeDriverException::class)
     private fun predicateOnElement(selector: String, action: (Int) -> Boolean): Boolean {
-        val nodeId = querySelectorOrNull(selector)
+        val nodeId = parseSelector(selector)
         if (nodeId != null && nodeId > 0) {
             return action(nodeId)
         }
