@@ -6,6 +6,9 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.*
  * Kotlin-native DOM service interface.
  */
 interface DomService {
+
+    suspend fun getBrowserUseState(snapshotOptions: SnapshotOptions): BrowserUseState
+
     /**
      * Collect all trees (DOM, AX, Snapshot) for the given target.
      */
@@ -41,8 +44,6 @@ interface DomService {
     fun buildDOMState(root: TinyTree, includeAttributes: List<String> = emptyList()): DOMState
 
     suspend fun buildBrowserState(domState: DOMState): BrowserUseState
-
-    suspend fun getActiveDOMState(snapshotOptions: SnapshotOptions): BrowserUseState
 
     /**
      * Compute a rich client profile from the active browser context.

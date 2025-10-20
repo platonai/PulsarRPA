@@ -5,8 +5,7 @@ import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.InstructionResult
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.browser.driver.chrome.dom.BrowserUseState
-import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
-import ai.platon.pulsar.browser.driver.chrome.dom.MicroDOMTreeNode
+import ai.platon.pulsar.browser.driver.chrome.dom.DOMState
 import ai.platon.pulsar.browser.driver.chrome.dom.DomDebug
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
@@ -295,7 +294,7 @@ class BrowserPerceptiveAgent(
             includeInteractivity = true
         )
 
-        return domService.getActiveDOMState(snapshotOptions)
+        return domService.getBrowserUseState(snapshotOptions)
     }
 
     /**
@@ -655,8 +654,7 @@ class BrowserPerceptiveAgent(
                 // message: agent guide + overall goal + last action summary + current context message
                 val message = buildExecutionMessage(systemMsg, userMsg, screenshotB64)
                 // interactive elements are already appended to message
-                val stepActionResult =
-                    generateStepActionWithRetry(message, stepContext, listOf(), screenshotB64)
+                val stepActionResult = generateStepActionWithRetry(message, stepContext, null, screenshotB64)
 
                 if (stepActionResult == null) {
                     consecutiveNoOps++
@@ -880,12 +878,12 @@ class BrowserPerceptiveAgent(
     private suspend fun generateStepActionWithRetry(
         message: String,
         context: ExecutionContext,
-        interactiveNodes: List<MicroDOMTreeNode> = listOf(),
+        domState: DOMState?,
         screenshotB64: String?
     ): ActionDescription? {
         return try {
             // Use overload supplying extracted elements to avoid re-extraction
-            tta.generate(message, interactiveNodes, screenshotB64)
+            tta.generate(message, domState, screenshotB64)
         } catch (e: Exception) {
             logError("Action generation failed", e, context.sessionId)
             consecutiveFailureCounter.incrementAndGet()
@@ -1182,7 +1180,7 @@ class BrowserPerceptiveAgent(
     private suspend fun buildUserMessage(instruction: String, browserUseState: BrowserUseState): String {
         val currentUrl = getCurrentUrl()
         val his = if (_history.isEmpty()) "(无)" else _history.takeLast(min(8, _history.size)).joinToString("\n")
-        val interactiveNodesJson =  DOMSerializer.toJson(browserUseState.domState.interactiveNodes)
+        val interactiveNodesJson =  browserUseState.domState.interactiveNodesJson
 
         return """
 此前动作摘要：

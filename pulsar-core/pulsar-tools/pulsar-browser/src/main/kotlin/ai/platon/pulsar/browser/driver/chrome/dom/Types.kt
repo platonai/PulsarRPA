@@ -52,15 +52,15 @@ data class CleanedDOMTreeNode(
  * Enhanced with compound component marking and paint order information.
  */
 data class MicroDOMTreeNode(
-    val shouldDisplay: Boolean?,
-    val interactiveIndex: Int?,
-    val ignoredByPaintOrder: Boolean?,
-    val excludedByParent: Boolean?,
+    val shouldDisplay: Boolean? = null,
+    val interactiveIndex: Int? = null,
+    val ignoredByPaintOrder: Boolean? = null,
+    val excludedByParent: Boolean? = null,
     val isCompoundComponent: Boolean? = null,
-    val originalNode: CleanedDOMTreeNode,
-    val children: List<MicroDOMTreeNode>?,
-    val shouldShowScrollInfo: Boolean?,
-    val scrollInfoText: String?
+    val originalNode: CleanedDOMTreeNode? = null,
+    val children: List<MicroDOMTreeNode>? = null,
+    val shouldShowScrollInfo: Boolean? = null,
+    val scrollInfoText: String? = null
 )
 
 typealias MicroDOMTree = MicroDOMTreeNode
@@ -73,7 +73,10 @@ data class DOMState(
     val frameIds: List<String>,
     val selectorMap: Map<String, DOMTreeNodeEx>,
     val locatorMap: LocatorMap? = null
-)
+) {
+    val microTreeJson: String by lazy { DOMSerializer.toJson(microTree) }
+    val interactiveNodesJson: String by lazy { DOMSerializer.toJson(interactiveNodes) }
+}
 
 data class ClientInfo(
     // "Asia/Shanghai"
@@ -124,7 +127,9 @@ data class BrowserState(
     val goForwardUrl: String,
     val clientInfo: ClientInfo,
     val scrollState: ScrollState
-)
+) {
+    val json: String by lazy { DOMSerializer.toJson(this) }
+}
 
 data class BrowserUseState(
     val browserState: BrowserState,

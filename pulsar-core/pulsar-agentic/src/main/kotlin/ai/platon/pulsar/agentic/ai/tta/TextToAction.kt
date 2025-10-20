@@ -1,7 +1,6 @@
 package ai.platon.pulsar.agentic.ai.tta
 
-import ai.platon.pulsar.browser.driver.chrome.dom.MicroDOMTreeNode
-import ai.platon.pulsar.browser.driver.chrome.dom.DOMStateBuilder
+import ai.platon.pulsar.browser.driver.chrome.dom.DOMState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ExperimentalApi
@@ -60,9 +59,14 @@ open class TextToAction(
         driver: WebDriver,
         screenshotB64: String? = null,
     ): ActionDescription {
-        val browserState = (driver as PulsarWebDriver).domService.getActiveDOMState(SnapshotOptions())
+        val browserUseState = (driver as PulsarWebDriver).domService.getBrowserUseState(SnapshotOptions())
 
-        return generate(instruction, browserState.domState.interactiveNodes, screenshotB64)
+        return generate(instruction, browserUseState.domState, screenshotB64)
+    }
+
+    @ExperimentalApi
+    open suspend fun generate(instruction: String, screenshotB64: String? = null): ActionDescription {
+        return generate(instruction, null, screenshotB64)
     }
 
     /**
@@ -75,11 +79,11 @@ open class TextToAction(
     @ExperimentalApi
     open suspend fun generate(
         instruction: String,
-        interactiveNodes: List<MicroDOMTreeNode> = listOf(),
+        domState: DOMState? = null,
         screenshotB64: String? = null
     ): ActionDescription {
         try {
-            return generateWithToolCallSpecs(instruction, interactiveNodes, screenshotB64, 1)
+            return generateWithToolCallSpecs(instruction, domState, screenshotB64, 1)
         } catch (e: Exception) {
             val errorResponse = ModelResponse(
                 """
@@ -95,7 +99,7 @@ open class TextToAction(
     @ExperimentalApi
     open suspend fun generateWithToolCallSpecs(
         instruction: String,
-        interactiveNodes: List<MicroDOMTreeNode> = listOf(),
+        domState: DOMState? = null,
         screenshotB64: String? = null,
         toolCallLimit: Int = 100,
     ): ActionDescription {
@@ -104,7 +108,7 @@ open class TextToAction(
             else -> buildOperatorSystemPrompt(instruction)
         }
 
-        val toolUsePrompt = buildToolUsePrompt(interactiveNodes, toolCallLimit)
+        val toolUsePrompt = buildToolUsePrompt(domState, toolCallLimit)
         val response = if (screenshotB64 != null) {
             chatModel.call(systemPrompt, toolUsePrompt, null, screenshotB64, "image/jpeg")
         } else {
@@ -117,14 +121,14 @@ open class TextToAction(
     @ExperimentalApi
     open suspend fun generateWithSourceCode(
         command: String,
-        interactiveNodes: List<MicroDOMTreeNode> = listOf()
+        domState: DOMState? = null,
     ): ModelResponse {
         val prompt = buildString {
             appendLine(webDriverSourceCodeUseMessage)
 
-            if (interactiveNodes.isNotEmpty()) {
+            if (domState != null) {
                 appendLine("可交互元素列表：")
-                appendLine(DOMStateBuilder.toJson(interactiveNodes))
+                appendLine(domState.microTreeJson)
             }
 
             appendLine(command)
@@ -133,12 +137,12 @@ open class TextToAction(
         return chatModel.call(prompt)
     }
 
-    fun buildToolUsePrompt(interactiveNodes: List<MicroDOMTreeNode>, toolCallLimit: Int = 100): String {
-        val json = DOMStateBuilder.toJson(interactiveNodes)
+    fun buildToolUsePrompt(domState: DOMState? = null, toolCallLimit: Int = 100): String {
+        val json = domState?.microTreeJson
         val prompt = buildString {
             appendLine("每次最多调用 $toolCallLimit 个工具")
 
-            if (json.isNotEmpty()) {
+            if (json != null) {
                 appendLine("可交互元素列表: ")
                 appendLine(json)
             }
