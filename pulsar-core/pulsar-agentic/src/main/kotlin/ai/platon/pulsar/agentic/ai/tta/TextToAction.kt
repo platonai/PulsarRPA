@@ -21,7 +21,6 @@ import com.google.gson.JsonParser
 import java.nio.file.Files
 
 open class TextToAction(
-    val driver: WebDriver,
     val conf: ImmutableConfig
 ) {
     private val logger = getLogger(this)
@@ -59,9 +58,9 @@ open class TextToAction(
         screenshotB64: String? = null,
     ): ActionDescription {
         try {
-            val interactiveElements = getInteractiveElements(driver)
+            val elements = getInteractiveElements(driver)
 
-            return generate(instruction, interactiveElements, screenshotB64)
+            return generate(instruction, elements, screenshotB64)
         } catch (e: Exception) {
             val errorResponse = ModelResponse(
                 """
@@ -83,15 +82,15 @@ open class TextToAction(
      * */
     open suspend fun generate(
         instruction: String,
-        interactiveElements: List<InteractiveElement> = listOf(),
+        elements: List<InteractiveElement> = listOf(),
         screenshotB64: String? = null
     ): ActionDescription {
-        return generateWithToolCallSpecs(instruction, interactiveElements, screenshotB64, 1)
+        return generateWithToolCallSpecs(instruction, elements, screenshotB64, 1)
     }
 
     open suspend fun generateWithToolCallSpecs(
         instruction: String,
-        interactiveElements: List<InteractiveElement> = listOf(),
+        elements: List<InteractiveElement> = listOf(),
         screenshotB64: String? = null,
         toolCallLimit: Int = 100,
     ): ActionDescription {
@@ -100,7 +99,7 @@ open class TextToAction(
             else -> buildOperatorSystemPrompt(instruction)
         }
 
-        val toolUsePrompt = buildToolUsePrompt(interactiveElements, toolCallLimit)
+        val toolUsePrompt = buildToolUsePrompt(elements, toolCallLimit)
         val response = if (screenshotB64 != null) {
             chatModel.call(systemPrompt, toolUsePrompt, null, screenshotB64, "image/jpeg")
         } else {
@@ -113,14 +112,14 @@ open class TextToAction(
     @ExperimentalApi
     open suspend fun generateWithSourceCode(
         command: String,
-        interactiveElements: List<InteractiveElement> = listOf()
+        elements: List<InteractiveElement> = listOf()
     ): ModelResponse {
         val prompt = buildString {
             appendLine(webDriverSourceCodeUseMessage)
 
-            if (interactiveElements.isNotEmpty()) {
+            if (elements.isNotEmpty()) {
                 appendLine("可交互元素列表：")
-                interactiveElements.forEach { appendLine(it) }
+                elements.forEach { appendLine(it) }
             }
 
             appendLine(command)
@@ -130,15 +129,15 @@ open class TextToAction(
     }
 
     fun buildToolUsePrompt(
-        interactiveElements: List<InteractiveElement>,
+        elements: List<InteractiveElement>,
         toolCallLimit: Int = 100,
     ): String {
         val prompt = buildString {
             appendLine("每次最多调用 $toolCallLimit 个工具")
 
-            if (interactiveElements.isNotEmpty()) {
+            if (elements.isNotEmpty()) {
                 appendLine("可交互元素列表: ")
-                interactiveElements.forEach { e -> appendLine(e.toString()) }
+                elements.forEach { e -> appendLine(e.toString()) }
             }
 
             appendLine()
