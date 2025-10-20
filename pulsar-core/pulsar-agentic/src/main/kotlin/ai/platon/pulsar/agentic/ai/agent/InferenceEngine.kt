@@ -32,10 +32,10 @@ data class LLMUsage(
 data class Metadata(val progress: String = "", val completed: Boolean = false)
 
 data class ObserveElement(
-    val locator: String,
+    val selector: String,
     val description: String,
     val method: String? = null,
-    val arguments: List<String>? = null,
+    val arguments: Map<String, String>? = null,
 )
 
 data class InternalObserveResult(
@@ -225,8 +225,14 @@ class InferenceEngine(
     }
 
     suspend fun observe(params: ObserveParams): InternalObserveResult {
+        if (params.returnAction) {
+            require(params.instruction.contains("click")) {
+                "If `returnAction` is true, the tool specification has to be included in `params.instruction`" }
+        }
+
         // Build dynamic schema hint for the LLM (prompt-enforced)
         val systemMsg = promptBuilder.buildObserveSystemPrompt(params.userProvidedInstructions)
+        // and a function call requirement is contained in the message
         val userMsg = promptBuilder.buildObserveUserMessage(params.instruction, params)
 
         val prefix = if (params.fromAct) "act" else "observe"
@@ -290,6 +296,14 @@ class InferenceEngine(
     }
 
     // ----------------------------------- Helpers -----------------------------------
+    /**
+     * Observe elements schema:
+     * ```json
+     *  { "elements": [ { "selector": string, "description": string, "method": string, "arguments": [{"name": string, "value": string}] } ] }
+     * ```
+     *
+     * This schema is build by [PromptBuilder.buildObserveResultSchemaContract] and is passed to LLM for a restricted response.
+     * */
     private fun parseObserveElements(root: JsonNode, returnAction: Boolean): List<ObserveElement> {
         // Determine the array of items to read
         val arr: ArrayNode = when {
@@ -309,19 +323,51 @@ class InferenceEngine(
         val result = mutableListOf<ObserveElement>()
         for (i in 0 until arr.size()) {
             val el: JsonNode = arr.get(i)
-            val locator = el.path("locator").asText("")
+            val selector = el.path("selector").asText("")
             val desc = el.path("description").asText("")
             val baseMethod = el.path("method").asText(null)
-            val argsNode = el.path("arguments")
-            val args: List<String>? = if (argsNode != null && argsNode.isArray) {
-                argsNode.map { it.asText("") }
-            } else null
+
+            // Parse arguments according to schema: array of { name, value }
+            val argsNode = el.get("arguments")
+            val argsMap: Map<String, String>? = when {
+                argsNode == null || argsNode.isNull -> null
+                argsNode.isArray -> {
+                    val m = linkedMapOf<String, String>()
+                    for (j in 0 until argsNode.size()) {
+                        val item = argsNode.get(j)
+                        val name = item.path("name").asText(null)
+                        // Accept both "value" and fallback to text of node if needed
+                        val value = item.path("value").asText(null)
+                        if (!name.isNullOrBlank()) {
+                            m[name] = value ?: ""
+                        }
+                    }
+                    if (m.isEmpty()) null else m
+                }
+                argsNode.isObject -> {
+                    // Be tolerant: support either a single {name,value} object or a map-like object
+                    if (argsNode.has("name") || argsNode.has("value")) {
+                        val name = argsNode.path("name").asText(null)
+                        val value = argsNode.path("value").asText(null)
+                        if (!name.isNullOrBlank()) mapOf(name to (value ?: "")) else null
+                    } else {
+                        val m = linkedMapOf<String, String>()
+                        val fields = argsNode.fields()
+                        while (fields.hasNext()) {
+                            val (k, v) = fields.next().let { it.key to it.value }
+                            m[k] = v.asText("")
+                        }
+                        if (m.isEmpty()) null else m
+                    }
+                }
+                else -> null
+            }
 
             val item = ObserveElement(
-                locator = locator,
+                selector = selector,
                 description = desc,
                 method = baseMethod.takeIf { returnAction },
-                arguments = args.takeIf { returnAction }
+                arguments = argsMap.takeIf { returnAction }
             )
 
             result.add(item)

@@ -37,7 +37,7 @@ data class ElementBounds(
 )
 
 data class ActionDescription(
-    val functionCalls: List<String>,
+    val expressions: List<String>,
     val selectedElement: InteractiveElement?,
     val modelResponse: ModelResponse,
 ) {

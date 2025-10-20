@@ -22,3 +22,13 @@ Read root README-AI.md and `devdocs/copilot/test-guide.md` for guidelines
 
 ### When serialize object to json in pulsar-browser module, always Round to two decimal places
 
+### override suspend fun act(observe: ObserveResult): ActResult
+
+- function call 中有一些参数需要提前传入，或者要求 LLM 留空
+
+### Fully locator support in WebDriver
+
+在 PulsarWebDriver 中，对所有依赖 selector 的方法进行改进：
+
+1. 如果 selector 具有 `backend:` 前缀，则 `backend:` 后的部分为 `backendNodeId`，使用该 id 进行元素定位。
+2. 其他情况，保持现有逻辑不变，使用标准 css path 定位

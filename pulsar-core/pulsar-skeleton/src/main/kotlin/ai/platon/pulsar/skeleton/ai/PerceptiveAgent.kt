@@ -52,7 +52,7 @@ data class ObserveResult(
     val description: String,
     val backendNodeId: Int? = null,
     val method: String? = null,
-    val arguments: List<String>? = null
+    val arguments: Map<String, String>? = null
 )
 
 interface PerceptiveAgent {

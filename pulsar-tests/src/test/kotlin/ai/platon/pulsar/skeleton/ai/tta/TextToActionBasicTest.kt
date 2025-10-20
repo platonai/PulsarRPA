@@ -23,7 +23,7 @@ class TextToActionBasicTest {
         val actionDescription = ActionDescription(functionCalls, null, modelResponse)
 
         assertNotNull(actionDescription)
-        assertEquals(functionCalls, actionDescription.functionCalls)
+        assertEquals(functionCalls, actionDescription.expressions)
         assertEquals(modelResponse, actionDescription.modelResponse)
         assertNull(actionDescription.selectedElement)
     }
@@ -34,8 +34,8 @@ class TextToActionBasicTest {
 
         val actionDescription = ActionDescription(emptyList(), null, modelResponse)
 
-        assertTrue(actionDescription.functionCalls.isEmpty())
-        assertEquals(0, actionDescription.functionCalls.size)
+        assertTrue(actionDescription.expressions.isEmpty())
+        assertEquals(0, actionDescription.expressions.size)
     }
 
     @Test

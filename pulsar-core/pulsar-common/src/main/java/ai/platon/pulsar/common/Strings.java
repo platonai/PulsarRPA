@@ -18,7 +18,6 @@
 package ai.platon.pulsar.common;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.math.NumberUtils;
 
 import java.awt.event.KeyEvent;
@@ -735,14 +734,22 @@ public final class Strings {
     else return s;
   }
 
-    public static String compactLog(String log) {
+   /**
+    * Replace all consecutive whitespace characters in the string — including regular spaces, tab characters, line breaks,
+    * full-width spaces, and HTML non-breaking spaces — with a single regular space " ".
+    * */
+    public static String compactWhitespaces(String log) {
         if (log == null) return null;
         return log.replaceAll("[\\s\\u00A0]+", " ").trim();
     }
 
-    public static String compactLog(String log, int maxWidth) {
+    /**
+     * Replace all consecutive whitespace characters in the string — including regular spaces, tab characters, line breaks,
+     * full-width spaces, and HTML non-breaking spaces — with a single regular space " ".
+     * */
+    public static String compactWhitespaces(String log, int maxWidth) {
         if (log == null) return null;
-        return StringUtils.abbreviate(compactLog(log), maxWidth);
+        return StringUtils.abbreviate(compactWhitespaces(log), maxWidth);
     }
 
     /**

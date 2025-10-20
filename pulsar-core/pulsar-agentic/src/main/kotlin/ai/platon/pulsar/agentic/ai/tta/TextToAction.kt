@@ -273,7 +273,7 @@ $AGENT_SYSTEM_PROMPT
         else -> null
     }
 
-    internal fun toolCallToDriverLine(tc: ToolCall): String? = ToolCallExecutor.toolCallToDriverLine(tc)
+    internal fun toolCallToDriverLine(tc: ToolCall): String? = ToolCallExecutor.toolCallToExpression(tc)
 
     /**
      * Parse JavaScript result into InteractiveElement objects

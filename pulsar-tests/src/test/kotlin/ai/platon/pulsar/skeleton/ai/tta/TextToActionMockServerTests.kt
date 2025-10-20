@@ -32,8 +32,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("点击搜索按钮", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click-related action")
@@ -47,8 +47,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("在搜索框输入 'AI工具'", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("fill") || action.contains("driver.fill") ||
                       action.contains("type") || action.contains("driver.type"),
@@ -63,8 +63,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("选择选项2", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("select") || action.contains("driver.select") ||
                       action.contains("click") || action.contains("driver.click"),
@@ -79,8 +79,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("点击切换开关", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click action for toggle")
@@ -96,8 +96,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("填写用户名 'testuser'", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("fill") || action.contains("driver.fill") ||
                       action.contains("type") || action.contains("driver.type"),
@@ -112,8 +112,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("输入邮箱 'test@example.com'", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("fill") || action.contains("driver.fill") ||
                       action.contains("type") || action.contains("driver.type"),
@@ -128,8 +128,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("调整滑块到75", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("fill") || action.contains("driver.fill") ||
                       action.contains("click") || action.contains("driver.click"),
@@ -144,8 +144,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("切换订阅开关", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click action for toggle switch")
@@ -161,8 +161,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("滚动到页面中间", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("scroll") || action.contains("driver.scroll"),
                       "Should generate scroll-related action")
@@ -176,8 +176,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("调整范围输入到50", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("fill") || action.contains("driver.fill") ||
                       action.contains("click") || action.contains("driver.click"),
@@ -194,8 +194,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("切换暗色模式", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click action for dark mode toggle")
@@ -209,8 +209,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("拖拽第一个项目", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("drag") || action.contains("driver.drag") ||
                       action.contains("click") || action.contains("driver.click"),
@@ -227,8 +227,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("输入密码 'secure123'", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("fill") || action.contains("driver.fill") ||
                       action.contains("type") || action.contains("driver.type"),
@@ -243,8 +243,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("选择日期", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("fill") || action.contains("driver.fill") ||
                       action.contains("click") || action.contains("driver.click"),
@@ -261,8 +261,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("等待动态内容加载", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("waitFor") || action.contains("driver.waitFor"),
                       "Should generate wait-related action")
@@ -278,8 +278,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("点击第一个提交按钮", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click action")
@@ -295,8 +295,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("导航到 interactive-2 页面", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("navigateTo") || action.contains("driver.navigateTo"),
                       "Should generate navigation-related action")
@@ -313,8 +313,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("返回上一页", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("back") || action.contains("driver.back"),
                       "Should generate back navigation action")
@@ -330,10 +330,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("点击不存在的魔法按钮", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
 
         // Should either generate an empty action or a reasonable fallback
-        printlnPro("Non-existent element request generated: ${actionDescription.functionCalls}")
+        printlnPro("Non-existent element request generated: ${actionDescription.expressions}")
     }
 
     @Test
@@ -344,10 +344,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("操作页面", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
 
         // Should generate some reasonable action based on available elements
-        printlnPro("Ambiguous command generated: ${actionDescription.functionCalls}")
+        printlnPro("Ambiguous command generated: ${actionDescription.expressions}")
     }
 
     // ===== Tests for English language support =====
@@ -360,8 +360,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("Click the search button", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("English prompt generated: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click action for English prompt")
@@ -375,8 +375,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("Fill in the username field with 'testuser'", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("English form fill generated: $action")
             assertTrue(action.contains("fill") || action.contains("driver.fill") ||
                       action.contains("type") || action.contains("driver.type"),
@@ -393,8 +393,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("提交表单", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Complex form submission generated: $action")
             assertTrue(action.contains("click") || action.contains("driver.click") ||
                       action.contains("submit") || action.contains("driver.submit"),
@@ -409,8 +409,8 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("点击加载更多按钮", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+            val action = actionDescription.expressions.first()
             printlnPro("Dynamic element interaction generated: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click action for dynamic element")

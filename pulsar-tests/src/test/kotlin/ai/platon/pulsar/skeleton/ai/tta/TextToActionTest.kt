@@ -141,7 +141,7 @@ class TextToActionTest: TextToActionTestBase() {
         assertNotNull(actionDescription)
         // selectedElement is only available in the suspend version, so skip this assertion
         // assertNull(actionDescription.selectedElement)
-        assertTrue(actionDescription.functionCalls.isEmpty())
+        assertTrue(actionDescription.expressions.isEmpty())
         assertTrue(actionDescription.modelResponse.content.contains("No WebDriver instance available"))
     }
 
@@ -155,7 +155,7 @@ class TextToActionTest: TextToActionTestBase() {
         assertNotNull(actionDescription.modelResponse)
 
         // Test that function calls are extracted from the response
-        val functionCalls = actionDescription.functionCalls
+        val functionCalls = actionDescription.expressions
         printlnPro("Extracted function calls: $functionCalls")
 
         // The function calls should be related to the prompt

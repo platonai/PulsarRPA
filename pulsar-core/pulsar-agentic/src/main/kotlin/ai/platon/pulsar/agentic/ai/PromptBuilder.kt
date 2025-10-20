@@ -3,6 +3,7 @@ package ai.platon.pulsar.agentic.ai
 import ai.platon.pulsar.browser.driver.chrome.dom.PulsarDOMSerializer
 import ai.platon.pulsar.agentic.ai.agent.ExtractParams
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
+import ai.platon.pulsar.common.Strings
 import java.util.*
 
 class PromptBuilder(val locale: Locale = Locale.CHINESE) {
@@ -236,7 +237,7 @@ Be comprehensive: if there are multiple elements that may be relevant for future
     fun buildObserveUserMessage(instruction: String, params: ObserveParams): SimpleMessage {
         val browserStateJson = PulsarDOMSerializer.MAPPER.writeValueAsString(params.browserState.basicState)
 
-        val schemaContract = buildObserveSchemaContract(params)
+        val schemaContract = buildObserveResultSchemaContract(params)
         fun contentCN() = """
 指令: $instruction
 
@@ -283,24 +284,29 @@ $schemaContract
         return SimpleMessage(role = "user", content = content)
     }
 
-    // observe
-    private fun buildObserveSchemaContract(params: ObserveParams): String {
+    /**
+     * Observe result schema:
+     * ```json
+     * { "elements": [ { "selector": string, "description": string, "method": string, "arguments": [{"name": string, "value": string}] } ] }
+     * ```
+     * */
+    private fun buildObserveResultSchemaContract(params: ObserveParams): String {
         // Build schema hint for the LLM (prompt-enforced)
 
         val actionFields = if (params.returnAction) {
-            """, "method": string, "arguments": [string]"""
+            """, "method": string, "arguments": [{"name": string, "value": string}]"""
         } else ""
 
         val schema = """
 {
   "elements": [
     {
-      "locator": string,
+      "selector": string,
       "description": string$actionFields
     }
   ]
 }
-""".replace("\n", " ").replace("\\s+".toRegex(), " ")
+""".let { Strings.compactWhitespaces(it) }
 
         return if (isCN) {
             """

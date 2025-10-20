@@ -34,27 +34,27 @@ internal class InternalAgentExecutor(
     }
 
     suspend fun performAct(action: ActionDescription): InstructionResult {
-        if (action.functionCalls.isEmpty()) {
+        if (action.expressions.isEmpty()) {
             return InstructionResult(listOf(), listOf(), action.modelResponse)
         }
-        val functionCalls = action.functionCalls
+        val functionCalls = action.expressions
 
         // Dispatches and executes each action using a SimpleCommandDispatcher.
         val dispatcher = ToolCallExecutor()
         val functionResults = functionCalls.map { action ->
             dispatcher.execute(action, driver)
         }
-        return InstructionResult(action.functionCalls, functionResults, action.modelResponse)
+        return InstructionResult(action.expressions, functionResults, action.modelResponse)
     }
 
     suspend fun execute(action: ActionDescription): InstructionResult {
-        if (action.functionCalls.isEmpty()) {
+        if (action.expressions.isEmpty()) {
             return InstructionResult(listOf(), listOf(), action.modelResponse)
         }
-        val functionCalls = action.functionCalls.take(1)
+        val functionCalls = action.expressions.take(1)
         val dispatcher = ToolCallExecutor()
         val functionResults = functionCalls.map { fc -> dispatcher.execute(fc, driver) }
-        return InstructionResult(action.functionCalls, functionResults, action.modelResponse)
+        return InstructionResult(action.expressions, functionResults, action.modelResponse)
     }
 
     @Deprecated("Use act instead", replaceWith = ReplaceWith("act(action)"))
@@ -66,10 +66,10 @@ internal class InternalAgentExecutor(
 
         // Dispatches and executes each action using a SimpleCommandDispatcher.
         val dispatcher = ToolCallExecutor()
-        val functionResults = actions.functionCalls.map { action ->
+        val functionResults = actions.expressions.map { action ->
             dispatcher.execute(action, driver)
         }
 
-        return InstructionResult(actions.functionCalls, functionResults, actions.modelResponse)
+        return InstructionResult(actions.expressions, functionResults, actions.modelResponse)
     }
 }

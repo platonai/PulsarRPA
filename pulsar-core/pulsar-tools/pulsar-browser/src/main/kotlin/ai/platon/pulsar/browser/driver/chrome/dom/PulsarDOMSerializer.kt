@@ -112,7 +112,7 @@ object PulsarDOMSerializer {
         addToLocatorMap(node.originalNode, locatorMap)
         // Also add interactive index mapping if present on SlimNode
         node.interactiveIndex?.let { idx ->
-            locatorMap.add(LocatorType.INDEX, idx.toString(), node.originalNode)
+            locatorMap.add(Locator.Type.INDEX, idx.toString(), node.originalNode)
         }
 
         // Detect compound components if enabled
@@ -489,12 +489,12 @@ object PulsarDOMSerializer {
     ) {
         // Add by element hash (primary key)
         node.elementHash?.takeIf { it.isNotBlank() }?.let { h ->
-            locatorMap.add(LocatorType.HASH, h, node)
+            locatorMap.add(Locator.Type.HASH, h, node)
         }
 
         // Add by XPath (secondary key)
         node.xpath?.takeIf { it.isNotBlank() }?.let { xp ->
-            locatorMap.add(LocatorType.XPATH, xp, node)
+            locatorMap.add(Locator.Type.XPATH, xp, node)
         }
 
         val frameId = node.frameId
@@ -502,17 +502,17 @@ object PulsarDOMSerializer {
 
         // Add by backend node ID (tertiary key)
         backendNodeId?.let { bn ->
-            locatorMap.add(LocatorType.BACKEND_NODE_ID, bn.toString(), node)
+            locatorMap.add(Locator.Type.BACKEND_NODE_ID, bn.toString(), node)
         }
 
         // Add by `$frameId/$backendNodeId` as node ID
         if (frameId != null && backendNodeId != null) {
             val selector = "$frameId/$backendNodeId"
-            locatorMap.add(LocatorType.FRAME_BACKEND_NODE_ID, selector, node)
+            locatorMap.add(Locator.Type.FRAME_BACKEND_NODE_ID, selector, node)
         }
 
         // Add by node ID (fallback key)
-        locatorMap.add(LocatorType.NODE_ID, node.nodeId.toString(), node)
+        locatorMap.add(Locator.Type.NODE_ID, node.nodeId.toString(), node)
     }
 
     private fun createNodeLocator(node: DOMTreeNodeEx, frameIds: List<String>): String {

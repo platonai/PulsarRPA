@@ -42,15 +42,15 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for complex: $command")
+            assertTrue(actionDescription.expressions.size <= 1, "Should generate at most one action for complex: $command")
 
             printlnPro("Complex workflow command: $command")
-            printlnPro("Generated action: ${actionDescription.functionCalls}")
+            printlnPro("Generated action: ${actionDescription.expressions}")
             printlnPro("Model response: ${actionDescription.modelResponse.content}")
 
             // Should handle complex instructions in some way
 
-                val action = actionDescription.functionCalls.first()
+                val action = actionDescription.expressions.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
         }
     }
@@ -71,14 +71,14 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should generate at most one action for conditional: $command")
+            assertTrue(actionDescription.expressions.size <= 1, "Should generate at most one action for conditional: $command")
 
             printlnPro("Conditional command: $command")
-            printlnPro("Generated action: ${actionDescription.functionCalls}")
+            printlnPro("Generated action: ${actionDescription.expressions}")
 
             // Should handle conditional logic
 
-                val action = actionDescription.functionCalls.first()
+                val action = actionDescription.expressions.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
         }
     }
@@ -102,12 +102,12 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
+            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
 
             printlnPro("Context-aware command: $command (expected: $expectedContext)")
-            printlnPro("Generated action: ${actionDescription.functionCalls}")
+            printlnPro("Generated action: ${actionDescription.expressions}")
             printlnPro("Selected element: ${actionDescription.selectedElement}")
-                val action = actionDescription.functionCalls.first()
+                val action = actionDescription.expressions.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
         }
     }
@@ -129,12 +129,12 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command: $command")
+            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
 
             printlnPro("Spatial command: $command (expected: $expectedPosition)")
-            printlnPro("Generated action: ${actionDescription.functionCalls}")
+            printlnPro("Generated action: ${actionDescription.expressions}")
             printlnPro("Selected element: ${actionDescription.selectedElement}")
-                val action = actionDescription.functionCalls.first()
+                val action = actionDescription.expressions.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
         }
     }
@@ -161,10 +161,10 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should handle malformed command: '$command'")
+            assertTrue(actionDescription.expressions.size <= 1, "Should handle malformed command: '$command'")
 
             printlnPro("Malformed command: '$command'")
-            printlnPro("Generated action: ${actionDescription.functionCalls}")
+            printlnPro("Generated action: ${actionDescription.expressions}")
             printlnPro("Model response state: ${actionDescription.modelResponse.state}")
 
             // Should not crash and should return some response
@@ -188,14 +188,14 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should handle contradictory command: $command")
+            assertTrue(actionDescription.expressions.size <= 1, "Should handle contradictory command: $command")
 
             printlnPro("Contradictory command: $command")
-            printlnPro("Generated action: ${actionDescription.functionCalls}")
+            printlnPro("Generated action: ${actionDescription.expressions}")
 
             // Should handle contradictions in some way
 
-                val action = actionDescription.functionCalls.first()
+                val action = actionDescription.expressions.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
         }
     }
@@ -219,10 +219,10 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking(veryLongCommand, driver)
 
         assertNotNull(actionDescription)
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should handle very long command")
+        assertTrue(actionDescription.expressions.size <= 1, "Should handle very long command")
 
         printlnPro("Very long command length: ${veryLongCommand.length}")
-        printlnPro("Generated action: ${actionDescription.functionCalls}")
+        printlnPro("Generated action: ${actionDescription.expressions}")
         printlnPro("Model response length: ${actionDescription.modelResponse.content.length}")
 
         // Should handle long commands without crashing
@@ -246,14 +246,14 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should handle Unicode command: $command")
+            assertTrue(actionDescription.expressions.size <= 1, "Should handle Unicode command: $command")
 
             printlnPro("Unicode command: $command")
-            printlnPro("Generated action: ${actionDescription.functionCalls}")
+            printlnPro("Generated action: ${actionDescription.expressions}")
 
             // Should handle Unicode characters
 
-                val action = actionDescription.functionCalls.first()
+                val action = actionDescription.expressions.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
         }
     }
@@ -276,11 +276,11 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should handle $language command: $command")
+            assertTrue(actionDescription.expressions.size <= 1, "Should handle $language command: $command")
 
             printlnPro("$language command: $command")
-            printlnPro("Generated action: ${actionDescription.functionCalls}")
-                val action = actionDescription.functionCalls.first()
+            printlnPro("Generated action: ${actionDescription.expressions}")
+                val action = actionDescription.expressions.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
         }
     }
@@ -302,15 +302,15 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         }
 
         results.forEachIndexed { index, result ->
-            printlnPro("Rapid execution ${index + 1}: ${result.functionCalls}")
+            printlnPro("Rapid execution ${index + 1}: ${result.expressions}")
             assertNotNull(result, "Should have result for execution ${index + 1}")
-            assertTrue(result.functionCalls.size <= 1, "Should generate at most one action")
+            assertTrue(result.expressions.size <= 1, "Should generate at most one action")
         }
 
         // Results should be consistent
         val firstResult = results.first()
         results.forEach { result ->
-            assertEquals(firstResult.functionCalls.size, result.functionCalls.size,
+            assertEquals(firstResult.expressions.size, result.expressions.size,
                         "Should be consistent in number of actions")
         }
     }
@@ -331,11 +331,11 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should handle timing command: $command")
+            assertTrue(actionDescription.expressions.size <= 1, "Should handle timing command: $command")
 
             printlnPro("Timing command: $command")
-            printlnPro("Generated action: ${actionDescription.functionCalls}")
-                val action = actionDescription.functionCalls.first()
+            printlnPro("Generated action: ${actionDescription.expressions}")
+                val action = actionDescription.expressions.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
         }
     }
@@ -358,11 +358,11 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverActionBlocking(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.functionCalls.size <= 1, "Should handle validation command: $command")
+            assertTrue(actionDescription.expressions.size <= 1, "Should handle validation command: $command")
 
             printlnPro("Validation command: $command (type: $expectedType)")
-            printlnPro("Generated action: ${actionDescription.functionCalls}")
-                val action = actionDescription.functionCalls.first()
+            printlnPro("Generated action: ${actionDescription.expressions}")
+                val action = actionDescription.expressions.first()
                 assertTrue(action.isNotBlank(), "Should generate non-empty action")
         }
     }
@@ -380,19 +380,19 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         // Analyze the response structure
         printlnPro("=== RESPONSE ANALYSIS ===")
         printlnPro("Command: $testCommand")
-        printlnPro("Function calls: ${actionDescription.functionCalls}")
-        printlnPro("Number of function calls: ${actionDescription.functionCalls.size}")
+        printlnPro("Function calls: ${actionDescription.expressions}")
+        printlnPro("Number of function calls: ${actionDescription.expressions.size}")
         printlnPro("Model response state: ${actionDescription.modelResponse.state}")
         printlnPro("Model response content length: ${actionDescription.modelResponse.content.length}")
         printlnPro("Selected element: ${actionDescription.selectedElement}")
 
         // Validate response structure
-        assertNotNull(actionDescription.functionCalls, "Function calls should not be null")
+        assertNotNull(actionDescription.expressions, "Function calls should not be null")
         assertNotNull(actionDescription.modelResponse, "Model response should not be null")
-        assertTrue(actionDescription.functionCalls.size <= 1, "Should have at most one function call")
+        assertTrue(actionDescription.expressions.size <= 1, "Should have at most one function call")
 
         // If there are function calls, validate their format
-        actionDescription.functionCalls.forEach { functionCall ->
+        actionDescription.expressions.forEach { functionCall ->
             assertTrue(functionCall.startsWith("driver.") || functionCall.contains("driver."),
                       "Function call should reference driver: $functionCall")
             assertTrue(functionCall.contains("(") && functionCall.contains(")"),

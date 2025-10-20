@@ -31,11 +31,11 @@ class TextToActionSimpleTest : TextToActionTestBase() {
             val actionDescription = textToAction.generateWebDriverActionBlocking(prompt, driver)
 
             assertNotNull(actionDescription)
-            printlnPro("Generated ${actionDescription.functionCalls.size} function calls")
+            printlnPro("Generated ${actionDescription.expressions.size} function calls")
             printlnPro("Model response: ${actionDescription.modelResponse.content.take(200)}...")
-            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
+            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
 
-            val action = actionDescription.functionCalls.first()
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("click") || action.contains("driver.click"),
                       "Should generate click-related action")
@@ -62,16 +62,16 @@ class TextToActionSimpleTest : TextToActionTestBase() {
 
             // For now, accept that we might get 0 function calls if no interactive elements are found
             // This is better than the previous conditional logic that masked bugs
-            if (actionDescription.functionCalls.isEmpty()) {
+            if (actionDescription.expressions.isEmpty()) {
                 printlnPro("WARNING: No function calls generated. This indicates the AI model couldn't determine an action.")
                 printlnPro("This is expected behavior when no interactive elements are available on the page.")
                 // Don't fail the test - this is the correct behavior when no elements are found
                 return@runEnhancedWebDriverTest
             }
 
-            assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action for valid command")
+            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
 
-            val action = actionDescription.functionCalls.first()
+            val action = actionDescription.expressions.first()
             printlnPro("Generated action: $action")
             assertTrue(action.contains("fill") || action.contains("driver.fill") ||
                       action.contains("type") || action.contains("driver.type"),

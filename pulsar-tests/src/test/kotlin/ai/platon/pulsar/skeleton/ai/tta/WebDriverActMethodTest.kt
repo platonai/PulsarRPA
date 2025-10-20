@@ -37,12 +37,12 @@ class WebDriverActMethodTest : TextToActionTestBase() {
 
             assertNotNull(result)
             // Must generate at least one function call
-            assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action")
+            assertTrue(result.expressions.isNotEmpty(), "Should generate at least one action")
             // Should contain at most one action
-            assertTrue(result.functionCalls.size <= 1, "Should generate at most one action")
+            assertTrue(result.expressions.size <= 1, "Should generate at most one action")
 
             // The generated action should be related to clicking
-            val action = result.functionCalls.first()
+            val action = result.expressions.first()
             assertTrue(action.contains("click") || action.contains("driver.click"), "Should generate click action")
         }
     }
@@ -60,12 +60,12 @@ class WebDriverActMethodTest : TextToActionTestBase() {
 
             assertNotNull(result)
             // Must generate at least one function call
-            assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action")
+            assertTrue(result.expressions.isNotEmpty(), "Should generate at least one action")
             // Should contain at most one action
-            assertTrue(result.functionCalls.size <= 1, "Should generate at most one action")
+            assertTrue(result.expressions.size <= 1, "Should generate at most one action")
 
             // The generated action should be related to filling
-            val action = result.functionCalls.first()
+            val action = result.expressions.first()
             assertTrue(action.contains("fill") || action.contains("driver.fill"), "Should generate fill action")
         }
     }
@@ -79,12 +79,12 @@ class WebDriverActMethodTest : TextToActionTestBase() {
 
             assertNotNull(result)
             // Must generate at least one function call
-            assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action")
+            assertTrue(result.expressions.isNotEmpty(), "Should generate at least one action")
             // Should contain at most one action
-            assertTrue(result.functionCalls.size <= 1, "Should generate at most one action")
+            assertTrue(result.expressions.size <= 1, "Should generate at most one action")
 
             // The generated action should be related to navigation
-            val action = result.functionCalls.first()
+            val action = result.expressions.first()
             assertTrue(action.contains("navigateTo") || action.contains("driver.navigateTo"), "Should generate navigation action")
         }
     }
@@ -102,12 +102,12 @@ class WebDriverActMethodTest : TextToActionTestBase() {
 
             assertNotNull(result)
             // Must generate at least one function call
-            assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action")
+            assertTrue(result.expressions.isNotEmpty(), "Should generate at least one action")
             // Should contain at most one action
-            assertTrue(result.functionCalls.size <= 1, "Should generate at most one action")
+            assertTrue(result.expressions.size <= 1, "Should generate at most one action")
 
             // The generated action should be related to scrolling
-            val action = result.functionCalls.first()
+            val action = result.expressions.first()
             assertTrue(action.contains("scroll") || action.contains("driver.scroll"), "Should generate scroll action")
         }
     }
@@ -125,12 +125,12 @@ class WebDriverActMethodTest : TextToActionTestBase() {
 
             assertNotNull(result)
             // Must generate at least one function call
-            assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action")
+            assertTrue(result.expressions.isNotEmpty(), "Should generate at least one action")
             // Should contain at most one action
-            assertTrue(result.functionCalls.size <= 1, "Should generate at most one action")
+            assertTrue(result.expressions.size <= 1, "Should generate at most one action")
 
             // The generated action should be related to waiting
-            val action = result.functionCalls.first()
+            val action = result.expressions.first()
             assertTrue(action.contains("waitFor") || action.contains("driver.waitFor"), "Should generate wait action")
         }
     }
@@ -148,12 +148,12 @@ class WebDriverActMethodTest : TextToActionTestBase() {
 
             assertNotNull(result)
             // Must generate at least one function call
-            assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action")
+            assertTrue(result.expressions.isNotEmpty(), "Should generate at least one action")
             // Should contain at most one action
-            assertTrue(result.functionCalls.size <= 1, "Should generate at most one action")
+            assertTrue(result.expressions.size <= 1, "Should generate at most one action")
 
             // The generated action should be related to checkbox
-            val action = result.functionCalls.first()
+            val action = result.expressions.first()
             assertTrue(action.contains("check") || action.contains("driver.check"), "Should generate checkbox action")
         }
     }
@@ -171,9 +171,9 @@ class WebDriverActMethodTest : TextToActionTestBase() {
 
             assertNotNull(result)
             // Must generate at least one function call
-            assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action")
+            assertTrue(result.expressions.isNotEmpty(), "Should generate at least one action")
             // Should contain at most one action
-            assertTrue(result.functionCalls.size <= 1, "Should generate at most one action")
+            assertTrue(result.expressions.size <= 1, "Should generate at most one action")
         }
     }
 
@@ -190,9 +190,9 @@ class WebDriverActMethodTest : TextToActionTestBase() {
 
             assertNotNull(result)
             // Must generate at least one function call
-            assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action even for ambiguous prompts")
+            assertTrue(result.expressions.isNotEmpty(), "Should generate at least one action even for ambiguous prompts")
             // Should contain at most one action
-            assertTrue(result.functionCalls.size <= 1, "Should generate at most one action even for ambiguous prompts")
+            assertTrue(result.expressions.size <= 1, "Should generate at most one action even for ambiguous prompts")
         }
     }
 
@@ -213,12 +213,12 @@ class WebDriverActMethodTest : TextToActionTestBase() {
             assertNotNull(result3)
 
             // Each should generate exactly one action (at least one and at most one)
-            assertTrue(result1.functionCalls.isNotEmpty(), "First call should generate at least one action")
-            assertTrue(result1.functionCalls.size <= 1)
-            assertTrue(result2.functionCalls.isNotEmpty(), "Second call should generate at least one action")
-            assertTrue(result2.functionCalls.size <= 1)
-            assertTrue(result3.functionCalls.isNotEmpty(), "Third call should generate at least one action")
-            assertTrue(result3.functionCalls.size <= 1)
+            assertTrue(result1.expressions.isNotEmpty(), "First call should generate at least one action")
+            assertTrue(result1.expressions.size <= 1)
+            assertTrue(result2.expressions.isNotEmpty(), "Second call should generate at least one action")
+            assertTrue(result2.expressions.size <= 1)
+            assertTrue(result3.expressions.isNotEmpty(), "Third call should generate at least one action")
+            assertTrue(result3.expressions.size <= 1)
         }
     }
 
@@ -241,11 +241,11 @@ class WebDriverActMethodTest : TextToActionTestBase() {
                 val result = tta.generateWebDriverActionBlocking(prompt)
 
                 assertNotNull(result, "Result should not be null for prompt: $prompt")
-                assertTrue(result.functionCalls.isNotEmpty(), "Should generate at least one action for: $prompt")
-                assertTrue(result.functionCalls.size <= 1, "Should generate at most one action for: $prompt")
+                assertTrue(result.expressions.isNotEmpty(), "Should generate at least one action for: $prompt")
+                assertTrue(result.expressions.size <= 1, "Should generate at most one action for: $prompt")
 
                 printlnPro("Prompt: $prompt")
-                printlnPro("Function calls: ${result.functionCalls}")
+                printlnPro("Function calls: ${result.expressions}")
                 printlnPro("Model response: ${result.modelResponse.content}")
                 printlnPro("---")
             }

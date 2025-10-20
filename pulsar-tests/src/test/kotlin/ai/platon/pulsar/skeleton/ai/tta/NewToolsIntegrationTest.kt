@@ -33,8 +33,8 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("检查搜索按钮是否存在", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
-        val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
+        val action = actionDescription.expressions.first()
         printlnPro("Generated action: $action")
         assertTrue(action.contains("exists") || action.contains("driver.exists"),
             "Should generate exists action")
@@ -50,8 +50,8 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("检查ID为'nonexistent-element'的元素是否存在", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
-        val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
+        val action = actionDescription.expressions.first()
         printlnPro("Generated action: $action")
         assertTrue(action.contains("exists") || action.contains("driver.exists"),
             "Should generate exists action")
@@ -67,8 +67,8 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("检查搜索输入框是否可见", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
-        val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
+        val action = actionDescription.expressions.first()
         printlnPro("Generated action: $action")
         assertTrue(action.contains("isVisible") || action.contains("driver.isVisible"),
             "Should generate isVisible action")
@@ -84,8 +84,8 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("检查隐藏的切换开关是否可见", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
-        val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
+        val action = actionDescription.expressions.first()
         printlnPro("Generated action: $action")
         assertTrue(action.contains("isVisible") || action.contains("driver.isVisible"),
             "Should generate isVisible action")
@@ -101,8 +101,8 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("聚焦到搜索输入框", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
-        val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
+        val action = actionDescription.expressions.first()
         printlnPro("Generated action: $action")
         assertTrue(action.contains("focus") || action.contains("driver.focus"),
             "Should generate focus action")
@@ -118,8 +118,8 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("聚焦到提交按钮", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
-        val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
+        val action = actionDescription.expressions.first()
         printlnPro("Generated action: $action")
         assertTrue(action.contains("focus") || action.contains("driver.focus"),
             "Should generate focus action")
@@ -137,8 +137,8 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("滚动到页面底部的表单", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
-        val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
+        val action = actionDescription.expressions.first()
         printlnPro("Generated action: $action")
         assertTrue(action.contains("scrollTo") || action.contains("driver.scrollTo"),
             "Should generate scrollTo action")
@@ -154,8 +154,8 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("滚动到标题为'Section 2'的区域", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
-        val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
+        val action = actionDescription.expressions.first()
         printlnPro("Generated action: $action")
         assertTrue(action.contains("scrollTo") || action.contains("driver.scrollTo"),
             "Should generate scrollTo action")
@@ -174,7 +174,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         // This might generate multiple actions: click + waitForNavigation
-        val actions = actionDescription.functionCalls
+        val actions = actionDescription.expressions
         printlnPro("Generated actions: $actions")
 
         // Check if any action contains waitForNavigation
@@ -192,7 +192,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("等待当前页面完全加载", driver)
 
         assertNotNull(actionDescription)
-        val actions = actionDescription.functionCalls
+        val actions = actionDescription.expressions
         printlnPro("Generated actions: $actions")
 
         // Check if any action contains waitForNavigation
@@ -212,8 +212,8 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("返回上一页", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
-        val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
+        val action = actionDescription.expressions.first()
         printlnPro("Generated action: $action")
         assertTrue(action.contains("goBack") || action.contains("driver.goBack"),
             "Should generate goBack action")
@@ -227,8 +227,8 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("前进到下一页", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.functionCalls.size, "Should generate exactly one action")
-        val action = actionDescription.functionCalls.first()
+        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
+        val action = actionDescription.expressions.first()
         printlnPro("Generated action: $action")
         assertTrue(action.contains("goForward") || action.contains("driver.goForward"),
             "Should generate goForward action")
@@ -244,7 +244,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("如果搜索按钮存在就点击它", driver)
 
         assertNotNull(actionDescription)
-        val actions = actionDescription.functionCalls
+        val actions = actionDescription.expressions
         printlnPro("Generated actions: $actions")
 
         // Should generate conditional logic with exists check
@@ -267,7 +267,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("等待搜索输入框出现然后输入文本", driver)
 
         assertNotNull(actionDescription)
-        val actions = actionDescription.functionCalls
+        val actions = actionDescription.expressions
         printlnPro("Generated actions: $actions")
 
         // Should include wait and then interaction
@@ -292,7 +292,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("确认提交按钮可见后点击它", driver)
 
         assertNotNull(actionDescription)
-        val actions = actionDescription.functionCalls
+        val actions = actionDescription.expressions
         printlnPro("Generated actions: $actions")
 
         // Should include visibility check and click
@@ -314,7 +314,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generateWebDriverActionBlocking("先聚焦到用户名输入框然后输入文本", driver)
 
         assertNotNull(actionDescription)
-        val actions = actionDescription.functionCalls
+        val actions = actionDescription.expressions
         printlnPro("Generated actions: $actions")
 
         // Should include focus and then interaction

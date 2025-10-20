@@ -7,13 +7,17 @@ import ai.platon.pulsar.agentic.ai.tta.InteractiveElement
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.browser.driver.chrome.dom.BrowserState
 import ai.platon.pulsar.browser.driver.chrome.dom.DomDebug
+import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
@@ -97,49 +101,67 @@ class BrowserPerceptiveAgent(
 
     override suspend fun act(observe: ObserveResult): ActResult {
         val method = observe.method?.trim().orEmpty()
-        val selector = observe.locator.trim()
-        val argsList = observe.arguments ?: emptyList()
+        val locator = Locator.parse(observe.locator)
+        // Use the correct type for arguments from ObserveResult
+        val argsMap: Map<String, String> = observe.arguments ?: emptyMap()
 
         if (method.isBlank()) {
-            val msg = "No actionable method provided in ObserveResult for selector: $selector"
+            val msg = "No actionable method provided in ObserveResult for locator: $locator"
             addToHistory(msg)
             return ActResult(success = false, message = msg, action = observe.description)
         }
 
-        // Build a minimal ToolCall-like map for validation
+        // Build a minimal ToolCall-like map for validation and execution
         val toolArgs = mutableMapOf<String, Any?>()
-        // Inject selector when the action likely targets an element
-        val selectorActions = ToolCallExecutor.SELECTOR_ACTIONS
-        val noSelectorActions = ToolCallExecutor.NO_SELECTOR_ACTIONS
+        // Copy provided arguments first (string values)
+        argsMap.forEach { (k, v) -> toolArgs[k] = v }
 
-        val lowerMethod = method
-        val finalArgsList = mutableListOf<String>()
-        if (lowerMethod !in noSelectorActions) {
+        // Inject selector only when the action targets an element
+        val selectorActions = ToolCallExecutor.SELECTOR_ACTIONS
+
+        val domain = "driver"
+        val methodName = method
+        if (methodName in selectorActions) {
+            val selector = locator?.absoluteSelector ?: toolArgs["selector"]?.toString()
             toolArgs["selector"] = selector
-            // Prepend selector into function call args for element actions
-            finalArgsList += selector
+            if (selector == null) {
+                val msg = "A selector is required for $locator | $observe"
+                addToHistory(msg)
+                return ActResult(success = false, message = msg, action = observe.description)
+            }
         }
-        // Append original arguments (as-is, in order)
-        finalArgsList += argsList
 
         // For waitForNavigation validation, provide oldUrl if not present
-        if (lowerMethod == "waitForNavigation") {
-            toolArgs["oldUrl"] = runCatching { driver.currentUrl() }.getOrDefault("")
+        if (methodName == "waitForNavigation") {
+            if (toolArgs["oldUrl"]?.toString().isNullOrBlank()) {
+                toolArgs["oldUrl"] = driver.currentUrl()
+            }
+            // Provide a reasonable default timeout if not set
+            if (toolArgs["timeoutMillis"] == null) {
+                toolArgs["timeoutMillis"] = 5000L
+            }
         }
-        // For navigateTo safety, validate URL if present
-        if (lowerMethod == "navigateTo" && finalArgsList.isNotEmpty()) {
-            if (!isSafeUrl(finalArgsList.first())) {
-                val msg = "Blocked unsafe URL: ${finalArgsList.first()}"
+
+        // For navigateTo safety, validate URL; map a single unnamed arg to url if necessary
+        if (methodName == "navigateTo") {
+            if (!toolArgs.containsKey("url")) {
+                // Heuristic: if only one argument exists, treat it as url
+                val onlyArgValue = argsMap.values.firstOrNull()
+                if (!onlyArgValue.isNullOrBlank()) toolArgs["url"] = onlyArgValue
+            }
+            val url = toolArgs["url"]?.toString().orEmpty()
+            if (!isSafeUrl(url)) {
+                val msg = "Blocked unsafe URL: $url"
                 addToHistory(msg)
                 return ActResult(false, msg, action = observe.description)
             }
         }
 
-        // Pre-action validation (lightweight)
+        // Pre-action validation (lightweight), reuse local ToolCall(data) class
         if (config.enablePreActionValidation) {
-            val ok = validateToolCall(ToolCall(lowerMethod, toolArgs))
+            val ok = validateToolCall(ToolCall(domain, methodName, toolArgs))
             if (!ok) {
-                val msg = "Tool call validation failed for $lowerMethod with selector ${selector.take(120)}"
+                val msg = "Tool call validation failed for $methodName with selector ${locator?.absoluteSelector?.take(120)}"
                 logStructured(
                     msg,
                     ExecutionContext(
@@ -154,39 +176,43 @@ class BrowserPerceptiveAgent(
             }
         }
 
-        // Build dispatcher-compatible function call: driver.method('arg1','arg2',...)
-        fun escArg(s: String): String {
-            // Use single quotes; escape any existing single quotes and backslashes
-            return "'" + s.replace("\\", "\\\\").replace("'", "\\'") + "'"
+        // Prefer using ToolCallExecutor's canonical driver line builder
+        val toolCall = ToolCall(
+            domain = "driver",
+            name = methodName,
+            args = toolArgs
+        )
+        val expression = ToolCallExecutor.toolCallToExpression(toolCall)
+        if (expression == null) {
+            val msg = "Can convert tool call to expression | $toolCall"
+            logger.warn("Invalid tool call | {}", msg)
+            return ActResult(false, msg, action = observe.description)
         }
-
-        val callArgs = finalArgsList.joinToString(",") { escArg(it) }
-        val functionCall = "driver.$lowerMethod($callArgs)"
 
         // Execute via WebDriver dispatcher
         return try {
             val actionDesc = ActionDescription(
-                functionCalls = listOf(functionCall),
+                expressions = listOf(expression),
                 selectedElement = null,
                 modelResponse = ModelResponse(
                     content = "ObserveResult action: ${observe.description}",
                     state = ResponseState.STOP
                 )
             )
-            val result = execute(actionDesc)
+            execute(actionDesc)
 
-            val msg = "Action [$method] executed on selector: $selector".trim()
-            addToHistory("observe.act -> $functionCall")
+            val msg = "Action [$methodName] executed on selector: $locator".trim()
+            addToHistory("observe.act -> $expression")
             ActResult(
                 success = true,
                 message = msg,
-                action = functionCall
+                action = expression
             )
         } catch (e: Exception) {
             logError("observe.act execution failed", e, uuid.toString())
             val msg = e.message ?: "Execution failed"
-            addToHistory("observe.act FAIL ${method} ${selector.take(80)} -> ${msg}")
-            ActResult(success = false, message = msg, action = "${method} ${selector}")
+            addToHistory("observe.act FAIL $methodName ${locator?.absoluteSelector?.take(80)} -> $msg")
+            ActResult(success = false, message = msg, action = "$methodName $locator")
         }
     }
 
@@ -256,13 +282,13 @@ class BrowserPerceptiveAgent(
     }
 
     protected suspend fun execute(action: ActionDescription): InstructionResult {
-        if (action.functionCalls.isEmpty()) {
+        if (action.expressions.isEmpty()) {
             return InstructionResult(listOf(), listOf(), action.modelResponse)
         }
-        val functionCalls = action.functionCalls.take(1)
+        val functionCalls = action.expressions.take(1)
         val dispatcher = ToolCallExecutor()
         val functionResults = functionCalls.map { fc -> dispatcher.execute(fc, driver) }
-        return InstructionResult(action.functionCalls, functionResults, action.modelResponse)
+        return InstructionResult(action.expressions, functionResults, action.modelResponse)
     }
 
     private suspend fun doObserve(options: ObserveOptions): List<ObserveResult> {
@@ -352,12 +378,10 @@ class BrowserPerceptiveAgent(
         return try {
             val internalResults = inference.observe(params)
             val results = internalResults.elements.map { ele ->
-                // The format of elementId: `\d+/\d+`
-
-                // Multi selectors are supported: `xpath:`, `backend:`, `node:`, `hash:`
-                val locator = ele.locator
-                val frameIdIndex = locator.substringBefore("/").toIntOrNull()
-                val backendNodeId = locator.substringAfterLast("/").toIntOrNull()
+                // Multi selectors are supported: `cssPath`, `xpath:`, `backend:`, `node:`, `hash:`, `fbn`, `index`
+                val selector = ele.selector.trim()
+                val frameIdIndex = selector.substringBefore("/").toIntOrNull()
+                val backendNodeId = selector.substringAfterLast("/").toIntOrNull()
                 val frameId = frameIdIndex?.let { browserState.domState.frameIds[it] }
                 val fbnLocator = "fbn:$frameId/$backendNodeId"
                 val node = browserState.domState.selectorMap[fbnLocator]
@@ -367,7 +391,7 @@ class BrowserPerceptiveAgent(
                 // Use xpath here
                 val xpathLocator = node?.xpath?.let { "xpath:$it" } ?: ""
                 ObserveResult(
-                    locator = xpathLocator,
+                    locator = xpathLocator.trim(),
                     description = ele.description,
                     backendNodeId = backendNodeId,
                     method = ele.method?.ifBlank { null },
@@ -420,11 +444,11 @@ class BrowserPerceptiveAgent(
     }
 
     private fun logExtractStart(instruction: String, requestId: String) {
-        logger.info("extract.start requestId={} instruction='{}'", requestId.take(8), instruction.take(120))
+        logger.info("extract.start requestId={} instruction='{}'", requestId.take(8), Strings.compactWhitespaces(instruction, 120))
     }
 
     private fun logObserveStart(instruction: String, requestId: String) {
-        logger.info("observe.start requestId={} instruction='{}'", requestId.take(8), instruction.take(120))
+        logger.info("observe.start requestId={} instruction='{}'", requestId.take(8), Strings.compactWhitespaces(instruction, 120))
     }
 
     private fun addHistoryExtract(instruction: String, requestId: String, success: Boolean) {
@@ -451,20 +475,20 @@ class BrowserPerceptiveAgent(
                 return doResolveProblem(action, sessionId, startTime, attempt)
             } catch (e: PerceptiveAgentError.TransientError) {
                 lastError = e
-                logError("Transient error on attempt ${'$'}{attempt + 1}", e, sessionId)
+                logError("Transient error on attempt ${attempt + 1}", e, sessionId)
                 if (attempt < config.maxRetries) {
                     val delay = calculateRetryDelay(attempt)
                     delay(delay)
                 }
             } catch (e: PerceptiveAgentError.TimeoutError) {
                 lastError = e
-                logError("Timeout error on attempt ${'$'}{attempt + 1}", e, sessionId)
+                logError("Timeout error on attempt ${attempt + 1}", e, sessionId)
                 if (attempt < config.maxRetries) {
                     delay(config.baseRetryDelayMs)
                 }
             } catch (e: Exception) {
                 lastError = e
-                logError("Unexpected error on attempt ${'$'}{attempt + 1}", e, sessionId)
+                logError("Unexpected error on attempt ${attempt + 1}", e, sessionId)
                 if (shouldRetryError(e) && attempt < config.maxRetries) {
                     val delay = calculateRetryDelay(attempt)
                     delay(delay)
@@ -477,7 +501,7 @@ class BrowserPerceptiveAgent(
 
         return ActResult(
             success = false,
-            message = "Failed after ${'$'}{config.maxRetries + 1} attempts. Last error: ${'$'}{lastError?.message}",
+            message = "Failed after ${config.maxRetries + 1} attempts. Last error: ${lastError?.message}",
             action = action.action
         )
     }
@@ -626,11 +650,11 @@ class BrowserPerceptiveAgent(
     private fun classifyError(e: Exception, step: Int): PerceptiveAgentError {
         return when (e) {
             is PerceptiveAgentError -> e
-            is TimeoutException -> PerceptiveAgentError.TimeoutError("Step ${'$'}step timed out", e)
-            is SocketTimeoutException -> PerceptiveAgentError.TimeoutError("Network timeout at step ${'$'}step", e)
-            is ConnectException -> PerceptiveAgentError.TransientError("Connection failed at step ${'$'}step", e)
+            is TimeoutException -> PerceptiveAgentError.TimeoutError("Step $step timed out", e)
+            is SocketTimeoutException -> PerceptiveAgentError.TimeoutError("Network timeout at step $step", e)
+            is ConnectException -> PerceptiveAgentError.TransientError("Connection failed at step $step", e)
             is UnknownHostException -> PerceptiveAgentError.TransientError(
-                "DNS resolution failed at step ${'$'}step",
+                "DNS resolution failed at step $step",
                 e
             )
 
@@ -697,7 +721,7 @@ class BrowserPerceptiveAgent(
         additionalData: Map<String, Any> = emptyMap()
     ) {
         if (!config.enableStructuredLogging) {
-            logger.info("{} - {}", context.sessionId.take(8), message)
+            logger.info("{} - {}", context.sessionId.take(8), Strings.compactWhitespaces(message, 200))
             return
         }
 
@@ -1040,14 +1064,14 @@ $interactiveSummary
 		""".trimIndent()
     }
 
-    private data class ToolCall(val name: String, val args: Map<String, Any?>)
-
     private data class ParsedResponse(
         val toolCalls: List<ToolCall>,
         val taskComplete: Boolean?,
     )
 
     private fun parseOperatorResponse(content: String): ParsedResponse {
+        val domain = "driver"
+
         // 1) Try structured JSON with tool_calls
         try {
             val root = JsonParser.parseString(content)
@@ -1061,7 +1085,7 @@ $interactiveSummary
                             val name = tc["name"]?.takeIf { it.isJsonPrimitive }?.asString
                             val args = (tc.getAsJsonObject("args") ?: JsonObject()).entrySet()
                                 .associate { (k, v) -> k to jsonElementToKotlin(v) }
-                            if (!name.isNullOrBlank()) toolCalls += ToolCall(name, args)
+                            if (!name.isNullOrBlank()) toolCalls += ToolCall(domain, name, args)
                         }
                     }
                 }
@@ -1075,7 +1099,7 @@ $interactiveSummary
 
         // 2) Fall back to TTA tool call JSON parser
         return runCatching {
-            val calls = tta.parseToolCalls(content).map { ToolCall(it.name, it.args) }
+            val calls = tta.parseToolCalls(content).map { ToolCall(domain, it.name, it.args) }
             ParsedResponse(calls.take(1), null)
         }.getOrElse { ParsedResponse(emptyList(), null) }
     }
@@ -1106,6 +1130,10 @@ $interactiveSummary
      */
     private fun isSafeUrl(url: String): Boolean {
         if (url.isBlank()) return false
+
+        if (!URLUtils.isStandard(url)) {
+            return false
+        }
 
         return runCatching {
             val uri = URI(url)

@@ -1,6 +1,10 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
-data class ToolCall(val domain: String, val name: String, val args: Map<String, Any?>)
+data class ToolCall(
+    val domain: String,
+    val name: String,
+    val args: Map<String, Any?>
+)
 
 /**
  * Executes WebDriver commands provided as string expressions.
@@ -49,8 +53,7 @@ class ToolCallExecutor {
         // require(toolCall.domain == "driver")
 
         return try {
-            val args = toolCall.args?.values?.toList()?.map { it.toString() } ?: emptyList()
-            execute1(toolCall.domain, toolCall.name, args, driver)
+            execute1(toolCall.domain, toolCall.name, toolCall.args, driver)
         } catch (e: Exception) {
             println("Error executing command: ${toolCall.name} - ${e.message}")
             null
@@ -59,7 +62,7 @@ class ToolCallExecutor {
 
     private suspend fun execute0(command: String, driver: WebDriver): Any? {
         // Extract function name and arguments from the command string
-        val (objectName, functionName, args) = parseSimpleFunctionCall(command) ?: return null
+        val (objectName, functionName, args) = parseKotlinFunctionExpression(command) ?: return null
 
         return execute1(objectName, functionName, args, driver)
     }
@@ -70,21 +73,25 @@ class ToolCallExecutor {
     private suspend fun execute1(
         objectName: String,
         functionName: String,
-        args: List<String>,
+        args: Map<String, Any?>,
         driver: WebDriver
     ): Any? {
         // Execute the appropriate WebDriver method based on the function name
+        val arg0 = args["0"]?.toString()
+        val arg1 = args["1"]?.toString()
+        val arg2 = args["2"]?.toString()
+        val arg3 = args["3"]?.toString()
         return when (functionName) {
             "open" -> {
                 // Navigate to URL and wait for page to load
-                if (args.isNotEmpty()) driver.open(args[0]) else null
+                if (args.isNotEmpty()) driver.open(arg0!!) else null
             }
 
             "navigateTo" -> {
                 // Navigate to URL without waiting for page to load
                 when (args.size) {
-                    1 -> driver.navigateTo(args[0])
-                    2 -> driver.navigateTo(NavigateEntry(args[0], pageUrl = args[1]))
+                    1 -> driver.navigateTo(arg0!!)
+                    2 -> driver.navigateTo(NavigateEntry(arg0!!, pageUrl = arg1!!))
                     else -> null
                 }
             }
@@ -92,23 +99,23 @@ class ToolCallExecutor {
             "click" -> {
                 // Click on an element with optional repeat count
                 when (args.size) {
-                    1 -> driver.click(args[0])
-                    2 -> driver.click(args[0], args[1].toIntOrNull() ?: 1)
-                    else -> if (args.isNotEmpty()) driver.click(args[0]) else null
+                    1 -> driver.click(arg0!!)
+                    2 -> driver.click(arg0!!, arg1!!.toIntOrNull() ?: 1)
+                    else -> if (args.isNotEmpty()) driver.click(arg0!!) else null
                 }
             }
 
             "type" -> {
                 // Type text into an element
-                if (args.size >= 2) driver.type(args[0], args[1]) else null
+                if (args.size >= 2) driver.type(arg0!!, arg1!!) else null
             }
 
             "waitForNavigation" -> {
                 // Wait for navigation to complete with optional timeout
                 when (args.size) {
                     0 -> driver.waitForNavigation()
-                    1 -> driver.waitForNavigation(args[0])
-                    else -> driver.waitForNavigation(args[0], args[1].toLongOrNull() ?: 30000L)
+                    1 -> driver.waitForNavigation(arg0!!)
+                    else -> driver.waitForNavigation(arg0!!, arg1!!.toLongOrNull() ?: 30000L)
                 }
             }
 
@@ -117,7 +124,7 @@ class ToolCallExecutor {
                 if (args.isEmpty()) {
                     driver.captureScreenshot()
                 } else {
-                    driver.captureScreenshot(args[0])
+                    driver.captureScreenshot(arg0!!)
                 }
             }
 
@@ -126,7 +133,7 @@ class ToolCallExecutor {
                 if (args.isEmpty()) {
                     driver.scrollDown()
                 } else {
-                    driver.scrollDown(args[0].toIntOrNull() ?: 1)
+                    driver.scrollDown(arg0!!.toIntOrNull() ?: 1)
                 }
             }
 
@@ -135,7 +142,7 @@ class ToolCallExecutor {
                 if (args.isEmpty()) {
                     driver.scrollUp()
                 } else {
-                    driver.scrollUp(args[0].toIntOrNull() ?: 1)
+                    driver.scrollUp(arg0!!.toIntOrNull() ?: 1)
                 }
             }
 
@@ -152,7 +159,7 @@ class ToolCallExecutor {
             "scrollToMiddle" -> {
                 // Scroll to a relative position on the page
                 if (args.isNotEmpty()) {
-                    driver.scrollToMiddle(args[0].toDoubleOrNull() ?: 0.5)
+                    driver.scrollToMiddle(arg0!!.toDoubleOrNull() ?: 0.5)
                 } else {
                     driver.scrollToMiddle(0.5)
                 }
@@ -162,19 +169,19 @@ class ToolCallExecutor {
                 // Simulate mouse wheel down with various parameter options
                 when (args.size) {
                     0 -> driver.mouseWheelDown()
-                    1 -> driver.mouseWheelDown(args[0].toIntOrNull() ?: 1)
-                    2 -> driver.mouseWheelDown(args[0].toIntOrNull() ?: 1, args[1].toDoubleOrNull() ?: 0.0)
+                    1 -> driver.mouseWheelDown(arg0!!.toIntOrNull() ?: 1)
+                    2 -> driver.mouseWheelDown(arg0!!.toIntOrNull() ?: 1, arg1!!.toDoubleOrNull() ?: 0.0)
                     3 -> driver.mouseWheelDown(
-                        args[0].toIntOrNull() ?: 1,
-                        args[1].toDoubleOrNull() ?: 0.0,
-                        args[2].toDoubleOrNull() ?: 0.0
+                        arg0!!.toIntOrNull() ?: 1,
+                        arg1!!.toDoubleOrNull() ?: 0.0,
+                        arg2!!.toDoubleOrNull() ?: 0.0
                     )
 
                     else -> driver.mouseWheelDown(
-                        args[0].toIntOrNull() ?: 1,
-                        args[1].toDoubleOrNull() ?: 0.0,
-                        args[2].toDoubleOrNull() ?: 0.0,
-                        args[3].toLongOrNull() ?: 0L
+                        arg0!!.toIntOrNull() ?: 1,
+                        arg1!!.toDoubleOrNull() ?: 0.0,
+                        arg2!!.toDoubleOrNull() ?: 0.0,
+                        arg3!!.toLongOrNull() ?: 0L
                     )
                 }
             }
@@ -183,19 +190,19 @@ class ToolCallExecutor {
                 // Simulate mouse wheel up with various parameter options
                 when (args.size) {
                     0 -> driver.mouseWheelUp()
-                    1 -> driver.mouseWheelUp(args[0].toIntOrNull() ?: 1)
-                    2 -> driver.mouseWheelUp(args[0].toIntOrNull() ?: 1, args[1].toDoubleOrNull() ?: 0.0)
+                    1 -> driver.mouseWheelUp(arg0!!.toIntOrNull() ?: 1)
+                    2 -> driver.mouseWheelUp(arg0!!.toIntOrNull() ?: 1, arg1!!.toDoubleOrNull() ?: 0.0)
                     3 -> driver.mouseWheelUp(
-                        args[0].toIntOrNull() ?: 1,
-                        args[1].toDoubleOrNull() ?: 0.0,
-                        args[2].toDoubleOrNull() ?: 0.0
+                        arg0!!.toIntOrNull() ?: 1,
+                        arg1!!.toDoubleOrNull() ?: 0.0,
+                        arg2!!.toDoubleOrNull() ?: 0.0
                     )
 
                     else -> driver.mouseWheelUp(
-                        args[0].toIntOrNull() ?: 1,
-                        args[1].toDoubleOrNull() ?: 0.0,
-                        args[2].toDoubleOrNull() ?: 0.0,
-                        args[3].toLongOrNull() ?: 0L
+                        arg0!!.toIntOrNull() ?: 1,
+                        arg1!!.toDoubleOrNull() ?: 0.0,
+                        arg2!!.toDoubleOrNull() ?: 0.0,
+                        arg3!!.toLongOrNull() ?: 0L
                     )
                 }
             }
@@ -203,8 +210,8 @@ class ToolCallExecutor {
             "moveMouseTo" -> {
                 // Move mouse to coordinates or element with offset
                 when (args.size) {
-                    2 -> driver.moveMouseTo(args[0].toDoubleOrNull() ?: 0.0, args[1].toDoubleOrNull() ?: 0.0)
-                    3 -> driver.moveMouseTo(args[0], args[1].toIntOrNull() ?: 0, args[2].toIntOrNull() ?: 0)
+                    2 -> driver.moveMouseTo(arg0!!.toDoubleOrNull() ?: 0.0, arg1!!.toDoubleOrNull() ?: 0.0)
+                    3 -> driver.moveMouseTo(arg0!!, arg1!!.toIntOrNull() ?: 0, arg2!!.toIntOrNull() ?: 0)
                     else -> null
                 }
             }
@@ -212,7 +219,7 @@ class ToolCallExecutor {
             "dragAndDrop" -> {
                 // Perform drag and drop from an element with x,y offset
                 if (args.size >= 3) {
-                    driver.dragAndDrop(args[0], args[1].toIntOrNull() ?: 0, args[2].toIntOrNull() ?: 0)
+                    driver.dragAndDrop(arg0!!, arg1!!.toIntOrNull() ?: 0, arg2!!.toIntOrNull() ?: 0)
                 } else {
                     null
                 }
@@ -223,24 +230,24 @@ class ToolCallExecutor {
                 if (args.isEmpty()) {
                     driver.outerHTML()
                 } else {
-                    driver.outerHTML(args[0])
+                    driver.outerHTML(arg0!!)
                 }
             }
 
             "selectFirstTextOrNull" -> {
                 // Get text content of the first element matching the selector
-                if (args.isNotEmpty()) driver.selectFirstTextOrNull(args[0]) else null
+                if (args.isNotEmpty()) driver.selectFirstTextOrNull(arg0!!) else null
             }
 
             "selectTextAll" -> {
                 // Get text content of all elements matching the selector
-                if (args.isNotEmpty()) driver.selectTextAll(args[0]) else null
+                if (args.isNotEmpty()) driver.selectTextAll(arg0!!) else null
             }
 
             "selectFirstAttributeOrNull" -> {
                 // Get attribute value of the first element matching the selector
                 if (args.size >= 2) {
-                    driver.selectFirstAttributeOrNull(args[0], args[1])
+                    driver.selectFirstAttributeOrNull(arg0!!, arg1!!)
                 } else {
                     null
                 }
@@ -248,28 +255,28 @@ class ToolCallExecutor {
 
             "selectAttributes" -> {
                 // Get all attributes of the first element matching the selector
-                if (args.isNotEmpty()) driver.selectAttributes(args[0]) else null
+                if (args.isNotEmpty()) driver.selectAttributes(arg0!!) else null
             }
 
             "selectAttributeAll" -> {
                 // Get specified attribute of all elements matching the selector
                 when (args.size) {
-                    2 -> driver.selectAttributeAll(args[0], args[1])
+                    2 -> driver.selectAttributeAll(arg0!!, arg1!!)
                     4 -> driver.selectAttributeAll(
-                        args[0],
-                        args[1],
-                        args[2].toIntOrNull() ?: 0,
-                        args[3].toIntOrNull() ?: Integer.MAX_VALUE
+                        arg0!!,
+                        arg1!!,
+                        arg2!!.toIntOrNull() ?: 0,
+                        arg3!!.toIntOrNull() ?: Integer.MAX_VALUE
                     )
 
-                    else -> if (args.size >= 2) driver.selectAttributeAll(args[0], args[1]) else null
+                    else -> if (args.size >= 2) driver.selectAttributeAll(arg0!!, arg1!!) else null
                 }
             }
 
             "setAttribute" -> {
                 // Set attribute on the first element matching the selector
                 if (args.size >= 3) {
-                    driver.setAttribute(args[0], args[1], args[2])
+                    driver.setAttribute(arg0!!, arg1!!, arg2!!)
                 } else {
                     null
                 }
@@ -278,7 +285,7 @@ class ToolCallExecutor {
             "setAttributeAll" -> {
                 // Set attribute on all elements matching the selector
                 if (args.size >= 3) {
-                    driver.setAttributeAll(args[0], args[1], args[2])
+                    driver.setAttributeAll(arg0!!, arg1!!, arg2!!)
                 } else {
                     null
                 }
@@ -287,67 +294,67 @@ class ToolCallExecutor {
             "selectHyperlinks" -> {
                 // Extract hyperlinks from elements matching the selector
                 when (args.size) {
-                    1 -> driver.selectHyperlinks(args[0])
+                    1 -> driver.selectHyperlinks(arg0!!)
                     3 -> driver.selectHyperlinks(
-                        args[0],
-                        args[1].toIntOrNull() ?: 0,
-                        args[2].toIntOrNull() ?: Integer.MAX_VALUE
+                        arg0!!,
+                        arg1!!.toIntOrNull() ?: 0,
+                        arg2!!.toIntOrNull() ?: Integer.MAX_VALUE
                     )
 
-                    else -> if (args.isNotEmpty()) driver.selectHyperlinks(args[0]) else null
+                    else -> if (args.isNotEmpty()) driver.selectHyperlinks(arg0!!) else null
                 }
             }
 
             "selectAnchors" -> {
                 // Extract anchor elements matching the selector
                 when (args.size) {
-                    1 -> driver.selectAnchors(args[0])
+                    1 -> driver.selectAnchors(arg0!!)
                     3 -> driver.selectAnchors(
-                        args[0],
-                        args[1].toIntOrNull() ?: 0,
-                        args[2].toIntOrNull() ?: Integer.MAX_VALUE
+                        arg0!!,
+                        arg1!!.toIntOrNull() ?: 0,
+                        arg2!!.toIntOrNull() ?: Integer.MAX_VALUE
                     )
 
-                    else -> if (args.isNotEmpty()) driver.selectAnchors(args[0]) else null
+                    else -> if (args.isNotEmpty()) driver.selectAnchors(arg0!!) else null
                 }
             }
 
             "selectImages" -> {
                 // Extract image sources from elements matching the selector
                 when (args.size) {
-                    1 -> driver.selectImages(args[0])
+                    1 -> driver.selectImages(arg0!!)
                     3 -> driver.selectImages(
-                        args[0],
-                        args[1].toIntOrNull() ?: 0,
-                        args[2].toIntOrNull() ?: Integer.MAX_VALUE
+                        arg0!!,
+                        arg1!!.toIntOrNull() ?: 0,
+                        arg2!!.toIntOrNull() ?: Integer.MAX_VALUE
                     )
 
-                    else -> if (args.isNotEmpty()) driver.selectImages(args[0]) else null
+                    else -> if (args.isNotEmpty()) driver.selectImages(arg0!!) else null
                 }
             }
 
             "evaluate" -> {
                 // Execute JavaScript and return the result
                 when (args.size) {
-                    1 -> driver.evaluate(args[0])
-                    2 -> driver.evaluate(args[0], args[1])
-                    else -> if (args.isNotEmpty()) driver.evaluate(args[0]) else null
+                    1 -> driver.evaluate(arg0!!)
+                    2 -> driver.evaluate(arg0!!, arg1!!)
+                    else -> if (args.isNotEmpty()) driver.evaluate(arg0!!) else null
                 }
             }
 
             "evaluateDetail" -> {
                 // Execute JavaScript and return detailed evaluation result
-                if (args.isNotEmpty()) driver.evaluateDetail(args[0]) else null
+                if (args.isNotEmpty()) driver.evaluateDetail(arg0!!) else null
             }
 
             "clickablePoint" -> {
                 // Get the clickable point of an element
-                if (args.isNotEmpty()) driver.clickablePoint(args[0]) else null
+                if (args.isNotEmpty()) driver.clickablePoint(arg0!!) else null
             }
 
             "boundingBox" -> {
                 // Get the bounding box of an element
-                if (args.isNotEmpty()) driver.boundingBox(args[0]) else null
+                if (args.isNotEmpty()) driver.boundingBox(arg0!!) else null
             }
 
             "newJsoupSession" -> {
@@ -357,12 +364,12 @@ class ToolCallExecutor {
 
             "loadJsoupResource" -> {
                 // Load a resource using Jsoup with current page context
-                if (args.isNotEmpty()) driver.loadJsoupResource(args[0]) else null
+                if (args.isNotEmpty()) driver.loadJsoupResource(arg0!!) else null
             }
 
             "loadResource" -> {
                 // Load a resource without browser rendering
-                if (args.isNotEmpty()) driver.loadResource(args[0]) else null
+                if (args.isNotEmpty()) driver.loadResource(arg0!!) else null
             }
 
             "pause" -> {
@@ -413,10 +420,10 @@ class ToolCallExecutor {
             "deleteCookies" -> {
                 // Delete cookies with various parameter options
                 when (args.size) {
-                    1 -> driver.deleteCookies(args[0])
-                    2 -> driver.deleteCookies(args[0], args[1])
-                    4 -> driver.deleteCookies(args[0], args[1], args[2], args[3])
-                    else -> if (args.isNotEmpty()) driver.deleteCookies(args[0]) else null
+                    1 -> driver.deleteCookies(arg0!!)
+                    2 -> driver.deleteCookies(arg0!!, arg1!!)
+                    4 -> driver.deleteCookies(arg0!!, arg1, arg2, arg3)
+                    else -> if (args.isNotEmpty()) driver.deleteCookies(arg0!!) else null
                 }
             }
 
@@ -428,18 +435,18 @@ class ToolCallExecutor {
             "waitForSelector" -> {
                 // Wait for element to appear in DOM with optional timeout
                 when (args.size) {
-                    1 -> driver.waitForSelector(args[0])
-                    2 -> driver.waitForSelector(args[0], args[1].toLongOrNull() ?: 30000L)
-                    else -> if (args.isNotEmpty()) driver.waitForSelector(args[0]) else null
+                    1 -> driver.waitForSelector(arg0!!)
+                    2 -> driver.waitForSelector(arg0!!, arg1!!.toLongOrNull() ?: 30000L)
+                    else -> if (args.isNotEmpty()) driver.waitForSelector(arg0!!) else null
                 }
             }
 
             "waitForPage" -> {
                 // Wait for navigation to a specific URL
                 if (args.size >= 2) {
-                    driver.waitForPage(args[0], java.time.Duration.ofMillis(args[1].toLongOrNull() ?: 30000L))
+                    driver.waitForPage(arg0!!, java.time.Duration.ofMillis(arg1!!.toLongOrNull() ?: 30000L))
                 } else if (args.isNotEmpty()) {
-                    driver.waitForPage(args[0], java.time.Duration.ofMillis(30000L))
+                    driver.waitForPage(arg0!!, java.time.Duration.ofMillis(30000L))
                 } else {
                     null
                 }
@@ -452,27 +459,27 @@ class ToolCallExecutor {
 
             "exists" -> {
                 // Check if element exists in DOM
-                if (args.isNotEmpty()) driver.exists(args[0]) else null
+                if (args.isNotEmpty()) driver.exists(arg0!!) else null
             }
 
             "isVisible" -> {
                 // Check if element is visible
-                if (args.isNotEmpty()) driver.isVisible(args[0]) else null
+                if (args.isNotEmpty()) driver.isVisible(arg0!!) else null
             }
 
             "visible" -> {
                 // Alias for isVisible
-                if (args.isNotEmpty()) driver.visible(args[0]) else null
+                if (args.isNotEmpty()) driver.visible(arg0!!) else null
             }
 
             "isHidden" -> {
                 // Check if element is hidden
-                if (args.isNotEmpty()) driver.isHidden(args[0]) else null
+                if (args.isNotEmpty()) driver.isHidden(arg0!!) else null
             }
 
             "isChecked" -> {
                 // Check if element is checked
-                if (args.isNotEmpty()) driver.isChecked(args[0]) else null
+                if (args.isNotEmpty()) driver.isChecked(arg0!!) else null
             }
 
             "bringToFront" -> {
@@ -482,13 +489,13 @@ class ToolCallExecutor {
 
             "focus" -> {
                 // Focus on an element
-                if (args.isNotEmpty()) driver.focus(args[0]) else null
+                if (args.isNotEmpty()) driver.focus(arg0!!) else null
             }
 
             "fill" -> {
                 // Clear and fill text into an element
                 if (args.size >= 2) {
-                    driver.fill(args[0], args[1])
+                    driver.fill(arg0!!, arg1!!)
                 } else {
                     null
                 }
@@ -497,7 +504,7 @@ class ToolCallExecutor {
             "press" -> {
                 // Press a keyboard key on an element
                 if (args.size >= 2) {
-                    driver.press(args[0], args[1])
+                    driver.press(arg0!!, arg1!!)
                 } else {
                     null
                 }
@@ -506,49 +513,49 @@ class ToolCallExecutor {
             "clickTextMatches" -> {
                 // Click element whose text content matches a pattern
                 when (args.size) {
-                    2 -> driver.clickTextMatches(args[0], args[1])
-                    3 -> driver.clickTextMatches(args[0], args[1], args[2].toIntOrNull() ?: 1)
-                    else -> if (args.size >= 2) driver.clickTextMatches(args[0], args[1]) else null
+                    2 -> driver.clickTextMatches(arg0!!, arg1!!)
+                    3 -> driver.clickTextMatches(arg0!!, arg1!!, arg2!!.toIntOrNull() ?: 1)
+                    else -> if (args.size >= 2) driver.clickTextMatches(arg0!!, arg1!!) else null
                 }
             }
 
             "clickMatches" -> {
                 // Click element whose attribute matches a pattern
                 when (args.size) {
-                    3 -> driver.clickMatches(args[0], args[1], args[2])
-                    4 -> driver.clickMatches(args[0], args[1], args[2], args[3].toIntOrNull() ?: 1)
-                    else -> if (args.size >= 3) driver.clickMatches(args[0], args[1], args[2]) else null
+                    3 -> driver.clickMatches(arg0!!, arg1!!, arg2!!)
+                    4 -> driver.clickMatches(arg0!!, arg1!!, arg2!!, arg3!!.toIntOrNull() ?: 1)
+                    else -> if (args.size >= 3) driver.clickMatches(arg0!!, arg1!!, arg2!!) else null
                 }
             }
 
             "clickNthAnchor" -> {
                 // Click the nth anchor element in the DOM
                 when (args.size) {
-                    1 -> driver.clickNthAnchor(args[0].toIntOrNull() ?: 0)
-                    2 -> driver.clickNthAnchor(args[0].toIntOrNull() ?: 0, args[1])
-                    else -> if (args.isNotEmpty()) driver.clickNthAnchor(args[0].toIntOrNull() ?: 0) else null
+                    1 -> driver.clickNthAnchor(arg0!!.toIntOrNull() ?: 0)
+                    2 -> driver.clickNthAnchor(arg0!!.toIntOrNull() ?: 0, arg1!!)
+                    else -> if (args.isNotEmpty()) driver.clickNthAnchor(arg0!!.toIntOrNull() ?: 0) else null
                 }
             }
 
             "check" -> {
                 // Check a checkbox or radio button
-                if (args.isNotEmpty()) driver.check(args[0]) else null
+                if (args.isNotEmpty()) driver.check(arg0!!) else null
             }
 
             "uncheck" -> {
                 // Uncheck a checkbox
-                if (args.isNotEmpty()) driver.uncheck(args[0]) else null
+                if (args.isNotEmpty()) driver.uncheck(arg0!!) else null
             }
 
             "scrollTo" -> {
                 // Scroll to bring element into view
-                if (args.isNotEmpty()) driver.scrollTo(args[0]) else null
+                if (args.isNotEmpty()) driver.scrollTo(arg0!!) else null
             }
 
             "scrollToScreen" -> {
                 // Scroll to a specific screen position by number
                 if (args.isNotEmpty()) {
-                    driver.scrollToScreen(args[0].toDoubleOrNull() ?: 0.5)
+                    driver.scrollToScreen(arg0!!.toDoubleOrNull() ?: 0.5)
                 } else {
                     driver.scrollToScreen(0.5)
                 }
@@ -557,7 +564,7 @@ class ToolCallExecutor {
             "selectFirstPropertyValueOrNull" -> {
                 // Get property value of first element matching selector
                 if (args.size >= 2) {
-                    driver.selectFirstPropertyValueOrNull(args[0], args[1])
+                    driver.selectFirstPropertyValueOrNull(arg0!!, arg1!!)
                 } else {
                     null
                 }
@@ -566,22 +573,22 @@ class ToolCallExecutor {
             "selectPropertyValueAll" -> {
                 // Get property values from all elements matching selector
                 when (args.size) {
-                    2 -> driver.selectPropertyValueAll(args[0], args[1])
+                    2 -> driver.selectPropertyValueAll(arg0!!, arg1!!)
                     4 -> driver.selectPropertyValueAll(
-                        args[0],
-                        args[1],
-                        args[2].toIntOrNull() ?: 0,
-                        args[3].toIntOrNull() ?: Integer.MAX_VALUE
+                        arg0!!,
+                        arg1!!,
+                        arg2!!.toIntOrNull() ?: 0,
+                        arg3!!.toIntOrNull() ?: Integer.MAX_VALUE
                     )
 
-                    else -> if (args.size >= 2) driver.selectPropertyValueAll(args[0], args[1]) else null
+                    else -> if (args.size >= 2) driver.selectPropertyValueAll(arg0!!, arg1!!) else null
                 }
             }
 
             "setProperty" -> {
                 // Set property on first element matching selector
                 if (args.size >= 3) {
-                    driver.setProperty(args[0], args[1], args[2])
+                    driver.setProperty(arg0!!, arg1!!, arg2!!)
                 } else {
                     null
                 }
@@ -590,7 +597,7 @@ class ToolCallExecutor {
             "setPropertyAll" -> {
                 // Set property on all elements matching the selector
                 if (args.size >= 3) {
-                    driver.setPropertyAll(args[0], args[1], args[2])
+                    driver.setPropertyAll(arg0!!, arg1!!, arg2!!)
                 } else {
                     null
                 }
@@ -599,24 +606,33 @@ class ToolCallExecutor {
             "evaluateValue" -> {
                 // Execute JavaScript and return JSON value
                 when (args.size) {
-                    1 -> driver.evaluateValue(args[0])
-                    2 -> driver.evaluateValue(args[0], args[1])
-                    else -> if (args.isNotEmpty()) driver.evaluateValue(args[0]) else null
+                    1 -> driver.evaluateValue(arg0!!)
+                    2 -> driver.evaluateValue(arg0!!, arg1!!)
+                    else -> if (args.isNotEmpty()) driver.evaluateValue(arg0!!) else null
                 }
             }
 
             "evaluateValueDetail" -> {
                 // Execute JavaScript and return detailed JSON value
-                if (args.isNotEmpty()) driver.evaluateValueDetail(args[0]) else null
+                if (args.isNotEmpty()) driver.evaluateValueDetail(arg0!!) else null
             }
 
             "delay" -> {
                 // Pause execution for specified milliseconds
                 if (args.isNotEmpty()) {
-                    driver.delay(args[0].toLongOrNull() ?: 1000L)
+                    driver.delay(arg0!!.toLongOrNull() ?: 1000L)
                 } else {
                     driver.delay(1000L)
                 }
+            }
+
+            // Navigation history controls
+            "goBack" -> {
+                driver.goBack()
+            }
+
+            "goForward" -> {
+                driver.goForward()
             }
 
             else -> {
@@ -693,94 +709,265 @@ stop()
 
         /**
          * Parses a function call from a text string into its components.
-         *
-         * Extracts the object name, function name, and argument list from a function call string.
-         * Handles various formats of function calls, including with and without quotes.
-         *
-         * Supported formats:
-         * - Standard: driver.method("arg1", "arg2")
-         * - Single quotes: driver.method('arg1', 'arg2')
-         * - No quotes: driver.method(arg1, arg2)
-         * - Trailing comma: driver.method(arg1, arg2, )
-         *
-         * Examples:
-         * ```
-         * driver.open("https://example.com")
-         * driver.navigateTo("https://example.com")
-         * driver.scrollToMiddle(0.4)
-         * driver.mouseWheelUp(2, 200, 200)
-         * ```
-         *
-         * @see <a href="https://github.com/Kotlin/grammar-tools">Kotlin Grammar Tools</a>
-         *
-         * @param input The function call string to parse.
-         * @return A triple containing (objectName, functionName, argumentList), or null if the input is not a valid function call.
+         * Uses a robust state machine to correctly handle:
+         * - Strings with commas and escaped quotes/backslashes
+         * - Nested parentheses inside arguments
+         * - Optional whitespace and trailing commas
          */
-        fun parseSimpleFunctionCall(input: String): Triple<String, String, List<String>>? {
-            val regex = """(\w+)\.(\w+)\((.*?)\)""".toRegex()
-            val match = regex.find(input) ?: return null
+        fun parseKotlinFunctionExpression(input: String): ToolCall? {
+            val s = input.trim().removeSuffix(";")
+            if (s.isEmpty()) return null
 
-            val (objectName, functionName, argsString) = match.destructured
-            if (argsString.isBlank()) {
-                return Triple(objectName, functionName, emptyList())
+            // Scan once to find the top-level '(' and its matching ')', respecting quotes/escapes
+            var inSingle = false
+            var inDouble = false
+            var escape = false
+            var depth = 0
+            var openIdx = -1
+            var closeIdx = -1
+
+            var i = 0
+            while (i < s.length) {
+                val c = s[i]
+                if (escape) {
+                    escape = false
+                    i++
+                    continue
+                }
+                when {
+                    inSingle -> {
+                        if (c == '\\') {
+                            escape = true
+                        } else if (c == '\'') {
+                            inSingle = false
+                        }
+                    }
+                    inDouble -> {
+                        if (c == '\\') {
+                            escape = true
+                        } else if (c == '"') {
+                            inDouble = false
+                        }
+                    }
+                    else -> {
+                        when (c) {
+                            '\'' -> inSingle = true
+                            '"' -> inDouble = true
+                            '(' -> {
+                                if (openIdx == -1) {
+                                    openIdx = i
+                                    depth = 1
+                                } else {
+                                    depth++
+                                }
+                            }
+                            ')' -> {
+                                if (openIdx != -1) {
+                                    depth--
+                                    if (depth == 0) {
+                                        closeIdx = i
+                                        i = s.length // break
+                                        continue
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                i++
             }
 
-            val args = argsString.split(",")
-                .map { it.trim() }.filter { it.isNotBlank() }
-                .map { it.removeSurrounding("\'") }
-                .map { it.removeSurrounding("\"") }
+            if (openIdx == -1 || closeIdx == -1 || closeIdx <= openIdx) return null
 
-            return Triple(objectName, functionName, args)
+            val header = s.substring(0, openIdx).trim()
+            val argsRegion = s.substring(openIdx + 1, closeIdx)
+
+            val dot = header.lastIndexOf('.')
+            if (dot <= 0 || dot >= header.length - 1) return null
+            val objectName = header.substring(0, dot).trim()
+            val functionName = header.substring(dot + 1).trim()
+            if (objectName.isEmpty() || functionName.isEmpty()) return null
+
+            val argsList = splitTopLevelArgs(argsRegion)
+            val normalized = argsList.mapNotNull { tok ->
+                val t = tok.trim()
+                if (t.isEmpty()) null else unquoteAndUnescape(t)
+            }
+            val args = normalized.withIndex().associate { it.index.toString() to it.value }
+            return ToolCall(objectName, functionName, args)
         }
 
-        fun toolCallToDriverLine(tc: ToolCall): String? = when (tc.name) {
+        // Split arguments by commas at top level, honoring quotes, escapes, and nested parentheses.
+        private fun splitTopLevelArgs(s: String): List<String> {
+            val out = mutableListOf<String>()
+            if (s.isBlank()) return out
+            var inSingle = false
+            var inDouble = false
+            var escape = false
+            var depth = 0
+            val buf = StringBuilder()
+            var i = 0
+            while (i < s.length) {
+                val c = s[i]
+                if (escape) {
+                    buf.append(c)
+                    escape = false
+                    i++
+                    continue
+                }
+                when {
+                    inSingle -> {
+                        when (c) {
+                            '\\' -> {
+                                escape = true
+                                buf.append(c)
+                            }
+                            '\'' -> {
+                                inSingle = false
+                                buf.append(c)
+                            }
+                            else -> buf.append(c)
+                        }
+                    }
+                    inDouble -> {
+                        when (c) {
+                            '\\' -> {
+                                escape = true
+                                buf.append(c)
+                            }
+                            '"' -> {
+                                inDouble = false
+                                buf.append(c)
+                            }
+                            else -> buf.append(c)
+                        }
+                    }
+                    else -> {
+                        when (c) {
+                            '\'' -> {
+                                inSingle = true
+                                buf.append(c)
+                            }
+                            '"' -> {
+                                inDouble = true
+                                buf.append(c)
+                            }
+                            '(' -> {
+                                depth++
+                                buf.append(c)
+                            }
+                            ')' -> {
+                                if (depth > 0) depth--
+                                buf.append(c)
+                            }
+                            ',' -> {
+                                if (depth == 0) {
+                                    out.add(buf.toString())
+                                    buf.setLength(0)
+                                } else {
+                                    buf.append(c)
+                                }
+                            }
+                            else -> buf.append(c)
+                        }
+                    }
+                }
+                i++
+            }
+            // Last token (may be empty on trailing comma)
+            if (buf.isNotEmpty()) {
+                out.add(buf.toString())
+            }
+            return out
+        }
+
+        // Remove one level of matching quotes and unescape backslash sequences inside.
+        private fun unquoteAndUnescape(token: String): String {
+            if (token.length >= 2) {
+                val first = token.first()
+                val last = token.last()
+                if ((first == '"' && last == '"') || (first == '\'' && last == '\'')) {
+                    return unescape(token.substring(1, token.length - 1))
+                }
+            }
+            return token.trim()
+        }
+
+        // Simple unescape: treats backslash as escape for the next char.
+        private fun unescape(s: String): String {
+            val sb = StringBuilder(s.length)
+            var i = 0
+            while (i < s.length) {
+                val c = s[i]
+                if (c == '\\' && i + 1 < s.length) {
+                    sb.append(s[i + 1])
+                    i += 2
+                } else {
+                    sb.append(c)
+                    i++
+                }
+            }
+            return sb.toString()
+        }
+
+        // Basic string escaper to safely embed values inside Kotlin string literals
+        private fun String.esc(): String = this
+            .replace("\\", "\\\\")
+            .replace("\"", "\\\"")
+
+        fun toolCallToExpression(tc: ToolCall): String? = when (tc.name) {
             // Navigation
-            "navigateTo" -> tc.args["url"]?.let { "driver.navigateTo(\"$it\")" }
+            "navigateTo" -> tc.args["url"]?.toString()?.let { "driver.navigateTo(\"${it.esc()}\")" }
             // Backward compatibility for older prompts
-            "goto" -> tc.args["url"]?.let { "driver.navigateTo(\"$it\")" }
+            "goto" -> tc.args["url"]?.toString()?.let { "driver.navigateTo(\"${it.esc()}\")" }
             // Wait
-            "waitForSelector" -> tc.args["selector"]?.let { sel -> "driver.waitForSelector(\"$sel\", ${(tc.args["timeoutMillis"] ?: 5000)}L)" }
+            "waitForSelector" -> tc.args["selector"]?.toString()?.let { sel ->
+                "driver.waitForSelector(\"${sel.esc()}\", ${(tc.args["timeoutMillis"] ?: 5000)}L)"
+            }
             // Status checking (first batch of new tools)
-            "exists" -> tc.args["selector"]?.let { "driver.exists(\"$it\")" }
-            "isVisible" -> tc.args["selector"]?.let { "driver.isVisible(\"$it\")" }
-            "focus" -> tc.args["selector"]?.let { "driver.focus(\"$it\")" }
+            "exists" -> tc.args["selector"]?.toString()?.let { "driver.exists(\"${it.esc()}\")" }
+            "isVisible" -> tc.args["selector"]?.toString()?.let { "driver.isVisible(\"${it.esc()}\")" }
+            "focus" -> tc.args["selector"]?.toString()?.let { "driver.focus(\"${it.esc()}\")" }
             // Basic interactions
-            "click" -> tc.args["selector"]?.let { "driver.click(\"$it\")" }
-            "fill" -> tc.args["selector"]?.let { s -> "driver.fill(\"$s\", \"${tc.args["text"] ?: ""}\")" }
-            "press" -> tc.args["selector"]?.let { s -> tc.args["key"]?.let { k -> "driver.press(\"$s\", \"$k\")" } }
-            "check" -> tc.args["selector"]?.let { "driver.check(\"$it\")" }
-            "uncheck" -> tc.args["selector"]?.let { "driver.uncheck(\"$it\")" }
+            "click" -> tc.args["selector"]?.toString()?.let { "driver.click(\"${it.esc()}\")" }
+            "fill" -> tc.args["selector"]?.toString()?.let { s ->
+                val text = tc.args["text"]?.toString()?.esc() ?: ""
+                "driver.fill(\"${s.esc()}\", \"$text\")"
+            }
+            "press" -> tc.args["selector"]?.toString()?.let { s -> tc.args["key"]?.toString()?.let { k -> "driver.press(\"${s.esc()}\", \"${k.esc()}\")" } }
+            "check" -> tc.args["selector"]?.toString()?.let { "driver.check(\"${it.esc()}\")" }
+            "uncheck" -> tc.args["selector"]?.toString()?.let { "driver.uncheck(\"${it.esc()}\")" }
             // Scrolling
             "scrollDown" -> "driver.scrollDown(${tc.args["count"] ?: 1})"
             "scrollUp" -> "driver.scrollUp(${tc.args["count"] ?: 1})"
-            "scrollTo" -> tc.args["selector"]?.let { "driver.scrollTo(\"$it\")" }
+            "scrollTo" -> tc.args["selector"]?.toString()?.let { "driver.scrollTo(\"${it.esc()}\")" }
             "scrollToTop" -> "driver.scrollToTop()"
             "scrollToBottom" -> "driver.scrollToBottom()"
             "scrollToMiddle" -> "driver.scrollToMiddle(${tc.args["ratio"] ?: 0.5})"
             "scrollToScreen" -> tc.args["screenNumber"]?.let { n -> "driver.scrollToScreen(${n})" }
             // Advanced clicks
-            "clickTextMatches" -> tc.args["selector"]?.let { s ->
-                val pattern = tc.args["pattern"] ?: return@let null
+            "clickTextMatches" -> tc.args["selector"]?.toString()?.let { s ->
+                val pattern = tc.args["pattern"]?.toString()?.esc() ?: return@let null
                 val count = tc.args["count"] ?: 1
-                "driver.clickTextMatches(\"$s\", \"$pattern\", $count)"
+                "driver.clickTextMatches(\"${s.esc()}\", \"$pattern\", $count)"
             }
 
-            "clickMatches" -> tc.args["selector"]?.let { s ->
-                val attr = tc.args["attrName"] ?: return@let null
-                val pattern = tc.args["pattern"] ?: return@let null
+            "clickMatches" -> tc.args["selector"]?.toString()?.let { s ->
+                val attr = tc.args["attrName"]?.toString()?.esc() ?: return@let null
+                val pattern = tc.args["pattern"]?.toString()?.esc() ?: return@let null
                 val count = tc.args["count"] ?: 1
-                "driver.clickMatches(\"$s\", \"$attr\", \"$pattern\", $count)"
+                "driver.clickMatches(\"${s.esc()}\", \"$attr\", \"$pattern\", $count)"
             }
 
             "clickNthAnchor" -> tc.args["n"]?.let { n ->
                 val root = tc.args["rootSelector"]?.toString() ?: "body"
-                "driver.clickNthAnchor(${n}, \"$root\")"
+                "driver.clickNthAnchor(${n}, \"${root.esc()}\")"
             }
             // Enhanced navigation
             "waitForNavigation" -> {
                 val oldUrl = tc.args["oldUrl"]?.toString() ?: ""
                 val timeout = tc.args["timeoutMillis"] ?: 5000L
-                "driver.waitForNavigation(\"$oldUrl\", ${timeout}L)"
+                "driver.waitForNavigation(\"${oldUrl.esc()}\", ${timeout}L)"
             }
 
             "goBack" -> "driver.goBack()"
@@ -788,12 +975,11 @@ stop()
             // Screenshots
             "captureScreenshot" -> {
                 val sel = tc.args["selector"]?.toString()
-                if (sel.isNullOrBlank()) "driver.captureScreenshot()" else "driver.captureScreenshot(\"$sel\")"
+                if (sel.isNullOrBlank()) "driver.captureScreenshot()" else "driver.captureScreenshot(\"${sel.esc()}\")"
             }
             // Timing
             "delay" -> "driver.delay(${tc.args["millis"] ?: 1000}L)"
             else -> null
         }
-
     }
 }
