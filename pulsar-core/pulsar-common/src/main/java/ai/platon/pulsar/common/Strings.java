@@ -735,7 +735,12 @@ public final class Strings {
     else return s;
   }
 
-  /**
+    public static String compactLog(String log) {
+        if (log == null) return null;
+        return log.replaceAll("[\\s\\u00A0]+", " ").trim();
+    }
+
+    /**
    * Formats a decimal number in its compact, readable form.
    *
    * @see <a href="https://docs.oracle.com/en/java/javase/12/docs/api/java.base/java/text/CompactNumberFormat.html">
