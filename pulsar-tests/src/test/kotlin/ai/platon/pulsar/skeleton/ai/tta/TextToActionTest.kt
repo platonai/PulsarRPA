@@ -2,6 +2,7 @@ package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
@@ -25,7 +26,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask to click a button then generate correct WebDriver action code`() {
         val prompt = "点击搜索按钮"
 
-        val actionDescription = textToAction.generateBlocking(prompt, listOf())
+        val actionDescription = runBlocking { textToAction.generate(prompt, listOf()) }
         lastResponse = actionDescription.modelResponse
         printlnPro(actionDescription.modelResponse.content)
 
@@ -37,7 +38,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask to fill input field then generate correct WebDriver action code`() {
         val prompt = "在搜索框中输入 'AI toys'"
 
-        val actionDescription = textToAction.generateBlocking(prompt, listOf())
+        val actionDescription = runBlocking { textToAction.generate(prompt, listOf()) }
         lastResponse = actionDescription.modelResponse
         printlnPro(actionDescription.modelResponse.content)
 

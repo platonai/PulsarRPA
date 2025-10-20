@@ -188,29 +188,16 @@ $AGENT_SYSTEM_PROMPT
         """.trimIndent()
     }
 
-    fun formatInteractiveElements(elements: List<InteractiveElement>, limit: Int = 200, charLimitPerLine: Int = 180): List<String> {
-        val ranked = rankInteractiveElements(elements).take(limit)
-        return ranked.mapIndexed { idx, e ->
-            val base = e.description
-            val clipped = if (base.length > charLimitPerLine) base.take(charLimitPerLine - 3) + "..." else base
-            "${idx + 1}. $clipped"
-        }
-    }
-
-    fun rankInteractiveElements(elements: List<InteractiveElement>): List<InteractiveElement> {
-        // Simple heuristic scoring: prioritize buttons, inputs (empty), anchors with text, then others
-        return elements.sortedWith(compareByDescending<InteractiveElement> { e ->
-            when (e.tagName.lowercase()) {
-                "button" -> 5
-                "input" -> if (e.value.isNullOrBlank()) 4 else 3
-                "select" -> 3
-                "textarea" -> 3
-                "a" -> if (e.text.isNotBlank()) 2 else 1
-                else -> 0
-            }
-        }.thenByDescending { it.text.length }.thenBy { it.selector.length })
-    }
-
+    /**
+     * Response format:
+     *
+     * ```json
+     * {
+     *   tool_calls: [ { name: string, args: [name: string, value: string] } ]
+     *   taskComplete: boolean
+     * }
+     * ```
+     * */
     protected fun modelResponseToActionDescription(response: ModelResponse, toolCallLimit: Int = 1): ActionDescription {
         val toolCalls = parseToolCalls(response.content).take(toolCallLimit)
         val functionCalls = if (toolCalls.isNotEmpty()) {

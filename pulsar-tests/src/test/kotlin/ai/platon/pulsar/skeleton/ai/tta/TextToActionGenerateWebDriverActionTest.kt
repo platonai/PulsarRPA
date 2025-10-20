@@ -3,6 +3,7 @@ package ai.platon.pulsar.skeleton.ai.tta
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.external.ModelResponse
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
@@ -31,7 +32,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             driver.navigateTo("https://example.com")
             driver.waitForSelector("body")
 
-            val actionDescription = textToAction.generateBlocking(prompt, driver)
+            val actionDescription = textToAction.generate(prompt, driver)
 
             assertNotNull(actionDescription)
             assertNotNull(actionDescription.modelResponse)
@@ -60,7 +61,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             driver.waitForSelector("body")
 
             prompts.forEach { prompt ->
-                val actionDescription = textToAction.generateBlocking(prompt, driver)
+                val actionDescription = textToAction.generate(prompt, driver)
 
                 assertNotNull(actionDescription, "Should generate action for prompt: $prompt")
                 assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $prompt")
@@ -88,7 +89,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             driver.waitForSelector("body")
 
             prompts.forEach { prompt ->
-                val actionDescription = textToAction.generateBlocking(prompt, driver)
+                val actionDescription = textToAction.generate(prompt, driver)
 
                 assertNotNull(actionDescription, "Should generate action for prompt: $prompt")
                 assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $prompt")
@@ -112,7 +113,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
 
         runEnhancedWebDriverTest { driver ->
             prompts.forEach { prompt ->
-                val actionDescription = textToAction.generateBlocking(prompt, driver)
+                val actionDescription = textToAction.generate(prompt, driver)
 
                 assertNotNull(actionDescription, "Should generate action for prompt: $prompt")
                 assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $prompt")
@@ -138,7 +139,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             driver.waitForSelector("body")
 
             prompts.forEach { prompt ->
-                val actionDescription = textToAction.generateBlocking(prompt, driver)
+                val actionDescription = textToAction.generate(prompt, driver)
 
                 assertNotNull(actionDescription, "Should generate action for prompt: $prompt")
                 assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $prompt")
@@ -164,7 +165,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             driver.waitForSelector("body")
 
             prompts.forEach { prompt ->
-                val actionDescription = textToAction.generateBlocking(prompt, driver)
+                val actionDescription = textToAction.generate(prompt, driver)
 
                 assertNotNull(actionDescription, "Should generate action for prompt: $prompt")
                 assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $prompt")
@@ -190,7 +191,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             driver.waitForSelector("body")
 
             prompts.forEach { prompt ->
-                val actionDescription = textToAction.generateBlocking(prompt, driver)
+                val actionDescription = textToAction.generate(prompt, driver)
 
                 assertNotNull(actionDescription, "Should generate action for prompt: $prompt")
                 assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $prompt")
@@ -207,7 +208,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
     fun `When generateWebDriverAction is called with empty elements then handle gracefully`() {
         val prompt = "点击按钮"
 
-        val actionDescription = textToAction.generateBlocking(prompt, listOf())
+        val actionDescription = runBlocking { textToAction.generate(prompt, listOf()) }
 
         assertNotNull(actionDescription)
         // Should handle empty elements gracefully
@@ -221,7 +222,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
         runEnhancedWebDriverTest { driver ->
             driver.navigateTo("about:blank")
 
-            val actionDescription = textToAction.generateBlocking(prompt, driver)
+            val actionDescription = textToAction.generate(prompt, driver)
 
             assertNotNull(actionDescription)
             // Should handle pages with no/few interactive elements
@@ -243,7 +244,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             driver.waitForSelector("body")
 
             prompts.forEach { prompt ->
-                val actionDescription = textToAction.generateBlocking(prompt, driver)
+                val actionDescription = textToAction.generate(prompt, driver)
 
                 assertNotNull(actionDescription, "Should handle ambiguous prompt: $prompt")
                 assertTrue(actionDescription.expressions.size <= 1, "Should generate at most one action for ambiguous: $prompt")
@@ -261,7 +262,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             driver.navigateTo("https://example.com")
             driver.waitForSelector("body")
 
-            val actionDescription = textToAction.generateBlocking(prompt, driver)
+            val actionDescription = textToAction.generate(prompt, driver)
 
             assertNotNull(actionDescription)
             // The selectedElement field should be populated when elements are found
@@ -279,7 +280,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             driver.navigateTo("https://example.com")
             driver.waitForSelector("body")
 
-            val actionDescription = textToAction.generateBlocking(prompt, driver)
+            val actionDescription = textToAction.generate(prompt, driver)
 
             assertNotNull(actionDescription)
             assertNotNull(actionDescription.expressions, "Function calls should not be null")
@@ -301,7 +302,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             driver.navigateTo("https://example.com")
             driver.waitForSelector("body")
 
-            val actionDescription = textToAction.generateBlocking(prompt, driver)
+            val actionDescription = textToAction.generate(prompt, driver)
 
             // Test that the tool call parsing works correctly
 
@@ -330,7 +331,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             driver.waitForSelector("body")
 
             prompts.forEach { (prompt, elementType) ->
-                val actionDescription = textToAction.generateBlocking(prompt, driver)
+                val actionDescription = textToAction.generate(prompt, driver)
 
                 assertNotNull(actionDescription, "Should handle $elementType element type for: $prompt")
                 assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $prompt")
@@ -355,7 +356,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
             driver.waitForSelector("body")
 
             prompts.forEach { (prompt, expectedAction) ->
-                val actionDescription = textToAction.generateBlocking(prompt, driver)
+                val actionDescription = textToAction.generate(prompt, driver)
 
                 assertNotNull(actionDescription, "Should handle Chinese prompt: $prompt")
                 assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $prompt")
@@ -375,7 +376,7 @@ class TextToActionGenerateWebDriverActionTest : TextToActionTestBase() {
 
             // Call multiple times to test consistency
             val results = (1..3).map {
-                textToAction.generateBlocking(prompt, driver)
+                textToAction.generate(prompt, driver)
             }
 
             results.forEach { result ->

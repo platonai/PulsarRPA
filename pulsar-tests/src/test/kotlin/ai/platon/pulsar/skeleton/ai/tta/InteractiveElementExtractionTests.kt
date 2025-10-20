@@ -35,7 +35,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
         // Test basic functionality using the available chat method
         val prompt = "从当前页面提取所有可交互的元素"
-        val response = textToAction.generateBlocking(prompt, driver)
+        val response = textToAction.generate(prompt, driver)
 
         printlnPro("Element extraction response: ${response.modelResponse.content}")
 
@@ -64,7 +64,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
                 // Test extraction functionality using available methods
                 val prompt = "分析$pageUrl 页面中的可交互元素"
-                val response = textToAction.generateBlocking(prompt, driver)
+                val response = textToAction.generate(prompt, driver)
 
                 printlnPro("Page $pageUrl analysis: ${response.modelResponse.content}")
 
@@ -86,7 +86,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
         // Test bounds-related functionality
         val prompt = "分析页面中元素的定位和尺寸信息"
-        val response = textToAction.generateBlocking(prompt, driver)
+        val response = textToAction.generate(prompt, driver)
 
         printlnPro("Bounds analysis response: ${response.modelResponse.content}")
 
@@ -108,7 +108,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
         // Test visibility-related functionality
         val prompt = "分析页面中元素的可见性状态"
-        val response = textToAction.generateBlocking(prompt, driver)
+        val response = textToAction.generate(prompt, driver)
 
         printlnPro("Visibility analysis response: ${response.modelResponse.content}")
 
@@ -130,7 +130,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
         // Test description generation functionality
         val prompt = "生成页面中元素的详细描述信息"
-        val response = textToAction.generateBlocking(prompt, driver)
+        val response = textToAction.generate(prompt, driver)
 
         printlnPro("Description generation response: ${response.modelResponse.content}")
 
@@ -152,7 +152,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
         // Test selector generation functionality
         val prompt = "分析页面中元素的选择器生成逻辑"
-        val response = textToAction.generateBlocking(prompt, driver)
+        val response = textToAction.generate(prompt, driver)
 
         printlnPro("Selector generation response: ${response.modelResponse.content}")
 
@@ -174,7 +174,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
         // Test dynamic content functionality
         val prompt = "测试页面动态内容的交互功能"
-        val response = textToAction.generateBlocking(prompt, driver)
+        val response = textToAction.generate(prompt, driver)
 
         printlnPro("Dynamic content response: ${response.modelResponse.content}")
 
@@ -196,7 +196,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
         // Test hidden element functionality
         val prompt = "分析页面中隐藏元素的显示和隐藏逻辑"
-        val response = textToAction.generateBlocking(prompt, driver)
+        val response = textToAction.generate(prompt, driver)
 
         printlnPro("Hidden elements response: ${response.modelResponse.content}")
 
@@ -219,7 +219,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
 
         // Test basic functionality to ensure script loading works
         val prompt = "测试JavaScript资源加载和功能执行"
-        val response = textToAction.generateBlocking(prompt, listOf())
+        val response = runBlocking { textToAction.generate(prompt, listOf()) }
 
         printlnPro("Resource loading test response: ${response.modelResponse.content}")
 
@@ -234,7 +234,7 @@ class InteractiveElementExtractionTests : TextToActionTestBase() {
         // Test performance with complex page
         val startTime = System.currentTimeMillis()
         val prompt = "分析复杂页面中的元素提取性能"
-        val response = textToAction.generateBlocking(prompt, driver)
+        val response = textToAction.generate(prompt, driver)
         val endTime = System.currentTimeMillis()
 
         val processingTime = endTime - startTime

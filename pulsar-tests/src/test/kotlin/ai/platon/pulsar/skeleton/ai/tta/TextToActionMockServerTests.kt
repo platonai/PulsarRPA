@@ -29,7 +29,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("点击搜索按钮", driver)
+        val actionDescription = textToAction.generate("点击搜索按钮", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -44,7 +44,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("在搜索框输入 'AI工具'", driver)
+        val actionDescription = textToAction.generate("在搜索框输入 'AI工具'", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -60,7 +60,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("选择选项2", driver)
+        val actionDescription = textToAction.generate("选择选项2", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -76,7 +76,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("点击切换开关", driver)
+        val actionDescription = textToAction.generate("点击切换开关", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -93,7 +93,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("填写用户名 'testuser'", driver)
+        val actionDescription = textToAction.generate("填写用户名 'testuser'", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -109,7 +109,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("输入邮箱 'test@example.com'", driver)
+        val actionDescription = textToAction.generate("输入邮箱 'test@example.com'", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -125,7 +125,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("调整滑块到75", driver)
+        val actionDescription = textToAction.generate("调整滑块到75", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -141,7 +141,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("切换订阅开关", driver)
+        val actionDescription = textToAction.generate("切换订阅开关", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -158,7 +158,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-3.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("滚动到页面中间", driver)
+        val actionDescription = textToAction.generate("滚动到页面中间", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -173,7 +173,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-3.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("调整范围输入到50", driver)
+        val actionDescription = textToAction.generate("调整范围输入到50", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -191,7 +191,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-4.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("切换暗色模式", driver)
+        val actionDescription = textToAction.generate("切换暗色模式", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -206,7 +206,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-4.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("拖拽第一个项目", driver)
+        val actionDescription = textToAction.generate("拖拽第一个项目", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -224,7 +224,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/forms-advanced-test.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("输入密码 'secure123'", driver)
+        val actionDescription = textToAction.generate("输入密码 'secure123'", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -240,7 +240,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/forms-advanced-test.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("选择日期", driver)
+        val actionDescription = textToAction.generate("选择日期", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -258,7 +258,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-dynamic.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("等待动态内容加载", driver)
+        val actionDescription = textToAction.generate("等待动态内容加载", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -275,7 +275,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-ambiguity.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("点击第一个提交按钮", driver)
+        val actionDescription = textToAction.generate("点击第一个提交按钮", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -292,7 +292,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("导航到 interactive-2 页面", driver)
+        val actionDescription = textToAction.generate("导航到 interactive-2 页面", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -310,7 +310,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("返回上一页", driver)
+        val actionDescription = textToAction.generate("返回上一页", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -327,7 +327,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("点击不存在的魔法按钮", driver)
+        val actionDescription = textToAction.generate("点击不存在的魔法按钮", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -341,7 +341,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("操作页面", driver)
+        val actionDescription = textToAction.generate("操作页面", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -357,7 +357,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("Click the search button", driver)
+        val actionDescription = textToAction.generate("Click the search button", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -372,7 +372,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("Fill in the username field with 'testuser'", driver)
+        val actionDescription = textToAction.generate("Fill in the username field with 'testuser'", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -390,7 +390,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-2.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("提交表单", driver)
+        val actionDescription = textToAction.generate("提交表单", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -406,7 +406,7 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-dynamic.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("点击加载更多按钮", driver)
+        val actionDescription = textToAction.generate("点击加载更多按钮", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")

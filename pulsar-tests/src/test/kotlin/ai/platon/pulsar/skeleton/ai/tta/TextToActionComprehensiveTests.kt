@@ -30,7 +30,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "在姓名输入框中输入 '张三'"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -47,7 +47,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "选择最喜欢的颜色为蓝色"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -64,7 +64,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "点击添加按钮"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -81,7 +81,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "切换消息显示"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -98,7 +98,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "在第一个数字输入框输入10，第二个数字输入框输入20"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -118,7 +118,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "在姓名输入框输入 '李四'"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -134,7 +134,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "选择最喜欢的编程语言为Python"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -150,7 +150,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "勾选订阅通讯复选框"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -166,7 +166,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "点击显示摘要按钮"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -182,7 +182,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "调整文本大小滑块到24"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -201,7 +201,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "点击用户管理区域的保存按钮"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -218,7 +218,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "点击产品管理区域的保存按钮"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -235,7 +235,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "点击右上角的菜单按钮"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -252,7 +252,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "在账单地址区域填写姓名为 '王五'"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -269,7 +269,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "在产品搜索框中输入 '手机'"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -288,7 +288,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "输入姓名张三，选择蓝色，然后点击添加按钮"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -304,7 +304,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "点击编辑按钮"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -321,7 +321,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "点击不存在的提交按钮"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -346,7 +346,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         )
 
         commands.forEach { command ->
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
@@ -368,7 +368,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         )
 
         commands.forEach { command ->
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
@@ -385,7 +385,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = ""
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -400,7 +400,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val command = "请帮我在这个页面的姓名输入框里面输入一个非常长的名字叫做'这是一个非常长的中文名字用来测试系统对于长文本输入的处理能力'然后选择颜色为浅黄色接着点击添加按钮计算一些数字最后切换消息显示"
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
@@ -422,7 +422,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         )
 
         commands.forEach { command ->
-        val actionDescription = textToAction.generateBlocking(command, driver)
+        val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")

@@ -30,7 +30,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("检查搜索按钮是否存在", driver)
+        val actionDescription = textToAction.generate("检查搜索按钮是否存在", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
@@ -47,7 +47,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("检查ID为'nonexistent-element'的元素是否存在", driver)
+        val actionDescription = textToAction.generate("检查ID为'nonexistent-element'的元素是否存在", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
@@ -64,7 +64,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("检查搜索输入框是否可见", driver)
+        val actionDescription = textToAction.generate("检查搜索输入框是否可见", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
@@ -81,7 +81,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("检查隐藏的切换开关是否可见", driver)
+        val actionDescription = textToAction.generate("检查隐藏的切换开关是否可见", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
@@ -98,7 +98,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("聚焦到搜索输入框", driver)
+        val actionDescription = textToAction.generate("聚焦到搜索输入框", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
@@ -115,7 +115,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("聚焦到提交按钮", driver)
+        val actionDescription = textToAction.generate("聚焦到提交按钮", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
@@ -134,7 +134,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-screens.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("滚动到页面底部的表单", driver)
+        val actionDescription = textToAction.generate("滚动到页面底部的表单", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
@@ -151,7 +151,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-screens.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("滚动到标题为'Section 2'的区域", driver)
+        val actionDescription = textToAction.generate("滚动到标题为'Section 2'的区域", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
@@ -170,7 +170,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("点击链接后等待页面跳转完成", driver)
+        val actionDescription = textToAction.generate("点击链接后等待页面跳转完成", driver)
 
         assertNotNull(actionDescription)
         // This might generate multiple actions: click + waitForNavigation
@@ -189,7 +189,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("等待当前页面完全加载", driver)
+        val actionDescription = textToAction.generate("等待当前页面完全加载", driver)
 
         assertNotNull(actionDescription)
         val actions = actionDescription.expressions
@@ -209,7 +209,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("返回上一页", driver)
+        val actionDescription = textToAction.generate("返回上一页", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
@@ -224,7 +224,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("前进到下一页", driver)
+        val actionDescription = textToAction.generate("前进到下一页", driver)
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action")
@@ -241,7 +241,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("如果搜索按钮存在就点击它", driver)
+        val actionDescription = textToAction.generate("如果搜索按钮存在就点击它", driver)
 
         assertNotNull(actionDescription)
         val actions = actionDescription.expressions
@@ -264,7 +264,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("等待搜索输入框出现然后输入文本", driver)
+        val actionDescription = textToAction.generate("等待搜索输入框出现然后输入文本", driver)
 
         assertNotNull(actionDescription)
         val actions = actionDescription.expressions
@@ -289,7 +289,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("确认提交按钮可见后点击它", driver)
+        val actionDescription = textToAction.generate("确认提交按钮可见后点击它", driver)
 
         assertNotNull(actionDescription)
         val actions = actionDescription.expressions
@@ -311,7 +311,7 @@ class NewToolsIntegrationTest : TextToActionTestBase() {
         driver.navigateTo("$generatedAssetsBaseURL/tta/interactive-1.html")
         driver.waitForSelector("body")
 
-        val actionDescription = textToAction.generateBlocking("先聚焦到用户名输入框然后输入文本", driver)
+        val actionDescription = textToAction.generate("先聚焦到用户名输入框然后输入文本", driver)
 
         assertNotNull(actionDescription)
         val actions = actionDescription.expressions

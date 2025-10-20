@@ -39,7 +39,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         )
 
         complexCommands.forEach { command ->
-            val actionDescription = textToAction.generateBlocking(command, driver)
+            val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
             assertTrue(actionDescription.expressions.size <= 1, "Should generate at most one action for complex: $command")
@@ -68,7 +68,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         )
 
         conditionalCommands.forEach { command ->
-            val actionDescription = textToAction.generateBlocking(command, driver)
+            val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
             assertTrue(actionDescription.expressions.size <= 1, "Should generate at most one action for conditional: $command")
@@ -99,7 +99,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         )
 
         contextCommands.forEach { (command, expectedContext) ->
-            val actionDescription = textToAction.generateBlocking(command, driver)
+            val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
@@ -126,7 +126,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         )
 
         spatialCommands.forEach { (command, expectedPosition) ->
-            val actionDescription = textToAction.generateBlocking(command, driver)
+            val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
@@ -158,7 +158,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         )
 
         malformedCommands.forEach { command ->
-            val actionDescription = textToAction.generateBlocking(command, driver)
+            val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
             assertTrue(actionDescription.expressions.size <= 1, "Should handle malformed command: '$command'")
@@ -185,7 +185,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         )
 
         contradictoryCommands.forEach { command ->
-            val actionDescription = textToAction.generateBlocking(command, driver)
+            val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
             assertTrue(actionDescription.expressions.size <= 1, "Should handle contradictory command: $command")
@@ -216,7 +216,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             另外如果页面加载比较慢的话请等待所有元素都加载完成再执行这些操作谢谢
         """.trimIndent()
 
-        val actionDescription = textToAction.generateBlocking(veryLongCommand, driver)
+        val actionDescription = textToAction.generate(veryLongCommand, driver)
 
         assertNotNull(actionDescription)
         assertTrue(actionDescription.expressions.size <= 1, "Should handle very long command")
@@ -243,7 +243,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         )
 
         unicodeCommands.forEach { command ->
-            val actionDescription = textToAction.generateBlocking(command, driver)
+            val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
             assertTrue(actionDescription.expressions.size <= 1, "Should handle Unicode command: $command")
@@ -273,7 +273,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         )
 
         multilingualCommands.forEach { (command, language) ->
-            val actionDescription = textToAction.generateBlocking(command, driver)
+            val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
             assertTrue(actionDescription.expressions.size <= 1, "Should handle $language command: $command")
@@ -297,7 +297,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
         // Execute the same command multiple times rapidly
         repeat(5) {
-            val actionDescription = textToAction.generateBlocking(baseCommand, driver)
+            val actionDescription = textToAction.generate(baseCommand, driver)
             results.add(actionDescription)
         }
 
@@ -328,7 +328,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         )
 
         timingCommands.forEach { command ->
-            val actionDescription = textToAction.generateBlocking(command, driver)
+            val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
             assertTrue(actionDescription.expressions.size <= 1, "Should handle timing command: $command")
@@ -355,7 +355,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         )
 
         validationCommands.forEach { (command, expectedType) ->
-            val actionDescription = textToAction.generateBlocking(command, driver)
+            val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
             assertTrue(actionDescription.expressions.size <= 1, "Should handle validation command: $command")
@@ -375,7 +375,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         driver.waitForSelector("body")
 
         val testCommand = "点击添加按钮"
-        val actionDescription = textToAction.generateBlocking(testCommand, driver)
+        val actionDescription = textToAction.generate(testCommand, driver)
 
         // Analyze the response structure
         printlnPro("=== RESPONSE ANALYSIS ===")
