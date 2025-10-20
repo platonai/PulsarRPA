@@ -1,19 +1,20 @@
 package ai.platon.pulsar.agentic.ai.agent
 
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.skeleton.ai.support.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Validates actions before execution to ensure safety and correctness.
- * 
+ *
  * This helper class provides validation for:
  * - URL safety checks
  * - Selector syntax validation
  * - Tool call parameter validation
  * - Security policy enforcement
- * 
+ *
  * @author Vincent Zhang, ivincent.zhang@gmail.com, platon.ai
  */
 class ActionValidator(
@@ -21,13 +22,13 @@ class ActionValidator(
     private val config: AgentConfig
 ) {
     private val logger = getLogger(this)
-    
+
     // Validation cache to avoid repeated validation of same actions
     private val validationCache = ConcurrentHashMap<String, Boolean>()
 
     /**
      * Validates a tool call before execution.
-     * 
+     *
      * @param toolCall The tool call to validate
      * @return true if the tool call is valid and safe to execute
      */
@@ -36,7 +37,7 @@ class ActionValidator(
         return validationCache.getOrPut(cacheKey) {
             when (toolCall.name) {
                 "navigateTo" -> validateNavigateTo(toolCall.args)
-                "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "focus", "scrollTo" -> 
+                "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "focus", "scrollTo" ->
                     validateElementAction(toolCall.args)
                 "waitForNavigation" -> validateWaitForNavigation(toolCall.args)
                 "goBack", "goForward", "delay" -> true // These don't need validation
@@ -56,7 +57,7 @@ class ActionValidator(
 
     /**
      * Validates navigation actions.
-     * 
+     *
      * @param args Action arguments containing URL
      * @return true if the URL is safe to navigate to
      */
@@ -68,33 +69,33 @@ class ActionValidator(
     /**
      * Validates element interaction actions.
      * Checks selector syntax and length constraints.
-     * 
+     *
      * @param args Action arguments containing selector
      * @return true if the selector is valid
      */
     fun validateElementAction(args: Map<String, Any?>): Boolean {
         val selector = args["selector"]?.toString() ?: return false
-        
+
         // Basic validation
         if (selector.isBlank() || selector.length > config.maxSelectorLength) {
             return false
         }
-        
+
         // Check for common selector syntax patterns
-        val hasValidPrefix = selector.startsWith("xpath:") || 
-                            selector.startsWith("css:") || 
-                            selector.startsWith("#") || 
+        val hasValidPrefix = selector.startsWith("xpath:") ||
+                            selector.startsWith("css:") ||
+                            selector.startsWith("#") ||
                             selector.startsWith(".") ||
                             selector.startsWith("//") ||
                             selector.startsWith("fbn:") ||
                             selector.matches(Regex("^[a-zA-Z][a-zA-Z0-9]*$")) // tag name
-        
+
         return hasValidPrefix
     }
 
     /**
      * Validates waitForNavigation actions.
-     * 
+     *
      * @param args Action arguments containing oldUrl and timeout
      * @return true if the parameters are valid
      */
@@ -107,7 +108,7 @@ class ActionValidator(
     /**
      * Enhanced URL validation with comprehensive safety checks.
      * Configurable for localhost and port restrictions.
-     * 
+     *
      * @param url The URL to validate
      * @return true if the URL is safe to use
      */
@@ -158,8 +159,3 @@ class ActionValidator(
         }
     }
 }
-
-/**
- * Simple tool call representation for validation.
- */
-data class ToolCall(val name: String, val args: Map<String, Any?>)

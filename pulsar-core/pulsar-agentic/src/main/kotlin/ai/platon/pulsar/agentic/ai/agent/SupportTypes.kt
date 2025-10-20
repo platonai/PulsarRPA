@@ -1,5 +1,6 @@
 package ai.platon.pulsar.agentic.ai.agent
 
+import ai.platon.pulsar.skeleton.ai.support.ToolCall
 import java.time.Instant
 
 data class ElementBounds(
@@ -75,4 +76,9 @@ data class ExecutionContext(
     val targetUrl: String,
     val timestamp: Instant = Instant.now(),
     val additionalContext: Map<String, Any> = emptyMap()
+)
+
+data class ToolCallResponse(
+    val toolCalls: List<ToolCall>,
+    val taskComplete: Boolean?,
 )

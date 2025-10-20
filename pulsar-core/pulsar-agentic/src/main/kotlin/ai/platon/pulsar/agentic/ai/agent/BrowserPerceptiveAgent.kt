@@ -16,7 +16,7 @@ import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCall
+import ai.platon.pulsar.skeleton.ai.support.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
@@ -37,6 +37,8 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.collections.emptyList
+import kotlin.collections.firstOrNull
 import kotlin.math.ceil
 import kotlin.math.min
 import kotlin.math.pow
@@ -181,7 +183,7 @@ class BrowserPerceptiveAgent(
 
         // Pre-action validation (lightweight), reuse local ToolCall(data) class
         if (config.enablePreActionValidation) {
-            val ok = actionValidator.validateToolCall(ToolCall(lowerMethod, toolArgs))
+            val ok = actionValidator.validateToolCall(ToolCall("driver", lowerMethod, toolArgs))
             if (!ok) {
                 val msg = "Tool call validation failed for $lowerMethod with selector ${selector?.take(120)}"
                 structuredLogger.log(
@@ -625,7 +627,10 @@ class BrowserPerceptiveAgent(
                 // Medium Priority #10: Detect if page state hasn't changed
                 val unchangedCount = pageStateTracker.checkStateChange(browserState)
                 if (unchangedCount >= 3) {
-                    structuredLogger.log("Page state unchanged for $unchangedCount steps, potential loop detected", stepContext)
+                    structuredLogger.log(
+                        "Page state unchanged for $unchangedCount steps, potential loop detected",
+                        stepContext
+                    )
                     consecutiveNoOps++
                 }
 
@@ -651,10 +656,10 @@ class BrowserPerceptiveAgent(
                 }
                 val userMsg = buildUserMessage(overallGoal, browserState)
 
-                // message: agent guide + overall goal + last action summary + current context message
-                val message = buildExecutionMessage(systemMsg, userMsg, screenshotB64)
+                // instruction: agent guide + overall goal + last action summary + current context message
+                val instruction = buildExecutionMessage(systemMsg, userMsg, screenshotB64)
                 // interactive elements are already appended to message
-                val stepActionResult = generateStepActionWithRetry(message, stepContext, null, screenshotB64)
+                val stepActionResult = generateStepAction(instruction, stepContext, null, screenshotB64)
 
                 if (stepActionResult == null) {
                     consecutiveNoOps++
@@ -829,11 +834,13 @@ class BrowserPerceptiveAgent(
         // Use Gson to create proper JSON string
         val jsonLog = JsonParser.parseString(
             logData.entries.joinToString(",", "{", "}") { (k, v) ->
-                """"$k":${when(v) {
-                    is String -> "\"$v\""
-                    is Number, is Boolean -> v.toString()
-                    else -> "\"$v\""
-                }}"""
+                """"$k":${
+                    when (v) {
+                        is String -> "\"$v\""
+                        is Number, is Boolean -> v.toString()
+                        else -> "\"$v\""
+                    }
+                }"""
             }
         )
 
@@ -875,15 +882,15 @@ class BrowserPerceptiveAgent(
     /**
      * Generates action with retry mechanism
      */
-    private suspend fun generateStepActionWithRetry(
-        message: String,
+    private suspend fun generateStepAction(
+        instruction: String,
         context: ExecutionContext,
         domState: DOMState?,
         screenshotB64: String?
     ): ActionDescription? {
         return try {
             // Use overload supplying extracted elements to avoid re-extraction
-            tta.generate(message, domState, screenshotB64)
+            tta.generate(instruction, domState, screenshotB64)
         } catch (e: Exception) {
             logError("Action generation failed", e, context.sessionId)
             consecutiveFailureCounter.incrementAndGet()
@@ -986,12 +993,12 @@ class BrowserPerceptiveAgent(
 
         // Medium Priority #11: Check for common selector syntax patterns
         val hasValidPrefix = selector.startsWith("xpath:") ||
-                            selector.startsWith("css:") ||
-                            selector.startsWith("#") ||
-                            selector.startsWith(".") ||
-                            selector.startsWith("//") ||
-                            selector.startsWith("fbn:") ||
-                            selector.matches(Regex("^[a-zA-Z][a-zA-Z0-9]*$")) // tag name
+                selector.startsWith("css:") ||
+                selector.startsWith("#") ||
+                selector.startsWith(".") ||
+                selector.startsWith("//") ||
+                selector.startsWith("fbn:") ||
+                selector.matches(Regex("^[a-zA-Z][a-zA-Z0-9]*$")) // tag name
 
         return hasValidPrefix
     }
@@ -1035,14 +1042,14 @@ class BrowserPerceptiveAgent(
     /**
      * Checks if execution should terminate
      */
-    private fun shouldTerminate(parsed: ParsedResponse): Boolean {
+    private fun shouldTerminate(parsed: ToolCallResponse): Boolean {
         return parsed.taskComplete == true
     }
 
     /**
      * Handles task completion
      */
-    private fun handleTaskCompletion(parsed: ParsedResponse, step: Int, context: ExecutionContext) {
+    private fun handleTaskCompletion(parsed: ToolCallResponse, step: Int, context: ExecutionContext) {
         logStructured(
             "Task completion detected", context, mapOf(
                 "taskComplete" to (parsed.taskComplete ?: false)
@@ -1180,7 +1187,7 @@ class BrowserPerceptiveAgent(
     private suspend fun buildUserMessage(instruction: String, browserUseState: BrowserUseState): String {
         val currentUrl = getCurrentUrl()
         val his = if (_history.isEmpty()) "(无)" else _history.takeLast(min(8, _history.size)).joinToString("\n")
-        val interactiveNodesJson =  browserUseState.domState.interactiveNodesJson
+        val interactiveNodesJson = browserUseState.domState.interactiveNodesJson
 
         return """
 此前动作摘要：
@@ -1195,12 +1202,7 @@ $interactiveNodesJson
 		""".trimIndent()
     }
 
-    private data class ParsedResponse(
-        val toolCalls: List<ToolCall>,
-        val taskComplete: Boolean?,
-    )
-
-    private fun parseOperatorResponse(content: String): ParsedResponse {
+    private fun parseOperatorResponse(content: String): ToolCallResponse {
         val domain = "driver"
 
         // 1) Try structured JSON with tool_calls
@@ -1222,7 +1224,7 @@ $interactiveNodesJson
                 }
                 val taskComplete = obj.get("taskComplete")?.takeIf { it.isJsonPrimitive }?.asBoolean
                 if (toolCalls.isNotEmpty() || taskComplete != null) {
-                    return ParsedResponse(toolCalls.take(1), taskComplete)
+                    return ToolCallResponse(toolCalls.take(1), taskComplete)
                 }
             }
         } catch (_: Exception) { /* fall back */
@@ -1231,8 +1233,8 @@ $interactiveNodesJson
         // 2) Fall back to TTA tool call JSON parser
         return runCatching {
             val calls = tta.parseToolCalls(content).map { ToolCall(domain, it.name, it.args) }
-            ParsedResponse(calls.take(1), null)
-        }.getOrElse { ParsedResponse(emptyList(), null) }
+            ToolCallResponse(calls.take(1), null)
+        }.getOrElse { ToolCallResponse(emptyList(), null) }
     }
 
     private fun jsonElementToKotlin(e: JsonElement): Any? = when {

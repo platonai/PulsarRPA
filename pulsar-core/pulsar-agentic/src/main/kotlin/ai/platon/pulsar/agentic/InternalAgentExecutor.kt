@@ -19,6 +19,8 @@ internal class InternalAgentExecutor(
         session.sessionConfig
     )
 
+    private val dispatcher = ToolCallExecutor()
+
     val agent = BrowserPerceptiveAgent(driver)
 
     suspend fun resolve(action: String): ActResult {
@@ -38,7 +40,6 @@ internal class InternalAgentExecutor(
             return InstructionResult(listOf(), functionResults = listOf(), modelResponse = action.modelResponse)
         }
 
-        val dispatcher = ToolCallExecutor()
         val result = if (action.toolCall != null) {
             dispatcher.execute(action.toolCall, driver)
         } else {
@@ -56,14 +57,15 @@ internal class InternalAgentExecutor(
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
         val tta = TextToAction(conf)
 
-        val actions = tta.generateWithToolCallSpecs(prompt)
+        val action = tta.generateWithToolCallSpecs(prompt)
 
-        // Dispatches and executes each action using a SimpleCommandDispatcher.
-        val dispatcher = ToolCallExecutor()
-        val functionResults = actions.expressions.map { action ->
-            dispatcher.execute(action, driver)
+        val result = if (action.toolCall != null) {
+            dispatcher.execute(action.toolCall, driver)
+        } else {
+            val functionCalls = action.expressions.take(1)
+            functionCalls.map { fc -> dispatcher.execute(fc, driver) }.firstOrNull()
         }
 
-        return InstructionResult(actions.expressions, functionResults, actions.modelResponse)
+        return InstructionResult(action.expressions, listOf(result), action.modelResponse)
     }
 }

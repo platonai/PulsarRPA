@@ -1,7 +1,7 @@
 package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCall
+import ai.platon.pulsar.skeleton.ai.support.ToolCall
 
 data class InteractiveElement(
     val id: String,

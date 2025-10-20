@@ -50,6 +50,8 @@ data class CleanedDOMTreeNode(
 /**
  * Serializable SimplifiedNode structure.
  * Enhanced with compound component marking and paint order information.
+ *
+ * Naming conversion: mini -> tiny -> micro -> nano -> pico -> ...
  */
 data class MicroDOMTreeNode(
     val shouldDisplay: Boolean? = null,
