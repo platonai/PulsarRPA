@@ -7,12 +7,12 @@ import kotlinx.coroutines.delay
 
 /**
  * Tracks page state changes to detect loops and ensure DOM stability.
- * 
+ *
  * This helper class encapsulates page state tracking logic, including:
  * - DOM stability detection
  * - Page state fingerprinting
  * - Loop detection
- * 
+ *
  * @author Vincent Zhang, ivincent.zhang@gmail.com, platon.ai
  */
 class PageStateTracker(
@@ -20,42 +20,42 @@ class PageStateTracker(
     private val config: AgentConfig
 ) {
     private val logger = getLogger(this)
-    
+
     private var lastPageStateHash: Int? = null
     private var sameStateCount = 0
 
     /**
      * Calculate page state fingerprint for loop detection.
      * Combines URL, DOM structure, and scroll position into a single hash.
-     * 
+     *
      * @param browserState The current browser state
      * @return Hash code representing the page state
      */
-    fun calculatePageStateHash(browserState: BrowserState): Int {
+    suspend fun calculatePageStateHash(browserState: BrowserState): Int {
         // Combine URL, DOM structure, and interactive elements for fingerprint
         val urlHash = runCatching { driver.currentUrl() }.getOrNull()?.hashCode() ?: 0
         val domHash = browserState.domState.json.hashCode()
         val scrollHash = browserState.basicState.scrollState.hashCode()
-        
+
         return (urlHash * 31 + domHash) * 31 + scrollHash
     }
 
     /**
      * Check if page state has changed since last check.
      * Tracks consecutive same-state occurrences for loop detection.
-     * 
+     *
      * @param browserState The current browser state
      * @return Number of consecutive times the same state has been observed
      */
-    fun checkStateChange(browserState: BrowserState): Int {
+    suspend fun checkStateChange(browserState: BrowserState): Int {
         val currentStateHash = calculatePageStateHash(browserState)
-        
+
         if (currentStateHash == lastPageStateHash) {
             sameStateCount++
         } else {
             sameStateCount = 0
         }
-        
+
         lastPageStateHash = currentStateHash
         return sameStateCount
     }
@@ -70,11 +70,11 @@ class PageStateTracker(
 
     /**
      * Wait for DOM to stabilize by checking for mutations.
-     * 
+     *
      * This method repeatedly checks the DOM structure hash to detect when
      * the page has finished loading and rendering. Requires multiple consecutive
      * stable checks before considering the DOM settled.
-     * 
+     *
      * @param timeoutMs Maximum time to wait for DOM to settle
      * @param checkIntervalMs Interval between stability checks
      */
@@ -83,13 +83,13 @@ class PageStateTracker(
         var lastDomHash: Int? = null
         var stableCount = 0
         val requiredStableChecks = 3 // Require 3 consecutive stable checks
-        
+
         while (System.currentTimeMillis() - startTime < timeoutMs) {
             try {
                 // Get a lightweight DOM fingerprint
                 val currentHtml = driver.evaluate("document.body?.innerHTML?.length || 0").toString()
                 val currentHash = currentHtml.hashCode()
-                
+
                 if (currentHash == lastDomHash) {
                     stableCount++
                     if (stableCount >= requiredStableChecks) {
@@ -99,7 +99,7 @@ class PageStateTracker(
                 } else {
                     stableCount = 0
                 }
-                
+
                 lastDomHash = currentHash
                 delay(checkIntervalMs)
             } catch (e: Exception) {
@@ -107,7 +107,7 @@ class PageStateTracker(
                 delay(checkIntervalMs)
             }
         }
-        
+
         logger.debug("DOM settle timeout after ${timeoutMs}ms")
     }
 }

@@ -92,7 +92,6 @@ open class TextToAction(val conf: ImmutableConfig) {
         screenshotB64: String? = null,
         toolCallLimit: Int = 100,
     ): ActionDescription {
-
         val systemPrompt = when {
             instruction.contains(AGENT_SYSTEM_PROMPT_PREFIX_20) -> instruction
             else -> buildOperatorSystemPrompt(instruction)

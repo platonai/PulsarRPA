@@ -324,7 +324,7 @@ $schema
 You MUST respond with a valid JSON object matching this schema:
 $schema
 
-- The locator must be identical to the corresponding accessibility tree node attributes
+- The `locator` must be identical to the corresponding accessibility tree node attributes
 - Do not provide parameters that cannot be determined
 - Must not include any extra text
 """.trimIndent()

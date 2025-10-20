@@ -1,10 +1,10 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
-import ai.platon.pulsar.agentic.ai.tta.TTATestBase
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -74,7 +74,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask to navigate to URL then generate correct navigation action`() {
         val prompt = "打开网页 https://example.com"
 
-        val response = runBlocking { TTATestBase.Companion.textToAction.generateWithSourceCode(prompt) }
+        val response = runBlocking { textToAction.generateWithSourceCode(prompt) }
         lastResponse = response
         printlnPro(response.content)
 
@@ -116,7 +116,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask about checkbox operations then generate check or uncheck actions`() {
         val prompt = "勾选同意条款复选框"
 
-        val response = runBlocking { TTATestBase.Companion.textToAction.generateWithSourceCode(prompt) }
+        val response = runBlocking { textToAction.generateWithSourceCode(prompt) }
         lastResponse = response
         printlnPro(response.content)
 
@@ -127,7 +127,7 @@ class TextToActionTest: TextToActionTestBase() {
     fun `When ask in English then generate appropriate English-context actions`() {
         val prompt = "Click the submit button and wait for confirmation"
 
-        val response = runBlocking { TTATestBase.Companion.textToAction.generateWithSourceCode(prompt) }
+        val response = runBlocking { textToAction.generateWithSourceCode(prompt) }
         lastResponse = response
         printlnPro(response.content)
 
