@@ -22,7 +22,7 @@ class TextToActionSimpleTest : TextToActionTestBase() {
             driver.waitForSelector("body")
 
             // Debug: Print interactive elements to see what's available
-            val interactiveElements = textToAction.extractInteractiveElements(driver)
+            val interactiveElements = textToAction.getInteractiveElements(driver)
             printlnPro("Extracted ${interactiveElements.size} interactive elements:")
             interactiveElements.take(5).forEach { element ->
                 printlnPro("  - ${element.tagName}#${element.id}: '${element.text.take(30)}' selector: ${element.selector}")
@@ -49,7 +49,7 @@ class TextToActionSimpleTest : TextToActionTestBase() {
             driver.waitForSelector("body")
 
             // Debug: Print interactive elements to see what's available
-            val interactiveElements = textToAction.extractInteractiveElements(driver)
+            val interactiveElements = textToAction.getInteractiveElements(driver)
             printlnPro("Extracted ${interactiveElements.size} interactive elements from interactive-1.html:")
             interactiveElements.take(10).forEach { element ->
                 printlnPro("  - ${element.tagName}#${element.id}: '${element.text.take(30)}' selector: ${element.selector}")

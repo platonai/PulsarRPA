@@ -40,7 +40,7 @@ class AccessibilityHandler(
      * current page. Each returned node is annotated with a frameId so that callers can associate
      * AX information with DOM/backend nodes across frames.
      */
-    fun getFullAXTreeRecursive(targetFrameId: String? = null, depth: Int? = null): AccessibilityTreeResult {
+    fun getFullAXTree(targetFrameId: String? = null, depth: Int? = null): AccessibilityTreeResult {
         // Ensure the Accessibility domain is enabled
         ensureEnabled()
 

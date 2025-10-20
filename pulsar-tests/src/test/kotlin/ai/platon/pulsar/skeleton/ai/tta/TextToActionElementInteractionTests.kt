@@ -26,7 +26,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
         driver.navigateTo(ttaUrl1)
         driver.waitForSelector("body")
 
-        val interactiveElements = textToAction.extractInteractiveElements(driver)
+        val interactiveElements = textToAction.getInteractiveElements(driver)
         printlnPro("Extracted ${interactiveElements.size} interactive elements")
         interactiveElements.forEach { printlnPro(" - ${it.selector} [${it.tagName}] visible=${it.isVisible}") }
 

@@ -41,17 +41,9 @@ class ChromeCdpDomService(
         val timings = mutableMapOf<String, Long>()
 
         // Fetch AX tree (resilient)
-        val axResult: AccessibilityTreeResult = if (options.includeAX) {
-            val axStart = System.currentTimeMillis()
-            val result = runCatching {
-                accessibility.getFullAXTreeRecursive(target.frameId, depth = null)
-            }.onFailure { e ->
-                logger.warn("AX tree collection failed | frameId={} | err={}", target.frameId, e.toString())
-                tracer?.trace("AX tree exception", e)
-            }.getOrDefault(AccessibilityTreeResult.EMPTY)
-            timings["ax_tree"] = System.currentTimeMillis() - axStart
-            result
-        } else AccessibilityTreeResult.EMPTY
+        val axStart = System.currentTimeMillis()
+        val axResult = getAccessibilityTree(target, options)
+        timings["ax_tree"] = System.currentTimeMillis() - axStart
 
         // Fetch DOM tree (resilient)
         val domStart = System.currentTimeMillis()
@@ -773,6 +765,21 @@ class ChromeCdpDomService(
         }
 
         return buildBrowserState(domState)
+    }
+
+    private fun getAccessibilityTree(target: PageTarget, options: SnapshotOptions): AccessibilityTreeResult {
+        // Fetch AX tree (resilient)
+        val axResult: AccessibilityTreeResult = if (options.includeAX) {
+            val result = runCatching {
+                accessibility.getFullAXTree(target.frameId, depth = null)
+            }.onFailure { e ->
+                logger.warn("AX tree collection failed | frameId={} | err={}", target.frameId, e.toString())
+                tracer?.trace("AX tree exception", e)
+            }.getOrDefault(AccessibilityTreeResult.EMPTY)
+            result
+        } else AccessibilityTreeResult.EMPTY
+
+        return axResult
     }
 }
 

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.agentic.ai.tta
 
+import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ExperimentalApi
 import ai.platon.pulsar.common.ai.llm.PromptTemplate
@@ -9,6 +10,7 @@ import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
+import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import ai.platon.pulsar.skeleton.common.llm.LLMUtils
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
@@ -16,11 +18,12 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
-import kotlinx.coroutines.runBlocking
-import org.apache.hadoop.record.compiler.generated.Rcc.driver
 import java.nio.file.Files
 
-open class TextToAction(val conf: ImmutableConfig) {
+open class TextToAction(
+    val driver: WebDriver,
+    val conf: ImmutableConfig
+) {
     private val logger = getLogger(this)
 
     val baseDir = AppPaths.get("tta")
@@ -56,7 +59,7 @@ open class TextToAction(val conf: ImmutableConfig) {
         screenshotB64: String? = null,
     ): ActionDescription {
         try {
-            val interactiveElements = extractInteractiveElements(driver)
+            val interactiveElements = getInteractiveElements(driver)
 
             return generate(instruction, interactiveElements, screenshotB64)
         } catch (e: Exception) {
@@ -434,13 +437,116 @@ $AGENT_SYSTEM_PROMPT
         return null
     }
 
-    // Newly reintroduced helpers --------------------------------------------------------------
-    /**
-     * deprecated, use DomService to build interactive element instead
-     * */
-    @Deprecated("use DomService to build interactive element instead")
-    fun extractInteractiveElements(driver: WebDriver): List<InteractiveElement> {
-        return runBlocking { extractInteractiveElementsDeferred(driver) }
+    suspend fun getInteractiveElements(driver: WebDriver): List<InteractiveElement> {
+        require(driver is PulsarWebDriver)
+        val snapshotOptions = SnapshotOptions()
+
+        val trees = driver.domService.getMultiDOMTrees(options = snapshotOptions)
+        val root = driver.domService.buildEnhancedDomTree(trees)
+
+        // Basic helpers for selector building
+        fun escapeIdent(s: String): String = s.replace(Regex("""([ #.:\\[\\]'""+~>])"""), "\\\\$1")
+        fun escapeAttrValue(s: String): String = s.replace("\"", "\\\"")
+
+        fun buildSelector(node: ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx): String {
+            val tag = node.nodeName.lowercase()
+            val attrs = node.attributes
+            val id = attrs["id"]?.takeIf { it.isNotBlank() }
+            if (!id.isNullOrBlank()) return "#${'$'}{escapeIdent(id)}"
+
+            val testId = attrs["data-testid"]?.takeIf { it.isNotBlank() }
+            if (!testId.isNullOrBlank()) return "[data-testid=\"${'$'}{escapeAttrValue(testId)}\"]"
+
+            val nameAttr = attrs["name"]?.takeIf { it.isNotBlank() }
+            if (!nameAttr.isNullOrBlank()) return "${'$'}tag[name=\"${'$'}{escapeAttrValue(nameAttr)}\"]"
+
+            val onclick = attrs["onclick"]?.takeIf { it.isNotBlank() }
+            if (!onclick.isNullOrBlank()) return "${'$'}tag[onclick=\"${'$'}{escapeAttrValue(onclick)}\"]"
+
+            val href = attrs["href"]?.takeIf { it.isNotBlank() }
+            if (tag == "a" && !href.isNullOrBlank()) return "a[href=\"${'$'}{escapeAttrValue(href)}\"]"
+
+            val typeAttr = attrs["type"]?.takeIf { it.isNotBlank() }
+            if (!typeAttr.isNullOrBlank()) return "${'$'}tag[type=\"${'$'}{escapeAttrValue(typeAttr)}\"]"
+
+            val classes = attrs["class"]?.trim()?.split(Regex("\\s+"))?.filter { it.isNotBlank() } ?: emptyList()
+            if (classes.isNotEmpty()) {
+                val top = classes.take(2).joinToString("") { ".${'$'}{escapeIdent(it)}" }
+                return "${'$'}tag${'$'}top"
+            }
+
+            return tag
+        }
+
+        fun isInteractiveCandidate(node: ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx): Boolean {
+            val tag = node.nodeName.uppercase()
+            val attrs = node.attributes
+            val hasHref = !attrs["href"].isNullOrBlank()
+            val role = node.axNode?.role?.lowercase()
+            val standardInteractive = tag in setOf("INPUT", "TEXTAREA", "SELECT", "BUTTON") || (tag == "A" && hasHref)
+            val roleInteractive = role in setOf("button", "link", "checkbox", "textbox", "combobox", "menuitem")
+            return node.isInteractable == true || standardInteractive || roleInteractive
+        }
+
+        fun boundsOf(node: ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx): ElementBounds? {
+            val r = node.snapshotNode?.clientRects ?: node.snapshotNode?.bounds ?: node.absolutePosition
+            return r?.let { ElementBounds(it.x, it.y, it.width, it.height) }
+        }
+
+        fun visible(node: ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx, b: ElementBounds?): Boolean {
+            val v = node.isVisible
+            val hasSize = b != null && b.width > 0 && b.height > 0
+            return when (v) {
+                true -> hasSize
+                false -> false
+                null -> hasSize
+            }
+        }
+
+        val results = mutableListOf<Pair<Int, InteractiveElement>>()
+
+        fun traverse(node: ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx) {
+            if (isInteractiveCandidate(node)) {
+                val b = boundsOf(node)
+                if (visible(node, b)) {
+                    val attrs = node.attributes
+                    val selector = buildSelector(node)
+                    val tag = node.nodeName.uppercase()
+                    val text = listOfNotNull(
+                        node.axNode?.name?.takeIf { !it.isNullOrBlank() },
+                        attrs["aria-label"],
+                        attrs["title"],
+                        attrs["value"]
+                    ).firstOrNull()?.take(100) ?: ""
+
+                    val element = InteractiveElement(
+                        id = attrs["id"] ?: "",
+                        tagName = tag,
+                        selector = selector,
+                        text = text,
+                        type = attrs["type"],
+                        href = attrs["href"],
+                        className = attrs["class"],
+                        placeholder = attrs["placeholder"],
+                        value = attrs["value"],
+                        isVisible = true,
+                        bounds = b ?: ElementBounds(0.0, 0.0, 0.0, 0.0)
+                    )
+                    val order = node.interactiveIndex ?: Int.MAX_VALUE
+                    results += order to element
+                }
+            }
+            node.children.forEach { traverse(it) }
+            node.shadowRoots.forEach { traverse(it) }
+            node.contentDocument?.let { traverse(it) }
+        }
+
+        traverse(root)
+
+        return results
+            .sortedBy { it.first }
+            .map { it.second }
+            .distinctBy { it.selector }
     }
 
     /**

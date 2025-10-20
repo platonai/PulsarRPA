@@ -286,7 +286,7 @@ $schemaContract
 
     /**
      * Observe result schema:
-     * ```json
+     * ```
      * { "elements": [ { "locator": string, "description": string, "method": string, "arguments": [{"name": string, "value": string}] } ] }
      * ```
      * */
