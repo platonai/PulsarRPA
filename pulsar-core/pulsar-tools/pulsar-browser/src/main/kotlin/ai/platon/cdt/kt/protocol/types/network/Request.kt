@@ -22,7 +22,7 @@ public data class Request(
   @JsonProperty("method")
   public val method: String,
   @JsonProperty("headers")
-  public val headers: Map<String, Any?>,
+  public val headers: MutableMap<String, Any?>,
   @JsonProperty("postData")
   @Optional
   public val postData: String? = null,

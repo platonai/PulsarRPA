@@ -1,13 +1,13 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt.detail
 
+import ai.platon.cdt.kt.protocol.types.fetch.HeaderEntry
+import ai.platon.cdt.kt.protocol.types.network.ErrorReason
+import ai.platon.cdt.kt.protocol.types.network.Initiator
+import ai.platon.cdt.kt.protocol.types.network.Request
+import ai.platon.cdt.kt.protocol.types.network.ResourceType
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.http.HttpStatus
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
-import com.github.kklisura.cdt.protocol.v2023.types.fetch.HeaderEntry
-import com.github.kklisura.cdt.protocol.v2023.types.network.ErrorReason
-import com.github.kklisura.cdt.protocol.v2023.types.network.Initiator
-import com.github.kklisura.cdt.protocol.v2023.types.network.Request
-import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType
 import java.lang.ref.WeakReference
 import java.util.*
 
@@ -67,7 +67,7 @@ class CDPRequest(
     fun finalizeInterceptions() {
     }
 
-    fun continueRequest(overrides: ContinueRequestOverrides) {
+    suspend fun continueRequest(overrides: ContinueRequestOverrides) {
         interceptionHandled = true
 
         val postDataBinaryBase64 = overrides.postData?.let { Base64.getEncoder().encodeToString(it.toByteArray()) }
@@ -75,17 +75,16 @@ class CDPRequest(
             interceptionId ?: throw ChromeRPCException("InterceptionId is required by Fetch.continueRequest")
 
         try {
-            val interceptResponse = false
             fetchAPI?.continueRequest(
                 requestId,
-                overrides.url, overrides.method, postDataBinaryBase64, overrides.headers, interceptResponse
+                overrides.url, overrides.method, postDataBinaryBase64, overrides.headers
             )
         } catch (e: Exception) {
             interceptionHandled = false
         }
     }
 
-    fun respond(response: ResponseForRequest) {
+    suspend fun respond(response: ResponseForRequest) {
         interceptionHandled = true
 
         val responseBody = when (val body = response.body) {
@@ -119,7 +118,7 @@ class CDPRequest(
         }
     }
 
-    fun abort(abortErrorReason: ErrorReason?) {
+    suspend fun abort(abortErrorReason: ErrorReason) {
         interceptionHandled = true
 
         interceptionId?.let { fetchAPI?.failRequest(it, abortErrorReason) }
@@ -127,6 +126,6 @@ class CDPRequest(
     }
 
     private fun headerEntry(name: String, value: String): HeaderEntry {
-        return HeaderEntry().also { it.name = name; it.value = value }
+        return HeaderEntry(name, value)
     }
 }

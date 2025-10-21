@@ -91,10 +91,10 @@ public interface Fetch {
    */
   public suspend fun continueRequest(
     @ParamName("requestId") requestId: String,
-    @ParamName("url") @Optional url: String?,
-    @ParamName("method") @Optional method: String?,
-    @ParamName("postData") @Optional postData: String?,
-    @ParamName("headers") @Optional headers: List<HeaderEntry>?,
+    @ParamName("url") @Optional url: String? = null,
+    @ParamName("method") @Optional method: String? = null,
+    @ParamName("postData") @Optional postData: String? = null,
+    @ParamName("headers") @Optional headers: List<HeaderEntry>? = null,
   )
 
   public suspend fun continueRequest(@ParamName("requestId") requestId: String) {

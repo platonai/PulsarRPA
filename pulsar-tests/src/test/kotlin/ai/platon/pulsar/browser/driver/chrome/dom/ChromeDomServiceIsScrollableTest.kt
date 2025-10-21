@@ -71,7 +71,7 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
         )
 
         // Wait for elements to exist deterministically
-        fun waitExists(id: String) {
+        suspend fun waitExists(id: String) {
             repeat(30) {
                 val ok = runCatching {
                     devTools.runtime.evaluate("document.getElementById('${id}') != null")
@@ -248,7 +248,7 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
         )
 
         // Wait for elements
-        fun waitExists(id: String) {
+        suspend fun waitExists(id: String) {
             repeat(30) {
                 val ok = runCatching {
                     devTools.runtime.evaluate("document.getElementById('${id}') != null")

@@ -10,7 +10,6 @@ import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import com.microsoft.playwright.Page
 import com.microsoft.playwright.options.WaitUntilState
 import org.jsoup.Connection
@@ -921,29 +920,6 @@ class PlaywrightDriver(
             page.close()
         } catch (e: Exception) {
             logger.warn("Error during close: ${e.message}")
-        }
-    }
-
-    private fun createJsEvaluate(evaluate: Evaluate?): JsEvaluation? {
-        evaluate ?: return null
-
-        val result = evaluate.result
-        val exception = evaluate.exceptionDetails
-        return if (exception != null) {
-            val jsException = JsException(
-                text = exception.text,
-                lineNumber = exception.lineNumber,
-                columnNumber = exception.columnNumber,
-                url = exception.url,
-            )
-            JsEvaluation(exception = jsException)
-        } else {
-            JsEvaluation(
-                value = result.value,
-                unserializableValue = result.unserializableValue,
-                className = result.className,
-                description = result.description
-            )
         }
     }
 

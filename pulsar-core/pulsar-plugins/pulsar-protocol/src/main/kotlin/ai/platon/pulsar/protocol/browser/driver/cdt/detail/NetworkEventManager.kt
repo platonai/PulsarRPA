@@ -1,9 +1,9 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt.detail
 
-import com.github.kklisura.cdt.protocol.v2023.events.fetch.RequestPaused
-import com.github.kklisura.cdt.protocol.v2023.events.network.RequestWillBeSent
-import com.github.kklisura.cdt.protocol.v2023.events.network.RequestWillBeSentExtraInfo
-import com.github.kklisura.cdt.protocol.v2023.events.network.ResponseReceivedExtraInfo
+import ai.platon.cdt.kt.protocol.events.fetch.RequestPaused
+import ai.platon.cdt.kt.protocol.events.network.RequestWillBeSent
+import ai.platon.cdt.kt.protocol.events.network.RequestWillBeSentExtraInfo
+import ai.platon.cdt.kt.protocol.events.network.ResponseReceivedExtraInfo
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
@@ -76,16 +76,14 @@ class NetworkEventManager {
     fun takeFirstRedirectInfoEvent(requestId: FetchRequestId): RedirectInfo? {
         return computeRedirectInfoQueue(requestId).removeFirstOrNull()
     }
-    
+
     private fun computeRedirectInfoQueue(requestId: FetchRequestId): MutableList<RedirectInfo> {
         return queuedRedirectInfoEvents.computeIfAbsent(requestId) { LinkedList() }
     }
 
-
     fun addRequestWillBeSentExtraInfoEvent(event: RequestWillBeSentExtraInfo) {
 
     }
-
 
     fun addRequestWillBeSentEvent(networkRequestId: NetworkRequestId, event: RequestWillBeSent) {
         requestWillBeSentEvents[networkRequestId] = event

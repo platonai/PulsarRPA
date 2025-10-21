@@ -134,27 +134,23 @@ public interface ChromeDevTools {
    * the nodes that were sent to the client.<p>Note that `iframe` owner elements will return
    * corresponding document elements as their child nodes.</p>
    */
-  public val dOM: DOM
-
-    public val dom: DOM
+  public val dom: DOM
 
     /**
    * DOM debugging allows setting breakpoints on particular DOM operations and events. JavaScript
    * execution will stop on these operations as if there was a regular breakpoint set.
    */
-  public val dOMDebugger: DOMDebugger
+  public val domDebugger: DOMDebugger
 
   /**
    * This domain facilitates obtaining document snapshots with DOM, layout, and style information.
    */
-  public val dOMSnapshot: DOMSnapshot
-
-    public val domSnapshot: DOMSnapshot
+  public val domSnapshot: DOMSnapshot
 
     /**
    * Query and modify DOM storage.
    */
-  public val dOMStorage: DOMStorage
+  public val domStorage: DOMStorage
 
   public val database: Database
 
