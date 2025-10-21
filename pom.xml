@@ -788,6 +788,7 @@
                 <artifactId>okhttp-bom</artifactId>
                 <version>${okhttp.version}</version>
                 <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
             <dependency>
