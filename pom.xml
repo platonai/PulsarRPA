@@ -782,6 +782,13 @@
                 <artifactId>ktor-serialization-kotlinx-json-jvm</artifactId>
                 <version>${ktor.version}</version>
             </dependency>
+            <!-- https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp-bom -->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp-bom</artifactId>
+                <version>${okhttp.version}</version>
+                <type>pom</type>
+            </dependency>
 
             <dependency>
                 <groupId>org.jetbrains.kotlinx</groupId>
@@ -820,6 +827,19 @@
 
             <!-- MockBean and SpyBean, but for MockK instead of Mockito -->
             <!-- Be careful to keep consistent with spring-boot -->
+            <!-- MockK for Kotlin-friendly mocking -->
+            <dependency>
+                <groupId>io.mockk</groupId>
+                <artifactId>mockk</artifactId>
+                <version>${mockk.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.mockk</groupId>
+                <artifactId>mockk-jvm</artifactId>
+                <version>${mockk.version}</version>
+                <scope>test</scope>
+            </dependency>
             <dependency>
                 <groupId>com.ninja-squad</groupId>
                 <artifactId>springmockk</artifactId>
@@ -874,13 +894,20 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <ktor.version>2.3.11</ktor.version>
-        <springmockk.version>4.0.2</springmockk.version>
-        <version.maven-exec-plugin>3.3.0</version.maven-exec-plugin>
-        <mockito-junit-jupiter.version>5.11.0</mockito-junit-jupiter.version>
+        <surefire.excludedGroups>
+            TimeConsumingTest,ExternalServiceTest,IntegrationTest,E2ETest,HeavyTest,
+            TestInfraCheck,SkippableLowerLevelTest
+        </surefire.excludedGroups>
 
+        <ktor.version>3.3.1</ktor.version>
+        <okhttp.version>5.2.1</okhttp.version>
+        <junit5.version>5.12.1</junit5.version>
+        <mockk.version>1.14.6</mockk.version>
+        <springmockk.version>4.0.2</springmockk.version>
+        <mockito-junit-jupiter.version>5.20.0</mockito-junit-jupiter.version>
         <langchain4j.version>1.5.0</langchain4j.version>
 
+        <version.maven-exec-plugin>3.3.0</version.maven-exec-plugin>
         <!-- Plugin versions -->
         <!-- Overrides ai.platon:platon -->
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
@@ -897,11 +924,6 @@
         <license-maven-plugin.version>4.3</license-maven-plugin.version>
         <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
 
-        <junit5.version>5.12.1</junit5.version>
-        <surefire.excludedGroups>
-            TimeConsumingTest,ExternalServiceTest,IntegrationTest,E2ETest,HeavyTest,
-            TestInfraCheck,SkippableLowerLevelTest
-        </surefire.excludedGroups>
         <kotlin.version>2.2.20</kotlin.version>
         <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
