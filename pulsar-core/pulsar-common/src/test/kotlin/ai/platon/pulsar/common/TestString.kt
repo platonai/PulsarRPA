@@ -6,7 +6,7 @@ import java.io.IOException
 import java.nio.ByteBuffer
 import java.nio.charset.Charset
 import java.nio.file.Files
-import java.util.Base64
+import java.util.*
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 import java.util.stream.Collectors
@@ -161,7 +161,7 @@ class TestString {
 
     @Test
     fun testTrim() {
-        var text = "       使用条件修剪  "
+        val text = "       使用条件修剪  "
         assertTrue { ' '.isWhitespace() }
         // String.trim() == CharSequence.trim(Char::isWhitespace)
         assertEquals("使用条件修剪", text.trim())
@@ -203,8 +203,9 @@ class TestString {
             "1b关注全球华人健康",
             "a关注全球华人健康"
         )
-        for (text in noChineseTexts) { // TODO: noChineseTexts assertion failed
-// assertFalse(text, StringUtil.isChinese(text));
+        for (text in noChineseTexts) {
+            // TODO: noChineseTexts assertion failed
+            // assertFalse(text, StringUtil.isChinese(text));
         }
         val mainlyChineseTexts = arrayOf(
             "1234关注全球华人健康关注全球华人健康",
@@ -357,10 +358,10 @@ class TestString {
         val expects = arrayOf(520, 2046_123, 2_457_325)
 
         IntRange(0, texts.size - 1).forEach { i ->
-            assertEquals(expects[i], Strings.getLastInteger(texts[i], 0), "The $i-th test is failed")
+            assertEquals(expects[i], Strings.findLastInteger(texts[i], 0), "The $i-th test is failed")
         }
 
-        assertEquals(150, Strings.getLastInteger("631 global ratings | 150 global reviews", 0))
+        assertEquals(150, Strings.findLastInteger("631 global ratings | 150 global reviews", 0))
     }
 
     @Test

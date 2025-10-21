@@ -193,14 +193,14 @@ class TestAppPaths {
 
     @Test
     fun testGetRandomTmp() {
-        val path = AppPaths.getRandomTmp("prefix-", ".suffix")
+        val path = AppPaths.getRandomTmpDirectory("prefix-", ".suffix")
         assertTrue(path.startsWith(AppPaths.TMP_DIR))
         assertTrue(path.toString().endsWith(".suffix"))
     }
 
     @Test
     fun testGetProcTmp() {
-        val path = AppPaths.getProcTmp("first", "second", "third")
+        val path = AppPaths.getProcTmpDirectory("first", "second", "third")
         assertEquals(Paths.get(AppPaths.PROC_TMP_DIR.toString(), "first/second/third"), path)
     }
 
@@ -234,7 +234,7 @@ class TestAppPaths {
     @Test
     fun testFileId() {
         val uri = "http://example.com/test"
-        val fileId = AppPaths.fileId(uri)
+        val fileId = AppPaths.md5Hex(uri)
         assertEquals("44739ab8292f3d29beb6975ac3207e46", fileId)
     }
 

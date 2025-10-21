@@ -70,26 +70,26 @@ class URLUtilsTest {
     @Test
     fun ensureChromeURLsAreMalformed() {
         assertThrows(MalformedURLException::class.java) {
-            URL("chrome://chrome-urls")
+            URI.create("chrome://chrome-urls").toURL()
         }
     }
 
     @Test
     fun testNormalize_WithoutQuery() {
         val result = URLUtils.normalize("http://example.com/path?query=123#fragment", true)
-        assertEquals(URL("http://example.com/path"), result)
+        assertEquals(URI.create("http://example.com/path").toURL(), result)
     }
 
     @Test
     fun testNormalize_WithQuery() {
         val result = URLUtils.normalize("http://example.com/path?query=123#fragment")
-        assertEquals(URL("http://example.com/path?query=123"), result)
+        assertEquals(URI.create("http://example.com/path?query=123").toURL(), result)
     }
 
     @Test
     fun testNormalize_RemoveFragment() {
         val result = URLUtils.normalize("http://example.com/path#fragment")
-        assertEquals(URL("http://example.com/path"), result)
+        assertEquals(URI.create("http://example.com/path").toURL(), result)
     }
 
     @Test
@@ -140,7 +140,7 @@ class URLUtilsTest {
 
         val url = "file:///C:/Users/User/Documents/file.txt"
         val normalizedUrl = URLUtils.normalize(url)
-        assertEquals(URL("file:///C:/Users/User/Documents/file.txt"), normalizedUrl)
+        assertEquals(URI.create("file:///C:/Users/User/Documents/file.txt").toURL(), normalizedUrl)
     }
 
 
