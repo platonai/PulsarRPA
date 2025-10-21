@@ -12,7 +12,6 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.Pson
-import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
@@ -386,7 +385,7 @@ class BrowserPerceptiveAgent(
             // If a timeout is provided and the action likely triggers navigation, wait for navigation
             val timeoutMs = action.timeoutMs?.toLong()?.takeIf { it > 0 }
             val maybeNavMethod = method in ToolCallExecutor.MAY_NAVIGATE_ACTIONS
-            if (timeoutMs != null && maybeNavMethod && execResult.success) {
+            if (timeoutMs != null && maybeNavMethod) {
                 // High Priority #4: Fail explicitly on navigation timeout
                 val remainingTime = driver.waitForNavigation(oldUrl, timeoutMs)
                 if (remainingTime <= 0) {
@@ -422,16 +421,14 @@ class BrowserPerceptiveAgent(
             }
             val results = internalResults.elements.map { ele ->
                 // Multi selectors are supported: `cssPath`, `xpath:`, `backend:`, `node:`, `hash:`, `fbn`, `index`
-                val selector = ele.selector?.trim() ?: return@map ObserveResult(description = "No selector found")
+                val selector = ele.locator?.trim() ?: return@map ObserveResult(description = "No selector observation")
 
-                val frameIdIndex = selector.substringBefore("/").toIntOrNull() ?: 0
-                val backendNodeId = selector.substringAfterLast("/").toIntOrNull()
-                val frameId = frameIdIndex.let { browserUseState.domState.frameIds[it] }
-                val fbnLocator = "fbn:$frameId/$backendNodeId"
-                val node = browserUseState.domState.selectorMap[fbnLocator]
+                val backendNodeId = selector.substringAfterLast("-").toIntOrNull()
+                val locator = Locator.parse(selector)
+                requireNotNull(locator)
+                val node = browserUseState.domState.locatorMap[locator]
                 if (node == null) {
-                    logger.warn("Failed retrieving backend node | {} | {}",
-                        fbnLocator, pulsarObjectMapper().writeValueAsString(ele))
+                    logger.warn("Failed retrieving backend node | {} | {}", locator, Pson.toJson(ele))
                 }
                 // Use xpath here
                 val xpathLocator = node?.xpath?.let { "xpath:$it" } ?: ""

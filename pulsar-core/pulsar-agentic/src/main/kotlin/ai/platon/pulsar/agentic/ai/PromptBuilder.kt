@@ -318,7 +318,7 @@ $schemaContract
 你必须返回一个与以下模式匹配的有效 JSON 对象：
 $schema
 
-- 保证 `locator` 与无障碍树节点属性一致
+- 确保 `locator` 与对应的无障碍树节点属性完全匹配，可以定位该节点。
 - 不提供不能确定的参数
 - 禁止包含任何额外文本
 """.trimIndent()
@@ -328,7 +328,7 @@ $schema
 You MUST respond with a valid JSON object matching this schema:
 $schema
 
-- The `locator` must be identical to the corresponding accessibility tree node attributes
+- The `locator` must exactly match the corresponding accessibility tree node attributes and be sufficient to locate the node.
 - Do not provide parameters that cannot be determined
 - Must not include any extra text
 """.trimIndent()

@@ -107,10 +107,10 @@ object DOMStateBuilder {
         }
 
         // Add to selector map with multiple keys for enhanced lookup
-        addToLocatorMap(node.originalNode, locatorMap)
+        addToLocatorMap(node.originalNode, frameIds, locatorMap)
         // Also add interactive index mapping if present on SlimNode
         node.interactiveIndex?.let { idx ->
-            locatorMap.add(Locator.Type.INDEX, idx.toString(), node.originalNode)
+            locatorMap.put(Locator.Type.INDEX, idx.toString(), node.originalNode)
         }
 
         // Detect compound components if enabled
@@ -218,7 +218,7 @@ object DOMStateBuilder {
         frameIds: List<String>,
     ): MicroDOMTreeNode {
         val prunedOriginal = CleanedDOMTreeNode(
-            locator = createNodeLocator(node.originalNode, frameIds),
+            locator = createNodeLocator(node.originalNode, frameIds).absoluteSelector,
             nodeId = node.originalNode.nodeId,
             backendNodeId = node.originalNode.backendNodeId,
             nodeType = node.originalNode.nodeType.value,
@@ -240,7 +240,7 @@ object DOMStateBuilder {
         )
 
         // Add to selector map with enhanced lookup keys
-        addToLocatorMap(node.originalNode, locatorMap)
+        addToLocatorMap(node.originalNode, frameIds, locatorMap)
 
         return MicroDOMTreeNode(
             shouldDisplay = null, // Pruned nodes are not displayed
@@ -341,7 +341,7 @@ object DOMStateBuilder {
         val stackingContexts = snapshot?.stackingContexts
 
         return CleanedDOMTreeNode(
-            locator = createNodeLocator(node, frameIds),
+            locator = createNodeLocator(node, frameIds).absoluteSelector,
             nodeId = node.nodeId,
             backendNodeId = node.backendNodeId,
             nodeType = node.nodeType.value,
@@ -454,7 +454,7 @@ object DOMStateBuilder {
         val scrollRects = snapshot?.scrollRects
 
         return CleanedDOMTreeNode(
-            locator = createNodeLocator(node, frameIds),
+            locator = createNodeLocator(node, frameIds).absoluteSelector,
             nodeId = node.nodeId,
             backendNodeId = node.backendNodeId,
             nodeType = node.nodeType.value,
@@ -483,16 +483,17 @@ object DOMStateBuilder {
      */
     private fun addToLocatorMap(
         node: DOMTreeNodeEx,
+        frameIds: List<String>,
         locatorMap: LocatorMap
     ) {
         // Add by element hash (primary key)
         node.elementHash?.takeIf { it.isNotBlank() }?.let { h ->
-            locatorMap.add(Locator.Type.HASH, h, node)
+            locatorMap.put(Locator.Type.HASH, h, node)
         }
 
         // Add by XPath (secondary key)
         node.xpath?.takeIf { it.isNotBlank() }?.let { xp ->
-            locatorMap.add(Locator.Type.XPATH, xp, node)
+            locatorMap.put(Locator.Type.XPATH, xp, node)
         }
 
         val frameId = node.frameId
@@ -500,22 +501,24 @@ object DOMStateBuilder {
 
         // Add by backend node ID (tertiary key)
         backendNodeId?.let { bn ->
-            locatorMap.add(Locator.Type.BACKEND_NODE_ID, bn.toString(), node)
+            locatorMap.put(Locator.Type.BACKEND_NODE_ID, bn.toString(), node)
         }
 
-        // Add by `$frameId/$backendNodeId` as node ID
+        // Add by `$frameId-$backendNodeId` as node ID
         if (frameId != null && backendNodeId != null) {
-            val selector = "$frameId/$backendNodeId"
-            locatorMap.add(Locator.Type.FRAME_BACKEND_NODE_ID, selector, node)
+            val frameIdIndex = frameIds.indexOf(frameId).takeIf { it > 0 } ?: 0
+            locatorMap.put(FBNLocator(frameId, backendNodeId), node)
+            locatorMap.put(FBNLocator(frameIdIndex, backendNodeId), node)
         }
 
         // Add by node ID (fallback key)
-        locatorMap.add(Locator.Type.NODE_ID, node.nodeId.toString(), node)
+        locatorMap.put(Locator.Type.NODE_ID, node.nodeId.toString(), node)
     }
 
-    private fun createNodeLocator(node: DOMTreeNodeEx, frameIds: List<String>): String {
+    private fun createNodeLocator(node: DOMTreeNodeEx, frameIds: List<String>): Locator {
         // Returns -1 if the list does not contain element.
-        val index = frameIds.indexOf(node.frameId)
-        return "$index/${node.backendNodeId}"
+        val index = frameIds.indexOf(node.frameId).takeIf { it > 0 } ?: 0
+        val selector = "$index-${node.backendNodeId}"
+        return Locator(Locator.Type.FRAME_BACKEND_NODE_ID, selector)
     }
 }

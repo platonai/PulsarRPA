@@ -2,7 +2,7 @@ package ai.platon.pulsar.browser.driver.chrome.dom
 
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 
-data class Locator(
+open class Locator(
     val type: Type,
     val selector: String,
 ) {
@@ -24,8 +24,8 @@ data class Locator(
                     "xpath" -> XPATH
                     "hash" -> HASH
                     "backend" -> BACKEND_NODE_ID
-                    "node" -> FRAME_BACKEND_NODE_ID
-                    "fbn" -> INDEX
+                    "node" -> NODE_ID
+                    "fbn" -> FRAME_BACKEND_NODE_ID
                     "index" -> INDEX
                     else -> null
                 }
@@ -65,15 +65,30 @@ data class Locator(
     }
 }
 
+class FBNLocator(selector: String): Locator(Type.FRAME_BACKEND_NODE_ID, selector) {
+
+    constructor(frameId: Int, backendNodeId: Int): this(frameId.toString(), backendNodeId)
+
+    constructor(frameId: String, backendNodeId: Int): this("$frameId$SEPARATOR$backendNodeId")
+
+    companion object {
+        const val SEPARATOR = "-"
+    }
+}
+
 class LocatorMap {
     private val map = mutableMapOf<Locator, DOMTreeNodeEx>()
 
-    fun add(type: Locator.Type, selector: String, node: DOMTreeNodeEx) {
-        map[Locator(type, selector)] = node
+    fun put(locator: Locator, node: DOMTreeNodeEx): DOMTreeNodeEx? {
+        return map.put(locator, node)
     }
 
-    fun select(locator: Locator): DOMTreeNodeEx? {
+    operator fun get(locator: Locator): DOMTreeNodeEx? {
         return map[locator]
+    }
+
+    fun put(type: Locator.Type, selector: String, node: DOMTreeNodeEx) {
+        map[Locator(type, selector)] = node
     }
 
     fun select(key: String): DOMTreeNodeEx? {
@@ -84,7 +99,7 @@ class LocatorMap {
             val typeStr = key.take(colon)
             val selector = key.substring(colon + 1)
             val type = Locator.Type.entries.firstOrNull { it.text == typeStr }
-            if (type != null) return select(Locator(type, selector))
+            if (type != null) return get(Locator(type, selector))
         }
         // Fallback: treat as element hash without prefix
         return map.entries.firstOrNull { it.key.type == Locator.Type.HASH && it.key.selector == key }?.value

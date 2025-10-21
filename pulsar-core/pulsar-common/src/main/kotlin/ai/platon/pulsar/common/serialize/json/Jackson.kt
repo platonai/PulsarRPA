@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common.serialize.json
 
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.*
@@ -37,6 +38,7 @@ fun pulsarObjectMapper(): ObjectMapper = jacksonObjectMapper()
     .configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true)
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
+    .setSerializationInclusion(JsonInclude.Include.NON_NULL)
     .registerModule(JavaTimeModule())
 
 /**
@@ -50,11 +52,13 @@ fun prettyPulsarObjectMapper(): ObjectMapper = pulsarObjectMapper()
 
 object PulsarJackson {
     private val mapper = pulsarObjectMapper()
+    private val prettyMapper = prettyPulsarObjectMapper()
 
     fun toJson(any: Any) = mapper.writeValueAsString(any)!!
+    fun toPrettyJson(any: Any) = prettyMapper.writeValueAsString(any)!!
 }
 
 /**
- * A shorter name following Gson name convention.
+ * A shorter name following Gson naming conventions.
  * */
 typealias Pson = PulsarJackson

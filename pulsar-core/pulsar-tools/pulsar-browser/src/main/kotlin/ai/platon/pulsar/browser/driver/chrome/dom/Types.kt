@@ -20,7 +20,7 @@ import java.util.*
 @JsonIgnoreProperties(value = ["nodeId", "backendNodeId", "frameId", "xpath", "elementHash"])
 data class CleanedDOMTreeNode(
     /**
-     * Locator format: `frameIndex/backendNodeId`
+     * Locator format: `frameIndex-backendNodeId`
      * */
     val locator: String,
     val frameId: String?,
@@ -73,7 +73,7 @@ data class DOMState(
     val interactiveNodes: List<MicroDOMTreeNode>,
     val frameIds: List<String>,
     val selectorMap: Map<String, DOMTreeNodeEx>,
-    val locatorMap: LocatorMap? = null
+    val locatorMap: LocatorMap
 ) {
     @get:JsonIgnore
     val microTreeJson: String by lazy { DOMSerializer.toJson(microTree) }

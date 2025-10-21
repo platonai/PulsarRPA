@@ -1,11 +1,10 @@
 package ai.platon.pulsar.agentic.ai.agent
 
+import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.browser.driver.chrome.dom.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
-import ai.platon.pulsar.agentic.ai.PromptBuilder
-import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.JsonNode
@@ -33,7 +32,7 @@ data class LLMUsage(
 data class Metadata(val progress: String = "", val completed: Boolean = false)
 
 data class ObserveElement(
-    val selector: String? = null,
+    val locator: String? = null,
     val description: String? = null,
     val method: String? = null,
     val arguments: Map<String, String>? = null,
@@ -324,7 +323,7 @@ class InferenceEngine(
         val result = mutableListOf<ObserveElement>()
         for (i in 0 until arr.size()) {
             val el: JsonNode = arr.get(i)
-            val selector = el.path("selector").asText("")
+            val locator = el.path("locator").asText("")
             val desc = el.path("description").asText("")
             val baseMethod = el.path("method").asText(null)
 
@@ -365,7 +364,7 @@ class InferenceEngine(
             }
 
             val item = ObserveElement(
-                selector = selector,
+                locator = locator,
                 description = desc,
                 method = baseMethod.takeIf { returnAction },
                 arguments = argsMap.takeIf { returnAction }
