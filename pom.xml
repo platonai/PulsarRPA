@@ -783,6 +783,25 @@
                 <version>${ktor.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-coroutines-bom</artifactId>
+                <version>${kotlin.coroutine.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-bom</artifactId>
+                <version>${kotlin.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-serialization</artifactId>
+                <version>${kotlin.version}</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.junit</groupId>
@@ -829,8 +848,11 @@
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-core-jvm</artifactId>
-            <version>${kotlin.coroutine.version}</version>
         </dependency>
 
         <dependency>
@@ -880,9 +902,9 @@
             TimeConsumingTest,ExternalServiceTest,IntegrationTest,E2ETest,HeavyTest,
             TestInfraCheck,SkippableLowerLevelTest
         </surefire.excludedGroups>
-<!--        <kotlin.version>2.2.20</kotlin.version>-->
-<!--        <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>-->
-<!--        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>-->
+        <kotlin.version>2.2.20</kotlin.version>
+        <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>
+        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
     </properties>
 
 </project>
