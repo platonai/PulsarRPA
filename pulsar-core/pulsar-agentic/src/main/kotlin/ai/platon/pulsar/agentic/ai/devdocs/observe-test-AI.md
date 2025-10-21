@@ -45,7 +45,7 @@
   - 运行现有 DomService E2E 用例：
     - `mvnw.cmd -pl pulsar-tests -am -Dtest=ai.platon.pulsar.browser.driver.chrome.dom.ChromeDomServiceE2ETest test`
   - 运行新增的 Agent E2E 用例（示例类名，创建后替换为真实包名）：
-    - `mvnw.cmd -pl pulsar-tests -am -Dtest=ai.platon.pulsar.skeleton.ai.PulsarAgentExtractObserveE2ETest test`
+    - `mvnw.cmd -pl pulsar-tests -am -Dtest=ai.platon.pulsar.skeleton.ai.agent.PulsarAgentExtractObserveE2ETest test`
 
 > 注：若需选择性地只跑某个测试方法，可使用 `-Dtest=ClassName#methodName` 形式。
 > LLM 配置说明：`PerceptiveAgent.*` 相关 E2E 依赖 LLM。若未配置 API Key（见 `docs/config/llm/llm-config.md`），测试会自动跳过（Assumption）。

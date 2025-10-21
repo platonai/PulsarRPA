@@ -6,20 +6,19 @@ import java.time.Instant
 
 /**
  * Provides structured JSON logging for agent operations.
- * 
+ *
  * This helper class formats log messages as proper JSON when structured
  * logging is enabled, improving observability and log analysis.
- * 
+ *
  * @author Vincent Zhang, ivincent.zhang@gmail.com, platon.ai
  */
-class StructuredLogger(
+class StructuredAgentLogger(
     private val logger: Logger,
     private val config: AgentConfig
 ) {
-    
     /**
      * Log a structured message with context and additional data.
-     * 
+     *
      * @param message The log message
      * @param context Execution context containing session ID, step number, etc.
      * @param additionalData Additional data to include in the log
@@ -43,7 +42,7 @@ class StructuredLogger(
             put("message", message)
             putAll(additionalData)
         }
-        
+
         // Create proper JSON string
         val jsonLog = formatAsJson(logData)
         logger.info("{}", jsonLog)
@@ -51,7 +50,7 @@ class StructuredLogger(
 
     /**
      * Log an error with context and exception details.
-     * 
+     *
      * @param message Error message
      * @param error The exception that occurred
      * @param sessionId Session identifier
@@ -74,7 +73,7 @@ class StructuredLogger(
 
     /**
      * Log observation operation with results.
-     * 
+     *
      * @param instruction The observation instruction
      * @param requestId Request identifier
      * @param resultCount Number of results found
@@ -83,7 +82,7 @@ class StructuredLogger(
     fun logObserve(instruction: String, requestId: String, resultCount: Int, success: Boolean) {
         val status = if (success) "OK" else "FAIL"
         val msg = "observe[$requestId] $status ${instruction.take(50)} -> $resultCount elements"
-        
+
         if (config.enableStructuredLogging) {
             val logData = mapOf(
                 "operation" to "observe",
@@ -101,7 +100,7 @@ class StructuredLogger(
 
     /**
      * Log extraction operation.
-     * 
+     *
      * @param instruction The extraction instruction
      * @param requestId Request identifier
      * @param success Whether the operation succeeded
@@ -109,7 +108,7 @@ class StructuredLogger(
     fun logExtract(instruction: String, requestId: String, success: Boolean) {
         val status = if (success) "OK" else "FAIL"
         val msg = "extract[$requestId] $status ${instruction.take(60)}"
-        
+
         if (config.enableStructuredLogging) {
             val logData = mapOf(
                 "operation" to "extract",
@@ -126,7 +125,7 @@ class StructuredLogger(
 
     /**
      * Format a map as a proper JSON string.
-     * 
+     *
      * @param data Map to format as JSON
      * @return JSON string
      */
@@ -145,7 +144,7 @@ class StructuredLogger(
 
     /**
      * Format a value for JSON output.
-     * 
+     *
      * @param value The value to format
      * @return JSON-formatted string representation
      */

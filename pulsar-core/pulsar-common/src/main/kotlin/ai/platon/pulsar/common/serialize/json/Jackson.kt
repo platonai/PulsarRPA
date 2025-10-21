@@ -25,7 +25,6 @@ class Double2Serializer : JsonSerializer<Double>() {
     }
 }
 
-
 /**
  * jacksonObjectMapper with support:
  * 1. kotlin
@@ -48,3 +47,14 @@ fun pulsarObjectMapper(): ObjectMapper = jacksonObjectMapper()
  * */
 fun prettyPulsarObjectMapper(): ObjectMapper = pulsarObjectMapper()
     .configure(SerializationFeature.INDENT_OUTPUT, true)
+
+object PulsarJackson {
+    private val mapper = pulsarObjectMapper()
+
+    fun toJson(any: Any) = mapper.writeValueAsString(any)!!
+}
+
+/**
+ * A shorter name following Gson name convention.
+ * */
+typealias Pson = PulsarJackson

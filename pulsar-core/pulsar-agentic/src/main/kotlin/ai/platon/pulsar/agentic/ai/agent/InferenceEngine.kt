@@ -33,8 +33,8 @@ data class LLMUsage(
 data class Metadata(val progress: String = "", val completed: Boolean = false)
 
 data class ObserveElement(
-    val selector: String,
-    val description: String,
+    val selector: String? = null,
+    val description: String? = null,
     val method: String? = null,
     val arguments: Map<String, String>? = null,
 )

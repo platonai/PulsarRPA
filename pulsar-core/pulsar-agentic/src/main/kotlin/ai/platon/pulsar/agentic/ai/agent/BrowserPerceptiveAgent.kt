@@ -11,12 +11,14 @@ import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.serialize.json.Pson
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.*
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.ai.support.ToolCall
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
@@ -37,8 +39,6 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.collections.emptyList
-import kotlin.collections.firstOrNull
 import kotlin.math.ceil
 import kotlin.math.min
 import kotlin.math.pow
@@ -65,7 +65,7 @@ class BrowserPerceptiveAgent(
     // Helper classes for better code organization
     private val pageStateTracker = PageStateTracker(driver, config)
     private val actionValidator = ActionValidator(driver, config)
-    private val structuredLogger = StructuredLogger(logger, config)
+    private val structuredLogger = StructuredAgentLogger(logger, config)
 
     // Action validation cache
     private val validationCache = ConcurrentHashMap<String, Boolean>()
@@ -80,8 +80,8 @@ class BrowserPerceptiveAgent(
     override val uuid = UUID.randomUUID()
     override val history: List<String> get() = _history
 
-    override suspend fun resolve(instruction: String): ActResult {
-        val opts = ActionOptions(action = instruction)
+    override suspend fun resolve(problem: String): ActResult {
+        val opts = ActionOptions(action = problem)
         return resolve(opts)
     }
 
@@ -119,13 +119,13 @@ class BrowserPerceptiveAgent(
     }
 
     override suspend fun act(observe: ObserveResult): ActResult {
-        val method = observe.method?.trim().orEmpty()
-        val locator = Locator.parse(observe.locator)
+        val method = observe.method?.trim()?.takeIf { it.isNotEmpty() }
+        val locator = observe.locator?.let { Locator.parse(it) }
         // Use the correct type for arguments from ObserveResult
         val argsMap: Map<String, String> = observe.arguments ?: emptyMap()
 
-        if (method.isBlank()) {
-            val msg = "No actionable method provided in ObserveResult for locator: $locator"
+        if (method == null || locator == null) {
+            val msg = "No valuable observations were made | " + Pson.toJson(observe)
             addToHistory(msg)
             return ActResult(success = false, message = msg, action = observe.description)
         }
@@ -148,7 +148,7 @@ class BrowserPerceptiveAgent(
             // val selector = locator?.absoluteSelector ?: toolArgs["selector"]?.toString()
             toolArgs["selector"] = selector
             if (selector == null) {
-                val msg = "A selector is required for $locator | $observe"
+                val msg = "No selector observation were made $locator | $observe"
                 addToHistory(msg)
                 return ActResult(success = false, message = msg, action = observe.description)
             }
@@ -167,12 +167,13 @@ class BrowserPerceptiveAgent(
 
         // For navigateTo safety, validate URL; map a single unnamed arg to url if necessary
         if (lowerMethod == "navigateTo") {
-            if (!toolArgs.containsKey("url")) {
-                // Heuristic: if only one argument exists, treat it as url
-                val onlyArgValue = argsMap.values.firstOrNull()
-                if (!onlyArgValue.isNullOrBlank()) toolArgs["url"] = onlyArgValue
+            val url = toolArgs["url"]?.toString()
+            if (url == null) {
+                val msg = "No url observation were made | " + Pson.toJson(observe)
+                addToHistory(msg)
+                return ActResult(false, msg, action = observe.description)
             }
-            val url = toolArgs["url"]?.toString().orEmpty()
+
             if (!isSafeUrl(url)) {
                 val msg = "Blocked unsafe URL: $url"
                 addToHistory(msg)
@@ -421,20 +422,22 @@ class BrowserPerceptiveAgent(
             }
             val results = internalResults.elements.map { ele ->
                 // Multi selectors are supported: `cssPath`, `xpath:`, `backend:`, `node:`, `hash:`, `fbn`, `index`
-                val selector = ele.selector.trim()
-                val frameIdIndex = selector.substringBefore("/").toIntOrNull()
+                val selector = ele.selector?.trim() ?: return@map ObserveResult(description = "No selector found")
+
+                val frameIdIndex = selector.substringBefore("/").toIntOrNull() ?: 0
                 val backendNodeId = selector.substringAfterLast("/").toIntOrNull()
-                val frameId = frameIdIndex?.let { browserUseState.domState.frameIds[it] }
+                val frameId = frameIdIndex.let { browserUseState.domState.frameIds[it] }
                 val fbnLocator = "fbn:$frameId/$backendNodeId"
                 val node = browserUseState.domState.selectorMap[fbnLocator]
                 if (node == null) {
-                    logger.warn("Failed retrieving backend node | {} | {}", fbnLocator, ele)
+                    logger.warn("Failed retrieving backend node | {} | {}",
+                        fbnLocator, pulsarObjectMapper().writeValueAsString(ele))
                 }
                 // Use xpath here
                 val xpathLocator = node?.xpath?.let { "xpath:$it" } ?: ""
                 ObserveResult(
+                    description = ele.description ?: "(No comment ...)",
                     locator = xpathLocator.trim(),
-                    description = ele.description,
                     backendNodeId = backendNodeId,
                     method = ele.method?.ifBlank { null },
                     arguments = ele.arguments?.takeIf { it.isNotEmpty() }
@@ -776,7 +779,7 @@ class BrowserPerceptiveAgent(
         additionalData: Map<String, Any> = emptyMap()
     ) {
         if (!config.enableStructuredLogging) {
-            logger.info("{} - {}", context.sessionId.take(8), message)
+            logger.info("sessionId: {} - {}", context.sessionId.take(8), message)
             return
         }
 
@@ -803,7 +806,7 @@ class BrowserPerceptiveAgent(
             }
         )
 
-        logger.info("{}", jsonLog)
+        logger.info("json: {}", jsonLog)
     }
 
     /**

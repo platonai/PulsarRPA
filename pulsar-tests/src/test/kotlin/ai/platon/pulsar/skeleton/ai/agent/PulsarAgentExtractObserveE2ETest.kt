@@ -1,11 +1,11 @@
-package ai.platon.pulsar.skeleton.ai
+package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.agentic.ai.agent.BrowserPerceptiveAgent
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.ChatModelFactory
-import org.junit.jupiter.api.Assertions.assertTrue
-import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.Instant
@@ -34,13 +34,16 @@ class PulsarAgentExtractObserveE2ETest : WebDriverTestBase() {
 
     @Test
     fun `Given interactive page When observe Then get actionable elements`() = runEnhancedWebDriverTest(testURL) { driver ->
-        assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping observe E2E test")
+        Assumptions.assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping observe E2E test")
 
         val agent = BrowserPerceptiveAgent(driver)
         val observed = agent.observe("Understand the page and list actionable elements")
 
-        assertTrue(observed.isNotEmpty(), "Observed elements should not be empty")
-        assertTrue(observed.all { it.description.isNotBlank() }, "Each observed item should have a non-blank description")
+        Assertions.assertTrue(observed.isNotEmpty(), "Observed elements should not be empty")
+        Assertions.assertTrue(
+            observed.all { it.description.isNotBlank() },
+            "Each observed item should have a non-blank description"
+        )
 
         writeMetrics(
             Metrics(
@@ -55,14 +58,14 @@ class PulsarAgentExtractObserveE2ETest : WebDriverTestBase() {
 
     @Test
     fun `Given interactive page When extract Then get structured data`() = runEnhancedWebDriverTest(testURL) { driver ->
-        assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping extract E2E test")
+        Assumptions.assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping extract E2E test")
 
         val agent = BrowserPerceptiveAgent(driver)
         val result = agent.extract("Extract key structured data from the page")
 
-        assertTrue(result.success, "Extract should succeed")
+        Assertions.assertTrue(result.success, "Extract should succeed")
         val jsonText = result.data.toString()
-        assertTrue(jsonText.isNotBlank(), "Extracted data should be non-empty JSON")
+        Assertions.assertTrue(jsonText.isNotBlank(), "Extracted data should be non-empty JSON")
 
         writeMetrics(
             Metrics(

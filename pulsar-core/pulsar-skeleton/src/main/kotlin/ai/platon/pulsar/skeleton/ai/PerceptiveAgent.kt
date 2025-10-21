@@ -47,9 +47,9 @@ data class ObserveOptions(
     val frameId: String? = null
 )
 
-data class ObserveResult(
-    val locator: String,
+data class ObserveResult constructor(
     val description: String,
+    val locator: String? = null,
     val backendNodeId: Int? = null,
     val method: String? = null,
     val arguments: Map<String, String>? = null
@@ -62,7 +62,7 @@ interface PerceptiveAgent {
     /**
      * Run `observe -> act -> observe -> act -> ...` loop to resolve the problem.
      * */
-    suspend fun resolve(instruction: String): ActResult
+    suspend fun resolve(problem: String): ActResult
     /**
      * Run `observe -> act -> observe -> act -> ...` loop to resolve the problem.
      * */

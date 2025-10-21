@@ -3,6 +3,7 @@ package ai.platon.pulsar.browser.driver.chrome.dom
 import ai.platon.pulsar.browser.driver.chrome.dom.model.CompactRect
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.common.serialize.json.Double2Serializer
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -74,7 +75,10 @@ data class DOMState(
     val selectorMap: Map<String, DOMTreeNodeEx>,
     val locatorMap: LocatorMap? = null
 ) {
+    @get:JsonIgnore
     val microTreeJson: String by lazy { DOMSerializer.toJson(microTree) }
+
+    @get:JsonIgnore
     val interactiveNodesJson: String by lazy { DOMSerializer.toJson(interactiveNodes) }
 }
 
@@ -130,6 +134,7 @@ data class BrowserState(
     val clientInfo: ClientInfo,
     val scrollState: ScrollState
 ) {
+    @get:JsonIgnore
     val json: String by lazy { DOMSerializer.toJson(this) }
 }
 
