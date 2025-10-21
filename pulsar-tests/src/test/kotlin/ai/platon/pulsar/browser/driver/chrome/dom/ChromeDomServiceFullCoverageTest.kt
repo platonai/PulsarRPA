@@ -47,7 +47,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         assertTrue(simplified.children.isNotEmpty())
 
         val llm = service.buildDOMState(simplified)
-        assertTrue(llm.microTreeJson.length > 100)
+        assertTrue(llm.nanoTreeLazyJson.length > 100)
         assertTrue(llm.selectorMap.isNotEmpty())
 
         // Selector map should include at least node: and possibly xpath: keys for some nodes

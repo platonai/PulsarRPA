@@ -39,7 +39,7 @@ class PageStateTracker(
         // Combine URL, DOM structure, and interactive elements for fingerprint
         val urlHash = runCatching { driver.currentUrl() }.getOrNull()?.hashCode() ?: 0
         // Prefer cached microTree JSON from DOMState to avoid repeated serialization cost
-        val domJson = browserUseState.domState.microTreeJson
+        val domJson = browserUseState.domState.nanoTreeLazyJson
         val domHash = domJson.hashCode()
         // Quantize scroll ratio to reduce noise from tiny jitters (bucket to percentage 0..100)
         val scrollBucket = (browserUseState.browserState.scrollState.scrollYRatio * 100).toInt()

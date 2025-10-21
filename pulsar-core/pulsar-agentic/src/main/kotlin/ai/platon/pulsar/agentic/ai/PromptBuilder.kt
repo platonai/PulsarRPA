@@ -97,7 +97,7 @@ Print null or an empty string if no new information is found.
     }
 
     fun buildExtractDomContent(domState: DOMState, params: ExtractParams): String {
-        val json = domState.microTreeJson
+        val json = domState.nanoTreeLazyJson
 
         // Inject schema hint to strongly guide JSON output
         val hintCN = "你必须返回一个严格符合以下JSON Schema的有效JSON对象。不要包含任何额外说明。"
@@ -238,8 +238,8 @@ Be comprehensive: if there are multiple elements that may be relevant for future
      * - the response's schema requirement
      * */
     fun buildObserveUserMessage(instruction: String, params: ObserveParams): SimpleMessage {
-        val browserStateJson = params.browserUseState.browserState.json
-        val compactTreeJson = params.browserUseState.domState.microTreeJson
+        val browserStateJson = params.browserUseState.browserState.lazyJson
+        val compactTreeJson = params.browserUseState.domState.nanoTreeLazyJson
 
         val schemaContract = buildObserveResultSchemaContract(params)
         fun contentCN() = """

@@ -128,7 +128,7 @@ open class TextToAction(
 
             if (domState != null) {
                 appendLine("可交互元素列表：")
-                appendLine(domState.microTreeJson)
+                appendLine(domState.nanoTreeLazyJson)
             }
 
             appendLine(command)
@@ -138,7 +138,7 @@ open class TextToAction(
     }
 
     fun buildToolUsePrompt(domState: DOMState? = null, toolCallLimit: Int = 100): String {
-        val json = domState?.microTreeJson
+        val json = domState?.nanoTreeLazyJson
         val prompt = buildString {
             appendLine("每次最多调用 $toolCallLimit 个工具")
 

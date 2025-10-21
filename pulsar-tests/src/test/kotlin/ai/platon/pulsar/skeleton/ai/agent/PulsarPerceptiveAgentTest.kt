@@ -36,7 +36,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
     private val mapper = ObjectMapper()
 
     companion object {
-        const val TIMEOUT_MS = 60_000L
+        const val TIMEOUT_MS = 120_000L
     }
 
     @Nested

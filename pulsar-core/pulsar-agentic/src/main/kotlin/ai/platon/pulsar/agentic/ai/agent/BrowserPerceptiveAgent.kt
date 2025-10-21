@@ -1147,7 +1147,7 @@ class BrowserPerceptiveAgent(
     private suspend fun buildUserMessage(instruction: String, browserUseState: BrowserUseState): String {
         val currentUrl = getCurrentUrl()
         val his = if (_history.isEmpty()) "(无)" else _history.takeLast(min(8, _history.size)).joinToString("\n")
-        val interactiveNodesJson = browserUseState.domState.interactiveNodesJson
+        val interactiveNodesJson = browserUseState.domState.interactiveNodesLazyJson
 
         return """
 此前动作摘要：

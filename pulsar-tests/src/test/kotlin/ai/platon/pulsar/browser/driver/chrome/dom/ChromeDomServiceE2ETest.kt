@@ -78,7 +78,7 @@ class ChromeDomServiceE2ETest : WebDriverTestBase() {
         assertTrue { enhancedRoot.children.isNotEmpty() }
         kotlin.test.assertTrue { simplified.children.isNotEmpty() }
 
-        assertTrue(llm.microTreeJson.length > 50, "Serialized JSON should not be trivial")
+        assertTrue(llm.nanoTreeLazyJson.length > 50, "Serialized JSON should not be trivial")
         assertTrue(llm.selectorMap.isNotEmpty(), "Selector map should contain entries")
 
         // Probe a stable element
@@ -98,7 +98,7 @@ class ChromeDomServiceE2ETest : WebDriverTestBase() {
                 domNodeCount = domCount,
                 axNodeCount = trees.axTree.size,
                 snapshotEntryCount = trees.snapshotByBackendId.size,
-                serializeJsonSize = llm.microTreeJson.length,
+                serializeJsonSize = llm.nanoTreeLazyJson.length,
                 notes = "End-to-end validation with LLM serialization"
             )
         )

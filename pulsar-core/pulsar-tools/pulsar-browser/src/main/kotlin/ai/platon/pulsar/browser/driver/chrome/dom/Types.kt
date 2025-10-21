@@ -23,16 +23,23 @@ data class CleanedDOMTreeNode(
      * Locator format: `frameIndex-backendNodeId`
      * */
     val locator: String,
+    @get:JsonIgnore
     val frameId: String?,
+    @get:JsonIgnore
     val xpath: String?,
+    @get:JsonIgnore
     val elementHash: String?,
+    @get:JsonIgnore
     val nodeId: Int,
+    @get:JsonIgnore
     val backendNodeId: Int?,
 
+    @get:JsonIgnore
     val nodeType: Int,
     val nodeName: String,
     val nodeValue: String?,
     val attributes: Map<String, Any>?,
+    @get:JsonIgnore
     val sessionId: String?,
     val isScrollable: Boolean?,
     val isVisible: Boolean?,
@@ -42,8 +49,11 @@ data class CleanedDOMTreeNode(
     val clientRects: CompactRect?,
     val scrollRects: CompactRect?,
     val absoluteBounds: CompactRect? = null,
+    @get:JsonIgnore
     val paintOrder: Int? = null,
+    @get:JsonIgnore
     val stackingContexts: Int? = null,
+    @get:JsonIgnore
     val contentDocument: CleanedDOMTreeNode?
     // Note: children_nodes and shadow_roots are intentionally omitted
 )
@@ -55,6 +65,7 @@ data class CleanedDOMTreeNode(
  * Naming conversion: mini -> tiny -> micro -> nano -> pico -> ...
  */
 data class MicroDOMTreeNode(
+    @get:JsonIgnore
     val shouldDisplay: Boolean? = null,
     val interactiveIndex: Int? = null,
     val ignoredByPaintOrder: Boolean? = null,
@@ -68,6 +79,66 @@ data class MicroDOMTreeNode(
 
 typealias MicroDOMTree = MicroDOMTreeNode
 
+data class NanoDOMTreeNode(
+    /**
+     * Locator format: `frameIndex-backendNodeId`
+     * */
+    val locator: String? = null,
+    val nodeName: String? = null,
+    val nodeValue: String? = null,
+    val attributes: Map<String, Any>? = null,
+    val isScrollable: Boolean? = null,
+    val isVisible: Boolean? = null,
+    val isInteractable: Boolean? = null,
+    val bounds: CompactRect? = null,
+    val clientRects: CompactRect? = null,
+    val scrollRects: CompactRect? = null,
+    val absoluteBounds: CompactRect? = null,
+    val children: List<NanoDOMTreeNode>? = null,
+) {
+    companion object {
+        fun create(microTree: MicroDOMTreeNode): NanoDOMTree {
+            val o = microTree.originalNode
+            if (o == null) {
+                // return an empty NanoDOMTree when there's no original cleaned node
+                return NanoDOMTree()
+            }
+
+            // Create the current node from the micro node
+            val root = newNode(microTree) ?: return NanoDOMTree()
+
+            // Recursively create child nano nodes, filter out empty placeholders
+            val childNanoList = microTree.children
+                ?.map { create(it) }
+                ?.filter { child ->
+                    // keep nodes that have any meaningful data (locator or nodeName or non-empty children)
+                    !(child.locator == null && child.nodeName == null && (child.children == null || child.children.isEmpty()))
+                }
+
+            return if (childNanoList.isNullOrEmpty()) root else root.copy(children = childNanoList)
+        }
+
+        private fun newNode(n: MicroDOMTreeNode): NanoDOMTree? {
+            val o = n.originalNode ?: return null
+            return NanoDOMTree(
+                o.locator,
+                o.nodeName,
+                o.nodeValue,
+                o.attributes,
+                o.isScrollable,
+                o.isVisible,
+                o.isInteractable,
+                o.bounds,
+                o.clientRects,
+                o.scrollRects,
+                o.absoluteBounds,
+            )
+        }
+    }
+}
+
+typealias NanoDOMTree = NanoDOMTreeNode
+
 data class DOMState(
     val microTree: MicroDOMTree,
     val interactiveNodes: List<MicroDOMTreeNode>,
@@ -76,10 +147,18 @@ data class DOMState(
     val locatorMap: LocatorMap
 ) {
     @get:JsonIgnore
-    val microTreeJson: String by lazy { DOMSerializer.toJson(microTree) }
+    val microTreeLazyJson: String by lazy { DOMSerializer.toJson(microTree) }
 
     @get:JsonIgnore
-    val interactiveNodesJson: String by lazy { DOMSerializer.toJson(interactiveNodes) }
+    @Suppress("unused")
+    val nanoTreeLazyJson: String by lazy {
+        // convert micro tree to nano tree first, then serialize
+        val nano = NanoDOMTreeNode.create(microTree)
+        DOMSerializer.toJson(nano)
+    }
+
+    @get:JsonIgnore
+    val interactiveNodesLazyJson: String by lazy { DOMSerializer.toJson(interactiveNodes) }
 }
 
 data class ClientInfo(
@@ -135,7 +214,7 @@ data class BrowserState(
     val scrollState: ScrollState
 ) {
     @get:JsonIgnore
-    val json: String by lazy { DOMSerializer.toJson(this) }
+    val lazyJson: String by lazy { DOMSerializer.toJson(this) }
 }
 
 data class BrowserUseState(
@@ -164,5 +243,10 @@ object DOMSerializer {
 
     fun toJson(browserState: BrowserState): String {
         return MAPPER.writeValueAsString(browserState)
+    }
+
+    // serialize nano tree
+    fun toJson(nano: NanoDOMTree): String {
+        return MAPPER.writeValueAsString(nano)
     }
 }
