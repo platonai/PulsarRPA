@@ -6,10 +6,12 @@ import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.ChatModelFactory
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.Instant
 
+@Tag("E2ETest")
 class PulsarAgentExtractObserveE2ETest : WebDriverTestBase() {
     private val testURL get() = interactiveDynamicURL
 

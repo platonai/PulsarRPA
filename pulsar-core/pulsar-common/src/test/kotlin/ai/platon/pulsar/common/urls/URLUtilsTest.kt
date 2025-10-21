@@ -3,7 +3,7 @@ package ai.platon.pulsar.common.urls
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.printlnPro
-import ai.platon.pulsar.common.config.AppConstants.BROWSER_SPECIFIC_URL_PREFIX
+import ai.platon.pulsar.common.config.AppConstants.BROWSER_INTERNAL_BASE_URL
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnOs
@@ -158,7 +158,7 @@ class URLUtilsTest {
     fun testBrowserURLToStandardURL() {
         // Test converting a browser protocol to URL
         val url = "chrome://settings"
-        val expected = "$BROWSER_SPECIFIC_URL_PREFIX?url=${URLEncoder.encode(url, Charsets.UTF_8)}"
+        val expected = "$BROWSER_INTERNAL_BASE_URL?url=${URLEncoder.encode(url, Charsets.UTF_8)}"
         printlnPro(expected)
         assertEquals(expected, URLUtils.browserURLToStandardURL(url))
     }
@@ -167,7 +167,7 @@ class URLUtilsTest {
     fun testUrlToBrowserProtocol() {
         // Test extracting and re-encoding a browser protocol from URL
         val expected = "chrome://settings"
-        val url = "$BROWSER_SPECIFIC_URL_PREFIX?url=${URLEncoder.encode(expected, Charsets.UTF_8)}"
+        val url = "$BROWSER_INTERNAL_BASE_URL?url=${URLEncoder.encode(expected, Charsets.UTF_8)}"
         assertEquals(expected, URLUtils.standardURLToBrowserURL(url))
 
         // Test with a URL that does not contain a browser protocol

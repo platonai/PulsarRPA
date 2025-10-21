@@ -21,6 +21,7 @@ import ai.platon.pulsar.common.measure.ByteUnit;
 import java.awt.*;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 
 @SuppressWarnings("unused")
 public interface AppConstants {
@@ -35,7 +36,9 @@ public interface AppConstants {
     String VAR_CAPTURE = "capture";
 
     /**
-     * An example of the shortest url
+     * An example of the shortest accessible url: <a href="http://t.tt">http://t.tt</a>
+     * <p>
+     * Another example is <a href="http://a.co">http://a.co</a> (redirect to amazon.com)
      * */
     String SHORTEST_VALID_URL = "http://t.tt";
     /**
@@ -45,11 +48,21 @@ public interface AppConstants {
     /**
      * The example url
      * */
-    String EXAMPLE_URL = "http://example.com";
+    String EXAMPLE_URL = "https://example.com";
+    /**
+     * The example url
+     * */
+    List<String> SEARCH_ENGINE_URLS = List.of(
+            "https://www.google.com/",
+            "https://cn.bing.com/",
+            "https://www.baidu.com/",
+            "https://www.so.com/",
+            "https://www.bing.com/"
+    );
     /**
      * The prefix of all pulsar specified urls
      * */
-    String INTERNAL_URL_PREFIX = "http://internal.pulsar.platon.ai";
+    String INTERNAL_URL_PREFIX = "http://internal.platon.ai";
     /**
      * The url of the nil page
      * */
@@ -146,9 +159,8 @@ public interface AppConstants {
 
     /**
      * Local file base url, the host is a fake host.
-     * Consider just use http://localhost.
      * */
-    String LOCAL_FILE_BASE_URL = "http://localfile.org";
+    String LOCAL_FILE_BASE_URL = "http://localfile.internal";
 
-    String BROWSER_SPECIFIC_URL_PREFIX = "http://browser-specific.org";
+    String BROWSER_INTERNAL_BASE_URL = "http://browser.internal";
 }

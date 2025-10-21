@@ -10,6 +10,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.DomDebug
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.Pson
 import ai.platon.pulsar.common.urls.URLUtils
@@ -486,19 +487,19 @@ class BrowserPerceptiveAgent(
     }
 
     private fun logExtractStart(instruction: String, requestId: String) {
-        logger.info("extract.start requestId={} instruction='{}'", requestId.take(8), instruction.take(120))
+        logger.info("extract.start requestId={} instruction='{}'", requestId.take(8), Strings.compactWhitespaces(instruction, 200))
     }
 
     private fun logObserveStart(instruction: String, requestId: String) {
-        logger.info("observe.start requestId={} instruction='{}'", requestId.take(8), instruction.take(120))
+        logger.info("observe.start requestId={} instruction='{}'", requestId.take(8), Strings.compactWhitespaces(instruction, 200))
     }
 
     private fun addHistoryExtract(instruction: String, requestId: String, success: Boolean) {
-        addToHistory("extract[$requestId] ${if (success) "OK" else "FAIL"} ${instruction.take(60)}")
+        addToHistory("extract[$requestId] ${if (success) "OK" else "FAIL"} ${Strings.compactWhitespaces(instruction, 200)}")
     }
 
     private fun addHistoryObserve(instruction: String, requestId: String, size: Int, success: Boolean) {
-        addToHistory("observe[$requestId] ${if (success) "OK" else "FAIL"} ${instruction.take(50)} -> $size elements")
+        addToHistory("observe[$requestId] ${if (success) "OK" else "FAIL"} ${Strings.compactWhitespaces(instruction, 200)} -> $size elements")
     }
 
     /**
