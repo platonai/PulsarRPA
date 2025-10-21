@@ -67,8 +67,6 @@ data class MicroDOMTreeNode(
 
 typealias MicroDOMTree = MicroDOMTreeNode
 
-// Keep the serialization result as a top-level data class for reuse
-
 data class DOMState(
     val microTree: MicroDOMTree,
     val interactiveNodes: List<MicroDOMTreeNode>,
@@ -81,9 +79,11 @@ data class DOMState(
 }
 
 data class ClientInfo(
-    // "Asia/Shanghai"
+    // time zone: "Asia/Shanghai"
     val timeZone: String,
+    // locale: "zh_CN"
     val locale: Locale,
+    //
     val viewportWidth: Int,
     val viewportHeight: Int,
     val screenWidth: Int,
@@ -125,8 +125,8 @@ data class ScrollState(
 
 data class BrowserState(
     val url: String,
-    val goBackUrl: String,
-    val goForwardUrl: String,
+    val goBackUrl: String? = null,
+    val goForwardUrl: String? = null,
     val clientInfo: ClientInfo,
     val scrollState: ScrollState
 ) {

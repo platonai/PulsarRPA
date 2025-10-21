@@ -245,15 +245,16 @@ class BrowserPerceptiveAgent(
 
         val schemaJson = buildSchemaJsonFromMap(options.schema)
         return try {
-            val domState = getBrowserUseState()
+            val browserUseState = getBrowserUseState()
 
-            val totalHeight = domState.browserState.scrollState.totalHeight
-            val viewportHeight = domState.browserState.scrollState.viewport.height
+            val totalHeight = browserUseState.browserState.scrollState.totalHeight
+            val viewportHeight = browserUseState.browserState.scrollState.viewport.height
+            val chunkSeen = 1 + browserUseState.browserState.scrollState.scrollYRatio * viewportHeight
             val params = ExtractParams(
                 instruction = instruction,
-                browserUseState = domState,
+                browserUseState = browserUseState,
                 schema = schemaJson,
-                chunksSeen = 0,
+                chunksSeen = chunkSeen.roundToInt(),
                 chunksTotal = ceil(totalHeight / viewportHeight).roundToInt(),
                 requestId = requestId,
                 logInferenceToFile = config.enableStructuredLogging
@@ -298,67 +299,27 @@ class BrowserPerceptiveAgent(
         return domService.getBrowserUseState(snapshotOptions)
     }
 
-    /**
-     * High Priority #3: Improved DOM settle detection
-     * Waits for DOM to stabilize by checking for mutations
-     */
-    private suspend fun waitForDOMSettle(timeoutMs: Long, checkIntervalMs: Long) {
-        val startTime = System.currentTimeMillis()
-        var lastDomHash: Int? = null
-        var stableCount = 0
-        val requiredStableChecks = 3 // Require 3 consecutive stable checks
-
-        while (System.currentTimeMillis() - startTime < timeoutMs) {
-            try {
-                // Get a lightweight DOM fingerprint
-                val currentHtml = driver.evaluate("document.body?.innerHTML?.length || 0").toString()
-                val currentHash = currentHtml.hashCode()
-
-                if (currentHash == lastDomHash) {
-                    stableCount++
-                    if (stableCount >= requiredStableChecks) {
-                        logger.debug("DOM settled after ${System.currentTimeMillis() - startTime}ms")
-                        return
-                    }
-                } else {
-                    stableCount = 0
-                }
-
-                lastDomHash = currentHash
-                delay(checkIntervalMs)
-            } catch (e: Exception) {
-                logger.warn("Error checking DOM stability: ${e.message}")
-                delay(checkIntervalMs)
-            }
-        }
-
-        logger.debug("DOM settle timeout after ${timeoutMs}ms")
-    }
-
-    protected suspend fun execute(action: ActionDescription): InstructionResult {
-        val toolCall = action.toolCall
-        if (toolCall == null) {
-            return InstructionResult(listOf(), listOf(), action.modelResponse)
-        }
+    private suspend fun execute(action: ActionDescription): InstructionResult {
+        val toolCall = action.toolCall ?: return InstructionResult(listOf(), listOf(), action.modelResponse)
 
         val result = toolCallExecutor.execute(toolCall, driver)
-        return InstructionResult(action.expressions, listOf(result), action.modelResponse)
+        return InstructionResult(action.expressions, listOf(result), action.modelResponse, listOf(toolCall))
     }
 
     private suspend fun doObserve(options: ObserveOptions): List<ObserveResult> {
         val instruction = promptBuilder.initObserveUserInstruction(options.instruction)
 
-        val browserState = getBrowserUseState()
+        val browserUseState = getBrowserUseState()
         val params = ObserveParams(
             instruction = instruction,
-            browserUseState = browserState,
+            browserUseState = browserUseState,
             requestId = UUID.randomUUID().toString(),
             returnAction = options.returnAction ?: false,
             logInferenceToFile = config.enableStructuredLogging,
             fromAct = false
         )
 
-        return doObserve1(params, browserState)
+        return doObserve1(params, browserUseState)
     }
 
     private suspend fun doObserveAct(action: ActionOptions): ActResult {
