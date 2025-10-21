@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import java.io.StringWriter
 
-class Double2SerializerTest {
+class DoubleSerializerTest {
 
     private fun mapper(includeNulls: Boolean = true): ObjectMapper =
         jacksonObjectMapper().apply {
@@ -17,8 +17,8 @@ class Double2SerializerTest {
                 setSerializationInclusion(JsonInclude.Include.ALWAYS)
             }
             val module = SimpleModule().apply {
-                addSerializer(Double::class.java, Double2Serializer())
-                addSerializer(Double::class.javaPrimitiveType, Double2Serializer())
+                addSerializer(Double::class.java, DoubleSerializer())
+                addSerializer(Double::class.javaPrimitiveType, DoubleSerializer())
             }
             registerModule(module)
         }
@@ -28,7 +28,7 @@ class Double2SerializerTest {
         val gen = JsonFactory().createGenerator(writer)
         // Provider is not used by serializer, but Jackson API requires it
         val provider = mapper().serializerProvider
-        Double2Serializer().serialize(value, gen, provider)
+        DoubleSerializer().serialize(value, gen, provider)
         gen.flush()
         return writer.toString()
     }

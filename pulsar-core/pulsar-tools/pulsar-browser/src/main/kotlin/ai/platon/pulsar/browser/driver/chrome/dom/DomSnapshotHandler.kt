@@ -32,7 +32,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
         includeDomRects: Boolean = true,
         includeAbsoluteCoords: Boolean = true
     ): Map<Int, SnapshotNodeEx> {
-        val computed = if (includeStyles) EXTENDED_COMPUTED_STYLES else emptyList()
+        val computed = if (includeStyles) REQUIRED_COMPUTED_STYLES else emptyList()
         val capture = try {
             domSnapshot.captureSnapshot(
                 computed,
@@ -190,51 +190,6 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
         }
     }
 
-    /**
-     * Capture snapshot as a flat list (legacy method).
-     * @deprecated Use captureByBackendNodeId or captureEnhanced for better functionality
-     */
-    @Deprecated("Use captureByBackendNodeId instead")
-    fun capture(includeStyles: Boolean = true): List<SnapshotNodeEx> {
-        val computed = if (includeStyles) REQUIRED_COMPUTED_STYLES else emptyList()
-        val capture = try {
-            domSnapshot.captureSnapshot(
-                computed,
-                /* includePaintOrder */ true,
-                /* includeDOMRects */ true,
-                /* includeBlendedBackgroundColors */ null,
-                /* includeTextColorOpacities */ null,
-            )
-        } catch (e: Exception) {
-            logger.warn("DOMSnapshot.captureSnapshot failed (legacy) | err={}", e.toString())
-            tracer?.debug("capture (legacy) exception", e)
-            return emptyList()
-        }
-
-        val docs = capture.documents ?: emptyList()
-        if (docs.isEmpty()) return emptyList()
-
-        val all = mutableListOf<SnapshotNodeEx>()
-        for (doc in docs) {
-            val layout = doc.layout ?: continue
-            val bounds = layout.bounds ?: emptyList()
-            val offsetRects = layout.offsetRects ?: emptyList()
-            val scrollRects = layout.scrollRects ?: emptyList()
-            val clientRects = layout.clientRects ?: emptyList()
-            val paintOrders = layout.paintOrders ?: emptyList()
-
-            val n = maxOf(bounds.size, offsetRects.size, scrollRects.size, clientRects.size, paintOrders.size)
-            for (i in 0 until n) {
-                all += SnapshotNodeEx(
-                    bounds = DOMRect.fromBoundsArray(bounds.getOrNull(i) ?: emptyList()),
-                    clientRects = DOMRect.fromRectArray(clientRects.getOrNull(i) ?: emptyList()),
-                    scrollRects = DOMRect.fromRectArray(scrollRects.getOrNull(i) ?: emptyList()),
-                    paintOrder = paintOrders.getOrNull(i)
-                )
-            }
-        }
-        return all
-    }
 
     /**
      * Build a mapping from backendNodeId to EnhancedSnapshotNode.
@@ -346,23 +301,6 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
          * Required computed styles for proper visibility, scroll detection, and absolute positioning.
          */
         val REQUIRED_COMPUTED_STYLES = listOf(
-            "display",
-            "visibility",
-            "opacity",
-            "overflow",
-            "overflow-x",
-            "overflow-y",
-            "cursor",
-            "pointer-events",
-            "position",
-            "transform",
-            "z-index"
-        )
-
-        /**
-         * Extended computed styles for stacking context and absolute coordinate calculation.
-         */
-        val EXTENDED_COMPUTED_STYLES = listOf(
             "display",
             "visibility",
             "opacity",

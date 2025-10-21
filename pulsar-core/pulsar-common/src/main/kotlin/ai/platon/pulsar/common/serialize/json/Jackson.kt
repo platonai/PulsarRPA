@@ -1,28 +1,66 @@
 package ai.platon.pulsar.common.serialize.json
 
+import ai.platon.pulsar.common.math.roundTo
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
 import com.fasterxml.jackson.databind.*
+import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import org.apache.commons.lang3.StringUtils
+import java.math.BigDecimal
 import java.math.RoundingMode
-import java.text.DecimalFormat
 
-class Double2Serializer : JsonSerializer<Double>() {
-    private val df = DecimalFormat("#.##").apply {
-        roundingMode = RoundingMode.HALF_UP
-    }
-
+class DoubleSerializer(val decimals: Int = 2): JsonSerializer<Double>() {
     override fun serialize(value: Double?, gen: JsonGenerator, serializers: SerializerProvider) {
         if (value == null) {
             gen.writeNull()
+        } else if (value.isNaN()) {
+            gen.writeRawValue("NaN")
+        } else if (value == Double.POSITIVE_INFINITY) {
+            gen.writeRawValue("∞")
+        } else if (value == Double.NEGATIVE_INFINITY) {
+            gen.writeRawValue("-∞")
         } else {
-            val s = df.format(value)
             // remove tailing `0`,  remove tailing `.`
-
-            gen.writeNumber(s)
+            val s = BigDecimal.valueOf(value).setScale(decimals, RoundingMode.HALF_UP).toString()
+            val s1 = s.dropLastWhile { it == '0' }.dropLastWhile { it == '.' }
+            gen.writeNumber(s1)
         }
+    }
+}
+
+fun doubleBindModule(decimals: Int = 2): SimpleModule {
+    return SimpleModule().apply {
+        val doubleSerializer = DoubleSerializer(decimals)
+        addSerializer(Double::class.java, doubleSerializer)
+        // Keep double value length minimal
+        addSerializer(Double::class.javaPrimitiveType, doubleSerializer)
+
+        // Ensure doubles inside containers (List/Map/Any) are also formatted by DoubleSerializer.
+        // Register a Number serializer that delegates to Double serializer for Double values,
+        // and falls back to the default provider for other numeric types.
+        addSerializer(Number::class.java, object : JsonSerializer<Number>() {
+            override fun serialize(
+                value: Number?,
+                gen: JsonGenerator,
+                serializers: SerializerProvider
+            ) {
+                if (value == null) {
+                    gen.writeNull()
+                    return
+                }
+
+                if (value is Double) {
+                    // Delegate to the configured Double serializer for consistent formatting
+                    doubleSerializer.serialize(value, gen, serializers)
+                } else {
+                    // For other numeric types, fall back to default serialization
+                    serializers.defaultSerializeValue(value, gen)
+                }
+            }
+        })
     }
 }
 

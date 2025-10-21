@@ -1,6 +1,12 @@
 package ai.platon.pulsar.browser.driver.chrome.dom.model
 
+import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
+import ai.platon.pulsar.browser.driver.chrome.dom.LocatorMap
+import ai.platon.pulsar.common.math.roundTo
 import com.fasterxml.jackson.annotation.JsonIgnore
+import java.awt.Dimension
+import java.math.RoundingMode
+import java.util.Locale
 
 /**
  * DOM node types based on the DOM specification.
@@ -66,9 +72,19 @@ data class CompactRect(
     val width: Double? = null,
     val height: Double? = null
 ) {
-    fun toDOMRect(): DOMRect {
-        return DOMRect(x?:0.0, y?:0.0, width?:0.0, height?:0.0)
+    /**
+     * Round every field to the nearest integer
+     * */
+    fun roundTo(decimals: Int = 1, mode: RoundingMode = RoundingMode.HALF_UP): CompactRect {
+        return CompactRect(
+            x?.roundTo(decimals),
+            y?.roundTo(decimals),
+            width?.roundTo(decimals),
+            height?.roundTo(decimals),
+        )
     }
+
+    fun round() = roundTo(1)
 }
 
 /**
@@ -81,7 +97,8 @@ data class DOMRect(
     val height: Double
 ) {
     fun compact(): CompactRect {
-        return CompactRect(x.takeIf { it != 0.0 }, y.takeIf { it != 0.0 },
+        return CompactRect(
+            x.takeIf { it != 0.0 }, y.takeIf { it != 0.0 },
             width.takeIf { it != 0.0 }, height.takeIf { it != 0.0 })
     }
 
@@ -143,7 +160,7 @@ data class AXNodeEx(
 /**
  * Enhanced snapshot node data extracted from DOMSnapshot.
  */
-data class SnapshotNodeEx(
+data class SnapshotNodeEx constructor(
     val isClickable: Boolean? = null,
     val cursorStyle: String? = null,
     val bounds: DOMRect? = null,
@@ -160,7 +177,6 @@ data class SnapshotNodeEx(
  */
 data class DOMTreeNodeEx(
     // DOM Node data
-    @JsonIgnore
     val nodeId: Int = 0,
     val backendNodeId: Int? = null,
     val nodeType: NodeType = NodeType.ELEMENT_NODE,
@@ -226,3 +242,202 @@ data class DOMInteractedElement(
     val isVisible: Boolean? = null,
     val isInteractable: Boolean? = null
 )
+
+
+/**
+ * Cleaned original node without children_nodes and shadow_roots.
+ * Enhanced with additional snapshot information for LLM consumption.
+ * This prevents duplication since SimplifiedNode.children already contains them.
+ */
+data class CleanedDOMTreeNode(
+    /**
+     * Locator format: `frameIndex-backendNodeId`
+     * */
+    val locator: String,
+    val frameId: String?,
+    val xpath: String?,
+    val elementHash: String?,
+    val nodeId: Int,
+    val backendNodeId: Int?,
+
+    val nodeType: Int,
+    val nodeName: String,
+    val nodeValue: String?,
+    val attributes: Map<String, Any>?,
+    val sessionId: String?,
+    val isScrollable: Boolean?,   // null means false
+    val isVisible: Boolean?,      // null means false
+    val isInteractable: Boolean?, // null means false
+    val interactiveIndex: Int?,
+    /** The absolute position bounding box. */
+    val bounds: CompactRect?,
+
+    val clientRects: CompactRect?,
+    val scrollRects: CompactRect?,
+    val absoluteBounds: CompactRect? = null,
+    val paintOrder: Int? = null,
+    val stackingContexts: Int? = null,
+    val contentDocument: CleanedDOMTreeNode?
+    // Note: children_nodes and shadow_roots are intentionally omitted
+)
+
+/**
+ * Serializable SimplifiedNode structure.
+ * Enhanced with compound component marking and paint order information.
+ *
+ * Naming conversion: mini -> tiny -> micro -> nano -> pico -> ...
+ */
+data class MicroDOMTreeNode(
+    val shouldDisplay: Boolean? = null,
+    val interactiveIndex: Int? = null,
+    val ignoredByPaintOrder: Boolean? = null,
+    val excludedByParent: Boolean? = null,
+    val isCompoundComponent: Boolean? = null,
+    val originalNode: CleanedDOMTreeNode? = null,
+    val children: List<MicroDOMTreeNode>? = null,
+    val shouldShowScrollInfo: Boolean? = null,
+    val scrollInfoText: String? = null
+)
+
+typealias MicroDOMTree = MicroDOMTreeNode
+
+data class NanoDOMTreeNode(
+    /**
+     * Locator format: `frameIndex-backendNodeId`
+     * */
+    val locator: String? = null,
+    val nodeName: String? = null,
+    val nodeValue: String? = null,
+    val attributes: Map<String, Any>? = null,
+    val html: String? = null,
+    val scrollable: Boolean? = null,   // null means false
+    val interactive: Boolean? = null,  // null means false
+    val invisible: Boolean? = null,    // null means false
+    val bounds: CompactRect? = null,
+    val clientRects: CompactRect? = null,
+    val scrollRects: CompactRect? = null,
+    val absoluteBounds: CompactRect? = null,
+    val children: List<NanoDOMTreeNode>? = null,
+) {
+    companion object {
+        fun create(microTree: MicroDOMTreeNode): NanoDOMTree {
+            // Create the current node from the micro node
+            val root = newNode(microTree) ?: return NanoDOMTree()
+
+            // Recursively create child nano nodes, filter out empty placeholders
+            val childNanoList = microTree.children
+                ?.map { create(it) }
+                ?.filter { child ->
+                    // keep nodes that have any meaningful data (locator or nodeName or non-empty children)
+                    !(child.locator == null && child.nodeName == null && (child.children == null || child.children.isEmpty()))
+                }
+
+            return if (childNanoList.isNullOrEmpty()) root else root.copy(children = childNanoList)
+        }
+
+        private fun newNode(n: MicroDOMTreeNode?): NanoDOMTree? {
+            val o = n?.originalNode ?: return null
+
+            return NanoDOMTree(
+                o.locator,
+                o.nodeName,
+                o.nodeValue,
+                o.attributes,
+                scrollable = o.isScrollable,
+                interactive = o.isInteractable,
+                // All nodes are visible unless `invisible` == true explicitly.
+                invisible = if (o.isVisible == true) null else true,
+                bounds = o.bounds?.round(),
+                clientRects = o.clientRects?.round(),
+                scrollRects = o.scrollRects?.round(),
+                absoluteBounds = o.absoluteBounds?.round(),
+            )
+        }
+    }
+}
+
+typealias NanoDOMTree = NanoDOMTreeNode
+
+data class DOMState(
+    val microTree: MicroDOMTree,
+    val interactiveNodes: List<MicroDOMTreeNode>,
+    val frameIds: List<String>,
+    val selectorMap: Map<String, DOMTreeNodeEx>,
+    val locatorMap: LocatorMap
+) {
+    @get:JsonIgnore
+    val microTreeLazyJson: String by lazy { DOMSerializer.toJson(microTree) }
+
+    @get:JsonIgnore
+    @Suppress("unused")
+    val nanoTreeLazyJson: String by lazy {
+        // convert micro tree to nano tree first, then serialize
+        val nano = NanoDOMTreeNode.create(microTree)
+        DOMSerializer.toJson(nano)
+    }
+
+    @get:JsonIgnore
+    val interactiveNodesLazyJson: String by lazy { DOMSerializer.toJson(interactiveNodes) }
+}
+
+data class ClientInfo(
+    // time zone: "Asia/Shanghai"
+    val timeZone: String,
+    // locale: "zh_CN"
+    val locale: Locale,
+    //
+    val viewportWidth: Int,
+    val viewportHeight: Int,
+    val screenWidth: Int,
+    val screenHeight: Int
+)
+
+data class FullClientInfo(
+    val timeZone: String,
+    val locale: Locale,
+    val userAgent: String? = null,
+    val devicePixelRatio: Double? = null,
+    val viewportWidth: Int? = null,
+    val viewportHeight: Int? = null,
+    val screenWidth: Int? = null,
+    val screenHeight: Int? = null,
+    val colorDepth: Int? = null,
+    val hardwareConcurrency: Int? = null,
+    val deviceMemoryGB: Double? = null,
+    val onLine: Boolean? = null,
+    val networkEffectiveType: String? = null,
+    val saveData: Boolean? = null,
+    val prefersDarkMode: Boolean? = null,
+    val prefersReducedMotion: Boolean? = null,
+    val isSecureContext: Boolean? = null,
+    val crossOriginIsolated: Boolean? = null,
+    val doNotTrack: String? = null,
+    val webdriver: Boolean? = null,
+    val historyLength: Int? = null,
+    val visibilityState: String? = null,
+)
+
+data class ScrollState(
+    val x: Double,
+    val y: Double,
+    val viewport: Dimension,
+    val totalHeight: Double,
+    val scrollYRatio: Double,
+)
+
+data class BrowserState(
+    val url: String,
+    val goBackUrl: String? = null,
+    val goForwardUrl: String? = null,
+    val clientInfo: ClientInfo,
+    val scrollState: ScrollState
+) {
+    @get:JsonIgnore
+    val lazyJson: String by lazy { DOMSerializer.toJson(this) }
+}
+
+data class BrowserUseState(
+    val browserState: BrowserState,
+    val domState: DOMState
+)
+

@@ -1,6 +1,8 @@
 package ai.platon.pulsar.common.math
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics
+import java.math.BigDecimal
+import java.math.RoundingMode
 
 /**
  * Find out outlier fences
@@ -54,4 +56,8 @@ fun getOutlierOuterFence(ds: DescriptiveStatistics, p1: Double = 25.0, p2: Doubl
     val f2 = q3 + 3 * iqr + smooth
 
     return f1 to f2
+}
+
+fun Double.roundTo(decimals: Int, mode: RoundingMode = RoundingMode.HALF_UP): Double {
+    return BigDecimal.valueOf(this).setScale(decimals, mode).toDouble()
 }

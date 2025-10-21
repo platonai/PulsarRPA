@@ -1,6 +1,6 @@
 package ai.platon.pulsar.agentic.ai.agent
 
-import ai.platon.pulsar.browser.driver.chrome.dom.BrowserUseState
+import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.delay

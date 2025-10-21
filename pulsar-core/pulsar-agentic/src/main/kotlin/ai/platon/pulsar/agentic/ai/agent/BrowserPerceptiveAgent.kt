@@ -4,10 +4,10 @@ import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.InstructionResult
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
-import ai.platon.pulsar.browser.driver.chrome.dom.BrowserUseState
-import ai.platon.pulsar.browser.driver.chrome.dom.DOMState
 import ai.platon.pulsar.browser.driver.chrome.dom.DomDebug
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
+import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Strings
@@ -127,7 +127,7 @@ class BrowserPerceptiveAgent(
         if (method == null || locator == null) {
             val msg = "No valuable observations were made | " + Pson.toJson(observe)
             addToHistory(msg)
-            return ActResult(success = false, message = msg, action = observe.description)
+            return ActResult(success = false, message = msg, action = "")
         }
 
         // Build a minimal ToolCall-like map for validation and execution
@@ -150,7 +150,7 @@ class BrowserPerceptiveAgent(
             if (selector == null) {
                 val msg = "No selector observation were made $locator | $observe"
                 addToHistory(msg)
-                return ActResult(success = false, message = msg, action = observe.description)
+                return ActResult(success = false, message = msg, action = method)
             }
         }
 
@@ -171,13 +171,13 @@ class BrowserPerceptiveAgent(
             if (url == null) {
                 val msg = "No url observation were made | " + Pson.toJson(observe)
                 addToHistory(msg)
-                return ActResult(false, msg, action = observe.description)
+                return ActResult(false, msg, action = method)
             }
 
             if (!isSafeUrl(url)) {
                 val msg = "Blocked unsafe URL: $url"
                 addToHistory(msg)
-                return ActResult(false, msg, action = observe.description)
+                return ActResult(false, msg, action = method)
             }
         }
 
@@ -196,7 +196,7 @@ class BrowserPerceptiveAgent(
                     )
                 )
                 addToHistory(msg)
-                return ActResult(false, msg, action = observe.description)
+                return ActResult(false, msg, action = method)
             }
         }
 
@@ -229,8 +229,8 @@ class BrowserPerceptiveAgent(
         } catch (e: Exception) {
             logError("observe.act execution failed", e, uuid.toString())
             val msg = e.message ?: "Execution failed"
-            addToHistory("observe.act FAIL $lowerMethod ${locator?.absoluteSelector?.take(80)} -> $msg")
-            ActResult(success = false, message = msg, action = "$lowerMethod $locator")
+            addToHistory("observe.act FAIL $lowerMethod ${locator.absoluteSelector} -> $msg")
+            ActResult(success = false, message = msg, action = toolCall.name)
         }
     }
 
@@ -487,19 +487,41 @@ class BrowserPerceptiveAgent(
     }
 
     private fun logExtractStart(instruction: String, requestId: String) {
-        logger.info("extract.start requestId={} instruction='{}'", requestId.take(8), Strings.compactWhitespaces(instruction, 200))
+        logger.info(
+            "extract.start requestId={} instruction='{}'",
+            requestId.take(8),
+            Strings.compactWhitespaces(instruction, 200)
+        )
     }
 
     private fun logObserveStart(instruction: String, requestId: String) {
-        logger.info("observe.start requestId={} instruction='{}'", requestId.take(8), Strings.compactWhitespaces(instruction, 200))
+        logger.info(
+            "observe.start requestId={} instruction='{}'",
+            requestId.take(8),
+            Strings.compactWhitespaces(instruction, 200)
+        )
     }
 
     private fun addHistoryExtract(instruction: String, requestId: String, success: Boolean) {
-        addToHistory("extract[$requestId] ${if (success) "OK" else "FAIL"} ${Strings.compactWhitespaces(instruction, 200)}")
+        addToHistory(
+            "extract[$requestId] ${if (success) "OK" else "FAIL"} ${
+                Strings.compactWhitespaces(
+                    instruction,
+                    200
+                )
+            }"
+        )
     }
 
     private fun addHistoryObserve(instruction: String, requestId: String, size: Int, success: Boolean) {
-        addToHistory("observe[$requestId] ${if (success) "OK" else "FAIL"} ${Strings.compactWhitespaces(instruction, 200)} -> $size elements")
+        addToHistory(
+            "observe[$requestId] ${if (success) "OK" else "FAIL"} ${
+                Strings.compactWhitespaces(
+                    instruction,
+                    200
+                )
+            } -> $size elements"
+        )
     }
 
     /**

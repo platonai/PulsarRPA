@@ -3,7 +3,7 @@ package ai.platon.pulsar.agentic.ai
 import ai.platon.pulsar.agentic.ai.agent.ExtractParams
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
-import ai.platon.pulsar.browser.driver.chrome.dom.DOMState
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.common.Strings
 import java.util.*
 
@@ -239,18 +239,19 @@ Be comprehensive: if there are multiple elements that may be relevant for future
      * */
     fun buildObserveUserMessage(instruction: String, params: ObserveParams): SimpleMessage {
         val browserStateJson = params.browserUseState.browserState.lazyJson
-        val compactTreeJson = params.browserUseState.domState.nanoTreeLazyJson
+        val nanoTreeJson = params.browserUseState.domState.nanoTreeLazyJson
 
         val schemaContract = buildObserveResultSchemaContract(params)
         fun contentCN() = """
 指令: $instruction
 
 ## 无障碍树(Accessibility Tree):
-$compactTreeJson
+$nanoTreeJson
 
 ## 无障碍树说明：
-- 对于每个节点的布尔（boolean）属性，若未显式赋值或值为 null，则一律视为 false。涉及的属性包括但不限于：`isScrollable`, `isVisible`, `isInteractable`, `shouldDisplay`, `ignoredByPaintOrder`, `excludedByParent`, `isCompoundComponent` 等。
-- 对于坐标和尺寸，若未显式赋值或值为 null，则一律视为 0。涉及的属性包括但不限于：`clientRects`, `scrollRects`, `bounds`。
+- 所有节点可见，除非 `invisible` == true 显示指定。
+- 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
+- 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
 
 ## 当前浏览器状态
 $browserStateJson
@@ -262,17 +263,15 @@ $schemaContract
 instruction: $instruction
 
 ## Accessibility Tree:
-$compactTreeJson
+$nanoTreeJson
 
 ## Accessibility Tree Specification
 
 ### Boolean Attributes:
-For each node's boolean attributes, if no explicit value is assigned or the value is null, it will be treated as false by default.
-The affected attributes include but are not limited to:
-`isScrollable`, `isVisible`, `isInteractable`, `shouldDisplay`, `ignoredByPaintOrder`, `excludedByParent`, `isCompoundComponent`, etc.
+- All nodes are visible unless `invisible` == true explicitly.
+- Unless explicitly specified, `scrollable` is false, `interactive` is false.
 ### Coordinate & Dimension Attributes:
-For coordinate and size-related attributes, if no explicit value is assigned or the value is null, it will be treated as 0 by default.
-The affected attributes include but are not limited to: `clientRects`, `scrollRects`, `bounds`.
+- For coordinate and size-related attributes, treated as `0` if no explicit value assigned. Affected attributes: `clientRects`, `scrollRects`, `bounds`.
 
 ## Current Browser State
 $browserStateJson

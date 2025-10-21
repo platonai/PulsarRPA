@@ -294,8 +294,8 @@ class ChromeCdpDomService(
             val history = devTools.page.navigationHistory
             val currentIndex = history?.currentIndex ?: -1
             val entries = history?.entries ?: emptyList()
-            val back = entries.getOrNull(currentIndex - 1)?.url ?: ""
-            val forward = entries.getOrNull(currentIndex + 1)?.url ?: ""
+            val back = entries.getOrNull(currentIndex - 1)?.url
+            val forward = entries.getOrNull(currentIndex + 1)?.url
             back to forward
         }.getOrElse { "" to "" }
 
@@ -361,7 +361,7 @@ class ChromeCdpDomService(
             screenHeight = screenHeight
         )
 
-        val basicState = BrowserState(
+        val browserState = BrowserState(
             url = url,
             goBackUrl = goBackUrl,
             goForwardUrl = goForwardUrl,
@@ -369,7 +369,7 @@ class ChromeCdpDomService(
             scrollState = scrollState
         )
 
-        return BrowserUseState(basicState, domState)
+        return BrowserUseState(browserState, domState)
     }
 
     override suspend fun computeFullClientInfo(): FullClientInfo {

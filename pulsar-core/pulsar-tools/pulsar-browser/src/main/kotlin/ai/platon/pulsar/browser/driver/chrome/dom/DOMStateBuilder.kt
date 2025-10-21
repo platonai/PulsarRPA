@@ -1,8 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome.dom
 
-import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
-import ai.platon.pulsar.browser.driver.chrome.dom.model.DefaultIncludeAttributes
-import ai.platon.pulsar.browser.driver.chrome.dom.model.TinyNode
+import ai.platon.pulsar.browser.driver.chrome.dom.model.*
 
 /**
  * Serializer for DOM trees optimized for LLM consumption.

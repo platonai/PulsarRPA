@@ -3,6 +3,7 @@ package ai.platon.pulsar.skeleton.ai.agent
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.agentic.ai.agent.BrowserPerceptiveAgent
 import ai.platon.pulsar.agentic.ai.agent.AgentConfig
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.ExtractOptions
@@ -83,6 +84,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 val agent = BrowserPerceptiveAgent(driver)
 
                 val result = agent.extract("Extract the page title and main content")
+                printlnPro(result)
 
                 assertTrue(result.success, "Extract should succeed")
                 assertNotNull(result.data)
@@ -114,6 +116,8 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
                 val result = agent.extract(options)
 
+                printlnPro(result)
+
                 assertTrue(result.success)
                 assertNotNull(result.data)
 
@@ -135,6 +139,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 val result = runBlocking {
                     agent.extract("")
                 }
+                printlnPro(result)
 
                 // Should still work with default instruction
                 assertNotNull(result)
@@ -150,6 +155,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 val agent = BrowserPerceptiveAgent(driver)
 
                 val result = agent.extract("Extract data")
+                printlnPro(result)
 
                 // Should handle gracefully even on failure
                 assertNotNull(result)
@@ -172,6 +178,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 val results = runBlocking {
                     agent.observe("List all interactive elements on this page")
                 }
+                printlnPro(results)
 
                 // Should find some interactive elements
                 assertTrue(results.isNotEmpty(), "Should find interactive elements")
@@ -201,6 +208,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 )
 
                 val results = agent.observe(options)
+                printlnPro(results)
 
                 assertNotNull(results)
 
@@ -225,6 +233,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 )
 
                 val results = agent.observe(options)
+                printlnPro(results)
 
                 assertNotNull(results)
                 // Some results might have methods/arguments
@@ -239,9 +248,8 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
             runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = BrowserPerceptiveAgent(driver)
 
-                val results = runBlocking {
-                    agent.observe("")
-                }
+                val results = agent.observe("")
+                printlnPro(results)
 
                 assertNotNull(results)
             }
@@ -261,6 +269,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 val agent = BrowserPerceptiveAgent(driver)
 
                 val result = agent.act("Click the search button")
+                printlnPro(result)
 
                 assertNotNull(result)
                 kotlin.test.assertEquals("click", result.action)
@@ -281,6 +290,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 )
 
                 val result = agent.act(options)
+                printlnPro(result)
 
                 assertNotNull(result)
                 assertEquals("Navigate to the home page", result.action)
@@ -320,6 +330,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     driver.navigateTo("about:blank")
                     agent.extract("Extract something")
                 }
+                printlnPro(result)
 
                 assertNotNull(result)
             }
@@ -345,6 +356,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 val result = runBlocking {
                     agent.act("Do something impossible")
                 }
+                printlnPro(result)
 
                 assertNotNull(result)
             }
@@ -364,8 +376,10 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
                 val initialHistorySize = agent.history.size
 
-                agent.extract("Extract title")
-                agent.observe("List elements")
+                val r1 = agent.extract("Extract title")
+                printlnPro(r1)
+                val r2 = agent.observe("List elements")
+                printlnPro(r2)
 
                 assertTrue(agent.history.size >= initialHistorySize + 2,
                     "History should grow with operations")
@@ -464,7 +478,8 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 val startTime = System.currentTimeMillis()
 
                 repeat(3) {
-                    agent.observe("Find interactive elements")
+                    val results = agent.observe("Find interactive elements")
+                    printlnPro(results)
                 }
 
                 val duration = System.currentTimeMillis() - startTime
