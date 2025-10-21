@@ -6,7 +6,8 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.NodeType
 import ai.platon.pulsar.browser.driver.chrome.dom.model.PageTarget
 import ai.platon.pulsar.common.getLogger
 import kotlin.jvm.Volatile
-import com.github.kklisura.cdt.protocol.v2023.types.dom.Node as CdpNode
+
+typealias CdpNode = ai.platon.cdt.kt.protocol.types.dom.Node
 
 /**
  * Handler for DOM tree operations.
@@ -31,7 +32,7 @@ class DomTreeHandler(private val devTools: RemoteDevTools) {
      * @param maxDepth Maximum depth to traverse (0 means full tree)
      * @return Enhanced DOM tree root node; returns an empty root on failure
      */
-    fun getDocument(target: PageTarget?, maxDepth: Int = 0): DOMTreeNodeEx {
+    suspend fun getDocument(target: PageTarget?, maxDepth: Int = 0): DOMTreeNodeEx {
         val dom = devTools.dom
         val depth = maxDepth.takeIf { it > 0 }
         val document = try {

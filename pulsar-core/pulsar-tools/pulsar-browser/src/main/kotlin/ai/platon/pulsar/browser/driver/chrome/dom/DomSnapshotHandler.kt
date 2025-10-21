@@ -1,10 +1,10 @@
 package ai.platon.pulsar.browser.driver.chrome.dom
 
+import ai.platon.cdt.kt.protocol.commands.DOMSnapshot
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMRect
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotNodeEx
 import ai.platon.pulsar.common.getLogger
-import com.github.kklisura.cdt.protocol.v2023.commands.DOMSnapshot
 
 /**
  * Handler for DOMSnapshot domain operations.
@@ -26,7 +26,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
      * @param includeAbsoluteCoords Whether to calculate absolute coordinates
      * @return Map of backendNodeId to enhanced snapshot data with absolute coordinates
      */
-    fun captureEnhanced(
+    suspend fun captureEnhanced(
         includeStyles: Boolean = true,
         includePaintOrder: Boolean = true,
         includeDomRects: Boolean = true,
@@ -142,8 +142,8 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
     /**
      * Get viewport bounds for absolute coordinate calculation.
      */
-    private fun getViewportBounds(): DOMRect {
-        fun evalNumber(expr: String, fallback: Double): Double = try {
+    private suspend fun getViewportBounds(): DOMRect {
+        suspend fun evalNumber(expr: String, fallback: Double): Double = try {
             val ro = devTools.runtime.evaluate(expr)
             ro?.result?.value?.toString()?.toDoubleOrNull() ?: ro?.result?.unserializableValue?.toDoubleOrNull() ?: fallback
         } catch (e: Exception) {
@@ -198,7 +198,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
      * @param includeStyles Whether to capture computed styles
      * @return Map of backendNodeId to snapshot data
      */
-    fun captureByBackendNodeId(
+    suspend fun captureByBackendNodeId(
         includeStyles: Boolean = true,
         includePaintOrder: Boolean = true,
         includeDomRects: Boolean = true

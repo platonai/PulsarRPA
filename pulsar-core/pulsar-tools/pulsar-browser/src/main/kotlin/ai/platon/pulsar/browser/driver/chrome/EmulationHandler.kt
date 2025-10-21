@@ -1,5 +1,9 @@
 package ai.platon.pulsar.browser.driver.chrome
 
+import ai.platon.cdt.kt.protocol.ChromeDevTools
+import ai.platon.cdt.kt.protocol.commands.DOM
+import ai.platon.cdt.kt.protocol.commands.Page
+import ai.platon.cdt.kt.protocol.types.input.*
 import ai.platon.pulsar.common.DescriptiveResult
 import ai.platon.pulsar.common.io.VirtualKey
 import ai.platon.pulsar.common.io.VirtualKeyboard
@@ -8,13 +12,6 @@ import ai.platon.pulsar.common.math.geometric.DimD
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
-import com.github.kklisura.cdt.protocol.v2023.ChromeDevTools
-import com.github.kklisura.cdt.protocol.v2023.commands.DOM
-import com.github.kklisura.cdt.protocol.v2023.commands.Page
-import com.github.kklisura.cdt.protocol.v2023.support.annotations.Experimental
-import com.github.kklisura.cdt.protocol.v2023.support.annotations.Optional
-import com.github.kklisura.cdt.protocol.v2023.support.annotations.ParamName
-import com.github.kklisura.cdt.protocol.v2023.types.input.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -57,7 +54,7 @@ class ClickableDOM(
         }
     }
 
-    fun clickablePoint(): DescriptiveResult<PointD> {
+    suspend fun clickablePoint(): DescriptiveResult<PointD> {
         val contentQuads = kotlin.runCatching { dom.getContentQuads(nodeId, null, null) }.getOrNull()
         if (contentQuads == null) {
             // throw new Error('Node is either not clickable or not an HTMLElement');
@@ -65,7 +62,7 @@ class ClickableDOM(
             return DescriptiveResult("error:notvisible")
         }
 
-        val layoutMetrics = page.layoutMetrics
+        val layoutMetrics = page.getLayoutMetrics()
         if (layoutMetrics == null) {
             // throw new Error('Node is either not clickable or not an HTMLElement');
             // return 'error:notvisible';
@@ -117,11 +114,11 @@ class ClickableDOM(
         return DescriptiveResult(PointD(x = x / 4, y = y / 4))
     }
 
-    fun isVisible(): Boolean {
+    suspend fun isVisible(): Boolean {
         return clickablePoint().value != null
     }
 
-    fun boundingBox(): RectD? {
+    suspend fun boundingBox(): RectD? {
         val box = dom.runCatching { getBoxModel(nodeId, null, null) }.getOrNull() ?: return null
 
         val quad = box.border.takeIf { it.isNotEmpty() } ?: return null
@@ -237,8 +234,8 @@ class Mouse(private val devTools: ChromeDevTools) {
     /**
      * TODO: input.dispatchMouseEvent(MOUSE_MOVED) not work, the reason is unknown. Robot.mouseMove works.
      * */
-    private fun chromeMoveTo(x: Double, y: Double) {
-        dispatchMouseEvent(
+    private suspend fun chromeMoveTo(x: Double, y: Double) {
+        input.dispatchMouseEvent(
             type = DispatchMouseEventType.MOUSE_MOVED, x = x, y = y,
             modifiers = null, timestamp = null,
             button = null, // button
@@ -276,24 +273,21 @@ class Mouse(private val devTools: ChromeDevTools) {
      * @param y Y coordinate
      */
     suspend fun down(x: Double, y: Double, clickCount: Int = 1) {
-        // TODO: handle modifiers
-        withContext(Dispatchers.IO) {
-            dispatchMouseEvent(
-                type = DispatchMouseEventType.MOUSE_PRESSED, x = x, y = y,
-                modifiers = null, timestamp = null,
-                button = MouseButton.LEFT,
-                buttons = null, // buttons
-                clickCount = clickCount,
-                force = 0.5, // force
-                tangentialPressure = null,
-                tiltX = null,
-                tiltY = null,
-                twist = null, // twist
-                deltaX = null,
-                deltaY = null,
-                pointerType = null
-            )
-        }
+        input.dispatchMouseEvent(
+            type = DispatchMouseEventType.MOUSE_PRESSED, x = x, y = y,
+            modifiers = null, timestamp = null,
+            button = MouseButton.LEFT,
+            buttons = null, // buttons
+            clickCount = clickCount,
+            force = 0.5, // force
+            tangentialPressure = null,
+            tiltX = null,
+            tiltY = null,
+            twist = null, // twist
+            deltaX = null,
+            deltaY = null,
+            pointerType = null
+        )
     }
 
     suspend fun up() {
@@ -305,34 +299,29 @@ class Mouse(private val devTools: ChromeDevTools) {
     }
 
     suspend fun up(x: Double, y: Double, clickCount: Int = 1) {
-        // TODO: handle modifiers
-        withContext(Dispatchers.IO) {
-            dispatchMouseEvent(
-                type = DispatchMouseEventType.MOUSE_RELEASED, x = x, y = y,
-                button = MouseButton.LEFT,
-                clickCount = clickCount
-            )
-        }
+        input.dispatchMouseEvent(
+            type = DispatchMouseEventType.MOUSE_RELEASED, x = x, y = y,
+            button = MouseButton.LEFT,
+            clickCount = clickCount
+        )
     }
 
     suspend fun scroll(deltaX: Double = 0.0, deltaY: Double = 10.0) {
-        withContext(Dispatchers.IO) {
-            dispatchMouseEvent(
-                type = DispatchMouseEventType.MOUSE_WHEEL, x = currentX, y = currentY,
-                modifiers = null, timestamp = null,
-                button = null, // button
-                buttons = null, // buttons
-                clickCount = null,
-                force = null, // force
-                tangentialPressure = null,
-                tiltX = null, // tiltX
-                tiltY = null, // tiltY
-                twist = null, // twist
-                deltaX = deltaX, // deltaX
-                deltaY = deltaY, // deltaY
-                pointerType = null
-            )
-        }
+        input.dispatchMouseEvent(
+            type = DispatchMouseEventType.MOUSE_WHEEL, x = currentX, y = currentY,
+            modifiers = null, timestamp = null,
+            button = null, // button
+            buttons = null, // buttons
+            clickCount = null,
+            force = null, // force
+            tangentialPressure = null,
+            tiltX = null, // tiltX
+            tiltY = null, // tiltY
+            twist = null, // twist
+            deltaX = deltaX, // deltaX
+            deltaY = deltaY, // deltaY
+            pointerType = null
+        )
     }
 
     /**
@@ -395,23 +384,21 @@ class Mouse(private val devTools: ChromeDevTools) {
      * @param y Y coordinate
      */
     suspend fun wheel(x: Double, y: Double, deltaX: Double, deltaY: Double) {
-        withContext(Dispatchers.IO) {
-            dispatchMouseEvent(
-                type = DispatchMouseEventType.MOUSE_WHEEL, x = x, y = y,
-                modifiers = null, timestamp = null,
-                button = null, // button
-                buttons = null, // buttons
-                clickCount = null,
-                force = null, // force
-                tangentialPressure = null,
-                tiltX = null, // tiltX
-                tiltY = null, // tiltY
-                twist = null, // twist
-                deltaX = deltaX, // deltaX
-                deltaY = deltaY, // deltaY
-                pointerType = null
-            )
-        }
+        input.dispatchMouseEvent(
+            type = DispatchMouseEventType.MOUSE_WHEEL, x = x, y = y,
+            modifiers = null, timestamp = null,
+            button = null, // button
+            buttons = null, // buttons
+            clickCount = null,
+            force = null, // force
+            tangentialPressure = null,
+            tiltX = null, // tiltX
+            tiltY = null, // tiltY
+            twist = null, // twist
+            deltaX = deltaX, // deltaX
+            deltaY = deltaY, // deltaY
+            pointerType = null
+        )
     }
 
     /**
@@ -492,44 +479,6 @@ class Mouse(private val devTools: ChromeDevTools) {
         }
         drop(target, data)
         up()
-    }
-
-    private fun dispatchMouseEvent(
-        @ParamName("type") type: DispatchMouseEventType,
-        @ParamName("x") x: Double? = null,
-        @ParamName("y") y: Double? = null,
-        @Optional @ParamName("modifiers") modifiers: Int? = null,
-        @Optional @ParamName("timestamp") timestamp: Double? = null,
-        @Optional @ParamName("button") button: MouseButton? = null,
-        @Optional @ParamName("buttons") buttons: Int? = null,
-        @Optional @ParamName("clickCount") clickCount: Int? = null,
-        @Experimental @Optional @ParamName("force") force: Double? = null,
-        @Experimental @Optional @ParamName("tangentialPressure") tangentialPressure: Double? = null,
-        @Experimental @Optional @ParamName("tiltX") tiltX: Int? = null,
-        @Experimental @Optional @ParamName("tiltY") tiltY: Int? = null,
-        @Experimental @Optional @ParamName("twist") twist: Int? = null,
-        @Optional @ParamName("deltaX") deltaX: Double? = null,
-        @Optional @ParamName("deltaY") deltaY: Double? = null,
-        @Optional @ParamName("pointerType") pointerType: DispatchMouseEventPointerType? = null
-    ) {
-        input.dispatchMouseEvent(
-            type,
-            x,
-            y,
-            modifiers,
-            timestamp,
-            button,
-            buttons,
-            clickCount,
-            force,
-            tangentialPressure,
-            tiltX,
-            tiltY,
-            twist,
-            deltaX,
-            deltaY,
-            pointerType
-        )
     }
 }
 
@@ -692,21 +641,19 @@ class Keyboard(private val devTools: ChromeDevTools) {
 
         val type = if (key.text.isEmpty()) DispatchKeyEventType.RAW_KEY_DOWN else DispatchKeyEventType.KEY_DOWN
         val commands = emptyList<String>()
-        withContext(Dispatchers.IO) {
-            dispatchKeyEvent1(
-                type,
-                modifiers = toModifiersMask(modifiers),
-                windowsVirtualKeyCode = key.keyCodeWithoutLocation,
-                code = key.code,
-                commands = commands,
-                key = key.key,
-                text = key.text,
-                unmodifiedText = key.text,
-                location = key.location,
-                isKeypad = key.location == KEYPAD_LOCATION,
-                autoRepeat = autoRepeat,
-            )
-        }
+        input.dispatchKeyEvent(
+            type,
+            modifiers = toModifiersMask(modifiers),
+            windowsVirtualKeyCode = key.keyCodeWithoutLocation,
+            code = key.code,
+            commands = commands,
+            key = key.key,
+            text = key.text,
+            unmodifiedText = key.text,
+            location = key.location,
+            isKeypad = key.location == KEYPAD_LOCATION,
+            autoRepeat = autoRepeat,
+        )
     }
 
     private suspend fun up(modifiers: Set<String>, key: VirtualKey) {
@@ -718,66 +665,13 @@ class Keyboard(private val devTools: ChromeDevTools) {
         }
         pressedKeys.remove(key.code)
 
-        withContext(Dispatchers.IO) {
-            dispatchKeyEvent1(
-                DispatchKeyEventType.KEY_UP,
-                modifiers = toModifiersMask(modifiers),
-                key = key.key,
-                windowsVirtualKeyCode = key.keyCodeWithoutLocation,
-                code = key.code,
-                location = key.location,
-            )
-        }
-    }
-
-    /**
-     * Dispatches a key event to the page.
-     *
-     * @param type Type of the key event.
-     * @param modifiers Bit field representing pressed modifier keys. Alt=1, Ctrl=2, Meta/Command=4,
-     *     Shift=8 (default: 0).
-     * @param timestamp Time at which the event occurred.
-     * @param text Text as generated by processing a virtual key code with a keyboard layout. Not
-     *     needed for `keyUp` and `rawKeyDown` events (default: "")
-     * @param unmodifiedText Text that would have been generated by the keyboard if no modifiers were
-     *     pressed (except for shift). Useful for shortcut (accelerator) key handling (default: "").
-     * @param keyIdentifier Unique key identifier (e.g., 'U+0041') (default: "").
-     * @param code Unique DOM defined string value for each physical key (e.g., 'KeyA') (default: "").
-     * @param key Unique DOM defined string value describing the meaning of the key in the context of
-     *     active modifiers, keyboard layout, etc. (e.g., 'AltGr') (default: "").
-     * @param windowsVirtualKeyCode Windows virtual key code (default: 0).
-     * @param nativeVirtualKeyCode Native virtual key code (default: 0).
-     * @param autoRepeat Whether the event was generated from auto repeat (default: false).
-     * @param isKeypad Whether the event was generated from the keypad (default: false).
-     * @param isSystemKey Whether the event was a system key event (default: false).
-     * @param location Whether the event was from the left or right side of the keyboard. 1=Left,
-     *     2=Right (default: 0).
-     * @param commands Editing commands to send with the key event (e.g., 'selectAll') (default: []).
-     *     These are related to but not equal the command names used in `document.execCommand` and
-     *     NSStandardKeyBindingResponding. See
-     *     https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/editing/commands/editor_command_names.h
-     *     for valid command names.
-     */
-    private fun dispatchKeyEvent1(
-        @ParamName("type") type: DispatchKeyEventType? = null,
-        @Optional @ParamName("modifiers") modifiers: Int? = null,
-        @Optional @ParamName("timestamp") timestamp: Double? = null,
-        @Optional @ParamName("text") text: String? = null,
-        @Optional @ParamName("unmodifiedText") unmodifiedText: String? = null,
-        @Optional @ParamName("keyIdentifier") keyIdentifier: String? = null,
-        @Optional @ParamName("code") code: String? = null,
-        @Optional @ParamName("key") key: String? = null,
-        @Optional @ParamName("windowsVirtualKeyCode") windowsVirtualKeyCode: Int? = null,
-        @Optional @ParamName("nativeVirtualKeyCode") nativeVirtualKeyCode: Int? = null,
-        @Optional @ParamName("autoRepeat") autoRepeat: Boolean? = null,
-        @Optional @ParamName("isKeypad") isKeypad: Boolean? = null,
-        @Optional @ParamName("isSystemKey") isSystemKey: Boolean? = null,
-        @Optional @ParamName("location") location: Int? = null,
-        @Experimental @Optional @ParamName("commands") commands: List<String?>? = null
-    ) {
         input.dispatchKeyEvent(
-            type, modifiers, timestamp, text, unmodifiedText, keyIdentifier, code, key, windowsVirtualKeyCode,
-            nativeVirtualKeyCode, autoRepeat, isKeypad, isSystemKey, location, commands
+            type = DispatchKeyEventType.KEY_UP,
+            modifiers = toModifiersMask(modifiers),
+            key = key.key,
+            windowsVirtualKeyCode = key.keyCodeWithoutLocation,
+            code = key.code,
+            location = key.location,
         )
     }
 }

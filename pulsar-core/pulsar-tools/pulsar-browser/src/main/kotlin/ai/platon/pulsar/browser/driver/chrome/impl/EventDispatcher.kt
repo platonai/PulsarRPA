@@ -14,50 +14,25 @@ import com.fasterxml.jackson.databind.type.TypeFactory
 import kotlinx.coroutines.*
 import org.apache.commons.lang3.StringUtils
 import java.io.IOException
-import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.ConcurrentSkipListSet
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.function.Consumer
 
 /**
- * TODO: use kotlinx.coroutines channels instead of CountDownLatch
- * */
+ * Coroutine-friendly invocation result wrapper to avoid blocking the calling thread.
+ */
+data class RpcResult(
+    val isSuccess: Boolean,
+    val result: JsonNode?,
+    val message: String? = null
+)
+
+/**
+ * Coroutine-based future that completes when a response with the matching id arrives.
+ */
 class InvocationFuture(val returnProperty: String? = null) {
-    var result: JsonNode? = null
-    var isSuccess = false
-    private val countDownLatch = CountDownLatch(1)
-    
-    fun signal(isSuccess: Boolean, result: JsonNode?) {
-        this.isSuccess = isSuccess
-        this.result = result
-        countDownLatch.countDown()
-    }
-    
-    /**
-     * Causes the current thread to wait until the latch has counted down to
-     * zero, unless the thread is interrupted, or the specified waiting time elapses.
-     *
-     * TODO: this method blocks the current thread, so it should not used in a coroutine
-     * */
-    @Throws(InterruptedException::class)
-    fun await(timeout: Duration) = await(timeout.toMillis(), TimeUnit.MILLISECONDS)
-    
-    /**
-     * Causes the current thread to wait until the latch has counted down to
-     * zero, unless the thread is interrupted, or the specified waiting time elapses.
-     *
-     * TODO: this method blocks the current thread, so it should not used in a coroutine
-     * */
-    @Throws(InterruptedException::class)
-    fun await(timeout: Long, timeUnit: TimeUnit): Boolean {
-        return if (timeout == 0L) {
-            countDownLatch.await()
-            true
-        } else countDownLatch.await(timeout, timeUnit)
-    }
+    val deferred: CompletableDeferred<RpcResult> = CompletableDeferred()
 }
 
 /** Error object returned from dev tools. */
@@ -95,13 +70,23 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
     
     @Throws(JsonProcessingException::class)
     fun serialize(message: Any): String = OBJECT_MAPPER.writeValueAsString(message)
-    
+
+    @Throws(JsonProcessingException::class)
+    fun serialize(id: Long, method: String, params: Map<String, Any>?, sessionId: String?): String {
+        return OBJECT_MAPPER.writeValueAsString(mapOf(
+            ID_PROPERTY to id,
+            METHOD_PROPERTY to method,
+            PARAMS_PROPERTY to params,
+            "sessionId" to sessionId
+        ))
+    }
+
     @Throws(IOException::class)
     fun <T> deserialize(classParameters: Array<Class<*>>, parameterizedClazz: Class<T>, jsonNode: JsonNode?): T {
         if (jsonNode == null) {
             throw ChromeRPCException("Failed converting null response to clazz $parameterizedClazz")
         }
-        
+
         val typeFactory: TypeFactory = OBJECT_MAPPER.typeFactory
         var javaType: JavaType? = null
         if (classParameters.size > 1) {
@@ -119,7 +104,13 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
         
         return OBJECT_MAPPER.readerFor(javaType).readValue(jsonNode)
     }
-    
+
+    /**
+     * A typical Server Side Event:
+     * ```json
+     * {"method":"Page.frameStartedLoading","params":{"frameId":"53F48CA08C50A3A72887CB9F15B293D5"}}
+     * ```
+     * */
     @Throws(IOException::class, ChromeRPCException::class)
     fun <T> deserialize(clazz: Class<T>, jsonNode: JsonNode?): T {
         if (jsonNode == null) {
@@ -155,8 +146,10 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
     }
     
     fun unsubscribeAll() {
-        invocationFutures.keys.forEach {
-            invocationFutures.remove(it)?.signal(false, null)
+        // Complete any pending futures with a failed result to unblock waiters
+        val ids = invocationFutures.keys.toList()
+        ids.forEach { id ->
+            invocationFutures.remove(id)?.deferred?.complete(RpcResult(false, null))
         }
     }
     
@@ -171,7 +164,7 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
     fun removeAllListeners() {
         eventListeners.clear()
     }
-    
+
     @Throws(ChromeRPCException::class, IOException::class)
     override fun accept(message: String) {
         tracer?.trace("◀ Accept {}", StringUtils.abbreviateMiddle(message, "...", 500))
@@ -182,24 +175,24 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
             val idNode = jsonNode.get(ID_PROPERTY)
             if (idNode != null) {
                 val id = idNode.asLong()
-                val future = invocationFutures[id]
+                val future = invocationFutures.remove(id)
+
+                logger.info("==============================")
+                println(id)
+                println(future?.returnProperty)
+                println(message)
+
                 if (future != null) {
                     var resultNode = jsonNode.get(RESULT_PROPERTY)
                     val errorNode = jsonNode.get(ERROR_PROPERTY)
                     if (errorNode != null) {
-                        future.signal(false, errorNode)
+                        future.deferred.complete(RpcResult(false, errorNode, message))
                     } else {
                         if (future.returnProperty != null) {
-                            if (resultNode != null) {
-                                resultNode = resultNode.get(future.returnProperty)
-                            }
+                            resultNode = resultNode?.get(future.returnProperty)
                         }
-                        
-                        if (resultNode != null) {
-                            future.signal(true, resultNode)
-                        } else {
-                            future.signal(true, null)
-                        }
+
+                        future.deferred.complete(RpcResult(true, resultNode, message))
                     }
                 } else {
                     logger.warn("Received response with unknown invocation #{} - {}", id, jsonNode.asText())
@@ -208,7 +201,7 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
                 val methodNode = jsonNode.get(METHOD_PROPERTY)
                 val paramsNode = jsonNode.get(PARAMS_PROPERTY)
                 if (methodNode != null) {
-                    handleEvent(methodNode.asText(), paramsNode)
+                    handleEventAsync(methodNode.asText(), paramsNode)
                 }
             }
         } catch (e: IOException) {
@@ -226,7 +219,7 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
         }
     }
 
-    private fun handleEvent(name: String, params: JsonNode) {
+    private fun handleEventAsync(name: String, params: JsonNode) {
         val listeners = eventListeners[name] ?: return
 
         // make a copy
@@ -236,6 +229,7 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
             return
         }
 
+        // Handle event in a separate coroutine
         eventDispatcherScope.launch {
             handleEvent0(params, unmodifiedListeners)
         }
@@ -246,11 +240,16 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
      *
      * Do not throw any exception, all exceptions are caught and logged.
      *
+     * A typical Server Side Event:
+     * ```json
+     * {"method":"Page.frameStartedLoading","params":{"frameId":"53F48CA08C50A3A72887CB9F15B293D5"}}
+     * ```
+     *
      * @param params the params node
      * @param unmodifiedListeners the listeners
      * @throws ChromeRPCException if the event could not be handled
      * */
-    private fun handleEvent0(params: JsonNode, unmodifiedListeners: Iterable<DevToolsEventListener>) {
+    private suspend fun handleEvent0(params: JsonNode, unmodifiedListeners: Iterable<DevToolsEventListener>) {
         try {
             handleEvent1(params, unmodifiedListeners)
         } catch (e: MismatchedInputException) {
@@ -260,23 +259,27 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
         }
     }
 
+    /**
+     * A typical Server Side Event:
+     * ```json
+     * {"method":"Page.frameStartedLoading","params":{"frameId":"53F48CA08C50A3A72887CB9F15B293D5"}}
+     * ```
+     * */
     @Throws(ChromeRPCException::class, IOException::class)
-    private fun handleEvent1(params: JsonNode, unmodifiedListeners: Iterable<DevToolsEventListener>) {
+    private suspend fun handleEvent1(params: JsonNode, unmodifiedListeners: Iterable<DevToolsEventListener>) {
         var event: Any? = null
         for (listener in unmodifiedListeners) {
             if (event == null) {
                 event = deserialize(listener.paramType, params)
             }
-            
-            if (event != null) {
-                try {
-                    listener.handler.onEvent(event)
-                } catch (e: Exception) {
-                    logger.warn("Failed to handle event, rethrow ChromeRPCException. Enable debug logging to see the stack trace | {}", e.message)
-                    logger.debug("Failed to handle event", e)
-                    // Let the exception throw again, they might be caught by RobustRPC, or somewhere else
-                    throw ChromeRPCException("Failed to handle event | ${listener.key}, ${listener.paramType}", e)
-                }
+
+            try {
+                listener.handler.onEvent(event!!)
+            } catch (e: Exception) {
+                logger.warn("Failed to handle event, rethrow ChromeRPCException. Enable debug logging to see the stack trace | {}", e.message)
+                logger.debug("Failed to handle event", e)
+                // Let the exception throw again, they might be caught by RobustRPC, or somewhere else
+                throw ChromeRPCException("Failed to handle event | ${listener.key}, ${listener.paramType}", e)
             }
         }
     }

@@ -1,6 +1,11 @@
 package ai.platon.pulsar.browser.driver.chrome.impl
 
-import ai.platon.pulsar.browser.driver.chrome.*
+import ai.platon.cdt.kt.protocol.support.types.EventHandler
+import ai.platon.cdt.kt.protocol.support.types.EventListener
+import ai.platon.pulsar.browser.driver.chrome.DevToolsConfig
+import ai.platon.pulsar.browser.driver.chrome.MethodInvocation
+import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
+import ai.platon.pulsar.browser.driver.chrome.Transport
 import ai.platon.pulsar.browser.driver.chrome.util.*
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.readable
@@ -8,16 +13,37 @@ import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.warnForClose
 import com.codahale.metrics.Gauge
 import com.codahale.metrics.SharedMetricRegistries
-import com.github.kklisura.cdt.protocol.v2023.support.types.EventHandler
-import com.github.kklisura.cdt.protocol.v2023.support.types.EventListener
-import kotlinx.coroutines.*
+import com.fasterxml.jackson.databind.JsonNode
+import kotlinx.coroutines.withTimeoutOrNull
 import org.slf4j.LoggerFactory
 import java.io.IOException
+import java.lang.reflect.Method
 import java.time.Duration
 import java.time.Instant
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
+import kotlin.reflect.KClass
+
+class CachedDevToolsInvocationHandlerProxies(impl: Any) : SuspendAwareHandler(impl) {
+    val commandHandler: DevToolsInvocationHandler = DevToolsInvocationHandler(impl)
+    val commands: MutableMap<Method, Any> = ConcurrentHashMap()
+
+    init {
+        // println("CommandHandler hashCode: " + commandHandler.hashCode())
+    }
+
+    // Typical proxy:
+    //   - jdk.proxy1.$Proxy24
+    // Typical methods:
+    //   - public abstract void com.github.kklisura.cdt.protocol.v2023.commands.Page.enable()
+    //   - public abstract com...page.Navigate com...Page.navigate(java.lang.String)
+    override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any? {
+        return commands.computeIfAbsent(method) {
+            ProxyClasses.createProxy(method.returnType, commandHandler)
+        }
+    }
+}
 
 abstract class ChromeDevToolsImpl(
     private val browserTransport: Transport,
@@ -26,8 +52,6 @@ abstract class ChromeDevToolsImpl(
 ) : RemoteDevTools, AutoCloseable {
 
     companion object {
-        private val instanceSequencer = AtomicInteger()
-
         private val startTime = Instant.now()
         private var lastActiveTime = startTime
         private val idleTime get() = Duration.between(lastActiveTime, Instant.now())
@@ -46,7 +70,6 @@ abstract class ChromeDevToolsImpl(
     }
 
     private val logger = LoggerFactory.getLogger(ChromeDevToolsImpl::class.java)
-    private val id = instanceSequencer.incrementAndGet()
 
     private val closeLatch = CountDownLatch(1)
     private val closed = AtomicBoolean()
@@ -58,136 +81,129 @@ abstract class ChromeDevToolsImpl(
         browserTransport.addMessageHandler(dispatcher)
         pageTransport.addMessageHandler(dispatcher)
     }
-    
-    /**
-     * Invokes a remote method and returns the result.
-     * The method is blocking and will wait for the response.
-     *
-     * TODO: use non-blocking version
-     *
-     * @param returnProperty The property to return from the response.
-     * @param clazz The class of the return type.
-     * @param <T> The return type.
-     * @return The result of the invocation.
-     * */
-    @Throws(InterruptedException::class)
-    open operator fun <T> invoke(
-        returnProperty: String,
-        clazz: Class<T>,
-        methodInvocation: MethodInvocation
-    ): T? {
-        try {
-            return invoke0(returnProperty, clazz, null, methodInvocation)
-        }  catch (e: ChromeIOException) {
-            // TODO: if the connection is lost, we should close the browser and restart it
-            throw ChromeRPCException("Web socket connection lost", e)
-        } catch (e: InterruptedException) {
-            logger.warn("Interrupted while invoke ${clazz::javaClass.name}.${methodInvocation.method}")
-            Thread.currentThread().interrupt()
-            return null
-        } catch (e: IOException) {
-            throw ChromeRPCException("Failed reading response message", e)
-        }
-    }
-    
-    /**
-     * Invokes a remote method and returns the result.
-     * The method is blocking and will wait for the response.
-     *
-     * TODO: use non-blocking version
-     *
-     * @param returnProperty The property to return from the response.
-     * @param clazz The class of the return type.
-     * @param returnTypeClasses The classes of the return type.
-     * @param method The method to invoke.
-     * @param <T> The return type.
-     * @return The result of the invocation.
-     * */
-    @Throws(ChromeIOException::class, ChromeRPCException::class)
-    override operator fun <T> invoke(
-        returnProperty: String?,
-        clazz: Class<T>,
-        returnTypeClasses: Array<Class<out Any>>?,
-        method: MethodInvocation
-    ): T? {
-        try {
-            return invoke0(returnProperty, clazz, returnTypeClasses, method)
-        } catch (e: InterruptedException) {
-            logger.warn("Interrupted while invoke ${method.method}")
-            Thread.currentThread().interrupt()
-            return null
-        }
-    }
-    
-    @Throws(ChromeIOException::class, InterruptedException::class, ChromeRPCException::class)
-    private fun <T> invoke0(
-        returnProperty: String?,
-        clazz: Class<T>,
-        returnTypeClasses: Array<Class<out Any>>?,
-        method: MethodInvocation
-    ): T? {
-        numInvokes.inc()
-        lastActiveTime = Instant.now()
 
-        // blocks the current thread which is optimized by Kotlin since this method is running within
-        // withContext(Dispatchers.IO), so it's OK for the client code to run efficiently.
-        val (future, responded) = invoke1(returnProperty, method)
-        
-        if (!responded) {
+    @Throws(ChromeIOException::class, ChromeRPCException::class)
+    override suspend operator fun <T : Any> invoke(
+        method: String, params: Map<String, Any?>?, returnClass: KClass<T>, returnProperty: String?
+    ): T? {
+        val invocation = DevToolsInvocationHandler.createMethodInvocation(method, params)
+
+        // Non-blocking
+        val message = dispatcher.serialize(invocation.id, invocation.method, invocation.params, null)
+
+        val rpcResult = sendAndReceive(invocation.id, method, returnProperty, message) ?: return null
+        val jsonNode = rpcResult.result ?: return null
+
+        return dispatcher.deserialize(returnClass.java, jsonNode)
+    }
+
+    /**
+     * Invokes a remote method and returns the result.
+     *
+     * This method is designed to be non-blocking, but it is often called in blocking methods
+     * from Java proxy objects. For example, when calling `devTools.page.navigate(url)`, the
+     * framework translates the function call to this `invoke` method. Since `devTools.page.navigate(url)`
+     * is not a suspend function, this method is wrapped in `runBlocking` to ensure compatibility.
+     *
+     * @param clazz The class of the return type. This is used to deserialize the result into the expected type.
+     * @param returnProperty The property to return from the response. This is optional and can be null.
+     * @param returnTypeClasses An array of classes representing the return type. This is used for deserialization
+     *                          when the return type involves generics or complex types.
+     * @param method The `MethodInvocation` object containing details about the method to invoke, such as its ID,
+     *               name, and parameters.
+     * @param <T> The generic return type of the method.
+     * @return The result of the invocation, deserialized into the specified type `T`, or null if the result is not available.
+     * @throws ChromeRPCException If the remote procedure call fails or the result indicates an error.
+     * @throws ChromeRPCTimeoutException If the response times out based on the configured read timeout.
+     */
+    @Throws(ChromeRPCException::class)
+    override suspend fun <T> invoke(
+        clazz: Class<T>,
+        returnProperty: String?,
+        returnTypeClasses: Array<Class<out Any>>?,
+        method: MethodInvocation
+    ): T? {
+        // Serialize the method invocation into a message to be sent to the remote server.
+        val message = dispatcher.serialize(method)
+
+        // Send the request and await the result in a coroutine-friendly way.
+        val rpcResult = sendAndReceive(method.id, method.method, returnProperty, message)
+
+        // If no result is received within the timeout, throw a timeout exception.
+        if (rpcResult == null) {
             val methodName = method.method
             val readTimeout = config.readTimeout
             throw ChromeRPCTimeoutException("Response timeout $methodName | #${numInvokes.count}, ($readTimeout)")
         }
-        
+
+        // Handle the result based on its success status and the expected return type.
         return when {
-            !future.isSuccess -> handleFailedFurther(future).let { throw ChromeRPCException(it.first.code, it.second) }
+            // If the result indicates failure, handle the error and throw an exception.
+            !rpcResult.isSuccess -> handleFailedFurther(rpcResult.result).let {
+                throw ChromeRPCException(
+                    it.first.code,
+                    it.second
+                )
+            }
+
+            // If the expected return type is `Void`, return null.
             Void.TYPE == clazz -> null
-            returnTypeClasses != null -> dispatcher.deserialize(returnTypeClasses, clazz, future.result)
-            else -> dispatcher.deserialize(clazz, future.result)
+
+            // If returnTypeClasses is provided, use it for deserialization.
+            returnTypeClasses != null -> dispatcher.deserialize(returnTypeClasses, clazz, rpcResult.result)
+
+            // Otherwise, deserialize the result using the provided class type.
+            else -> dispatcher.deserialize(clazz, rpcResult.result)
         }
     }
-    
+
     @Throws(ChromeIOException::class, InterruptedException::class)
-    private fun invoke1(
-        returnProperty: String?,
-        method: MethodInvocation
-    ): Pair<InvocationFuture, Boolean> {
-        val future = dispatcher.subscribe(method.id, returnProperty)
-        val message = dispatcher.serialize(method)
-        
-        // See https://github.com/hardkoded/puppeteer-sharp/issues/796 to understand why we need handle Target methods
-        // differently.
-        if (method.method.startsWith("Target.")) {
-            browserTransport.sendAsync(message)
-        } else {
-            pageTransport.sendAsync(message)
+    private suspend fun sendAndReceive(
+        methodId: Long, method: String, returnProperty: String?, rawMessage: String
+    ): RpcResult? {
+        val future = dispatcher.subscribe(methodId, returnProperty)
+
+        sendToBrowser(method, rawMessage)
+
+        // Await without blocking a thread; enforce the configured timeout.
+        val timeoutMillis = config.readTimeout.toMillis()
+        val result = withTimeoutOrNull(timeoutMillis) { future.deferred.await() }
+        if (result == null) {
+            // Ensure we don't leak the future if timed out
+            dispatcher.unsubscribe(methodId)
         }
 
-        // await() blocks the current thread
-        // 1. the current thread is optimized by Kotlin since this method is running within withContext(Dispatchers.IO)
-        // 2. there are still better solutions to avoid blocking the current thread
-        // 3. it is unclear whether there is a significant performance improvement by using non-blocking solution
-        // 4. unfortunately, there is no easy way to combine the coroutine with the [ProxyClasses.createProxyFromAbstract]
-        // 5. a possible solutions is to send CDP messages directly instead of using the proxy classes
-        // 6. kotlin channel can help which do not block the current thread
+        return result
+    }
 
-        // see: https://ktor.io/docs/websocket-client.html
-        val responded = future.await(config.readTimeout)
-        dispatcher.unsubscribe(method.id)
-        
-        return future to responded
+    /**
+     * Send the message to the server and return immediately
+     * */
+    private suspend fun sendToBrowser(method: String, message: String) {
+        // See https://github.com/hardkoded/puppeteer-sharp/issues/796 to understand why we need handle Target methods
+        // differently.
+        if (method.startsWith("Target.")) {
+            browserTransport.send(message)
+        } else {
+            pageTransport.send(message)
+        }
     }
 
     @Throws(ChromeRPCException::class, IOException::class)
-    private fun handleFailedFurther(future: InvocationFuture): Pair<ErrorObject, String> {
+    private fun handleFailedFurther(result: RpcResult): Pair<ErrorObject, String> {
+        return handleFailedFurther(result.result)
+    }
+
+    @Throws(ChromeRPCException::class, IOException::class)
+    private fun handleFailedFurther(error: JsonNode?): Pair<ErrorObject, String> {
         // Received an error
-        val error = dispatcher.deserialize(ErrorObject::class.java, future.result)
+        val error = dispatcher.deserialize(ErrorObject::class.java, error)
         val sb = StringBuilder(error.message)
         if (error.data != null) {
             sb.append(": ")
             sb.append(error.data)
         }
-        
+
         return error to sb.toString()
     }
 

@@ -1,9 +1,14 @@
 package ai.platon.pulsar.browser.driver.examples
 
+import ai.platon.cdt.kt.protocol.events.page.DomContentEventFired
+import ai.platon.cdt.kt.protocol.events.page.FrameAttached
+import ai.platon.cdt.kt.protocol.events.page.FrameDetached
+import ai.platon.cdt.kt.protocol.events.page.FrameNavigated
+import ai.platon.cdt.kt.protocol.events.page.FrameStartedLoading
+import ai.platon.cdt.kt.protocol.events.page.FrameStoppedLoading
+import ai.platon.cdt.kt.protocol.events.page.LoadEventFired
 import ai.platon.pulsar.common.AppFiles
-import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.AppPaths
-import com.github.kklisura.cdt.protocol.v2023.events.page.*
 import com.google.gson.Gson
 import java.util.concurrent.TimeUnit
 
@@ -11,7 +16,7 @@ class BlockUrlsExample: BrowserExampleBase() {
 
     override val testUrl = "https://www.stbchina.cn/"
 
-    override fun run() {
+    override suspend fun run() {
         page.enable()
         network.enable()
         runtime.enable()
@@ -42,20 +47,20 @@ class BlockUrlsExample: BrowserExampleBase() {
             if (isMainFrame(event.frameId)) {
                 debugDocumentState(event)
             }
-            printlnPro("onFrameAttached - ${event.frameId}")
+            println("onFrameAttached - ${event.frameId}")
         }
 
         page.onFrameDetached { event: FrameDetached ->
             if (isMainFrame(event.frameId)) {
                 debugDocumentState(event)
             }
-            printlnPro("onFrameDetached - " + event.frameId)
+            println("onFrameDetached - " + event.frameId)
         }
 
         page.onFrameNavigated { event: FrameNavigated ->
             if (isMainFrame(event.frame.id)) {
                 debugDocumentState(event)
-                printlnPro(event.javaClass.simpleName + " - " + event.frame.id)
+                println(event.javaClass.simpleName + " - " + event.frame.id)
             }
         }
 
@@ -68,16 +73,16 @@ class BlockUrlsExample: BrowserExampleBase() {
 
         page.onFrameStoppedLoading { event: FrameStoppedLoading ->
             if (isMainFrame(event.frameId)) {
-                printlnPro("[main] onFrameStoppedLoading - ${event.frameId} - ${pageSource.length}")
+                println("[main] onFrameStoppedLoading - ${event.frameId} - ${pageSource.length}")
             } else {
-                printlnPro("onFrameStoppedLoading - ${event.frameId}")
+                println("onFrameStoppedLoading - ${event.frameId}")
             }
-            printlnPro()
+            println()
         }
 
         page.navigate(testUrl)
 
-        printlnPro(Gson().toJson(chrome.version))
+        println(Gson().toJson(chrome.version))
 
 //        readLine()
     }
@@ -86,13 +91,12 @@ class BlockUrlsExample: BrowserExampleBase() {
         return mainFrame.id == frameId
     }
 
-    private fun debugDocumentState(event: Any, message: String = "") {
+    private suspend fun debugDocumentState(event: Any, message: String = "") {
         val evaluate = runtime.evaluate("document.readyState")
-        printlnPro("${event.javaClass.simpleName} ${evaluate.result.value} | message")
+        println("${event.javaClass.simpleName} ${evaluate.result.value} | message")
     }
 }
 
-fun main() {
+suspend fun main() {
     BlockUrlsExample().use { it.run() }
 }
-

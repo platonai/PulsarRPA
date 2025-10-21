@@ -16,13 +16,19 @@ import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.SystemUtils
 import org.slf4j.LoggerFactory
-import java.io.*
+import java.io.BufferedReader
+import java.io.FileFilter
+import java.io.IOException
+import java.io.InputStreamReader
 import java.net.Socket
 import java.nio.channels.FileChannel
 import java.nio.channels.FileLockInterruptionException
 import java.nio.channels.OverlappingFileLockException
 import java.nio.charset.Charset
-import java.nio.file.*
+import java.nio.file.Files
+import java.nio.file.NoSuchFileException
+import java.nio.file.Path
+import java.nio.file.StandardOpenOption
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.atomic.AtomicBoolean
@@ -36,7 +42,7 @@ import kotlin.time.toJavaDuration
  * The chrome launcher
  * */
 class ChromeLauncher constructor(
-    val userDataDir: Path,
+    val userDataDir: Path = AppPaths.CONTEXT_DEFAULT_DIR.resolve("chrome"),
     val options: LauncherOptions = LauncherOptions(),
     private val shutdownHookRegistry: ShutdownHookRegistry = RuntimeShutdownHookRegistry()
 ) : AutoCloseable {

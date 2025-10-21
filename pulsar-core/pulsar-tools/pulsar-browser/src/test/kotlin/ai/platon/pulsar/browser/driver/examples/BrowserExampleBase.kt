@@ -1,3 +1,22 @@
+/*-
+ * #%L
+ * cdt-kotlin-client
+ * %%
+ * Copyright (C) 2025 platon.ai
+ * %%
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * 
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ * 
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ * #L%
+ */
 package ai.platon.pulsar.browser.driver.examples
 
 import ai.platon.pulsar.browser.common.BrowserSettings
@@ -5,12 +24,13 @@ import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
 import ai.platon.pulsar.browser.driver.chrome.DevToolsConfig
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.common.browser.BrowserFiles
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 
 abstract class BrowserExampleBase(val headless: Boolean = false): AutoCloseable {
     val logger = LoggerFactory.getLogger(BrowserExampleBase::class.java)
 
-    open val testUrl = "https://item.jd.com/100001071956.html"
+    open val testUrl = "https://github.com/"
 
     val browserSettings = BrowserSettings()
     val preloadJs = browserSettings.scriptLoader.getPreloadJs()
@@ -27,17 +47,17 @@ abstract class BrowserExampleBase(val headless: Boolean = false): AutoCloseable 
     val browser get() = devTools.browser
     val network get() = devTools.network
     val page get() = devTools.page
-    val mainFrame get() = page.frameTree.frame
+    val mainFrame get() = runBlocking { page.getFrameTree().frame }
     val runtime get() = devTools.runtime
     val emulation get() = devTools.emulation
-    val dom get() = devTools.dom
+    val dom get() = devTools.dOM
     val overlay get() = devTools.overlay
 
-    abstract fun run()
+    abstract suspend fun run()
 
     val pageSource: String
         get() {
-            val evaluation = runtime.evaluate("document.documentElement.outerHTML")
+            val evaluation = runBlocking { runtime.evaluate("document.documentElement.outerHTML") }
             return evaluation.result.value.toString()
         }
 

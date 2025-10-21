@@ -1,9 +1,10 @@
 package ai.platon.pulsar.browser.driver.chrome.impl
 
 import ai.platon.pulsar.browser.driver.chrome.*
+import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
 import ai.platon.pulsar.browser.driver.chrome.util.ProxyClasses
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
+import ai.platon.pulsar.browser.driver.chrome.util.SuspendAwareHandler
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warnForClose
@@ -11,8 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import java.io.ByteArrayOutputStream
 import java.io.IOException
 import java.io.InputStream
-import java.lang.reflect.InvocationHandler
-import java.lang.reflect.Method
 import java.net.ConnectException
 import java.net.HttpURLConnection
 import java.net.URI
@@ -22,8 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 class ChromeImpl(
     override var host: String = LOCALHOST,
-    override var port: Int = 0,
-    var wss: WebSocketServiceFactory
+    override var port: Int = 0
 ) : RemoteChrome {
     companion object {
         const val ABOUT_BLANK_PAGE = "about:blank"
@@ -57,13 +55,7 @@ class ChromeImpl(
      * The Chrome version.
      * */
     override val version get() = _version.value
-    
-    constructor(host: String, port: Int) : this(host, port, object : WebSocketServiceFactory {
-        override fun createWebSocketService(wsUrl: String): Transport {
-            return TransportImpl.create(URI.create(wsUrl))
-        }
-    })
-    
+
     constructor(port: Int) : this(LOCALHOST, port)
     
     @Throws(ChromeIOException::class)
@@ -137,31 +129,37 @@ class ChromeImpl(
     
     @Throws(ChromeIOException::class)
     private fun createDevTools0(version: ChromeVersion, tab: ChromeTab, config: DevToolsConfig): RemoteDevTools {
-        // Create invocation handler
-        val commandHandler = DevToolsInvocationHandler()
-        val commands: MutableMap<Method, Any> = ConcurrentHashMap()
-        val invocationHandler = InvocationHandler { _, method, _ ->
-            commands.computeIfAbsent(method) { ProxyClasses.createProxy(method.returnType, commandHandler) }
-        }
-        
         val browserUrl = version.webSocketDebuggerUrl
             ?: throw ChromeIOException("Invalid web socket url to browser")
-        val browserTransport = wss.createWebSocketService(browserUrl)
-        
+        val browserTransport = KtorTransport.create(URI.create(browserUrl))
+
         // Connect to a tab via web socket
         val debuggerUrl = tab.webSocketDebuggerUrl
             ?: throw ChromeIOException("Invalid web socket url to page")
-        val pageTransport = wss.createWebSocketService(debuggerUrl)
-        
-        // Create concrete dev tools instance from interface
-        return ProxyClasses.createProxyFromAbstract(
+        val pageTransport = KtorTransport.create(URI.create(debuggerUrl))
+
+        val invocationHandler = CachedDevToolsInvocationHandlerProxies(this)
+
+        val devTools: RemoteDevTools = createRemoteDevToolsProxy(browserTransport, pageTransport, config, invocationHandler)
+
+        invocationHandler.commandHandler.devTools = devTools
+
+        return devTools
+    }
+
+    private fun createRemoteDevToolsProxy(
+        browserTransport: Transport, pageTransport: Transport, config: DevToolsConfig,
+        invocationHandler: SuspendAwareHandler
+    ): RemoteDevTools {
+        // Create a class that inherits from ChromeDevToolsImpl and construct an object
+        return ProxyClasses.createCoroutineSupportedProxyFromAbstract(
             ChromeDevToolsImpl::class.java,
             arrayOf(Transport::class.java, Transport::class.java, DevToolsConfig::class.java),
             arrayOf(browserTransport, pageTransport, config),
             invocationHandler
-        ).also { commandHandler.devTools = it }
+        )
     }
-    
+
     /**
      * Sends a request and parses json response as type T.
      *

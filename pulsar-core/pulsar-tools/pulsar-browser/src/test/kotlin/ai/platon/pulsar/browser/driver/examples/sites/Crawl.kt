@@ -6,7 +6,7 @@ class Crawler: BrowserExampleBase() {
 
     override val testUrl = "https://ly.simuwang.com/"
 
-    override fun run() {
+    override suspend fun run() {
         network.setBlockedURLs(listOf("*fireyejs*"))
         network.enable()
 
@@ -17,6 +17,6 @@ class Crawler: BrowserExampleBase() {
     }
 }
 
-fun main() {
+suspend fun main() {
     Crawler().use { it.run() }
 }
