@@ -290,5 +290,206 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         // Hard assertion: ensure 'loaded' class is present in the enhanced DOM snapshot as well
         assertTrue(klass.split(" ").contains("loaded"), "Expected #dynamicContent to have 'loaded' class in enhanced DOM snapshot")
     }
+
+    @Test
+    fun `SnapshotNodeEx bounds and rects are populated correctly`() = runEnhancedWebDriverTest(testURL) { driver ->
+        assertIs<PulsarWebDriver>(driver)
+        val devTools = driver.implementation as RemoteDevTools
+        val service = ChromeCdpDomService(devTools)
+
+        val options = SnapshotOptions(
+            maxDepth = 100,
+            includeAX = true,
+            includeSnapshot = true,
+            includeStyles = true,
+            includePaintOrder = true,
+            includeDOMRects = true,
+            includeScrollAnalysis = true,
+            includeVisibility = true,
+            includeInteractivity = true
+        )
+
+        val root = collectEnhancedRoot(service, options)
+        printlnPro(DomDebug.summarize(root))
+        assertNotNull(root)
+
+        // Test bounds on body element
+        val bodyNode = service.findElement(ElementRefCriteria(cssSelector = "body"))
+        assertNotNull(bodyNode, "Expected body element to be found")
+        val bodySnapshot = bodyNode!!.snapshotNode
+        assertNotNull(bodySnapshot, "Expected body to have snapshot data")
+        
+        // Test bounds property
+        assertNotNull(bodySnapshot!!.bounds, "Expected body snapshot to have bounds")
+        val bounds = bodySnapshot.bounds!!
+        assertTrue(bounds.width > 0, "Expected bounds width to be positive")
+        assertTrue(bounds.height > 0, "Expected bounds height to be positive")
+        printlnPro("Body bounds: x=${bounds.x}, y=${bounds.y}, width=${bounds.width}, height=${bounds.height}")
+        
+        // Test absoluteBounds property
+        assertNotNull(bodySnapshot.absoluteBounds, "Expected body snapshot to have absoluteBounds")
+        val absoluteBounds = bodySnapshot.absoluteBounds!!
+        assertTrue(absoluteBounds.width > 0, "Expected absoluteBounds width to be positive")
+        assertTrue(absoluteBounds.height > 0, "Expected absoluteBounds height to be positive")
+        printlnPro("Body absoluteBounds: x=${absoluteBounds.x}, y=${absoluteBounds.y}, width=${absoluteBounds.width}, height=${absoluteBounds.height}")
+        
+        // Test clientRects property
+        val clientRects = bodySnapshot.clientRects
+        if (clientRects != null) {
+            assertTrue(clientRects.width >= 0, "Expected clientRects width to be non-negative")
+            assertTrue(clientRects.height >= 0, "Expected clientRects height to be non-negative")
+            printlnPro("Body clientRects: x=${clientRects.x}, y=${clientRects.y}, width=${clientRects.width}, height=${clientRects.height}")
+        }
+        
+        // Test scrollRects property
+        val scrollRects = bodySnapshot.scrollRects
+        if (scrollRects != null) {
+            assertTrue(scrollRects.width >= 0, "Expected scrollRects width to be non-negative")
+            assertTrue(scrollRects.height >= 0, "Expected scrollRects height to be non-negative")
+            printlnPro("Body scrollRects: x=${scrollRects.x}, y=${scrollRects.y}, width=${scrollRects.width}, height=${scrollRects.height}")
+        }
+    }
+
+    @Test
+    fun `SnapshotNodeEx bounds on interactive elements`() = runEnhancedWebDriverTest(testURL) { driver ->
+        assertIs<PulsarWebDriver>(driver)
+        val devTools = driver.implementation as RemoteDevTools
+        val service = ChromeCdpDomService(devTools)
+
+        // Generate dynamic content with buttons
+        runCatching { devTools.runtime.evaluate("generateLargeList(100)") }
+        
+        val options = SnapshotOptions(
+            maxDepth = 100,
+            includeAX = true,
+            includeSnapshot = true,
+            includeStyles = true,
+            includePaintOrder = true,
+            includeDOMRects = true,
+            includeScrollAnalysis = true,
+            includeVisibility = true,
+            includeInteractivity = true
+        )
+
+        val root = collectEnhancedRoot(service, options)
+        printlnPro(DomDebug.summarize(root))
+        
+        // Find a button element
+        val buttonNode = service.findElement(ElementRefCriteria(cssSelector = "button"))
+        assertNotNull(buttonNode, "Expected button element to be found")
+        
+        val buttonSnapshot = buttonNode!!.snapshotNode
+        if (buttonSnapshot != null) {
+            printlnPro(DomDebug.summarize(buttonNode))
+            
+            // Test bounds on button
+            if (buttonSnapshot.bounds != null) {
+                val bounds = buttonSnapshot.bounds!!
+                assertTrue(bounds.width >= 0, "Expected button bounds width to be non-negative")
+                assertTrue(bounds.height >= 0, "Expected button bounds height to be non-negative")
+                printlnPro("Button bounds: x=${bounds.x}, y=${bounds.y}, width=${bounds.width}, height=${bounds.height}")
+            }
+            
+            // Test absoluteBounds on button
+            if (buttonSnapshot.absoluteBounds != null) {
+                val absoluteBounds = buttonSnapshot.absoluteBounds!!
+                assertTrue(absoluteBounds.width >= 0, "Expected button absoluteBounds width to be non-negative")
+                assertTrue(absoluteBounds.height >= 0, "Expected button absoluteBounds height to be non-negative")
+                printlnPro("Button absoluteBounds: x=${absoluteBounds.x}, y=${absoluteBounds.y}, width=${absoluteBounds.width}, height=${absoluteBounds.height}")
+            }
+            
+            // Test clientRects on button
+            if (buttonSnapshot.clientRects != null) {
+                val clientRects = buttonSnapshot.clientRects!!
+                assertTrue(clientRects.width >= 0, "Expected button clientRects width to be non-negative")
+                assertTrue(clientRects.height >= 0, "Expected button clientRects height to be non-negative")
+                printlnPro("Button clientRects: x=${clientRects.x}, y=${clientRects.y}, width=${clientRects.width}, height=${clientRects.height}")
+            }
+            
+            // Test scrollRects on button (may be null for non-scrollable elements)
+            if (buttonSnapshot.scrollRects != null) {
+                val scrollRects = buttonSnapshot.scrollRects!!
+                assertTrue(scrollRects.width >= 0, "Expected button scrollRects width to be non-negative")
+                assertTrue(scrollRects.height >= 0, "Expected button scrollRects height to be non-negative")
+                printlnPro("Button scrollRects: x=${scrollRects.x}, y=${scrollRects.y}, width=${scrollRects.width}, height=${scrollRects.height}")
+            }
+        }
+    }
+
+    @Test
+    fun `SnapshotNodeEx scrollRects on scrollable container`() = runEnhancedWebDriverTest(testURL) { driver ->
+        assertIs<PulsarWebDriver>(driver)
+        val devTools = driver.implementation as RemoteDevTools
+        val service = ChromeCdpDomService(devTools)
+
+        // Generate a large scrollable list
+        runCatching { devTools.runtime.evaluate("generateLargeList(1000)") }
+        
+        // Wait for container to be present
+        var hasContainer = false
+        repeat(50) {
+            val ok = runCatching {
+                devTools.runtime.evaluate("document.getElementById('virtualScrollContainer') != null")
+            }.getOrNull()?.result?.value?.toString()?.equals("true", ignoreCase = true) == true
+            if (ok) { hasContainer = true; return@repeat }
+            Thread.sleep(200)
+        }
+        assertTrue(hasContainer, "Expected #virtualScrollContainer to be present")
+
+        val options = SnapshotOptions(
+            maxDepth = 100,
+            includeAX = true,
+            includeSnapshot = true,
+            includeStyles = true,
+            includePaintOrder = true,
+            includeDOMRects = true,
+            includeScrollAnalysis = true,
+            includeVisibility = true,
+            includeInteractivity = true
+        )
+
+        val root = collectEnhancedRoot(service, options)
+        
+        // Find the scrollable container
+        val scrollContainer = service.findElement(ElementRefCriteria(cssSelector = "#virtualScrollContainer"))
+        assertNotNull(scrollContainer, "Expected scroll container to be found")
+        
+        val snapshot = scrollContainer!!.snapshotNode
+        assertNotNull(snapshot, "Expected scroll container to have snapshot data")
+        printlnPro(DomDebug.summarize(scrollContainer))
+        
+        // Test bounds
+        assertNotNull(snapshot!!.bounds, "Expected scroll container to have bounds")
+        val bounds = snapshot.bounds!!
+        assertTrue(bounds.width > 0, "Expected scroll container bounds width to be positive")
+        assertTrue(bounds.height > 0, "Expected scroll container bounds height to be positive")
+        printlnPro("ScrollContainer bounds: x=${bounds.x}, y=${bounds.y}, width=${bounds.width}, height=${bounds.height}")
+        
+        // Test absoluteBounds
+        assertNotNull(snapshot.absoluteBounds, "Expected scroll container to have absoluteBounds")
+        val absoluteBounds = snapshot.absoluteBounds!!
+        assertTrue(absoluteBounds.width > 0, "Expected scroll container absoluteBounds width to be positive")
+        assertTrue(absoluteBounds.height > 0, "Expected scroll container absoluteBounds height to be positive")
+        printlnPro("ScrollContainer absoluteBounds: x=${absoluteBounds.x}, y=${absoluteBounds.y}, width=${absoluteBounds.width}, height=${absoluteBounds.height}")
+        
+        // Test scrollRects - should be present for scrollable elements
+        assertNotNull(snapshot.scrollRects, "Expected scroll container to have scrollRects")
+        val scrollRects = snapshot.scrollRects!!
+        assertTrue(scrollRects.width >= 0, "Expected scroll container scrollRects width to be non-negative")
+        assertTrue(scrollRects.height >= 0, "Expected scroll container scrollRects height to be non-negative")
+        printlnPro("ScrollContainer scrollRects: x=${scrollRects.x}, y=${scrollRects.y}, width=${scrollRects.width}, height=${scrollRects.height}")
+        
+        // ScrollRects height should typically be larger than bounds height for scrollable content
+        // (though this isn't guaranteed in all cases, so we just log it)
+        printlnPro("ScrollRects.height (${scrollRects.height}) vs Bounds.height (${bounds.height})")
+        
+        // Test clientRects
+        if (snapshot.clientRects != null) {
+            val clientRects = snapshot.clientRects!!
+            assertTrue(clientRects.width >= 0, "Expected scroll container clientRects width to be non-negative")
+            assertTrue(clientRects.height >= 0, "Expected scroll container clientRects height to be non-negative")
+            printlnPro("ScrollContainer clientRects: x=${clientRects.x}, y=${clientRects.y}, width=${clientRects.width}, height=${clientRects.height}")
+        }
+    }
 }
 
