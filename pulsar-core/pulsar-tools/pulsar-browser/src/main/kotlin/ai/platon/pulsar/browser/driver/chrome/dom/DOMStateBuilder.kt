@@ -513,10 +513,10 @@ object DOMStateBuilder {
         locatorMap.put(Locator.Type.NODE_ID, node.nodeId.toString(), node)
     }
 
-    private fun createNodeLocator(node: DOMTreeNodeEx, frameIds: List<String>): Locator {
-        // Returns -1 if the list does not contain element.
-        val index = frameIds.indexOf(node.frameId).takeIf { it > 0 } ?: 0
-        val selector = "$index-${node.backendNodeId}"
-        return Locator(Locator.Type.FRAME_BACKEND_NODE_ID, selector)
+    private fun createNodeLocator(node: DOMTreeNodeEx, frameIds: List<String>): FBNLocator {
+        // Returns -1 if the list does not contain element
+        val frameIndex = frameIds.indexOf(node.frameId).takeIf { it > 0 } ?: 0
+        val backendNodeId = node.backendNodeId ?: 0
+        return FBNLocator(frameIndex, backendNodeId)
     }
 }

@@ -1,6 +1,7 @@
 package ai.platon.pulsar.browser.driver.chrome.dom
 
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
+import org.apache.commons.lang3.StringUtils
 
 open class Locator(
     val type: Type,
@@ -65,16 +66,35 @@ open class Locator(
     }
 }
 
-class FBNLocator(selector: String): Locator(Type.FRAME_BACKEND_NODE_ID, selector) {
+class FBNLocator(
+    val frameId: String,
+    val backendNodeId: Int
+): Locator(Type.FRAME_BACKEND_NODE_ID, "$PREFIX$frameId$SEPARATOR$backendNodeId") {
 
     constructor(frameId: Int, backendNodeId: Int): this(frameId.toString(), backendNodeId)
 
-    constructor(frameId: String, backendNodeId: Int): this("$frameId$SEPARATOR$backendNodeId")
-
     companion object {
-        const val SEPARATOR = "-"
+        const val SEPARATOR = ","
         const val PREFIX = "fbn:"
         const val PATTERN = "$PREFIX\\d+$SEPARATOR\\d+"
+
+        fun parse(str: String): FBNLocator? {
+            val trimmed = str.trim()
+            val frameId = StringUtils.substringBetween(trimmed, ":", SEPARATOR).toIntOrNull() ?: 0
+            val backendNodeId = trimmed.substringAfterLast(SEPARATOR).toIntOrNull() ?: return null
+            return FBNLocator(frameId, backendNodeId)
+        }
+
+        fun parseRelaxed(selector: String?): FBNLocator? {
+            var trimmed = selector?.trim() ?: return null
+
+            // Multi selectors are supported: `cssPath`, `xpath:`, `backend:`, `node:`, `hash:`, `fbn`, `index`
+            if (!trimmed.startsWith(PREFIX)) {
+                trimmed = "$PREFIX$selector"
+            }
+
+            return parse(trimmed)
+        }
     }
 }
 
