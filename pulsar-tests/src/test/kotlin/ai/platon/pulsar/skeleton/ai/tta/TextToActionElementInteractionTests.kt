@@ -19,42 +19,6 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
         // Setup is handled by parent class
     }
 
-    // ======== INPUT FIELD TESTS ========
-
-    @Test
-    fun `Make sure interactive elements calculated correctly`() = runEnhancedWebDriverTest(browser) { driver ->
-        driver.navigateTo(ttaUrl1)
-        driver.waitForSelector("body")
-
-        val interactiveElements = textToAction.getInteractiveElements(driver)
-        printlnPro("Extracted ${interactiveElements.size} interactive elements")
-        interactiveElements.forEach { printlnPro(" - ${it.selector} [${it.tagName}] visible=${it.isVisible}") }
-
-        // All returned elements must be visible and one of allowed interactive tags
-        val allowedTags = setOf("input", "select", "textarea", "button", "a")
-        assertTrue(interactiveElements.isNotEmpty(), "Should extract interactive elements from page")
-        assertTrue(interactiveElements.all { it.isVisible }, "All interactive elements should be visible")
-        assertTrue(interactiveElements.all { it.tagName.lowercase() in allowedTags }, "Only interactive tags should be returned")
-
-        // Expected interactive elements on interactive-1.html
-        val expectedSelectors = setOf(
-            "#name",
-            "#colorSelect",
-            "#num1",
-            "#num2",
-            "button[onclick=\"addNumbers()\"]",
-            "button[onclick=\"toggleMessage()\"]",
-        )
-        val selectors = interactiveElements.map { it.selector }.toSet()
-
-        // Must include the expected set (and ideally equal for this page)
-        assertTrue(expectedSelectors.all { it in selectors }, "Should include expected interactive elements: $expectedSelectors, actual: $selectors")
-        assertEquals(expectedSelectors.size, selectors.size, "Should not include non-interactive elements on this page")
-
-        // Ensure some known non-interactive node is not present
-        assertTrue(selectors.none { it.contains("#hiddenMessage") }, "Hidden paragraph should not be included")
-    }
-
     @Test
     fun `When given text input commands then generate appropriate fill actions`() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo(ttaUrl1)

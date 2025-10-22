@@ -1173,7 +1173,7 @@ class BrowserPerceptiveAgent(
         }
     }
 
-    private suspend fun buildUserMessage(instruction: String, browserUseState: BrowserUseState): String {
+    private suspend fun buildUserMessage(goal: String, browserUseState: BrowserUseState): String {
         val his = if (_history.isEmpty()) "(无)" else _history.takeLast(min(8, _history.size)).joinToString("\n")
 
         return """
@@ -1186,7 +1186,7 @@ $his
   "summary": string,
   "suggestions": [string]
 }
-当前目标：$instruction
+当前目标：$goal
 
 		""".trimIndent()
     }

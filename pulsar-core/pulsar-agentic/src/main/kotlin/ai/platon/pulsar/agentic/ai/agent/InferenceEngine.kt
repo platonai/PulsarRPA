@@ -57,8 +57,9 @@ data class ExtractParams(
     val logInferenceToFile: Boolean = false,
 )
 
-data class ObserveParams(
+data class ObserveParams constructor(
     val instruction: String,
+    val overallGoal: String? = null,
     val browserUseState: BrowserUseState,
     val requestId: String = UUID.randomUUID().toString(),
     val userProvidedInstructions: String? = null,

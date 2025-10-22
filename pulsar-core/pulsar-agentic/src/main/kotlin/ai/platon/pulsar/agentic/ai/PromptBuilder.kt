@@ -5,6 +5,7 @@ import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.alwaysFalse
 import java.util.*
 
 class PromptBuilder(val locale: Locale = Locale.CHINESE) {
@@ -300,6 +301,11 @@ $schemaContract
             """, "method": string, "arguments": [{"name": string, "value": string}] """
         } else ""
 
+        // reserved
+        val overallGoalState = if (alwaysFalse() && params.overallGoal != null) {
+            """, "overallGoalState": { "isComplete": boolean, "summary": string, "suggestions": [string] }"""
+        } else ""
+
         val schema = """
 {
   "elements": [
@@ -307,7 +313,7 @@ $schemaContract
       "locator": string,
       "description": string$actionFields
     }
-  ]
+  ]$overallGoalState
 }
 """.let { Strings.compactWhitespaces(it) }
 

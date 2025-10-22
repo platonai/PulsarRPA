@@ -83,7 +83,7 @@ open class TextToAction(
         val fromAgent = instruction.startsWith(TTA_AGENT_SYSTEM_PROMPT_PREFIX_20)
         val systemPrompt = if (fromAgent) instruction else buildOperatorSystemPrompt(instruction)
 
-        val params = ObserveParams(instruction, browserUseState, returnAction = true, logInferenceToFile = true)
+        val params = ObserveParams(instruction, browserUseState = browserUseState, returnAction = true, logInferenceToFile = true)
         val userMessage = buildBrowserUseStatePrompt(params, toolCallLimit)
         val response = if (screenshotB64 != null) {
             chatModel.call(systemPrompt, userMessage, null, screenshotB64, "image/jpeg")
@@ -104,23 +104,20 @@ open class TextToAction(
     }
 
     fun buildBrowserUseStatePrompt(params: ObserveParams, toolCallLimit: Int = 100): String {
-        val observeMessage = promptBuilder.buildObserveUserMessage(params)
+        val observeMessage = promptBuilder.buildObserveUserMessage(params).content
 
         val prompt = """
 每次最多调用 $toolCallLimit 个工具。
 
 $observeMessage
 
-如果任务已经完成，则严格按如下格式输出 JSON 信息：
+如果总体目标已经达成，则严格按如下格式输出 JSON 信息：
 
 {
   "isComplete": true,
   "summary": string,
   "suggestions": [string]
 }
-
-- 提供本次任务小结
-- 提供后续操作3条建议
 
 """
 
@@ -234,114 +231,6 @@ $TTA_AGENT_SYSTEM_PROMPT
     }
 
     internal fun toolCallToDriverLine(tc: ToolCall): String? = ToolCallExecutor.toolCallToExpression(tc)
-
-    suspend fun getInteractiveElements(driver: WebDriver): List<InteractiveElement> {
-        require(driver is PulsarWebDriver)
-        val snapshotOptions = SnapshotOptions()
-
-        val trees = driver.domService.getMultiDOMTrees(options = snapshotOptions)
-        val root = driver.domService.buildEnhancedDomTree(trees)
-
-        fun buildSelector(node: DOMTreeNodeEx): String {
-            val tag = node.nodeName.lowercase()
-            val attrs = node.attributes
-            val id = attrs["id"]?.takeIf { it.isNotBlank() }
-            if (!id.isNullOrBlank()) return "#${'$'}{escapeIdent(id)}"
-
-            val testId = attrs["data-testid"]?.takeIf { it.isNotBlank() }
-            if (!testId.isNullOrBlank()) return "[data-testid=\"${'$'}{escapeAttrValue(testId)}\"]"
-
-            val nameAttr = attrs["name"]?.takeIf { it.isNotBlank() }
-            if (!nameAttr.isNullOrBlank()) return "${'$'}tag[name=\"${'$'}{escapeAttrValue(nameAttr)}\"]"
-
-            val onclick = attrs["onclick"]?.takeIf { it.isNotBlank() }
-            if (!onclick.isNullOrBlank()) return "${'$'}tag[onclick=\"${'$'}{escapeAttrValue(onclick)}\"]"
-
-            val href = attrs["href"]?.takeIf { it.isNotBlank() }
-            if (tag == "a" && !href.isNullOrBlank()) return "a[href=\"${'$'}{escapeAttrValue(href)}\"]"
-
-            val typeAttr = attrs["type"]?.takeIf { it.isNotBlank() }
-            if (!typeAttr.isNullOrBlank()) return "${'$'}tag[type=\"${'$'}{escapeAttrValue(typeAttr)}\"]"
-
-            val classes = attrs["class"]?.trim()?.split(Regex("\\s+"))?.filter { it.isNotBlank() } ?: emptyList()
-            if (classes.isNotEmpty()) {
-                val top = classes.take(2).joinToString("") { ".${'$'}{escapeIdent(it)}" }
-                return "${'$'}tag${'$'}top"
-            }
-
-            return tag
-        }
-
-        fun isInteractiveCandidate(node: DOMTreeNodeEx): Boolean {
-            val tag = node.nodeName.uppercase()
-            val attrs = node.attributes
-            val hasHref = !attrs["href"].isNullOrBlank()
-            val role = node.axNode?.role?.lowercase()
-            val standardInteractive = tag in setOf("INPUT", "TEXTAREA", "SELECT", "BUTTON") || (tag == "A" && hasHref)
-            val roleInteractive = role in setOf("button", "link", "checkbox", "textbox", "combobox", "menuitem")
-            return node.isInteractable == true || standardInteractive || roleInteractive
-        }
-
-        fun boundsOf(node: DOMTreeNodeEx): ElementBounds? {
-            val r = node.snapshotNode?.clientRects ?: node.snapshotNode?.bounds ?: node.absolutePosition
-            return r?.let { ElementBounds(it.x, it.y, it.width, it.height) }
-        }
-
-        fun visible(node: DOMTreeNodeEx, b: ElementBounds?): Boolean {
-            val v = node.isVisible
-            val hasSize = b != null && b.width > 0 && b.height > 0
-            return when (v) {
-                true -> hasSize
-                false -> false
-                null -> hasSize
-            }
-        }
-
-        val results = mutableListOf<Pair<Int, InteractiveElement>>()
-
-        fun traverse(node: DOMTreeNodeEx) {
-            if (isInteractiveCandidate(node)) {
-                val b = boundsOf(node)
-                if (visible(node, b)) {
-                    val attrs = node.attributes
-                    val selector = buildSelector(node)
-                    val tag = node.nodeName.uppercase()
-                    val text = listOfNotNull(
-                        node.axNode?.name?.takeIf { !it.isNullOrBlank() },
-                        attrs["aria-label"],
-                        attrs["title"],
-                        attrs["value"]
-                    ).firstOrNull()?.take(100) ?: ""
-
-                    val element = InteractiveElement(
-                        id = attrs["id"] ?: "",
-                        tagName = tag,
-                        selector = selector,
-                        text = text,
-                        type = attrs["type"],
-                        href = attrs["href"],
-                        className = attrs["class"],
-                        placeholder = attrs["placeholder"],
-                        value = attrs["value"],
-                        isVisible = true,
-                        bounds = b ?: ElementBounds(0.0, 0.0, 0.0, 0.0)
-                    )
-                    val order = node.interactiveIndex ?: Int.MAX_VALUE
-                    results += order to element
-                }
-            }
-            node.children.forEach { traverse(it) }
-            node.shadowRoots.forEach { traverse(it) }
-            node.contentDocument?.let { traverse(it) }
-        }
-
-        traverse(root)
-
-        return results
-            .sortedBy { it.first }
-            .map { it.second }
-            .distinctBy { it.selector }
-    }
 
     companion object {
 
