@@ -666,7 +666,6 @@ waitForNavigation(oldUrl: String = "", timeoutMillis: Long = 5000): Long
 goBack()
 goForward()
 delay(millis: Long = 1000)
-stop()
     """
 
         val SUPPORTED_TOOL_CALLS = TOOL_CALL_LIST.split("\n").filter { it.contains("(") }.map { it.trim() }

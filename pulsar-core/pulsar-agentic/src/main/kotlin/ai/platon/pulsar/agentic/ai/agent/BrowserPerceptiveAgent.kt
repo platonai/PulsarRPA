@@ -422,7 +422,10 @@ class BrowserPerceptiveAgent(
             }
             val results = internalResults.elements.map { ele ->
                 // Multi selectors are supported: `cssPath`, `xpath:`, `backend:`, `node:`, `hash:`, `fbn`, `index`
-                val selector = ele.locator?.trim() ?: return@map ObserveResult(description = "No selector observation")
+                var selector = ele.locator?.trim() ?: return@map ObserveResult(description = "No selector observation")
+                if (selector.matches("\\d+-\\d+".toRegex())) {
+                    selector = "fbn:$selector"
+                }
 
                 val backendNodeId = selector.substringAfterLast("-").toIntOrNull()
                 val locator = Locator.parse(selector)

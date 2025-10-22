@@ -2,9 +2,11 @@ package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.agentic.ai.agent.BrowserPerceptiveAgent
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.ChatModelFactory
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
@@ -80,4 +82,27 @@ class PulsarAgentExtractObserveE2ETest : WebDriverTestBase() {
             )
         )
     }
+
+    @Test
+    fun `test element bounds calculation with positioned elements`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
+        driver.waitForSelector("body", 5000)
+        val agent = BrowserPerceptiveAgent(driver)
+
+        // Test bounds-related functionality
+        val prompt = "分析页面中元素的定位和尺寸信息"
+        val result = agent.observe(prompt)
+        printlnPro(result)
+    }
+
+    @Test
+    fun `test element visibility detection with interactive elements`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
+        driver.waitForSelector("body", 5000)
+        val agent = BrowserPerceptiveAgent(driver)
+
+        // Test visibility-related functionality
+        val prompt = "分析页面中元素的可见性状态"
+        val result = agent.observe(prompt)
+        printlnPro(result)
+    }
+
 }

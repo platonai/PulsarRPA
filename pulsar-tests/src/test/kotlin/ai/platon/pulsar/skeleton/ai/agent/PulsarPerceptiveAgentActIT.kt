@@ -4,6 +4,7 @@ import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.agentic.ai.agent.BrowserPerceptiveAgent
+import ai.platon.pulsar.common.printlnPro
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Tag
@@ -22,6 +23,7 @@ class PulsarPerceptiveAgentActIT : WebDriverTestBase() {
 
         val agent = BrowserPerceptiveAgent(driver)
         val result = agent.act("搜索browser")
+        printlnPro(result)
 
         assertNotNull(result)
         assertTrue(agent.history.isNotEmpty())
@@ -33,8 +35,9 @@ class PulsarPerceptiveAgentActIT : WebDriverTestBase() {
 
         val agent = BrowserPerceptiveAgent(driver)
         val opts = ActionOptions(action = "打开首页")
-        val res = agent.act(opts)
+        val result = agent.act(opts)
+        printlnPro(result)
 
-        assertEquals("打开首页", res.action)
+        assertEquals("打开首页", result.action)
     }
 }

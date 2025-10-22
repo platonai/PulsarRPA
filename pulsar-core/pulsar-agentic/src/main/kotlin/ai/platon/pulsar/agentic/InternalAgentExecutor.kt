@@ -51,21 +51,4 @@ internal class InternalAgentExecutor(
     }
 
     suspend fun execute(action: ActionDescription) = performAct(action)
-
-    @Deprecated("Use act instead", replaceWith = ReplaceWith("act(action)"))
-    suspend fun instruct(prompt: String): InstructionResult {
-        // Converts the prompt into a sequence of webdriver actions using TextToAction.
-        val tta = TextToAction(conf)
-
-        val action = tta.generateWithToolCallSpecs(prompt)
-
-        val result = if (action.toolCall != null) {
-            dispatcher.execute(action.toolCall, driver)
-        } else {
-            val functionCalls = action.expressions.take(1)
-            functionCalls.map { fc -> dispatcher.execute(fc, driver) }.firstOrNull()
-        }
-
-        return InstructionResult(action.expressions, listOf(result), action.modelResponse)
-    }
 }

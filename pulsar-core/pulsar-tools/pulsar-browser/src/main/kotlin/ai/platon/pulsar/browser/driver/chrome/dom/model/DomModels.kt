@@ -309,7 +309,6 @@ data class NanoDOMTreeNode(
     val nodeName: String? = null,
     val nodeValue: String? = null,
     val attributes: Map<String, Any>? = null,
-    val html: String? = null,
     val scrollable: Boolean? = null,   // null means false
     val interactive: Boolean? = null,  // null means false
     val invisible: Boolean? = null,    // null means false
@@ -338,8 +337,9 @@ data class NanoDOMTreeNode(
         private fun newNode(n: MicroDOMTreeNode?): NanoDOMTree? {
             val o = n?.originalNode ?: return null
 
+            // remove locator's prefix to reduce serialized size
             return NanoDOMTree(
-                o.locator,
+                o.locator.substringAfter(":"),
                 o.nodeName,
                 o.nodeValue,
                 o.attributes,

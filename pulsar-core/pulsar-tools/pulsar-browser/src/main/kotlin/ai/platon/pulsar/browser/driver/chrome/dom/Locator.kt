@@ -73,6 +73,8 @@ class FBNLocator(selector: String): Locator(Type.FRAME_BACKEND_NODE_ID, selector
 
     companion object {
         const val SEPARATOR = "-"
+        const val PREFIX = "fbn:"
+        const val PATTERN = "$PREFIX\\d+$SEPARATOR\\d+"
     }
 }
 

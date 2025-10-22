@@ -1,10 +1,10 @@
 package ai.platon.pulsar.agentic.ai.tta
 
-import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
+import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ExperimentalApi
-import ai.platon.pulsar.common.ai.llm.PromptTemplate
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
@@ -13,7 +13,6 @@ import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import ai.platon.pulsar.skeleton.ai.support.ToolCall
-import ai.platon.pulsar.skeleton.common.llm.LLMUtils
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.google.gson.JsonElement
@@ -29,21 +28,9 @@ open class TextToAction(
     val baseDir = AppPaths.get("tta")
 
     val chatModel: BrowserChatModel get() = ChatModelFactory.getOrCreate(conf)
-    val webDriverSourceCodeFile = baseDir.resolve("MiniWebDriver.kt")
-    var webDriverSourceCode: String
-        private set
-    var webDriverSourceCodeUseMessage: String
-        private set
 
     init {
         Files.createDirectories(baseDir)
-
-        LLMUtils.copyWebDriverFile(webDriverSourceCodeFile)
-        webDriverSourceCode = Files.readAllLines(webDriverSourceCodeFile)
-            .filter { it.contains(" fun ") }
-            .joinToString("\n")
-        webDriverSourceCodeUseMessage = PromptTemplate(WEB_DRIVER_SOURCE_CODE_USE_MESSAGE_TEMPLATE)
-            .render(mapOf("webDriverSourceCode" to webDriverSourceCode))
     }
 
     /**
@@ -54,19 +41,11 @@ open class TextToAction(
      * @return The action description
      * */
     @ExperimentalApi
-    open suspend fun generate(
-        instruction: String,
-        driver: WebDriver,
-        screenshotB64: String? = null,
-    ): ActionDescription {
-        val browserUseState = (driver as PulsarWebDriver).domService.getBrowserUseState(SnapshotOptions())
+    open suspend fun generate(instruction: String, driver: WebDriver, screenshotB64: String? = null): ActionDescription {
+        require(driver is PulsarWebDriver) { "PulsarWebDriver is required to use agents" }
+        val browserUseState = driver.domService.getBrowserUseState(SnapshotOptions())
 
-        return generate(instruction, browserUseState.domState, screenshotB64)
-    }
-
-    @ExperimentalApi
-    open suspend fun generate(instruction: String, screenshotB64: String? = null): ActionDescription {
-        return generate(instruction, null, screenshotB64)
+        return generate(instruction, browserUseState, screenshotB64)
     }
 
     /**
@@ -77,13 +56,9 @@ open class TextToAction(
      * @return The action description
      * */
     @ExperimentalApi
-    open suspend fun generate(
-        instruction: String,
-        domState: DOMState? = null,
-        screenshotB64: String? = null
-    ): ActionDescription {
+    open suspend fun generate(instruction: String, browserUseState: BrowserUseState, screenshotB64: String? = null): ActionDescription {
         try {
-            return generateWithToolCallSpecs(instruction, domState, screenshotB64, 1)
+            return generateWithToolCallSpecs(instruction, browserUseState, screenshotB64, 1)
         } catch (e: Exception) {
             val errorResponse = ModelResponse(
                 """
@@ -97,65 +72,57 @@ open class TextToAction(
     }
 
     @ExperimentalApi
-    open suspend fun generateWithToolCallSpecs(
-        instruction: String,
-        domState: DOMState? = null,
-        screenshotB64: String? = null,
-        toolCallLimit: Int = 100,
-    ): ActionDescription {
+    open suspend fun generateResponse(
+        instruction: String, browserUseState: BrowserUseState? = null, screenshotB64: String? = null, toolCallLimit: Int = 100,
+    ): ModelResponse {
         val systemPrompt = when {
             instruction.contains(AGENT_SYSTEM_PROMPT_PREFIX_20) -> instruction
             else -> buildOperatorSystemPrompt(instruction)
         }
 
-        val toolUsePrompt = buildToolUsePrompt(domState, toolCallLimit)
+        val stateMessage = buildBrowserUseStatePrompt(browserUseState, toolCallLimit)
         val response = if (screenshotB64 != null) {
-            chatModel.call(systemPrompt, toolUsePrompt, null, screenshotB64, "image/jpeg")
+            chatModel.call(systemPrompt, stateMessage, null, screenshotB64, "image/jpeg")
         } else {
-            chatModel.call(systemPrompt, toolUsePrompt)
+            chatModel.call(systemPrompt, stateMessage)
         }
+
+        return response
+    }
+
+    @ExperimentalApi
+    private suspend fun generateWithToolCallSpecs(
+        instruction: String, browserUseState: BrowserUseState? = null, screenshotB64: String? = null, toolCallLimit: Int = 100,
+    ): ActionDescription {
+        val response = generateResponse(instruction, browserUseState, screenshotB64, toolCallLimit)
 
         return modelResponseToActionDescription(response, toolCallLimit)
     }
 
-    @ExperimentalApi
-    open suspend fun generateWithSourceCode(
-        command: String,
-        domState: DOMState? = null,
-    ): ModelResponse {
-        val prompt = buildString {
-            appendLine(webDriverSourceCodeUseMessage)
-
-            if (domState != null) {
-                appendLine("可交互元素列表：")
-                appendLine(domState.nanoTreeLazyJson)
-            }
-
-            appendLine(command)
+    fun buildBrowserUseStatePrompt(browserUseState: BrowserUseState? = null, toolCallLimit: Int = 100): String {
+        if (browserUseState == null) {
+            return "每次最多调用 $toolCallLimit 个工具。"
         }
 
-        return chatModel.call(prompt)
-    }
+        val prompt = """
+每次最多调用 $toolCallLimit 个工具。
 
-    fun buildToolUsePrompt(domState: DOMState? = null, toolCallLimit: Int = 100): String {
-        val json = domState?.nanoTreeLazyJson
-        val prompt = buildString {
-            appendLine("每次最多调用 $toolCallLimit 个工具")
+## 可交互元素列表
+${browserUseState.domState.nanoTreeLazyJson}
 
-            if (json != null) {
-                appendLine("可交互元素列表: ")
-                appendLine(json)
-            }
+- 节点唯一定位符 `locator` 由两个整数组成。
+- 所有节点可见，除非 `invisible` == true 显示指定。
+- 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
+- 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
 
-            appendLine()
-        }
+"""
 
         return prompt
     }
 
     fun buildOperatorSystemPrompt(goal: String): String {
         return """
-$AGENT_SYSTEM_PROMPT
+$TTA_AGENT_SYSTEM_PROMPT
 
 用户总目标：$goal
         """.trimIndent()
@@ -240,209 +207,6 @@ $AGENT_SYSTEM_PROMPT
 
     internal fun toolCallToDriverLine(tc: ToolCall): String? = ToolCallExecutor.toolCallToExpression(tc)
 
-    /**
-     * Parse JavaScript result into InteractiveElement objects
-     */
-    private fun parseInteractiveElements(jsResult: Any?): List<InteractiveElement> {
-        if (jsResult == null) return emptyList()
-
-        try {
-            // 处理 JavaScript 返回的结果
-            // 在真实场景中，jsResult 通常是一个包含元素信息的 Map 或 List
-            when (jsResult) {
-                is List<*> -> {
-                    return jsResult.mapNotNull { item ->
-                        parseElementFromMap(item as? Map<String, Any?>)
-                    }
-                }
-
-                is Map<*, *> -> {
-                    // 如果返回的是单个对象，可能包含数组
-                    val elements = jsResult["elements"] as? List<*>
-                    return elements?.mapNotNull { item ->
-                        parseElementFromMap(item as? Map<String, Any?>)
-                    } ?: emptyList()
-                }
-
-                is String -> {
-                    // 如果返回的是 JSON 字符串，需要解析
-                    return parseElementsFromJsonString(jsResult)
-                }
-            }
-        } catch (e: Exception) {
-            logger.warn("Error parsing interactive elements: {}", e.message)
-        }
-
-        return emptyList()
-    }
-
-    /**
-     * Parse a single element from a Map structure
-     */
-    private fun parseElementFromMap(elementMap: Map<String, Any?>?): InteractiveElement? {
-        if (elementMap == null) return null
-
-        try {
-            val bounds = elementMap["bounds"] as? Map<String, Any?> ?: return null
-
-            return InteractiveElement(
-                id = elementMap["id"] as? String ?: "",
-                tagName = elementMap["tagName"] as? String ?: "",
-                selector = elementMap["selector"] as? String ?: "",
-                text = (elementMap["text"] as? String ?: "").take(100),
-                type = elementMap["type"] as? String,
-                href = elementMap["href"] as? String,
-                className = elementMap["className"] as? String,
-                placeholder = elementMap["placeholder"] as? String,
-                value = elementMap["value"] as? String,
-                isVisible = elementMap["isVisible"] as? Boolean ?: false,
-                bounds = ElementBounds(
-                    x = (bounds["x"] as? Number)?.toDouble() ?: 0.0,
-                    y = (bounds["y"] as? Number)?.toDouble() ?: 0.0,
-                    width = (bounds["width"] as? Number)?.toDouble() ?: 0.0,
-                    height = (bounds["height"] as? Number)?.toDouble() ?: 0.0
-                )
-            )
-        } catch (e: Exception) {
-            logger.warn("Error parsing element from map: {}", e.message)
-            return null
-        }
-    }
-
-    /**
-     * Parse elements from JSON string using Gson
-     */
-    internal fun parseElementsFromJsonString(jsonString: String): List<InteractiveElement> {
-        if (jsonString.isBlank()) return emptyList()
-
-        // Support strings like: JsEvaluation(value=[ {...}, {...} ], unserializableValue=null, ...)
-        val normalized = when {
-            jsonString.trimStart().startsWith("[") || jsonString.trimStart().startsWith("{") -> jsonString
-            jsonString.contains("JsEvaluation(") -> {
-                // Try to extract the substring that starts from the first '[' and ends at the matching ']'
-                val start = jsonString.indexOf('[')
-                val end = jsonString.lastIndexOf(']')
-                if (start >= 0 && end > start) jsonString.substring(start, end + 1) else jsonString
-            }
-
-            else -> jsonString
-        }
-
-        return try {
-            val root = JsonParser.parseString(normalized)
-            val arr = when {
-                root.isJsonArray -> root.asJsonArray
-                root.isJsonObject && root.asJsonObject.get("elements")?.isJsonArray == true -> root.asJsonObject.getAsJsonArray(
-                    "elements"
-                )
-
-                else -> return emptyList()
-            }
-            arr.mapNotNull { el ->
-                if (!el.isJsonObject) return@mapNotNull null
-                val obj = el.asJsonObject
-                val boundsObj = obj.get("bounds")?.takeIf { it.isJsonObject }?.asJsonObject
-                val bounds = ElementBounds(
-                    x = boundsObj?.get("x")?.takeIf { it.isJsonPrimitive }?.asDouble ?: 0.0,
-                    y = boundsObj?.get("y")?.takeIf { it.isJsonPrimitive }?.asDouble ?: 0.0,
-                    width = boundsObj?.get("width")?.takeIf { it.isJsonPrimitive }?.asDouble ?: 0.0,
-                    height = boundsObj?.get("height")?.takeIf { it.isJsonPrimitive }?.asDouble ?: 0.0
-                )
-                InteractiveElement(
-                    id = obj.get("id")?.takeIf { it.isJsonPrimitive }?.asString ?: "",
-                    tagName = obj.get("tagName")?.takeIf { it.isJsonPrimitive }?.asString ?: "",
-                    selector = obj.get("selector")?.takeIf { it.isJsonPrimitive }?.asString ?: "",
-                    text = obj.get("text")?.takeIf { it.isJsonPrimitive }?.asString?.take(100) ?: "",
-                    type = obj.get("type")?.takeIf { it.isJsonPrimitive }?.asString,
-                    href = obj.get("href")?.takeIf { it.isJsonPrimitive }?.asString,
-                    className = obj.get("className")?.takeIf { it.isJsonPrimitive }?.asString,
-                    placeholder = obj.get("placeholder")?.takeIf { it.isJsonPrimitive }?.asString,
-                    value = obj.get("value")?.takeIf { it.isJsonPrimitive }?.asString,
-                    isVisible = obj.get("isVisible")?.takeIf { it.isJsonPrimitive }?.asBoolean ?: false,
-                    bounds = bounds
-                )
-            }
-        } catch (e: Exception) {
-            logger.warn("Failed to parse elements JSON: {}", e.message)
-            emptyList()
-        }
-    }
-
-    // Make extraction helpers internal for tests
-    internal fun extractSelector(command: String): String? {
-        val patterns = listOf(
-            // ID selectors
-            """['"](#[^'"]+)['"]""".toRegex(),
-            // Class selectors (allow dot followed by any non-quote/non-space chars)
-            """['"](\.[^'"\s]+)['"]""".toRegex(),
-            // Attribute selectors
-            """['"](\[[^]]+])['"]""".toRegex(),
-            // Fallback: any quoted token starting with a letter
-            """['"]([a-zA-Z][^'"]*?)['"]""".toRegex()
-        )
-        for (pattern in patterns) {
-            val match = pattern.find(command)
-            if (match != null) return match.groupValues[1]
-        }
-        return null
-    }
-
-    internal fun extractSelectorAndText(command: String): Pair<String?, String?> {
-        val patterns = listOf(
-            """fill\s*\(\s*['"]([^'"]+)['"]\s*,\s*['"]([^'"]*)['"]\s*\)""".toRegex(),
-            """type\s*\(\s*['"]([^'"]+)['"]\s*,\s*['"]([^'"]*)['"]\s*\)""".toRegex()
-        )
-        for (pattern in patterns) {
-            val match = pattern.find(command)
-            if (match != null && match.groupValues.size >= 3) return Pair(match.groupValues[1], match.groupValues[2])
-        }
-        return Pair(null, null)
-    }
-
-    internal fun extractRatio(command: String): Double? {
-        val patterns = listOf(
-            """scrollToMiddle\s*\(\s*(\d*\.?\d+)\s*\)""".toRegex(),
-            """(\d*\.?\d+)""".toRegex()
-        )
-        for (pattern in patterns) {
-            val match = pattern.find(command)
-            if (match != null) return match.groupValues[1].toDoubleOrNull()
-        }
-        return null
-    }
-
-    internal fun extractCount(command: String): Int? {
-        val patterns = listOf(
-            """(?:scrollDown|scrollUp)\s*\(\s*(\d+)\s*\)""".toRegex(),
-            """(\d+)""".toRegex()
-        )
-        for (pattern in patterns) {
-            val match = pattern.find(command)
-            if (match != null) return match.groupValues[1].toIntOrNull()
-        }
-        return null
-    }
-
-    internal fun extractSelectorAndTimeout(command: String): Pair<String?, Long?> {
-        val selectorPattern = """waitForSelector\s*\(\s*['"]([^'"]+)['"]""".toRegex()
-        val timeoutPattern = """(\d+)L?""".toRegex()
-        val selector = selectorPattern.find(command)?.groupValues?.get(1)
-        val timeout = timeoutPattern.findAll(command).lastOrNull()?.groupValues?.get(1)?.toLongOrNull()
-        return Pair(selector, timeout)
-    }
-
-    internal fun extractUrl(command: String): String? {
-        val patterns = listOf(
-            """navigateTo\s*\(\s*['"]([^'"]+)['"]""".toRegex(),
-            """['"]((https?://[^'"]+))['"]""".toRegex()
-        )
-        for (pattern in patterns) {
-            val match = pattern.find(command)
-            if (match != null) return match.groupValues[1]
-        }
-        return null
-    }
-
     suspend fun getInteractiveElements(driver: WebDriver): List<InteractiveElement> {
         require(driver is PulsarWebDriver)
         val snapshotOptions = SnapshotOptions()
@@ -450,11 +214,7 @@ $AGENT_SYSTEM_PROMPT
         val trees = driver.domService.getMultiDOMTrees(options = snapshotOptions)
         val root = driver.domService.buildEnhancedDomTree(trees)
 
-        // Basic helpers for selector building
-        fun escapeIdent(s: String): String = s.replace(Regex("""([ #.:\\[\\]'""+~>])"""), "\\\\$1")
-        fun escapeAttrValue(s: String): String = s.replace("\"", "\\\"")
-
-        fun buildSelector(node: ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx): String {
+        fun buildSelector(node: DOMTreeNodeEx): String {
             val tag = node.nodeName.lowercase()
             val attrs = node.attributes
             val id = attrs["id"]?.takeIf { it.isNotBlank() }
@@ -484,7 +244,7 @@ $AGENT_SYSTEM_PROMPT
             return tag
         }
 
-        fun isInteractiveCandidate(node: ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx): Boolean {
+        fun isInteractiveCandidate(node: DOMTreeNodeEx): Boolean {
             val tag = node.nodeName.uppercase()
             val attrs = node.attributes
             val hasHref = !attrs["href"].isNullOrBlank()
@@ -494,12 +254,12 @@ $AGENT_SYSTEM_PROMPT
             return node.isInteractable == true || standardInteractive || roleInteractive
         }
 
-        fun boundsOf(node: ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx): ElementBounds? {
+        fun boundsOf(node: DOMTreeNodeEx): ElementBounds? {
             val r = node.snapshotNode?.clientRects ?: node.snapshotNode?.bounds ?: node.absolutePosition
             return r?.let { ElementBounds(it.x, it.y, it.width, it.height) }
         }
 
-        fun visible(node: ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx, b: ElementBounds?): Boolean {
+        fun visible(node: DOMTreeNodeEx, b: ElementBounds?): Boolean {
             val v = node.isVisible
             val hasSize = b != null && b.width > 0 && b.height > 0
             return when (v) {
@@ -511,7 +271,7 @@ $AGENT_SYSTEM_PROMPT
 
         val results = mutableListOf<Pair<Int, InteractiveElement>>()
 
-        fun traverse(node: ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx) {
+        fun traverse(node: DOMTreeNodeEx) {
             if (isInteractiveCandidate(node)) {
                 val b = boundsOf(node)
                 if (visible(node, b)) {
@@ -555,37 +315,9 @@ $AGENT_SYSTEM_PROMPT
             .distinctBy { it.selector }
     }
 
-    /**
-     * deprecated, use DomService to build interactive element instead
-     * */
-    @Deprecated("use DomService to build interactive element instead")
-    suspend fun extractInteractiveElementsDeferred(driver: WebDriver): List<InteractiveElement> {
-        try {
-            // If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression).
-            val result = driver.evaluateDetail(EXTRACT_INTERACTIVE_ELEMENTS_EXPRESSION)
-
-            // NOTE: Do NOT coerce to string here; parseInteractiveElements can handle List/Map/JSON string
-            val elements = parseInteractiveElements(result?.value)
-            // Kotlin-side safety filter: only visible interactive controls
-            val filtered = elements.filter { e ->
-                val tag = e.tagName.lowercase()
-                e.isVisible &&
-                        (tag == "input" || tag == "select" || tag == "textarea" || tag == "button"
-                                || (tag == "a" && !e.href.isNullOrBlank()))
-            }
-
-            // Deduplicate by selector to avoid duplicates from complex pages
-            return filtered.distinctBy { it.selector }
-        } catch (e: Exception) {
-            return emptyList()
-        }
-    }
-
     companion object {
 
-        const val TOOL_CALL_LIST = ToolCallExecutor.TOOL_CALL_LIST
-
-        val AGENT_SYSTEM_PROMPT = """
+        val TTA_AGENT_SYSTEM_PROMPT = """
 你是一个网页通用代理，目标是基于用户目标一步一步完成任务。
 重要指南：
 1) 将复杂动作拆成原子步骤；
@@ -595,165 +327,25 @@ $AGENT_SYSTEM_PROMPT
 5) 始终验证目标元素存在且可见后再执行操作；
 6) 遇到错误时尝试替代方案或优雅终止；
 
-输出严格使用 JSON 字段：
+## 输出严格使用 JSON 字段：
 
 {
   tool_calls: [ { name: string, args: [name: string, value: string] } ]
   taskComplete: boolean
 }
 
-安全要求：
+## 安全要求：
 - 仅操作可见的交互元素
 - 避免快速连续操作，适当等待页面加载
 - 遇到验证码或安全提示时停止执行
 
-工具规范：
-$TOOL_CALL_LIST
+## 工具规范：
+```
+${ToolCallExecutor.TOOL_CALL_LIST}
+```
 
         """.trimIndent()
 
-        val AGENT_SYSTEM_PROMPT_PREFIX_20 = AGENT_SYSTEM_PROMPT.take(20)
-
-        const val WEB_DRIVER_SOURCE_CODE_USE_MESSAGE_TEMPLATE = """
-以下是浏览器自动化的 WebDriver API 接口及其注释，你可以使用这些接口来控制浏览器。
-
-{{webDriverSourceCode}}
-
-WebDriver 代码结束。
-
-如果用户要求你执行浏览器操作，你需要生成一个函数实现用户的需求。
-该函数接收一个 WebDriver 对象，你仅允许使用 WebDriver 接口中的函数。
-你的返回结果仅包含该函数，不需要任何注释或者解释，返回格式如下：
-```kotlin
-suspend fun llmGeneratedFunction(driver: WebDriver) {
-    // 你的代码
-}
-```
-
-请注意：
-1. 如果需要选择页面元素，请使用提供的交互元素列表中的 selector
-2. 对于点击操作，优先选择按钮或链接元素
-3. 对于输入操作，优先选择输入框元素
-4. 如果没有合适的交互元素，请生成一个空的挂起函数
-        """
-
-        const val PULSAR_SESSION_SOURCE_CODE_USE_MESSAGE_TEMPLATE = """
-以下是抓取网页的 API 接口及其注释，你可以使用这些接口来抓取网页。
-
-{{pulsarSessionSourceCode}}
-
-PulsarSession 代码结束。
-
-如果用户要求你抓取，你需要生成一个函数实现用户的需求。
-该函数接收一个 PulsarSession 对象，你仅允许使用 PulsarSession 接口中的函数。
-你的返回结果仅包含该函数，不需要任何注释或者解释，返回格式如下：
-```kotlin
-suspend fun llmGeneratedFunction(session: PulsarSession) {
-    // 你的代码
-}
-```
-        """
-
-        // JavaScript code to extract truly interactive elements from the page
-        val EXTRACT_INTERACTIVE_ELEMENTS_EXPRESSION = """
-    (function() {
-        // Basic CSS.escape polyfill
-        if (typeof window.CSS === 'undefined') { window.CSS = {}; }
-        if (!window.CSS.escape) {
-            window.CSS.escape = function(value) {
-                if (value == null) return '';
-                return String(value).replace(/([#.:\[\]"'\\\s>+~])/g, '\\$1');
-            };
-        }
-
-        const isVisible = (el) => {
-            const style = window.getComputedStyle(el);
-            if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') return false;
-            const rect = el.getBoundingClientRect();
-            return rect.width > 0 && rect.height > 0;
-        };
-
-        const isDisabled = (el) => el.hasAttribute('disabled') || el.getAttribute('aria-disabled') === 'true';
-
-        const buildSelector = (el) => {
-            const tag = el.tagName.toLowerCase();
-            if (el.id) return '#' + CSS.escape(el.id);
-            const testId = el.getAttribute('data-testid');
-            if (testId) return `[data-testid="${'$'}{CSS.escape(testId)}"]`;
-            const nameAttr = el.getAttribute('name');
-            if (nameAttr) return `${'$'}{tag}[name="${'$'}{CSS.escape(nameAttr)}"]`;
-            if (el.hasAttribute('onclick')) {
-                const oc = el.getAttribute('onclick').replace(/"/g, '\\"');
-                return `${'$'}{tag}[onclick="${'$'}{oc}"]`;
-            }
-            if (tag === 'a' && el.getAttribute('href')) {
-                const href = el.getAttribute('href').replace(/"/g, '\\"');
-                return `a[href="${'$'}{href}"]`;
-            }
-            const typeAttr = el.getAttribute('type');
-            if (typeAttr) return `${'$'}{tag}[type="${'$'}{CSS.escape(typeAttr)}"]`;
-            // Fallback to nth-of-type path
-            let path = tag;
-            let node = el;
-            while (node && node.parentElement) {
-                const parent = node.parentElement;
-                if (parent.id) {
-                    const idx = Array.from(parent.children).filter(c => c.tagName === node.tagName).indexOf(node) + 1;
-                    path = parent.tagName.toLowerCase() + '#' + CSS.escape(parent.id) + ' > ' + node.tagName.toLowerCase() + `:nth-of-type(${'$'}{idx})`;
-                    break;
-                } else {
-                    const idx = Array.from(parent.children).filter(c => c.tagName === node.tagName).indexOf(node) + 1;
-                    path = parent.tagName.toLowerCase() + ' > ' + node.tagName.toLowerCase() + `:nth-of-type(${'$'}{idx})`;
-                }
-                node = parent;
-            }
-            return path;
-        };
-
-        const candidates = new Set();
-        // Form controls and standard interactive elements
-        document.querySelectorAll('input, textarea, select, button, a[href]').forEach(el => candidates.add(el));
-        // Elements with explicit interactivity
-        document.querySelectorAll('[onclick], [contenteditable="true"], [role="button"], [role="link"]').forEach(el => candidates.add(el));
-
-        const interactiveTags = new Set(['INPUT','TEXTAREA','SELECT','BUTTON','A']);
-        const hiddenInputTypes = new Set(['hidden']);
-
-        const elements = [];
-        candidates.forEach(el => {
-            const tag = el.tagName;
-            const type = (el.getAttribute('type') || '').toLowerCase();
-            if (!isVisible(el)) return;
-            if (isDisabled(el)) return;
-            if (tag === 'INPUT' && hiddenInputTypes.has(type)) return;
-
-            // Accept if it's a known interactive tag or has onclick/contenteditable/role
-            const hasInteractiveRole = el.hasAttribute('onclick') || el.getAttribute('contenteditable') === 'true' || ['button','link'].includes((el.getAttribute('role')||'').toLowerCase());
-            const isStandardInteractive = interactiveTags.has(tag) && (tag !== 'A' || el.hasAttribute('href'));
-            if (!hasInteractiveRole && !isStandardInteractive) return;
-
-            const selector = buildSelector(el);
-            const bounds = el.getBoundingClientRect();
-            elements.push({
-                id: el.id || '',
-                tagName: tag,
-                selector: selector,
-                text: (el.innerText || '').trim(),
-                type: el.getAttribute('type') || null,
-                href: el.getAttribute('href') || null,
-                className: el.className || null,
-                placeholder: el.getAttribute('placeholder') || null,
-                value: (el.value !== undefined ? String(el.value) : null),
-                isVisible: true,
-                bounds: { x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height }
-            });
-        });
-
-        // Deduplicate by selector
-        const seen = new Set();
-        let finalElements = elements.filter(e => !seen.has(e.selector) && seen.add(e.selector));
-        return JSON.stringify(finalElements)
-    })();
-""".trimIndent()
+        val AGENT_SYSTEM_PROMPT_PREFIX_20 = TTA_AGENT_SYSTEM_PROMPT.take(20)
     }
 }

@@ -249,6 +249,7 @@ Be comprehensive: if there are multiple elements that may be relevant for future
 $nanoTreeJson
 
 ## 无障碍树说明：
+- 节点唯一定位符 `locator` 由两个整数组成。
 - 所有节点可见，除非 `invisible` == true 显示指定。
 - 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
 - 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
@@ -266,12 +267,10 @@ instruction: $instruction
 $nanoTreeJson
 
 ## Accessibility Tree Specification
-
-### Boolean Attributes:
+- The unique node identifier `locator` consists of two integers.
 - All nodes are visible unless `invisible` == true explicitly.
 - Unless explicitly specified, `scrollable` is false, `interactive` is false.
-### Coordinate & Dimension Attributes:
-- For coordinate and size-related attributes, treated as `0` if no explicit value assigned. Affected attributes: `clientRects`, `scrollRects`, `bounds`.
+- For values in `clientRects`, `scrollRects`, `bounds`, treated as `0` if no explicit value assigned.
 
 ## Current Browser State
 $browserStateJson
@@ -317,7 +316,8 @@ $schemaContract
 你必须返回一个与以下模式匹配的有效 JSON 对象：
 $schema
 
-- 确保 `locator` 与对应的无障碍树节点属性完全匹配，可以定位该节点。
+- 确保 `locator` 与对应的无障碍树节点属性完全匹配，可以定位该节点
+- 工具调用时，`selector` 参数将基于 `locator`
 - 不提供不能确定的参数
 - 禁止包含任何额外文本
 """.trimIndent()
@@ -327,7 +327,8 @@ $schema
 You MUST respond with a valid JSON object matching this schema:
 $schema
 
-- The `locator` must exactly match the corresponding accessibility tree node attributes and be sufficient to locate the node.
+- The `locator` **must exactly match** the corresponding accessibility tree node attributes to ensure correct node identification.
+- During tool invocation, the `selector` parameter **is derived from** the `locator`.
 - Do not provide parameters that cannot be determined
 - Must not include any extra text
 """.trimIndent()
