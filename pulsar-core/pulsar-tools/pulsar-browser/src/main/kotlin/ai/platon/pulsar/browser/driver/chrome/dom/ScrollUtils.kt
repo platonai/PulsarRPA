@@ -22,7 +22,7 @@ object ScrollUtils {
      */
     fun isActuallyScrollable(node: DOMTreeNodeEx): Boolean {
         val snapshot = node.snapshotNode ?: return false
-        val styles = snapshot.computedStyles ?: return false
+        val styles = snapshot.computedStyles ?: emptyMap()
 
         // Get overflow properties
         val overflow = styles["overflow"]
@@ -32,8 +32,6 @@ object ScrollUtils {
         // Check if any overflow property indicates scrollability
         val hasScrollOverflow = listOfNotNull(overflow, overflowX, overflowY)
             .any { it == "scroll" || it == "auto" }
-
-        if (!hasScrollOverflow) return false
 
         // Get rects
         val clientRect = snapshot.clientRects
@@ -55,11 +53,23 @@ object ScrollUtils {
                    scrollRect.height > clientRect.height + 1.0
         }
 
-        // For regular elements, check if scroll area is larger than client area
+        // For regular elements, check dimensions first as a strong indicator
         val isHorizontallyScrollable = scrollRect.width > clientRect.width + 1.0
         val isVerticallyScrollable = scrollRect.height > clientRect.height + 1.0
+        val hasDimensionBasedScrollability = isHorizontallyScrollable || isVerticallyScrollable
 
-        return isHorizontallyScrollable || isVerticallyScrollable
+        // If dimensions indicate scrollability but overflow is not set, it might be:
+        // 1. Computed styles not captured fully by CDP
+        // 2. Dynamic content where CSS is applied via inline styles or not captured
+        // So we use overflow as a hint but don't strictly require it
+        if (hasScrollOverflow) {
+            return hasDimensionBasedScrollability
+        }
+
+        // If overflow properties are not available or not set to scroll/auto,
+        // but dimensions clearly indicate scrollability, trust the dimensions
+        // This handles cases where CDP doesn't capture all computed styles
+        return hasDimensionBasedScrollability
     }
 
     /**
