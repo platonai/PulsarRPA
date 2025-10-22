@@ -1,5 +1,6 @@
 package ai.platon.pulsar.agentic.ai.tta
 
+import ai.platon.pulsar.agentic.ai.agent.ObserveElement
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.support.ToolCall
 
@@ -37,8 +38,14 @@ data class ElementBounds(
     val height: Double
 )
 
+data class ActionResponse(
+    val elements: List<ObserveElement>,
+    val isComplete: Boolean = false,
+    val summary: String? = null,
+    val suggestions: List<String> = emptyList()
+)
+
 data class ActionDescription(
-    @Deprecated("Use toolCall instead.", ReplaceWith("toolCall"))
     val expressions: List<String> = emptyList(),
     val modelResponse: ModelResponse,
     val toolCall: ToolCall? = null,

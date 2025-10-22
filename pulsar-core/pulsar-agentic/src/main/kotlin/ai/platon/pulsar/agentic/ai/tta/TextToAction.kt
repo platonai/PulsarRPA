@@ -103,7 +103,6 @@ open class TextToAction(
         return modelResponseToActionDescription(response, toolCallLimit)
     }
 
-
     fun buildBrowserUseStatePrompt(params: ObserveParams, toolCallLimit: Int = 100): String {
         val observeMessage = promptBuilder.buildObserveUserMessage(params)
 
@@ -173,26 +172,20 @@ $TTA_AGENT_SYSTEM_PROMPT
                         val locator = first.get("locator")?.takeIf { it.isJsonPrimitive }?.asString
                         if (!method.isNullOrBlank()) {
                             val argsMap = linkedMapOf<String, Any?>()
-                            var argIndex = 0
                             if (!locator.isNullOrBlank()) {
-                                argsMap[argIndex.toString()] = locator
-                                argIndex++
+                                argsMap["selector"] = locator
                             }
                             val argsArr = first.get("arguments")
                             if (argsArr?.isJsonArray == true) {
                                 argsArr.asJsonArray.forEach { argEl ->
-                                    when {
-                                        argEl.isJsonObject -> {
-                                            val valueEl = argEl.asJsonObject.get("value")
-                                            val value = if (valueEl != null) jsonElementToKotlin(valueEl) else null
-                                            argsMap[argIndex.toString()] = value?.toString() ?: ""
-                                            argIndex++
+                                    if (argEl.isJsonObject) {
+                                        val name = argEl.asJsonObject.get("name")?.takeIf { it.isJsonPrimitive }?.asString
+                                        val valueEl = argEl.asJsonObject.get("value")
+                                        if (!name.isNullOrBlank()) {
+                                            argsMap[name] = if (valueEl != null) jsonElementToKotlin(valueEl) else null
                                         }
-                                        argEl.isJsonPrimitive -> {
-                                            argsMap[argIndex.toString()] = argEl.asString
-                                            argIndex++
-                                        }
-                                        else -> { /* ignore */ }
+                                    } else if (argEl.isJsonPrimitive) {
+                                        // No name provided; skip to keep strict schema
                                     }
                                 }
                             }
