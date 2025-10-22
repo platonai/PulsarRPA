@@ -1,5 +1,7 @@
 package ai.platon.pulsar.agentic.ai.tta
 
+import ai.platon.pulsar.agentic.ai.PromptBuilder
+import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
@@ -24,6 +26,8 @@ open class TextToAction(
     val conf: ImmutableConfig
 ) {
     private val logger = getLogger(this)
+
+    private val promptBuilder = PromptBuilder()
 
     val baseDir = AppPaths.get("tta")
 
@@ -73,18 +77,18 @@ open class TextToAction(
 
     @ExperimentalApi
     open suspend fun generateResponse(
-        instruction: String, browserUseState: BrowserUseState? = null, screenshotB64: String? = null, toolCallLimit: Int = 100,
+        instruction: String, browserUseState: BrowserUseState, screenshotB64: String? = null, toolCallLimit: Int = 100,
     ): ModelResponse {
-        val systemPrompt = when {
-            instruction.contains(AGENT_SYSTEM_PROMPT_PREFIX_20) -> instruction
-            else -> buildOperatorSystemPrompt(instruction)
-        }
+        // instruction from agent: agent guide + tool specs + overall goal + last action summary
+        val fromAgent = instruction.startsWith(TTA_AGENT_SYSTEM_PROMPT_PREFIX_20)
+        val systemPrompt = if (fromAgent) instruction else buildOperatorSystemPrompt(instruction)
 
-        val stateMessage = buildBrowserUseStatePrompt(browserUseState, toolCallLimit)
+        val params = ObserveParams(instruction, browserUseState, returnAction = true, logInferenceToFile = true)
+        val userMessage = buildBrowserUseStatePrompt(params, toolCallLimit)
         val response = if (screenshotB64 != null) {
-            chatModel.call(systemPrompt, stateMessage, null, screenshotB64, "image/jpeg")
+            chatModel.call(systemPrompt, userMessage, null, screenshotB64, "image/jpeg")
         } else {
-            chatModel.call(systemPrompt, stateMessage)
+            chatModel.call(systemPrompt, userMessage)
         }
 
         return response
@@ -92,95 +96,126 @@ open class TextToAction(
 
     @ExperimentalApi
     private suspend fun generateWithToolCallSpecs(
-        instruction: String, browserUseState: BrowserUseState? = null, screenshotB64: String? = null, toolCallLimit: Int = 100,
+        instruction: String, browserUseState: BrowserUseState, screenshotB64: String? = null, toolCallLimit: Int = 100,
     ): ActionDescription {
         val response = generateResponse(instruction, browserUseState, screenshotB64, toolCallLimit)
 
         return modelResponseToActionDescription(response, toolCallLimit)
     }
 
-    fun buildBrowserUseStatePrompt(browserUseState: BrowserUseState? = null, toolCallLimit: Int = 100): String {
-        if (browserUseState == null) {
-            return "每次最多调用 $toolCallLimit 个工具。"
-        }
+
+    fun buildBrowserUseStatePrompt(params: ObserveParams, toolCallLimit: Int = 100): String {
+        val observeMessage = promptBuilder.buildObserveUserMessage(params)
 
         val prompt = """
 每次最多调用 $toolCallLimit 个工具。
 
-## 可交互元素列表
-${browserUseState.domState.nanoTreeLazyJson}
+$observeMessage
 
-- 节点唯一定位符 `locator` 由两个整数组成。
-- 所有节点可见，除非 `invisible` == true 显示指定。
-- 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
-- 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
+如果任务已经完成，则严格按如下格式输出 JSON 信息：
+
+{
+  "isComplete": true,
+  "summary": string,
+  "suggestions": [string]
+}
+
+- 提供本次任务小结
+- 提供后续操作3条建议
 
 """
 
         return prompt
     }
 
-    fun buildOperatorSystemPrompt(goal: String): String {
+    fun buildOperatorSystemPrompt(overallGoal: String): String {
         return """
 $TTA_AGENT_SYSTEM_PROMPT
 
-用户总目标：$goal
+总体目标：$overallGoal
         """.trimIndent()
     }
 
-    /**
-     * Response format:
-     *
-     * ```json
-     * {
-     *   tool_calls: [ { name: string, args: [name: string, value: string] } ]
-     *   taskComplete: boolean
-     * }
-     * ```
-     * */
     protected fun modelResponseToActionDescription(response: ModelResponse, toolCallLimit: Int = 1): ActionDescription {
-        val toolCalls = parseToolCalls(response.content).take(toolCallLimit)
-        val functionCalls = if (toolCalls.isNotEmpty()) {
-            toolCalls.mapNotNull { toolCallToDriverLine(it) }
-        } else {
-            response.content.split("\n").map { it.trim() }.filter { it.startsWith("driver.") && it.contains("(") }
-        }
-        return ActionDescription(functionCalls, response, null, null)
-    }
+        val content = response.content
+        // Try new JSON formats first
+        try {
+            val root = JsonParser.parseString(content)
+            if (root.isJsonObject) {
+                val obj = root.asJsonObject
 
-    // Proper JSON parsing with Gson instead of ad-hoc regex
-    internal fun parseToolCalls(json: String): List<ToolCall> {
-        if (json.isBlank()) return emptyList()
-        return try {
-            val root = JsonParser.parseString(json)
-            if (!root.isJsonObject) return emptyList()
-            val arr = root.asJsonObject.getAsJsonArray("tool_calls") ?: return emptyList()
-            arr.mapNotNull { el ->
-                if (!el.isJsonObject) return@mapNotNull null
-                val obj = el.asJsonObject
-                val name = obj.get("name")?.takeIf { it.isJsonPrimitive }?.asString ?: return@mapNotNull null
+                // Completion shape: { isComplete, summary, suggestions }
+                if (obj.has("isComplete")) {
+                    val isComplete = obj.get("isComplete")?.takeIf { it.isJsonPrimitive }?.asBoolean ?: false
+                    val summary = obj.get("summary")?.takeIf { it.isJsonPrimitive }?.asString
+                    val suggestionsEl = obj.get("suggestions")
+                    val suggestions = if (suggestionsEl?.isJsonArray == true) {
+                        suggestionsEl.asJsonArray.mapNotNull { if (it.isJsonPrimitive) it.asString else null }
+                    } else emptyList()
 
-                val args = mutableMapOf<String, Any?>()
-                val argsEl = obj.get("args")
-                if (argsEl?.isJsonObject == true) {
-                    val argsObj: JsonObject = argsEl.asJsonObject
-                    for ((k, v) in argsObj.entrySet()) {
-                        args[k] = jsonElementToKotlin(v)
-                    }
-                } else if (argsEl?.isJsonArray == true) {
-                    val argsArr = argsEl.asJsonArray
-                    // Heuristic: if it's a list of strings, create numbered keys
-                    argsArr.forEachIndexed { index, jsonElement ->
-                        args["arg${index + 1}"] = jsonElementToKotlin(jsonElement)
-                    }
+                    return ActionDescription(
+                        expressions = emptyList(),
+                        modelResponse = response,
+                        toolCall = null,
+                        selectedElement = null,
+                        isComplete = isComplete,
+                        summary = summary,
+                        suggestions = suggestions
+                    )
                 }
 
-                ToolCall("driver", name, args)
+                // Action shape: { elements: [ { locator, description, method, arguments: [{name,value}] } ] }
+                if (obj.has("elements") && obj.get("elements").isJsonArray) {
+                    val arr = obj.getAsJsonArray("elements")
+                    val first = arr.firstOrNull()?.let { if (it.isJsonObject) it.asJsonObject else null }
+                    if (first != null) {
+                        val method = first.get("method")?.takeIf { it.isJsonPrimitive }?.asString
+                        val locator = first.get("locator")?.takeIf { it.isJsonPrimitive }?.asString
+                        if (!method.isNullOrBlank()) {
+                            val argsMap = linkedMapOf<String, Any?>()
+                            var argIndex = 0
+                            if (!locator.isNullOrBlank()) {
+                                argsMap[argIndex.toString()] = locator
+                                argIndex++
+                            }
+                            val argsArr = first.get("arguments")
+                            if (argsArr?.isJsonArray == true) {
+                                argsArr.asJsonArray.forEach { argEl ->
+                                    when {
+                                        argEl.isJsonObject -> {
+                                            val valueEl = argEl.asJsonObject.get("value")
+                                            val value = if (valueEl != null) jsonElementToKotlin(valueEl) else null
+                                            argsMap[argIndex.toString()] = value?.toString() ?: ""
+                                            argIndex++
+                                        }
+                                        argEl.isJsonPrimitive -> {
+                                            argsMap[argIndex.toString()] = argEl.asString
+                                            argIndex++
+                                        }
+                                        else -> { /* ignore */ }
+                                    }
+                                }
+                            }
+
+                            val tc = ToolCall("driver", method, argsMap)
+                            return ActionDescription(
+                                expressions = listOfNotNull(toolCallToDriverLine(tc)).take(1),
+                                modelResponse = response,
+                                toolCall = tc,
+                                selectedElement = null
+                            )
+                        }
+                    }
+                }
             }
         } catch (e: Exception) {
-            logger.warn("Failed to parse tool calls: {}", e.message)
-            emptyList()
+            logger.debug("Model response is not valid JSON or parse failed: {}", e.message)
         }
+
+        // Fallback: plain driver.* expressions
+        val expressions = content.split("\n").map { it.trim() }
+            .filter { it.startsWith("driver.") && it.contains("(") }
+        return ActionDescription(expressions, response, null, null)
     }
 
     private fun jsonElementToKotlin(e: JsonElement): Any? = when {
@@ -319,6 +354,7 @@ $TTA_AGENT_SYSTEM_PROMPT
 
         val TTA_AGENT_SYSTEM_PROMPT = """
 你是一个网页通用代理，目标是基于用户目标一步一步完成任务。
+
 重要指南：
 1) 将复杂动作拆成原子步骤；
 2) 一次仅做一个动作（如：单击一次、输入一次、选择一次）；
@@ -327,16 +363,29 @@ $TTA_AGENT_SYSTEM_PROMPT
 5) 始终验证目标元素存在且可见后再执行操作；
 6) 遇到错误时尝试替代方案或优雅终止；
 
-## 输出严格使用 JSON 字段：
+## 输出严格使用以下两种 JSON 之一：
 
+1) 动作输出（仅含一个元素）：
 {
-  tool_calls: [ { name: string, args: [name: string, value: string] } ]
-  taskComplete: boolean
+  "elements": [
+    {
+      "locator": string,
+      "description": string,
+      "method": string,
+      "arguments": [ { "name": string, "value": string } ]
+    }
+  ]
+}
+
+2) 任务完成输出：
+{
+  "isComplete": true,
+  "summary": string,
+  "suggestions": [ string ]
 }
 
 ## 安全要求：
 - 仅操作可见的交互元素
-- 避免快速连续操作，适当等待页面加载
 - 遇到验证码或安全提示时停止执行
 
 ## 工具规范：
@@ -346,6 +395,6 @@ ${ToolCallExecutor.TOOL_CALL_LIST}
 
         """.trimIndent()
 
-        val AGENT_SYSTEM_PROMPT_PREFIX_20 = TTA_AGENT_SYSTEM_PROMPT.take(20)
+        val TTA_AGENT_SYSTEM_PROMPT_PREFIX_20 = TTA_AGENT_SYSTEM_PROMPT.take(20)
     }
 }

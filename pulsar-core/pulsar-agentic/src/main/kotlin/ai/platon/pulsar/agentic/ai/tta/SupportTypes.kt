@@ -43,6 +43,9 @@ data class ActionDescription(
     val modelResponse: ModelResponse,
     val toolCall: ToolCall? = null,
     val selectedElement: InteractiveElement? = null,
+    val isComplete: Boolean = false,
+    val summary: String? = null,
+    val suggestions: List<String> = emptyList()
 )
 
 data class InstructionResult(

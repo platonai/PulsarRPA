@@ -3,13 +3,6 @@ package ai.platon.pulsar.agentic.ai.agent
 import ai.platon.pulsar.skeleton.ai.support.ToolCall
 import java.time.Instant
 
-data class ElementBounds(
-    val x: Double,
-    val y: Double,
-    val width: Double,
-    val height: Double
-)
-
 /**
  * Configuration for enhanced error handling and retry mechanisms
  */

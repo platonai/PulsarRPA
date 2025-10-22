@@ -35,6 +35,7 @@ internal class InternalAgentExecutor(
         return agent.act(action)
     }
 
+
     suspend fun performAct(action: ActionDescription): InstructionResult {
         if (action.expressions.isEmpty() && action.toolCall == null) {
             return InstructionResult(listOf(), functionResults = listOf(), modelResponse = action.modelResponse)
@@ -51,4 +52,21 @@ internal class InternalAgentExecutor(
     }
 
     suspend fun execute(action: ActionDescription) = performAct(action)
+
+    @Deprecated("Use act instead", replaceWith = ReplaceWith("act(action)"))
+    suspend fun instruct(prompt: String): InstructionResult {
+        // Converts the prompt into a sequence of webdriver actions using TextToAction.
+        val tta = TextToAction(conf)
+
+        val action = tta.generate(prompt, driver)
+
+        val result = if (action.toolCall != null) {
+            dispatcher.execute(action.toolCall, driver)
+        } else {
+            val functionCalls = action.expressions.take(1)
+            functionCalls.map { fc -> dispatcher.execute(fc, driver) }.firstOrNull()
+        }
+
+        return InstructionResult(action.expressions, listOf(result), action.modelResponse)
+    }
 }

@@ -237,7 +237,8 @@ Be comprehensive: if there are multiple elements that may be relevant for future
      * - the current browser state
      * - the response's schema requirement
      * */
-    fun buildObserveUserMessage(instruction: String, params: ObserveParams): SimpleMessage {
+    fun buildObserveUserMessage(params: ObserveParams): SimpleMessage {
+        val instruction = params.instruction
         val browserStateJson = params.browserUseState.browserState.lazyJson
         val nanoTreeJson = params.browserUseState.domState.nanoTreeLazyJson
 
@@ -292,7 +293,7 @@ $schemaContract
      * { "elements": [ { "locator": string, "description": string, "method": string, "arguments": [{"name": string, "value": string}] } ] }
      * ```
      * */
-    private fun buildObserveResultSchemaContract(params: ObserveParams): String {
+    fun buildObserveResultSchemaContract(params: ObserveParams): String {
         // Build schema hint for the LLM (prompt-enforced)
 
         val actionFields = if (params.returnAction) {

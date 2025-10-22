@@ -233,7 +233,7 @@ class InferenceEngine(
         // Build dynamic schema hint for the LLM (prompt-enforced)
         val systemMsg = promptBuilder.buildObserveSystemPrompt(params.userProvidedInstructions)
         // and a function call requirement is contained in the message
-        val userMsg = promptBuilder.buildObserveUserMessage(params.instruction, params)
+        val userMsg = promptBuilder.buildObserveUserMessage(params)
 
         val prefix = if (params.fromAct) "act" else "observe"
         var callFile = ""
