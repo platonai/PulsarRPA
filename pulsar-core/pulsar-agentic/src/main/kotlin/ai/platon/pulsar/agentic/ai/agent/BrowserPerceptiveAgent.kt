@@ -299,7 +299,7 @@ class BrowserPerceptiveAgent(
             includeInteractivity = true
         )
 
-        return domService.getBrowserUseState(snapshotOptions)
+        return domService.getBrowserUseState(snapshotOptions = snapshotOptions)
     }
 
     private suspend fun execute(action: ActionDescription): InstructionResult {

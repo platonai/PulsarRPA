@@ -15,6 +15,15 @@ object DomDebug {
         override fun toString(): String = "depth=$depth, nodes=$nodes, leaves=$leaves"
     }
 
+    // Bounds stats for a tree
+    data class BoundsStats(
+        val zero: Int,
+        val positive: Int,
+        val missing: Int
+    ) {
+        override fun toString(): String = "zero=$zero, positive=$positive, missing=$missing"
+    }
+
     // ----- Stats calculators -----
 
     fun stats(root: DOMTreeNodeEx): TreeStats {
@@ -48,10 +57,51 @@ object DomDebug {
         return TreeStats(maxDepth, count, leaves)
     }
 
+    // ----- Bounds stats calculators -----
+
+    private fun rectOf(n: DOMTreeNodeEx): DOMRect? {
+        val s = n.snapshotNode
+        return s?.clientRects ?: s?.absoluteBounds ?: s?.bounds ?: n.absolutePosition
+    }
+
+    fun boundsStats(root: DOMTreeNodeEx): BoundsStats {
+        var zero = 0
+        var positive = 0
+        var missing = 0
+        fun dfs(n: DOMTreeNodeEx) {
+            val r = rectOf(n)
+            if (r == null) missing++
+            else if (r.width > 0 && r.height > 0) positive++
+            else zero++
+            n.children.forEach { dfs(it) }
+            n.shadowRoots.forEach { dfs(it) }
+            n.contentDocument?.let { dfs(it) }
+        }
+        dfs(root)
+        return BoundsStats(zero, positive, missing)
+    }
+
+    fun boundsStats(root: TinyNode): BoundsStats {
+        var zero = 0
+        var positive = 0
+        var missing = 0
+        fun dfs(n: TinyNode) {
+            val o = n.originalNode
+            val r = rectOf(o)
+            if (r == null) missing++
+            else if (r.width > 0 && r.height > 0) positive++
+            else zero++
+            n.children.forEach { dfs(it) }
+        }
+        dfs(root)
+        return BoundsStats(zero, positive, missing)
+    }
+
     // ----- Summaries -----
 
     fun summarize(trees: TargetMultiTrees): String {
         val s = stats(trees.domTree)
+        val b = boundsStats(trees.domTree)
         return buildString {
             appendLine("TargetAllTrees")
             appendLine("- devicePixelRatio=${trees.devicePixelRatio}")
@@ -61,6 +111,9 @@ object DomDebug {
             appendLine("- snapshotByBackendId.size=${trees.snapshotByBackendId.size}")
             appendLine("- domByBackendId.size=${trees.domByBackendId.size}")
             appendLine("- domTree.stats=($s)")
+            appendLine("- domTree.boundsStats=($b)")
+            // Also report zero vs non-zero bounds counts explicitly
+            appendLine("- domTree.bounds.zeroNonZero=(zero=${b.zero}, nonZero=${b.positive})")
         }
     }
 
@@ -73,6 +126,8 @@ object DomDebug {
         val xPathShort = node.xpath?.takeLast(40) ?: ""
         val counts =
             if (includeTreeStats) stats(node).toString() else "children=${node.children.size} shadowRoots=${node.shadowRoots.size} contentDocument=${node.contentDocument != null}"
+        val b = if (includeTreeStats) boundsStats(node).toString() else null
+        val bz = if (includeTreeStats) boundsStats(node) else null
         return buildString {
             appendLine("DOMTreeNodeEx")
             appendLine("- nodeId=${node.nodeId} backendId=${node.backendNodeId} type=${node.nodeType} name=${node.nodeName}")
@@ -82,6 +137,8 @@ object DomDebug {
             appendLine("- scrollable=${node.isScrollable} visible=${node.isVisible} interactable=${node.isInteractable} index=${node.interactiveIndex}")
             appendLine("- bounds=${node.snapshotNode?.clientRects ?: node.absolutePosition}")
             appendLine("- ${counts}")
+            if (b != null) appendLine("- boundsStats=($b)")
+            if (bz != null) appendLine("- bounds.zeroNonZero=(zero=${bz.zero}, nonZero=${bz.positive})")
         }
     }
 
@@ -99,6 +156,7 @@ object DomDebug {
 
     fun summarize(root: TinyNode): String {
         val s = stats(root)
+        val b = boundsStats(root)
         val original = root.originalNode
         val hashShort = original.elementHash?.take(12)
         return buildString {
@@ -106,6 +164,39 @@ object DomDebug {
             appendLine("- from nodeId=${original.nodeId} name=${original.nodeName} hash=${hashShort}")
             appendLine("- shouldDisplay=${root.shouldDisplay} interactiveIndex=${root.interactiveIndex}")
             appendLine("- stats=($s)")
+            appendLine("- boundsStats=($b)")
+            // Also report zero vs non-zero bounds counts explicitly
+            appendLine("- bounds.zeroNonZero=(zero=${b.zero}, nonZero=${b.positive})")
+        }
+    }
+
+    fun summarize(snapshotNode: Map<Int, SnapshotNodeEx>): String {
+        var zero = 0
+        var positive = 0
+        var missing = 0
+        var withClientRects = 0
+        var withAbsolute = 0
+        var withBounds = 0
+
+        snapshotNode.values.forEach { s ->
+            val r = s.clientRects ?: s.absoluteBounds ?: s.bounds
+            if (s.clientRects != null) withClientRects++
+            if (s.absoluteBounds != null) withAbsolute++
+            if (s.bounds != null) withBounds++
+            when {
+                r == null -> missing++
+                r.width > 0 && r.height > 0 -> positive++
+                else -> zero++
+            }
+        }
+
+        return buildString {
+            appendLine("SnapshotNodeExMap")
+            appendLine("- entries=${snapshotNode.size}")
+            appendLine("- boundsStats=(zero=${zero}, positive=${positive}, missing=${missing})")
+            appendLine("- with: clientRects=${withClientRects}, absoluteBounds=${withAbsolute}, bounds=${withBounds}")
+            // Also report zero vs non-zero bounds counts explicitly
+            appendLine("- bounds.zeroNonZero=(zero=${zero}, nonZero=${positive})")
         }
     }
 
@@ -138,7 +229,7 @@ object DomDebug {
             return (name + id + klass).trim()
         }
         val sample = uniqueNodes.take(3).joinToString(", ") { labelOf(it) }
-        val json = DOMStateBuilder.toJson(state.microTree)
+        val json = DOMSerializer.toJson(state.microTree)
 
         return buildString {
             appendLine("DOMState")

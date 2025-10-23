@@ -47,7 +47,7 @@ open class TextToAction(
     @ExperimentalApi
     open suspend fun generate(instruction: String, driver: WebDriver, screenshotB64: String? = null): ActionDescription {
         require(driver is PulsarWebDriver) { "PulsarWebDriver is required to use agents" }
-        val browserUseState = driver.domService.getBrowserUseState(SnapshotOptions())
+        val browserUseState = driver.domService.getBrowserUseState(snapshotOptions = SnapshotOptions())
 
         return generate(instruction, browserUseState, screenshotB64)
     }

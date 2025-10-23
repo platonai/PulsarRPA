@@ -19,12 +19,6 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
     /**
      * Enhanced capture with absolute coordinates and stacking context analysis.
      * This method provides comprehensive layout information for interaction indices.
-     *
-     * @param includeStyles Whether to capture computed styles
-     * @param includePaintOrder Whether to include paint order information
-     * @param includeDomRects Whether to include DOM rectangles
-     * @param includeAbsoluteCoords Whether to calculate absolute coordinates
-     * @return Map of backendNodeId to enhanced snapshot data with absolute coordinates
      */
     fun captureEnhanced(
         includeStyles: Boolean = true,
@@ -50,11 +44,6 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
         val byBackend = mutableMapOf<Int, SnapshotNodeEx>()
         val strings = capture.strings ?: emptyList()
 
-        // Calculate viewport dimensions for absolute coordinate calculation
-        val viewportBounds = if (includeAbsoluteCoords) {
-            getViewportBounds()
-        } else null
-
         var totalRows = 0
         for (doc in capture.documents ?: emptyList()) {
             val nodeTree = doc.nodes ?: continue
@@ -64,7 +53,8 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
             val nodeIndex: List<Int> = layout.nodeIndex ?: emptyList()
 
             val bounds = layout.bounds ?: emptyList()
-            val offsetRects = layout.offsetRects ?: emptyList()
+            // The offset rect of nodes. Only available when includeDOMRects is set to true
+            val offsetRects = layout.offsetRects
             val scrollRects = layout.scrollRects ?: emptyList()
             val clientRects = layout.clientRects ?: emptyList()
             val paintOrders = if (includePaintOrder) layout.paintOrders ?: emptyList() else emptyList()
@@ -114,16 +104,14 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
                 val cursor = styles["cursor"]
                 val isClickable = cursor in setOf("pointer", "hand")
 
-                // Calculate absolute coordinates if requested
-                val absoluteBounds = if (includeAbsoluteCoords && viewportBounds != null) {
-                    val boundsRect = DOMRect.fromBoundsArray(bounds.getOrNull(row) ?: emptyList())
-                    if (boundsRect != null) calculateAbsoluteCoordinates(boundsRect, viewportBounds, styles) else null
-                } else null
+                // CDP layout.bounds are already document-absolute; treat them as absoluteBounds directly
+                val boundsRect = DOMRect.fromBoundsArray(bounds.getOrNull(row) ?: emptyList())
+                val absoluteBounds = if (includeAbsoluteCoords) boundsRect else null
 
                 val snap = SnapshotNodeEx(
                     isClickable = isClickable,
                     cursorStyle = cursor,
-                    bounds = DOMRect.fromBoundsArray(bounds.getOrNull(row) ?: emptyList()),
+                    bounds = boundsRect,
                     clientRects = DOMRect.fromRectArray(clientRects.getOrNull(row) ?: emptyList()),
                     scrollRects = DOMRect.fromRectArray(scrollRects.getOrNull(row) ?: emptyList()),
                     computedStyles = styles.takeIf { it.isNotEmpty() },
@@ -135,68 +123,16 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
                 byBackend[backendId] = snap
             }
         }
+
+        logger.info("Bounds summary: {}", DomDebug.summarize(byBackend))
+
         tracer?.debug("DOMSnapshot captured | entries={} rowsApprox={} styles={} paintOrder={}", byBackend.size, totalRows, includeStyles, includePaintOrder)
         return byBackend
     }
 
     /**
-     * Get viewport bounds for absolute coordinate calculation.
-     */
-    private fun getViewportBounds(): DOMRect {
-        fun evalNumber(expr: String, fallback: Double): Double = try {
-            val ro = devTools.runtime.evaluate(expr)
-            ro?.result?.value?.toString()?.toDoubleOrNull() ?: ro?.result?.unserializableValue?.toDoubleOrNull() ?: fallback
-        } catch (e: Exception) {
-            tracer?.debug("Runtime.evaluate failed | expr={} err={}", expr, e.toString())
-            fallback
-        }
-        val w = evalNumber("window.innerWidth", 1024.0)
-        val h = evalNumber("window.innerHeight", 768.0)
-        return DOMRect(x = 0.0, y = 0.0, width = w, height = h)
-    }
-
-    /**
-     * Calculate absolute coordinates based on viewport and element styles.
-     */
-    private fun calculateAbsoluteCoordinates(
-        bounds: DOMRect,
-        viewportBounds: DOMRect,
-        styles: Map<String, String>
-    ): DOMRect {
-        val position = styles["position"] ?: "static"
-
-        return when (position) {
-            "fixed" -> {
-                // Fixed positioning is relative to viewport
-                bounds
-            }
-            "absolute" -> {
-                // Absolute positioning - nearest positioned ancestor unknown at this stage; return as-is
-                bounds
-            }
-            "relative" -> {
-                // Relative positioning - offset from normal position
-                val top = styles["top"]?.toDoubleOrNull() ?: 0.0
-                val left = styles["left"]?.toDoubleOrNull() ?: 0.0
-                bounds.copy(
-                    x = bounds.x + left,
-                    y = bounds.y + top
-                )
-            }
-            else -> {
-                // Static positioning - use bounds as-is
-                bounds
-            }
-        }
-    }
-
-
-    /**
      * Build a mapping from backendNodeId to EnhancedSnapshotNode.
      * This is the primary method for associating snapshot data with DOM nodes.
-     *
-     * @param includeStyles Whether to capture computed styles
-     * @return Map of backendNodeId to snapshot data
      */
     fun captureByBackendNodeId(
         includeStyles: Boolean = true,
@@ -229,7 +165,6 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
             val nodeIndex: List<Int> = layout.nodeIndex ?: emptyList()
 
             val bounds = layout.bounds ?: emptyList()
-            val offsetRects = layout.offsetRects ?: emptyList()
             val scrollRects = layout.scrollRects ?: emptyList()
             val clientRects = layout.clientRects ?: emptyList()
             val paintOrders = if (includePaintOrder) layout.paintOrders ?: emptyList() else emptyList()

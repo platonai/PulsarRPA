@@ -7,7 +7,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.*
  */
 interface DomService {
 
-    suspend fun getBrowserUseState(snapshotOptions: SnapshotOptions): BrowserUseState
+    suspend fun getBrowserUseState(target: PageTarget = PageTarget(), snapshotOptions: SnapshotOptions): BrowserUseState
 
     /**
      * Collect all trees (DOM, AX, Snapshot) for the given target.

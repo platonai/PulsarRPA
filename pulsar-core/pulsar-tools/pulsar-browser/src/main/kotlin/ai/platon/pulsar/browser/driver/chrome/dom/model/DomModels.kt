@@ -211,7 +211,38 @@ data class DOMTreeNodeEx(
     // Visibility and interaction
     val isInteractable: Boolean? = null,
     val interactiveIndex: Int? = null
-)
+) {
+    fun textContent(): String {
+        val sb = StringBuilder()
+
+        fun appendToken(s: String?) {
+            val t = s?.trim()
+            if (!t.isNullOrEmpty()) {
+                if (sb.isNotEmpty()) sb.append(' ')
+                sb.append(t)
+            }
+        }
+
+        when (nodeType) {
+            NodeType.TEXT_NODE -> appendToken(nodeValue)
+            else -> {
+                // Prefer accessible name if present
+                appendToken(axNode?.name)
+                // Include meaningful attributes
+                if (attributes.isNotEmpty()) {
+                    DefaultIncludeAttributes.ATTRIBUTES.forEach { key ->
+                        attributes[key]?.let { appendToken(it) }
+                    }
+                }
+            }
+        }
+
+        // Recurse into descendants
+        children.forEach { appendToken(it.textContent()) }
+
+        return sb.toString().replace(Regex("\\s+"), " ").trim()
+    }
+}
 
 typealias DOMTreeEx = DOMTreeNodeEx
 
