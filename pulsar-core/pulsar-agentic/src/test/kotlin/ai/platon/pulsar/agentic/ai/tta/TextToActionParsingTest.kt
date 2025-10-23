@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 private class TestableTextToAction(conf: ImmutableConfig): TextToAction(conf) {
-    fun parse(response: ModelResponse): ActionDescription = modelResponseToActionDescription(response, 1)
+    fun parse(response: ModelResponse): ActionDescription = modelResponseToActionDescription(response)
 }
 
 class TextToActionParsingTest {

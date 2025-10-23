@@ -95,7 +95,7 @@ open class TextToAction(
         return modelResponseToActionDescription(response, browserUseState)
     }
 
-    protected fun modelResponseToActionDescription(response: ModelResponse, browserUseState: BrowserUseState): ActionDescription {
+    protected fun modelResponseToActionDescription(response: ModelResponse, browserUseState: BrowserUseState? = null): ActionDescription {
         val content = response.content
         // Try new JSON formats first
         try {
@@ -168,9 +168,13 @@ open class TextToAction(
         method: String,
         argsMap: Map<String, Any?>,
         locator: String?,
-        browserUseState: BrowserUseState
+        browserUseState: BrowserUseState? = null,
     ): ActionDescription {
         val toolCall = ToolCall("driver", method, argsMap)
+
+        if (browserUseState == null) {
+            return ActionDescription(modelResponse = response, toolCall = toolCall)
+        }
 
         val fbnLocator = browserUseState.domState.getAbsoluteFBNLocator(locator)
         val node = if (fbnLocator != null) browserUseState.domState.locatorMap[fbnLocator] else null
