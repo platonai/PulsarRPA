@@ -1,6 +1,7 @@
 package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.agentic.ai.agent.ObserveElement
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.support.ToolCall
 
@@ -45,10 +46,14 @@ data class ActionResponse(
     val suggestions: List<String> = emptyList()
 )
 
-data class ActionDescription(
+data class ActionDescription constructor(
     val expressions: List<String> = emptyList(),
     val modelResponse: ModelResponse,
     val toolCall: ToolCall? = null,
+    val locator: String? = null,
+    val xpath: String? = null,
+    val node: DOMTreeNodeEx? = null,
+    @Deprecated("Use node instead", ReplaceWith("node"))
     val selectedElement: InteractiveElement? = null,
     val isComplete: Boolean = false,
     val summary: String? = null,

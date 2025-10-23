@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ExperimentalApi
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.serialize.json.Pson
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
@@ -150,8 +151,6 @@ $TTA_AGENT_SYSTEM_PROMPT
                     return ActionDescription(
                         expressions = emptyList(),
                         modelResponse = response,
-                        toolCall = null,
-                        selectedElement = null,
                         isComplete = isComplete,
                         summary = summary,
                         suggestions = suggestions
@@ -186,10 +185,17 @@ $TTA_AGENT_SYSTEM_PROMPT
                             }
 
                             val tc = ToolCall("driver", method, argsMap)
+
+                            val locator = browserUseState.domState.getAbsoluteFBNLocator(locator)
+                            val node = if (locator != null) browserUseState.domState.locatorMap[locator] else null
+
                             return ActionDescription(
                                 expressions = listOfNotNull(toolCallToDriverLine(tc)).take(1),
                                 modelResponse = response,
                                 toolCall = tc,
+                                locator = locator?.absoluteSelector,
+                                xpath = node?.xpath,
+                                node = node,
                                 selectedElement = null
                             )
                         }
@@ -203,7 +209,7 @@ $TTA_AGENT_SYSTEM_PROMPT
         // Fallback: plain driver.* expressions
         val expressions = content.split("\n").map { it.trim() }
             .filter { it.startsWith("driver.") && it.contains("(") }
-        return ActionDescription(expressions, response, null, null)
+        return ActionDescription(expressions, response)
     }
 
     private fun jsonElementToKotlin(e: JsonElement): Any? = when {
