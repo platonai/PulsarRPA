@@ -1,5 +1,7 @@
 package ai.platon.pulsar.agentic.ai.tta
 
+import ai.platon.pulsar.agentic.ai.agent.ObserveElement
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.support.ToolCall
 
@@ -37,12 +39,25 @@ data class ElementBounds(
     val height: Double
 )
 
-data class ActionDescription(
-    @Deprecated("Use toolCall instead.", ReplaceWith("toolCall"))
-    val expressions: List<String> = emptyList(),
+data class ActionResponse(
+    val elements: List<ObserveElement>,
+    val isComplete: Boolean = false,
+    val summary: String? = null,
+    val suggestions: List<String> = emptyList()
+)
+
+data class ActionDescription constructor(
     val modelResponse: ModelResponse,
     val toolCall: ToolCall? = null,
-    val selectedElement: InteractiveElement? = null,
+    val locator: String? = null,
+    val node: DOMTreeNodeEx? = null,
+    val xpath: String? = null,
+    val cssSelector: String? = null,
+    val expressions: List<String> = emptyList(),
+    val cssFriendlyExpressions: List<String> = emptyList(),
+    val isComplete: Boolean = false,
+    val summary: String? = null,
+    val suggestions: List<String> = emptyList()
 )
 
 data class InstructionResult(

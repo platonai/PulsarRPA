@@ -3,13 +3,6 @@ package ai.platon.pulsar.agentic.ai.agent
 import ai.platon.pulsar.skeleton.ai.support.ToolCall
 import java.time.Instant
 
-data class ElementBounds(
-    val x: Double,
-    val y: Double,
-    val width: Double,
-    val height: Double
-)
-
 /**
  * Configuration for enhanced error handling and retry mechanisms
  */
@@ -29,8 +22,8 @@ data class AgentConfig(
     val enableAdaptiveDelays: Boolean = true,
     val enablePreActionValidation: Boolean = true,
     // New configuration options for fixes
-    val actTimeoutMs: Long = 30000,
-    val llmInferenceTimeoutMs: Long = 60000,
+    val actTimeoutMs: Long = 30_000,
+    val llmInferenceTimeoutMs: Long = 60_000,
     val maxResultsToTry: Int = 3,
     val screenshotEveryNSteps: Int = 1,
     val domSettleTimeoutMs: Long = 2000,
@@ -38,7 +31,9 @@ data class AgentConfig(
     val allowLocalhost: Boolean = false,
     val allowedPorts: Set<Int> = setOf(80, 443, 8080, 8443, 3000, 5000, 8000, 9000),
     val maxSelectorLength: Int = 1000,
-    val denyUnknownActions: Boolean = true
+    val denyUnknownActions: Boolean = true,
+    // Overall timeout for resolve() to avoid indefinite hangs
+    val resolveTimeoutMs: Long = 60 * 60_000
 )
 
 /**

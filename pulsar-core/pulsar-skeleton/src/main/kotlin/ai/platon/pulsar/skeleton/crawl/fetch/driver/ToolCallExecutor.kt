@@ -1,7 +1,6 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
-@Deprecated("Use ai.platon.pulsar.skeleton.ai.support.ToolCall instead", ReplaceWith("ai.platon.pulsar.skeleton.ai.support.ToolCall"))
-typealias ToolCall = ai.platon.pulsar.skeleton.ai.support.ToolCall
+import ai.platon.pulsar.skeleton.ai.support.ToolCall
 
 /**
  * Executes WebDriver commands provided as string expressions.
@@ -666,7 +665,6 @@ waitForNavigation(oldUrl: String = "", timeoutMillis: Long = 5000): Long
 goBack()
 goForward()
 delay(millis: Long = 1000)
-stop()
     """
 
         val SUPPORTED_TOOL_CALLS = TOOL_CALL_LIST.split("\n").filter { it.contains("(") }.map { it.trim() }

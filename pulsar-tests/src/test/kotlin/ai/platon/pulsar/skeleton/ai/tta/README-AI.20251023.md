@@ -7,7 +7,7 @@ This document guides AI agents on how to create, run, and evolve tests for the T
 Before you start, read the following to understand the project landscape:
 
 1. Root `README-AI.md` – global dev rules and project structure
-2. Core class `pulsar-core/pulsar-agentic/src/main/kotlin/ai/platon/pulsar/agentic/ai/tta/TextToAction.kt` – TTA core implementation
+2. Core guide `pulsar-core/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/ai/README-AI.md` – TTA core implementation
 3. All tests must use the Mock Server pages under `pulsar-tests-common/src/main/resources/static/generated/tta`
 
 ## 🎯 Test Goals
@@ -15,10 +15,10 @@ Before you start, read the following to understand the project landscape:
 Test the Text-To-Action (TTA) capability to ensure the AI correctly translates natural language commands into executable WebDriver actions.
 
 Focus areas:
-- `ai.platon.pulsar.agentic.ai.tta.TextToAction#generate`
-- Only test generate; ignore other methods
+- `ai.platon.pulsar.skeleton.ai.tta.TextToAction#generateWebDriverAction`
+- Only test generateWebDriverAction; ignore other methods
 - Natural language → WebDriver API mapping accuracy
-- Reliable identification and selection of elements
+- Reliable identification and selection of interactive elements
 - Stability of element references under DOM changes
 
 ## 🛠 Test Environment
@@ -28,15 +28,17 @@ Focus areas:
 pulsar-tests/src/test/kotlin/ai/platon/pulsar/skeleton/ai/tta/    # Test code directory
 ├── TextToActionTestBase.kt                                       # Test base class
 ├── TextToActionBasicTest.kt                                      # Basic sanity tests
-├── TextToActionComprehensiveTests.kt                             # Comprehensive tests
-├── TextToActionEdgeCasesTest.kt                                  # Edge cases
-├── TextToActionElementInteractionTests.kt                        # Element interaction tests
+├── TextToActionSimpleTest.kt                                     # Simple scenarios
+├── TextToActionTest.kt                                           # General functionality tests
+├── TextToActionGenerateWebDriverActionTest.kt                    # generateWebDriverAction focus
 ├── TextToActionElementSelectionTests.kt                          # Element selection tests
+├── TextToActionElementInteractionTests.kt                        # Element interaction tests
+├── TextToActionEdgeCasesTest.kt                                  # Edge cases
+├── TextToActionComprehensiveTests.kt                             # Comprehensive tests
 ├── TextToActionMockServerTests.kt                                # Mock server wiring tests
 ├── NewToolsIntegrationTest.kt                                    # New tools integration tests
 ├── ConditionalActionsAndNavigationTest.kt                        # Conditional actions and navigation tests
-├── README-AI.md                                                  # This file
-└── README-AI.20251023.md                                         # Dated variant (reference only)
+└── README-AI.md                                                  # This file
 
 # Note: Interactive test pages live in a shared module used by multiple suites
 pulsar-tests-common/src/main/resources/static/generated/tta       # Actual test web page directory
@@ -141,35 +143,35 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 @Test
 fun `When given clear action then generate precise WebDriver code`() = runWebDriverTest { driver ->
     val command = "click the login button"
-    val action = textToAction.generate(command, driver)
+    val action = textToAction.generateWebDriverAction(command, driver)
     assertThat(action.expressions.joinToString("\n")).contains("driver.click(")
 }
 
 @Test
 fun `When asking to check element existence then generate exists check`() = runWebDriverTest { driver ->
     val command = "check whether the login button exists"
-    val action = textToAction.generate(command, driver)
+    val action = textToAction.generateWebDriverAction(command, driver)
     assertThat(action.expressions.joinToString("\n")).contains("driver.exists(")
 }
 
 @Test
 fun `When asking to verify element visibility then generate visibility check`() = runWebDriverTest { driver ->
     val command = "ensure the submit button is visible"
-    val action = textToAction.generate(command, driver)
+    val action = textToAction.generateWebDriverAction(command, driver)
     assertThat(action.expressions.joinToString("\n")).contains("driver.isVisible(")
 }
 
 @Test
 fun `When asking to focus element then generate focus action`() = runWebDriverTest { driver ->
     val command = "focus the search input"
-    val action = textToAction.generate(command, driver)
+    val action = textToAction.generateWebDriverAction(command, driver)
     assertThat(action.expressions.joinToString("\n")).contains("driver.focus(")
 }
 
 @Test
 fun `When asking to scroll to element then generate scrollTo action`() = runWebDriverTest { driver ->
     val command = "scroll to the bottom of the page"
-    val action = textToAction.generate(command, driver)
+    val action = textToAction.generateWebDriverAction(command, driver)
     assertThat(action.expressions.joinToString("\n")).contains("driver.scrollTo(")
 }
 ```
@@ -178,20 +180,20 @@ fun `When asking to scroll to element then generate scrollTo action`() = runWebD
 ```kotlin
 @Test
 fun `When element does not exist then return empty tool-calls`() = runWebDriverTest { driver ->
-    val action = textToAction.generate("click a non-existent button", driver)
+    val action = textToAction.generateWebDriverAction("click a non-existent button", driver)
     assertThat(action.expressions.joinToString()).doesNotContain("driver.click(")
 }
 
 @Test
 fun `When asking for conditional action then include appropriate checks`() = runWebDriverTest { driver ->
-    val action = textToAction.generate("if the login button exists then click it", driver)
+    val action = textToAction.generateWebDriverAction("if the login button exists then click it", driver)
     val calls = action.expressions.joinToString()
     assertThat(calls).contains("driver.exists(") || calls.contains("driver.click(")
 }
 
 @Test
 fun `When asking for defensive interaction then check visibility before action`() = runWebDriverTest { driver ->
-    val action = textToAction.generate("ensure the submit button is visible before clicking", driver)
+    val action = textToAction.generateWebDriverAction("ensure the submit button is visible before clicking", driver)
     val calls = action.expressions.joinToString()
     assertThat(calls).contains("driver.isVisible(") || calls.contains("driver.click(")
 }
@@ -201,20 +203,20 @@ fun `When asking for defensive interaction then check visibility before action`(
 ```kotlin
 @Test
 fun `When ambiguous command then choose best match or ask to clarify`() = runWebDriverTest { driver ->
-    val action = textToAction.generate("click the button", driver)
+    val action = textToAction.generateWebDriverAction("click the button", driver)
     // Verify strategy: prioritize data-testid or closest text match
 }
 
 @Test
 fun `When asking for navigation sequence then generate proper flow`() = runWebDriverTest { driver ->
-    val action = textToAction.generate("click the link and wait for navigation", driver)
+    val action = textToAction.generateWebDriverAction("click the link and wait for navigation", driver)
     val calls = action.expressions.joinToString()
     assertThat(calls).contains("driver.click(") || calls.contains("driver.waitForNavigation(")
 }
 
 @Test
 fun `When asking for complex interaction then generate multi-step sequence`() = runWebDriverTest { driver ->
-    val action = textToAction.generate("scroll to the form, ensure the input is visible, then type text", driver)
+    val action = textToAction.generateWebDriverAction("scroll to the form, ensure the input is visible, then type text", driver)
     val calls = action.expressions.joinToString()
     assertThat(calls).contains("driver.scrollTo(") ||
                   calls.contains("driver.isVisible(") ||
@@ -241,10 +243,8 @@ fun `When asking for complex interaction then generate multi-step sequence`() = 
 - Check/uncheck: `driver.check("#agree")` / `driver.uncheck("#agree")`
 - Advanced clicks (text/attribute matches): `driver.clickTextMatches(".list", "Submit", 1)` / `driver.clickMatches(".item", "data-id", "^x-\\d+$", 1)`
 - Click nth link: `driver.clickNthAnchor(3)` (0-based)
-
-Driver expressions (fallback; not exposed as tools in the current prompt):
 - Screenshots: full page `driver.captureScreenshot()` or node `driver.captureScreenshot("#area")`
-- Extraction: `driver.selectFirstTextOrNull("#content")`, `driver.selectTextAll(".item")`, etc.
+- Extraction: "extract text content" → `driver.selectFirstTextOrNull("#content")` (Note: selection APIs are not yet exposed as tool calls; current tool mode won't generate these calls)
 
 ### 2. Element selection accuracy
 - Match by text: "click the submit button"
@@ -274,7 +274,7 @@ Driver expressions (fallback; not exposed as tools in the current prompt):
 
 ## ✅ Current Tool-call API (available)
 
-Exposed and supported (the system prompt embeds this list; align tests with it):
+Exposed and supported (TTA tools → driver mapping exists):
 - navigateTo(url)
 - waitForSelector(selector, timeoutMillis)
 - exists(selector): Boolean – element existence
@@ -293,10 +293,21 @@ Exposed and supported (the system prompt embeds this list; align tests with it):
 - waitForNavigation(oldUrl?, timeoutMillis?)
 - goBack()
 - goForward()
+- captureScreenshot() / captureScreenshot(selector)
 - delay(millis)
+- stop()
 
-Notes:
-- Selection APIs (text/attributes/properties) and `captureScreenshot(...)` are supported by the driver, but are not listed in the current tool-call prompt; use as fallback expressions only if needed by a test.
+MiniWebDriver has more capabilities not yet exposed via tools (recommended to open later):
+- State queries: isHidden(selector), isChecked(selector)
+- Focus and typing: type(selector, text)
+- Precise scroll/positioning: moveMouseTo(x, y) / moveMouseTo(selector, dx, dy)
+- Wheel/drag: mouseWheelDown/Up(...), dragAndDrop(selector, dx, dy)
+- Page/node extraction: outerHTML(), outerHTML(selector)
+- Text/attributes/properties/bulk: selectFirstTextOrNull, selectTextAll, selectFirstAttributeOrNull, selectAttributes, selectAttributeAll
+- Properties: selectFirstPropertyValueOrNull, selectPropertyValueAll
+- Links/images bulk: selectHyperlinks, selectImages
+- Session: getCookies(), url()/currentUrl()/documentURI()/baseURI()/referrer()
+- Z-order: bringToFront()
 
 ## 💡 Recommended future tool exposure and scenarios
 
@@ -328,8 +339,8 @@ Notes:
 
 ## ✍️ Doc updates aligned with implementation
 
-- In "Basic action mapping", include: clickTextMatches, clickMatches, clickNthAnchor
-- Move `captureScreenshot(selector)` and selection APIs to the fallback section
+- In "Basic action mapping", include: scrollToScreen, clickTextMatches, clickMatches, clickNthAnchor, captureScreenshot(selector)
+- In "High-value scenarios", add: nth-link clicking, text/attribute match clicks, partial screenshot
 - In "Gaps/roadmap", clarify: iframe/Shadow DOM not supported yet; expand after pages land
 - Add "Recommended tools to expose" section (above) as source for future tests
 
@@ -429,6 +440,5 @@ Linux/macOS:
 ./mvnw clean test jacoco:report
 ```
 
-Notes for Windows (cmd.exe):
-- Quote `-D` properties, e.g. `-D"dot.sperated.parameter=quoted"`
-- When running tests with the `-am` parameter, add `-D"surefire.failIfNoSpecifiedTests=false"`
+Notes:
+- If parameters include special characters like `.`, use double quotes, e.g. `-Dtest="ai.platon.pulsar.skeleton.ai.tta.**"`.

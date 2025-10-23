@@ -17,37 +17,36 @@ class TextToActionBasicTest {
 
     @Test
     fun `When ActionDescription is created then all fields are properly initialized`() {
-        val functionCalls = listOf("driver.click(\"#button\")")
+        val expressions = listOf("driver.click(\"#button\")")
         val modelResponse = ModelResponse("Test response", ai.platon.pulsar.external.ResponseState.STOP)
 
-        val actionDescription = ActionDescription(functionCalls, modelResponse)
+        val actionDescription = ActionDescription(modelResponse, expressions = expressions)
 
         assertNotNull(actionDescription)
-        assertEquals(functionCalls, actionDescription.expressions)
+        assertEquals(expressions, actionDescription.cssFriendlyExpressions)
         assertEquals(modelResponse, actionDescription.modelResponse)
-        assertNull(actionDescription.selectedElement)
     }
 
     @Test
-    fun `When ActionDescription is created with empty function calls then functionCalls is empty`() {
+    fun `When ActionDescription is created with empty function calls then expressions is empty`() {
         val modelResponse = ModelResponse("Test response", ai.platon.pulsar.external.ResponseState.STOP)
 
-        val actionDescription = ActionDescription(emptyList(), modelResponse)
+        val actionDescription = ActionDescription(modelResponse)
 
-        assertTrue(actionDescription.expressions.isEmpty())
-        assertEquals(0, actionDescription.expressions.size)
+        assertTrue(actionDescription.cssFriendlyExpressions.isEmpty())
+        assertEquals(0, actionDescription.cssFriendlyExpressions.size)
     }
 
     @Test
     fun `When InstructionResult is created then all fields are properly initialized`() {
-        val functionCalls = listOf("driver.click(\"#button\")")
+        val expressions = listOf("driver.click(\"#button\")")
         val functionResults = listOf<Any?>(null)
         val modelResponse = ModelResponse("Test response", ai.platon.pulsar.external.ResponseState.STOP)
 
-        val instructionResult = InstructionResult(functionCalls, functionResults, modelResponse)
+        val instructionResult = InstructionResult(expressions, functionResults, modelResponse)
 
         assertNotNull(instructionResult)
-        assertEquals(functionCalls, instructionResult.expressions)
+        assertEquals(expressions, instructionResult.expressions)
         assertEquals(functionResults, instructionResult.functionResults)
         assertEquals(modelResponse, instructionResult.modelResponse)
     }

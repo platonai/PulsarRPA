@@ -9,9 +9,11 @@ import ai.platon.cdt.kt.protocol.types.page.ReferrerPolicy
 import ai.platon.cdt.kt.protocol.types.page.TransitionType
 import ai.platon.cdt.kt.protocol.types.runtime.Evaluate
 import ai.platon.pulsar.browser.common.ScriptConfuser
+import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
 
 class PageHandler(
@@ -23,7 +25,8 @@ class PageHandler(
         const val ELEMENT_NODE = 1
 
         // Backend node ID selector prefix
-        private const val BACKEND_NODE_PREFIX = "backend:"
+        private val BACKEND_NODE_PREFIX = Locator.Type.BACKEND_NODE_ID.text
+        private val FBN_PREFIX = Locator.Type.FRAME_BACKEND_NODE_ID.text
     }
 
     private val logger = getLogger(this)
@@ -65,7 +68,7 @@ class PageHandler(
      */
     @Throws(ChromeDriverException::class)
     suspend fun querySelector(selector: String): Int? {
-        return parseSelector(selector)
+        return resolveSelector(selector)
     }
 
     /**
@@ -81,8 +84,10 @@ class PageHandler(
     suspend fun querySelectorAll(selector: String): List<Int> {
         // For backend node ID, return a single-element list
         if (selector.startsWith(BACKEND_NODE_PREFIX)) {
-            val nodeId = parseSelector(selector)
+            val nodeId = resolveSelector(selector)
             return if (nodeId != null && nodeId > 0) listOf(nodeId) else listOf()
+        } else if (selector.startsWith(FBN_PREFIX)) {
+
         }
 
         // For regular selectors, use querySelectorAll
@@ -124,6 +129,11 @@ class PageHandler(
         }
         val valueIndex = nameIndex + 1
         return attributes.getOrNull(valueIndex)
+    }
+
+    @Throws(ChromeDriverException::class)
+    suspend fun setAttribute(nodeId: Int, attrName: String, attrValue: String) {
+        domAPI?.setAttributeValue(nodeId, attrName, attrValue)
     }
 
     /**
@@ -174,7 +184,7 @@ class PageHandler(
      */
     @Throws(ChromeDriverException::class)
     suspend fun focusOnSelector(selector: String): Int {
-        val nodeId = parseSelector(selector)
+        val nodeId = resolveSelector(selector)
         if (nodeId == null || nodeId == 0) {
             return 0
         }
@@ -194,7 +204,7 @@ class PageHandler(
      */
     @Throws(ChromeDriverException::class)
     suspend fun scrollIntoViewIfNeeded(selector: String, rect: Rect? = null): Int? {
-        val nodeId = parseSelector(selector)
+        val nodeId = resolveSelector(selector)
         if (nodeId == null || nodeId == 0) {
             logger.info("No node found for selector: $selector")
             return null
@@ -262,7 +272,7 @@ class PageHandler(
 //        val iife = JsUtils.toIIFE(confuser.confuse(expression))
 //        return evaluate(iife, returnByValue = true)
         val expression2 = confuser.confuse(expression)
-        return runtimeAPI?.evaluate(expression = expression2, returnByValue = true)
+        return cdpEvaluate(expression2, returnByValue = true)
     }
 
     /**
@@ -301,23 +311,14 @@ class PageHandler(
      * @return nodeId or null if not found
      */
     @Throws(ChromeDriverException::class)
-    private suspend fun parseSelector(selector: String): Int? {
-        // Check if it's a backend node ID selector
-        if (selector.startsWith(BACKEND_NODE_PREFIX)) {
-            val backendNodeIdStr = selector.substring(BACKEND_NODE_PREFIX.length)
-            val backendNodeId = backendNodeIdStr.toIntOrNull()
-
-            if (backendNodeId == null) {
-                logger.warn("Invalid backend node ID format: {}", selector)
-                return null
-            }
-
-            // Resolve backend node ID to nodeId
-            return resolveBackendNodeId(backendNodeId)
+    private suspend fun resolveSelector(selector: String): Int? {
+        val locator = Locator.parse(selector) ?: return null
+        return when (locator.type) {
+            Locator.Type.CSS_PATH -> querySelectorOrNull(selector)
+            Locator.Type.BACKEND_NODE_ID -> resolveBackendNodeId(locator.selector.toInt())
+            Locator.Type.FRAME_BACKEND_NODE_ID -> resolveBackendNodeId(Strings.findLastInteger(selector))
+            else -> throw UnsupportedOperationException("Unsupported selector $selector")
         }
-
-        // Regular CSS selector
-        return querySelectorOrNull(selector)
     }
 
     /**
@@ -327,7 +328,9 @@ class PageHandler(
      * @return nodeId or null if resolution fails
      */
     @Throws(ChromeDriverException::class)
-    private suspend fun resolveBackendNodeId(backendNodeId: Int): Int? {
+    private suspend fun resolveBackendNodeId(backendNodeId: Int?): Int? {
+        backendNodeId ?: return null
+
         return try {
             // Use DOM.resolveNode to convert backendNodeId to a runtime object
             val remoteObject = domAPI?.resolveNode(null, backendNodeId, null, null)
@@ -352,7 +355,7 @@ class PageHandler(
 
     @Throws(ChromeDriverException::class)
     private suspend fun <T> invokeOnElement(selector: String, action: suspend (Int) -> T): T? {
-        val nodeId = parseSelector(selector)
+        val nodeId = resolveSelector(selector)
         if (nodeId != null && nodeId > 0) {
             return action(nodeId)
         }
@@ -362,7 +365,7 @@ class PageHandler(
 
     @Throws(ChromeDriverException::class)
     private suspend fun predicateOnElement(selector: String, action: suspend (Int) -> Boolean): Boolean {
-        val nodeId = parseSelector(selector)
+        val nodeId = resolveSelector(selector)
         if (nodeId != null && nodeId > 0) {
             return action(nodeId)
         }

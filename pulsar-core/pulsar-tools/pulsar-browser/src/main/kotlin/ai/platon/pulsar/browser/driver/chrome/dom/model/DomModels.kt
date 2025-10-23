@@ -1,12 +1,15 @@
 package ai.platon.pulsar.browser.driver.chrome.dom.model
 
+import ai.platon.pulsar.browser.driver.chrome.dom.CSSSelectorUtils
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
+import ai.platon.pulsar.browser.driver.chrome.dom.FBNLocator
 import ai.platon.pulsar.browser.driver.chrome.dom.LocatorMap
 import ai.platon.pulsar.common.math.roundTo
 import com.fasterxml.jackson.annotation.JsonIgnore
+import org.apache.commons.lang3.StringUtils
 import java.awt.Dimension
 import java.math.RoundingMode
-import java.util.Locale
+import java.util.*
 
 /**
  * DOM node types based on the DOM specification.
@@ -175,7 +178,7 @@ data class SnapshotNodeEx constructor(
 /**
  * Enhanced DOM tree node containing merged information from DOM, AX, and Snapshot trees.
  */
-data class DOMTreeNodeEx(
+data class DOMTreeNodeEx constructor(
     // DOM Node data
     val nodeId: Int = 0,
     val backendNodeId: Int? = null,
@@ -211,7 +214,48 @@ data class DOMTreeNodeEx(
     // Visibility and interaction
     val isInteractable: Boolean? = null,
     val interactiveIndex: Int? = null
-)
+) {
+    fun textContent(): String {
+        val sb = StringBuilder()
+
+        fun appendToken(s: String?) {
+            val t = s?.trim()
+            if (!t.isNullOrEmpty()) {
+                if (sb.isNotEmpty()) sb.append(' ')
+                sb.append(t)
+            }
+        }
+
+        when (nodeType) {
+            NodeType.TEXT_NODE -> appendToken(nodeValue)
+            else -> {
+                // Prefer accessible name if present
+                appendToken(axNode?.name)
+                // Include meaningful attributes
+                if (attributes.isNotEmpty()) {
+                    DefaultIncludeAttributes.ATTRIBUTES.forEach { key ->
+                        attributes[key]?.let { appendToken(it) }
+                    }
+                }
+            }
+        }
+
+        // Recurse into descendants
+        children.forEach { appendToken(it.textContent()) }
+
+        return sb.toString().replace(Regex("\\s+"), " ").trim()
+    }
+
+    /**
+     * Build a best-effort CSS selector for this node.
+     * Strategy:
+     * - If an id exists, prefer #id (or tag[id="..."] if id is not a valid identifier)
+     * - Else, use up to a few stable classes: tag.class1.class2
+     * - Else, fall back to stable attributes like data-*, aria-label, name, type, role
+     * - Else, return the lowercase tag name (or "*")
+     */
+    fun cssSelector(): String = CSSSelectorUtils.generateCSSSelector(this)
+}
 
 typealias DOMTreeEx = DOMTreeNodeEx
 
@@ -309,7 +353,6 @@ data class NanoDOMTreeNode(
     val nodeName: String? = null,
     val nodeValue: String? = null,
     val attributes: Map<String, Any>? = null,
-    val html: String? = null,
     val scrollable: Boolean? = null,   // null means false
     val interactive: Boolean? = null,  // null means false
     val invisible: Boolean? = null,    // null means false
@@ -338,8 +381,9 @@ data class NanoDOMTreeNode(
         private fun newNode(n: MicroDOMTreeNode?): NanoDOMTree? {
             val o = n?.originalNode ?: return null
 
+            // remove locator's prefix to reduce serialized size
             return NanoDOMTree(
-                o.locator,
+                o.locator.substringAfter(":"),
                 o.nodeName,
                 o.nodeValue,
                 o.attributes,
@@ -378,6 +422,21 @@ data class DOMState(
 
     @get:JsonIgnore
     val interactiveNodesLazyJson: String by lazy { DOMSerializer.toJson(interactiveNodes) }
+
+    fun getAbsoluteFBNLocator(locator: String?): FBNLocator? {
+        if (locator == null) return null
+
+        val fbnLocator = FBNLocator.parseRelaxed(locator) ?: return null
+        if (fbnLocator.isAbsolute) {
+            return fbnLocator
+        }
+
+        require(StringUtils.isNumeric(fbnLocator.frameId))
+        val index = fbnLocator.frameId.toIntOrNull() ?: return null
+        val absoluteFrameId = frameIds.getOrNull(index) ?: return null
+
+        return FBNLocator(absoluteFrameId, fbnLocator.backendNodeId)
+    }
 }
 
 data class ClientInfo(
@@ -440,4 +499,3 @@ data class BrowserUseState(
     val browserState: BrowserState,
     val domState: DOMState
 )
-

@@ -11,7 +11,7 @@ Its main job is to translate the user’s natural language command into a callab
 
 1. Action Translation
 
-    - Implement logic in `ai.platon.pulsar.skeleton.ai.tta.TextToAction#generateWebDriverAction`
+    - Implement and wire logic in `ai.platon.pulsar.agentic.ai.tta.TextToAction#generate`
     - Generate EXACT ONE WebDriver action with interactive elements
     - Convert user’s plain text commands (e.g., "scroll to the middle") into concrete MiniWebDriver APIs
 
@@ -27,8 +27,8 @@ Its main job is to translate the user’s natural language command into a callab
 
 3. Prompt Construction
 
-    - Use tool-call style prompt and response
-    - Provide interactive element lists only (not the entire page DOM)
+    - Use the elements snapshot (ranked interactive elements), not full DOM
+    - Use the strict JSON response formats defined below (no markdown, no extra text)
 
 4. Interactive Element Handling
 
@@ -37,7 +37,7 @@ Its main job is to translate the user’s natural language command into a callab
 
 5. Fallback Rule
 
-    - If no suitable interactive element exists for the requested action: generate an empty suspend function instead of throwing errors
+    - If no suitable interactive element exists for the requested action, or the task cannot proceed in this step, return the Completion JSON (see below) with a concise summary and a few suggestions
 
 ---
 
@@ -54,63 +54,75 @@ Its main job is to translate the user’s natural language command into a callab
 - Input
   - user command: natural language string
   - interactive elements: a short, ranked list built from the active DOM
-- Output (EXACT ONE action)
-  - A single WebDriver action rendered from an allowed API call, using a valid selector when needed
-  - If uncertain or no element fits, output an empty action (no-op function)
+- Output (EXACT ONE action or a completion)
+  - Prefer an action for the next atomic step; if not possible, return a completion object
 
 Success criteria
-- Returns exactly one actionable driver line (or a no-op) that compiles against MiniWebDriver
-- Selector is stable and present in the provided element list
+- Returns exactly one actionable driver line (or a completion) that compiles against MiniWebDriver
+- Selector is stable and present in the provided element list when required
 - No hallucinated selectors or parameters
 
 ---
 
 ## MiniWebDriver API (subset for TTA)
 
-Allowed tool calls → driver methods mapping:
+Allowed calls → driver methods mapping:
 - click(selector: String) → `driver.click(selector)`
-- fill(selector: String, text: String) → `driver.fill(selector, text)`
+- type(selector: String, text: String) → `driver.type(selector, text)`
 - navigateTo(url: String) → `driver.navigateTo(url)`
 - scrollDown(count: Int = 1) → `driver.scrollDown(count)`
 - scrollUp(count: Int = 1) → `driver.scrollUp(count)`
 - scrollToMiddle(ratio: Double = 0.5) → `driver.scrollToMiddle(ratio)`
-- waitForSelector(selector: String, timeoutMillis: Long = 5000) → `driver.waitForSelector(selector, timeoutMillis)`
-- check(selector: String) → `driver.check(selector)`
-- uncheck(selector: String) → `driver.uncheck(selector)`
+- waitForNavigation(oldUrl: String = current, timeoutMillis: Long = 5000) → `driver.waitForNavigation(oldUrl, timeoutMillis)`
 
-Note: `generateWebDriverAction` must produce exactly one driver line. For multi-step user asks, choose the highest-value primary step first (see tie-break rules below).
+Note: The agent must produce exactly one driver step per generation. For multi-step user asks, choose the highest-value primary step first (see tie-break rules below).
 
 ---
 
-## Tool-call Prompt and Response Schema
+## Response Schema (JSON only)
 
-Use a strict JSON-only tool-call style. The model must return JSON only.
+The model must return JSON only, no code fences or extra text. There are two supported formats:
 
-- Tools list (names and args) matches the MiniWebDriver subset above
-- Response format (no extra text/markdown):
+1) Action (preferred when a next atomic step is clear)
 
 {
-  "tool_calls": [
-    {"name": "click", "args": {"selector": "#submit-btn"}}
+  "elements": [
+    {
+      "locator": string,            // a stable selector for the target element (optional for no-selector actions)
+      "description": string,        // short human-friendly description
+      "method": string,             // one of the allowed MiniWebDriver methods (e.g., click, type, scrollToMiddle)
+      "arguments": [                // ordered arguments besides locator (if any)
+        { "name": string, "value": string }
+      ]
+    }
   ]
+}
+
+- Only one element is expected per step.
+- For actions that don’t require a selector (e.g., scrollToMiddle), locator can be omitted.
+
+2) Completion (when task is done or cannot proceed this step)
+
+{
+  "isComplete": true,
+  "summary": string,
+  "suggestions": [string]
 }
 
 Rules
 1) JSON only; no comments/markdown/code fences
-2) If unsure or no element, return {"tool_calls": []}
-3) Never fabricate selectors or arguments
-4) Max 1 tool call for `generateWebDriverAction`; for batched flows a higher limit may be used
-
-The prompt should include only the interactive element descriptions, not raw DOM. See `buildToolUsePrompt` in `TextToAction.kt`.
+2) Prefer an action when safe and obvious; otherwise return the completion JSON
+3) Never fabricate selectors or arguments not present in the element list/context
+4) Emit at most one actionable element in the "elements" array
 
 ---
 
 ## Element Selection Heuristics (must)
 
-Align with `docs/development/dom/interactive-elements.md` and `EXTRACT_INTERACTIVE_ELEMENTS_EXPRESSION`:
+Align with `docs/development/dom/interactive-elements.md`:
 
 - Candidate pool: input, textarea, select, button, a[href], or elements with explicit interactivity (onclick, contenteditable=true, role=button/link)
-- Visibility: must be visible, not disabled, not hidden type
+- Visibility: must be visible, not disabled, not type=hidden
 - Stability: prefer selectors built from
   1) id → `#id`
   2) data-testid → `[data-testid=...]`
@@ -119,7 +131,7 @@ Align with `docs/development/dom/interactive-elements.md` and `EXTRACT_INTERACTI
   5) a[href=...] for links
   6) tag[type=...] fallback; otherwise nth-of-type path
 - Semantic fit
-  - fill → prefer input/textarea with matching placeholder/text/type
+  - type → prefer input/textarea with matching placeholder/text/type
   - click → prefer button/link whose text matches the intent (e.g., next, search, submit) or has relevant role/onclick
 - Disambiguation
   - Prefer visible, on-screen elements closer to view center/top
@@ -133,15 +145,15 @@ Reject if
 
 ## Action Selection Rules
 
-- EXACT ONE call for `generateWebDriverAction`
+- EXACT ONE call per step
 - Primary intent mapping examples
   - "scroll to the middle" → `scrollToMiddle()` (no selector needed)
   - "scroll down a bit" → `scrollDown(1)` (or parsed count)
-  - "go back" → Not in current subset → return empty function (no-op)
-  - "search `best AI toy`" (single-step ask) → choose either the most probable primary step:
-    - If a clear search box exists → `fill(<search>, "best AI toy")`
+  - "go back" → not in the subset above; return Completion JSON
+  - "search `best AI toy`" (single-step ask) → choose the highest-value primary step:
+    - If a clear search box exists → `type(<search>, "best AI toy")`
     - If no input but a clear search button exists → `click(<search-button>)`
-  - "type X in the search box" → `fill(<search-input>, "X")`
+  - "type X in the search box" → `type(<search-input>, "X")`
   - "click next" → `click(<next-button-or-link>)`
 
 Tie-breaker policy
@@ -151,8 +163,8 @@ Tie-breaker policy
 
 ## Fallback Behavior (must)
 
-- If no suitable interactive element exists for the action, return an empty suspend function (no error)
-- If the instruction requires a capability outside the allowed tool set (e.g., "go back" not supported here), return a no-op
+- If no suitable interactive element exists for the action, or the action is unsafe/ambiguous, return the Completion JSON with a short summary and 2-3 suggestions for next steps
+- If the instruction requires a capability outside the allowed tool set (e.g., "go back"), return the Completion JSON
 
 ---
 
@@ -167,46 +179,75 @@ Tie-breaker policy
 ## Examples
 
 User → "scroll to the middle"
-Return →
+
+Action JSON →
 {
-  "tool_calls": [
-    {"name": "scrollToMiddle", "args": {"ratio": 0.5}}
+  "elements": [
+    {
+      "method": "scrollToMiddle",
+      "description": "Scroll viewport to middle",
+      "arguments": [ { "name": "ratio", "value": "0.5" } ]
+    }
   ]
 }
 
 User → "type best AI toy in the search box"
+
 Elements (excerpt) →
 - [input type='search'] ph='Search...' selector='#search-input'
 - [button type='submit'] 'Search' selector='#submit-btn'
-Return →
+
+Action JSON →
 {
-  "tool_calls": [
-    {"name": "fill", "args": {"selector": "#search-input", "text": "best AI toy"}}
+  "elements": [
+    {
+      "locator": "#search-input",
+      "description": "Search input",
+      "method": "type",
+      "arguments": [ { "name": "text", "value": "best AI toy" } ]
+    }
   ]
 }
 
 User → "click next"
+
 Elements (excerpt) →
 - [a] 'Next' selector='a[href="/page/2"]'
 - [button] 'Continue' selector='#continue'
-Return →
+
+Action JSON →
 {
-  "tool_calls": [
-    {"name": "click", "args": {"selector": "a[href=\"/page/2\"]"}}
+  "elements": [
+    {
+      "locator": "a[href=\"/page/2\"]",
+      "description": "Next link",
+      "method": "click",
+      "arguments": []
+    }
   ]
 }
 
 User → ambiguous or no element
-Return → {"tool_calls": []}
+
+Completion JSON →
+{
+  "isComplete": true,
+  "summary": "Cannot find a reliable next action from current context.",
+  "suggestions": [
+    "Refine the query keywords",
+    "Scroll or navigate to a results page",
+    "Provide a specific button or link text"
+  ]
+}
 
 ---
 
 ## Implementation Notes
 
-- Use MiniWebDriver as the contract; when you code, use `WebDriver` as the interface
+- Use `WebDriver` as the runtime interface (the MiniWebDriver contract maps to `ToolCallExecutor` methods)
 - Reference spec: `docs/development/dom/interactive-elements.md`
-- Tests to learn from: `ai.platon.pulsar.skeleton.ai.tta.InteractiveElementExtractionTests`
-- The prompt builder and JSON parser are in `TextToAction.kt`. Match its schema and limits.
+- See `TextToAction.kt` for prompt assembly and response parsing; match its schema and limits
+- Tests to learn from will be updated; temporarily ignore legacy tool_calls tests
 
 ---
 
@@ -218,11 +259,13 @@ Return → {"tool_calls": []}
 
 On Windows cmd.exe from project root:
 
+```
 :: build all
 mvnw.cmd -q -DskipTests package
 
 :: run a focused test suite (example)
 mvnw.cmd -q -pl pulsar-tests -Dtest="ai.platon.pulsar.skeleton.ai.tta.TextToActionBasicTest" test
+```
 
 ---
 
@@ -230,7 +273,7 @@ mvnw.cmd -q -pl pulsar-tests -Dtest="ai.platon.pulsar.skeleton.ai.tta.TextToActi
 
 - Add scoring for element ranking (text/placeholder/type/position)
 - Add multilingual intent keywords (搜索/search, 提交/submit, 上一页/previous, 下一页/next)
-- Expand tool set (e.g., back(), reload(), selectOption()) and update mapping and tests accordingly
-  - double click
-  - drag and drop
-  - select options
+- Expand tool set (e.g., goBack(), reload(), selectOption()) and update mapping and tests accordingly
+  - doubleClick
+  - dragAndDrop
+  - selectOptions

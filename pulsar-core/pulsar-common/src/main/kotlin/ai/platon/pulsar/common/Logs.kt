@@ -214,7 +214,7 @@ fun printlnPro() {
  * A protected version for println which can be disabled.
  * */
 fun printlnPro(o: Any?) {
-    if (System.getProperty("log.print.enabled") != "true") {
+    if (System.getProperty("logging.printlnPro.enabled") == "false") {
         return
     }
 

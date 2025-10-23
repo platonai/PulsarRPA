@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 
@@ -14,6 +15,8 @@ import org.springframework.boot.test.context.SpringBootTest
  * Each test opens a real webpage on the mock server and tests
  * the generateWebDriverAction method with actual interactive elements
  */
+@Tag("ExternalServiceTest")
+@Tag("TimeConsumingTest")
 @SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionMockServerTests : TextToActionTestBase() {
 
@@ -32,10 +35,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("点击搜索按钮", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("click") || action.contains("driver.click"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("click") || expression.contains("driver.click"),
                       "Should generate click-related action")
     }
 
@@ -47,11 +50,11 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("在搜索框输入 'AI工具'", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("fill") || action.contains("driver.fill") ||
-                      action.contains("type") || action.contains("driver.type"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("fill") || expression.contains("driver.fill") ||
+                      expression.contains("type") || expression.contains("driver.type"),
                       "Should generate fill-related action")
     }
 
@@ -63,11 +66,11 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("选择选项2", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("select") || action.contains("driver.select") ||
-                      action.contains("click") || action.contains("driver.click"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("select") || expression.contains("driver.select") ||
+                      expression.contains("click") || expression.contains("driver.click"),
                       "Should generate select-related action")
     }
 
@@ -79,10 +82,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("点击切换开关", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("click") || action.contains("driver.click"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("click") || expression.contains("driver.click"),
                       "Should generate click action for toggle")
     }
 
@@ -96,11 +99,11 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("填写用户名 'testuser'", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("fill") || action.contains("driver.fill") ||
-                      action.contains("type") || action.contains("driver.type"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("fill") || expression.contains("driver.fill") ||
+                      expression.contains("type") || expression.contains("driver.type"),
                       "Should generate fill-related action")
     }
 
@@ -112,11 +115,11 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("输入邮箱 'test@example.com'", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("fill") || action.contains("driver.fill") ||
-                      action.contains("type") || action.contains("driver.type"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("fill") || expression.contains("driver.fill") ||
+                      expression.contains("type") || expression.contains("driver.type"),
                       "Should generate fill-related action for email")
     }
 
@@ -128,11 +131,11 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("调整滑块到75", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("fill") || action.contains("driver.fill") ||
-                      action.contains("click") || action.contains("driver.click"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("fill") || expression.contains("driver.fill") ||
+                      expression.contains("click") || expression.contains("driver.click"),
                       "Should generate action for slider interaction")
     }
 
@@ -144,10 +147,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("切换订阅开关", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("click") || action.contains("driver.click"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("click") || expression.contains("driver.click"),
                       "Should generate click action for toggle switch")
     }
 
@@ -161,10 +164,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("滚动到页面中间", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("scroll") || action.contains("driver.scroll"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("scroll") || expression.contains("driver.scroll"),
                       "Should generate scroll-related action")
     }
 
@@ -176,11 +179,11 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("调整范围输入到50", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("fill") || action.contains("driver.fill") ||
-                      action.contains("click") || action.contains("driver.click"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("fill") || expression.contains("driver.fill") ||
+                      expression.contains("click") || expression.contains("driver.click"),
                       "Should generate action for range input")
     }
 
@@ -194,10 +197,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("切换暗色模式", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("click") || action.contains("driver.click"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("click") || expression.contains("driver.click"),
                       "Should generate click action for dark mode toggle")
     }
 
@@ -209,11 +212,11 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("拖拽第一个项目", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("drag") || action.contains("driver.drag") ||
-                      action.contains("click") || action.contains("driver.click"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("drag") || expression.contains("driver.drag") ||
+                      expression.contains("click") || expression.contains("driver.click"),
                       "Should generate action for drag interaction")
     }
 
@@ -227,11 +230,11 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("输入密码 'secure123'", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("fill") || action.contains("driver.fill") ||
-                      action.contains("type") || action.contains("driver.type"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("fill") || expression.contains("driver.fill") ||
+                      expression.contains("type") || expression.contains("driver.type"),
                       "Should generate fill-related action for password")
     }
 
@@ -243,11 +246,11 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("选择日期", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("fill") || action.contains("driver.fill") ||
-                      action.contains("click") || action.contains("driver.click"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("fill") || expression.contains("driver.fill") ||
+                      expression.contains("click") || expression.contains("driver.click"),
                       "Should generate action for date selection")
     }
 
@@ -261,10 +264,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("等待动态内容加载", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("waitFor") || action.contains("driver.waitFor"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("waitFor") || expression.contains("driver.waitFor"),
                       "Should generate wait-related action")
     }
 
@@ -278,10 +281,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("点击第一个提交按钮", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("click") || action.contains("driver.click"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("click") || expression.contains("driver.click"),
                       "Should generate click action")
     }
 
@@ -295,10 +298,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("导航到 interactive-2 页面", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("navigateTo") || action.contains("driver.navigateTo"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("navigateTo") || expression.contains("driver.navigateTo"),
                       "Should generate navigation-related action")
     }
 
@@ -313,10 +316,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("返回上一页", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("back") || action.contains("driver.back"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("back") || expression.contains("driver.back"),
                       "Should generate back navigation action")
     }
 
@@ -330,10 +333,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("点击不存在的魔法按钮", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
 
         // Should either generate an empty action or a reasonable fallback
-        printlnPro("Non-existent element request generated: ${actionDescription.expressions}")
+        printlnPro("Non-existent element request generated: ${actionDescription.cssFriendlyExpressions}")
     }
 
     @Test
@@ -344,10 +347,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("操作页面", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
 
         // Should generate some reasonable action based on available elements
-        printlnPro("Ambiguous command generated: ${actionDescription.expressions}")
+        printlnPro("Ambiguous command generated: ${actionDescription.cssFriendlyExpressions}")
     }
 
     // ===== Tests for English language support =====
@@ -360,10 +363,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("Click the search button", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("English prompt generated: $action")
-            assertTrue(action.contains("click") || action.contains("driver.click"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("English prompt generated: $expression")
+            assertTrue(expression.contains("click") || expression.contains("driver.click"),
                       "Should generate click action for English prompt")
     }
 
@@ -375,11 +378,11 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("Fill in the username field with 'testuser'", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("English form fill generated: $action")
-            assertTrue(action.contains("fill") || action.contains("driver.fill") ||
-                      action.contains("type") || action.contains("driver.type"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("English form fill generated: $expression")
+            assertTrue(expression.contains("fill") || expression.contains("driver.fill") ||
+                      expression.contains("type") || expression.contains("driver.type"),
                       "Should generate fill action for English prompt")
     }
 
@@ -393,11 +396,11 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("提交表单", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Complex form submission generated: $action")
-            assertTrue(action.contains("click") || action.contains("driver.click") ||
-                      action.contains("submit") || action.contains("driver.submit"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Complex form submission generated: $expression")
+            assertTrue(expression.contains("click") || expression.contains("driver.click") ||
+                      expression.contains("submit") || expression.contains("driver.submit"),
                       "Should generate submission-related action")
     }
 
@@ -409,10 +412,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("点击加载更多按钮", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Dynamic element interaction generated: $action")
-            assertTrue(action.contains("click") || action.contains("driver.click"),
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Dynamic element interaction generated: $expression")
+            assertTrue(expression.contains("click") || expression.contains("driver.click"),
                       "Should generate click action for dynamic element")
     }
 }

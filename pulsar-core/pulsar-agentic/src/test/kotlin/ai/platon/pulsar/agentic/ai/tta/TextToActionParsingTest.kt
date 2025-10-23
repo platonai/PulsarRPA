@@ -1,109 +1,106 @@
 package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import org.junit.jupiter.api.Assertions
-import org.junit.jupiter.api.Assertions.assertTrue
+import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.external.ResponseState
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+
+private class TestableTextToAction(conf: ImmutableConfig): TextToAction(conf) {
+    fun parse(response: ModelResponse): ActionDescription = modelResponseToActionDescription(response)
+}
 
 class TextToActionParsingTest {
 
-    private val tta = TextToAction(ImmutableConfig())
+    private val tta = TestableTextToAction(ImmutableConfig())
 
     @Test
-    fun `parseToolCalls should parse multiple tool calls with mixed argument types`() {
+    fun `elements JSON with click builds ToolCall with selector as arg0`() {
         val json = """
-            {"tool_calls":[
-              {"name":"click","args":{"selector":"#submit"}},
-              {"name":"fill","args":{"selector":"#q","text":"Hello World"}},
-              {"name":"scrollDown","args":{"count":3}},
-              {"name":"waitForSelector","args":{"selector":"#result","timeoutMillis":8000}},
-              {"name":"navigateTo","args":{"url":"https://example.com"}}
-            ]}
+            {
+              "elements": [
+                {
+                  "locator": "#submit",
+                  "description": "Submit button",
+                  "method": "click",
+                  "arguments": []
+                }
+              ]
+            }
         """.trimIndent()
+        val resp = ModelResponse(json, ResponseState.STOP)
 
-        val calls = tta.parseToolCalls(json)
-        Assertions.assertEquals(5, calls.size)
-        Assertions.assertEquals("click", calls[0].name)
-        Assertions.assertEquals("#submit", calls[0].args["selector"])
-        Assertions.assertEquals(3, calls[2].args["count"]) // numeric preserved
-        Assertions.assertEquals(8000, calls[3].args["timeoutMillis"]) // numeric preserved
+        val ad = tta.parse(resp)
+        assertNotNull(ad.toolCall)
+        assertEquals("driver", ad.toolCall!!.domain)
+        assertEquals("click", ad.toolCall!!.name)
+        assertEquals("#submit", ad.toolCall!!.args["selector"])
+        // Optional: expression rendering should match
+        assertTrue(ad.cssFriendlyExpressions.firstOrNull()?.startsWith("driver.click(") == true)
+        assertFalse(ad.isComplete)
+        assertNull(ad.summary)
+        assertTrue(ad.suggestions.isEmpty())
     }
 
     @Test
-    fun `toolCallToDriverLine should map tool calls to driver code`() {
-        val toolCallsJson = """{"tool_calls":[{"name":"fill","args":{"selector":"#q","text":"Hi"}}]}"""
-        val calls = tta.parseToolCalls(toolCallsJson)
-        val line = tta.toolCallToDriverLine(calls.first())
-        Assertions.assertEquals("driver.fill(\"#q\", \"Hi\")", line)
+    fun `elements JSON with type maps locator to arg0 and text to arg1`() {
+        val json = """
+            {
+              "elements": [
+                {
+                  "locator": "#q",
+                  "description": "Search input",
+                  "method": "type",
+                  "arguments": [ { "name": "text", "value": "hello" } ]
+                }
+              ]
+            }
+        """.trimIndent()
+        val resp = ModelResponse(json, ResponseState.STOP)
+
+        val ad = tta.parse(resp)
+        val tc = requireNotNull(ad.toolCall)
+        assertEquals("driver", tc.domain)
+        assertEquals("type", tc.name)
+        assertEquals("#q", tc.args["selector"])
+        assertEquals("hello", tc.args["text"]) // named mapping for argument values
+
+        assertFalse(ad.isComplete)
     }
 
     @Test
-    fun `parseToolCalls invalid json returns empty list`() {
-        assertTrue(tta.parseToolCalls("not-json").isEmpty())
-        assertTrue(tta.parseToolCalls("{}").isEmpty())
+    fun `completion JSON sets isComplete summary and suggestions`() {
+        val json = """
+            {
+              "isComplete": true,
+              "summary": "Done searching",
+              "suggestions": ["Refine query", "Open first result"]
+            }
+        """.trimIndent()
+        val resp = ModelResponse(json, ResponseState.STOP)
+
+        val ad = tta.parse(resp)
+        assertNull(ad.toolCall)
+        assertTrue(ad.cssFriendlyExpressions.isEmpty())
+        assertTrue(ad.isComplete)
+        assertEquals("Done searching", ad.summary)
+        assertEquals(listOf("Refine query", "Open first result"), ad.suggestions)
     }
 
     @Test
-    fun `parseElementsFromJsonString should parse valid elements array`() {
-        val json = """[
-          {"id":"a1","tagName":"BUTTON","selector":"#a1","text":"Click Me","isVisible":true,
-           "bounds":{"x":10,"y":20,"width":100,"height":40}}
-        ]""".trimIndent()
-        val elements = tta.parseElementsFromJsonString(json)
-        Assertions.assertEquals(1, elements.size)
-        val e = elements.first()
-        Assertions.assertEquals("a1", e.id)
-        Assertions.assertEquals("#a1", e.selector)
-        assertTrue(e.isVisible)
-        Assertions.assertEquals(100.0, e.bounds.width)
-    }
+    fun `plain driver expression fallback is preserved`() {
+        val text = """
+            driver.click("#ok")
+            // some commentary from model
+            driver.scrollToMiddle(0.5)
+        """.trimIndent()
+        val resp = ModelResponse(text, ResponseState.STOP)
 
-    @Test
-    fun `parseElementsFromJsonString should handle wrapper object with elements field`() {
-        val json = """{"elements":[{"id":"x","tagName":"DIV","selector":"#x","text":"Some Text",
-            "isVisible":false,"bounds":{"x":0,"y":0,"width":1,"height":1}}]}"""
-        val elements = tta.parseElementsFromJsonString(json)
-        Assertions.assertEquals(1, elements.size)
-        Assertions.assertEquals("x", elements.first().id)
-    }
-
-    @Test
-    fun `element parsing returns empty list for invalid json`() {
-        assertTrue(tta.parseElementsFromJsonString("not-json").isEmpty())
-    }
-
-    @Test
-    fun `extractSelector variants`() {
-        Assertions.assertEquals("#id1", tta.extractSelector("driver.click(\"#id1\")"))
-        Assertions.assertEquals(".class-x", tta.extractSelector("driver.click(\".class-x\")"))
-    }
-
-    @Test
-    fun `extractSelectorAndText from fill`() {
-        val (sel, text) = tta.extractSelectorAndText("driver.fill(\"#q\", \"Hello\")")
-        Assertions.assertEquals("#q", sel)
-        Assertions.assertEquals("Hello", text)
-    }
-
-    @Test
-    fun `extractRatio parses numeric`() {
-        Assertions.assertEquals(0.75, tta.extractRatio("driver.scrollToMiddle(0.75)"))
-    }
-
-    @Test
-    fun `extractCount parses integer`() {
-        Assertions.assertEquals(5, tta.extractCount("driver.scrollDown(5)"))
-    }
-
-    @Test
-    fun `extractSelectorAndTimeout parses both`() {
-        val (sel, timeout) = tta.extractSelectorAndTimeout("driver.waitForSelector(\"#res\", 7000L)")
-        Assertions.assertEquals("#res", sel)
-        Assertions.assertEquals(7000L, timeout)
-    }
-
-    @Test
-    fun `extractUrl parses url`() {
-        Assertions.assertEquals("https://example.com", tta.extractUrl("driver.navigateTo(\"https://example.com\")"))
+        val ad = tta.parse(resp)
+        // Should extract driver.* lines only
+        assertTrue(ad.toolCall == null || ad.cssFriendlyExpressions.isNotEmpty())
+        assertTrue(ad.cssFriendlyExpressions.any { it.startsWith("driver.click(") })
+        assertTrue(ad.cssFriendlyExpressions.any { it.startsWith("driver.scrollToMiddle(") })
+        assertFalse(ad.isComplete)
     }
 }

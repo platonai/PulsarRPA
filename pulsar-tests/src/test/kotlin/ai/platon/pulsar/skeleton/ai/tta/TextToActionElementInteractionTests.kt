@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 
@@ -11,48 +12,14 @@ import org.springframework.boot.test.context.SpringBootTest
  * Element-specific interaction tests for TextToAction.generateWebDriverAction() method
  * Focus on different HTML element types and interaction patterns
  */
+@Tag("ExternalServiceTest")
+@Tag("TimeConsumingTest")
 @SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionElementInteractionTests : TextToActionTestBase() {
 
     @BeforeEach
     fun setUp() {
         // Setup is handled by parent class
-    }
-
-    // ======== INPUT FIELD TESTS ========
-
-    @Test
-    fun `Make sure interactive elements calculated correctly`() = runEnhancedWebDriverTest(browser) { driver ->
-        driver.navigateTo(ttaUrl1)
-        driver.waitForSelector("body")
-
-        val interactiveElements = textToAction.getInteractiveElements(driver)
-        printlnPro("Extracted ${interactiveElements.size} interactive elements")
-        interactiveElements.forEach { printlnPro(" - ${it.selector} [${it.tagName}] visible=${it.isVisible}") }
-
-        // All returned elements must be visible and one of allowed interactive tags
-        val allowedTags = setOf("input", "select", "textarea", "button", "a")
-        assertTrue(interactiveElements.isNotEmpty(), "Should extract interactive elements from page")
-        assertTrue(interactiveElements.all { it.isVisible }, "All interactive elements should be visible")
-        assertTrue(interactiveElements.all { it.tagName.lowercase() in allowedTags }, "Only interactive tags should be returned")
-
-        // Expected interactive elements on interactive-1.html
-        val expectedSelectors = setOf(
-            "#name",
-            "#colorSelect",
-            "#num1",
-            "#num2",
-            "button[onclick=\"addNumbers()\"]",
-            "button[onclick=\"toggleMessage()\"]",
-        )
-        val selectors = interactiveElements.map { it.selector }.toSet()
-
-        // Must include the expected set (and ideally equal for this page)
-        assertTrue(expectedSelectors.all { it in selectors }, "Should include expected interactive elements: $expectedSelectors, actual: $selectors")
-        assertEquals(expectedSelectors.size, selectors.size, "Should not include non-interactive elements on this page")
-
-        // Ensure some known non-interactive node is not present
-        assertTrue(selectors.none { it.contains("#hiddenMessage") }, "Hidden paragraph should not be included")
     }
 
     @Test
@@ -71,12 +38,14 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
 
-            val action = actionDescription.expressions.first()
-            printlnPro("Input command: $command -> Generated action: $action")
-            assertTrue(action.contains("fill") || action.contains("type"), "Should generate fill action")
-            assertTrue(action.contains(expectedField), "Should target the name field")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Input command: $command -> Generated action: $expression")
+            assertTrue(expression.contains("fill") || expression.contains("type"), "Should generate fill action")
+            // no selectors since 20251023, advanced locators are supported
+//            assertTrue(expression.contains(expectedField), "Should target the name field")
+
         }
     }
 
@@ -96,15 +65,16 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
 
-            val action = actionDescription.expressions.first()
-            printlnPro("Number input command: $command -> Generated action: $action")
-            assertTrue(action.contains("fill") || action.contains("type"), "Should generate fill action")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            printlnPro("Number input command: $command -> Generated action: $expression")
+            assertTrue(expression.contains("fill") || expression.contains("type"), "Should generate fill action")
 
             // Should target one of the number fields
-            val targetsCorrectField = possibleFields.any { field -> action.contains(field) }
-            assertTrue(targetsCorrectField, "Should target one of: $possibleFields")
+            // no selectors since 20251023, advanced locators are supported
+//            val targetsCorrectField = possibleFields.any { field -> expression.contains(field) }
+//            assertTrue(targetsCorrectField, "Should target one of: $possibleFields")
         }
     }
 
@@ -126,11 +96,12 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-                val action = actionDescription.expressions.first()
-                printlnPro("Select command: $command -> Generated action: $action")
-                assertTrue(action.contains("click") || action.contains("select"), "Should generate selection action")
-                assertTrue(action.contains(expectedField), "Should target the select field")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+                val expression = actionDescription.cssFriendlyExpressions.first()
+                printlnPro("Select command: $command -> Generated action: $expression")
+                assertTrue(expression.contains("click") || expression.contains("select"), "Should generate selection action")
+                // no selectors since 20251023, advanced locators are supported
+                // assertTrue(expression.contains(expectedField), "Should target the select field")
         }
     }
 
@@ -150,11 +121,11 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-                val action = actionDescription.expressions.first()
-                printlnPro("Language select command: $command -> Generated action: $action")
-                assertTrue(action.contains("click") || action.contains("select"), "Should generate selection action")
-                assertTrue(action.contains(expectedField), "Should target the language select")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+                val expression = actionDescription.cssFriendlyExpressions.first()
+                printlnPro("Language select command: $command -> Generated action: $expression")
+                assertTrue(expression.contains("click") || expression.contains("select"), "Should generate selection action")
+                assertTrue(expression.contains(expectedField), "Should target the language select")
         }
     }
 
@@ -176,11 +147,12 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-                val action = actionDescription.expressions.first()
-                printlnPro("Button click command: $command -> Generated action: $action")
-                assertTrue(action.contains("click"), "Should generate click action")
-                assertTrue(action.contains("button") || action.contains(expectedContext), "Should target button element")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+                val expression = actionDescription.cssFriendlyExpressions.first()
+                printlnPro("Button click command: $command -> Generated action: $expression")
+                assertTrue(expression.contains("click"), "Should generate click action")
+            // no selectors since 20251023, advanced locators are supported
+//                assertTrue(expression.contains("button") || expression.contains(expectedContext), "Should target button element")
         }
     }
 
@@ -200,11 +172,12 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-                val action = actionDescription.expressions.first()
-                printlnPro("Show summary command: $command -> Generated action: $action")
-                assertTrue(action.contains("click"), "Should generate click action")
-                assertTrue(action.contains(expectedContext) || action.contains("button"), "Should target summary button")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+                val expression = actionDescription.cssFriendlyExpressions.first()
+                printlnPro("Show summary command: $command -> Generated action: $expression")
+                assertTrue(expression.contains("click"), "Should generate click action")
+            // no selectors since 20251023, advanced locators are supported
+//                assertTrue(expression.contains(expectedContext) || expression.contains("button"), "Should target summary button")
         }
     }
 
@@ -226,11 +199,12 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-                val action = actionDescription.expressions.first()
-                printlnPro("Checkbox command: $command -> Generated action: $action")
-                assertTrue(action.contains(expectedAction) || action.contains("click"), "Should generate check or click action")
-                assertTrue(action.contains("subscribeToggle") || action.contains("checkbox"), "Should target subscribe checkbox")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+                val expression = actionDescription.cssFriendlyExpressions.first()
+                printlnPro("Checkbox command: $command -> Generated action: $expression")
+                assertTrue(expression.contains(expectedAction) || expression.contains("click"), "Should generate check or click action")
+            // no selectors since 20251023, advanced locators are supported
+//                assertTrue(expression.contains("subscribeToggle") || expression.contains("checkbox"), "Should target subscribe checkbox")
         }
     }
 
@@ -253,11 +227,12 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-                val action = actionDescription.expressions.first()
-                printlnPro("Uncheck command: $command -> Generated action: $action")
-                assertTrue(action.contains(expectedAction) || action.contains("click"), "Should generate uncheck or click action")
-                assertTrue(action.contains("subscribeToggle") || action.contains("checkbox"), "Should target subscribe checkbox")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+                val expression = actionDescription.cssFriendlyExpressions.first()
+                printlnPro("Uncheck command: $command -> Generated action: $expression")
+                assertTrue(expression.contains(expectedAction) || expression.contains("click"), "Should generate uncheck or click action")
+            // no selectors since 20251023, advanced locators are supported
+//                assertTrue(expression.contains("subscribeToggle") || expression.contains("checkbox"), "Should target subscribe checkbox")
         }
     }
 
@@ -279,13 +254,14 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-                val action = actionDescription.expressions.first()
-                printlnPro("Slider command: $command -> Generated action: $action")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+                val expression = actionDescription.cssFriendlyExpressions.first()
+                printlnPro("Slider command: $command -> Generated action: $expression")
                 // Slider might be handled via click, fill, or JavaScript evaluation
-                assertTrue(action.contains("click") || action.contains("fill") || action.contains("evaluate"),
+                assertTrue(expression.contains("click") || expression.contains("fill") || expression.contains("evaluate"),
                           "Should generate interaction for slider")
-                assertTrue(action.contains(expectedField) || action.contains("slider"), "Should target text size slider")
+            // no selectors since 20251023, advanced locators are supported
+//                assertTrue(expression.contains(expectedField) || expression.contains("slider"), "Should target text size slider")
         }
     }
 
@@ -306,11 +282,11 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-                val action = actionDescription.expressions.first()
-                printlnPro("Form command: $command -> Generated action: $action")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+                val expression = actionDescription.cssFriendlyExpressions.first()
+                printlnPro("Form command: $command -> Generated action: $expression")
                 // Should handle the complex form instruction
-                assertTrue(action.contains("fill") || action.contains("click") || action.contains("check"),
+                assertTrue(expression.contains("fill") || expression.contains("click") || expression.contains("check"),
                           "Should generate form interaction")
         }
     }
@@ -336,11 +312,11 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-                val action = actionDescription.expressions.first()
-                printlnPro("Dynamic content command: $command -> Generated action: $action")
-                assertTrue(action.contains("click"), "Should generate click action")
-                assertTrue(action.contains("toggle") || action.contains("button"), "Should target toggle button")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+                val expression = actionDescription.cssFriendlyExpressions.first()
+                printlnPro("Dynamic content command: $command -> Generated action: $expression")
+                assertTrue(expression.contains("click"), "Should generate click action")
+                assertTrue(expression.contains("toggle") || expression.contains("button"), "Should target toggle button")
         }
     }
 
@@ -362,11 +338,11 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-                val action = actionDescription.expressions.first()
-                printlnPro("Scroll command: $command -> Generated action: $action")
-                assertTrue(action.contains("scroll"), "Should generate scroll action")
-                assertTrue(action.contains(expectedAction), "Should generate correct scroll action")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+                val expression = actionDescription.cssFriendlyExpressions.first()
+                printlnPro("Scroll command: $command -> Generated action: $expression")
+                assertTrue(expression.contains("scroll"), "Should generate scroll action")
+                assertTrue(expression.contains(expectedAction), "Should generate correct scroll action")
         }
     }
 
@@ -388,11 +364,11 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-                val action = actionDescription.expressions.first()
-                printlnPro("Wait command: $command -> Generated action: $action")
-                assertTrue(action.contains("waitFor"), "Should generate wait action")
-                assertTrue(action.contains(expectedAction), "Should generate correct wait action")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+                val expression = actionDescription.cssFriendlyExpressions.first()
+                printlnPro("Wait command: $command -> Generated action: $expression")
+                assertTrue(expression.contains("waitFor"), "Should generate wait action")
+                assertTrue(expression.contains(expectedAction), "Should generate correct wait action")
         }
     }
 
@@ -414,13 +390,13 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
 
-            printlnPro("Non-existent element command: $command -> Generated: ${actionDescription.expressions}")
+            printlnPro("Non-existent element command: $command -> Generated: ${actionDescription.cssFriendlyExpressions}")
             printlnPro("Model response: ${actionDescription.modelResponse.content}")
 
             // Should handle non-existent elements gracefully - might generate empty function or fallback
-            assertTrue(actionDescription.expressions.size <= 1, "Should handle non-existent elements gracefully")
+            assertTrue(actionDescription.cssFriendlyExpressions.size <= 1, "Should handle non-existent elements gracefully")
         }
     }
 
@@ -440,12 +416,12 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-                val action = actionDescription.expressions.first()
-                printlnPro("Ambiguous command: $command -> Generated action: $action")
-                assertTrue(action.contains("click") || action.contains("fill"), "Should generate some action")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+                val expression = actionDescription.cssFriendlyExpressions.first()
+                printlnPro("Ambiguous command: $command -> Generated action: $expression")
+                assertTrue(expression.contains("click") || expression.contains("fill"), "Should generate some action")
                 // Should select one of the available elements
-                printlnPro("Selected element: ${actionDescription.selectedElement}")
+
         }
     }
 }

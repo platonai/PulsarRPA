@@ -7,7 +7,6 @@ import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.browser.driver.chrome.dom.DomDebug
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
-import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Strings
@@ -23,7 +22,6 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.google.gson.JsonElement
-import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
@@ -93,7 +91,16 @@ class BrowserPerceptiveAgent(
         val startTime = Instant.now()
         val sessionId = uuid.toString()
 
-        return resolveProblemWithRetry(action, sessionId, startTime)
+        // Overall timeout to prevent indefinite hangs for a full resolve session
+        return try {
+            withTimeout(config.resolveTimeoutMs) {
+                resolveProblemWithRetry(action, sessionId, startTime)
+            }
+        } catch (_: kotlinx.coroutines.TimeoutCancellationException) {
+            val msg = "Resolve timed out after ${config.resolveTimeoutMs}ms: ${action.action}"
+            addToHistory("resolve TIMEOUT: ${action.action}")
+            ActResult(success = false, message = msg, action = action.action)
+        }
     }
 
     override suspend fun act(action: String): ActResult {
@@ -111,7 +118,7 @@ class BrowserPerceptiveAgent(
             withTimeout(config.actTimeoutMs) {
                 doObserveAct(action)
             }
-        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+        } catch (_: kotlinx.coroutines.TimeoutCancellationException) {
             val msg = "Action timed out after ${config.actTimeoutMs}ms: ${action.action}"
             addToHistory("act TIMEOUT: ${action.action}")
             ActResult(success = false, message = msg, action = action.action)
@@ -137,9 +144,9 @@ class BrowserPerceptiveAgent(
 
         // Inject selector only when the action targets an element
         val selectorActions = ToolCallExecutor.SELECTOR_ACTIONS
-        val noSelectorActions = ToolCallExecutor.NO_SELECTOR_ACTIONS
+        // val noSelectorActions = ToolCallExecutor.NO_SELECTOR_ACTIONS // unused
 
-        val domain = "driver"
+        // val domain = "driver" // unused
         val lowerMethod = method
         val backendNodeId = observe.backendNodeId
         // backend selector is supported since 20251020
@@ -210,14 +217,14 @@ class BrowserPerceptiveAgent(
         // Execute via WebDriver dispatcher
         return try {
             val actionDesc = ActionDescription(
-                expressions = listOf(),
+                cssFriendlyExpressions = listOf(),
                 toolCall = toolCall,
                 modelResponse = ModelResponse(
                     content = "ObserveResult action: ${observe.description}",
                     state = ResponseState.STOP
                 )
             )
-            val result = execute(actionDesc)
+            execute(actionDesc)
 
             val msg = "Action [$lowerMethod] executed on selector: $locator".trim()
             addToHistory("observe.act -> ${toolCall.name}")
@@ -297,14 +304,14 @@ class BrowserPerceptiveAgent(
             includeInteractivity = true
         )
 
-        return domService.getBrowserUseState(snapshotOptions)
+        return domService.getBrowserUseState(snapshotOptions = snapshotOptions)
     }
 
     private suspend fun execute(action: ActionDescription): InstructionResult {
         val toolCall = action.toolCall ?: return InstructionResult(listOf(), listOf(), action.modelResponse)
 
         val result = toolCallExecutor.execute(toolCall, driver)
-        return InstructionResult(action.expressions, listOf(result), action.modelResponse, listOf(toolCall))
+        return InstructionResult(action.cssFriendlyExpressions, listOf(result), action.modelResponse, listOf(toolCall))
     }
 
     private suspend fun doObserve(options: ObserveOptions): List<ObserveResult> {
@@ -421,13 +428,9 @@ class BrowserPerceptiveAgent(
                 inference.observe(params)
             }
             val results = internalResults.elements.map { ele ->
-                // Multi selectors are supported: `cssPath`, `xpath:`, `backend:`, `node:`, `hash:`, `fbn`, `index`
-                val selector = ele.locator?.trim() ?: return@map ObserveResult(description = "No selector observation")
-
-                val backendNodeId = selector.substringAfterLast("-").toIntOrNull()
-                val locator = Locator.parse(selector)
-                requireNotNull(locator)
-                val node = browserUseState.domState.locatorMap[locator]
+                requireNotNull(ele.locator)
+                val locator = browserUseState.domState.getAbsoluteFBNLocator(ele.locator)
+                val node = if (locator != null) browserUseState.domState.locatorMap[locator] else null
                 if (node == null) {
                     logger.warn("Failed retrieving backend node | {} | {}", locator, Pson.toJson(ele))
                 }
@@ -436,7 +439,7 @@ class BrowserPerceptiveAgent(
                 ObserveResult(
                     description = ele.description ?: "(No comment ...)",
                     locator = xpathLocator.trim(),
-                    backendNodeId = backendNodeId,
+                    backendNodeId = locator?.backendNodeId,
                     method = ele.method?.ifBlank { null },
                     arguments = ele.arguments?.takeIf { it.isNotEmpty() }
                 )
@@ -542,21 +545,22 @@ class BrowserPerceptiveAgent(
                 lastError = e
                 logError("Transient error on attempt ${attempt + 1}", e, sessionId)
                 if (attempt < config.maxRetries) {
-                    val delay = calculateRetryDelay(attempt)
-                    delay(delay)
+                    val backoffMs = calculateRetryDelay(attempt)
+                    delay(backoffMs)
                 }
             } catch (e: PerceptiveAgentError.TimeoutError) {
                 lastError = e
                 logError("Timeout error on attempt ${attempt + 1}", e, sessionId)
                 if (attempt < config.maxRetries) {
-                    delay(config.baseRetryDelayMs)
+                    val baseBackoffMs = config.baseRetryDelayMs
+                    delay(baseBackoffMs)
                 }
             } catch (e: Exception) {
                 lastError = e
                 logError("Unexpected error on attempt ${attempt + 1}", e, sessionId)
                 if (shouldRetryError(e) && attempt < config.maxRetries) {
-                    val delay = calculateRetryDelay(attempt)
-                    delay(delay)
+                    val backoffMs = calculateRetryDelay(attempt)
+                    delay(backoffMs)
                 } else {
                     // Non-retryable error, exit loop
                     break
@@ -593,7 +597,7 @@ class BrowserPerceptiveAgent(
             )
         )
 
-        val systemMsg = tta.buildOperatorSystemPrompt(overallGoal)
+        val systemMsg = TextToAction.buildOperatorSystemPrompt(overallGoal)
         var consecutiveNoOps = 0
         var step = 0
 
@@ -636,30 +640,30 @@ class BrowserPerceptiveAgent(
                 } else {
                     null
                 }
-                val userMsg = buildUserMessage(overallGoal, browserUseState)
+                val userMsg = promptBuilder.buildCurrentStepUserMessage(overallGoal, _history)
 
-                // instruction: agent guide + overall goal + last action summary + current context message
-                val instruction = buildExecutionMessage(systemMsg, userMsg, screenshotB64)
+                // currentStepMessage: agent general guide + overall goal + action history + overall goal again
+                val currentStepMessage = buildCurrentStepMessage(systemMsg, userMsg, screenshotB64)
                 // interactive elements are already appended to message
-                val stepActionResult = generateStepAction(instruction, stepContext, null, screenshotB64)
+                val stepAction = generateStepAction(currentStepMessage, stepContext, browserUseState, screenshotB64)
 
-                if (stepActionResult == null) {
+                if (stepAction == null) {
                     consecutiveNoOps++
                     val stop = handleConsecutiveNoOps(consecutiveNoOps, step, stepContext)
                     if (stop) break
                     continue
                 }
 
-                val response = stepActionResult.modelResponse
-                val parsed = parseOperatorResponse(response.content)
+                val response = stepAction.modelResponse
+                val toolCallResponse = parseStepActionResponse(response.content)
 
                 // Check for task completion
-                if (shouldTerminate(parsed)) {
-                    handleTaskCompletion(parsed, step, stepContext)
+                if (shouldTerminate(toolCallResponse)) {
+                    handleTaskCompletion(toolCallResponse, step, stepContext)
                     break
                 }
 
-                val toolCall = parsed.toolCalls.firstOrNull()
+                val toolCall = toolCallResponse.toolCalls.firstOrNull()
                 if (toolCall == null) {
                     consecutiveNoOps++
                     val stop = handleConsecutiveNoOps(consecutiveNoOps, step, stepContext)
@@ -671,7 +675,7 @@ class BrowserPerceptiveAgent(
                 consecutiveNoOps = 0
 
                 // Execute the tool call with enhanced error handling
-                val execSummary = doExecuteToolCall(stepActionResult, step, stepContext)
+                val execSummary = doExecuteToolCall(stepAction, step, stepContext)
 
                 if (execSummary != null) {
                     addToHistory("#$step $execSummary")
@@ -701,7 +705,6 @@ class BrowserPerceptiveAgent(
             val summary = generateFinalSummary(overallGoal, context)
             val ok = summary.state != ResponseState.OTHER
             return ActResult(success = ok, message = summary.content, action = overallGoal)
-
         } catch (e: Exception) {
             val executionTime = Duration.between(startTime, Instant.now())
             logStructured(
@@ -865,14 +868,15 @@ class BrowserPerceptiveAgent(
      * Generates action with retry mechanism
      */
     private suspend fun generateStepAction(
+        // instruction: agent guide + overall goal + last action summary
         instruction: String,
         context: ExecutionContext,
-        domState: DOMState?,
+        browserUseState: BrowserUseState,
         screenshotB64: String?
     ): ActionDescription? {
         return try {
             // Use overload supplying extracted elements to avoid re-extraction
-            tta.generate(instruction, domState, screenshotB64)
+            tta.generate(instruction, browserUseState, screenshotB64)
         } catch (e: Exception) {
             logError("Action generation failed", e, context.sessionId)
             consecutiveFailureCounter.incrementAndGet()
@@ -1007,8 +1011,8 @@ class BrowserPerceptiveAgent(
             return true
         }
 
-        val delay = calculateConsecutiveNoOpDelay(consecutiveNoOps)
-        delay(delay)
+        val delayMs = calculateConsecutiveNoOpDelay(consecutiveNoOps)
+        delay(delayMs)
         return false
     }
 
@@ -1047,13 +1051,7 @@ class BrowserPerceptiveAgent(
     private fun updatePerformanceMetrics(step: Int, stepStartTime: Instant, success: Boolean) {
         val stepTime = Duration.between(stepStartTime, Instant.now()).toMillis()
         stepExecutionTimes[step] = stepTime
-
-        // Update metrics (simplified for brevity)
-        if (success) {
-            // Update success metrics
-        } else {
-            // Update failure metrics
-        }
+        // metrics update deferred
     }
 
     /**
@@ -1141,7 +1139,7 @@ class BrowserPerceptiveAgent(
      * @param screenshotB64 Optional base64 PNG/JPEG screenshot; if non-null, only a marker line is appended
      * @return A multi-line String ready for the LLM as the text part of a multimodal request
      */
-    private fun buildExecutionMessage(systemPrompt: String, userMsg: String, screenshotB64: String?): String {
+    private fun buildCurrentStepMessage(systemPrompt: String, userMsg: String, screenshotB64: String?): String {
         return buildString {
             appendLine(systemPrompt)
             appendLine(userMsg)
@@ -1166,57 +1164,62 @@ class BrowserPerceptiveAgent(
         }
     }
 
-    private suspend fun buildUserMessage(instruction: String, browserUseState: BrowserUseState): String {
-        val currentUrl = getCurrentUrl()
-        val his = if (_history.isEmpty()) "(无)" else _history.takeLast(min(8, _history.size)).joinToString("\n")
-        val interactiveNodesJson = browserUseState.domState.interactiveNodesLazyJson
-
-        return """
-此前动作摘要：
-$his
-
-可交互元素：
-$interactiveNodesJson
-
-请基于当前页面截图、交互元素与历史动作，规划下一步（严格单步原子动作），若无法推进请输出空 tool_calls。
-当前目标：$instruction
-当前URL：$currentUrl
-		""".trimIndent()
-    }
-
-    private fun parseOperatorResponse(content: String): ToolCallResponse {
+    private fun parseStepActionResponse(content: String): ToolCallResponse {
         val domain = "driver"
 
-        // 1) Try structured JSON with tool_calls
-        try {
+        // Support two JSON formats only: completion or elements-based action
+        return try {
             val root = JsonParser.parseString(content)
             if (root.isJsonObject) {
                 val obj = root.asJsonObject
-                val toolCalls = mutableListOf<ToolCall>()
-                if (obj.has("tool_calls") && obj.get("tool_calls").isJsonArray) {
-                    obj.getAsJsonArray("tool_calls").forEach { el ->
-                        if (el.isJsonObject) {
-                            val tc = el.asJsonObject
-                            val name = tc["name"]?.takeIf { it.isJsonPrimitive }?.asString
-                            val args = (tc.getAsJsonObject("args") ?: JsonObject()).entrySet()
-                                .associate { (k, v) -> k to jsonElementToKotlin(v) }
-                            if (!name.isNullOrBlank()) toolCalls += ToolCall(domain, name, args)
+
+                // Completion JSON
+                if (obj.has("isComplete")) {
+                    val complete = obj.get("isComplete")?.takeIf { it.isJsonPrimitive }?.asBoolean ?: false
+                    return ToolCallResponse(emptyList(), if (complete) true else null)
+                }
+
+                // Elements-based action JSON
+                if (obj.has("elements") && obj.get("elements").isJsonArray) {
+                    val arr = obj.getAsJsonArray("elements")
+                    val first = arr.firstOrNull()?.takeIf { it.isJsonObject }?.asJsonObject
+                    if (first != null) {
+                        val method = first.get("method")?.takeIf { it.isJsonPrimitive }?.asString
+                        val locator = first.get("locator")?.takeIf { it.isJsonPrimitive }?.asString
+                        if (!method.isNullOrBlank()) {
+                            val args = linkedMapOf<String, Any?>()
+                            var i = 0
+                            if (!locator.isNullOrBlank()) {
+                                args[i.toString()] = locator
+                                i++
+                            }
+                            val a = first.get("arguments")
+                            if (a?.isJsonArray == true) {
+                                a.asJsonArray.forEach { el ->
+                                    when {
+                                        el.isJsonObject -> {
+                                            val v = el.asJsonObject.get("value")
+                                            args[i.toString()] = if (v == null) null else jsonElementToKotlin(v)
+                                            i++
+                                        }
+                                        el.isJsonPrimitive -> {
+                                            args[i.toString()] = el.asString
+                                            i++
+                                        }
+                                    }
+                                }
+                            }
+                            val tc = ToolCall(domain, method, args)
+                            return ToolCallResponse(listOf(tc), null)
                         }
                     }
                 }
-                val taskComplete = obj.get("taskComplete")?.takeIf { it.isJsonPrimitive }?.asBoolean
-                if (toolCalls.isNotEmpty() || taskComplete != null) {
-                    return ToolCallResponse(toolCalls.take(1), taskComplete)
-                }
             }
-        } catch (_: Exception) { /* fall back */
+            // Not a supported JSON shape; return empty
+            ToolCallResponse(emptyList(), null)
+        } catch (_: Exception) {
+            ToolCallResponse(emptyList(), null)
         }
-
-        // 2) Fall back to TTA tool call JSON parser
-        return runCatching {
-            val calls = tta.parseToolCalls(content).map { ToolCall(domain, it.name, it.args) }
-            ToolCallResponse(calls.take(1), null)
-        }.getOrElse { ToolCallResponse(emptyList(), null) }
     }
 
     private fun jsonElementToKotlin(e: JsonElement): Any? = when {
@@ -1281,7 +1284,7 @@ $interactiveNodesJson
 
             // Medium Priority #12: Validate port with configurable whitelist
             val port = uri.port
-            if (port != -1 && port !in config.allowedPorts) {
+            if (port != -1 && !config.allowedPorts.contains(port)) {
                 logStructured(
                     "Blocked URL with non-whitelisted port", ExecutionContext(uuid.toString(), 0, "url_validation", ""),
                     mapOf("port" to port, "host" to host, "allowedPorts" to config.allowedPorts)

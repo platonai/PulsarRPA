@@ -1,8 +1,7 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
-import org.junit.jupiter.api.Assertions.assertEquals
-import org.junit.jupiter.api.Assertions.assertNotNull
-import org.junit.jupiter.api.Assertions.assertTrue
+import ai.platon.pulsar.skeleton.ai.support.ToolCall
+import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 class ToolCallExecutorTest {

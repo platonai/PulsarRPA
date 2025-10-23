@@ -20,35 +20,6 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
     }
 
     @Test
-    fun `parseOperatorResponse should parse valid tool_calls JSON without LLM`() = runEnhancedWebDriverTest { driver ->
-        val agent = BrowserPerceptiveAgent(driver, config = AgentConfig(enableStructuredLogging = false))
-
-        val json = """
-            {
-              "tool_calls": [
-                {"name": "navigateTo", "args": {"url": "https://example.com"}},
-                {"name": "click", "args": {"selector": "#btn"}}
-              ],
-              "taskComplete": false
-            }
-        """.trimIndent()
-
-        val m = getMethod(agent, "parseOperatorResponse", String::class.java)
-        val parsed = m.invoke(agent, json)
-        val parsedClass = parsed!!::class.java
-
-        val toolCallsField = parsedClass.getDeclaredField("toolCalls").apply { isAccessible = true }
-        val taskCompleteField = parsedClass.getDeclaredField("taskComplete").apply { isAccessible = true }
-
-        val toolCalls = toolCallsField.get(parsed) as List<*>
-        val taskComplete = taskCompleteField.get(parsed) as Boolean?
-
-        assertNotNull(toolCalls)
-        assertTrue(toolCalls.isNotEmpty(), "Should parse at least one tool call")
-        assertEquals(false, taskComplete)
-    }
-
-    @Test
     fun `isSafeUrl should allow http and https and block others`() = runEnhancedWebDriverTest { driver ->
         val agent = BrowserPerceptiveAgent(driver)
         val m = getMethod(agent, "isSafeUrl", String::class.java)
