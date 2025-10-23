@@ -5,10 +5,8 @@ import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.InstructionResult
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.browser.driver.chrome.dom.DomDebug
-import ai.platon.pulsar.browser.driver.chrome.dom.FBNLocator
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
-import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Strings
@@ -24,11 +22,9 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.google.gson.JsonElement
-import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
-import org.apache.commons.lang3.StringUtils
 import java.io.IOException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
@@ -212,7 +208,7 @@ class BrowserPerceptiveAgent(
         // Execute via WebDriver dispatcher
         return try {
             val actionDesc = ActionDescription(
-                expressions = listOf(),
+                cssFriendlyExpressions = listOf(),
                 toolCall = toolCall,
                 modelResponse = ModelResponse(
                     content = "ObserveResult action: ${observe.description}",
@@ -306,7 +302,7 @@ class BrowserPerceptiveAgent(
         val toolCall = action.toolCall ?: return InstructionResult(listOf(), listOf(), action.modelResponse)
 
         val result = toolCallExecutor.execute(toolCall, driver)
-        return InstructionResult(action.expressions, listOf(result), action.modelResponse, listOf(toolCall))
+        return InstructionResult(action.cssFriendlyExpressions, listOf(result), action.modelResponse, listOf(toolCall))
     }
 
     private suspend fun doObserve(options: ObserveOptions): List<ObserveResult> {
@@ -591,7 +587,7 @@ class BrowserPerceptiveAgent(
             )
         )
 
-        val systemMsg = tta.buildOperatorSystemPrompt(overallGoal)
+        val systemMsg = TextToAction.buildOperatorSystemPrompt(overallGoal)
         var consecutiveNoOps = 0
         var step = 0
 

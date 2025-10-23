@@ -37,18 +37,18 @@ internal class InternalAgentExecutor(
 
 
     suspend fun performAct(action: ActionDescription): InstructionResult {
-        if (action.expressions.isEmpty() && action.toolCall == null) {
+        if (action.cssFriendlyExpressions.isEmpty() && action.toolCall == null) {
             return InstructionResult(listOf(), functionResults = listOf(), modelResponse = action.modelResponse)
         }
 
         val result = if (action.toolCall != null) {
             dispatcher.execute(action.toolCall, driver)
         } else {
-            val functionCalls = action.expressions.take(1)
-            functionCalls.map { fc -> dispatcher.execute(fc, driver) }.firstOrNull()
+            val expressions = action.cssFriendlyExpressions.take(1)
+            expressions.map { fc -> dispatcher.execute(fc, driver) }.firstOrNull()
         }
 
-        return InstructionResult(action.expressions, functionResults = listOf(result), modelResponse = action.modelResponse)
+        return InstructionResult(action.cssFriendlyExpressions, functionResults = listOf(result), modelResponse = action.modelResponse)
     }
 
     suspend fun execute(action: ActionDescription) = performAct(action)
@@ -63,10 +63,10 @@ internal class InternalAgentExecutor(
         val result = if (action.toolCall != null) {
             dispatcher.execute(action.toolCall, driver)
         } else {
-            val functionCalls = action.expressions.take(1)
-            functionCalls.map { fc -> dispatcher.execute(fc, driver) }.firstOrNull()
+            val expressions = action.cssFriendlyExpressions.take(1)
+            expressions.map { fc -> dispatcher.execute(fc, driver) }.firstOrNull()
         }
 
-        return InstructionResult(action.expressions, listOf(result), action.modelResponse)
+        return InstructionResult(action.cssFriendlyExpressions, listOf(result), action.modelResponse)
     }
 }

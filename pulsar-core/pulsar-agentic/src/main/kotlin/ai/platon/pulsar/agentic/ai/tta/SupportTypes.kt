@@ -47,14 +47,14 @@ data class ActionResponse(
 )
 
 data class ActionDescription constructor(
-    val expressions: List<String> = emptyList(),
     val modelResponse: ModelResponse,
     val toolCall: ToolCall? = null,
     val locator: String? = null,
-    val xpath: String? = null,
     val node: DOMTreeNodeEx? = null,
-    @Deprecated("Use node instead", ReplaceWith("node"))
-    val selectedElement: InteractiveElement? = null,
+    val xpath: String? = null,
+    val cssSelector: String? = null,
+    val expressions: List<String> = emptyList(),
+    val cssFriendlyExpressions: List<String> = emptyList(),
     val isComplete: Boolean = false,
     val summary: String? = null,
     val suggestions: List<String> = emptyList()
