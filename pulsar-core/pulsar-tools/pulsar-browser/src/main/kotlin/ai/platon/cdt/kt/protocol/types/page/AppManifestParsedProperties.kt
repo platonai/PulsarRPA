@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.page
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -8,7 +9,7 @@ import kotlin.String
  * Parsed app manifest properties.
  */
 @Experimental
-public data class AppManifestParsedProperties(
-  @JsonProperty("scope")
-  public val scope: String,
+data class AppManifestParsedProperties(
+  @param:JsonProperty("scope")
+  val scope: String,
 )

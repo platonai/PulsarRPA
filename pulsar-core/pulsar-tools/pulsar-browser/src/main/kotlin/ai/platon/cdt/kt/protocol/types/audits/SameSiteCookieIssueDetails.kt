@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.audits
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -10,22 +11,22 @@ import kotlin.collections.List
  * time finding a specific cookie. With this, we can convey specific error
  * information without the cookie.
  */
-public data class SameSiteCookieIssueDetails(
-  @JsonProperty("cookie")
-  public val cookie: AffectedCookie,
-  @JsonProperty("cookieWarningReasons")
-  public val cookieWarningReasons: List<SameSiteCookieWarningReason>,
-  @JsonProperty("cookieExclusionReasons")
-  public val cookieExclusionReasons: List<SameSiteCookieExclusionReason>,
-  @JsonProperty("operation")
-  public val operation: SameSiteCookieOperation,
-  @JsonProperty("siteForCookies")
-  @Optional
-  public val siteForCookies: String? = null,
-  @JsonProperty("cookieUrl")
-  @Optional
-  public val cookieUrl: String? = null,
-  @JsonProperty("request")
-  @Optional
-  public val request: AffectedRequest? = null,
+data class SameSiteCookieIssueDetails(
+  @param:JsonProperty("cookie")
+  val cookie: AffectedCookie,
+  @param:JsonProperty("cookieWarningReasons")
+  val cookieWarningReasons: List<SameSiteCookieWarningReason>,
+  @param:JsonProperty("cookieExclusionReasons")
+  val cookieExclusionReasons: List<SameSiteCookieExclusionReason>,
+  @param:JsonProperty("operation")
+  val operation: SameSiteCookieOperation,
+  @param:JsonProperty("siteForCookies")
+  @param:Optional
+  val siteForCookies: String? = null,
+  @param:JsonProperty("cookieUrl")
+  @param:Optional
+  val cookieUrl: String? = null,
+  @param:JsonProperty("request")
+  @param:Optional
+  val request: AffectedRequest? = null,
 )

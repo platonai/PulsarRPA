@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.webaudio
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -7,21 +8,21 @@ import kotlin.String
 /**
  * Protocol object for AudioNode
  */
-public data class AudioNode(
-  @JsonProperty("nodeId")
-  public val nodeId: String,
-  @JsonProperty("contextId")
-  public val contextId: String,
-  @JsonProperty("nodeType")
-  public val nodeType: String,
-  @JsonProperty("numberOfInputs")
-  public val numberOfInputs: Double,
-  @JsonProperty("numberOfOutputs")
-  public val numberOfOutputs: Double,
-  @JsonProperty("channelCount")
-  public val channelCount: Double,
-  @JsonProperty("channelCountMode")
-  public val channelCountMode: ChannelCountMode,
-  @JsonProperty("channelInterpretation")
-  public val channelInterpretation: ChannelInterpretation,
+data class AudioNode(
+  @param:JsonProperty("nodeId")
+  val nodeId: String,
+  @param:JsonProperty("contextId")
+  val contextId: String,
+  @param:JsonProperty("nodeType")
+  val nodeType: String,
+  @param:JsonProperty("numberOfInputs")
+  val numberOfInputs: Double,
+  @param:JsonProperty("numberOfOutputs")
+  val numberOfOutputs: Double,
+  @param:JsonProperty("channelCount")
+  val channelCount: Double,
+  @param:JsonProperty("channelCountMode")
+  val channelCountMode: ChannelCountMode,
+  @param:JsonProperty("channelInterpretation")
+  val channelInterpretation: ChannelInterpretation,
 )

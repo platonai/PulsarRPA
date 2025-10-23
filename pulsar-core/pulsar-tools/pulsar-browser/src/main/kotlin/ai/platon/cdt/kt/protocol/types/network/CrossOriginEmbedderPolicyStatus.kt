@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.network
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -6,15 +7,15 @@ import com.fasterxml.jackson.`annotation`.JsonProperty
 import kotlin.String
 
 @Experimental
-public data class CrossOriginEmbedderPolicyStatus(
-  @JsonProperty("value")
-  public val `value`: CrossOriginEmbedderPolicyValue,
-  @JsonProperty("reportOnlyValue")
-  public val reportOnlyValue: CrossOriginEmbedderPolicyValue,
-  @JsonProperty("reportingEndpoint")
-  @Optional
-  public val reportingEndpoint: String? = null,
-  @JsonProperty("reportOnlyReportingEndpoint")
-  @Optional
-  public val reportOnlyReportingEndpoint: String? = null,
+data class CrossOriginEmbedderPolicyStatus(
+  @param:JsonProperty("value")
+  val `value`: CrossOriginEmbedderPolicyValue,
+  @param:JsonProperty("reportOnlyValue")
+  val reportOnlyValue: CrossOriginEmbedderPolicyValue,
+  @param:JsonProperty("reportingEndpoint")
+  @param:Optional
+  val reportingEndpoint: String? = null,
+  @param:JsonProperty("reportOnlyReportingEndpoint")
+  @param:Optional
+  val reportOnlyReportingEndpoint: String? = null,
 )

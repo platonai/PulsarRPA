@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.network
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -7,9 +8,9 @@ import ai.platon.cdt.kt.protocol.types.network.ErrorReason
 import ai.platon.cdt.kt.protocol.types.network.Request
 import ai.platon.cdt.kt.protocol.types.network.ResourceType
 import com.fasterxml.jackson.`annotation`.JsonProperty
-import java.lang.Deprecated
 import kotlin.Any
 import kotlin.Boolean
+import kotlin.Deprecated
 import kotlin.Int
 import kotlin.String
 import kotlin.collections.Map
@@ -20,37 +21,37 @@ import kotlin.collections.Map
  * Deprecated, use Fetch.requestPaused instead.
  */
 @Experimental
-@Deprecated
-public data class RequestIntercepted(
-  @JsonProperty("interceptionId")
-  public val interceptionId: String,
-  @JsonProperty("request")
-  public val request: Request,
-  @JsonProperty("frameId")
-  public val frameId: String,
-  @JsonProperty("resourceType")
-  public val resourceType: ResourceType,
-  @JsonProperty("isNavigationRequest")
-  public val isNavigationRequest: Boolean,
-  @JsonProperty("isDownload")
-  @Optional
-  public val isDownload: Boolean? = null,
-  @JsonProperty("redirectUrl")
-  @Optional
-  public val redirectUrl: String? = null,
-  @JsonProperty("authChallenge")
-  @Optional
-  public val authChallenge: AuthChallenge? = null,
-  @JsonProperty("responseErrorReason")
-  @Optional
-  public val responseErrorReason: ErrorReason? = null,
-  @JsonProperty("responseStatusCode")
-  @Optional
-  public val responseStatusCode: Int? = null,
-  @JsonProperty("responseHeaders")
-  @Optional
-  public val responseHeaders: Map<String, Any?>? = null,
-  @JsonProperty("requestId")
-  @Optional
-  public val requestId: String? = null,
+@Deprecated("Deprecated")
+data class RequestIntercepted(
+  @param:JsonProperty("interceptionId")
+  val interceptionId: String,
+  @param:JsonProperty("request")
+  val request: Request,
+  @param:JsonProperty("frameId")
+  val frameId: String,
+  @param:JsonProperty("resourceType")
+  val resourceType: ResourceType,
+  @param:JsonProperty("isNavigationRequest")
+  val isNavigationRequest: Boolean,
+  @param:JsonProperty("isDownload")
+  @param:Optional
+  val isDownload: Boolean? = null,
+  @param:JsonProperty("redirectUrl")
+  @param:Optional
+  val redirectUrl: String? = null,
+  @param:JsonProperty("authChallenge")
+  @param:Optional
+  val authChallenge: AuthChallenge? = null,
+  @param:JsonProperty("responseErrorReason")
+  @param:Optional
+  val responseErrorReason: ErrorReason? = null,
+  @param:JsonProperty("responseStatusCode")
+  @param:Optional
+  val responseStatusCode: Int? = null,
+  @param:JsonProperty("responseHeaders")
+  @param:Optional
+  val responseHeaders: Map<String, Any?>? = null,
+  @param:JsonProperty("requestId")
+  @param:Optional
+  val requestId: String? = null,
 )

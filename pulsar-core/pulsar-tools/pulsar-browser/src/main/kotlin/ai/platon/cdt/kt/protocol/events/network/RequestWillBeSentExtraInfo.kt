@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.network
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -17,14 +18,14 @@ import kotlin.collections.Map
  * or requestWillBeSentExtraInfo will be fired first for the same request.
  */
 @Experimental
-public data class RequestWillBeSentExtraInfo(
-  @JsonProperty("requestId")
-  public val requestId: String,
-  @JsonProperty("associatedCookies")
-  public val associatedCookies: List<BlockedCookieWithReason>,
-  @JsonProperty("headers")
-  public val headers: Map<String, Any?>,
-  @JsonProperty("clientSecurityState")
-  @Optional
-  public val clientSecurityState: ClientSecurityState? = null,
+data class RequestWillBeSentExtraInfo(
+  @param:JsonProperty("requestId")
+  val requestId: String,
+  @param:JsonProperty("associatedCookies")
+  val associatedCookies: List<BlockedCookieWithReason>,
+  @param:JsonProperty("headers")
+  val headers: Map<String, Any?>,
+  @param:JsonProperty("clientSecurityState")
+  @param:Optional
+  val clientSecurityState: ClientSecurityState? = null,
 )

@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.commands
 
 import ai.platon.cdt.kt.protocol.events.network.DataReceived
@@ -47,9 +48,9 @@ import ai.platon.cdt.kt.protocol.types.network.RequestPattern
 import ai.platon.cdt.kt.protocol.types.network.ResponseBody
 import ai.platon.cdt.kt.protocol.types.network.ResponseBodyForInterception
 import ai.platon.cdt.kt.protocol.types.network.SecurityIsolationStatus
-import java.lang.Deprecated
 import kotlin.Any
 import kotlin.Boolean
+import kotlin.Deprecated
 import kotlin.Double
 import kotlin.Int
 import kotlin.String
@@ -61,51 +62,50 @@ import kotlin.collections.Map
  * Network domain allows tracking network activities of the page. It exposes information about http,
  * file, data and other requests and responses, their headers, bodies, timing, etc.
  */
-public interface Network {
+interface Network {
   /**
-   * Sets a list of content encodings that will be accepted. Empty list means no encoding is
-   * accepted.
+   * Sets a list of content encodings that will be accepted. Empty list means no encoding is accepted.
    * @param encodings List of accepted content encodings.
    */
   @Experimental
-  public suspend fun setAcceptedEncodings(@ParamName("encodings") encodings: List<ContentEncoding>)
+  suspend fun setAcceptedEncodings(@ParamName("encodings") encodings: List<ContentEncoding>)
 
   /**
    * Clears accepted encodings set by setAcceptedEncodings
    */
   @Experimental
-  public suspend fun clearAcceptedEncodingsOverride()
+  suspend fun clearAcceptedEncodingsOverride()
 
   /**
    * Tells whether clearing browser cache is supported.
    */
-  @Deprecated
+  @Deprecated("Deprecated by protocol")
   @Returns("result")
-  public suspend fun canClearBrowserCache(): Boolean
+  suspend fun canClearBrowserCache(): Boolean
 
   /**
    * Tells whether clearing browser cookies is supported.
    */
-  @Deprecated
+  @Deprecated("Deprecated by protocol")
   @Returns("result")
-  public suspend fun canClearBrowserCookies(): Boolean
+  suspend fun canClearBrowserCookies(): Boolean
 
   /**
    * Tells whether emulation of network conditions is supported.
    */
-  @Deprecated
+  @Deprecated("Deprecated by protocol")
   @Returns("result")
-  public suspend fun canEmulateNetworkConditions(): Boolean
+  suspend fun canEmulateNetworkConditions(): Boolean
 
   /**
    * Clears browser cache.
    */
-  public suspend fun clearBrowserCache()
+  suspend fun clearBrowserCache()
 
   /**
    * Clears browser cookies.
    */
-  public suspend fun clearBrowserCookies()
+  suspend fun clearBrowserCookies()
 
   /**
    * Response to Network.requestIntercepted which either modifies the request to continue with any
@@ -114,92 +114,80 @@ public interface Network {
    * event will be sent with the same InterceptionId.
    * Deprecated, use Fetch.continueRequest, Fetch.fulfillRequest and Fetch.failRequest instead.
    * @param interceptionId
-   * @param errorReason If set this causes the request to fail with the given reason. Passing
-   * `Aborted` for requests
+   * @param errorReason If set this causes the request to fail with the given reason. Passing `Aborted` for requests
    * marked with `isNavigationRequest` also cancels the navigation. Must not be set in response
    * to an authChallenge.
-   * @param rawResponse If set the requests completes using with the provided base64 encoded raw
-   * response, including
-   * HTTP status line and headers etc... Must not be set in response to an authChallenge. (Encoded
-   * as a base64 string when passed over JSON)
-   * @param url If set the request url will be modified in a way that's not observable by page. Must
-   * not be
+   * @param rawResponse If set the requests completes using with the provided base64 encoded raw response, including
+   * HTTP status line and headers etc... Must not be set in response to an authChallenge. (Encoded as a base64 string when passed over JSON)
+   * @param url If set the request url will be modified in a way that's not observable by page. Must not be
    * set in response to an authChallenge.
-   * @param method If set this allows the request method to be overridden. Must not be set in
-   * response to an
+   * @param method If set this allows the request method to be overridden. Must not be set in response to an
    * authChallenge.
-   * @param postData If set this allows postData to be set. Must not be set in response to an
+   * @param postData If set this allows postData to be set. Must not be set in response to an authChallenge.
+   * @param headers If set this allows the request headers to be changed. Must not be set in response to an
    * authChallenge.
-   * @param headers If set this allows the request headers to be changed. Must not be set in
-   * response to an
-   * authChallenge.
-   * @param authChallengeResponse Response to a requestIntercepted with an authChallenge. Must not
-   * be set otherwise.
+   * @param authChallengeResponse Response to a requestIntercepted with an authChallenge. Must not be set otherwise.
    */
-  @Deprecated
+  @Deprecated("Deprecated by protocol")
   @Experimental
-  public suspend fun continueInterceptedRequest(
+  suspend fun continueInterceptedRequest(
     @ParamName("interceptionId") interceptionId: String,
-    @ParamName("errorReason") @Optional errorReason: ErrorReason?,
-    @ParamName("rawResponse") @Optional rawResponse: String?,
-    @ParamName("url") @Optional url: String?,
-    @ParamName("method") @Optional method: String?,
-    @ParamName("postData") @Optional postData: String?,
-    @ParamName("headers") @Optional headers: Map<String, Any?>?,
-    @ParamName("authChallengeResponse") @Optional authChallengeResponse: AuthChallengeResponse?,
+    @ParamName("errorReason") @Optional errorReason: ErrorReason? = null,
+    @ParamName("rawResponse") @Optional rawResponse: String? = null,
+    @ParamName("url") @Optional url: String? = null,
+    @ParamName("method") @Optional method: String? = null,
+    @ParamName("postData") @Optional postData: String? = null,
+    @ParamName("headers") @Optional headers: Map<String, Any?>? = null,
+    @ParamName("authChallengeResponse") @Optional authChallengeResponse: AuthChallengeResponse? = null,
   )
 
-  @Deprecated
+  @Deprecated("Deprecated by protocol")
   @Experimental
-  public suspend fun continueInterceptedRequest(@ParamName("interceptionId")
-      interceptionId: String) {
+  suspend fun continueInterceptedRequest(@ParamName("interceptionId") interceptionId: String) {
     return continueInterceptedRequest(interceptionId, null, null, null, null, null, null, null)
   }
 
   /**
    * Deletes browser cookies with matching name and url or domain/path pair.
    * @param name Name of the cookies to remove.
-   * @param url If specified, deletes all the cookies with the given name where domain and path
-   * match
+   * @param url If specified, deletes all the cookies with the given name where domain and path match
    * provided URL.
    * @param domain If specified, deletes only cookies with the exact domain.
    * @param path If specified, deletes only cookies with the exact path.
    */
-  public suspend fun deleteCookies(
+  suspend fun deleteCookies(
     @ParamName("name") name: String,
-    @ParamName("url") @Optional url: String?,
-    @ParamName("domain") @Optional domain: String?,
-    @ParamName("path") @Optional path: String?,
+    @ParamName("url") @Optional url: String? = null,
+    @ParamName("domain") @Optional domain: String? = null,
+    @ParamName("path") @Optional path: String? = null,
   )
 
-  public suspend fun deleteCookies(@ParamName("name") name: String) {
+  suspend fun deleteCookies(@ParamName("name") name: String) {
     return deleteCookies(name, null, null, null)
   }
 
   /**
    * Disables network tracking, prevents network events from being sent to the client.
    */
-  public suspend fun disable()
+  suspend fun disable()
 
   /**
    * Activates emulation of network conditions.
    * @param offline True to emulate internet disconnection.
    * @param latency Minimum latency from request sent to response headers received (ms).
-   * @param downloadThroughput Maximal aggregated download throughput (bytes/sec). -1 disables
-   * download throttling.
-   * @param uploadThroughput Maximal aggregated upload throughput (bytes/sec).  -1 disables upload
-   * throttling.
+   * @param downloadThroughput Maximal aggregated download throughput (bytes/sec). -1 disables download throttling.
+   * @param uploadThroughput Maximal aggregated upload throughput (bytes/sec).  -1 disables upload throttling.
    * @param connectionType Connection type if known.
    */
-  public suspend fun emulateNetworkConditions(
+  suspend fun emulateNetworkConditions(
     @ParamName("offline") offline: Boolean,
     @ParamName("latency") latency: Double,
     @ParamName("downloadThroughput") downloadThroughput: Double,
     @ParamName("uploadThroughput") uploadThroughput: Double,
-    @ParamName("connectionType") @Optional connectionType: ConnectionType?,
+    @ParamName("connectionType") @Optional connectionType: ConnectionType? = null,
   )
 
-  public suspend fun emulateNetworkConditions(
+  suspend fun emulateNetworkConditions(
     @ParamName("offline") offline: Boolean,
     @ParamName("latency") latency: Double,
     @ParamName("downloadThroughput") downloadThroughput: Double,
@@ -210,20 +198,17 @@ public interface Network {
 
   /**
    * Enables network tracking, network events will now be delivered to the client.
-   * @param maxTotalBufferSize Buffer size in bytes to use when preserving network payloads (XHRs,
-   * etc).
-   * @param maxResourceBufferSize Per-resource buffer size in bytes to use when preserving network
-   * payloads (XHRs, etc).
-   * @param maxPostDataSize Longest post body size (in bytes) that would be included in
-   * requestWillBeSent notification
+   * @param maxTotalBufferSize Buffer size in bytes to use when preserving network payloads (XHRs, etc).
+   * @param maxResourceBufferSize Per-resource buffer size in bytes to use when preserving network payloads (XHRs, etc).
+   * @param maxPostDataSize Longest post body size (in bytes) that would be included in requestWillBeSent notification
    */
-  public suspend fun enable(
-    @ParamName("maxTotalBufferSize") @Optional @Experimental maxTotalBufferSize: Int?,
-    @ParamName("maxResourceBufferSize") @Optional @Experimental maxResourceBufferSize: Int?,
-    @ParamName("maxPostDataSize") @Optional maxPostDataSize: Int?,
+  suspend fun enable(
+    @ParamName("maxTotalBufferSize") @Optional @Experimental maxTotalBufferSize: Int? = null,
+    @ParamName("maxResourceBufferSize") @Optional @Experimental maxResourceBufferSize: Int? = null,
+    @ParamName("maxPostDataSize") @Optional maxPostDataSize: Int? = null,
   )
 
-  public suspend fun enable() {
+  suspend fun enable() {
     return enable(null, null, null)
   }
 
@@ -233,7 +218,7 @@ public interface Network {
    */
   @Returns("cookies")
   @ReturnTypeParameter(Cookie::class)
-  public suspend fun getAllCookies(): List<Cookie>
+  suspend fun getAllCookies(): List<Cookie>
 
   /**
    * Returns the DER-encoded certificate.
@@ -242,7 +227,7 @@ public interface Network {
   @Experimental
   @Returns("tableNames")
   @ReturnTypeParameter(String::class)
-  public suspend fun getCertificate(@ParamName("origin") origin: String): List<String>
+  suspend fun getCertificate(@ParamName("origin") origin: String): List<String>
 
   /**
    * Returns all browser cookies for the current URL. Depending on the backend support, will return
@@ -253,11 +238,11 @@ public interface Network {
    */
   @Returns("cookies")
   @ReturnTypeParameter(Cookie::class)
-  public suspend fun getCookies(@ParamName("urls") @Optional urls: List<String>?): List<Cookie>
+  suspend fun getCookies(@ParamName("urls") @Optional urls: List<String>? = null): List<Cookie>
 
   @Returns("cookies")
   @ReturnTypeParameter(Cookie::class)
-  public suspend fun getCookies(): List<Cookie> {
+  suspend fun getCookies(): List<Cookie> {
     return getCookies(null)
   }
 
@@ -265,23 +250,21 @@ public interface Network {
    * Returns content served for the given request.
    * @param requestId Identifier of the network request to get content for.
    */
-  public suspend fun getResponseBody(@ParamName("requestId") requestId: String): ResponseBody
+  suspend fun getResponseBody(@ParamName("requestId") requestId: String): ResponseBody
 
   /**
-   * Returns post data sent with the request. Returns an error when no data was sent with the
-   * request.
+   * Returns post data sent with the request. Returns an error when no data was sent with the request.
    * @param requestId Identifier of the network request to get content for.
    */
   @Returns("postData")
-  public suspend fun getRequestPostData(@ParamName("requestId") requestId: String): String
+  suspend fun getRequestPostData(@ParamName("requestId") requestId: String): String
 
   /**
    * Returns content served for the given currently intercepted request.
    * @param interceptionId Identifier for the intercepted request to get body for.
    */
   @Experimental
-  public suspend fun getResponseBodyForInterception(@ParamName("interceptionId")
-      interceptionId: String): ResponseBodyForInterception
+  suspend fun getResponseBodyForInterception(@ParamName("interceptionId") interceptionId: String): ResponseBodyForInterception
 
   /**
    * Returns a handle to the stream representing the response body. Note that after this command,
@@ -292,18 +275,16 @@ public interface Network {
    */
   @Experimental
   @Returns("stream")
-  public suspend fun takeResponseBodyForInterceptionAsStream(@ParamName("interceptionId")
-      interceptionId: String): String
+  suspend fun takeResponseBodyForInterceptionAsStream(@ParamName("interceptionId") interceptionId: String): String
 
   /**
    * This method sends a new XMLHttpRequest which is identical to the original one. The following
-   * parameters should be identical: method, url, async, request body, extra headers,
-   * withCredentials
+   * parameters should be identical: method, url, async, request body, extra headers, withCredentials
    * attribute, user, password.
    * @param requestId Identifier of XHR to replay.
    */
   @Experimental
-  public suspend fun replayXHR(@ParamName("requestId") requestId: String)
+  suspend fun replayXHR(@ParamName("requestId") requestId: String)
 
   /**
    * Searches for given string in response content.
@@ -315,18 +296,17 @@ public interface Network {
   @Experimental
   @Returns("result")
   @ReturnTypeParameter(SearchMatch::class)
-  public suspend fun searchInResponseBody(
+  suspend fun searchInResponseBody(
     @ParamName("requestId") requestId: String,
     @ParamName("query") query: String,
-    @ParamName("caseSensitive") @Optional caseSensitive: Boolean?,
-    @ParamName("isRegex") @Optional isRegex: Boolean?,
+    @ParamName("caseSensitive") @Optional caseSensitive: Boolean? = null,
+    @ParamName("isRegex") @Optional isRegex: Boolean? = null,
   ): List<SearchMatch>
 
   @Experimental
   @Returns("result")
   @ReturnTypeParameter(SearchMatch::class)
-  public suspend fun searchInResponseBody(@ParamName("requestId") requestId: String,
-      @ParamName("query") query: String): List<SearchMatch> {
+  suspend fun searchInResponseBody(@ParamName("requestId") requestId: String, @ParamName("query") query: String): List<SearchMatch> {
     return searchInResponseBody(requestId, query, null, null)
   }
 
@@ -335,27 +315,26 @@ public interface Network {
    * @param urls URL patterns to block. Wildcards ('*') are allowed.
    */
   @Experimental
-  public suspend fun setBlockedURLs(@ParamName("urls") urls: List<String>)
+  suspend fun setBlockedURLs(@ParamName("urls") urls: List<String>)
 
   /**
    * Toggles ignoring of service worker for each request.
    * @param bypass Bypass service worker and load from network.
    */
   @Experimental
-  public suspend fun setBypassServiceWorker(@ParamName("bypass") bypass: Boolean)
+  suspend fun setBypassServiceWorker(@ParamName("bypass") bypass: Boolean)
 
   /**
    * Toggles ignoring cache for each request. If `true`, cache will not be used.
    * @param cacheDisabled Cache disabled state.
    */
-  public suspend fun setCacheDisabled(@ParamName("cacheDisabled") cacheDisabled: Boolean)
+  suspend fun setCacheDisabled(@ParamName("cacheDisabled") cacheDisabled: Boolean)
 
   /**
    * Sets a cookie with the given cookie data; may overwrite equivalent cookies if they exist.
    * @param name Cookie name.
    * @param value Cookie value.
-   * @param url The request-URI to associate with the setting of the cookie. This value can affect
-   * the
+   * @param url The request-URI to associate with the setting of the cookie. This value can affect the
    * default domain, path, source port, and source scheme values of the created cookie.
    * @param domain Cookie domain.
    * @param path Cookie path.
@@ -366,40 +345,37 @@ public interface Network {
    * @param priority Cookie Priority type.
    * @param sameParty True if cookie is SameParty.
    * @param sourceScheme Cookie source scheme type.
-   * @param sourcePort Cookie source port. Valid values are {-1, [1, 65535]}, -1 indicates an
-   * unspecified port.
+   * @param sourcePort Cookie source port. Valid values are {-1, [1, 65535]}, -1 indicates an unspecified port.
    * An unspecified port value allows protocol clients to emulate legacy cookie scope for the port.
    * This is a temporary ability and it will be removed in the future.
    */
   @Returns("success")
-  public suspend fun setCookie(
+  suspend fun setCookie(
     @ParamName("name") name: String,
     @ParamName("value") `value`: String,
-    @ParamName("url") @Optional url: String?,
-    @ParamName("domain") @Optional domain: String?,
-    @ParamName("path") @Optional path: String?,
-    @ParamName("secure") @Optional secure: Boolean?,
-    @ParamName("httpOnly") @Optional httpOnly: Boolean?,
-    @ParamName("sameSite") @Optional sameSite: CookieSameSite?,
-    @ParamName("expires") @Optional expires: Double?,
-    @ParamName("priority") @Optional @Experimental priority: CookiePriority?,
-    @ParamName("sameParty") @Optional @Experimental sameParty: Boolean?,
-    @ParamName("sourceScheme") @Optional @Experimental sourceScheme: CookieSourceScheme?,
-    @ParamName("sourcePort") @Optional @Experimental sourcePort: Int?,
+    @ParamName("url") @Optional url: String? = null,
+    @ParamName("domain") @Optional domain: String? = null,
+    @ParamName("path") @Optional path: String? = null,
+    @ParamName("secure") @Optional secure: Boolean? = null,
+    @ParamName("httpOnly") @Optional httpOnly: Boolean? = null,
+    @ParamName("sameSite") @Optional sameSite: CookieSameSite? = null,
+    @ParamName("expires") @Optional expires: Double? = null,
+    @ParamName("priority") @Optional @Experimental priority: CookiePriority? = null,
+    @ParamName("sameParty") @Optional @Experimental sameParty: Boolean? = null,
+    @ParamName("sourceScheme") @Optional @Experimental sourceScheme: CookieSourceScheme? = null,
+    @ParamName("sourcePort") @Optional @Experimental sourcePort: Int? = null,
   ): Boolean
 
   @Returns("success")
-  public suspend fun setCookie(@ParamName("name") name: String, @ParamName("value")
-      `value`: String): Boolean {
-    return setCookie(name, `value`, null, null, null, null, null, null, null, null, null, null,
-        null)
+  suspend fun setCookie(@ParamName("name") name: String, @ParamName("value") `value`: String): Boolean {
+    return setCookie(name, `value`, null, null, null, null, null, null, null, null, null, null, null)
   }
 
   /**
    * Sets given cookies.
    * @param cookies Cookies to be set.
    */
-  public suspend fun setCookies(@ParamName("cookies") cookies: List<CookieParam>)
+  suspend fun setCookies(@ParamName("cookies") cookies: List<CookieParam>)
 
   /**
    * For testing.
@@ -407,32 +383,30 @@ public interface Network {
    * @param maxResourceSize Maximum per-resource size.
    */
   @Experimental
-  public suspend fun setDataSizeLimitsForTest(@ParamName("maxTotalSize") maxTotalSize: Int,
-      @ParamName("maxResourceSize") maxResourceSize: Int)
+  suspend fun setDataSizeLimitsForTest(@ParamName("maxTotalSize") maxTotalSize: Int, @ParamName("maxResourceSize") maxResourceSize: Int)
 
   /**
    * Specifies whether to always send extra HTTP headers with the requests from this page.
    * @param headers Map with extra HTTP headers.
    */
-  public suspend fun setExtraHTTPHeaders(@ParamName("headers") headers: Map<String, Any?>)
+  suspend fun setExtraHTTPHeaders(@ParamName("headers") headers: Map<String, Any?>)
 
   /**
    * Specifies whether to attach a page script stack id in requests
    * @param enabled Whether to attach a page script stack for debugging purpose.
    */
   @Experimental
-  public suspend fun setAttachDebugStack(@ParamName("enabled") enabled: Boolean)
+  suspend fun setAttachDebugStack(@ParamName("enabled") enabled: Boolean)
 
   /**
    * Sets the requests to intercept that match the provided patterns and optionally resource types.
    * Deprecated, please use Fetch.enable instead.
-   * @param patterns Requests matching any of these patterns will be forwarded and wait for the
-   * corresponding
+   * @param patterns Requests matching any of these patterns will be forwarded and wait for the corresponding
    * continueInterceptedRequest call.
    */
-  @Deprecated
+  @Deprecated("Deprecated by protocol")
   @Experimental
-  public suspend fun setRequestInterception(@ParamName("patterns") patterns: List<RequestPattern>)
+  suspend fun setRequestInterception(@ParamName("patterns") patterns: List<RequestPattern>)
 
   /**
    * Returns information about the COEP/COOP isolation status.
@@ -440,12 +414,11 @@ public interface Network {
    */
   @Experimental
   @Returns("status")
-  public suspend fun getSecurityIsolationStatus(@ParamName("frameId") @Optional frameId: String?):
-      SecurityIsolationStatus
+  suspend fun getSecurityIsolationStatus(@ParamName("frameId") @Optional frameId: String? = null): SecurityIsolationStatus
 
   @Experimental
   @Returns("status")
-  public suspend fun getSecurityIsolationStatus(): SecurityIsolationStatus {
+  suspend fun getSecurityIsolationStatus(): SecurityIsolationStatus {
     return getSecurityIsolationStatus(null)
   }
 
@@ -457,197 +430,161 @@ public interface Network {
    */
   @Experimental
   @Returns("resource")
-  public suspend fun loadNetworkResource(
+  suspend fun loadNetworkResource(
     @ParamName("frameId") frameId: String,
     @ParamName("url") url: String,
     @ParamName("options") options: LoadNetworkResourceOptions,
   ): LoadNetworkResourcePageResult
 
   @EventName("dataReceived")
-  public fun onDataReceived(eventListener: EventHandler<DataReceived>): EventListener
+  fun onDataReceived(eventListener: EventHandler<DataReceived>): EventListener
 
   @EventName("dataReceived")
-  public fun onDataReceived(eventListener: suspend (DataReceived) -> Unit): EventListener
+  fun onDataReceived(eventListener: suspend (DataReceived) -> Unit): EventListener
 
   @EventName("eventSourceMessageReceived")
-  public fun onEventSourceMessageReceived(eventListener: EventHandler<EventSourceMessageReceived>):
-      EventListener
+  fun onEventSourceMessageReceived(eventListener: EventHandler<EventSourceMessageReceived>): EventListener
 
   @EventName("eventSourceMessageReceived")
-  public
-      fun onEventSourceMessageReceived(eventListener: suspend (EventSourceMessageReceived) -> Unit):
-      EventListener
+  fun onEventSourceMessageReceived(eventListener: suspend (EventSourceMessageReceived) -> Unit): EventListener
 
   @EventName("loadingFailed")
-  public fun onLoadingFailed(eventListener: EventHandler<LoadingFailed>): EventListener
+  fun onLoadingFailed(eventListener: EventHandler<LoadingFailed>): EventListener
 
   @EventName("loadingFailed")
-  public fun onLoadingFailed(eventListener: suspend (LoadingFailed) -> Unit): EventListener
+  fun onLoadingFailed(eventListener: suspend (LoadingFailed) -> Unit): EventListener
 
   @EventName("loadingFinished")
-  public fun onLoadingFinished(eventListener: EventHandler<LoadingFinished>): EventListener
+  fun onLoadingFinished(eventListener: EventHandler<LoadingFinished>): EventListener
 
   @EventName("loadingFinished")
-  public fun onLoadingFinished(eventListener: suspend (LoadingFinished) -> Unit): EventListener
+  fun onLoadingFinished(eventListener: suspend (LoadingFinished) -> Unit): EventListener
 
   @EventName("requestIntercepted")
-  @Deprecated
+  @Deprecated("Deprecated by protocol")
   @Experimental
-  public fun onRequestIntercepted(eventListener: EventHandler<RequestIntercepted>): EventListener
+  fun onRequestIntercepted(eventListener: EventHandler<RequestIntercepted>): EventListener
 
   @EventName("requestIntercepted")
-  @Deprecated
+  @Deprecated("Deprecated by protocol")
   @Experimental
-  public fun onRequestIntercepted(eventListener: suspend (RequestIntercepted) -> Unit):
-      EventListener
+  fun onRequestIntercepted(eventListener: suspend (RequestIntercepted) -> Unit): EventListener
 
   @EventName("requestServedFromCache")
-  public fun onRequestServedFromCache(eventListener: EventHandler<RequestServedFromCache>):
-      EventListener
+  fun onRequestServedFromCache(eventListener: EventHandler<RequestServedFromCache>): EventListener
 
   @EventName("requestServedFromCache")
-  public fun onRequestServedFromCache(eventListener: suspend (RequestServedFromCache) -> Unit):
-      EventListener
+  fun onRequestServedFromCache(eventListener: suspend (RequestServedFromCache) -> Unit): EventListener
 
   @EventName("requestWillBeSent")
-  public fun onRequestWillBeSent(eventListener: EventHandler<RequestWillBeSent>): EventListener
+  fun onRequestWillBeSent(eventListener: EventHandler<RequestWillBeSent>): EventListener
 
   @EventName("requestWillBeSent")
-  public fun onRequestWillBeSent(eventListener: suspend (RequestWillBeSent) -> Unit): EventListener
+  fun onRequestWillBeSent(eventListener: suspend (RequestWillBeSent) -> Unit): EventListener
 
   @EventName("resourceChangedPriority")
   @Experimental
-  public fun onResourceChangedPriority(eventListener: EventHandler<ResourceChangedPriority>):
-      EventListener
+  fun onResourceChangedPriority(eventListener: EventHandler<ResourceChangedPriority>): EventListener
 
   @EventName("resourceChangedPriority")
   @Experimental
-  public fun onResourceChangedPriority(eventListener: suspend (ResourceChangedPriority) -> Unit):
-      EventListener
+  fun onResourceChangedPriority(eventListener: suspend (ResourceChangedPriority) -> Unit): EventListener
 
   @EventName("signedExchangeReceived")
   @Experimental
-  public fun onSignedExchangeReceived(eventListener: EventHandler<SignedExchangeReceived>):
-      EventListener
+  fun onSignedExchangeReceived(eventListener: EventHandler<SignedExchangeReceived>): EventListener
 
   @EventName("signedExchangeReceived")
   @Experimental
-  public fun onSignedExchangeReceived(eventListener: suspend (SignedExchangeReceived) -> Unit):
-      EventListener
+  fun onSignedExchangeReceived(eventListener: suspend (SignedExchangeReceived) -> Unit): EventListener
 
   @EventName("responseReceived")
-  public fun onResponseReceived(eventListener: EventHandler<ResponseReceived>): EventListener
+  fun onResponseReceived(eventListener: EventHandler<ResponseReceived>): EventListener
 
   @EventName("responseReceived")
-  public fun onResponseReceived(eventListener: suspend (ResponseReceived) -> Unit): EventListener
+  fun onResponseReceived(eventListener: suspend (ResponseReceived) -> Unit): EventListener
 
   @EventName("webSocketClosed")
-  public fun onWebSocketClosed(eventListener: EventHandler<WebSocketClosed>): EventListener
+  fun onWebSocketClosed(eventListener: EventHandler<WebSocketClosed>): EventListener
 
   @EventName("webSocketClosed")
-  public fun onWebSocketClosed(eventListener: suspend (WebSocketClosed) -> Unit): EventListener
+  fun onWebSocketClosed(eventListener: suspend (WebSocketClosed) -> Unit): EventListener
 
   @EventName("webSocketCreated")
-  public fun onWebSocketCreated(eventListener: EventHandler<WebSocketCreated>): EventListener
+  fun onWebSocketCreated(eventListener: EventHandler<WebSocketCreated>): EventListener
 
   @EventName("webSocketCreated")
-  public fun onWebSocketCreated(eventListener: suspend (WebSocketCreated) -> Unit): EventListener
+  fun onWebSocketCreated(eventListener: suspend (WebSocketCreated) -> Unit): EventListener
 
   @EventName("webSocketFrameError")
-  public fun onWebSocketFrameError(eventListener: EventHandler<WebSocketFrameError>): EventListener
+  fun onWebSocketFrameError(eventListener: EventHandler<WebSocketFrameError>): EventListener
 
   @EventName("webSocketFrameError")
-  public fun onWebSocketFrameError(eventListener: suspend (WebSocketFrameError) -> Unit):
-      EventListener
+  fun onWebSocketFrameError(eventListener: suspend (WebSocketFrameError) -> Unit): EventListener
 
   @EventName("webSocketFrameReceived")
-  public fun onWebSocketFrameReceived(eventListener: EventHandler<WebSocketFrameReceived>):
-      EventListener
+  fun onWebSocketFrameReceived(eventListener: EventHandler<WebSocketFrameReceived>): EventListener
 
   @EventName("webSocketFrameReceived")
-  public fun onWebSocketFrameReceived(eventListener: suspend (WebSocketFrameReceived) -> Unit):
-      EventListener
+  fun onWebSocketFrameReceived(eventListener: suspend (WebSocketFrameReceived) -> Unit): EventListener
 
   @EventName("webSocketFrameSent")
-  public fun onWebSocketFrameSent(eventListener: EventHandler<WebSocketFrameSent>): EventListener
+  fun onWebSocketFrameSent(eventListener: EventHandler<WebSocketFrameSent>): EventListener
 
   @EventName("webSocketFrameSent")
-  public fun onWebSocketFrameSent(eventListener: suspend (WebSocketFrameSent) -> Unit):
-      EventListener
+  fun onWebSocketFrameSent(eventListener: suspend (WebSocketFrameSent) -> Unit): EventListener
 
   @EventName("webSocketHandshakeResponseReceived")
-  public
-      fun onWebSocketHandshakeResponseReceived(eventListener: EventHandler<WebSocketHandshakeResponseReceived>):
-      EventListener
+  fun onWebSocketHandshakeResponseReceived(eventListener: EventHandler<WebSocketHandshakeResponseReceived>): EventListener
 
   @EventName("webSocketHandshakeResponseReceived")
-  public
-      fun onWebSocketHandshakeResponseReceived(eventListener: suspend (WebSocketHandshakeResponseReceived) -> Unit):
-      EventListener
+  fun onWebSocketHandshakeResponseReceived(eventListener: suspend (WebSocketHandshakeResponseReceived) -> Unit): EventListener
 
   @EventName("webSocketWillSendHandshakeRequest")
-  public
-      fun onWebSocketWillSendHandshakeRequest(eventListener: EventHandler<WebSocketWillSendHandshakeRequest>):
-      EventListener
+  fun onWebSocketWillSendHandshakeRequest(eventListener: EventHandler<WebSocketWillSendHandshakeRequest>): EventListener
 
   @EventName("webSocketWillSendHandshakeRequest")
-  public
-      fun onWebSocketWillSendHandshakeRequest(eventListener: suspend (WebSocketWillSendHandshakeRequest) -> Unit):
-      EventListener
+  fun onWebSocketWillSendHandshakeRequest(eventListener: suspend (WebSocketWillSendHandshakeRequest) -> Unit): EventListener
 
   @EventName("webTransportCreated")
-  public fun onWebTransportCreated(eventListener: EventHandler<WebTransportCreated>): EventListener
+  fun onWebTransportCreated(eventListener: EventHandler<WebTransportCreated>): EventListener
 
   @EventName("webTransportCreated")
-  public fun onWebTransportCreated(eventListener: suspend (WebTransportCreated) -> Unit):
-      EventListener
+  fun onWebTransportCreated(eventListener: suspend (WebTransportCreated) -> Unit): EventListener
 
   @EventName("webTransportConnectionEstablished")
-  public
-      fun onWebTransportConnectionEstablished(eventListener: EventHandler<WebTransportConnectionEstablished>):
-      EventListener
+  fun onWebTransportConnectionEstablished(eventListener: EventHandler<WebTransportConnectionEstablished>): EventListener
 
   @EventName("webTransportConnectionEstablished")
-  public
-      fun onWebTransportConnectionEstablished(eventListener: suspend (WebTransportConnectionEstablished) -> Unit):
-      EventListener
+  fun onWebTransportConnectionEstablished(eventListener: suspend (WebTransportConnectionEstablished) -> Unit): EventListener
 
   @EventName("webTransportClosed")
-  public fun onWebTransportClosed(eventListener: EventHandler<WebTransportClosed>): EventListener
+  fun onWebTransportClosed(eventListener: EventHandler<WebTransportClosed>): EventListener
 
   @EventName("webTransportClosed")
-  public fun onWebTransportClosed(eventListener: suspend (WebTransportClosed) -> Unit):
-      EventListener
+  fun onWebTransportClosed(eventListener: suspend (WebTransportClosed) -> Unit): EventListener
 
   @EventName("requestWillBeSentExtraInfo")
   @Experimental
-  public fun onRequestWillBeSentExtraInfo(eventListener: EventHandler<RequestWillBeSentExtraInfo>):
-      EventListener
+  fun onRequestWillBeSentExtraInfo(eventListener: EventHandler<RequestWillBeSentExtraInfo>): EventListener
 
   @EventName("requestWillBeSentExtraInfo")
   @Experimental
-  public
-      fun onRequestWillBeSentExtraInfo(eventListener: suspend (RequestWillBeSentExtraInfo) -> Unit):
-      EventListener
+  fun onRequestWillBeSentExtraInfo(eventListener: suspend (RequestWillBeSentExtraInfo) -> Unit): EventListener
 
   @EventName("responseReceivedExtraInfo")
   @Experimental
-  public fun onResponseReceivedExtraInfo(eventListener: EventHandler<ResponseReceivedExtraInfo>):
-      EventListener
+  fun onResponseReceivedExtraInfo(eventListener: EventHandler<ResponseReceivedExtraInfo>): EventListener
 
   @EventName("responseReceivedExtraInfo")
   @Experimental
-  public
-      fun onResponseReceivedExtraInfo(eventListener: suspend (ResponseReceivedExtraInfo) -> Unit):
-      EventListener
+  fun onResponseReceivedExtraInfo(eventListener: suspend (ResponseReceivedExtraInfo) -> Unit): EventListener
 
   @EventName("trustTokenOperationDone")
   @Experimental
-  public fun onTrustTokenOperationDone(eventListener: EventHandler<TrustTokenOperationDone>):
-      EventListener
+  fun onTrustTokenOperationDone(eventListener: EventHandler<TrustTokenOperationDone>): EventListener
 
   @EventName("trustTokenOperationDone")
   @Experimental
-  public fun onTrustTokenOperationDone(eventListener: suspend (TrustTokenOperationDone) -> Unit):
-      EventListener
+  fun onTrustTokenOperationDone(eventListener: suspend (TrustTokenOperationDone) -> Unit): EventListener
 }

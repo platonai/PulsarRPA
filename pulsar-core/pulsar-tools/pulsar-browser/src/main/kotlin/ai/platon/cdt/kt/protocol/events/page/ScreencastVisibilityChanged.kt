@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.page
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -8,7 +9,7 @@ import kotlin.Boolean
  * Fired when the page with currently enabled screencast was shown or hidden `.
  */
 @Experimental
-public data class ScreencastVisibilityChanged(
-  @JsonProperty("visible")
-  public val visible: Boolean,
+data class ScreencastVisibilityChanged(
+  @param:JsonProperty("visible")
+  val visible: Boolean,
 )

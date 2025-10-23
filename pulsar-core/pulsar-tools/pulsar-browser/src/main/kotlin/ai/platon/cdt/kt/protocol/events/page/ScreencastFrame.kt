@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.page
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -10,11 +11,11 @@ import kotlin.String
  * Compressed image data requested by the `startScreencast`.
  */
 @Experimental
-public data class ScreencastFrame(
-  @JsonProperty("data")
-  public val `data`: String,
-  @JsonProperty("metadata")
-  public val metadata: ScreencastFrameMetadata,
-  @JsonProperty("sessionId")
-  public val sessionId: Int,
+data class ScreencastFrame(
+  @param:JsonProperty("data")
+  val `data`: String,
+  @param:JsonProperty("metadata")
+  val metadata: ScreencastFrameMetadata,
+  @param:JsonProperty("sessionId")
+  val sessionId: Int,
 )

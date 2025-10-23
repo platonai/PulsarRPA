@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.network
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -13,22 +14,22 @@ import kotlin.collections.Map
  * An object providing the result of a network resource load.
  */
 @Experimental
-public data class LoadNetworkResourcePageResult(
-  @JsonProperty("success")
-  public val success: Boolean,
-  @JsonProperty("netError")
-  @Optional
-  public val netError: Double? = null,
-  @JsonProperty("netErrorName")
-  @Optional
-  public val netErrorName: String? = null,
-  @JsonProperty("httpStatusCode")
-  @Optional
-  public val httpStatusCode: Double? = null,
-  @JsonProperty("stream")
-  @Optional
-  public val stream: String? = null,
-  @JsonProperty("headers")
-  @Optional
-  public val headers: Map<String, Any>? = null,
+data class LoadNetworkResourcePageResult(
+  @param:JsonProperty("success")
+  val success: Boolean,
+  @param:JsonProperty("netError")
+  @param:Optional
+  val netError: Double? = null,
+  @param:JsonProperty("netErrorName")
+  @param:Optional
+  val netErrorName: String? = null,
+  @param:JsonProperty("httpStatusCode")
+  @param:Optional
+  val httpStatusCode: Double? = null,
+  @param:JsonProperty("stream")
+  @param:Optional
+  val stream: String? = null,
+  @param:JsonProperty("headers")
+  @param:Optional
+  val headers: Map<String, Any?>? = null,
 )

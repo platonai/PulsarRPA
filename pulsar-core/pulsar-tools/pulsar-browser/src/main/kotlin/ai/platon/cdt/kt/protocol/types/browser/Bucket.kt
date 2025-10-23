@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.browser
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -8,11 +9,11 @@ import kotlin.Int
  * Chrome histogram bucket.
  */
 @Experimental
-public data class Bucket(
-  @JsonProperty("low")
-  public val low: Int,
-  @JsonProperty("high")
-  public val high: Int,
-  @JsonProperty("count")
-  public val count: Int,
+data class Bucket(
+  @param:JsonProperty("low")
+  val low: Int,
+  @param:JsonProperty("high")
+  val high: Int,
+  @param:JsonProperty("count")
+  val count: Int,
 )

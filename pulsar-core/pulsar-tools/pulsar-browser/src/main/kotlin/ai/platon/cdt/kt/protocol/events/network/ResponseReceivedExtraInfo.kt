@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.network
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -16,16 +17,16 @@ import kotlin.collections.Map
  * it, and responseReceivedExtraInfo may be fired before or after responseReceived.
  */
 @Experimental
-public data class ResponseReceivedExtraInfo(
-  @JsonProperty("requestId")
-  public val requestId: String,
-  @JsonProperty("blockedCookies")
-  public val blockedCookies: List<BlockedSetCookieWithReason>,
-  @JsonProperty("headers")
-  public val headers: Map<String, Any?>,
-  @JsonProperty("resourceIPAddressSpace")
-  public val resourceIPAddressSpace: IPAddressSpace,
-  @JsonProperty("headersText")
-  @Optional
-  public val headersText: String? = null,
+data class ResponseReceivedExtraInfo(
+  @param:JsonProperty("requestId")
+  val requestId: String,
+  @param:JsonProperty("blockedCookies")
+  val blockedCookies: List<BlockedSetCookieWithReason>,
+  @param:JsonProperty("headers")
+  val headers: Map<String, Any?>,
+  @param:JsonProperty("resourceIPAddressSpace")
+  val resourceIPAddressSpace: IPAddressSpace,
+  @param:JsonProperty("headersText")
+  @param:Optional
+  val headersText: String? = null,
 )

@@ -1,20 +1,21 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.overlay
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
 import ai.platon.cdt.kt.protocol.types.dom.RGBA
 import com.fasterxml.jackson.`annotation`.JsonProperty
 
-public data class ScrollSnapContainerHighlightConfig(
-  @JsonProperty("snapportBorder")
-  @Optional
-  public val snapportBorder: LineStyle? = null,
-  @JsonProperty("snapAreaBorder")
-  @Optional
-  public val snapAreaBorder: LineStyle? = null,
-  @JsonProperty("scrollMarginColor")
-  @Optional
-  public val scrollMarginColor: RGBA? = null,
-  @JsonProperty("scrollPaddingColor")
-  @Optional
-  public val scrollPaddingColor: RGBA? = null,
+data class ScrollSnapContainerHighlightConfig(
+  @param:JsonProperty("snapportBorder")
+  @param:Optional
+  val snapportBorder: LineStyle? = null,
+  @param:JsonProperty("snapAreaBorder")
+  @param:Optional
+  val snapAreaBorder: LineStyle? = null,
+  @param:JsonProperty("scrollMarginColor")
+  @param:Optional
+  val scrollMarginColor: RGBA? = null,
+  @param:JsonProperty("scrollPaddingColor")
+  @param:Optional
+  val scrollPaddingColor: RGBA? = null,
 )

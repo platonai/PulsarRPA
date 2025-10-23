@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.page
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -8,12 +9,12 @@ import kotlin.String
 /**
  * Fired when frame has been attached to its parent.
  */
-public data class FrameAttached(
-  @JsonProperty("frameId")
-  public val frameId: String,
-  @JsonProperty("parentFrameId")
-  public val parentFrameId: String,
-  @JsonProperty("stack")
-  @Optional
-  public val stack: StackTrace? = null,
+data class FrameAttached(
+  @param:JsonProperty("frameId")
+  val frameId: String,
+  @param:JsonProperty("parentFrameId")
+  val parentFrameId: String,
+  @param:JsonProperty("stack")
+  @param:Optional
+  val stack: StackTrace? = null,
 )

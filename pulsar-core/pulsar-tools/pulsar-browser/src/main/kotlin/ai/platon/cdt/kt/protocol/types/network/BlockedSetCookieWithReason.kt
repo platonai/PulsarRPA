@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.network
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -10,12 +11,12 @@ import kotlin.collections.List
  * A cookie which was not stored from a response with the corresponding reason.
  */
 @Experimental
-public data class BlockedSetCookieWithReason(
-  @JsonProperty("blockedReasons")
-  public val blockedReasons: List<SetCookieBlockedReason>,
-  @JsonProperty("cookieLine")
-  public val cookieLine: String,
-  @JsonProperty("cookie")
-  @Optional
-  public val cookie: Cookie? = null,
+data class BlockedSetCookieWithReason(
+  @param:JsonProperty("blockedReasons")
+  val blockedReasons: List<SetCookieBlockedReason>,
+  @param:JsonProperty("cookieLine")
+  val cookieLine: String,
+  @param:JsonProperty("cookie")
+  @param:Optional
+  val cookie: Cookie? = null,
 )

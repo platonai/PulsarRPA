@@ -1,9 +1,10 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.page
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
 import ai.platon.cdt.kt.protocol.types.page.DownloadProgressState
 import com.fasterxml.jackson.`annotation`.JsonProperty
-import java.lang.Deprecated
+import kotlin.Deprecated
 import kotlin.Double
 import kotlin.String
 
@@ -12,14 +13,14 @@ import kotlin.String
  * Deprecated. Use Browser.downloadProgress instead.
  */
 @Experimental
-@Deprecated
-public data class DownloadProgress(
-  @JsonProperty("guid")
-  public val guid: String,
-  @JsonProperty("totalBytes")
-  public val totalBytes: Double,
-  @JsonProperty("receivedBytes")
-  public val receivedBytes: Double,
-  @JsonProperty("state")
-  public val state: DownloadProgressState,
+@Deprecated("Deprecated")
+data class DownloadProgress(
+  @param:JsonProperty("guid")
+  val guid: String,
+  @param:JsonProperty("totalBytes")
+  val totalBytes: Double,
+  @param:JsonProperty("receivedBytes")
+  val receivedBytes: Double,
+  @param:JsonProperty("state")
+  val state: DownloadProgressState,
 )

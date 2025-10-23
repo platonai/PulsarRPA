@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.serviceworker
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -9,27 +10,27 @@ import kotlin.collections.List
 /**
  * ServiceWorker version.
  */
-public data class ServiceWorkerVersion(
-  @JsonProperty("versionId")
-  public val versionId: String,
-  @JsonProperty("registrationId")
-  public val registrationId: String,
-  @JsonProperty("scriptURL")
-  public val scriptURL: String,
-  @JsonProperty("runningStatus")
-  public val runningStatus: ServiceWorkerVersionRunningStatus,
-  @JsonProperty("status")
-  public val status: ServiceWorkerVersionStatus,
-  @JsonProperty("scriptLastModified")
-  @Optional
-  public val scriptLastModified: Double? = null,
-  @JsonProperty("scriptResponseTime")
-  @Optional
-  public val scriptResponseTime: Double? = null,
-  @JsonProperty("controlledClients")
-  @Optional
-  public val controlledClients: List<String>? = null,
-  @JsonProperty("targetId")
-  @Optional
-  public val targetId: String? = null,
+data class ServiceWorkerVersion(
+  @param:JsonProperty("versionId")
+  val versionId: String,
+  @param:JsonProperty("registrationId")
+  val registrationId: String,
+  @param:JsonProperty("scriptURL")
+  val scriptURL: String,
+  @param:JsonProperty("runningStatus")
+  val runningStatus: ServiceWorkerVersionRunningStatus,
+  @param:JsonProperty("status")
+  val status: ServiceWorkerVersionStatus,
+  @param:JsonProperty("scriptLastModified")
+  @param:Optional
+  val scriptLastModified: Double? = null,
+  @param:JsonProperty("scriptResponseTime")
+  @param:Optional
+  val scriptResponseTime: Double? = null,
+  @param:JsonProperty("controlledClients")
+  @param:Optional
+  val controlledClients: List<String>? = null,
+  @param:JsonProperty("targetId")
+  @param:Optional
+  val targetId: String? = null,
 )

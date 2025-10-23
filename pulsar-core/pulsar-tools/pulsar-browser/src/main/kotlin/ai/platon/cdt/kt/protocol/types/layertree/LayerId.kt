@@ -1,5 +1,6 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.layertree
 
 import kotlin.String
 
-public typealias LayerId = String
+typealias LayerId = String

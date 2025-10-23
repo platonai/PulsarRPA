@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.browser
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -9,20 +10,20 @@ import kotlin.Int
  * Browser window bounds information
  */
 @Experimental
-public data class Bounds(
-  @JsonProperty("left")
-  @Optional
-  public val left: Int? = null,
-  @JsonProperty("top")
-  @Optional
-  public val top: Int? = null,
-  @JsonProperty("width")
-  @Optional
-  public val width: Int? = null,
-  @JsonProperty("height")
-  @Optional
-  public val height: Int? = null,
-  @JsonProperty("windowState")
-  @Optional
-  public val windowState: WindowState? = null,
+data class Bounds(
+  @param:JsonProperty("left")
+  @param:Optional
+  val left: Int? = null,
+  @param:JsonProperty("top")
+  @param:Optional
+  val top: Int? = null,
+  @param:JsonProperty("width")
+  @param:Optional
+  val width: Int? = null,
+  @param:JsonProperty("height")
+  @param:Optional
+  val height: Int? = null,
+  @param:JsonProperty("windowState")
+  @param:Optional
+  val windowState: WindowState? = null,
 )

@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.applicationcache
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -8,15 +9,15 @@ import kotlin.collections.List
 /**
  * Detailed application cache information.
  */
-public data class ApplicationCache(
-  @JsonProperty("manifestURL")
-  public val manifestURL: String,
-  @JsonProperty("size")
-  public val size: Double,
-  @JsonProperty("creationTime")
-  public val creationTime: Double,
-  @JsonProperty("updateTime")
-  public val updateTime: Double,
-  @JsonProperty("resources")
-  public val resources: List<ApplicationCacheResource>,
+data class ApplicationCache(
+  @param:JsonProperty("manifestURL")
+  val manifestURL: String,
+  @param:JsonProperty("size")
+  val size: Double,
+  @param:JsonProperty("creationTime")
+  val creationTime: Double,
+  @param:JsonProperty("updateTime")
+  val updateTime: Double,
+  @param:JsonProperty("resources")
+  val resources: List<ApplicationCacheResource>,
 )

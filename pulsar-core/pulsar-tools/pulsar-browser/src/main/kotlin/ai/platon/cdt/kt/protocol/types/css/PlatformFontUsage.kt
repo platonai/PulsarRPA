@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.css
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -8,11 +9,11 @@ import kotlin.String
 /**
  * Information about amount of glyphs that were rendered with given font.
  */
-public data class PlatformFontUsage(
-  @JsonProperty("familyName")
-  public val familyName: String,
-  @JsonProperty("isCustomFont")
-  public val isCustomFont: Boolean,
-  @JsonProperty("glyphCount")
-  public val glyphCount: Double,
+data class PlatformFontUsage(
+  @param:JsonProperty("familyName")
+  val familyName: String,
+  @param:JsonProperty("isCustomFont")
+  val isCustomFont: Boolean,
+  @param:JsonProperty("glyphCount")
+  val glyphCount: Double,
 )

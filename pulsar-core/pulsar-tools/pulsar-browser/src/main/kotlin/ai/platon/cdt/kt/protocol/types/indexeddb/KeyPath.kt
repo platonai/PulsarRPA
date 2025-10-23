@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.indexeddb
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -8,13 +9,13 @@ import kotlin.collections.List
 /**
  * Key path.
  */
-public data class KeyPath(
-  @JsonProperty("type")
-  public val type: KeyPathType,
-  @JsonProperty("string")
-  @Optional
-  public val string: String? = null,
-  @JsonProperty("array")
-  @Optional
-  public val array: List<String>? = null,
+data class KeyPath(
+  @param:JsonProperty("type")
+  val type: KeyPathType,
+  @param:JsonProperty("string")
+  @param:Optional
+  val string: String? = null,
+  @param:JsonProperty("array")
+  @param:Optional
+  val array: List<String>? = null,
 )

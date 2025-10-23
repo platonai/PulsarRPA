@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.accessibility
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -10,33 +11,33 @@ import kotlin.collections.List
 /**
  * A node in the accessibility tree.
  */
-public data class AXNode(
-  @JsonProperty("nodeId")
-  public val nodeId: String,
-  @JsonProperty("ignored")
-  public val ignored: Boolean,
-  @JsonProperty("ignoredReasons")
-  @Optional
-  public val ignoredReasons: List<AXProperty>? = null,
-  @JsonProperty("role")
-  @Optional
-  public val role: AXValue? = null,
-  @JsonProperty("name")
-  @Optional
-  public val name: AXValue? = null,
-  @JsonProperty("description")
-  @Optional
-  public val description: AXValue? = null,
-  @JsonProperty("value")
-  @Optional
-  public val `value`: AXValue? = null,
-  @JsonProperty("properties")
-  @Optional
-  public val properties: List<AXProperty>? = null,
-  @JsonProperty("childIds")
-  @Optional
-  public val childIds: List<String>? = null,
-  @JsonProperty("backendDOMNodeId")
-  @Optional
-  public val backendDOMNodeId: Int? = null,
+data class AXNode(
+  @param:JsonProperty("nodeId")
+  val nodeId: String,
+  @param:JsonProperty("ignored")
+  val ignored: Boolean,
+  @param:JsonProperty("ignoredReasons")
+  @param:Optional
+  val ignoredReasons: List<AXProperty>? = null,
+  @param:JsonProperty("role")
+  @param:Optional
+  val role: AXValue? = null,
+  @param:JsonProperty("name")
+  @param:Optional
+  val name: AXValue? = null,
+  @param:JsonProperty("description")
+  @param:Optional
+  val description: AXValue? = null,
+  @param:JsonProperty("value")
+  @param:Optional
+  val `value`: AXValue? = null,
+  @param:JsonProperty("properties")
+  @param:Optional
+  val properties: List<AXProperty>? = null,
+  @param:JsonProperty("childIds")
+  @param:Optional
+  val childIds: List<String>? = null,
+  @param:JsonProperty("backendDOMNodeId")
+  @param:Optional
+  val backendDOMNodeId: Int? = null,
 )

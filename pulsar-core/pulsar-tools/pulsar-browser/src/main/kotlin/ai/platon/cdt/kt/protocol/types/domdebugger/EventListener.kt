@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.domdebugger
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -10,28 +11,28 @@ import kotlin.String
 /**
  * Object event listener.
  */
-public data class EventListener(
-  @JsonProperty("type")
-  public val type: String,
-  @JsonProperty("useCapture")
-  public val useCapture: Boolean,
-  @JsonProperty("passive")
-  public val passive: Boolean,
-  @JsonProperty("once")
-  public val once: Boolean,
-  @JsonProperty("scriptId")
-  public val scriptId: String,
-  @JsonProperty("lineNumber")
-  public val lineNumber: Int,
-  @JsonProperty("columnNumber")
-  public val columnNumber: Int,
-  @JsonProperty("handler")
-  @Optional
-  public val handler: RemoteObject? = null,
-  @JsonProperty("originalHandler")
-  @Optional
-  public val originalHandler: RemoteObject? = null,
-  @JsonProperty("backendNodeId")
-  @Optional
-  public val backendNodeId: Int? = null,
+data class EventListener(
+  @param:JsonProperty("type")
+  val type: String,
+  @param:JsonProperty("useCapture")
+  val useCapture: Boolean,
+  @param:JsonProperty("passive")
+  val passive: Boolean,
+  @param:JsonProperty("once")
+  val once: Boolean,
+  @param:JsonProperty("scriptId")
+  val scriptId: String,
+  @param:JsonProperty("lineNumber")
+  val lineNumber: Int,
+  @param:JsonProperty("columnNumber")
+  val columnNumber: Int,
+  @param:JsonProperty("handler")
+  @param:Optional
+  val handler: RemoteObject? = null,
+  @param:JsonProperty("originalHandler")
+  @param:Optional
+  val originalHandler: RemoteObject? = null,
+  @param:JsonProperty("backendNodeId")
+  @param:Optional
+  val backendNodeId: Int? = null,
 )

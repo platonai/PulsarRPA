@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.console
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -8,20 +9,20 @@ import kotlin.String
 /**
  * Console message.
  */
-public data class ConsoleMessage(
-  @JsonProperty("source")
-  public val source: ConsoleMessageSource,
-  @JsonProperty("level")
-  public val level: ConsoleMessageLevel,
-  @JsonProperty("text")
-  public val text: String,
-  @JsonProperty("url")
-  @Optional
-  public val url: String? = null,
-  @JsonProperty("line")
-  @Optional
-  public val line: Int? = null,
-  @JsonProperty("column")
-  @Optional
-  public val column: Int? = null,
+data class ConsoleMessage(
+  @param:JsonProperty("source")
+  val source: ConsoleMessageSource,
+  @param:JsonProperty("level")
+  val level: ConsoleMessageLevel,
+  @param:JsonProperty("text")
+  val text: String,
+  @param:JsonProperty("url")
+  @param:Optional
+  val url: String? = null,
+  @param:JsonProperty("line")
+  @param:Optional
+  val line: Int? = null,
+  @param:JsonProperty("column")
+  @param:Optional
+  val column: Int? = null,
 )

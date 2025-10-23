@@ -1,17 +1,18 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.support.types
 
-public fun interface EventHandler<T> {
-  public suspend fun onEvent(event: T)
+fun interface EventHandler<T> {
+  suspend fun onEvent(event: T)
 }
 
-public interface EventListener {
+interface EventListener {
   /**
    * Alias to unsubscribe.  
    */
-  public fun off()
+  fun off()
 
   /**
    * Unsubscribe this event listener.  
    */
-  public fun unsubscribe()
+  fun unsubscribe()
 }

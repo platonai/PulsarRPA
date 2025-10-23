@@ -1,12 +1,13 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.audits
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
 
-public data class HeavyAdIssueDetails(
-  @JsonProperty("resolution")
-  public val resolution: HeavyAdResolutionStatus,
-  @JsonProperty("reason")
-  public val reason: HeavyAdReason,
-  @JsonProperty("frame")
-  public val frame: AffectedFrame,
+data class HeavyAdIssueDetails(
+  @param:JsonProperty("resolution")
+  val resolution: HeavyAdResolutionStatus,
+  @param:JsonProperty("reason")
+  val reason: HeavyAdReason,
+  @param:JsonProperty("frame")
+  val frame: AffectedFrame,
 )

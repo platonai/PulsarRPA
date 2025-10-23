@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.systeminfo
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -8,11 +9,11 @@ import kotlin.String
 /**
  * Represents process info.
  */
-public data class ProcessInfo(
-  @JsonProperty("type")
-  public val type: String,
-  @JsonProperty("id")
-  public val id: Int,
-  @JsonProperty("cpuTime")
-  public val cpuTime: Double,
+data class ProcessInfo(
+  @param:JsonProperty("type")
+  val type: String,
+  @param:JsonProperty("id")
+  val id: Int,
+  @param:JsonProperty("cpuTime")
+  val cpuTime: Double,
 )

@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.browser
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -10,13 +11,13 @@ import kotlin.String
  * Fired when download makes progress. Last call has |done| == true.
  */
 @Experimental
-public data class DownloadProgress(
-  @JsonProperty("guid")
-  public val guid: String,
-  @JsonProperty("totalBytes")
-  public val totalBytes: Double,
-  @JsonProperty("receivedBytes")
-  public val receivedBytes: Double,
-  @JsonProperty("state")
-  public val state: DownloadProgressState,
+data class DownloadProgress(
+  @param:JsonProperty("guid")
+  val guid: String,
+  @param:JsonProperty("totalBytes")
+  val totalBytes: Double,
+  @param:JsonProperty("receivedBytes")
+  val receivedBytes: Double,
+  @param:JsonProperty("state")
+  val state: DownloadProgressState,
 )

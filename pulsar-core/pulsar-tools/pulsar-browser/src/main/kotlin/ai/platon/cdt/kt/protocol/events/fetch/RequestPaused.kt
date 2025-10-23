@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.fetch
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -18,25 +19,25 @@ import kotlin.collections.List
  * and responseStatusCode -- the request is at the response stage if either
  * of these fields is present and in the request stage otherwise.
  */
-public data class RequestPaused(
-  @JsonProperty("requestId")
-  public val requestId: String,
-  @JsonProperty("request")
-  public val request: Request,
-  @JsonProperty("frameId")
-  public val frameId: String,
-  @JsonProperty("resourceType")
-  public val resourceType: ResourceType,
-  @JsonProperty("responseErrorReason")
-  @Optional
-  public val responseErrorReason: ErrorReason? = null,
-  @JsonProperty("responseStatusCode")
-  @Optional
-  public val responseStatusCode: Int? = null,
-  @JsonProperty("responseHeaders")
-  @Optional
-  public val responseHeaders: List<HeaderEntry>? = null,
-  @JsonProperty("networkId")
-  @Optional
-  public val networkId: String? = null,
+data class RequestPaused(
+  @param:JsonProperty("requestId")
+  val requestId: String,
+  @param:JsonProperty("request")
+  val request: Request,
+  @param:JsonProperty("frameId")
+  val frameId: String,
+  @param:JsonProperty("resourceType")
+  val resourceType: ResourceType,
+  @param:JsonProperty("responseErrorReason")
+  @param:Optional
+  val responseErrorReason: ErrorReason? = null,
+  @param:JsonProperty("responseStatusCode")
+  @param:Optional
+  val responseStatusCode: Int? = null,
+  @param:JsonProperty("responseHeaders")
+  @param:Optional
+  val responseHeaders: List<HeaderEntry>? = null,
+  @param:JsonProperty("networkId")
+  @param:Optional
+  val networkId: String? = null,
 )

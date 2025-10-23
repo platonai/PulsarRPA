@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.storage
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -5,13 +6,13 @@ import kotlin.Boolean
 import kotlin.Double
 import kotlin.collections.List
 
-public data class UsageAndQuota(
-  @JsonProperty("usage")
-  public val usage: Double,
-  @JsonProperty("quota")
-  public val quota: Double,
-  @JsonProperty("overrideActive")
-  public val overrideActive: Boolean,
-  @JsonProperty("usageBreakdown")
-  public val usageBreakdown: List<UsageForType>,
+data class UsageAndQuota(
+  @param:JsonProperty("usage")
+  val usage: Double,
+  @param:JsonProperty("quota")
+  val quota: Double,
+  @param:JsonProperty("overrideActive")
+  val overrideActive: Boolean,
+  @param:JsonProperty("usageBreakdown")
+  val usageBreakdown: List<UsageForType>,
 )

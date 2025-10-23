@@ -1,8 +1,9 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.page
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
 import com.fasterxml.jackson.`annotation`.JsonProperty
-import java.lang.Deprecated
+import kotlin.Deprecated
 import kotlin.String
 
 /**
@@ -10,14 +11,14 @@ import kotlin.String
  * Deprecated. Use Browser.downloadWillBegin instead.
  */
 @Experimental
-@Deprecated
-public data class DownloadWillBegin(
-  @JsonProperty("frameId")
-  public val frameId: String,
-  @JsonProperty("guid")
-  public val guid: String,
-  @JsonProperty("url")
-  public val url: String,
-  @JsonProperty("suggestedFilename")
-  public val suggestedFilename: String,
+@Deprecated("Deprecated")
+data class DownloadWillBegin(
+  @param:JsonProperty("frameId")
+  val frameId: String,
+  @param:JsonProperty("guid")
+  val guid: String,
+  @param:JsonProperty("url")
+  val url: String,
+  @param:JsonProperty("suggestedFilename")
+  val suggestedFilename: String,
 )

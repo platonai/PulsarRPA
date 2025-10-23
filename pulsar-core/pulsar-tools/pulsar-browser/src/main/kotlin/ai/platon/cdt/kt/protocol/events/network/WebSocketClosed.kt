@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.network
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -7,9 +8,9 @@ import kotlin.String
 /**
  * Fired when WebSocket is closed.
  */
-public data class WebSocketClosed(
-  @JsonProperty("requestId")
-  public val requestId: String,
-  @JsonProperty("timestamp")
-  public val timestamp: Double,
+data class WebSocketClosed(
+  @param:JsonProperty("requestId")
+  val requestId: String,
+  @param:JsonProperty("timestamp")
+  val timestamp: Double,
 )

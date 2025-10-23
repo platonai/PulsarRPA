@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.indexeddb
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -8,11 +9,11 @@ import kotlin.collections.List
 /**
  * Database with an array of object stores.
  */
-public data class DatabaseWithObjectStores(
-  @JsonProperty("name")
-  public val name: String,
-  @JsonProperty("version")
-  public val version: Double,
-  @JsonProperty("objectStores")
-  public val objectStores: List<ObjectStore>,
+data class DatabaseWithObjectStores(
+  @param:JsonProperty("name")
+  val name: String,
+  @param:JsonProperty("version")
+  val version: Double,
+  @param:JsonProperty("objectStores")
+  val objectStores: List<ObjectStore>,
 )

@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.browser
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -11,19 +12,19 @@ import kotlin.String
  * https://w3c.github.io/permissions/#dictdef-permissiondescriptor.
  */
 @Experimental
-public data class PermissionDescriptor(
-  @JsonProperty("name")
-  public val name: String,
-  @JsonProperty("sysex")
-  @Optional
-  public val sysex: Boolean? = null,
-  @JsonProperty("userVisibleOnly")
-  @Optional
-  public val userVisibleOnly: Boolean? = null,
-  @JsonProperty("allowWithoutSanitization")
-  @Optional
-  public val allowWithoutSanitization: Boolean? = null,
-  @JsonProperty("panTiltZoom")
-  @Optional
-  public val panTiltZoom: Boolean? = null,
+data class PermissionDescriptor(
+  @param:JsonProperty("name")
+  val name: String,
+  @param:JsonProperty("sysex")
+  @param:Optional
+  val sysex: Boolean? = null,
+  @param:JsonProperty("userVisibleOnly")
+  @param:Optional
+  val userVisibleOnly: Boolean? = null,
+  @param:JsonProperty("allowWithoutSanitization")
+  @param:Optional
+  val allowWithoutSanitization: Boolean? = null,
+  @param:JsonProperty("panTiltZoom")
+  @param:Optional
+  val panTiltZoom: Boolean? = null,
 )

@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.page
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -11,9 +12,9 @@ import kotlin.String
  * when bfcache navigation fails.
  */
 @Experimental
-public data class BackForwardCacheNotUsed(
-  @JsonProperty("loaderId")
-  public val loaderId: String,
-  @JsonProperty("frameId")
-  public val frameId: String,
+data class BackForwardCacheNotUsed(
+  @param:JsonProperty("loaderId")
+  val loaderId: String,
+  @param:JsonProperty("frameId")
+  val frameId: String,
 )

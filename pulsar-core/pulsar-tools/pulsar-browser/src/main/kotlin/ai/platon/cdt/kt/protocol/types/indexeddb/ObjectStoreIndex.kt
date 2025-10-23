@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.indexeddb
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -7,13 +8,13 @@ import kotlin.String
 /**
  * Object store index.
  */
-public data class ObjectStoreIndex(
-  @JsonProperty("name")
-  public val name: String,
-  @JsonProperty("keyPath")
-  public val keyPath: KeyPath,
-  @JsonProperty("unique")
-  public val unique: Boolean,
-  @JsonProperty("multiEntry")
-  public val multiEntry: Boolean,
+data class ObjectStoreIndex(
+  @param:JsonProperty("name")
+  val name: String,
+  @param:JsonProperty("keyPath")
+  val keyPath: KeyPath,
+  @param:JsonProperty("unique")
+  val unique: Boolean,
+  @param:JsonProperty("multiEntry")
+  val multiEntry: Boolean,
 )

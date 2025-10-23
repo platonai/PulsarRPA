@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.webaudio
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -6,13 +7,13 @@ import kotlin.Double
 /**
  * Fields in AudioContext that change in real-time.
  */
-public data class ContextRealtimeData(
-  @JsonProperty("currentTime")
-  public val currentTime: Double,
-  @JsonProperty("renderCapacity")
-  public val renderCapacity: Double,
-  @JsonProperty("callbackIntervalMean")
-  public val callbackIntervalMean: Double,
-  @JsonProperty("callbackIntervalVariance")
-  public val callbackIntervalVariance: Double,
+data class ContextRealtimeData(
+  @param:JsonProperty("currentTime")
+  val currentTime: Double,
+  @param:JsonProperty("renderCapacity")
+  val renderCapacity: Double,
+  @param:JsonProperty("callbackIntervalMean")
+  val callbackIntervalMean: Double,
+  @param:JsonProperty("callbackIntervalVariance")
+  val callbackIntervalVariance: Double,
 )

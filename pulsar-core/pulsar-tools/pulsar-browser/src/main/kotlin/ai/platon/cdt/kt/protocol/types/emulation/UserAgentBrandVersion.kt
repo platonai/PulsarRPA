@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.emulation
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -8,9 +9,9 @@ import kotlin.String
  * Used to specify User Agent Cient Hints to emulate. See https://wicg.github.io/ua-client-hints
  */
 @Experimental
-public data class UserAgentBrandVersion(
-  @JsonProperty("brand")
-  public val brand: String,
-  @JsonProperty("version")
-  public val version: String,
+data class UserAgentBrandVersion(
+  @param:JsonProperty("brand")
+  val brand: String,
+  @param:JsonProperty("version")
+  val version: String,
 )

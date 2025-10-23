@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.network
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -8,14 +9,14 @@ import kotlin.String
 /**
  * Information about the cached resource.
  */
-public data class CachedResource(
-  @JsonProperty("url")
-  public val url: String,
-  @JsonProperty("type")
-  public val type: ResourceType,
-  @JsonProperty("response")
-  @Optional
-  public val response: Response? = null,
-  @JsonProperty("bodySize")
-  public val bodySize: Double,
+data class CachedResource(
+  @param:JsonProperty("url")
+  val url: String,
+  @param:JsonProperty("type")
+  val type: ResourceType,
+  @param:JsonProperty("response")
+  @param:Optional
+  val response: Response? = null,
+  @param:JsonProperty("bodySize")
+  val bodySize: Double,
 )

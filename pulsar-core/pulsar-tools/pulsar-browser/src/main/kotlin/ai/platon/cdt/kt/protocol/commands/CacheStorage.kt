@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.commands
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -14,20 +15,19 @@ import kotlin.String
 import kotlin.collections.List
 
 @Experimental
-public interface CacheStorage {
+interface CacheStorage {
   /**
    * Deletes a cache.
    * @param cacheId Id of cache for deletion.
    */
-  public suspend fun deleteCache(@ParamName("cacheId") cacheId: String)
+  suspend fun deleteCache(@ParamName("cacheId") cacheId: String)
 
   /**
    * Deletes a cache entry.
    * @param cacheId Id of cache where the entry will be deleted.
    * @param request URL spec of the request.
    */
-  public suspend fun deleteEntry(@ParamName("cacheId") cacheId: String, @ParamName("request")
-      request: String)
+  suspend fun deleteEntry(@ParamName("cacheId") cacheId: String, @ParamName("request") request: String)
 
   /**
    * Requests cache names.
@@ -35,8 +35,7 @@ public interface CacheStorage {
    */
   @Returns("caches")
   @ReturnTypeParameter(Cache::class)
-  public suspend fun requestCacheNames(@ParamName("securityOrigin") securityOrigin: String):
-      List<Cache>
+  suspend fun requestCacheNames(@ParamName("securityOrigin") securityOrigin: String): List<Cache>
 
   /**
    * Fetches cache entry.
@@ -45,7 +44,7 @@ public interface CacheStorage {
    * @param requestHeaders headers of the request.
    */
   @Returns("response")
-  public suspend fun requestCachedResponse(
+  suspend fun requestCachedResponse(
     @ParamName("cacheId") cacheId: String,
     @ParamName("requestURL") requestURL: String,
     @ParamName("requestHeaders") requestHeaders: List<Header>,
@@ -58,14 +57,14 @@ public interface CacheStorage {
    * @param pageSize Number of records to fetch.
    * @param pathFilter If present, only return the entries containing this substring in the path
    */
-  public suspend fun requestEntries(
+  suspend fun requestEntries(
     @ParamName("cacheId") cacheId: String,
-    @ParamName("skipCount") @Optional skipCount: Int?,
-    @ParamName("pageSize") @Optional pageSize: Int?,
-    @ParamName("pathFilter") @Optional pathFilter: String?,
+    @ParamName("skipCount") @Optional skipCount: Int? = null,
+    @ParamName("pageSize") @Optional pageSize: Int? = null,
+    @ParamName("pathFilter") @Optional pathFilter: String? = null,
   ): RequestEntries
 
-  public suspend fun requestEntries(@ParamName("cacheId") cacheId: String): RequestEntries {
+  suspend fun requestEntries(@ParamName("cacheId") cacheId: String): RequestEntries {
     return requestEntries(cacheId, null, null, null)
   }
 }

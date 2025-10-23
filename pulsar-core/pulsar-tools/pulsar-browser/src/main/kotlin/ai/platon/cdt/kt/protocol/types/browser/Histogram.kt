@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.browser
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -10,13 +11,13 @@ import kotlin.collections.List
  * Chrome histogram.
  */
 @Experimental
-public data class Histogram(
-  @JsonProperty("name")
-  public val name: String,
-  @JsonProperty("sum")
-  public val sum: Int,
-  @JsonProperty("count")
-  public val count: Int,
-  @JsonProperty("buckets")
-  public val buckets: List<Bucket>,
+data class Histogram(
+  @param:JsonProperty("name")
+  val name: String,
+  @param:JsonProperty("sum")
+  val sum: Int,
+  @param:JsonProperty("count")
+  val count: Int,
+  @param:JsonProperty("buckets")
+  val buckets: List<Bucket>,
 )

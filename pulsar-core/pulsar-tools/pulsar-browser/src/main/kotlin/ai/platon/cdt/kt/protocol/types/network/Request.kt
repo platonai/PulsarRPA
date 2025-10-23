@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.network
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -13,38 +14,38 @@ import kotlin.collections.Map
 /**
  * HTTP request data.
  */
-public data class Request(
-  @JsonProperty("url")
-  public val url: String,
-  @JsonProperty("urlFragment")
-  @Optional
-  public val urlFragment: String? = null,
-  @JsonProperty("method")
-  public val method: String,
-  @JsonProperty("headers")
-  public val headers: MutableMap<String, Any?>,
-  @JsonProperty("postData")
-  @Optional
-  public val postData: String? = null,
-  @JsonProperty("hasPostData")
-  @Optional
-  public val hasPostData: Boolean? = null,
-  @JsonProperty("postDataEntries")
-  @Optional
-  @Experimental
-  public val postDataEntries: List<PostDataEntry>? = null,
-  @JsonProperty("mixedContentType")
-  @Optional
-  public val mixedContentType: MixedContentType? = null,
-  @JsonProperty("initialPriority")
-  public val initialPriority: ResourcePriority,
-  @JsonProperty("referrerPolicy")
-  public val referrerPolicy: RequestReferrerPolicy,
-  @JsonProperty("isLinkPreload")
-  @Optional
-  public val isLinkPreload: Boolean? = null,
-  @JsonProperty("trustTokenParams")
-  @Optional
-  @Experimental
-  public val trustTokenParams: TrustTokenParams? = null,
+data class Request(
+  @param:JsonProperty("url")
+  val url: String,
+  @param:JsonProperty("urlFragment")
+  @param:Optional
+  val urlFragment: String? = null,
+  @param:JsonProperty("method")
+  val method: String,
+  @param:JsonProperty("headers")
+  val headers: Map<String, Any?>,
+  @param:JsonProperty("postData")
+  @param:Optional
+  val postData: String? = null,
+  @param:JsonProperty("hasPostData")
+  @param:Optional
+  val hasPostData: Boolean? = null,
+  @param:JsonProperty("postDataEntries")
+  @param:Optional
+  @param:Experimental
+  val postDataEntries: List<PostDataEntry>? = null,
+  @param:JsonProperty("mixedContentType")
+  @param:Optional
+  val mixedContentType: MixedContentType? = null,
+  @param:JsonProperty("initialPriority")
+  val initialPriority: ResourcePriority,
+  @param:JsonProperty("referrerPolicy")
+  val referrerPolicy: RequestReferrerPolicy,
+  @param:JsonProperty("isLinkPreload")
+  @param:Optional
+  val isLinkPreload: Boolean? = null,
+  @param:JsonProperty("trustTokenParams")
+  @param:Optional
+  @param:Experimental
+  val trustTokenParams: TrustTokenParams? = null,
 )

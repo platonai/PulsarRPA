@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.database
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -6,13 +7,13 @@ import kotlin.String
 /**
  * Database object.
  */
-public data class Database(
-  @JsonProperty("id")
-  public val id: String,
-  @JsonProperty("domain")
-  public val domain: String,
-  @JsonProperty("name")
-  public val name: String,
-  @JsonProperty("version")
-  public val version: String,
+data class Database(
+  @param:JsonProperty("id")
+  val id: String,
+  @param:JsonProperty("domain")
+  val domain: String,
+  @param:JsonProperty("name")
+  val name: String,
+  @param:JsonProperty("version")
+  val version: String,
 )

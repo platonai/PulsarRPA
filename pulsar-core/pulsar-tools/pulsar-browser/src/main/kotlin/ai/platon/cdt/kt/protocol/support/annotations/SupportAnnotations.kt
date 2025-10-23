@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.support.annotations
 
 import kotlin.String
@@ -22,13 +23,13 @@ public annotation class Experimental
 @Target(AnnotationTarget.VALUE_PARAMETER)
 @Retention(AnnotationRetention.RUNTIME)
 public annotation class ParamName(
-  public val `value`: String,
+  val `value`: String,
 )
 
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 public annotation class Returns(
-  public val `value`: String,
+  val `value`: String,
 )
 
 @Target(AnnotationTarget.FUNCTION)
@@ -40,5 +41,5 @@ public annotation class ReturnTypeParameter(
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 public annotation class EventName(
-  public val `value`: String,
+  val `value`: String,
 )

@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.dom
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -8,9 +9,9 @@ import kotlin.Int
  * Called when a pseudo element is removed from an element.
  */
 @Experimental
-public data class PseudoElementRemoved(
-  @JsonProperty("parentId")
-  public val parentId: Int,
-  @JsonProperty("pseudoElementId")
-  public val pseudoElementId: Int,
+data class PseudoElementRemoved(
+  @param:JsonProperty("parentId")
+  val parentId: Int,
+  @param:JsonProperty("pseudoElementId")
+  val pseudoElementId: Int,
 )

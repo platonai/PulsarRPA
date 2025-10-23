@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.page
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -11,13 +12,13 @@ import kotlin.String
  * Navigation may still be cancelled after the event is issued.
  */
 @Experimental
-public data class FrameRequestedNavigation(
-  @JsonProperty("frameId")
-  public val frameId: String,
-  @JsonProperty("reason")
-  public val reason: ClientNavigationReason,
-  @JsonProperty("url")
-  public val url: String,
-  @JsonProperty("disposition")
-  public val disposition: ClientNavigationDisposition,
+data class FrameRequestedNavigation(
+  @param:JsonProperty("frameId")
+  val frameId: String,
+  @param:JsonProperty("reason")
+  val reason: ClientNavigationReason,
+  @param:JsonProperty("url")
+  val url: String,
+  @param:JsonProperty("disposition")
+  val disposition: ClientNavigationDisposition,
 )

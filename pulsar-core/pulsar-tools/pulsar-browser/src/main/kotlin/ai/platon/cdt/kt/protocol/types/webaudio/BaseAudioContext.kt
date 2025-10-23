@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.webaudio
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -8,20 +9,20 @@ import kotlin.String
 /**
  * Protocol object for BaseAudioContext
  */
-public data class BaseAudioContext(
-  @JsonProperty("contextId")
-  public val contextId: String,
-  @JsonProperty("contextType")
-  public val contextType: ContextType,
-  @JsonProperty("contextState")
-  public val contextState: ContextState,
-  @JsonProperty("realtimeData")
-  @Optional
-  public val realtimeData: ContextRealtimeData? = null,
-  @JsonProperty("callbackBufferSize")
-  public val callbackBufferSize: Double,
-  @JsonProperty("maxOutputChannelCount")
-  public val maxOutputChannelCount: Double,
-  @JsonProperty("sampleRate")
-  public val sampleRate: Double,
+data class BaseAudioContext(
+  @param:JsonProperty("contextId")
+  val contextId: String,
+  @param:JsonProperty("contextType")
+  val contextType: ContextType,
+  @param:JsonProperty("contextState")
+  val contextState: ContextState,
+  @param:JsonProperty("realtimeData")
+  @param:Optional
+  val realtimeData: ContextRealtimeData? = null,
+  @param:JsonProperty("callbackBufferSize")
+  val callbackBufferSize: Double,
+  @param:JsonProperty("maxOutputChannelCount")
+  val maxOutputChannelCount: Double,
+  @param:JsonProperty("sampleRate")
+  val sampleRate: Double,
 )

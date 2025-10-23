@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.network
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -13,15 +14,15 @@ import kotlin.collections.Map
  * https://wicg.github.io/webpackage/draft-yasskin-httpbis-origin-signed-exchanges-impl.html#cbor-representation
  */
 @Experimental
-public data class SignedExchangeHeader(
-  @JsonProperty("requestUrl")
-  public val requestUrl: String,
-  @JsonProperty("responseCode")
-  public val responseCode: Int,
-  @JsonProperty("responseHeaders")
-  public val responseHeaders: Map<String, Any?>,
-  @JsonProperty("signatures")
-  public val signatures: List<SignedExchangeSignature>,
-  @JsonProperty("headerIntegrity")
-  public val headerIntegrity: String,
+data class SignedExchangeHeader(
+  @param:JsonProperty("requestUrl")
+  val requestUrl: String,
+  @param:JsonProperty("responseCode")
+  val responseCode: Int,
+  @param:JsonProperty("responseHeaders")
+  val responseHeaders: Map<String, Any?>,
+  @param:JsonProperty("signatures")
+  val signatures: List<SignedExchangeSignature>,
+  @param:JsonProperty("headerIntegrity")
+  val headerIntegrity: String,
 )

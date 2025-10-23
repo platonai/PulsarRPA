@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.runtime
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -14,20 +15,20 @@ import kotlin.collections.List
 /**
  * Issued when console API was called.
  */
-public data class ConsoleAPICalled(
-  @JsonProperty("type")
-  public val type: ConsoleAPICalledType,
-  @JsonProperty("args")
-  public val args: List<RemoteObject>,
-  @JsonProperty("executionContextId")
-  public val executionContextId: Int,
-  @JsonProperty("timestamp")
-  public val timestamp: Double,
-  @JsonProperty("stackTrace")
-  @Optional
-  public val stackTrace: StackTrace? = null,
-  @JsonProperty("context")
-  @Optional
-  @Experimental
-  public val context: String? = null,
+data class ConsoleAPICalled(
+  @param:JsonProperty("type")
+  val type: ConsoleAPICalledType,
+  @param:JsonProperty("args")
+  val args: List<RemoteObject>,
+  @param:JsonProperty("executionContextId")
+  val executionContextId: Int,
+  @param:JsonProperty("timestamp")
+  val timestamp: Double,
+  @param:JsonProperty("stackTrace")
+  @param:Optional
+  val stackTrace: StackTrace? = null,
+  @param:JsonProperty("context")
+  @param:Optional
+  @param:Experimental
+  val context: String? = null,
 )

@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.profiler
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -9,17 +10,17 @@ import kotlin.collections.List
 /**
  * Profile.
  */
-public data class Profile(
-  @JsonProperty("nodes")
-  public val nodes: List<ProfileNode>,
-  @JsonProperty("startTime")
-  public val startTime: Double,
-  @JsonProperty("endTime")
-  public val endTime: Double,
-  @JsonProperty("samples")
-  @Optional
-  public val samples: List<Int>? = null,
-  @JsonProperty("timeDeltas")
-  @Optional
-  public val timeDeltas: List<Int>? = null,
+data class Profile(
+  @param:JsonProperty("nodes")
+  val nodes: List<ProfileNode>,
+  @param:JsonProperty("startTime")
+  val startTime: Double,
+  @param:JsonProperty("endTime")
+  val endTime: Double,
+  @param:JsonProperty("samples")
+  @param:Optional
+  val samples: List<Int>? = null,
+  @param:JsonProperty("timeDeltas")
+  @param:Optional
+  val timeDeltas: List<Int>? = null,
 )

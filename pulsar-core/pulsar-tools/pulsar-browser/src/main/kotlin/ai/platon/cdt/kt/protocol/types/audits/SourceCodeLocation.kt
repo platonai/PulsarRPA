@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.audits
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -5,14 +6,14 @@ import com.fasterxml.jackson.`annotation`.JsonProperty
 import kotlin.Int
 import kotlin.String
 
-public data class SourceCodeLocation(
-  @JsonProperty("scriptId")
-  @Optional
-  public val scriptId: String? = null,
-  @JsonProperty("url")
-  public val url: String,
-  @JsonProperty("lineNumber")
-  public val lineNumber: Int,
-  @JsonProperty("columnNumber")
-  public val columnNumber: Int,
+data class SourceCodeLocation(
+  @param:JsonProperty("scriptId")
+  @param:Optional
+  val scriptId: String? = null,
+  @param:JsonProperty("url")
+  val url: String,
+  @param:JsonProperty("lineNumber")
+  val lineNumber: Int,
+  @param:JsonProperty("columnNumber")
+  val columnNumber: Int,
 )

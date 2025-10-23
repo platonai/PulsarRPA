@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.page
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -9,9 +10,9 @@ import kotlin.collections.List
  * The installability error
  */
 @Experimental
-public data class InstallabilityError(
-  @JsonProperty("errorId")
-  public val errorId: String,
-  @JsonProperty("errorArguments")
-  public val errorArguments: List<InstallabilityErrorArgument>,
+data class InstallabilityError(
+  @param:JsonProperty("errorId")
+  val errorId: String,
+  @param:JsonProperty("errorArguments")
+  val errorArguments: List<InstallabilityErrorArgument>,
 )

@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.network
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -9,14 +10,14 @@ import kotlin.String
 /**
  * Fired upon WebTransport creation.
  */
-public data class WebTransportCreated(
-  @JsonProperty("transportId")
-  public val transportId: String,
-  @JsonProperty("url")
-  public val url: String,
-  @JsonProperty("timestamp")
-  public val timestamp: Double,
-  @JsonProperty("initiator")
-  @Optional
-  public val initiator: Initiator? = null,
+data class WebTransportCreated(
+  @param:JsonProperty("transportId")
+  val transportId: String,
+  @param:JsonProperty("url")
+  val url: String,
+  @param:JsonProperty("timestamp")
+  val timestamp: Double,
+  @param:JsonProperty("initiator")
+  @param:Optional
+  val initiator: Initiator? = null,
 )

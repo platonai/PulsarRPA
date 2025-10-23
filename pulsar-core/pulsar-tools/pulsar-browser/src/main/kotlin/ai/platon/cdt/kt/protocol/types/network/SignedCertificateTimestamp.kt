@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.network
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -7,21 +8,21 @@ import kotlin.String
 /**
  * Details of a signed certificate timestamp (SCT).
  */
-public data class SignedCertificateTimestamp(
-  @JsonProperty("status")
-  public val status: String,
-  @JsonProperty("origin")
-  public val origin: String,
-  @JsonProperty("logDescription")
-  public val logDescription: String,
-  @JsonProperty("logId")
-  public val logId: String,
-  @JsonProperty("timestamp")
-  public val timestamp: Double,
-  @JsonProperty("hashAlgorithm")
-  public val hashAlgorithm: String,
-  @JsonProperty("signatureAlgorithm")
-  public val signatureAlgorithm: String,
-  @JsonProperty("signatureData")
-  public val signatureData: String,
+data class SignedCertificateTimestamp(
+  @param:JsonProperty("status")
+  val status: String,
+  @param:JsonProperty("origin")
+  val origin: String,
+  @param:JsonProperty("logDescription")
+  val logDescription: String,
+  @param:JsonProperty("logId")
+  val logId: String,
+  @param:JsonProperty("timestamp")
+  val timestamp: Double,
+  @param:JsonProperty("hashAlgorithm")
+  val hashAlgorithm: String,
+  @param:JsonProperty("signatureAlgorithm")
+  val signatureAlgorithm: String,
+  @param:JsonProperty("signatureData")
+  val signatureData: String,
 )

@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.performancetimeline
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -9,20 +10,20 @@ import kotlin.String
 /**
  * See https://github.com/WICG/LargestContentfulPaint and largest_contentful_paint.idl
  */
-public data class LargestContentfulPaint(
-  @JsonProperty("renderTime")
-  public val renderTime: Double,
-  @JsonProperty("loadTime")
-  public val loadTime: Double,
-  @JsonProperty("size")
-  public val size: Double,
-  @JsonProperty("elementId")
-  @Optional
-  public val elementId: String? = null,
-  @JsonProperty("url")
-  @Optional
-  public val url: String? = null,
-  @JsonProperty("nodeId")
-  @Optional
-  public val nodeId: Int? = null,
+data class LargestContentfulPaint(
+  @param:JsonProperty("renderTime")
+  val renderTime: Double,
+  @param:JsonProperty("loadTime")
+  val loadTime: Double,
+  @param:JsonProperty("size")
+  val size: Double,
+  @param:JsonProperty("elementId")
+  @param:Optional
+  val elementId: String? = null,
+  @param:JsonProperty("url")
+  @param:Optional
+  val url: String? = null,
+  @param:JsonProperty("nodeId")
+  @param:Optional
+  val nodeId: Int? = null,
 )

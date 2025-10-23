@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.css
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -8,27 +9,27 @@ import kotlin.String
 /**
  * CSS property declaration data.
  */
-public data class CSSProperty(
-  @JsonProperty("name")
-  public val name: String,
-  @JsonProperty("value")
-  public val `value`: String,
-  @JsonProperty("important")
-  @Optional
-  public val important: Boolean? = null,
-  @JsonProperty("implicit")
-  @Optional
-  public val implicit: Boolean? = null,
-  @JsonProperty("text")
-  @Optional
-  public val text: String? = null,
-  @JsonProperty("parsedOk")
-  @Optional
-  public val parsedOk: Boolean? = null,
-  @JsonProperty("disabled")
-  @Optional
-  public val disabled: Boolean? = null,
-  @JsonProperty("range")
-  @Optional
-  public val range: SourceRange? = null,
+data class CSSProperty(
+  @param:JsonProperty("name")
+  val name: String,
+  @param:JsonProperty("value")
+  val `value`: String,
+  @param:JsonProperty("important")
+  @param:Optional
+  val important: Boolean? = null,
+  @param:JsonProperty("implicit")
+  @param:Optional
+  val implicit: Boolean? = null,
+  @param:JsonProperty("text")
+  @param:Optional
+  val text: String? = null,
+  @param:JsonProperty("parsedOk")
+  @param:Optional
+  val parsedOk: Boolean? = null,
+  @param:JsonProperty("disabled")
+  @param:Optional
+  val disabled: Boolean? = null,
+  @param:JsonProperty("range")
+  @param:Optional
+  val range: SourceRange? = null,
 )

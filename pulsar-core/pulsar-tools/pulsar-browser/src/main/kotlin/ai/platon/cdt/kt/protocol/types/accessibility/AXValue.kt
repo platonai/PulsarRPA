@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.accessibility
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -8,16 +9,16 @@ import kotlin.collections.List
 /**
  * A single computed AX property.
  */
-public data class AXValue(
-  @JsonProperty("type")
-  public val type: AXValueType,
-  @JsonProperty("value")
-  @Optional
-  public val `value`: Any? = null,
-  @JsonProperty("relatedNodes")
-  @Optional
-  public val relatedNodes: List<AXRelatedNode>? = null,
-  @JsonProperty("sources")
-  @Optional
-  public val sources: List<AXValueSource>? = null,
+data class AXValue(
+  @param:JsonProperty("type")
+  val type: AXValueType,
+  @param:JsonProperty("value")
+  @param:Optional
+  val `value`: Any? = null,
+  @param:JsonProperty("relatedNodes")
+  @param:Optional
+  val relatedNodes: List<AXRelatedNode>? = null,
+  @param:JsonProperty("sources")
+  @param:Optional
+  val sources: List<AXValueSource>? = null,
 )

@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.profiler
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -9,11 +10,11 @@ import kotlin.String
  * Runtime call counter information.
  */
 @Experimental
-public data class RuntimeCallCounterInfo(
-  @JsonProperty("name")
-  public val name: String,
-  @JsonProperty("value")
-  public val `value`: Double,
-  @JsonProperty("time")
-  public val time: Double,
+data class RuntimeCallCounterInfo(
+  @param:JsonProperty("name")
+  val name: String,
+  @param:JsonProperty("value")
+  val `value`: Double,
+  @param:JsonProperty("time")
+  val time: Double,
 )

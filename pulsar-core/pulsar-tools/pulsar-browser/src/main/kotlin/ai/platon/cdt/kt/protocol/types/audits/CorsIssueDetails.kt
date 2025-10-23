@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.audits
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -12,20 +13,20 @@ import kotlin.String
  * Details for a CORS related issue, e.g. a warning or error related to
  * CORS RFC1918 enforcement.
  */
-public data class CorsIssueDetails(
-  @JsonProperty("corsErrorStatus")
-  public val corsErrorStatus: CorsErrorStatus,
-  @JsonProperty("isWarning")
-  public val isWarning: Boolean,
-  @JsonProperty("request")
-  public val request: AffectedRequest,
-  @JsonProperty("initiatorOrigin")
-  @Optional
-  public val initiatorOrigin: String? = null,
-  @JsonProperty("resourceIPAddressSpace")
-  @Optional
-  public val resourceIPAddressSpace: IPAddressSpace? = null,
-  @JsonProperty("clientSecurityState")
-  @Optional
-  public val clientSecurityState: ClientSecurityState? = null,
+data class CorsIssueDetails(
+  @param:JsonProperty("corsErrorStatus")
+  val corsErrorStatus: CorsErrorStatus,
+  @param:JsonProperty("isWarning")
+  val isWarning: Boolean,
+  @param:JsonProperty("request")
+  val request: AffectedRequest,
+  @param:JsonProperty("initiatorOrigin")
+  @param:Optional
+  val initiatorOrigin: String? = null,
+  @param:JsonProperty("resourceIPAddressSpace")
+  @param:Optional
+  val resourceIPAddressSpace: IPAddressSpace? = null,
+  @param:JsonProperty("clientSecurityState")
+  @param:Optional
+  val clientSecurityState: ClientSecurityState? = null,
 )

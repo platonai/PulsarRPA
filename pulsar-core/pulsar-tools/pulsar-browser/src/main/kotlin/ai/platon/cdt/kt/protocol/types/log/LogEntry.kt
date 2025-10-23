@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.log
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -12,31 +13,31 @@ import kotlin.collections.List
 /**
  * Log entry.
  */
-public data class LogEntry(
-  @JsonProperty("source")
-  public val source: LogEntrySource,
-  @JsonProperty("level")
-  public val level: LogEntryLevel,
-  @JsonProperty("text")
-  public val text: String,
-  @JsonProperty("timestamp")
-  public val timestamp: Double,
-  @JsonProperty("url")
-  @Optional
-  public val url: String? = null,
-  @JsonProperty("lineNumber")
-  @Optional
-  public val lineNumber: Int? = null,
-  @JsonProperty("stackTrace")
-  @Optional
-  public val stackTrace: StackTrace? = null,
-  @JsonProperty("networkRequestId")
-  @Optional
-  public val networkRequestId: String? = null,
-  @JsonProperty("workerId")
-  @Optional
-  public val workerId: String? = null,
-  @JsonProperty("args")
-  @Optional
-  public val args: List<RemoteObject>? = null,
+data class LogEntry(
+  @param:JsonProperty("source")
+  val source: LogEntrySource,
+  @param:JsonProperty("level")
+  val level: LogEntryLevel,
+  @param:JsonProperty("text")
+  val text: String,
+  @param:JsonProperty("timestamp")
+  val timestamp: Double,
+  @param:JsonProperty("url")
+  @param:Optional
+  val url: String? = null,
+  @param:JsonProperty("lineNumber")
+  @param:Optional
+  val lineNumber: Int? = null,
+  @param:JsonProperty("stackTrace")
+  @param:Optional
+  val stackTrace: StackTrace? = null,
+  @param:JsonProperty("networkRequestId")
+  @param:Optional
+  val networkRequestId: String? = null,
+  @param:JsonProperty("workerId")
+  @param:Optional
+  val workerId: String? = null,
+  @param:JsonProperty("args")
+  @param:Optional
+  val args: List<RemoteObject>? = null,
 )

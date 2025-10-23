@@ -927,7 +927,7 @@
 
         <kotlin.version>2.2.20</kotlin.version>
         <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>
-        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
+        <kotlin.compiler.jvmTarget>11</kotlin.compiler.jvmTarget>
     </properties>
 
 </project>

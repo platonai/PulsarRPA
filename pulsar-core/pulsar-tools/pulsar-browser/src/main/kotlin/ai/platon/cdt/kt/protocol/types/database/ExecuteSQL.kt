@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.database
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -6,14 +7,14 @@ import kotlin.Any
 import kotlin.String
 import kotlin.collections.List
 
-public data class ExecuteSQL(
-  @JsonProperty("columnNames")
-  @Optional
-  public val columnNames: List<String>? = null,
-  @JsonProperty("values")
-  @Optional
-  public val values: List<Any?>? = null,
-  @JsonProperty("sqlError")
-  @Optional
-  public val sqlError: Error? = null,
+data class ExecuteSQL(
+  @param:JsonProperty("columnNames")
+  @param:Optional
+  val columnNames: List<String>? = null,
+  @param:JsonProperty("values")
+  @param:Optional
+  val values: List<Any?>? = null,
+  @param:JsonProperty("sqlError")
+  @param:Optional
+  val sqlError: Error? = null,
 )

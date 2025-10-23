@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.memory
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -7,13 +8,13 @@ import kotlin.String
 /**
  * Executable module information
  */
-public data class Module(
-  @JsonProperty("name")
-  public val name: String,
-  @JsonProperty("uuid")
-  public val uuid: String,
-  @JsonProperty("baseAddress")
-  public val baseAddress: String,
-  @JsonProperty("size")
-  public val size: Double,
+data class Module(
+  @param:JsonProperty("name")
+  val name: String,
+  @param:JsonProperty("uuid")
+  val uuid: String,
+  @param:JsonProperty("baseAddress")
+  val baseAddress: String,
+  @param:JsonProperty("size")
+  val size: Double,
 )

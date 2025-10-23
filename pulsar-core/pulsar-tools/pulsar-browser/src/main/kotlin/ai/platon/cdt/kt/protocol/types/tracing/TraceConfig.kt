@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.tracing
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -8,29 +9,29 @@ import kotlin.String
 import kotlin.collections.List
 import kotlin.collections.Map
 
-public data class TraceConfig(
-  @JsonProperty("recordMode")
-  @Optional
-  public val recordMode: TraceConfigRecordMode? = null,
-  @JsonProperty("enableSampling")
-  @Optional
-  public val enableSampling: Boolean? = null,
-  @JsonProperty("enableSystrace")
-  @Optional
-  public val enableSystrace: Boolean? = null,
-  @JsonProperty("enableArgumentFilter")
-  @Optional
-  public val enableArgumentFilter: Boolean? = null,
-  @JsonProperty("includedCategories")
-  @Optional
-  public val includedCategories: List<String>? = null,
-  @JsonProperty("excludedCategories")
-  @Optional
-  public val excludedCategories: List<String>? = null,
-  @JsonProperty("syntheticDelays")
-  @Optional
-  public val syntheticDelays: List<String>? = null,
-  @JsonProperty("memoryDumpConfig")
-  @Optional
-  public val memoryDumpConfig: Map<String, Any?>? = null,
+data class TraceConfig(
+  @param:JsonProperty("recordMode")
+  @param:Optional
+  val recordMode: TraceConfigRecordMode? = null,
+  @param:JsonProperty("enableSampling")
+  @param:Optional
+  val enableSampling: Boolean? = null,
+  @param:JsonProperty("enableSystrace")
+  @param:Optional
+  val enableSystrace: Boolean? = null,
+  @param:JsonProperty("enableArgumentFilter")
+  @param:Optional
+  val enableArgumentFilter: Boolean? = null,
+  @param:JsonProperty("includedCategories")
+  @param:Optional
+  val includedCategories: List<String>? = null,
+  @param:JsonProperty("excludedCategories")
+  @param:Optional
+  val excludedCategories: List<String>? = null,
+  @param:JsonProperty("syntheticDelays")
+  @param:Optional
+  val syntheticDelays: List<String>? = null,
+  @param:JsonProperty("memoryDumpConfig")
+  @param:Optional
+  val memoryDumpConfig: Map<String, Any?>? = null,
 )

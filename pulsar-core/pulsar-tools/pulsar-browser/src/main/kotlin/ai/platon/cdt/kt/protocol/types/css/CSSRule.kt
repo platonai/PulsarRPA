@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.css
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -8,17 +9,17 @@ import kotlin.collections.List
 /**
  * CSS rule representation.
  */
-public data class CSSRule(
-  @JsonProperty("styleSheetId")
-  @Optional
-  public val styleSheetId: String? = null,
-  @JsonProperty("selectorList")
-  public val selectorList: SelectorList,
-  @JsonProperty("origin")
-  public val origin: StyleSheetOrigin,
-  @JsonProperty("style")
-  public val style: CSSStyle,
-  @JsonProperty("media")
-  @Optional
-  public val media: List<CSSMedia>? = null,
+data class CSSRule(
+  @param:JsonProperty("styleSheetId")
+  @param:Optional
+  val styleSheetId: String? = null,
+  @param:JsonProperty("selectorList")
+  val selectorList: SelectorList,
+  @param:JsonProperty("origin")
+  val origin: StyleSheetOrigin,
+  @param:JsonProperty("style")
+  val style: CSSStyle,
+  @param:JsonProperty("media")
+  @param:Optional
+  val media: List<CSSMedia>? = null,
 )

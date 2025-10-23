@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.commands
 
 import ai.platon.cdt.kt.protocol.events.domstorage.DomStorageItemAdded
@@ -20,76 +21,67 @@ import kotlin.collections.List
  * Query and modify DOM storage.
  */
 @Experimental
-public interface DOMStorage {
+interface DOMStorage {
   /**
    * @param storageId
    */
-  public suspend fun clear(@ParamName("storageId") storageId: StorageId)
+  suspend fun clear(@ParamName("storageId") storageId: StorageId)
 
   /**
    * Disables storage tracking, prevents storage events from being sent to the client.
    */
-  public suspend fun disable()
+  suspend fun disable()
 
   /**
    * Enables storage tracking, storage events will now be delivered to the client.
    */
-  public suspend fun enable()
+  suspend fun enable()
 
   /**
    * @param storageId
    */
   @Returns("entries")
   @ReturnTypeParameter(String::class)
-  public suspend fun getDOMStorageItems(@ParamName("storageId") storageId: StorageId):
-      List<List<String>>
+  suspend fun getDOMStorageItems(@ParamName("storageId") storageId: StorageId): List<List<String>>
 
   /**
    * @param storageId
    * @param key
    */
-  public suspend fun removeDOMStorageItem(@ParamName("storageId") storageId: StorageId,
-      @ParamName("key") key: String)
+  suspend fun removeDOMStorageItem(@ParamName("storageId") storageId: StorageId, @ParamName("key") key: String)
 
   /**
    * @param storageId
    * @param key
    * @param value
    */
-  public suspend fun setDOMStorageItem(
+  suspend fun setDOMStorageItem(
     @ParamName("storageId") storageId: StorageId,
     @ParamName("key") key: String,
     @ParamName("value") `value`: String,
   )
 
   @EventName("domStorageItemAdded")
-  public fun onDomStorageItemAdded(eventListener: EventHandler<DomStorageItemAdded>): EventListener
+  fun onDomStorageItemAdded(eventListener: EventHandler<DomStorageItemAdded>): EventListener
 
   @EventName("domStorageItemAdded")
-  public fun onDomStorageItemAdded(eventListener: suspend (DomStorageItemAdded) -> Unit):
-      EventListener
+  fun onDomStorageItemAdded(eventListener: suspend (DomStorageItemAdded) -> Unit): EventListener
 
   @EventName("domStorageItemRemoved")
-  public fun onDomStorageItemRemoved(eventListener: EventHandler<DomStorageItemRemoved>):
-      EventListener
+  fun onDomStorageItemRemoved(eventListener: EventHandler<DomStorageItemRemoved>): EventListener
 
   @EventName("domStorageItemRemoved")
-  public fun onDomStorageItemRemoved(eventListener: suspend (DomStorageItemRemoved) -> Unit):
-      EventListener
+  fun onDomStorageItemRemoved(eventListener: suspend (DomStorageItemRemoved) -> Unit): EventListener
 
   @EventName("domStorageItemUpdated")
-  public fun onDomStorageItemUpdated(eventListener: EventHandler<DomStorageItemUpdated>):
-      EventListener
+  fun onDomStorageItemUpdated(eventListener: EventHandler<DomStorageItemUpdated>): EventListener
 
   @EventName("domStorageItemUpdated")
-  public fun onDomStorageItemUpdated(eventListener: suspend (DomStorageItemUpdated) -> Unit):
-      EventListener
+  fun onDomStorageItemUpdated(eventListener: suspend (DomStorageItemUpdated) -> Unit): EventListener
 
   @EventName("domStorageItemsCleared")
-  public fun onDomStorageItemsCleared(eventListener: EventHandler<DomStorageItemsCleared>):
-      EventListener
+  fun onDomStorageItemsCleared(eventListener: EventHandler<DomStorageItemsCleared>): EventListener
 
   @EventName("domStorageItemsCleared")
-  public fun onDomStorageItemsCleared(eventListener: suspend (DomStorageItemsCleared) -> Unit):
-      EventListener
+  fun onDomStorageItemsCleared(eventListener: suspend (DomStorageItemsCleared) -> Unit): EventListener
 }

@@ -1,14 +1,15 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.runtime
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
 import com.fasterxml.jackson.`annotation`.JsonProperty
 import kotlin.String
 
-public data class CompileScript(
-  @JsonProperty("scriptId")
-  @Optional
-  public val scriptId: String? = null,
-  @JsonProperty("exceptionDetails")
-  @Optional
-  public val exceptionDetails: ExceptionDetails? = null,
+data class CompileScript(
+  @param:JsonProperty("scriptId")
+  @param:Optional
+  val scriptId: String? = null,
+  @param:JsonProperty("exceptionDetails")
+  @param:Optional
+  val exceptionDetails: ExceptionDetails? = null,
 )

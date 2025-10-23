@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.accessibility
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -8,8 +9,7 @@ import com.fasterxml.jackson.`annotation`.JsonProperty
  * - from 'live' to 'root': attributes which apply to nodes in live regions
  * - from 'autocomplete' to 'valuetext': attributes which apply to widgets
  * - from 'checked' to 'selected': states which apply to widgets
- * - from 'activedescendant' to 'owns' - relationships between elements other than
- * parent/child/sibling.
+ * - from 'activedescendant' to 'owns' - relationships between elements other than parent/child/sibling.
  */
 public enum class AXPropertyName {
   @JsonProperty("busy")

@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.debugger
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -9,21 +10,21 @@ import com.fasterxml.jackson.`annotation`.JsonProperty
 import kotlin.Boolean
 import kotlin.collections.List
 
-public data class SetScriptSource(
-  @JsonProperty("callFrames")
-  @Optional
-  public val callFrames: List<CallFrame>? = null,
-  @JsonProperty("stackChanged")
-  @Optional
-  public val stackChanged: Boolean? = null,
-  @JsonProperty("asyncStackTrace")
-  @Optional
-  public val asyncStackTrace: StackTrace? = null,
-  @JsonProperty("asyncStackTraceId")
-  @Optional
-  @Experimental
-  public val asyncStackTraceId: StackTraceId? = null,
-  @JsonProperty("exceptionDetails")
-  @Optional
-  public val exceptionDetails: ExceptionDetails? = null,
+data class SetScriptSource(
+  @param:JsonProperty("callFrames")
+  @param:Optional
+  val callFrames: List<CallFrame>? = null,
+  @param:JsonProperty("stackChanged")
+  @param:Optional
+  val stackChanged: Boolean? = null,
+  @param:JsonProperty("asyncStackTrace")
+  @param:Optional
+  val asyncStackTrace: StackTrace? = null,
+  @param:JsonProperty("asyncStackTraceId")
+  @param:Optional
+  @param:Experimental
+  val asyncStackTraceId: StackTraceId? = null,
+  @param:JsonProperty("exceptionDetails")
+  @param:Optional
+  val exceptionDetails: ExceptionDetails? = null,
 )

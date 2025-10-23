@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.emulation
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -12,21 +13,21 @@ import kotlin.collections.List
  * Missing optional values will be filled in by the target with what it would normally use.
  */
 @Experimental
-public data class UserAgentMetadata(
-  @JsonProperty("brands")
-  @Optional
-  public val brands: List<UserAgentBrandVersion>? = null,
-  @JsonProperty("fullVersion")
-  @Optional
-  public val fullVersion: String? = null,
-  @JsonProperty("platform")
-  public val platform: String,
-  @JsonProperty("platformVersion")
-  public val platformVersion: String,
-  @JsonProperty("architecture")
-  public val architecture: String,
-  @JsonProperty("model")
-  public val model: String,
-  @JsonProperty("mobile")
-  public val mobile: Boolean,
+data class UserAgentMetadata(
+  @param:JsonProperty("brands")
+  @param:Optional
+  val brands: List<UserAgentBrandVersion>? = null,
+  @param:JsonProperty("fullVersion")
+  @param:Optional
+  val fullVersion: String? = null,
+  @param:JsonProperty("platform")
+  val platform: String,
+  @param:JsonProperty("platformVersion")
+  val platformVersion: String,
+  @param:JsonProperty("architecture")
+  val architecture: String,
+  @param:JsonProperty("model")
+  val model: String,
+  @param:JsonProperty("mobile")
+  val mobile: Boolean,
 )

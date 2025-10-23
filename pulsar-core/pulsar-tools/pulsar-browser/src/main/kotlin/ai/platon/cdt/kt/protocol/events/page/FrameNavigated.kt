@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.page
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -8,10 +9,10 @@ import com.fasterxml.jackson.`annotation`.JsonProperty
 /**
  * Fired once navigation of the frame has completed. Frame is now associated with the new loader.
  */
-public data class FrameNavigated(
-  @JsonProperty("frame")
-  public val frame: Frame,
-  @JsonProperty("type")
-  @Experimental
-  public val type: NavigationType,
+data class FrameNavigated(
+  @param:JsonProperty("frame")
+  val frame: Frame,
+  @param:JsonProperty("type")
+  @param:Experimental
+  val type: NavigationType,
 )

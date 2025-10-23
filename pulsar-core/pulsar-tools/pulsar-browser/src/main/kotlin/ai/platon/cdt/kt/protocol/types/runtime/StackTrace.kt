@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.runtime
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -9,17 +10,17 @@ import kotlin.collections.List
 /**
  * Call frames for assertions or error messages.
  */
-public data class StackTrace(
-  @JsonProperty("description")
-  @Optional
-  public val description: String? = null,
-  @JsonProperty("callFrames")
-  public val callFrames: List<CallFrame>,
-  @JsonProperty("parent")
-  @Optional
-  public val parent: StackTrace? = null,
-  @JsonProperty("parentId")
-  @Optional
-  @Experimental
-  public val parentId: StackTraceId? = null,
+data class StackTrace(
+  @param:JsonProperty("description")
+  @param:Optional
+  val description: String? = null,
+  @param:JsonProperty("callFrames")
+  val callFrames: List<CallFrame>,
+  @param:JsonProperty("parent")
+  @param:Optional
+  val parent: StackTrace? = null,
+  @param:JsonProperty("parentId")
+  @param:Optional
+  @param:Experimental
+  val parentId: StackTraceId? = null,
 )

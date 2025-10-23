@@ -1,11 +1,12 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.cachestorage
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
 import kotlin.String
 
-public data class Header(
-  @JsonProperty("name")
-  public val name: String,
-  @JsonProperty("value")
-  public val `value`: String,
+data class Header(
+  @param:JsonProperty("name")
+  val name: String,
+  @param:JsonProperty("value")
+  val `value`: String,
 )

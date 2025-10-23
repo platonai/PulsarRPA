@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.target
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -10,11 +11,11 @@ import kotlin.String
  * Issued when attached to target because of auto-attach or `attachToTarget` command.
  */
 @Experimental
-public data class AttachedToTarget(
-  @JsonProperty("sessionId")
-  public val sessionId: String,
-  @JsonProperty("targetInfo")
-  public val targetInfo: TargetInfo,
-  @JsonProperty("waitingForDebugger")
-  public val waitingForDebugger: Boolean,
+data class AttachedToTarget(
+  @param:JsonProperty("sessionId")
+  val sessionId: String,
+  @param:JsonProperty("targetInfo")
+  val targetInfo: TargetInfo,
+  @param:JsonProperty("waitingForDebugger")
+  val waitingForDebugger: Boolean,
 )

@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.runtime
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -6,18 +7,18 @@ import com.fasterxml.jackson.`annotation`.JsonProperty
 import kotlin.String
 
 @Experimental
-public data class PropertyPreview(
-  @JsonProperty("name")
-  public val name: String,
-  @JsonProperty("type")
-  public val type: PropertyPreviewType,
-  @JsonProperty("value")
-  @Optional
-  public val `value`: String? = null,
-  @JsonProperty("valuePreview")
-  @Optional
-  public val valuePreview: ObjectPreview? = null,
-  @JsonProperty("subtype")
-  @Optional
-  public val subtype: PropertyPreviewSubtype? = null,
+data class PropertyPreview(
+  @param:JsonProperty("name")
+  val name: String,
+  @param:JsonProperty("type")
+  val type: PropertyPreviewType,
+  @param:JsonProperty("value")
+  @param:Optional
+  val `value`: String? = null,
+  @param:JsonProperty("valuePreview")
+  @param:Optional
+  val valuePreview: ObjectPreview? = null,
+  @param:JsonProperty("subtype")
+  @param:Optional
+  val subtype: PropertyPreviewSubtype? = null,
 )

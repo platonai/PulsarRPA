@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.commands
 
 import ai.platon.cdt.kt.protocol.events.webaudio.AudioListenerCreated
@@ -28,115 +29,99 @@ import kotlin.Unit
  * https://webaudio.github.io/web-audio-api/
  */
 @Experimental
-public interface WebAudio {
+interface WebAudio {
   /**
    * Enables the WebAudio domain and starts sending context lifetime events.
    */
-  public suspend fun enable()
+  suspend fun enable()
 
   /**
    * Disables the WebAudio domain.
    */
-  public suspend fun disable()
+  suspend fun disable()
 
   /**
    * Fetch the realtime data from the registered contexts.
    * @param contextId
    */
   @Returns("realtimeData")
-  public suspend fun getRealtimeData(@ParamName("contextId") contextId: String): ContextRealtimeData
+  suspend fun getRealtimeData(@ParamName("contextId") contextId: String): ContextRealtimeData
 
   @EventName("contextCreated")
-  public fun onContextCreated(eventListener: EventHandler<ContextCreated>): EventListener
+  fun onContextCreated(eventListener: EventHandler<ContextCreated>): EventListener
 
   @EventName("contextCreated")
-  public fun onContextCreated(eventListener: suspend (ContextCreated) -> Unit): EventListener
+  fun onContextCreated(eventListener: suspend (ContextCreated) -> Unit): EventListener
 
   @EventName("contextWillBeDestroyed")
-  public fun onContextWillBeDestroyed(eventListener: EventHandler<ContextWillBeDestroyed>):
-      EventListener
+  fun onContextWillBeDestroyed(eventListener: EventHandler<ContextWillBeDestroyed>): EventListener
 
   @EventName("contextWillBeDestroyed")
-  public fun onContextWillBeDestroyed(eventListener: suspend (ContextWillBeDestroyed) -> Unit):
-      EventListener
+  fun onContextWillBeDestroyed(eventListener: suspend (ContextWillBeDestroyed) -> Unit): EventListener
 
   @EventName("contextChanged")
-  public fun onContextChanged(eventListener: EventHandler<ContextChanged>): EventListener
+  fun onContextChanged(eventListener: EventHandler<ContextChanged>): EventListener
 
   @EventName("contextChanged")
-  public fun onContextChanged(eventListener: suspend (ContextChanged) -> Unit): EventListener
+  fun onContextChanged(eventListener: suspend (ContextChanged) -> Unit): EventListener
 
   @EventName("audioListenerCreated")
-  public fun onAudioListenerCreated(eventListener: EventHandler<AudioListenerCreated>):
-      EventListener
+  fun onAudioListenerCreated(eventListener: EventHandler<AudioListenerCreated>): EventListener
 
   @EventName("audioListenerCreated")
-  public fun onAudioListenerCreated(eventListener: suspend (AudioListenerCreated) -> Unit):
-      EventListener
+  fun onAudioListenerCreated(eventListener: suspend (AudioListenerCreated) -> Unit): EventListener
 
   @EventName("audioListenerWillBeDestroyed")
-  public
-      fun onAudioListenerWillBeDestroyed(eventListener: EventHandler<AudioListenerWillBeDestroyed>):
-      EventListener
+  fun onAudioListenerWillBeDestroyed(eventListener: EventHandler<AudioListenerWillBeDestroyed>): EventListener
 
   @EventName("audioListenerWillBeDestroyed")
-  public
-      fun onAudioListenerWillBeDestroyed(eventListener: suspend (AudioListenerWillBeDestroyed) -> Unit):
-      EventListener
+  fun onAudioListenerWillBeDestroyed(eventListener: suspend (AudioListenerWillBeDestroyed) -> Unit): EventListener
 
   @EventName("audioNodeCreated")
-  public fun onAudioNodeCreated(eventListener: EventHandler<AudioNodeCreated>): EventListener
+  fun onAudioNodeCreated(eventListener: EventHandler<AudioNodeCreated>): EventListener
 
   @EventName("audioNodeCreated")
-  public fun onAudioNodeCreated(eventListener: suspend (AudioNodeCreated) -> Unit): EventListener
+  fun onAudioNodeCreated(eventListener: suspend (AudioNodeCreated) -> Unit): EventListener
 
   @EventName("audioNodeWillBeDestroyed")
-  public fun onAudioNodeWillBeDestroyed(eventListener: EventHandler<AudioNodeWillBeDestroyed>):
-      EventListener
+  fun onAudioNodeWillBeDestroyed(eventListener: EventHandler<AudioNodeWillBeDestroyed>): EventListener
 
   @EventName("audioNodeWillBeDestroyed")
-  public fun onAudioNodeWillBeDestroyed(eventListener: suspend (AudioNodeWillBeDestroyed) -> Unit):
-      EventListener
+  fun onAudioNodeWillBeDestroyed(eventListener: suspend (AudioNodeWillBeDestroyed) -> Unit): EventListener
 
   @EventName("audioParamCreated")
-  public fun onAudioParamCreated(eventListener: EventHandler<AudioParamCreated>): EventListener
+  fun onAudioParamCreated(eventListener: EventHandler<AudioParamCreated>): EventListener
 
   @EventName("audioParamCreated")
-  public fun onAudioParamCreated(eventListener: suspend (AudioParamCreated) -> Unit): EventListener
+  fun onAudioParamCreated(eventListener: suspend (AudioParamCreated) -> Unit): EventListener
 
   @EventName("audioParamWillBeDestroyed")
-  public fun onAudioParamWillBeDestroyed(eventListener: EventHandler<AudioParamWillBeDestroyed>):
-      EventListener
+  fun onAudioParamWillBeDestroyed(eventListener: EventHandler<AudioParamWillBeDestroyed>): EventListener
 
   @EventName("audioParamWillBeDestroyed")
-  public
-      fun onAudioParamWillBeDestroyed(eventListener: suspend (AudioParamWillBeDestroyed) -> Unit):
-      EventListener
+  fun onAudioParamWillBeDestroyed(eventListener: suspend (AudioParamWillBeDestroyed) -> Unit): EventListener
 
   @EventName("nodesConnected")
-  public fun onNodesConnected(eventListener: EventHandler<NodesConnected>): EventListener
+  fun onNodesConnected(eventListener: EventHandler<NodesConnected>): EventListener
 
   @EventName("nodesConnected")
-  public fun onNodesConnected(eventListener: suspend (NodesConnected) -> Unit): EventListener
+  fun onNodesConnected(eventListener: suspend (NodesConnected) -> Unit): EventListener
 
   @EventName("nodesDisconnected")
-  public fun onNodesDisconnected(eventListener: EventHandler<NodesDisconnected>): EventListener
+  fun onNodesDisconnected(eventListener: EventHandler<NodesDisconnected>): EventListener
 
   @EventName("nodesDisconnected")
-  public fun onNodesDisconnected(eventListener: suspend (NodesDisconnected) -> Unit): EventListener
+  fun onNodesDisconnected(eventListener: suspend (NodesDisconnected) -> Unit): EventListener
 
   @EventName("nodeParamConnected")
-  public fun onNodeParamConnected(eventListener: EventHandler<NodeParamConnected>): EventListener
+  fun onNodeParamConnected(eventListener: EventHandler<NodeParamConnected>): EventListener
 
   @EventName("nodeParamConnected")
-  public fun onNodeParamConnected(eventListener: suspend (NodeParamConnected) -> Unit):
-      EventListener
+  fun onNodeParamConnected(eventListener: suspend (NodeParamConnected) -> Unit): EventListener
 
   @EventName("nodeParamDisconnected")
-  public fun onNodeParamDisconnected(eventListener: EventHandler<NodeParamDisconnected>):
-      EventListener
+  fun onNodeParamDisconnected(eventListener: EventHandler<NodeParamDisconnected>): EventListener
 
   @EventName("nodeParamDisconnected")
-  public fun onNodeParamDisconnected(eventListener: suspend (NodeParamDisconnected) -> Unit):
-      EventListener
+  fun onNodeParamDisconnected(eventListener: suspend (NodeParamDisconnected) -> Unit): EventListener
 }

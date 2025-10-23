@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.commands
 
 import ai.platon.cdt.kt.protocol.events.media.PlayerErrorsRaised
@@ -15,49 +16,44 @@ import kotlin.Unit
  * This domain allows detailed inspection of media elements
  */
 @Experimental
-public interface Media {
+interface Media {
   /**
    * Enables the Media domain
    */
-  public suspend fun enable()
+  suspend fun enable()
 
   /**
    * Disables the Media domain.
    */
-  public suspend fun disable()
+  suspend fun disable()
 
   @EventName("playerPropertiesChanged")
-  public fun onPlayerPropertiesChanged(eventListener: EventHandler<PlayerPropertiesChanged>):
-      EventListener
+  fun onPlayerPropertiesChanged(eventListener: EventHandler<PlayerPropertiesChanged>): EventListener
 
   @EventName("playerPropertiesChanged")
-  public fun onPlayerPropertiesChanged(eventListener: suspend (PlayerPropertiesChanged) -> Unit):
-      EventListener
+  fun onPlayerPropertiesChanged(eventListener: suspend (PlayerPropertiesChanged) -> Unit): EventListener
 
   @EventName("playerEventsAdded")
-  public fun onPlayerEventsAdded(eventListener: EventHandler<PlayerEventsAdded>): EventListener
+  fun onPlayerEventsAdded(eventListener: EventHandler<PlayerEventsAdded>): EventListener
 
   @EventName("playerEventsAdded")
-  public fun onPlayerEventsAdded(eventListener: suspend (PlayerEventsAdded) -> Unit): EventListener
+  fun onPlayerEventsAdded(eventListener: suspend (PlayerEventsAdded) -> Unit): EventListener
 
   @EventName("playerMessagesLogged")
-  public fun onPlayerMessagesLogged(eventListener: EventHandler<PlayerMessagesLogged>):
-      EventListener
+  fun onPlayerMessagesLogged(eventListener: EventHandler<PlayerMessagesLogged>): EventListener
 
   @EventName("playerMessagesLogged")
-  public fun onPlayerMessagesLogged(eventListener: suspend (PlayerMessagesLogged) -> Unit):
-      EventListener
+  fun onPlayerMessagesLogged(eventListener: suspend (PlayerMessagesLogged) -> Unit): EventListener
 
   @EventName("playerErrorsRaised")
-  public fun onPlayerErrorsRaised(eventListener: EventHandler<PlayerErrorsRaised>): EventListener
+  fun onPlayerErrorsRaised(eventListener: EventHandler<PlayerErrorsRaised>): EventListener
 
   @EventName("playerErrorsRaised")
-  public fun onPlayerErrorsRaised(eventListener: suspend (PlayerErrorsRaised) -> Unit):
-      EventListener
+  fun onPlayerErrorsRaised(eventListener: suspend (PlayerErrorsRaised) -> Unit): EventListener
 
   @EventName("playersCreated")
-  public fun onPlayersCreated(eventListener: EventHandler<PlayersCreated>): EventListener
+  fun onPlayersCreated(eventListener: EventHandler<PlayersCreated>): EventListener
 
   @EventName("playersCreated")
-  public fun onPlayersCreated(eventListener: suspend (PlayersCreated) -> Unit): EventListener
+  fun onPlayersCreated(eventListener: suspend (PlayersCreated) -> Unit): EventListener
 }

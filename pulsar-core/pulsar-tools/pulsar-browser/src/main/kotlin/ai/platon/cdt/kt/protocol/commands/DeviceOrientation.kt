@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.commands
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -5,11 +6,11 @@ import ai.platon.cdt.kt.protocol.support.annotations.ParamName
 import kotlin.Double
 
 @Experimental
-public interface DeviceOrientation {
+interface DeviceOrientation {
   /**
    * Clears the overridden Device Orientation.
    */
-  public suspend fun clearDeviceOrientationOverride()
+  suspend fun clearDeviceOrientationOverride()
 
   /**
    * Overrides the Device Orientation.
@@ -17,7 +18,7 @@ public interface DeviceOrientation {
    * @param beta Mock beta
    * @param gamma Mock gamma
    */
-  public suspend fun setDeviceOrientationOverride(
+  suspend fun setDeviceOrientationOverride(
     @ParamName("alpha") alpha: Double,
     @ParamName("beta") beta: Double,
     @ParamName("gamma") gamma: Double,

@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.network
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -7,47 +8,47 @@ import kotlin.Double
 /**
  * Timing information for the request.
  */
-public data class ResourceTiming(
-  @JsonProperty("requestTime")
-  public val requestTime: Double,
-  @JsonProperty("proxyStart")
-  public val proxyStart: Double,
-  @JsonProperty("proxyEnd")
-  public val proxyEnd: Double,
-  @JsonProperty("dnsStart")
-  public val dnsStart: Double,
-  @JsonProperty("dnsEnd")
-  public val dnsEnd: Double,
-  @JsonProperty("connectStart")
-  public val connectStart: Double,
-  @JsonProperty("connectEnd")
-  public val connectEnd: Double,
-  @JsonProperty("sslStart")
-  public val sslStart: Double,
-  @JsonProperty("sslEnd")
-  public val sslEnd: Double,
-  @JsonProperty("workerStart")
-  @Experimental
-  public val workerStart: Double,
-  @JsonProperty("workerReady")
-  @Experimental
-  public val workerReady: Double,
-  @JsonProperty("workerFetchStart")
-  @Experimental
-  public val workerFetchStart: Double,
-  @JsonProperty("workerRespondWithSettled")
-  @Experimental
-  public val workerRespondWithSettled: Double,
-  @JsonProperty("sendStart")
-  public val sendStart: Double,
-  @JsonProperty("sendEnd")
-  public val sendEnd: Double,
-  @JsonProperty("pushStart")
-  @Experimental
-  public val pushStart: Double,
-  @JsonProperty("pushEnd")
-  @Experimental
-  public val pushEnd: Double,
-  @JsonProperty("receiveHeadersEnd")
-  public val receiveHeadersEnd: Double,
+data class ResourceTiming(
+  @param:JsonProperty("requestTime")
+  val requestTime: Double,
+  @param:JsonProperty("proxyStart")
+  val proxyStart: Double,
+  @param:JsonProperty("proxyEnd")
+  val proxyEnd: Double,
+  @param:JsonProperty("dnsStart")
+  val dnsStart: Double,
+  @param:JsonProperty("dnsEnd")
+  val dnsEnd: Double,
+  @param:JsonProperty("connectStart")
+  val connectStart: Double,
+  @param:JsonProperty("connectEnd")
+  val connectEnd: Double,
+  @param:JsonProperty("sslStart")
+  val sslStart: Double,
+  @param:JsonProperty("sslEnd")
+  val sslEnd: Double,
+  @param:JsonProperty("workerStart")
+  @param:Experimental
+  val workerStart: Double,
+  @param:JsonProperty("workerReady")
+  @param:Experimental
+  val workerReady: Double,
+  @param:JsonProperty("workerFetchStart")
+  @param:Experimental
+  val workerFetchStart: Double,
+  @param:JsonProperty("workerRespondWithSettled")
+  @param:Experimental
+  val workerRespondWithSettled: Double,
+  @param:JsonProperty("sendStart")
+  val sendStart: Double,
+  @param:JsonProperty("sendEnd")
+  val sendEnd: Double,
+  @param:JsonProperty("pushStart")
+  @param:Experimental
+  val pushStart: Double,
+  @param:JsonProperty("pushEnd")
+  @param:Experimental
+  val pushEnd: Double,
+  @param:JsonProperty("receiveHeadersEnd")
+  val receiveHeadersEnd: Double,
 )

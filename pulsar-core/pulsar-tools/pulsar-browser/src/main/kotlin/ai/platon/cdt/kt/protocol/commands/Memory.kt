@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.commands
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -11,64 +12,62 @@ import kotlin.Boolean
 import kotlin.Int
 
 @Experimental
-public interface Memory {
-  public suspend fun getDOMCounters(): DOMCounters
+interface Memory {
+  suspend fun getDOMCounters(): DOMCounters
 
-  public suspend fun prepareForLeakDetection()
+  suspend fun prepareForLeakDetection()
 
   /**
    * Simulate OomIntervention by purging V8 memory.
    */
-  public suspend fun forciblyPurgeJavaScriptMemory()
+  suspend fun forciblyPurgeJavaScriptMemory()
 
   /**
    * Enable/disable suppressing memory pressure notifications in all processes.
    * @param suppressed If true, memory pressure notifications will be suppressed.
    */
-  public suspend fun setPressureNotificationsSuppressed(@ParamName("suppressed")
-      suppressed: Boolean)
+  suspend fun setPressureNotificationsSuppressed(@ParamName("suppressed") suppressed: Boolean)
 
   /**
    * Simulate a memory pressure notification in all processes.
    * @param level Memory pressure level of the notification.
    */
-  public suspend fun simulatePressureNotification(@ParamName("level") level: PressureLevel)
+  suspend fun simulatePressureNotification(@ParamName("level") level: PressureLevel)
 
   /**
    * Start collecting native memory profile.
    * @param samplingInterval Average number of bytes between samples.
    * @param suppressRandomness Do not randomize intervals between samples.
    */
-  public suspend fun startSampling(@ParamName("samplingInterval") @Optional samplingInterval: Int?,
-      @ParamName("suppressRandomness") @Optional suppressRandomness: Boolean?)
+  suspend fun startSampling(@ParamName("samplingInterval") @Optional samplingInterval: Int? = null, @ParamName("suppressRandomness") @Optional suppressRandomness: Boolean? = null)
 
-  public suspend fun startSampling() {
+  suspend fun startSampling() {
     return startSampling(null, null)
   }
 
   /**
    * Stop collecting native memory profile.
    */
-  public suspend fun stopSampling()
+  suspend fun stopSampling()
 
   /**
    * Retrieve native memory allocations profile
    * collected since renderer process startup.
    */
   @Returns("profile")
-  public suspend fun getAllTimeSamplingProfile(): SamplingProfile
+  suspend fun getAllTimeSamplingProfile(): SamplingProfile
 
   /**
    * Retrieve native memory allocations profile
    * collected since browser process startup.
    */
   @Returns("profile")
-  public suspend fun getBrowserSamplingProfile(): SamplingProfile
+  suspend fun getBrowserSamplingProfile(): SamplingProfile
 
   /**
    * Retrieve native memory allocations profile collected since last
    * `startSampling` call.
    */
   @Returns("profile")
-  public suspend fun getSamplingProfile(): SamplingProfile
+  suspend fun getSamplingProfile(): SamplingProfile
 }

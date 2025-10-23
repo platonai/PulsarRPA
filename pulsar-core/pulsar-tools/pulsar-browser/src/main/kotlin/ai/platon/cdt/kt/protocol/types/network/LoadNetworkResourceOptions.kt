@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.network
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -9,9 +10,9 @@ import kotlin.Boolean
  * CORB and streaming.
  */
 @Experimental
-public data class LoadNetworkResourceOptions(
-  @JsonProperty("disableCache")
-  public val disableCache: Boolean,
-  @JsonProperty("includeCredentials")
-  public val includeCredentials: Boolean,
+data class LoadNetworkResourceOptions(
+  @param:JsonProperty("disableCache")
+  val disableCache: Boolean,
+  @param:JsonProperty("includeCredentials")
+  val includeCredentials: Boolean,
 )

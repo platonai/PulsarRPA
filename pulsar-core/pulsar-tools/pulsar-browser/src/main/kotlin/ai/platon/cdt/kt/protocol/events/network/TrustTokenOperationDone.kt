@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.network
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -15,20 +16,20 @@ import kotlin.String
  * or after the response was received.
  */
 @Experimental
-public data class TrustTokenOperationDone(
-  @JsonProperty("status")
-  public val status: TrustTokenOperationDoneStatus,
-  @JsonProperty("type")
-  public val type: TrustTokenOperationType,
-  @JsonProperty("requestId")
-  public val requestId: String,
-  @JsonProperty("topLevelOrigin")
-  @Optional
-  public val topLevelOrigin: String? = null,
-  @JsonProperty("issuerOrigin")
-  @Optional
-  public val issuerOrigin: String? = null,
-  @JsonProperty("issuedTokenCount")
-  @Optional
-  public val issuedTokenCount: Int? = null,
+data class TrustTokenOperationDone(
+  @param:JsonProperty("status")
+  val status: TrustTokenOperationDoneStatus,
+  @param:JsonProperty("type")
+  val type: TrustTokenOperationType,
+  @param:JsonProperty("requestId")
+  val requestId: String,
+  @param:JsonProperty("topLevelOrigin")
+  @param:Optional
+  val topLevelOrigin: String? = null,
+  @param:JsonProperty("issuerOrigin")
+  @param:Optional
+  val issuerOrigin: String? = null,
+  @param:JsonProperty("issuedTokenCount")
+  @param:Optional
+  val issuedTokenCount: Int? = null,
 )

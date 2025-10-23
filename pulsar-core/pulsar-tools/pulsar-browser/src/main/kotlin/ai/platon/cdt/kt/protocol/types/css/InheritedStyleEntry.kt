@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.css
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -7,10 +8,10 @@ import kotlin.collections.List
 /**
  * Inherited CSS rule collection from ancestor node.
  */
-public data class InheritedStyleEntry(
-  @JsonProperty("inlineStyle")
-  @Optional
-  public val inlineStyle: CSSStyle? = null,
-  @JsonProperty("matchedCSSRules")
-  public val matchedCSSRules: List<RuleMatch>,
+data class InheritedStyleEntry(
+  @param:JsonProperty("inlineStyle")
+  @param:Optional
+  val inlineStyle: CSSStyle? = null,
+  @param:JsonProperty("matchedCSSRules")
+  val matchedCSSRules: List<RuleMatch>,
 )

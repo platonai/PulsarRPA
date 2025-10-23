@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.css
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -7,9 +8,9 @@ import kotlin.collections.List
 /**
  * Media query descriptor.
  */
-public data class MediaQuery(
-  @JsonProperty("expressions")
-  public val expressions: List<MediaQueryExpression>,
-  @JsonProperty("active")
-  public val active: Boolean,
+data class MediaQuery(
+  @param:JsonProperty("expressions")
+  val expressions: List<MediaQueryExpression>,
+  @param:JsonProperty("active")
+  val active: Boolean,
 )

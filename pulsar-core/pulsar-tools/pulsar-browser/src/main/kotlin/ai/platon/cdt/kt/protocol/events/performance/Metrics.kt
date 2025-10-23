@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.performance
 
 import ai.platon.cdt.kt.protocol.types.performance.Metric
@@ -8,9 +9,9 @@ import kotlin.collections.List
 /**
  * Current values of the metrics.
  */
-public data class Metrics(
-  @JsonProperty("metrics")
-  public val metrics: List<Metric>,
-  @JsonProperty("title")
-  public val title: String,
+data class Metrics(
+  @param:JsonProperty("metrics")
+  val metrics: List<Metric>,
+  @param:JsonProperty("title")
+  val title: String,
 )

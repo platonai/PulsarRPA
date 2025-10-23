@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.dom
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -8,9 +9,9 @@ import kotlin.Int
  * Called when shadow root is popped from the element.
  */
 @Experimental
-public data class ShadowRootPopped(
-  @JsonProperty("hostId")
-  public val hostId: Int,
-  @JsonProperty("rootId")
-  public val rootId: Int,
+data class ShadowRootPopped(
+  @param:JsonProperty("hostId")
+  val hostId: Int,
+  @param:JsonProperty("rootId")
+  val rootId: Int,
 )

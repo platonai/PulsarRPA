@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.dom
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -9,7 +10,7 @@ import kotlin.collections.List
  * Fired when `Element`'s inline style is modified via a CSS property modification.
  */
 @Experimental
-public data class InlineStyleInvalidated(
-  @JsonProperty("nodeIds")
-  public val nodeIds: List<Int>,
+data class InlineStyleInvalidated(
+  @param:JsonProperty("nodeIds")
+  val nodeIds: List<Int>,
 )

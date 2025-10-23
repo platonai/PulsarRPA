@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.css
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -7,15 +8,15 @@ import kotlin.String
 /**
  * Information about font variation axes for variable fonts
  */
-public data class FontVariationAxis(
-  @JsonProperty("tag")
-  public val tag: String,
-  @JsonProperty("name")
-  public val name: String,
-  @JsonProperty("minValue")
-  public val minValue: Double,
-  @JsonProperty("maxValue")
-  public val maxValue: Double,
-  @JsonProperty("defaultValue")
-  public val defaultValue: Double,
+data class FontVariationAxis(
+  @param:JsonProperty("tag")
+  val tag: String,
+  @param:JsonProperty("name")
+  val name: String,
+  @param:JsonProperty("minValue")
+  val minValue: Double,
+  @param:JsonProperty("maxValue")
+  val maxValue: Double,
+  @param:JsonProperty("defaultValue")
+  val defaultValue: Double,
 )

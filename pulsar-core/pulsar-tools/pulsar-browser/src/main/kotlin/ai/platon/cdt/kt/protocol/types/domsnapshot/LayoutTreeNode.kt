@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.domsnapshot
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -11,24 +12,24 @@ import kotlin.collections.List
 /**
  * Details of an element in the DOM tree with a LayoutObject.
  */
-public data class LayoutTreeNode(
-  @JsonProperty("domNodeIndex")
-  public val domNodeIndex: Int,
-  @JsonProperty("boundingBox")
-  public val boundingBox: Rect,
-  @JsonProperty("layoutText")
-  @Optional
-  public val layoutText: String? = null,
-  @JsonProperty("inlineTextNodes")
-  @Optional
-  public val inlineTextNodes: List<InlineTextBox>? = null,
-  @JsonProperty("styleIndex")
-  @Optional
-  public val styleIndex: Int? = null,
-  @JsonProperty("paintOrder")
-  @Optional
-  public val paintOrder: Int? = null,
-  @JsonProperty("isStackingContext")
-  @Optional
-  public val isStackingContext: Boolean? = null,
+data class LayoutTreeNode(
+  @param:JsonProperty("domNodeIndex")
+  val domNodeIndex: Int,
+  @param:JsonProperty("boundingBox")
+  val boundingBox: Rect,
+  @param:JsonProperty("layoutText")
+  @param:Optional
+  val layoutText: String? = null,
+  @param:JsonProperty("inlineTextNodes")
+  @param:Optional
+  val inlineTextNodes: List<InlineTextBox>? = null,
+  @param:JsonProperty("styleIndex")
+  @param:Optional
+  val styleIndex: Int? = null,
+  @param:JsonProperty("paintOrder")
+  @param:Optional
+  val paintOrder: Int? = null,
+  @param:JsonProperty("isStackingContext")
+  @param:Optional
+  val isStackingContext: Boolean? = null,
 )

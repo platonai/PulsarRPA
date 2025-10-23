@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.page
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -7,15 +8,15 @@ import kotlin.String
 /**
  * Navigation history entry.
  */
-public data class NavigationEntry(
-  @JsonProperty("id")
-  public val id: Int,
-  @JsonProperty("url")
-  public val url: String,
-  @JsonProperty("userTypedURL")
-  public val userTypedURL: String,
-  @JsonProperty("title")
-  public val title: String,
-  @JsonProperty("transitionType")
-  public val transitionType: TransitionType,
+data class NavigationEntry(
+  @param:JsonProperty("id")
+  val id: Int,
+  @param:JsonProperty("url")
+  val url: String,
+  @param:JsonProperty("userTypedURL")
+  val userTypedURL: String,
+  @param:JsonProperty("title")
+  val title: String,
+  @param:JsonProperty("transitionType")
+  val transitionType: TransitionType,
 )

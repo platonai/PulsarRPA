@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.accessibility
 
 import com.fasterxml.jackson.`annotation`.JsonProperty

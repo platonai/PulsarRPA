@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.debugger
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -5,10 +6,10 @@ import ai.platon.cdt.kt.protocol.types.runtime.ExceptionDetails
 import ai.platon.cdt.kt.protocol.types.runtime.RemoteObject
 import com.fasterxml.jackson.`annotation`.JsonProperty
 
-public data class EvaluateOnCallFrame(
-  @JsonProperty("result")
-  public val result: RemoteObject,
-  @JsonProperty("exceptionDetails")
-  @Optional
-  public val exceptionDetails: ExceptionDetails? = null,
+data class EvaluateOnCallFrame(
+  @param:JsonProperty("result")
+  val result: RemoteObject,
+  @param:JsonProperty("exceptionDetails")
+  @param:Optional
+  val exceptionDetails: ExceptionDetails? = null,
 )

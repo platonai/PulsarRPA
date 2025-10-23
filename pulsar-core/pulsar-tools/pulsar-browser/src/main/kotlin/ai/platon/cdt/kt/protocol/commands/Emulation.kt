@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.commands
 
 import ai.platon.cdt.kt.protocol.events.emulation.VirtualTimeBudgetExpired
@@ -18,8 +19,8 @@ import ai.platon.cdt.kt.protocol.types.emulation.SetEmulatedVisionDeficiencyType
 import ai.platon.cdt.kt.protocol.types.emulation.UserAgentMetadata
 import ai.platon.cdt.kt.protocol.types.emulation.VirtualTimePolicy
 import ai.platon.cdt.kt.protocol.types.page.Viewport
-import java.lang.Deprecated
 import kotlin.Boolean
+import kotlin.Deprecated
 import kotlin.Double
 import kotlin.Int
 import kotlin.String
@@ -29,53 +30,52 @@ import kotlin.collections.List
 /**
  * This domain emulates different environments for the page.
  */
-public interface Emulation {
+interface Emulation {
   /**
    * Tells whether emulation is supported.
    */
   @Returns("result")
-  public suspend fun canEmulate(): Boolean
+  suspend fun canEmulate(): Boolean
 
   /**
    * Clears the overridden device metrics.
    */
-  public suspend fun clearDeviceMetricsOverride()
+  suspend fun clearDeviceMetricsOverride()
 
   /**
    * Clears the overridden Geolocation Position and Error.
    */
-  public suspend fun clearGeolocationOverride()
+  suspend fun clearGeolocationOverride()
 
   /**
    * Requests that page scale factor is reset to initial values.
    */
   @Experimental
-  public suspend fun resetPageScaleFactor()
+  suspend fun resetPageScaleFactor()
 
   /**
    * Enables or disables simulating a focused and active page.
    * @param enabled Whether to enable to disable focus emulation.
    */
   @Experimental
-  public suspend fun setFocusEmulationEnabled(@ParamName("enabled") enabled: Boolean)
+  suspend fun setFocusEmulationEnabled(@ParamName("enabled") enabled: Boolean)
 
   /**
    * Enables CPU throttling to emulate slow CPUs.
    * @param rate Throttling rate as a slowdown factor (1 is no throttle, 2 is 2x slowdown, etc).
    */
   @Experimental
-  public suspend fun setCPUThrottlingRate(@ParamName("rate") rate: Double)
+  suspend fun setCPUThrottlingRate(@ParamName("rate") rate: Double)
 
   /**
    * Sets or clears an override of the default background color of the frame. This override is used
    * if the content does not specify one.
-   * @param color RGBA of the default background color. If not specified, any existing override will
-   * be
+   * @param color RGBA of the default background color. If not specified, any existing override will be
    * cleared.
    */
-  public suspend fun setDefaultBackgroundColorOverride(@ParamName("color") @Optional color: RGBA?)
+  suspend fun setDefaultBackgroundColorOverride(@ParamName("color") @Optional color: RGBA? = null)
 
-  public suspend fun setDefaultBackgroundColorOverride() {
+  suspend fun setDefaultBackgroundColorOverride() {
     return setDefaultBackgroundColorOverride(null)
   }
 
@@ -83,13 +83,10 @@ public interface Emulation {
    * Overrides the values of device screen dimensions (window.screen.width, window.screen.height,
    * window.innerWidth, window.innerHeight, and "device-width"/"device-height"-related CSS media
    * query results).
-   * @param width Overriding width value in pixels (minimum 0, maximum 10000000). 0 disables the
-   * override.
-   * @param height Overriding height value in pixels (minimum 0, maximum 10000000). 0 disables the
-   * override.
+   * @param width Overriding width value in pixels (minimum 0, maximum 10000000). 0 disables the override.
+   * @param height Overriding height value in pixels (minimum 0, maximum 10000000). 0 disables the override.
    * @param deviceScaleFactor Overriding device scale factor value. 0 disables the override.
-   * @param mobile Whether to emulate mobile device. This includes viewport meta tag, overlay
-   * scrollbars, text
+   * @param mobile Whether to emulate mobile device. This includes viewport meta tag, overlay scrollbars, text
    * autosizing and more.
    * @param scale Scale to apply to resulting view image.
    * @param screenWidth Overriding screen width value in pixels (minimum 0, maximum 10000000).
@@ -98,61 +95,57 @@ public interface Emulation {
    * @param positionY Overriding view Y position on screen in pixels (minimum 0, maximum 10000000).
    * @param dontSetVisibleSize Do not set visible view size, rely upon explicit setVisibleSize call.
    * @param screenOrientation Screen orientation override.
-   * @param viewport If set, the visible area of the page will be overridden to this viewport. This
-   * viewport
+   * @param viewport If set, the visible area of the page will be overridden to this viewport. This viewport
    * change is not observed by the page, e.g. viewport-relative elements do not change positions.
-   * @param displayFeature If set, the display feature of a multi-segment screen. If not set,
-   * multi-segment support
+   * @param displayFeature If set, the display feature of a multi-segment screen. If not set, multi-segment support
    * is turned-off.
    */
-  public suspend fun setDeviceMetricsOverride(
+  suspend fun setDeviceMetricsOverride(
     @ParamName("width") width: Int,
     @ParamName("height") height: Int,
     @ParamName("deviceScaleFactor") deviceScaleFactor: Double,
     @ParamName("mobile") mobile: Boolean,
-    @ParamName("scale") @Optional @Experimental scale: Double?,
-    @ParamName("screenWidth") @Optional @Experimental screenWidth: Int?,
-    @ParamName("screenHeight") @Optional @Experimental screenHeight: Int?,
-    @ParamName("positionX") @Optional @Experimental positionX: Int?,
-    @ParamName("positionY") @Optional @Experimental positionY: Int?,
-    @ParamName("dontSetVisibleSize") @Optional @Experimental dontSetVisibleSize: Boolean?,
-    @ParamName("screenOrientation") @Optional screenOrientation: ScreenOrientation?,
-    @ParamName("viewport") @Optional @Experimental viewport: Viewport?,
-    @ParamName("displayFeature") @Optional @Experimental displayFeature: DisplayFeature?,
+    @ParamName("scale") @Optional @Experimental scale: Double? = null,
+    @ParamName("screenWidth") @Optional @Experimental screenWidth: Int? = null,
+    @ParamName("screenHeight") @Optional @Experimental screenHeight: Int? = null,
+    @ParamName("positionX") @Optional @Experimental positionX: Int? = null,
+    @ParamName("positionY") @Optional @Experimental positionY: Int? = null,
+    @ParamName("dontSetVisibleSize") @Optional @Experimental dontSetVisibleSize: Boolean? = null,
+    @ParamName("screenOrientation") @Optional screenOrientation: ScreenOrientation? = null,
+    @ParamName("viewport") @Optional @Experimental viewport: Viewport? = null,
+    @ParamName("displayFeature") @Optional @Experimental displayFeature: DisplayFeature? = null,
   )
 
-  public suspend fun setDeviceMetricsOverride(
+  suspend fun setDeviceMetricsOverride(
     @ParamName("width") width: Int,
     @ParamName("height") height: Int,
     @ParamName("deviceScaleFactor") deviceScaleFactor: Double,
     @ParamName("mobile") mobile: Boolean,
   ) {
-    return setDeviceMetricsOverride(width, height, deviceScaleFactor, mobile, null, null, null,
-        null, null, null, null, null, null)
+    return setDeviceMetricsOverride(width, height, deviceScaleFactor, mobile, null, null, null, null, null, null, null, null, null)
   }
 
   /**
    * @param hidden Whether scrollbars should be always hidden.
    */
   @Experimental
-  public suspend fun setScrollbarsHidden(@ParamName("hidden") hidden: Boolean)
+  suspend fun setScrollbarsHidden(@ParamName("hidden") hidden: Boolean)
 
   /**
    * @param disabled Whether document.coookie API should be disabled.
    */
   @Experimental
-  public suspend fun setDocumentCookieDisabled(@ParamName("disabled") disabled: Boolean)
+  suspend fun setDocumentCookieDisabled(@ParamName("disabled") disabled: Boolean)
 
   /**
    * @param enabled Whether touch emulation based on mouse input should be enabled.
    * @param configuration Touch/gesture events configuration. Default: current platform.
    */
   @Experimental
-  public suspend fun setEmitTouchEventsForMouse(@ParamName("enabled") enabled: Boolean,
-      @ParamName("configuration") @Optional configuration: SetEmitTouchEventsForMouseConfiguration?)
+  suspend fun setEmitTouchEventsForMouse(@ParamName("enabled") enabled: Boolean, @ParamName("configuration") @Optional configuration: SetEmitTouchEventsForMouseConfiguration? = null)
 
   @Experimental
-  public suspend fun setEmitTouchEventsForMouse(@ParamName("enabled") enabled: Boolean) {
+  suspend fun setEmitTouchEventsForMouse(@ParamName("enabled") enabled: Boolean) {
     return setEmitTouchEventsForMouse(enabled, null)
   }
 
@@ -161,10 +154,9 @@ public interface Emulation {
    * @param media Media type to emulate. Empty string disables the override.
    * @param features Media features to emulate.
    */
-  public suspend fun setEmulatedMedia(@ParamName("media") @Optional media: String?,
-      @ParamName("features") @Optional features: List<MediaFeature>?)
+  suspend fun setEmulatedMedia(@ParamName("media") @Optional media: String? = null, @ParamName("features") @Optional features: List<MediaFeature>? = null)
 
-  public suspend fun setEmulatedMedia() {
+  suspend fun setEmulatedMedia() {
     return setEmulatedMedia(null, null)
   }
 
@@ -173,8 +165,7 @@ public interface Emulation {
    * @param type Vision deficiency to emulate.
    */
   @Experimental
-  public suspend fun setEmulatedVisionDeficiency(@ParamName("type")
-      type: SetEmulatedVisionDeficiencyType)
+  suspend fun setEmulatedVisionDeficiency(@ParamName("type") type: SetEmulatedVisionDeficiencyType)
 
   /**
    * Overrides the Geolocation Position or Error. Omitting any of the parameters emulates position
@@ -183,13 +174,13 @@ public interface Emulation {
    * @param longitude Mock longitude
    * @param accuracy Mock accuracy
    */
-  public suspend fun setGeolocationOverride(
-    @ParamName("latitude") @Optional latitude: Double?,
-    @ParamName("longitude") @Optional longitude: Double?,
-    @ParamName("accuracy") @Optional accuracy: Double?,
+  suspend fun setGeolocationOverride(
+    @ParamName("latitude") @Optional latitude: Double? = null,
+    @ParamName("longitude") @Optional longitude: Double? = null,
+    @ParamName("accuracy") @Optional accuracy: Double? = null,
   )
 
-  public suspend fun setGeolocationOverride() {
+  suspend fun setGeolocationOverride() {
     return setGeolocationOverride(null, null, null)
   }
 
@@ -199,93 +190,84 @@ public interface Emulation {
    * @param isScreenUnlocked Mock isScreenUnlocked
    */
   @Experimental
-  public suspend fun setIdleOverride(@ParamName("isUserActive") isUserActive: Boolean,
-      @ParamName("isScreenUnlocked") isScreenUnlocked: Boolean)
+  suspend fun setIdleOverride(@ParamName("isUserActive") isUserActive: Boolean, @ParamName("isScreenUnlocked") isScreenUnlocked: Boolean)
 
   /**
    * Clears Idle state overrides.
    */
   @Experimental
-  public suspend fun clearIdleOverride()
+  suspend fun clearIdleOverride()
 
   /**
    * Overrides value returned by the javascript navigator object.
    * @param platform The platform navigator.platform should return.
    */
-  @Deprecated
+  @Deprecated("Deprecated by protocol")
   @Experimental
-  public suspend fun setNavigatorOverrides(@ParamName("platform") platform: String)
+  suspend fun setNavigatorOverrides(@ParamName("platform") platform: String)
 
   /**
    * Sets a specified page scale factor.
    * @param pageScaleFactor Page scale factor.
    */
   @Experimental
-  public suspend fun setPageScaleFactor(@ParamName("pageScaleFactor") pageScaleFactor: Double)
+  suspend fun setPageScaleFactor(@ParamName("pageScaleFactor") pageScaleFactor: Double)
 
   /**
    * Switches script execution in the page.
    * @param value Whether script execution should be disabled in the page.
    */
-  public suspend fun setScriptExecutionDisabled(@ParamName("value") `value`: Boolean)
+  suspend fun setScriptExecutionDisabled(@ParamName("value") `value`: Boolean)
 
   /**
    * Enables touch on platforms which do not support them.
    * @param enabled Whether the touch event emulation should be enabled.
    * @param maxTouchPoints Maximum touch points supported. Defaults to one.
    */
-  public suspend fun setTouchEmulationEnabled(@ParamName("enabled") enabled: Boolean,
-      @ParamName("maxTouchPoints") @Optional maxTouchPoints: Int?)
+  suspend fun setTouchEmulationEnabled(@ParamName("enabled") enabled: Boolean, @ParamName("maxTouchPoints") @Optional maxTouchPoints: Int? = null)
 
-  public suspend fun setTouchEmulationEnabled(@ParamName("enabled") enabled: Boolean) {
+  suspend fun setTouchEmulationEnabled(@ParamName("enabled") enabled: Boolean) {
     return setTouchEmulationEnabled(enabled, null)
   }
 
   /**
-   * Turns on virtual time for all frames (replacing real-time with a synthetic time source) and
-   * sets
+   * Turns on virtual time for all frames (replacing real-time with a synthetic time source) and sets
    * the current virtual time policy.  Note this supersedes any previous time budget.
    * @param policy
-   * @param budget If set, after this many virtual milliseconds have elapsed virtual time will be
-   * paused and a
+   * @param budget If set, after this many virtual milliseconds have elapsed virtual time will be paused and a
    * virtualTimeBudgetExpired event is sent.
-   * @param maxVirtualTimeTaskStarvationCount If set this specifies the maximum number of tasks that
-   * can be run before virtual is forced
+   * @param maxVirtualTimeTaskStarvationCount If set this specifies the maximum number of tasks that can be run before virtual is forced
    * forwards to prevent deadlock.
-   * @param waitForNavigation If set the virtual time policy change should be deferred until any
-   * frame starts navigating.
+   * @param waitForNavigation If set the virtual time policy change should be deferred until any frame starts navigating.
    * Note any previous deferred policy change is superseded.
-   * @param initialVirtualTime If set, base::Time::Now will be overridden to initially return this
-   * value.
+   * @param initialVirtualTime If set, base::Time::Now will be overridden to initially return this value.
    */
   @Experimental
   @Returns("virtualTimeTicksBase")
-  public suspend fun setVirtualTimePolicy(
+  suspend fun setVirtualTimePolicy(
     @ParamName("policy") policy: VirtualTimePolicy,
-    @ParamName("budget") @Optional budget: Double?,
-    @ParamName("maxVirtualTimeTaskStarvationCount") @Optional
-        maxVirtualTimeTaskStarvationCount: Int?,
-    @ParamName("waitForNavigation") @Optional waitForNavigation: Boolean?,
-    @ParamName("initialVirtualTime") @Optional initialVirtualTime: Double?,
+    @ParamName("budget") @Optional budget: Double? = null,
+    @ParamName("maxVirtualTimeTaskStarvationCount") @Optional maxVirtualTimeTaskStarvationCount: Int? = null,
+    @ParamName("waitForNavigation") @Optional waitForNavigation: Boolean? = null,
+    @ParamName("initialVirtualTime") @Optional initialVirtualTime: Double? = null,
   ): Double
 
   @Experimental
   @Returns("virtualTimeTicksBase")
-  public suspend fun setVirtualTimePolicy(@ParamName("policy") policy: VirtualTimePolicy): Double {
+  suspend fun setVirtualTimePolicy(@ParamName("policy") policy: VirtualTimePolicy): Double {
     return setVirtualTimePolicy(policy, null, null, null, null)
   }
 
   /**
    * Overrides default host system locale with the specified one.
-   * @param locale ICU style C locale (e.g. "en_US"). If not specified or empty, disables the
-   * override and
+   * @param locale ICU style C locale (e.g. "en_US"). If not specified or empty, disables the override and
    * restores default host system locale.
    */
   @Experimental
-  public suspend fun setLocaleOverride(@ParamName("locale") @Optional locale: String?)
+  suspend fun setLocaleOverride(@ParamName("locale") @Optional locale: String? = null)
 
   @Experimental
-  public suspend fun setLocaleOverride() {
+  suspend fun setLocaleOverride() {
     return setLocaleOverride(null)
   }
 
@@ -295,7 +277,7 @@ public interface Emulation {
    * restores default host system timezone.
    */
   @Experimental
-  public suspend fun setTimezoneOverride(@ParamName("timezoneId") timezoneId: String)
+  suspend fun setTimezoneOverride(@ParamName("timezoneId") timezoneId: String)
 
   /**
    * Resizes the frame/viewport of the page. Note that this does not affect the frame's container
@@ -304,44 +286,39 @@ public interface Emulation {
    * @param width Frame width (DIP).
    * @param height Frame height (DIP).
    */
-  @Deprecated
+  @Deprecated("Deprecated by protocol")
   @Experimental
-  public suspend fun setVisibleSize(@ParamName("width") width: Int, @ParamName("height")
-      height: Int)
+  suspend fun setVisibleSize(@ParamName("width") width: Int, @ParamName("height") height: Int)
 
   /**
    * @param imageTypes Image types to disable.
    */
   @Experimental
-  public suspend fun setDisabledImageTypes(@ParamName("imageTypes")
-      imageTypes: List<DisabledImageType>)
+  suspend fun setDisabledImageTypes(@ParamName("imageTypes") imageTypes: List<DisabledImageType>)
 
   /**
    * Allows overriding user agent with the given string.
    * @param userAgent User agent to use.
    * @param acceptLanguage Browser langugage to emulate.
    * @param platform The platform navigator.platform should return.
-   * @param userAgentMetadata To be sent in Sec-CH-UA-* headers and returned in
-   * navigator.userAgentData
+   * @param userAgentMetadata To be sent in Sec-CH-UA-* headers and returned in navigator.userAgentData
    */
-  public suspend fun setUserAgentOverride(
+  suspend fun setUserAgentOverride(
     @ParamName("userAgent") userAgent: String,
-    @ParamName("acceptLanguage") @Optional acceptLanguage: String?,
-    @ParamName("platform") @Optional platform: String?,
-    @ParamName("userAgentMetadata") @Optional @Experimental userAgentMetadata: UserAgentMetadata?,
+    @ParamName("acceptLanguage") @Optional acceptLanguage: String? = null,
+    @ParamName("platform") @Optional platform: String? = null,
+    @ParamName("userAgentMetadata") @Optional @Experimental userAgentMetadata: UserAgentMetadata? = null,
   )
 
-  public suspend fun setUserAgentOverride(@ParamName("userAgent") userAgent: String) {
+  suspend fun setUserAgentOverride(@ParamName("userAgent") userAgent: String) {
     return setUserAgentOverride(userAgent, null, null, null)
   }
 
   @EventName("virtualTimeBudgetExpired")
   @Experimental
-  public fun onVirtualTimeBudgetExpired(eventListener: EventHandler<VirtualTimeBudgetExpired>):
-      EventListener
+  fun onVirtualTimeBudgetExpired(eventListener: EventHandler<VirtualTimeBudgetExpired>): EventListener
 
   @EventName("virtualTimeBudgetExpired")
   @Experimental
-  public fun onVirtualTimeBudgetExpired(eventListener: suspend (VirtualTimeBudgetExpired) -> Unit):
-      EventListener
+  fun onVirtualTimeBudgetExpired(eventListener: suspend (VirtualTimeBudgetExpired) -> Unit): EventListener
 }

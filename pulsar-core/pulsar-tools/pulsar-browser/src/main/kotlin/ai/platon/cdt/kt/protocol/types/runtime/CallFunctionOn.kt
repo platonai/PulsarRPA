@@ -1,12 +1,13 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.runtime
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
 import com.fasterxml.jackson.`annotation`.JsonProperty
 
-public data class CallFunctionOn(
-  @JsonProperty("result")
-  public val result: RemoteObject,
-  @JsonProperty("exceptionDetails")
-  @Optional
-  public val exceptionDetails: ExceptionDetails? = null,
+data class CallFunctionOn(
+  @param:JsonProperty("result")
+  val result: RemoteObject,
+  @param:JsonProperty("exceptionDetails")
+  @param:Optional
+  val exceptionDetails: ExceptionDetails? = null,
 )

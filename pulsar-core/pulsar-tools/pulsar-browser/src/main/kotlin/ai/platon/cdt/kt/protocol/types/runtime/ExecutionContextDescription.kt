@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.runtime
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -11,17 +12,17 @@ import kotlin.collections.Map
 /**
  * Description of an isolated world.
  */
-public data class ExecutionContextDescription(
-  @JsonProperty("id")
-  public val id: Int,
-  @JsonProperty("origin")
-  public val origin: String,
-  @JsonProperty("name")
-  public val name: String,
-  @JsonProperty("uniqueId")
-  @Experimental
-  public val uniqueId: String,
-  @JsonProperty("auxData")
-  @Optional
-  public val auxData: Map<String, Any?>? = null,
+data class ExecutionContextDescription(
+  @param:JsonProperty("id")
+  val id: Int,
+  @param:JsonProperty("origin")
+  val origin: String,
+  @param:JsonProperty("name")
+  val name: String,
+  @param:JsonProperty("uniqueId")
+  @param:Experimental
+  val uniqueId: String,
+  @param:JsonProperty("auxData")
+  @param:Optional
+  val auxData: Map<String, Any?>? = null,
 )

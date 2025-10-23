@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.database
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -7,9 +8,9 @@ import kotlin.String
 /**
  * Database error.
  */
-public data class Error(
-  @JsonProperty("message")
-  public val message: String,
-  @JsonProperty("code")
-  public val code: Int,
+data class Error(
+  @param:JsonProperty("message")
+  val message: String,
+  @param:JsonProperty("code")
+  val code: Int,
 )

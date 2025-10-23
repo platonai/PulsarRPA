@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.page
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -12,23 +13,23 @@ import kotlin.String
  * Information about the Resource on the page.
  */
 @Experimental
-public data class FrameResource(
-  @JsonProperty("url")
-  public val url: String,
-  @JsonProperty("type")
-  public val type: ResourceType,
-  @JsonProperty("mimeType")
-  public val mimeType: String,
-  @JsonProperty("lastModified")
-  @Optional
-  public val lastModified: Double? = null,
-  @JsonProperty("contentSize")
-  @Optional
-  public val contentSize: Double? = null,
-  @JsonProperty("failed")
-  @Optional
-  public val failed: Boolean? = null,
-  @JsonProperty("canceled")
-  @Optional
-  public val canceled: Boolean? = null,
+data class FrameResource(
+  @param:JsonProperty("url")
+  val url: String,
+  @param:JsonProperty("type")
+  val type: ResourceType,
+  @param:JsonProperty("mimeType")
+  val mimeType: String,
+  @param:JsonProperty("lastModified")
+  @param:Optional
+  val lastModified: Double? = null,
+  @param:JsonProperty("contentSize")
+  @param:Optional
+  val contentSize: Double? = null,
+  @param:JsonProperty("failed")
+  @param:Optional
+  val failed: Boolean? = null,
+  @param:JsonProperty("canceled")
+  @param:Optional
+  val canceled: Boolean? = null,
 )

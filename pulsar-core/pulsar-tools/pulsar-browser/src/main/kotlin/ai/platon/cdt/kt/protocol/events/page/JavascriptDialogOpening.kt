@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.page
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -10,16 +11,16 @@ import kotlin.String
  * Fired when a JavaScript initiated dialog (alert, confirm, prompt, or onbeforeunload) is about to
  * open.
  */
-public data class JavascriptDialogOpening(
-  @JsonProperty("url")
-  public val url: String,
-  @JsonProperty("message")
-  public val message: String,
-  @JsonProperty("type")
-  public val type: DialogType,
-  @JsonProperty("hasBrowserHandler")
-  public val hasBrowserHandler: Boolean,
-  @JsonProperty("defaultPrompt")
-  @Optional
-  public val defaultPrompt: String? = null,
+data class JavascriptDialogOpening(
+  @param:JsonProperty("url")
+  val url: String,
+  @param:JsonProperty("message")
+  val message: String,
+  @param:JsonProperty("type")
+  val type: DialogType,
+  @param:JsonProperty("hasBrowserHandler")
+  val hasBrowserHandler: Boolean,
+  @param:JsonProperty("defaultPrompt")
+  @param:Optional
+  val defaultPrompt: String? = null,
 )

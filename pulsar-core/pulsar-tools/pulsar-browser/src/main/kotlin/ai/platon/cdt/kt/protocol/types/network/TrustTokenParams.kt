@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.network
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -12,12 +13,12 @@ import kotlin.collections.List
  * are specified in third_party/blink/renderer/core/fetch/trust_token.idl.
  */
 @Experimental
-public data class TrustTokenParams(
-  @JsonProperty("type")
-  public val type: TrustTokenOperationType,
-  @JsonProperty("refreshPolicy")
-  public val refreshPolicy: TrustTokenParamsRefreshPolicy,
-  @JsonProperty("issuers")
-  @Optional
-  public val issuers: List<String>? = null,
+data class TrustTokenParams(
+  @param:JsonProperty("type")
+  val type: TrustTokenOperationType,
+  @param:JsonProperty("refreshPolicy")
+  val refreshPolicy: TrustTokenParamsRefreshPolicy,
+  @param:JsonProperty("issuers")
+  @param:Optional
+  val issuers: List<String>? = null,
 )

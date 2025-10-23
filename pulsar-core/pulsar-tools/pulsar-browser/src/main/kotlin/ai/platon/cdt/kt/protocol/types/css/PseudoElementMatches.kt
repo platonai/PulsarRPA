@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.css
 
 import ai.platon.cdt.kt.protocol.types.dom.PseudoType
@@ -7,9 +8,9 @@ import kotlin.collections.List
 /**
  * CSS rule collection for a single pseudo style.
  */
-public data class PseudoElementMatches(
-  @JsonProperty("pseudoType")
-  public val pseudoType: PseudoType,
-  @JsonProperty("matches")
-  public val matches: List<RuleMatch>,
+data class PseudoElementMatches(
+  @param:JsonProperty("pseudoType")
+  val pseudoType: PseudoType,
+  @param:JsonProperty("matches")
+  val matches: List<RuleMatch>,
 )

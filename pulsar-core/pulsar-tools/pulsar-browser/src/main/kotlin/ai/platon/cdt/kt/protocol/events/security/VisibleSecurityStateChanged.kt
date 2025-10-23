@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.security
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -8,7 +9,7 @@ import com.fasterxml.jackson.`annotation`.JsonProperty
  * The security state of the page changed.
  */
 @Experimental
-public data class VisibleSecurityStateChanged(
-  @JsonProperty("visibleSecurityState")
-  public val visibleSecurityState: VisibleSecurityState,
+data class VisibleSecurityStateChanged(
+  @param:JsonProperty("visibleSecurityState")
+  val visibleSecurityState: VisibleSecurityState,
 )

@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.dom
 
 import ai.platon.cdt.kt.protocol.types.dom.Node
@@ -7,11 +8,11 @@ import kotlin.Int
 /**
  * Mirrors `DOMNodeInserted` event.
  */
-public data class ChildNodeInserted(
-  @JsonProperty("parentNodeId")
-  public val parentNodeId: Int,
-  @JsonProperty("previousNodeId")
-  public val previousNodeId: Int,
-  @JsonProperty("node")
-  public val node: Node,
+data class ChildNodeInserted(
+  @param:JsonProperty("parentNodeId")
+  val parentNodeId: Int,
+  @param:JsonProperty("previousNodeId")
+  val previousNodeId: Int,
+  @param:JsonProperty("node")
+  val node: Node,
 )

@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.commands
 
 import ai.platon.cdt.kt.protocol.events.backgroundservice.BackgroundServiceEventReceived
@@ -15,48 +16,41 @@ import kotlin.Unit
  * Defines events for background web platform features.
  */
 @Experimental
-public interface BackgroundService {
+interface BackgroundService {
   /**
    * Enables event updates for the service.
    * @param service
    */
-  public suspend fun startObserving(@ParamName("service") service: ServiceName)
+  suspend fun startObserving(@ParamName("service") service: ServiceName)
 
   /**
    * Disables event updates for the service.
    * @param service
    */
-  public suspend fun stopObserving(@ParamName("service") service: ServiceName)
+  suspend fun stopObserving(@ParamName("service") service: ServiceName)
 
   /**
    * Set the recording state for the service.
    * @param shouldRecord
    * @param service
    */
-  public suspend fun setRecording(@ParamName("shouldRecord") shouldRecord: Boolean,
-      @ParamName("service") service: ServiceName)
+  suspend fun setRecording(@ParamName("shouldRecord") shouldRecord: Boolean, @ParamName("service") service: ServiceName)
 
   /**
    * Clears all stored data for the service.
    * @param service
    */
-  public suspend fun clearEvents(@ParamName("service") service: ServiceName)
+  suspend fun clearEvents(@ParamName("service") service: ServiceName)
 
   @EventName("recordingStateChanged")
-  public fun onRecordingStateChanged(eventListener: EventHandler<RecordingStateChanged>):
-      EventListener
+  fun onRecordingStateChanged(eventListener: EventHandler<RecordingStateChanged>): EventListener
 
   @EventName("recordingStateChanged")
-  public fun onRecordingStateChanged(eventListener: suspend (RecordingStateChanged) -> Unit):
-      EventListener
+  fun onRecordingStateChanged(eventListener: suspend (RecordingStateChanged) -> Unit): EventListener
 
   @EventName("backgroundServiceEventReceived")
-  public
-      fun onBackgroundServiceEventReceived(eventListener: EventHandler<BackgroundServiceEventReceived>):
-      EventListener
+  fun onBackgroundServiceEventReceived(eventListener: EventHandler<BackgroundServiceEventReceived>): EventListener
 
   @EventName("backgroundServiceEventReceived")
-  public
-      fun onBackgroundServiceEventReceived(eventListener: suspend (BackgroundServiceEventReceived) -> Unit):
-      EventListener
+  fun onBackgroundServiceEventReceived(eventListener: suspend (BackgroundServiceEventReceived) -> Unit): EventListener
 }

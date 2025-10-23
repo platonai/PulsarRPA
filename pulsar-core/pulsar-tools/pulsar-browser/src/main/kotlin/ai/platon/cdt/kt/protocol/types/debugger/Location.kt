@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.debugger
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -8,12 +9,12 @@ import kotlin.String
 /**
  * Location in the source code.
  */
-public data class Location(
-  @JsonProperty("scriptId")
-  public val scriptId: String,
-  @JsonProperty("lineNumber")
-  public val lineNumber: Int,
-  @JsonProperty("columnNumber")
-  @Optional
-  public val columnNumber: Int? = null,
+data class Location(
+  @param:JsonProperty("scriptId")
+  val scriptId: String,
+  @param:JsonProperty("lineNumber")
+  val lineNumber: Int,
+  @param:JsonProperty("columnNumber")
+  @param:Optional
+  val columnNumber: Int? = null,
 )

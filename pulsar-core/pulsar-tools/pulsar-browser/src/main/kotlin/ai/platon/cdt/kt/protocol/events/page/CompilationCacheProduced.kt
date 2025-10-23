@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.page
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -9,9 +10,9 @@ import kotlin.String
  * if Page.setGenerateCompilationCache is enabled.
  */
 @Experimental
-public data class CompilationCacheProduced(
-  @JsonProperty("url")
-  public val url: String,
-  @JsonProperty("data")
-  public val `data`: String,
+data class CompilationCacheProduced(
+  @param:JsonProperty("url")
+  val url: String,
+  @param:JsonProperty("data")
+  val `data`: String,
 )

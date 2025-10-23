@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.page
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -9,13 +10,13 @@ import kotlin.String
 /**
  * Emitted only when `page.interceptFileChooser` is enabled.
  */
-public data class FileChooserOpened(
-  @JsonProperty("frameId")
-  @Experimental
-  public val frameId: String,
-  @JsonProperty("backendNodeId")
-  @Experimental
-  public val backendNodeId: Int,
-  @JsonProperty("mode")
-  public val mode: FileChooserOpenedMode,
+data class FileChooserOpened(
+  @param:JsonProperty("frameId")
+  @param:Experimental
+  val frameId: String,
+  @param:JsonProperty("backendNodeId")
+  @param:Experimental
+  val backendNodeId: Int,
+  @param:JsonProperty("mode")
+  val mode: FileChooserOpenedMode,
 )

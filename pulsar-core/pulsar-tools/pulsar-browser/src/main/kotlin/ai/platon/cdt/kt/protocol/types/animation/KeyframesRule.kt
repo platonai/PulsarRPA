@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.animation
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -8,10 +9,10 @@ import kotlin.collections.List
 /**
  * Keyframes Rule
  */
-public data class KeyframesRule(
-  @JsonProperty("name")
-  @Optional
-  public val name: String? = null,
-  @JsonProperty("keyframes")
-  public val keyframes: List<KeyframeStyle>,
+data class KeyframesRule(
+  @param:JsonProperty("name")
+  @param:Optional
+  val name: String? = null,
+  @param:JsonProperty("keyframes")
+  val keyframes: List<KeyframeStyle>,
 )

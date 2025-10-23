@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.debugger
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -7,9 +8,9 @@ import kotlin.String
 /**
  * Search match for resource.
  */
-public data class SearchMatch(
-  @JsonProperty("lineNumber")
-  public val lineNumber: Double,
-  @JsonProperty("lineContent")
-  public val lineContent: String,
+data class SearchMatch(
+  @param:JsonProperty("lineNumber")
+  val lineNumber: Double,
+  @param:JsonProperty("lineContent")
+  val lineContent: String,
 )

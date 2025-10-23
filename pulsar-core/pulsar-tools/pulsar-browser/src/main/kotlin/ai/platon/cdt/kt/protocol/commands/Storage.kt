@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.commands
 
 import ai.platon.cdt.kt.protocol.events.storage.CacheStorageContentUpdated
@@ -23,14 +24,13 @@ import kotlin.Unit
 import kotlin.collections.List
 
 @Experimental
-public interface Storage {
+interface Storage {
   /**
    * Clears storage for origin.
    * @param origin Security origin.
    * @param storageTypes Comma separated list of StorageType to clear.
    */
-  public suspend fun clearDataForOrigin(@ParamName("origin") origin: String,
-      @ParamName("storageTypes") storageTypes: String)
+  suspend fun clearDataForOrigin(@ParamName("origin") origin: String, @ParamName("storageTypes") storageTypes: String)
 
   /**
    * Returns all browser cookies.
@@ -38,12 +38,11 @@ public interface Storage {
    */
   @Returns("cookies")
   @ReturnTypeParameter(Cookie::class)
-  public suspend fun getCookies(@ParamName("browserContextId") @Optional browserContextId: String?):
-      List<Cookie>
+  suspend fun getCookies(@ParamName("browserContextId") @Optional browserContextId: String? = null): List<Cookie>
 
   @Returns("cookies")
   @ReturnTypeParameter(Cookie::class)
-  public suspend fun getCookies(): List<Cookie> {
+  suspend fun getCookies(): List<Cookie> {
     return getCookies(null)
   }
 
@@ -52,10 +51,9 @@ public interface Storage {
    * @param cookies Cookies to be set.
    * @param browserContextId Browser context to use when called on the browser endpoint.
    */
-  public suspend fun setCookies(@ParamName("cookies") cookies: List<CookieParam>,
-      @ParamName("browserContextId") @Optional browserContextId: String?)
+  suspend fun setCookies(@ParamName("cookies") cookies: List<CookieParam>, @ParamName("browserContextId") @Optional browserContextId: String? = null)
 
-  public suspend fun setCookies(@ParamName("cookies") cookies: List<CookieParam>) {
+  suspend fun setCookies(@ParamName("cookies") cookies: List<CookieParam>) {
     return setCookies(cookies, null)
   }
 
@@ -63,10 +61,9 @@ public interface Storage {
    * Clears cookies.
    * @param browserContextId Browser context to use when called on the browser endpoint.
    */
-  public suspend fun clearCookies(@ParamName("browserContextId") @Optional
-      browserContextId: String?)
+  suspend fun clearCookies(@ParamName("browserContextId") @Optional browserContextId: String? = null)
 
-  public suspend fun clearCookies() {
+  suspend fun clearCookies() {
     return clearCookies(null)
   }
 
@@ -74,7 +71,7 @@ public interface Storage {
    * Returns usage and quota in bytes.
    * @param origin Security origin.
    */
-  public suspend fun getUsageAndQuota(@ParamName("origin") origin: String): UsageAndQuota
+  suspend fun getUsageAndQuota(@ParamName("origin") origin: String): UsageAndQuota
 
   /**
    * Override quota for the specified origin
@@ -88,11 +85,10 @@ public interface Storage {
    * disabled (called without a quotaSize).
    */
   @Experimental
-  public suspend fun overrideQuotaForOrigin(@ParamName("origin") origin: String,
-      @ParamName("quotaSize") @Optional quotaSize: Double?)
+  suspend fun overrideQuotaForOrigin(@ParamName("origin") origin: String, @ParamName("quotaSize") @Optional quotaSize: Double? = null)
 
   @Experimental
-  public suspend fun overrideQuotaForOrigin(@ParamName("origin") origin: String) {
+  suspend fun overrideQuotaForOrigin(@ParamName("origin") origin: String) {
     return overrideQuotaForOrigin(origin, null)
   }
 
@@ -100,25 +96,25 @@ public interface Storage {
    * Registers origin to be notified when an update occurs to its cache storage list.
    * @param origin Security origin.
    */
-  public suspend fun trackCacheStorageForOrigin(@ParamName("origin") origin: String)
+  suspend fun trackCacheStorageForOrigin(@ParamName("origin") origin: String)
 
   /**
    * Registers origin to be notified when an update occurs to its IndexedDB.
    * @param origin Security origin.
    */
-  public suspend fun trackIndexedDBForOrigin(@ParamName("origin") origin: String)
+  suspend fun trackIndexedDBForOrigin(@ParamName("origin") origin: String)
 
   /**
    * Unregisters origin from receiving notifications for cache storage.
    * @param origin Security origin.
    */
-  public suspend fun untrackCacheStorageForOrigin(@ParamName("origin") origin: String)
+  suspend fun untrackCacheStorageForOrigin(@ParamName("origin") origin: String)
 
   /**
    * Unregisters origin from receiving notifications for IndexedDB.
    * @param origin Security origin.
    */
-  public suspend fun untrackIndexedDBForOrigin(@ParamName("origin") origin: String)
+  suspend fun untrackIndexedDBForOrigin(@ParamName("origin") origin: String)
 
   /**
    * Returns the number of stored Trust Tokens per issuer for the
@@ -127,7 +123,7 @@ public interface Storage {
   @Experimental
   @Returns("tokens")
   @ReturnTypeParameter(TrustTokens::class)
-  public suspend fun getTrustTokens(): List<TrustTokens>
+  suspend fun getTrustTokens(): List<TrustTokens>
 
   /**
    * Removes all Trust Tokens issued by the provided issuerOrigin.
@@ -136,38 +132,29 @@ public interface Storage {
    */
   @Experimental
   @Returns("didDeleteTokens")
-  public suspend fun clearTrustTokens(@ParamName("issuerOrigin") issuerOrigin: String): Boolean
+  suspend fun clearTrustTokens(@ParamName("issuerOrigin") issuerOrigin: String): Boolean
 
   @EventName("cacheStorageContentUpdated")
-  public fun onCacheStorageContentUpdated(eventListener: EventHandler<CacheStorageContentUpdated>):
-      EventListener
+  fun onCacheStorageContentUpdated(eventListener: EventHandler<CacheStorageContentUpdated>): EventListener
 
   @EventName("cacheStorageContentUpdated")
-  public
-      fun onCacheStorageContentUpdated(eventListener: suspend (CacheStorageContentUpdated) -> Unit):
-      EventListener
+  fun onCacheStorageContentUpdated(eventListener: suspend (CacheStorageContentUpdated) -> Unit): EventListener
 
   @EventName("cacheStorageListUpdated")
-  public fun onCacheStorageListUpdated(eventListener: EventHandler<CacheStorageListUpdated>):
-      EventListener
+  fun onCacheStorageListUpdated(eventListener: EventHandler<CacheStorageListUpdated>): EventListener
 
   @EventName("cacheStorageListUpdated")
-  public fun onCacheStorageListUpdated(eventListener: suspend (CacheStorageListUpdated) -> Unit):
-      EventListener
+  fun onCacheStorageListUpdated(eventListener: suspend (CacheStorageListUpdated) -> Unit): EventListener
 
   @EventName("indexedDBContentUpdated")
-  public fun onIndexedDBContentUpdated(eventListener: EventHandler<IndexedDBContentUpdated>):
-      EventListener
+  fun onIndexedDBContentUpdated(eventListener: EventHandler<IndexedDBContentUpdated>): EventListener
 
   @EventName("indexedDBContentUpdated")
-  public fun onIndexedDBContentUpdated(eventListener: suspend (IndexedDBContentUpdated) -> Unit):
-      EventListener
+  fun onIndexedDBContentUpdated(eventListener: suspend (IndexedDBContentUpdated) -> Unit): EventListener
 
   @EventName("indexedDBListUpdated")
-  public fun onIndexedDBListUpdated(eventListener: EventHandler<IndexedDBListUpdated>):
-      EventListener
+  fun onIndexedDBListUpdated(eventListener: EventHandler<IndexedDBListUpdated>): EventListener
 
   @EventName("indexedDBListUpdated")
-  public fun onIndexedDBListUpdated(eventListener: suspend (IndexedDBListUpdated) -> Unit):
-      EventListener
+  fun onIndexedDBListUpdated(eventListener: suspend (IndexedDBListUpdated) -> Unit): EventListener
 }

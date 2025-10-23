@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.security
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -10,15 +11,15 @@ import kotlin.collections.List
  * Security state information about the page.
  */
 @Experimental
-public data class VisibleSecurityState(
-  @JsonProperty("securityState")
-  public val securityState: SecurityState,
-  @JsonProperty("certificateSecurityState")
-  @Optional
-  public val certificateSecurityState: CertificateSecurityState? = null,
-  @JsonProperty("safetyTipInfo")
-  @Optional
-  public val safetyTipInfo: SafetyTipInfo? = null,
-  @JsonProperty("securityStateIssueIds")
-  public val securityStateIssueIds: List<String>,
+data class VisibleSecurityState(
+  @param:JsonProperty("securityState")
+  val securityState: SecurityState,
+  @param:JsonProperty("certificateSecurityState")
+  @param:Optional
+  val certificateSecurityState: CertificateSecurityState? = null,
+  @param:JsonProperty("safetyTipInfo")
+  @param:Optional
+  val safetyTipInfo: SafetyTipInfo? = null,
+  @param:JsonProperty("securityStateIssueIds")
+  val securityStateIssueIds: List<String>,
 )

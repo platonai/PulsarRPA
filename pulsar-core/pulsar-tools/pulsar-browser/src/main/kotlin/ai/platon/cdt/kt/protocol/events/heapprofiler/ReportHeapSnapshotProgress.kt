@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.heapprofiler
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -5,12 +6,12 @@ import com.fasterxml.jackson.`annotation`.JsonProperty
 import kotlin.Boolean
 import kotlin.Int
 
-public data class ReportHeapSnapshotProgress(
-  @JsonProperty("done")
-  public val done: Int,
-  @JsonProperty("total")
-  public val total: Int,
-  @JsonProperty("finished")
-  @Optional
-  public val finished: Boolean? = null,
+data class ReportHeapSnapshotProgress(
+  @param:JsonProperty("done")
+  val done: Int,
+  @param:JsonProperty("total")
+  val total: Int,
+  @param:JsonProperty("finished")
+  @param:Optional
+  val finished: Boolean? = null,
 )

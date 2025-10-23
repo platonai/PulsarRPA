@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.profiler
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -14,11 +15,11 @@ import kotlin.collections.List
  * trigger collection of coverage data immediatelly at a certain point in time.
  */
 @Experimental
-public data class PreciseCoverageDeltaUpdate(
-  @JsonProperty("timestamp")
-  public val timestamp: Double,
-  @JsonProperty("occassion")
-  public val occassion: String,
-  @JsonProperty("result")
-  public val result: List<ScriptCoverage>,
+data class PreciseCoverageDeltaUpdate(
+  @param:JsonProperty("timestamp")
+  val timestamp: Double,
+  @param:JsonProperty("occassion")
+  val occassion: String,
+  @param:JsonProperty("result")
+  val result: List<ScriptCoverage>,
 )

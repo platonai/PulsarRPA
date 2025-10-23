@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.webauthn
 
 import com.fasterxml.jackson.`annotation`.JsonProperty

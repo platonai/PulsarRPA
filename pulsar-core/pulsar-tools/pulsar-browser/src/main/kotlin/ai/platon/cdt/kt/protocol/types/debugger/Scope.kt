@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.debugger
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -8,18 +9,18 @@ import kotlin.String
 /**
  * Scope description.
  */
-public data class Scope(
-  @JsonProperty("type")
-  public val type: ScopeType,
-  @JsonProperty("object")
-  public val `object`: RemoteObject,
-  @JsonProperty("name")
-  @Optional
-  public val name: String? = null,
-  @JsonProperty("startLocation")
-  @Optional
-  public val startLocation: Location? = null,
-  @JsonProperty("endLocation")
-  @Optional
-  public val endLocation: Location? = null,
+data class Scope(
+  @param:JsonProperty("type")
+  val type: ScopeType,
+  @param:JsonProperty("object")
+  val `object`: RemoteObject,
+  @param:JsonProperty("name")
+  @param:Optional
+  val name: String? = null,
+  @param:JsonProperty("startLocation")
+  @param:Optional
+  val startLocation: Location? = null,
+  @param:JsonProperty("endLocation")
+  @param:Optional
+  val endLocation: Location? = null,
 )

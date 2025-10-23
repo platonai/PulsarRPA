@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.network
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -10,11 +11,11 @@ import kotlin.String
  * Fired when resource loading priority is changed
  */
 @Experimental
-public data class ResourceChangedPriority(
-  @JsonProperty("requestId")
-  public val requestId: String,
-  @JsonProperty("newPriority")
-  public val newPriority: ResourcePriority,
-  @JsonProperty("timestamp")
-  public val timestamp: Double,
+data class ResourceChangedPriority(
+  @param:JsonProperty("requestId")
+  val requestId: String,
+  @param:JsonProperty("newPriority")
+  val newPriority: ResourcePriority,
+  @param:JsonProperty("timestamp")
+  val timestamp: Double,
 )

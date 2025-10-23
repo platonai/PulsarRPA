@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.network
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -8,7 +9,7 @@ import kotlin.collections.Map
 /**
  * WebSocket request data.
  */
-public data class WebSocketRequest(
-  @JsonProperty("headers")
-  public val headers: Map<String, Any?>,
+data class WebSocketRequest(
+  @param:JsonProperty("headers")
+  val headers: Map<String, Any?>,
 )

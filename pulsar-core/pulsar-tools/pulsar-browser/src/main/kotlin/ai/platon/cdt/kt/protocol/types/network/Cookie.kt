@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.network
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -11,38 +12,38 @@ import kotlin.String
 /**
  * Cookie object
  */
-public data class Cookie(
-  @JsonProperty("name")
-  public val name: String,
-  @JsonProperty("value")
-  public val `value`: String,
-  @JsonProperty("domain")
-  public val domain: String,
-  @JsonProperty("path")
-  public val path: String,
-  @JsonProperty("expires")
-  public val expires: Double,
-  @JsonProperty("size")
-  public val size: Int,
-  @JsonProperty("httpOnly")
-  public val httpOnly: Boolean,
-  @JsonProperty("secure")
-  public val secure: Boolean,
-  @JsonProperty("session")
-  public val session: Boolean,
-  @JsonProperty("sameSite")
-  @Optional
-  public val sameSite: CookieSameSite? = null,
-  @JsonProperty("priority")
-  @Experimental
-  public val priority: CookiePriority,
-  @JsonProperty("sameParty")
-  @Experimental
-  public val sameParty: Boolean,
-  @JsonProperty("sourceScheme")
-  @Experimental
-  public val sourceScheme: CookieSourceScheme,
-  @JsonProperty("sourcePort")
-  @Experimental
-  public val sourcePort: Int,
+data class Cookie(
+  @param:JsonProperty("name")
+  val name: String,
+  @param:JsonProperty("value")
+  val `value`: String,
+  @param:JsonProperty("domain")
+  val domain: String,
+  @param:JsonProperty("path")
+  val path: String,
+  @param:JsonProperty("expires")
+  val expires: Double,
+  @param:JsonProperty("size")
+  val size: Int,
+  @param:JsonProperty("httpOnly")
+  val httpOnly: Boolean,
+  @param:JsonProperty("secure")
+  val secure: Boolean,
+  @param:JsonProperty("session")
+  val session: Boolean,
+  @param:JsonProperty("sameSite")
+  @param:Optional
+  val sameSite: CookieSameSite? = null,
+  @param:JsonProperty("priority")
+  @param:Experimental
+  val priority: CookiePriority,
+  @param:JsonProperty("sameParty")
+  @param:Experimental
+  val sameParty: Boolean,
+  @param:JsonProperty("sourceScheme")
+  @param:Experimental
+  val sourceScheme: CookieSourceScheme,
+  @param:JsonProperty("sourcePort")
+  @param:Experimental
+  val sourcePort: Int,
 )

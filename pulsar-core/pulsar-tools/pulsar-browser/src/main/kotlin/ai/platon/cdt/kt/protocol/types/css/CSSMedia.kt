@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.css
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -8,21 +9,21 @@ import kotlin.collections.List
 /**
  * CSS media rule descriptor.
  */
-public data class CSSMedia(
-  @JsonProperty("text")
-  public val text: String,
-  @JsonProperty("source")
-  public val source: CSSMediaSource,
-  @JsonProperty("sourceURL")
-  @Optional
-  public val sourceURL: String? = null,
-  @JsonProperty("range")
-  @Optional
-  public val range: SourceRange? = null,
-  @JsonProperty("styleSheetId")
-  @Optional
-  public val styleSheetId: String? = null,
-  @JsonProperty("mediaList")
-  @Optional
-  public val mediaList: List<MediaQuery>? = null,
+data class CSSMedia(
+  @param:JsonProperty("text")
+  val text: String,
+  @param:JsonProperty("source")
+  val source: CSSMediaSource,
+  @param:JsonProperty("sourceURL")
+  @param:Optional
+  val sourceURL: String? = null,
+  @param:JsonProperty("range")
+  @param:Optional
+  val range: SourceRange? = null,
+  @param:JsonProperty("styleSheetId")
+  @param:Optional
+  val styleSheetId: String? = null,
+  @param:JsonProperty("mediaList")
+  @param:Optional
+  val mediaList: List<MediaQuery>? = null,
 )

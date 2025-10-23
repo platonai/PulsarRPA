@@ -1,10 +1,11 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.accessibility
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
 
-public data class AXProperty(
-  @JsonProperty("name")
-  public val name: AXPropertyName,
-  @JsonProperty("value")
-  public val `value`: AXValue,
+data class AXProperty(
+  @param:JsonProperty("name")
+  val name: AXPropertyName,
+  @param:JsonProperty("value")
+  val `value`: AXValue,
 )

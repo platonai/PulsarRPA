@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.runtime
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -9,33 +10,33 @@ import kotlin.String
 /**
  * Mirror object referencing original JavaScript object.
  */
-public data class RemoteObject(
-  @JsonProperty("type")
-  public val type: RemoteObjectType,
-  @JsonProperty("subtype")
-  @Optional
-  public val subtype: RemoteObjectSubtype? = null,
-  @JsonProperty("className")
-  @Optional
-  public val className: String? = null,
-  @JsonProperty("value")
-  @Optional
-  public val `value`: Any? = null,
-  @JsonProperty("unserializableValue")
-  @Optional
-  public val unserializableValue: String? = null,
-  @JsonProperty("description")
-  @Optional
-  public val description: String? = null,
-  @JsonProperty("objectId")
-  @Optional
-  public val objectId: String? = null,
-  @JsonProperty("preview")
-  @Optional
-  @Experimental
-  public val preview: ObjectPreview? = null,
-  @JsonProperty("customPreview")
-  @Optional
-  @Experimental
-  public val customPreview: CustomPreview? = null,
+data class RemoteObject(
+  @param:JsonProperty("type")
+  val type: RemoteObjectType,
+  @param:JsonProperty("subtype")
+  @param:Optional
+  val subtype: RemoteObjectSubtype? = null,
+  @param:JsonProperty("className")
+  @param:Optional
+  val className: String? = null,
+  @param:JsonProperty("value")
+  @param:Optional
+  val `value`: Any? = null,
+  @param:JsonProperty("unserializableValue")
+  @param:Optional
+  val unserializableValue: String? = null,
+  @param:JsonProperty("description")
+  @param:Optional
+  val description: String? = null,
+  @param:JsonProperty("objectId")
+  @param:Optional
+  val objectId: String? = null,
+  @param:JsonProperty("preview")
+  @param:Optional
+  @param:Experimental
+  val preview: ObjectPreview? = null,
+  @param:JsonProperty("customPreview")
+  @param:Optional
+  @param:Experimental
+  val customPreview: CustomPreview? = null,
 )

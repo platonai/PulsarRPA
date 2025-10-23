@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.page
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -8,7 +9,7 @@ import kotlin.String
  * Fired when frame has stopped loading.
  */
 @Experimental
-public data class FrameStoppedLoading(
-  @JsonProperty("frameId")
-  public val frameId: String,
+data class FrameStoppedLoading(
+  @param:JsonProperty("frameId")
+  val frameId: String,
 )

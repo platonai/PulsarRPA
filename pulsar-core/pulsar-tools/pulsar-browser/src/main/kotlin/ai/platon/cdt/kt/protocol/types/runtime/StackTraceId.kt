@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.runtime
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -10,10 +11,10 @@ import kotlin.String
  * allows to track cross-debugger calls. See `Runtime.StackTrace` and `Debugger.paused` for usages.
  */
 @Experimental
-public data class StackTraceId(
-  @JsonProperty("id")
-  public val id: String,
-  @JsonProperty("debuggerId")
-  @Optional
-  public val debuggerId: String? = null,
+data class StackTraceId(
+  @param:JsonProperty("id")
+  val id: String,
+  @param:JsonProperty("debuggerId")
+  @param:Optional
+  val debuggerId: String? = null,
 )

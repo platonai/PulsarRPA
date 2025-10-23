@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.commands
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -12,43 +13,39 @@ import kotlin.String
 import kotlin.collections.List
 
 @Experimental
-public interface Accessibility {
+interface Accessibility {
   /**
    * Disables the accessibility domain.
    */
-  public suspend fun disable()
+  suspend fun disable()
 
   /**
-   * Enables the accessibility domain which causes `AXNodeId`s to remain consistent between method
-   * calls.
-   * This turns on accessibility for the page, which can impact performance until accessibility is
-   * disabled.
+   * Enables the accessibility domain which causes `AXNodeId`s to remain consistent between method calls.
+   * This turns on accessibility for the page, which can impact performance until accessibility is disabled.
    */
-  public suspend fun enable()
+  suspend fun enable()
 
   /**
    * Fetches the accessibility node and partial accessibility tree for this DOM node, if it exists.
    * @param nodeId Identifier of the node to get the partial accessibility tree for.
    * @param backendNodeId Identifier of the backend node to get the partial accessibility tree for.
-   * @param objectId JavaScript object id of the node wrapper to get the partial accessibility tree
-   * for.
-   * @param fetchRelatives Whether to fetch this nodes ancestors, siblings and children. Defaults to
-   * true.
+   * @param objectId JavaScript object id of the node wrapper to get the partial accessibility tree for.
+   * @param fetchRelatives Whether to fetch this nodes ancestors, siblings and children. Defaults to true.
    */
   @Experimental
   @Returns("nodes")
   @ReturnTypeParameter(AXNode::class)
-  public suspend fun getPartialAXTree(
-    @ParamName("nodeId") @Optional nodeId: Int?,
-    @ParamName("backendNodeId") @Optional backendNodeId: Int?,
-    @ParamName("objectId") @Optional objectId: String?,
-    @ParamName("fetchRelatives") @Optional fetchRelatives: Boolean?,
+  suspend fun getPartialAXTree(
+    @ParamName("nodeId") @Optional nodeId: Int? = null,
+    @ParamName("backendNodeId") @Optional backendNodeId: Int? = null,
+    @ParamName("objectId") @Optional objectId: String? = null,
+    @ParamName("fetchRelatives") @Optional fetchRelatives: Boolean? = null,
   ): List<AXNode>
 
   @Experimental
   @Returns("nodes")
   @ReturnTypeParameter(AXNode::class)
-  public suspend fun getPartialAXTree(): List<AXNode> {
+  suspend fun getPartialAXTree(): List<AXNode> {
     return getPartialAXTree(null, null, null, null)
   }
 
@@ -60,12 +57,12 @@ public interface Accessibility {
   @Experimental
   @Returns("nodes")
   @ReturnTypeParameter(AXNode::class)
-  public suspend fun getFullAXTree(@ParamName("max_depth") @Optional max_depth: Int?): List<AXNode>
+  suspend fun getFullAXTree(@ParamName("max_depth") @Optional max_depth: Int? = null): List<AXNode>
 
   @Experimental
   @Returns("nodes")
   @ReturnTypeParameter(AXNode::class)
-  public suspend fun getFullAXTree(): List<AXNode> {
+  suspend fun getFullAXTree(): List<AXNode> {
     return getFullAXTree(null)
   }
 
@@ -77,7 +74,7 @@ public interface Accessibility {
   @Experimental
   @Returns("nodes")
   @ReturnTypeParameter(AXNode::class)
-  public suspend fun getChildAXNodes(@ParamName("id") id: String): List<AXNode>
+  suspend fun getChildAXNodes(@ParamName("id") id: String): List<AXNode>
 
   /**
    * Query a DOM node's accessibility subtree for accessible name and role.
@@ -94,18 +91,18 @@ public interface Accessibility {
   @Experimental
   @Returns("nodes")
   @ReturnTypeParameter(AXNode::class)
-  public suspend fun queryAXTree(
-    @ParamName("nodeId") @Optional nodeId: Int?,
-    @ParamName("backendNodeId") @Optional backendNodeId: Int?,
-    @ParamName("objectId") @Optional objectId: String?,
-    @ParamName("accessibleName") @Optional accessibleName: String?,
-    @ParamName("role") @Optional role: String?,
+  suspend fun queryAXTree(
+    @ParamName("nodeId") @Optional nodeId: Int? = null,
+    @ParamName("backendNodeId") @Optional backendNodeId: Int? = null,
+    @ParamName("objectId") @Optional objectId: String? = null,
+    @ParamName("accessibleName") @Optional accessibleName: String? = null,
+    @ParamName("role") @Optional role: String? = null,
   ): List<AXNode>
 
   @Experimental
   @Returns("nodes")
   @ReturnTypeParameter(AXNode::class)
-  public suspend fun queryAXTree(): List<AXNode> {
+  suspend fun queryAXTree(): List<AXNode> {
     return queryAXTree(null, null, null, null, null)
   }
 }

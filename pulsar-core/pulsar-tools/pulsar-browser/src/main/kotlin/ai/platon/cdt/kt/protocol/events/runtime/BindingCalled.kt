@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.runtime
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -9,11 +10,11 @@ import kotlin.String
  * Notification is issued every time when binding is called.
  */
 @Experimental
-public data class BindingCalled(
-  @JsonProperty("name")
-  public val name: String,
-  @JsonProperty("payload")
-  public val payload: String,
-  @JsonProperty("executionContextId")
-  public val executionContextId: Int,
+data class BindingCalled(
+  @param:JsonProperty("name")
+  val name: String,
+  @param:JsonProperty("payload")
+  val payload: String,
+  @param:JsonProperty("executionContextId")
+  val executionContextId: Int,
 )

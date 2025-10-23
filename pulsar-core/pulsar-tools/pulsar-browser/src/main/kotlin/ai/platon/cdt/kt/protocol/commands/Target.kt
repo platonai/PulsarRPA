@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.commands
 
 import ai.platon.cdt.kt.protocol.events.target.AttachedToTarget
@@ -17,8 +18,8 @@ import ai.platon.cdt.kt.protocol.support.types.EventHandler
 import ai.platon.cdt.kt.protocol.support.types.EventListener
 import ai.platon.cdt.kt.protocol.types.target.RemoteLocation
 import ai.platon.cdt.kt.protocol.types.target.TargetInfo
-import java.lang.Deprecated
 import kotlin.Boolean
+import kotlin.Deprecated
 import kotlin.Int
 import kotlin.String
 import kotlin.Unit
@@ -27,27 +28,25 @@ import kotlin.collections.List
 /**
  * Supports additional targets discovery and allows to attach to them.
  */
-public interface Target {
+interface Target {
   /**
    * Activates (focuses) the target.
    * @param targetId
    */
-  public suspend fun activateTarget(@ParamName("targetId") targetId: String)
+  suspend fun activateTarget(@ParamName("targetId") targetId: String)
 
   /**
    * Attaches to the target with given id.
    * @param targetId
-   * @param flatten Enables "flat" access to the session via specifying sessionId attribute in the
-   * commands.
+   * @param flatten Enables "flat" access to the session via specifying sessionId attribute in the commands.
    * We plan to make this the default, deprecate non-flattened mode,
    * and eventually retire it. See crbug.com/991325.
    */
   @Returns("sessionId")
-  public suspend fun attachToTarget(@ParamName("targetId") targetId: String, @ParamName("flatten")
-      @Optional flatten: Boolean?): String
+  suspend fun attachToTarget(@ParamName("targetId") targetId: String, @ParamName("flatten") @Optional flatten: Boolean? = null): String
 
   @Returns("sessionId")
-  public suspend fun attachToTarget(@ParamName("targetId") targetId: String): String {
+  suspend fun attachToTarget(@ParamName("targetId") targetId: String): String {
     return attachToTarget(targetId, null)
   }
 
@@ -56,14 +55,14 @@ public interface Target {
    */
   @Experimental
   @Returns("sessionId")
-  public suspend fun attachToBrowserTarget(): String
+  suspend fun attachToBrowserTarget(): String
 
   /**
    * Closes the target. If the target is a page that gets closed too.
    * @param targetId
    */
   @Returns("success")
-  public suspend fun closeTarget(@ParamName("targetId") targetId: String): Boolean
+  suspend fun closeTarget(@ParamName("targetId") targetId: String): Boolean
 
   /**
    * Inject object to the target's main frame that provides a communication
@@ -73,17 +72,15 @@ public interface Target {
    *
    * The object has the follwing API:
    * - `binding.send(json)` - a method to send messages over the remote debugging protocol
-   * - `binding.onmessage = json => handleMessage(json)` - a callback that will be called for the
-   * protocol notifications and command responses.
+   * - `binding.onmessage = json => handleMessage(json)` - a callback that will be called for the protocol notifications and command responses.
    * @param targetId
    * @param bindingName Binding name, 'cdp' if not specified.
    */
   @Experimental
-  public suspend fun exposeDevToolsProtocol(@ParamName("targetId") targetId: String,
-      @ParamName("bindingName") @Optional bindingName: String?)
+  suspend fun exposeDevToolsProtocol(@ParamName("targetId") targetId: String, @ParamName("bindingName") @Optional bindingName: String? = null)
 
   @Experimental
-  public suspend fun exposeDevToolsProtocol(@ParamName("targetId") targetId: String) {
+  suspend fun exposeDevToolsProtocol(@ParamName("targetId") targetId: String) {
     return exposeDevToolsProtocol(targetId, null)
   }
 
@@ -96,15 +93,15 @@ public interface Target {
    */
   @Experimental
   @Returns("browserContextId")
-  public suspend fun createBrowserContext(
-    @ParamName("disposeOnDetach") @Optional disposeOnDetach: Boolean?,
-    @ParamName("proxyServer") @Optional proxyServer: String?,
-    @ParamName("proxyBypassList") @Optional proxyBypassList: String?,
+  suspend fun createBrowserContext(
+    @ParamName("disposeOnDetach") @Optional disposeOnDetach: Boolean? = null,
+    @ParamName("proxyServer") @Optional proxyServer: String? = null,
+    @ParamName("proxyBypassList") @Optional proxyBypassList: String? = null,
   ): String
 
   @Experimental
   @Returns("browserContextId")
-  public suspend fun createBrowserContext(): String {
+  suspend fun createBrowserContext(): String {
     return createBrowserContext(null, null, null)
   }
 
@@ -114,35 +111,33 @@ public interface Target {
   @Experimental
   @Returns("browserContextIds")
   @ReturnTypeParameter(String::class)
-  public suspend fun getBrowserContexts(): List<String>
+  suspend fun getBrowserContexts(): List<String>
 
   /**
    * Creates a new page.
-   * @param url The initial URL the page will be navigated to. An empty string indicates
-   * about:blank.
+   * @param url The initial URL the page will be navigated to. An empty string indicates about:blank.
    * @param width Frame width in DIP (headless chrome only).
    * @param height Frame height in DIP (headless chrome only).
    * @param browserContextId The browser context to create the page in.
-   * @param enableBeginFrameControl Whether BeginFrames for this target will be controlled via
-   * DevTools (headless chrome only,
+   * @param enableBeginFrameControl Whether BeginFrames for this target will be controlled via DevTools (headless chrome only,
    * not supported on MacOS yet, false by default).
    * @param newWindow Whether to create a new Window or Tab (chrome-only, false by default).
    * @param background Whether to create the target in background or foreground (chrome-only,
    * false by default).
    */
   @Returns("targetId")
-  public suspend fun createTarget(
+  suspend fun createTarget(
     @ParamName("url") url: String,
-    @ParamName("width") @Optional width: Int?,
-    @ParamName("height") @Optional height: Int?,
-    @ParamName("browserContextId") @Optional browserContextId: String?,
-    @ParamName("enableBeginFrameControl") @Optional @Experimental enableBeginFrameControl: Boolean?,
-    @ParamName("newWindow") @Optional newWindow: Boolean?,
-    @ParamName("background") @Optional background: Boolean?,
+    @ParamName("width") @Optional width: Int? = null,
+    @ParamName("height") @Optional height: Int? = null,
+    @ParamName("browserContextId") @Optional browserContextId: String? = null,
+    @ParamName("enableBeginFrameControl") @Optional @Experimental enableBeginFrameControl: Boolean? = null,
+    @ParamName("newWindow") @Optional newWindow: Boolean? = null,
+    @ParamName("background") @Optional background: Boolean? = null,
   ): String
 
   @Returns("targetId")
-  public suspend fun createTarget(@ParamName("url") url: String): String {
+  suspend fun createTarget(@ParamName("url") url: String): String {
     return createTarget(url, null, null, null, null, null, null)
   }
 
@@ -151,10 +146,9 @@ public interface Target {
    * @param sessionId Session to detach.
    * @param targetId Deprecated.
    */
-  public suspend fun detachFromTarget(@ParamName("sessionId") @Optional sessionId: String?,
-      @ParamName("targetId") @Optional @Deprecated targetId: String?)
+  suspend fun detachFromTarget(@ParamName("sessionId") @Optional sessionId: String? = null, @ParamName("targetId") @Optional targetId: String? = null)
 
-  public suspend fun detachFromTarget() {
+  suspend fun detachFromTarget() {
     return detachFromTarget(null, null)
   }
 
@@ -164,7 +158,7 @@ public interface Target {
    * @param browserContextId
    */
   @Experimental
-  public suspend fun disposeBrowserContext(@ParamName("browserContextId") browserContextId: String)
+  suspend fun disposeBrowserContext(@ParamName("browserContextId") browserContextId: String)
 
   /**
    * Returns information about a target.
@@ -172,11 +166,11 @@ public interface Target {
    */
   @Experimental
   @Returns("targetInfo")
-  public suspend fun getTargetInfo(@ParamName("targetId") @Optional targetId: String?): TargetInfo
+  suspend fun getTargetInfo(@ParamName("targetId") @Optional targetId: String? = null): TargetInfo
 
   @Experimental
   @Returns("targetInfo")
-  public suspend fun getTargetInfo(): TargetInfo {
+  suspend fun getTargetInfo(): TargetInfo {
     return getTargetInfo(null)
   }
 
@@ -185,7 +179,7 @@ public interface Target {
    */
   @Returns("targetInfos")
   @ReturnTypeParameter(TargetInfo::class)
-  public suspend fun getTargets(): List<TargetInfo>
+  suspend fun getTargets(): List<TargetInfo>
 
   /**
    * Sends protocol message over session with given id.
@@ -195,15 +189,15 @@ public interface Target {
    * @param sessionId Identifier of the session.
    * @param targetId Deprecated.
    */
-  @Deprecated
-  public suspend fun sendMessageToTarget(
+  @Deprecated("Deprecated by protocol")
+  suspend fun sendMessageToTarget(
     @ParamName("message") message: String,
-    @ParamName("sessionId") @Optional sessionId: String?,
-    @ParamName("targetId") @Optional @Deprecated targetId: String?,
+    @ParamName("sessionId") @Optional sessionId: String? = null,
+    @ParamName("targetId") @Optional targetId: String? = null,
   )
 
-  @Deprecated
-  public suspend fun sendMessageToTarget(@ParamName("message") message: String) {
+  @Deprecated("Deprecated by protocol")
+  suspend fun sendMessageToTarget(@ParamName("message") message: String) {
     return sendMessageToTarget(message, null, null)
   }
 
@@ -212,24 +206,21 @@ public interface Target {
    * this one. When turned on, attaches to all existing related targets as well. When turned off,
    * automatically detaches from all currently attached targets.
    * @param autoAttach Whether to auto-attach to related targets.
-   * @param waitForDebuggerOnStart Whether to pause new targets when attaching to them. Use
-   * `Runtime.runIfWaitingForDebugger`
+   * @param waitForDebuggerOnStart Whether to pause new targets when attaching to them. Use `Runtime.runIfWaitingForDebugger`
    * to run paused targets.
-   * @param flatten Enables "flat" access to the session via specifying sessionId attribute in the
-   * commands.
+   * @param flatten Enables "flat" access to the session via specifying sessionId attribute in the commands.
    * We plan to make this the default, deprecate non-flattened mode,
    * and eventually retire it. See crbug.com/991325.
    */
   @Experimental
-  public suspend fun setAutoAttach(
+  suspend fun setAutoAttach(
     @ParamName("autoAttach") autoAttach: Boolean,
     @ParamName("waitForDebuggerOnStart") waitForDebuggerOnStart: Boolean,
-    @ParamName("flatten") @Optional flatten: Boolean?,
+    @ParamName("flatten") @Optional flatten: Boolean? = null,
   )
 
   @Experimental
-  public suspend fun setAutoAttach(@ParamName("autoAttach") autoAttach: Boolean,
-      @ParamName("waitForDebuggerOnStart") waitForDebuggerOnStart: Boolean) {
+  suspend fun setAutoAttach(@ParamName("autoAttach") autoAttach: Boolean, @ParamName("waitForDebuggerOnStart") waitForDebuggerOnStart: Boolean) {
     return setAutoAttach(autoAttach, waitForDebuggerOnStart, null)
   }
 
@@ -238,7 +229,7 @@ public interface Target {
    * `targetCreated/targetInfoChanged/targetDestroyed` events.
    * @param discover Whether to discover available targets.
    */
-  public suspend fun setDiscoverTargets(@ParamName("discover") discover: Boolean)
+  suspend fun setDiscoverTargets(@ParamName("discover") discover: Boolean)
 
   /**
    * Enables target discovery for the specified locations, when `setDiscoverTargets` was set to
@@ -246,55 +237,51 @@ public interface Target {
    * @param locations List of remote locations.
    */
   @Experimental
-  public suspend fun setRemoteLocations(@ParamName("locations") locations: List<RemoteLocation>)
+  suspend fun setRemoteLocations(@ParamName("locations") locations: List<RemoteLocation>)
 
   @EventName("attachedToTarget")
   @Experimental
-  public fun onAttachedToTarget(eventListener: EventHandler<AttachedToTarget>): EventListener
+  fun onAttachedToTarget(eventListener: EventHandler<AttachedToTarget>): EventListener
 
   @EventName("attachedToTarget")
   @Experimental
-  public fun onAttachedToTarget(eventListener: suspend (AttachedToTarget) -> Unit): EventListener
+  fun onAttachedToTarget(eventListener: suspend (AttachedToTarget) -> Unit): EventListener
 
   @EventName("detachedFromTarget")
   @Experimental
-  public fun onDetachedFromTarget(eventListener: EventHandler<DetachedFromTarget>): EventListener
+  fun onDetachedFromTarget(eventListener: EventHandler<DetachedFromTarget>): EventListener
 
   @EventName("detachedFromTarget")
   @Experimental
-  public fun onDetachedFromTarget(eventListener: suspend (DetachedFromTarget) -> Unit):
-      EventListener
+  fun onDetachedFromTarget(eventListener: suspend (DetachedFromTarget) -> Unit): EventListener
 
   @EventName("receivedMessageFromTarget")
-  public fun onReceivedMessageFromTarget(eventListener: EventHandler<ReceivedMessageFromTarget>):
-      EventListener
+  fun onReceivedMessageFromTarget(eventListener: EventHandler<ReceivedMessageFromTarget>): EventListener
 
   @EventName("receivedMessageFromTarget")
-  public
-      fun onReceivedMessageFromTarget(eventListener: suspend (ReceivedMessageFromTarget) -> Unit):
-      EventListener
+  fun onReceivedMessageFromTarget(eventListener: suspend (ReceivedMessageFromTarget) -> Unit): EventListener
 
   @EventName("targetCreated")
-  public fun onTargetCreated(eventListener: EventHandler<TargetCreated>): EventListener
+  fun onTargetCreated(eventListener: EventHandler<TargetCreated>): EventListener
 
   @EventName("targetCreated")
-  public fun onTargetCreated(eventListener: suspend (TargetCreated) -> Unit): EventListener
+  fun onTargetCreated(eventListener: suspend (TargetCreated) -> Unit): EventListener
 
   @EventName("targetDestroyed")
-  public fun onTargetDestroyed(eventListener: EventHandler<TargetDestroyed>): EventListener
+  fun onTargetDestroyed(eventListener: EventHandler<TargetDestroyed>): EventListener
 
   @EventName("targetDestroyed")
-  public fun onTargetDestroyed(eventListener: suspend (TargetDestroyed) -> Unit): EventListener
+  fun onTargetDestroyed(eventListener: suspend (TargetDestroyed) -> Unit): EventListener
 
   @EventName("targetCrashed")
-  public fun onTargetCrashed(eventListener: EventHandler<TargetCrashed>): EventListener
+  fun onTargetCrashed(eventListener: EventHandler<TargetCrashed>): EventListener
 
   @EventName("targetCrashed")
-  public fun onTargetCrashed(eventListener: suspend (TargetCrashed) -> Unit): EventListener
+  fun onTargetCrashed(eventListener: suspend (TargetCrashed) -> Unit): EventListener
 
   @EventName("targetInfoChanged")
-  public fun onTargetInfoChanged(eventListener: EventHandler<TargetInfoChanged>): EventListener
+  fun onTargetInfoChanged(eventListener: EventHandler<TargetInfoChanged>): EventListener
 
   @EventName("targetInfoChanged")
-  public fun onTargetInfoChanged(eventListener: suspend (TargetInfoChanged) -> Unit): EventListener
+  fun onTargetInfoChanged(eventListener: suspend (TargetInfoChanged) -> Unit): EventListener
 }

@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.systeminfo
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -8,23 +9,23 @@ import kotlin.String
 /**
  * Describes a single graphics processor (GPU).
  */
-public data class GPUDevice(
-  @JsonProperty("vendorId")
-  public val vendorId: Double,
-  @JsonProperty("deviceId")
-  public val deviceId: Double,
-  @JsonProperty("subSysId")
-  @Optional
-  public val subSysId: Double? = null,
-  @JsonProperty("revision")
-  @Optional
-  public val revision: Double? = null,
-  @JsonProperty("vendorString")
-  public val vendorString: String,
-  @JsonProperty("deviceString")
-  public val deviceString: String,
-  @JsonProperty("driverVendor")
-  public val driverVendor: String,
-  @JsonProperty("driverVersion")
-  public val driverVersion: String,
+data class GPUDevice(
+  @param:JsonProperty("vendorId")
+  val vendorId: Double,
+  @param:JsonProperty("deviceId")
+  val deviceId: Double,
+  @param:JsonProperty("subSysId")
+  @param:Optional
+  val subSysId: Double? = null,
+  @param:JsonProperty("revision")
+  @param:Optional
+  val revision: Double? = null,
+  @param:JsonProperty("vendorString")
+  val vendorString: String,
+  @param:JsonProperty("deviceString")
+  val deviceString: String,
+  @param:JsonProperty("driverVendor")
+  val driverVendor: String,
+  @param:JsonProperty("driverVersion")
+  val driverVersion: String,
 )

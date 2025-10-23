@@ -1,15 +1,16 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.cast
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
 import com.fasterxml.jackson.`annotation`.JsonProperty
 import kotlin.String
 
-public data class Sink(
-  @JsonProperty("name")
-  public val name: String,
-  @JsonProperty("id")
-  public val id: String,
-  @JsonProperty("session")
-  @Optional
-  public val session: String? = null,
+data class Sink(
+  @param:JsonProperty("name")
+  val name: String,
+  @param:JsonProperty("id")
+  val id: String,
+  @param:JsonProperty("session")
+  @param:Optional
+  val session: String? = null,
 )

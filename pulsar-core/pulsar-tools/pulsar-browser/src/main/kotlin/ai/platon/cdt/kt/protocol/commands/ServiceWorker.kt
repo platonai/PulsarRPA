@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.commands
 
 import ai.platon.cdt.kt.protocol.events.serviceworker.WorkerErrorReported
@@ -13,19 +14,19 @@ import kotlin.String
 import kotlin.Unit
 
 @Experimental
-public interface ServiceWorker {
+interface ServiceWorker {
   /**
    * @param origin
    * @param registrationId
    * @param data
    */
-  public suspend fun deliverPushMessage(
+  suspend fun deliverPushMessage(
     @ParamName("origin") origin: String,
     @ParamName("registrationId") registrationId: String,
     @ParamName("data") `data`: String,
   )
 
-  public suspend fun disable()
+  suspend fun disable()
 
   /**
    * @param origin
@@ -33,7 +34,7 @@ public interface ServiceWorker {
    * @param tag
    * @param lastChance
    */
-  public suspend fun dispatchSyncEvent(
+  suspend fun dispatchSyncEvent(
     @ParamName("origin") origin: String,
     @ParamName("registrationId") registrationId: String,
     @ParamName("tag") tag: String,
@@ -45,73 +46,66 @@ public interface ServiceWorker {
    * @param registrationId
    * @param tag
    */
-  public suspend fun dispatchPeriodicSyncEvent(
+  suspend fun dispatchPeriodicSyncEvent(
     @ParamName("origin") origin: String,
     @ParamName("registrationId") registrationId: String,
     @ParamName("tag") tag: String,
   )
 
-  public suspend fun enable()
+  suspend fun enable()
 
   /**
    * @param versionId
    */
-  public suspend fun inspectWorker(@ParamName("versionId") versionId: String)
+  suspend fun inspectWorker(@ParamName("versionId") versionId: String)
 
   /**
    * @param forceUpdateOnPageLoad
    */
-  public suspend fun setForceUpdateOnPageLoad(@ParamName("forceUpdateOnPageLoad")
-      forceUpdateOnPageLoad: Boolean)
+  suspend fun setForceUpdateOnPageLoad(@ParamName("forceUpdateOnPageLoad") forceUpdateOnPageLoad: Boolean)
 
   /**
    * @param scopeURL
    */
-  public suspend fun skipWaiting(@ParamName("scopeURL") scopeURL: String)
+  suspend fun skipWaiting(@ParamName("scopeURL") scopeURL: String)
 
   /**
    * @param scopeURL
    */
-  public suspend fun startWorker(@ParamName("scopeURL") scopeURL: String)
+  suspend fun startWorker(@ParamName("scopeURL") scopeURL: String)
 
-  public suspend fun stopAllWorkers()
+  suspend fun stopAllWorkers()
 
   /**
    * @param versionId
    */
-  public suspend fun stopWorker(@ParamName("versionId") versionId: String)
+  suspend fun stopWorker(@ParamName("versionId") versionId: String)
 
   /**
    * @param scopeURL
    */
-  public suspend fun unregister(@ParamName("scopeURL") scopeURL: String)
+  suspend fun unregister(@ParamName("scopeURL") scopeURL: String)
 
   /**
    * @param scopeURL
    */
-  public suspend fun updateRegistration(@ParamName("scopeURL") scopeURL: String)
+  suspend fun updateRegistration(@ParamName("scopeURL") scopeURL: String)
 
   @EventName("workerErrorReported")
-  public fun onWorkerErrorReported(eventListener: EventHandler<WorkerErrorReported>): EventListener
+  fun onWorkerErrorReported(eventListener: EventHandler<WorkerErrorReported>): EventListener
 
   @EventName("workerErrorReported")
-  public fun onWorkerErrorReported(eventListener: suspend (WorkerErrorReported) -> Unit):
-      EventListener
+  fun onWorkerErrorReported(eventListener: suspend (WorkerErrorReported) -> Unit): EventListener
 
   @EventName("workerRegistrationUpdated")
-  public fun onWorkerRegistrationUpdated(eventListener: EventHandler<WorkerRegistrationUpdated>):
-      EventListener
+  fun onWorkerRegistrationUpdated(eventListener: EventHandler<WorkerRegistrationUpdated>): EventListener
 
   @EventName("workerRegistrationUpdated")
-  public
-      fun onWorkerRegistrationUpdated(eventListener: suspend (WorkerRegistrationUpdated) -> Unit):
-      EventListener
+  fun onWorkerRegistrationUpdated(eventListener: suspend (WorkerRegistrationUpdated) -> Unit): EventListener
 
   @EventName("workerVersionUpdated")
-  public fun onWorkerVersionUpdated(eventListener: EventHandler<WorkerVersionUpdated>):
-      EventListener
+  fun onWorkerVersionUpdated(eventListener: EventHandler<WorkerVersionUpdated>): EventListener
 
   @EventName("workerVersionUpdated")
-  public fun onWorkerVersionUpdated(eventListener: suspend (WorkerVersionUpdated) -> Unit):
-      EventListener
+  fun onWorkerVersionUpdated(eventListener: suspend (WorkerVersionUpdated) -> Unit): EventListener
 }

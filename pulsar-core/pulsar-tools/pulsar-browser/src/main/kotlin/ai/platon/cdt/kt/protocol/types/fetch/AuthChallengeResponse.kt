@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.fetch
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -7,13 +8,13 @@ import kotlin.String
 /**
  * Response to an AuthChallenge.
  */
-public data class AuthChallengeResponse(
-  @JsonProperty("response")
-  public val response: AuthChallengeResponseResponse,
-  @JsonProperty("username")
-  @Optional
-  public val username: String? = null,
-  @JsonProperty("password")
-  @Optional
-  public val password: String? = null,
+data class AuthChallengeResponse(
+  @param:JsonProperty("response")
+  val response: AuthChallengeResponseResponse,
+  @param:JsonProperty("username")
+  @param:Optional
+  val username: String? = null,
+  @param:JsonProperty("password")
+  @param:Optional
+  val password: String? = null,
 )

@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.media
 
 import com.fasterxml.jackson.`annotation`.JsonProperty
@@ -6,9 +7,9 @@ import kotlin.String
 /**
  * Corresponds to kMediaPropertyChange
  */
-public data class PlayerProperty(
-  @JsonProperty("name")
-  public val name: String,
-  @JsonProperty("value")
-  public val `value`: String,
+data class PlayerProperty(
+  @param:JsonProperty("name")
+  val name: String,
+  @param:JsonProperty("value")
+  val `value`: String,
 )

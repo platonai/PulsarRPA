@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.events.dom
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -9,9 +10,9 @@ import kotlin.Int
  * Called when a pseudo element is added to an element.
  */
 @Experimental
-public data class PseudoElementAdded(
-  @JsonProperty("parentId")
-  public val parentId: Int,
-  @JsonProperty("pseudoElement")
-  public val pseudoElement: Node,
+data class PseudoElementAdded(
+  @param:JsonProperty("parentId")
+  val parentId: Int,
+  @param:JsonProperty("pseudoElement")
+  val pseudoElement: Node,
 )

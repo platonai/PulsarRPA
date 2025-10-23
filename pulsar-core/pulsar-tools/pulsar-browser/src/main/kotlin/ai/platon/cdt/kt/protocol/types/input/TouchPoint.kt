@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.input
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -6,40 +7,40 @@ import com.fasterxml.jackson.`annotation`.JsonProperty
 import kotlin.Double
 import kotlin.Int
 
-public data class TouchPoint(
-  @JsonProperty("x")
-  public val x: Double,
-  @JsonProperty("y")
-  public val y: Double,
-  @JsonProperty("radiusX")
-  @Optional
-  public val radiusX: Double? = null,
-  @JsonProperty("radiusY")
-  @Optional
-  public val radiusY: Double? = null,
-  @JsonProperty("rotationAngle")
-  @Optional
-  public val rotationAngle: Double? = null,
-  @JsonProperty("force")
-  @Optional
-  public val force: Double? = null,
-  @JsonProperty("tangentialPressure")
-  @Optional
-  @Experimental
-  public val tangentialPressure: Double? = null,
-  @JsonProperty("tiltX")
-  @Optional
-  @Experimental
-  public val tiltX: Int? = null,
-  @JsonProperty("tiltY")
-  @Optional
-  @Experimental
-  public val tiltY: Int? = null,
-  @JsonProperty("twist")
-  @Optional
-  @Experimental
-  public val twist: Int? = null,
-  @JsonProperty("id")
-  @Optional
-  public val id: Double? = null,
+data class TouchPoint(
+  @param:JsonProperty("x")
+  val x: Double,
+  @param:JsonProperty("y")
+  val y: Double,
+  @param:JsonProperty("radiusX")
+  @param:Optional
+  val radiusX: Double? = null,
+  @param:JsonProperty("radiusY")
+  @param:Optional
+  val radiusY: Double? = null,
+  @param:JsonProperty("rotationAngle")
+  @param:Optional
+  val rotationAngle: Double? = null,
+  @param:JsonProperty("force")
+  @param:Optional
+  val force: Double? = null,
+  @param:JsonProperty("tangentialPressure")
+  @param:Optional
+  @param:Experimental
+  val tangentialPressure: Double? = null,
+  @param:JsonProperty("tiltX")
+  @param:Optional
+  @param:Experimental
+  val tiltX: Int? = null,
+  @param:JsonProperty("tiltY")
+  @param:Optional
+  @param:Experimental
+  val tiltY: Int? = null,
+  @param:JsonProperty("twist")
+  @param:Optional
+  @param:Experimental
+  val twist: Int? = null,
+  @param:JsonProperty("id")
+  @param:Optional
+  val id: Double? = null,
 )

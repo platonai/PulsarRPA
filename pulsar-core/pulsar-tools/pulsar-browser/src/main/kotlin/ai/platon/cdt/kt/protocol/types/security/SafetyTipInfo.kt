@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.security
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -6,10 +7,10 @@ import com.fasterxml.jackson.`annotation`.JsonProperty
 import kotlin.String
 
 @Experimental
-public data class SafetyTipInfo(
-  @JsonProperty("safetyTipStatus")
-  public val safetyTipStatus: SafetyTipStatus,
-  @JsonProperty("safeUrl")
-  @Optional
-  public val safeUrl: String? = null,
+data class SafetyTipInfo(
+  @param:JsonProperty("safetyTipStatus")
+  val safetyTipStatus: SafetyTipStatus,
+  @param:JsonProperty("safeUrl")
+  @param:Optional
+  val safeUrl: String? = null,
 )

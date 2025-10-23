@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.security
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -12,44 +13,44 @@ import kotlin.collections.List
  * Details about the security state of the page certificate.
  */
 @Experimental
-public data class CertificateSecurityState(
-  @JsonProperty("protocol")
-  public val protocol: String,
-  @JsonProperty("keyExchange")
-  public val keyExchange: String,
-  @JsonProperty("keyExchangeGroup")
-  @Optional
-  public val keyExchangeGroup: String? = null,
-  @JsonProperty("cipher")
-  public val cipher: String,
-  @JsonProperty("mac")
-  @Optional
-  public val mac: String? = null,
-  @JsonProperty("certificate")
-  public val certificate: List<String>,
-  @JsonProperty("subjectName")
-  public val subjectName: String,
-  @JsonProperty("issuer")
-  public val issuer: String,
-  @JsonProperty("validFrom")
-  public val validFrom: Double,
-  @JsonProperty("validTo")
-  public val validTo: Double,
-  @JsonProperty("certificateNetworkError")
-  @Optional
-  public val certificateNetworkError: String? = null,
-  @JsonProperty("certificateHasWeakSignature")
-  public val certificateHasWeakSignature: Boolean,
-  @JsonProperty("certificateHasSha1Signature")
-  public val certificateHasSha1Signature: Boolean,
-  @JsonProperty("modernSSL")
-  public val modernSSL: Boolean,
-  @JsonProperty("obsoleteSslProtocol")
-  public val obsoleteSslProtocol: Boolean,
-  @JsonProperty("obsoleteSslKeyExchange")
-  public val obsoleteSslKeyExchange: Boolean,
-  @JsonProperty("obsoleteSslCipher")
-  public val obsoleteSslCipher: Boolean,
-  @JsonProperty("obsoleteSslSignature")
-  public val obsoleteSslSignature: Boolean,
+data class CertificateSecurityState(
+  @param:JsonProperty("protocol")
+  val protocol: String,
+  @param:JsonProperty("keyExchange")
+  val keyExchange: String,
+  @param:JsonProperty("keyExchangeGroup")
+  @param:Optional
+  val keyExchangeGroup: String? = null,
+  @param:JsonProperty("cipher")
+  val cipher: String,
+  @param:JsonProperty("mac")
+  @param:Optional
+  val mac: String? = null,
+  @param:JsonProperty("certificate")
+  val certificate: List<String>,
+  @param:JsonProperty("subjectName")
+  val subjectName: String,
+  @param:JsonProperty("issuer")
+  val issuer: String,
+  @param:JsonProperty("validFrom")
+  val validFrom: Double,
+  @param:JsonProperty("validTo")
+  val validTo: Double,
+  @param:JsonProperty("certificateNetworkError")
+  @param:Optional
+  val certificateNetworkError: String? = null,
+  @param:JsonProperty("certificateHasWeakSignature")
+  val certificateHasWeakSignature: Boolean,
+  @param:JsonProperty("certificateHasSha1Signature")
+  val certificateHasSha1Signature: Boolean,
+  @param:JsonProperty("modernSSL")
+  val modernSSL: Boolean,
+  @param:JsonProperty("obsoleteSslProtocol")
+  val obsoleteSslProtocol: Boolean,
+  @param:JsonProperty("obsoleteSslKeyExchange")
+  val obsoleteSslKeyExchange: Boolean,
+  @param:JsonProperty("obsoleteSslCipher")
+  val obsoleteSslCipher: Boolean,
+  @param:JsonProperty("obsoleteSslSignature")
+  val obsoleteSslSignature: Boolean,
 )

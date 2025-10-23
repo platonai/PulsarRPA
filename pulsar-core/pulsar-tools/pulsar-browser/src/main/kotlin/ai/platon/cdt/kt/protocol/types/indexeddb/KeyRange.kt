@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.indexeddb
 
 import ai.platon.cdt.kt.protocol.support.annotations.Optional
@@ -7,15 +8,15 @@ import kotlin.Boolean
 /**
  * Key range.
  */
-public data class KeyRange(
-  @JsonProperty("lower")
-  @Optional
-  public val lower: Key? = null,
-  @JsonProperty("upper")
-  @Optional
-  public val upper: Key? = null,
-  @JsonProperty("lowerOpen")
-  public val lowerOpen: Boolean,
-  @JsonProperty("upperOpen")
-  public val upperOpen: Boolean,
+data class KeyRange(
+  @param:JsonProperty("lower")
+  @param:Optional
+  val lower: Key? = null,
+  @param:JsonProperty("upper")
+  @param:Optional
+  val upper: Key? = null,
+  @param:JsonProperty("lowerOpen")
+  val lowerOpen: Boolean,
+  @param:JsonProperty("upperOpen")
+  val upperOpen: Boolean,
 )

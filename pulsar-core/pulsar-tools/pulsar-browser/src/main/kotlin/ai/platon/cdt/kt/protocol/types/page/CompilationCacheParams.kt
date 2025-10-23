@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.types.page
 
 import ai.platon.cdt.kt.protocol.support.annotations.Experimental
@@ -10,10 +11,10 @@ import kotlin.String
  * Per-script compilation cache parameters for `Page.produceCompilationCache`
  */
 @Experimental
-public data class CompilationCacheParams(
-  @JsonProperty("url")
-  public val url: String,
-  @JsonProperty("eager")
-  @Optional
-  public val eager: Boolean? = null,
+data class CompilationCacheParams(
+  @param:JsonProperty("url")
+  val url: String,
+  @param:JsonProperty("eager")
+  @param:Optional
+  val eager: Boolean? = null,
 )

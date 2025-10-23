@@ -1,3 +1,4 @@
+@file:Suppress("unused")
 package ai.platon.cdt.kt.protocol.commands
 
 import ai.platon.cdt.kt.protocol.events.tethering.Accepted
@@ -13,22 +14,22 @@ import kotlin.Unit
  * The Tethering domain defines methods and events for browser port binding.
  */
 @Experimental
-public interface Tethering {
+interface Tethering {
   /**
    * Request browser port binding.
    * @param port Port number to bind.
    */
-  public suspend fun bind(@ParamName("port") port: Int)
+  suspend fun bind(@ParamName("port") port: Int)
 
   /**
    * Request browser port unbinding.
    * @param port Port number to unbind.
    */
-  public suspend fun unbind(@ParamName("port") port: Int)
+  suspend fun unbind(@ParamName("port") port: Int)
 
   @EventName("accepted")
-  public fun onAccepted(eventListener: EventHandler<Accepted>): EventListener
+  fun onAccepted(eventListener: EventHandler<Accepted>): EventListener
 
   @EventName("accepted")
-  public fun onAccepted(eventListener: suspend (Accepted) -> Unit): EventListener
+  fun onAccepted(eventListener: suspend (Accepted) -> Unit): EventListener
 }
