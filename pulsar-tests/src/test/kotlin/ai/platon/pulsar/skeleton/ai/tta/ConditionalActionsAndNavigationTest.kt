@@ -29,7 +29,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate("如果搜索按钮存在且可见就点击它", driver)
 
         assertNotNull(actionDescription)
-        val actions = actionDescription.expressions
+        val actions = actionDescription.cssFriendlyExpressions
         printlnPro("Generated actions: $actions")
 
         // Should generate defensive checks before clicking
@@ -56,7 +56,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate("先确认用户名输入框存在，然后输入'testuser'", driver)
 
         assertNotNull(actionDescription)
-        val actions = actionDescription.expressions
+        val actions = actionDescription.cssFriendlyExpressions
         printlnPro("Generated actions: $actions")
 
         // Should include existence verification before filling
@@ -80,7 +80,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate("等待动态按钮出现并可见，然后点击它", driver)
 
         assertNotNull(actionDescription)
-        val actions = actionDescription.expressions
+        val actions = actionDescription.cssFriendlyExpressions
         printlnPro("Generated actions: $actions")
 
         // Should include waiting, visibility check, and interaction
@@ -108,7 +108,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate("跳转到交互页面2并等待页面完全加载", driver)
 
         assertNotNull(actionDescription)
-        val actions = actionDescription.expressions
+        val actions = actionDescription.cssFriendlyExpressions
         printlnPro("Generated actions: $actions")
 
         // Should include navigation and waiting
@@ -131,7 +131,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate("点击跳转到页面2的链接，然后等待页面跳转完成", driver)
 
         assertNotNull(actionDescription)
-        val actions = actionDescription.expressions
+        val actions = actionDescription.cssFriendlyExpressions
         printlnPro("Generated actions: $actions")
 
         // Should include click and navigation wait
@@ -157,7 +157,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate("返回上一页，然后再前进到当前页", driver)
 
         assertNotNull(actionDescription)
-        val actions = actionDescription.expressions
+        val actions = actionDescription.cssFriendlyExpressions
         printlnPro("Generated actions: $actions")
 
         // Should include back and forward navigation
@@ -183,7 +183,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
             "检查用户名输入框是否存在且可见，如果满足条件则输入'testuser'，然后聚焦到密码框", driver)
 
         assertNotNull(actionDescription)
-        val actions = actionDescription.expressions
+        val actions = actionDescription.cssFriendlyExpressions
         printlnPro("Generated actions: $actions")
 
         // Should include existence check, visibility check, fill, and focus
@@ -213,7 +213,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
             "等待页面完全加载，检查导航菜单是否存在，如果存在则点击它并等待新页面加载", driver)
 
         assertNotNull(actionDescription)
-        val actions = actionDescription.expressions
+        val actions = actionDescription.cssFriendlyExpressions
         printlnPro("Generated actions: $actions")
 
         // Should include navigation wait, existence check, click, and navigation wait
@@ -240,7 +240,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
             "滚动到页面底部的表单，聚焦到邮箱输入框，然后输入'test@example.com'", driver)
 
         assertNotNull(actionDescription)
-        val actions = actionDescription.expressions
+        val actions = actionDescription.cssFriendlyExpressions
         printlnPro("Generated actions: $actions")
 
         // Should include scroll, focus, and fill
@@ -269,7 +269,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate("检查所有提交按钮中哪个是可见的，然后点击第一个可见的", driver)
 
         assertNotNull(actionDescription)
-        val actions = actionDescription.expressions
+        val actions = actionDescription.cssFriendlyExpressions
         printlnPro("Generated actions: $actions")
 
         // Should include visibility checks and interaction
@@ -293,7 +293,7 @@ class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
             "确认页面已完全加载，检查动态内容是否存在，如果存在则滚动到它", driver)
 
         assertNotNull(actionDescription)
-        val actions = actionDescription.expressions
+        val actions = actionDescription.cssFriendlyExpressions
         printlnPro("Generated actions: $actions")
 
         // Should include navigation check, existence check, and scroll

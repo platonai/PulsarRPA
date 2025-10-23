@@ -36,7 +36,7 @@ class TextToActionParsingTest {
         assertEquals("click", ad.toolCall!!.name)
         assertEquals("#submit", ad.toolCall!!.args["selector"])
         // Optional: expression rendering should match
-        assertTrue(ad.expressions.firstOrNull()?.startsWith("driver.click(") == true)
+        assertTrue(ad.cssFriendlyExpressions.firstOrNull()?.startsWith("driver.click(") == true)
         assertFalse(ad.isComplete)
         assertNull(ad.summary)
         assertTrue(ad.suggestions.isEmpty())
@@ -81,7 +81,7 @@ class TextToActionParsingTest {
 
         val ad = tta.parse(resp)
         assertNull(ad.toolCall)
-        assertTrue(ad.expressions.isEmpty())
+        assertTrue(ad.cssFriendlyExpressions.isEmpty())
         assertTrue(ad.isComplete)
         assertEquals("Done searching", ad.summary)
         assertEquals(listOf("Refine query", "Open first result"), ad.suggestions)
@@ -98,9 +98,9 @@ class TextToActionParsingTest {
 
         val ad = tta.parse(resp)
         // Should extract driver.* lines only
-        assertTrue(ad.toolCall == null || ad.expressions.isNotEmpty())
-        assertTrue(ad.expressions.any { it.startsWith("driver.click(") })
-        assertTrue(ad.expressions.any { it.startsWith("driver.scrollToMiddle(") })
+        assertTrue(ad.toolCall == null || ad.cssFriendlyExpressions.isNotEmpty())
+        assertTrue(ad.cssFriendlyExpressions.any { it.startsWith("driver.click(") })
+        assertTrue(ad.cssFriendlyExpressions.any { it.startsWith("driver.scrollToMiddle(") })
         assertFalse(ad.isComplete)
     }
 }

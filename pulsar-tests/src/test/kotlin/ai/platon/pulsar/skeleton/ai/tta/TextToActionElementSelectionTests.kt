@@ -35,10 +35,10 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(
                 1,
-                actionDescription.expressions.size,
+                actionDescription.cssFriendlyExpressions.size,
                 "Should generate exactly one action for valid command"
             )
-            val expression = actionDescription.expressions.first()
+            val expression = actionDescription.cssFriendlyExpressions.first()
             printlnPro("Multiple buttons - Generated action: $expression")
             assertTrue(
                 expression.contains("click") || expression.contains("driver.click"),
@@ -54,8 +54,8 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("点击关于链接", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Multiple links - Generated action: $expression")
         assertTrue(
             expression.contains("click") || expression.contains("driver.click"),
@@ -74,10 +74,10 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(
                 1,
-                actionDescription.expressions.size,
+                actionDescription.cssFriendlyExpressions.size,
                 "Should generate exactly one action for valid command"
             )
-            val expression = actionDescription.expressions.first()
+            val expression = actionDescription.cssFriendlyExpressions.first()
             printlnPro("Multiple inputs - Generated action: $expression")
             assertTrue(
                 expression.contains("fill") || expression.contains("driver.fill") ||
@@ -96,8 +96,8 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("点击顶部的搜索按钮", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Position-based selection - Generated action: $expression")
         assertTrue(
             expression.contains("click") || expression.contains("driver.click"),
@@ -113,8 +113,8 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("在表单中填写用户名", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Context-based selection - Generated action: $expression")
         assertTrue(
             expression.contains("fill") || expression.contains("driver.fill") ||
@@ -134,8 +134,8 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
             textToAction.generate("点击 data-testid 为 submit-primary 的按钮", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("data-testid selection - Generated action: $expression")
         assertTrue(
             expression.contains("click") || expression.contains("driver.click"),
@@ -156,10 +156,10 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(
                 1,
-                actionDescription.expressions.size,
+                actionDescription.cssFriendlyExpressions.size,
                 "Should generate exactly one action for valid command"
             )
-            val expression = actionDescription.expressions.first()
+            val expression = actionDescription.cssFriendlyExpressions.first()
             printlnPro("ARIA label selection - Generated action: $expression")
             assertTrue(
                 expression.contains("click") || expression.contains("driver.click"),
@@ -177,8 +177,8 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("填写带有占位符的输入框", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Placeholder-based selection - Generated action: $expression")
         assertTrue(
             expression.contains("fill") || expression.contains("driver.fill") ||
@@ -197,8 +197,8 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("点击显示结果的按钮", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Text-based button selection - Generated action: $expression")
         assertTrue(
             expression.contains("click") || expression.contains("driver.click"),
@@ -214,8 +214,8 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("点击联系我们的链接", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Link text selection - Generated action: $expression")
         assertTrue(
             expression.contains("click") || expression.contains("driver.click"),
@@ -236,10 +236,10 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(
                 1,
-                actionDescription.expressions.size,
+                actionDescription.cssFriendlyExpressions.size,
                 "Should generate exactly one action for valid command"
             )
-            val expression = actionDescription.expressions.first()
+            val expression = actionDescription.cssFriendlyExpressions.first()
             printlnPro("Input type selection - Generated action: $expression")
             assertTrue(
                 expression.contains("fill") || expression.contains("driver.fill") ||
@@ -256,8 +256,8 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("输入密码", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Password field selection - Generated action: $expression")
         assertTrue(
             expression.contains("fill") || expression.contains("driver.fill") ||
@@ -276,8 +276,8 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("点击带有 primary 类的按钮", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Class-based selection - Generated action: $expression")
         assertTrue(
             expression.contains("click") || expression.contains("driver.click"),
@@ -298,10 +298,10 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
             assertNotNull(actionDescription)
             assertEquals(
                 1,
-                actionDescription.expressions.size,
+                actionDescription.cssFriendlyExpressions.size,
                 "Should generate exactly one action for valid command"
             )
-            val expression = actionDescription.expressions.first()
+            val expression = actionDescription.cssFriendlyExpressions.first()
             printlnPro("Section-based selection - Generated action: $expression")
             assertTrue(
                 expression.contains("click") || expression.contains("driver.click"),
@@ -319,16 +319,8 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("点击搜索按钮", driver)
 
         assertNotNull(actionDescription)
-        printlnPro("Selected element: ${actionDescription.selectedElement}")
-        printlnPro("Function calls: ${actionDescription.expressions}")
 
-        // The selectedElement should be populated when an element is found
-        // Note: It might be null if no suitable element is found, which is acceptable
-        if (actionDescription.selectedElement != null) {
-            val selectedElement = actionDescription.selectedElement!!
-            assertTrue(selectedElement.tagName.isNotBlank(), "Selected element should have tag name")
-            assertTrue(selectedElement.selector.isNotBlank(), "Selected element should have selector")
-        }
+        printlnPro("Function calls: ${actionDescription.cssFriendlyExpressions}")
     }
 
     @Test
@@ -339,8 +331,8 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate("点击主要的提交按钮", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Most appropriate element selection - Generated action: $expression")
         assertTrue(
             expression.contains("click") || expression.contains("driver.click"),

@@ -6,9 +6,9 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ExperimentalApi
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.serialize.json.Pson
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
@@ -25,8 +25,6 @@ open class TextToAction(
     val conf: ImmutableConfig
 ) {
     private val logger = getLogger(this)
-
-    private val promptBuilder = PromptBuilder()
 
     val baseDir = AppPaths.get("tta")
 
@@ -63,14 +61,9 @@ open class TextToAction(
         try {
             return generateWithToolCallSpecs(instruction, browserUseState, screenshotB64, 1)
         } catch (e: Exception) {
-            val errorResponse = ModelResponse(
-                """
-                suspend fun llmGeneratedFunction(driver: WebDriver) {
-                    // Error occurred during optimization: ${e.message}
-                }
-            """.trimIndent(), ResponseState.OTHER
+            val errorResponse = ModelResponse("Unknown exception" + e.brief(), ResponseState.OTHER
             )
-            return ActionDescription(emptyList(), errorResponse, null, null)
+            return ActionDescription(errorResponse)
         }
     }
 
@@ -102,35 +95,6 @@ open class TextToAction(
         return modelResponseToActionDescription(response, browserUseState)
     }
 
-    fun buildBrowserUseStatePrompt(params: ObserveParams, toolCallLimit: Int = 100): String {
-        val observeMessage = promptBuilder.buildObserveUserMessage(params).content
-
-        val prompt = """
-每次最多调用 $toolCallLimit 个工具。
-
-$observeMessage
-
-如果总体目标已经达成，则严格按如下格式输出 JSON 信息：
-
-{
-  "isComplete": true,
-  "summary": string,
-  "suggestions": [string]
-}
-
-"""
-
-        return prompt
-    }
-
-    fun buildOperatorSystemPrompt(overallGoal: String): String {
-        return """
-$TTA_AGENT_SYSTEM_PROMPT
-
-总体目标：$overallGoal
-        """.trimIndent()
-    }
-
     protected fun modelResponseToActionDescription(response: ModelResponse, browserUseState: BrowserUseState): ActionDescription {
         val content = response.content
         // Try new JSON formats first
@@ -149,7 +113,7 @@ $TTA_AGENT_SYSTEM_PROMPT
                     } else emptyList()
 
                     return ActionDescription(
-                        expressions = emptyList(),
+                        cssFriendlyExpressions = emptyList(),
                         modelResponse = response,
                         isComplete = isComplete,
                         summary = summary,
@@ -184,20 +148,7 @@ $TTA_AGENT_SYSTEM_PROMPT
                                 }
                             }
 
-                            val tc = ToolCall("driver", method, argsMap)
-
-                            val locator = browserUseState.domState.getAbsoluteFBNLocator(locator)
-                            val node = if (locator != null) browserUseState.domState.locatorMap[locator] else null
-
-                            return ActionDescription(
-                                expressions = listOfNotNull(toolCallToDriverLine(tc)).take(1),
-                                modelResponse = response,
-                                toolCall = tc,
-                                locator = locator?.absoluteSelector,
-                                xpath = node?.xpath,
-                                node = node,
-                                selectedElement = null
-                            )
+                            return createActionDescription(response, method, argsMap, locator, browserUseState)
                         }
                     }
                 }
@@ -209,7 +160,37 @@ $TTA_AGENT_SYSTEM_PROMPT
         // Fallback: plain driver.* expressions
         val expressions = content.split("\n").map { it.trim() }
             .filter { it.startsWith("driver.") && it.contains("(") }
-        return ActionDescription(expressions, response)
+        return ActionDescription(response, expressions = expressions)
+    }
+
+    private fun createActionDescription(
+        response: ModelResponse,
+        method: String,
+        argsMap: Map<String, Any?>,
+        locator: String?,
+        browserUseState: BrowserUseState
+    ): ActionDescription {
+        val toolCall = ToolCall("driver", method, argsMap)
+
+        val fbnLocator = browserUseState.domState.getAbsoluteFBNLocator(locator)
+        val node = if (fbnLocator != null) browserUseState.domState.locatorMap[fbnLocator] else null
+        val cssSelector = node?.cssSelector()
+        // CSS friendly expression
+        val expression = ToolCallExecutor.toolCallToExpression(toolCall)
+        val cssFriendlyExpression = if (locator != null && cssSelector != null) {
+            expression?.replace(locator, cssSelector)
+        } else null
+
+        return ActionDescription(
+            modelResponse = response,
+            toolCall = toolCall,
+            locator = fbnLocator?.absoluteSelector,
+            xpath = node?.xpath,
+            cssSelector = cssSelector,
+            cssFriendlyExpressions = listOfNotNull(cssFriendlyExpression),
+            expressions = listOfNotNull(expression),
+            node = node
+        )
     }
 
     private fun jsonElementToKotlin(e: JsonElement): Any? = when {
@@ -233,8 +214,6 @@ $TTA_AGENT_SYSTEM_PROMPT
         e.isJsonObject -> e.asJsonObject.entrySet().associate { it.key to jsonElementToKotlin(it.value) }
         else -> null
     }
-
-    internal fun toolCallToDriverLine(tc: ToolCall): String? = ToolCallExecutor.toolCallToExpression(tc)
 
     companion object {
 
@@ -282,5 +261,35 @@ ${ToolCallExecutor.TOOL_CALL_LIST}
         """.trimIndent()
 
         val TTA_AGENT_SYSTEM_PROMPT_PREFIX_20 = TTA_AGENT_SYSTEM_PROMPT.take(20)
+
+        fun buildBrowserUseStatePrompt(params: ObserveParams, toolCallLimit: Int = 100): String {
+            val observeMessage = PromptBuilder().buildObserveUserMessage(params).content
+
+            val prompt = """
+每次最多调用 $toolCallLimit 个工具。
+
+$observeMessage
+
+如果总体目标已经达成，则严格按如下格式输出 JSON 信息：
+
+{
+  "isComplete": true,
+  "summary": string,
+  "suggestions": [string]
+}
+
+"""
+
+            return prompt
+        }
+
+        fun buildOperatorSystemPrompt(overallGoal: String): String {
+            return """
+$TTA_AGENT_SYSTEM_PROMPT
+
+总体目标：$overallGoal
+        """.trimIndent()
+        }
+
     }
 }

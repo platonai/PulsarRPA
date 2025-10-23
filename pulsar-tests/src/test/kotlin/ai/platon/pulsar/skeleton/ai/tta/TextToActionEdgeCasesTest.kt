@@ -30,8 +30,8 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate("", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        printlnPro("Empty command generated: ${actionDescription.expressions}")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        printlnPro("Empty command generated: ${actionDescription.cssFriendlyExpressions}")
     }
 
     @Test
@@ -42,8 +42,8 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate("   ", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        printlnPro("Blank command generated: ${actionDescription.expressions}")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        printlnPro("Blank command generated: ${actionDescription.cssFriendlyExpressions}")
     }
 
     @Test
@@ -55,8 +55,8 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate(longCommand, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        printlnPro("Long command generated: ${actionDescription.expressions}")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        printlnPro("Long command generated: ${actionDescription.cssFriendlyExpressions}")
     }
 
     // ===== Tests for special characters and encoding =====
@@ -70,8 +70,8 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate(specialCommand, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        printlnPro("Special characters command generated: ${actionDescription.expressions}")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        printlnPro("Special characters command generated: ${actionDescription.cssFriendlyExpressions}")
     }
 
     @Test
@@ -83,8 +83,8 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate(unicodeCommand, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        printlnPro("Unicode command generated: ${actionDescription.expressions}")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        printlnPro("Unicode command generated: ${actionDescription.cssFriendlyExpressions}")
     }
 
     @Test
@@ -96,8 +96,8 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate(quotedCommand, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        printlnPro("Quoted command generated: ${actionDescription.expressions}")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        printlnPro("Quoted command generated: ${actionDescription.cssFriendlyExpressions}")
     }
 
     // ===== Tests for impossible requests =====
@@ -111,8 +111,8 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate(impossibleCommand, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        printlnPro("Impossible element request generated: ${actionDescription.expressions}")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        printlnPro("Impossible element request generated: ${actionDescription.cssFriendlyExpressions}")
     }
 
     @Test
@@ -124,8 +124,8 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate(impossibleCommand, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        printlnPro("Impossible action request generated: ${actionDescription.expressions}")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        printlnPro("Impossible action request generated: ${actionDescription.cssFriendlyExpressions}")
     }
 
     // ===== Tests for contradictory requests =====
@@ -139,8 +139,8 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate(contradictoryCommand, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        printlnPro("Contradictory command generated: ${actionDescription.expressions}")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        printlnPro("Contradictory command generated: ${actionDescription.cssFriendlyExpressions}")
     }
 
     // ===== Tests for ambiguous requests =====
@@ -162,8 +162,8 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-            printlnPro("Vague command '$command' generated: ${actionDescription.expressions}")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+            printlnPro("Vague command '$command' generated: ${actionDescription.cssFriendlyExpressions}")
         }
     }
 
@@ -182,8 +182,8 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-            printlnPro("Ambiguous command '$command' generated: ${actionDescription.expressions}")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+            printlnPro("Ambiguous command '$command' generated: ${actionDescription.cssFriendlyExpressions}")
         }
     }
 
@@ -196,8 +196,8 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate("点击按钮", driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        printlnPro("No elements page generated: ${actionDescription.expressions}")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        printlnPro("No elements page generated: ${actionDescription.cssFriendlyExpressions}")
     }
 
     // ===== Tests for malformed commands =====
@@ -218,8 +218,8 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-            printlnPro("Malformed command '$command' generated: ${actionDescription.expressions}")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+            printlnPro("Malformed command '$command' generated: ${actionDescription.cssFriendlyExpressions}")
         }
     }
 
@@ -241,8 +241,8 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-            printlnPro("Specific command '$command' generated: ${actionDescription.expressions}")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+            printlnPro("Specific command '$command' generated: ${actionDescription.cssFriendlyExpressions}")
         }
     }
 
@@ -265,10 +265,10 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         // All results should be valid
         results.forEach { result ->
             assertNotNull(result)
-            assertTrue(result.expressions.size <= 1, "Each rapid call should generate at most one action")
+            assertTrue(result.cssFriendlyExpressions.size <= 1, "Each rapid call should generate at most one action")
         }
 
-        printlnPro("Rapid calls generated consistent results: ${results.map { it.expressions }}")
+        printlnPro("Rapid calls generated consistent results: ${results.map { it.cssFriendlyExpressions }}")
     }
 
     // ===== Tests for mixed language commands =====
@@ -289,8 +289,8 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-            printlnPro("Mixed language command '$command' generated: ${actionDescription.expressions}")
+            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+            printlnPro("Mixed language command '$command' generated: ${actionDescription.cssFriendlyExpressions}")
         }
     }
 
@@ -307,8 +307,8 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        printlnPro("Long text command generated: ${actionDescription.expressions}")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        printlnPro("Long text command generated: ${actionDescription.cssFriendlyExpressions}")
     }
 
     // ===== Tests for selectedElement field validation =====
@@ -321,14 +321,6 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         val actionDescription = textToAction.generate("点击搜索按钮", driver)
 
         assertNotNull(actionDescription)
-
-        if (actionDescription.selectedElement != null) {
-            val element = actionDescription.selectedElement!!
-            assertTrue(element.id.isNotBlank() || element.selector.isNotBlank(),
-                      "Selected element should have id or selector")
-            assertTrue(element.tagName.isNotBlank(), "Selected element should have tag name")
-            printlnPro("Selected element validation passed: ${element.tagName} with selector ${element.selector}")
-        }
     }
 
     // ===== Tests for model response validation =====

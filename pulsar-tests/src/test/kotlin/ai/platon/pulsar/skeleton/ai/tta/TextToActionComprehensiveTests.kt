@@ -33,9 +33,9 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
 
-        val expression = actionDescription.expressions.first()
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Command: $command -> Generated action: $expression")
         assertTrue(expression.contains("fill") || expression.contains("type"), "Should generate fill action")
         assertTrue(expression.contains("name") || expression.contains("#name"), "Should target the name input field")
@@ -50,9 +50,9 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
 
-        val expression = actionDescription.expressions.first()
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Command: $command -> Generated action: $expression")
         assertTrue(expression.contains("click") || expression.contains("select"), "Should generate selection action")
         assertTrue(expression.contains("colorSelect") || expression.contains("#colorSelect"), "Should target the color select")
@@ -67,9 +67,9 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
 
-        val expression = actionDescription.expressions.first()
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Command: $command -> Generated action: $expression")
         assertTrue(expression.contains("click"), "Should generate click action")
         assertTrue(expression.contains("button") || expression.contains("Add"), "Should target button element")
@@ -84,9 +84,9 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
 
-        val expression = actionDescription.expressions.first()
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Command: $command -> Generated action: $expression")
         assertTrue(expression.contains("click"), "Should generate click action")
         assertTrue(expression.contains("toggle") || expression.contains("Toggle"), "Should target toggle button")
@@ -101,9 +101,9 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
 
-        val expression = actionDescription.expressions.first()
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Command: $command -> Generated action: $expression")
         // Should handle the complex instruction somehow
         assertTrue(expression.contains("fill") || expression.contains("type") || expression.contains("click"),
@@ -121,8 +121,8 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Command: $command -> Generated action: $expression")
         assertTrue(expression.contains("fill") || expression.contains("type"), "Should generate fill action")
         assertTrue(expression.contains("nameInput") || expression.contains("#nameInput"), "Should target name input")
@@ -137,8 +137,8 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Command: $command -> Generated action: $expression")
         assertTrue(expression.contains("click") || expression.contains("select"), "Should generate selection action")
         assertTrue(expression.contains("languageSelect") || expression.contains("#languageSelect"), "Should target language select")
@@ -153,8 +153,8 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Command: $command -> Generated action: $expression")
         assertTrue(expression.contains("check") || expression.contains("click"), "Should generate check or click action")
         assertTrue(expression.contains("subscribeToggle") || expression.contains("#subscribeToggle"), "Should target subscribe checkbox")
@@ -169,8 +169,8 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Command: $command -> Generated action: $expression")
         assertTrue(expression.contains("click"), "Should generate click action")
         assertTrue(expression.contains("showSummary") || expression.contains("button"), "Should target summary button")
@@ -185,8 +185,8 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Command: $command -> Generated action: $expression")
         // Slider interaction might be handled differently
         assertTrue(expression.contains("click") || expression.contains("fill") || expression.contains("evaluate"),
@@ -204,12 +204,12 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Command: $command -> Generated action: $expression")
         assertTrue(expression.contains("click"), "Should generate click action")
         // Should disambiguate and select the user section save button
-        printlnPro("Selected element: ${actionDescription.selectedElement}")
+
     }
 
     @Test
@@ -221,12 +221,12 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Command: $command -> Generated action: $expression")
         assertTrue(expression.contains("click"), "Should generate click action")
         // Should disambiguate and select the product section save button
-        printlnPro("Selected element: ${actionDescription.selectedElement}")
+
     }
 
     @Test
@@ -238,12 +238,12 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Command: $command -> Generated action: $expression")
         assertTrue(expression.contains("click"), "Should generate click action")
         // Should use position context to select the top-right menu button
-        printlnPro("Selected element: ${actionDescription.selectedElement}")
+
     }
 
     @Test
@@ -255,12 +255,12 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Command: $command -> Generated action: $expression")
         assertTrue(expression.contains("fill") || expression.contains("type"), "Should generate fill action")
         // Should disambiguate between billing and shipping forms
-        printlnPro("Selected element: ${actionDescription.selectedElement}")
+
     }
 
     @Test
@@ -272,12 +272,12 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Command: $command -> Generated action: $expression")
         assertTrue(expression.contains("fill") || expression.contains("type"), "Should generate fill action")
         // Should select the product search field among multiple search fields
-        printlnPro("Selected element: ${actionDescription.selectedElement}")
+
     }
 
     // ======== COMPLEX SCENARIO TESTS ========
@@ -291,10 +291,10 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
 
         // Should handle the complex instruction in some way (might pick the most important action)
-        printlnPro("Complex command: $command -> Generated: ${actionDescription.expressions}")
+        printlnPro("Complex command: $command -> Generated: ${actionDescription.cssFriendlyExpressions}")
         printlnPro("Model response: ${actionDescription.modelResponse.content}")
     }
 
@@ -307,12 +307,12 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Ambiguous command: $command -> Generated action: $expression")
         assertTrue(expression.contains("click"), "Should generate click action")
         // Should select one of the edit buttons based on some logic
-        printlnPro("Selected element: ${actionDescription.selectedElement}")
+
     }
 
     @Test
@@ -324,10 +324,10 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
 
         // Should handle non-existent elements gracefully
-        printlnPro("Non-existent element command: $command -> Generated: ${actionDescription.expressions}")
+        printlnPro("Non-existent element command: $command -> Generated: ${actionDescription.cssFriendlyExpressions}")
         printlnPro("Model response: ${actionDescription.modelResponse.content}")
     }
 
@@ -349,8 +349,8 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("English command: $command -> Generated action: $expression")
         }
     }
@@ -371,8 +371,8 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Mixed language command: $command -> Generated action: $expression")
         }
     }
@@ -388,9 +388,9 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
 
-        printlnPro("Empty command -> Generated: ${actionDescription.expressions}")
+        printlnPro("Empty command -> Generated: ${actionDescription.cssFriendlyExpressions}")
         printlnPro("Model response: ${actionDescription.modelResponse.content}")
     }
 
@@ -403,9 +403,9 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
 
-        printlnPro("Very long command -> Generated: ${actionDescription.expressions}")
+        printlnPro("Very long command -> Generated: ${actionDescription.cssFriendlyExpressions}")
         printlnPro("Model response length: ${actionDescription.modelResponse.content.length}")
     }
 
@@ -425,8 +425,8 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         val actionDescription = textToAction.generate(command, driver)
 
         assertNotNull(actionDescription)
-        assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-        val expression = actionDescription.expressions.first()
+        assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+        val expression = actionDescription.cssFriendlyExpressions.first()
         printlnPro("Special characters command: $command -> Generated action: $expression")
         }
     }

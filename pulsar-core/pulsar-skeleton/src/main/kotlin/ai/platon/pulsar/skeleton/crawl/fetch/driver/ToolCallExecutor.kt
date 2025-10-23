@@ -1,7 +1,6 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
-@Deprecated("Use ai.platon.pulsar.skeleton.ai.support.ToolCall instead", ReplaceWith("ai.platon.pulsar.skeleton.ai.support.ToolCall"))
-typealias ToolCall = ai.platon.pulsar.skeleton.ai.support.ToolCall
+import ai.platon.pulsar.skeleton.ai.support.ToolCall
 
 /**
  * Executes WebDriver commands provided as string expressions.
