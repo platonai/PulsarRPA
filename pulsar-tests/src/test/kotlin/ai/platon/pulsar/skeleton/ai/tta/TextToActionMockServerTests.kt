@@ -33,9 +33,9 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("click") || action.contains("driver.click"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("click") || expression.contains("driver.click"),
                       "Should generate click-related action")
     }
 
@@ -48,10 +48,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("fill") || action.contains("driver.fill") ||
-                      action.contains("type") || action.contains("driver.type"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("fill") || expression.contains("driver.fill") ||
+                      expression.contains("type") || expression.contains("driver.type"),
                       "Should generate fill-related action")
     }
 
@@ -64,10 +64,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("select") || action.contains("driver.select") ||
-                      action.contains("click") || action.contains("driver.click"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("select") || expression.contains("driver.select") ||
+                      expression.contains("click") || expression.contains("driver.click"),
                       "Should generate select-related action")
     }
 
@@ -80,9 +80,9 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("click") || action.contains("driver.click"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("click") || expression.contains("driver.click"),
                       "Should generate click action for toggle")
     }
 
@@ -97,10 +97,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("fill") || action.contains("driver.fill") ||
-                      action.contains("type") || action.contains("driver.type"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("fill") || expression.contains("driver.fill") ||
+                      expression.contains("type") || expression.contains("driver.type"),
                       "Should generate fill-related action")
     }
 
@@ -113,10 +113,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("fill") || action.contains("driver.fill") ||
-                      action.contains("type") || action.contains("driver.type"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("fill") || expression.contains("driver.fill") ||
+                      expression.contains("type") || expression.contains("driver.type"),
                       "Should generate fill-related action for email")
     }
 
@@ -129,10 +129,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("fill") || action.contains("driver.fill") ||
-                      action.contains("click") || action.contains("driver.click"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("fill") || expression.contains("driver.fill") ||
+                      expression.contains("click") || expression.contains("driver.click"),
                       "Should generate action for slider interaction")
     }
 
@@ -145,9 +145,9 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("click") || action.contains("driver.click"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("click") || expression.contains("driver.click"),
                       "Should generate click action for toggle switch")
     }
 
@@ -162,9 +162,9 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("scroll") || action.contains("driver.scroll"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("scroll") || expression.contains("driver.scroll"),
                       "Should generate scroll-related action")
     }
 
@@ -177,10 +177,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("fill") || action.contains("driver.fill") ||
-                      action.contains("click") || action.contains("driver.click"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("fill") || expression.contains("driver.fill") ||
+                      expression.contains("click") || expression.contains("driver.click"),
                       "Should generate action for range input")
     }
 
@@ -195,9 +195,9 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("click") || action.contains("driver.click"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("click") || expression.contains("driver.click"),
                       "Should generate click action for dark mode toggle")
     }
 
@@ -210,10 +210,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("drag") || action.contains("driver.drag") ||
-                      action.contains("click") || action.contains("driver.click"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("drag") || expression.contains("driver.drag") ||
+                      expression.contains("click") || expression.contains("driver.click"),
                       "Should generate action for drag interaction")
     }
 
@@ -228,10 +228,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("fill") || action.contains("driver.fill") ||
-                      action.contains("type") || action.contains("driver.type"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("fill") || expression.contains("driver.fill") ||
+                      expression.contains("type") || expression.contains("driver.type"),
                       "Should generate fill-related action for password")
     }
 
@@ -244,10 +244,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("fill") || action.contains("driver.fill") ||
-                      action.contains("click") || action.contains("driver.click"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("fill") || expression.contains("driver.fill") ||
+                      expression.contains("click") || expression.contains("driver.click"),
                       "Should generate action for date selection")
     }
 
@@ -262,9 +262,9 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("waitFor") || action.contains("driver.waitFor"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("waitFor") || expression.contains("driver.waitFor"),
                       "Should generate wait-related action")
     }
 
@@ -279,9 +279,9 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("click") || action.contains("driver.click"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("click") || expression.contains("driver.click"),
                       "Should generate click action")
     }
 
@@ -296,9 +296,9 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("navigateTo") || action.contains("driver.navigateTo"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("navigateTo") || expression.contains("driver.navigateTo"),
                       "Should generate navigation-related action")
     }
 
@@ -314,9 +314,9 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Generated action: $action")
-            assertTrue(action.contains("back") || action.contains("driver.back"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Generated action: $expression")
+            assertTrue(expression.contains("back") || expression.contains("driver.back"),
                       "Should generate back navigation action")
     }
 
@@ -361,9 +361,9 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("English prompt generated: $action")
-            assertTrue(action.contains("click") || action.contains("driver.click"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("English prompt generated: $expression")
+            assertTrue(expression.contains("click") || expression.contains("driver.click"),
                       "Should generate click action for English prompt")
     }
 
@@ -376,10 +376,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("English form fill generated: $action")
-            assertTrue(action.contains("fill") || action.contains("driver.fill") ||
-                      action.contains("type") || action.contains("driver.type"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("English form fill generated: $expression")
+            assertTrue(expression.contains("fill") || expression.contains("driver.fill") ||
+                      expression.contains("type") || expression.contains("driver.type"),
                       "Should generate fill action for English prompt")
     }
 
@@ -394,10 +394,10 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Complex form submission generated: $action")
-            assertTrue(action.contains("click") || action.contains("driver.click") ||
-                      action.contains("submit") || action.contains("driver.submit"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Complex form submission generated: $expression")
+            assertTrue(expression.contains("click") || expression.contains("driver.click") ||
+                      expression.contains("submit") || expression.contains("driver.submit"),
                       "Should generate submission-related action")
     }
 
@@ -410,9 +410,9 @@ class TextToActionMockServerTests : TextToActionTestBase() {
 
         assertNotNull(actionDescription)
         assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command")
-            val action = actionDescription.expressions.first()
-            printlnPro("Dynamic element interaction generated: $action")
-            assertTrue(action.contains("click") || action.contains("driver.click"),
+            val expression = actionDescription.expressions.first()
+            printlnPro("Dynamic element interaction generated: $expression")
+            assertTrue(expression.contains("click") || expression.contains("driver.click"),
                       "Should generate click action for dynamic element")
     }
 }

@@ -50,8 +50,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
             // Should handle complex instructions in some way
 
-                val action = actionDescription.expressions.first()
-                assertTrue(action.isNotBlank(), "Should generate non-empty action")
+                val expression = actionDescription.expressions.first()
+                assertTrue(expression.isNotBlank(), "Should generate non-empty action")
         }
     }
 
@@ -78,8 +78,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
             // Should handle conditional logic
 
-                val action = actionDescription.expressions.first()
-                assertTrue(action.isNotBlank(), "Should generate non-empty action")
+                val expression = actionDescription.expressions.first()
+                assertTrue(expression.isNotBlank(), "Should generate non-empty action")
         }
     }
 
@@ -107,8 +107,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             printlnPro("Context-aware command: $command (expected: $expectedContext)")
             printlnPro("Generated action: ${actionDescription.expressions}")
             printlnPro("Selected element: ${actionDescription.selectedElement}")
-                val action = actionDescription.expressions.first()
-                assertTrue(action.isNotBlank(), "Should generate non-empty action")
+                val expression = actionDescription.expressions.first()
+                assertTrue(expression.isNotBlank(), "Should generate non-empty action")
         }
     }
 
@@ -134,8 +134,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             printlnPro("Spatial command: $command (expected: $expectedPosition)")
             printlnPro("Generated action: ${actionDescription.expressions}")
             printlnPro("Selected element: ${actionDescription.selectedElement}")
-                val action = actionDescription.expressions.first()
-                assertTrue(action.isNotBlank(), "Should generate non-empty action")
+                val expression = actionDescription.expressions.first()
+                assertTrue(expression.isNotBlank(), "Should generate non-empty action")
         }
     }
 
@@ -195,8 +195,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
             // Should handle contradictions in some way
 
-                val action = actionDescription.expressions.first()
-                assertTrue(action.isNotBlank(), "Should generate non-empty action")
+                val expression = actionDescription.expressions.first()
+                assertTrue(expression.isNotBlank(), "Should generate non-empty action")
         }
     }
 
@@ -253,8 +253,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
             // Should handle Unicode characters
 
-                val action = actionDescription.expressions.first()
-                assertTrue(action.isNotBlank(), "Should generate non-empty action")
+                val expression = actionDescription.expressions.first()
+                assertTrue(expression.isNotBlank(), "Should generate non-empty action")
         }
     }
 
@@ -280,8 +280,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
             printlnPro("$language command: $command")
             printlnPro("Generated action: ${actionDescription.expressions}")
-                val action = actionDescription.expressions.first()
-                assertTrue(action.isNotBlank(), "Should generate non-empty action")
+                val expression = actionDescription.expressions.first()
+                assertTrue(expression.isNotBlank(), "Should generate non-empty action")
         }
     }
 
@@ -335,8 +335,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
             printlnPro("Timing command: $command")
             printlnPro("Generated action: ${actionDescription.expressions}")
-                val action = actionDescription.expressions.first()
-                assertTrue(action.isNotBlank(), "Should generate non-empty action")
+                val expression = actionDescription.expressions.first()
+                assertTrue(expression.isNotBlank(), "Should generate non-empty action")
         }
     }
 
@@ -362,8 +362,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
             printlnPro("Validation command: $command (type: $expectedType)")
             printlnPro("Generated action: ${actionDescription.expressions}")
-                val action = actionDescription.expressions.first()
-                assertTrue(action.isNotBlank(), "Should generate non-empty action")
+                val expression = actionDescription.expressions.first()
+                assertTrue(expression.isNotBlank(), "Should generate non-empty action")
         }
     }
 
