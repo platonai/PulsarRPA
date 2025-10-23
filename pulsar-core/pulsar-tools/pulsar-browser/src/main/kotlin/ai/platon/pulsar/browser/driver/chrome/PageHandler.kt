@@ -336,7 +336,14 @@ class PageHandler(
         val locator = Locator.parse(selector) ?: return null
         return when (locator.type) {
             Locator.Type.CSS_PATH -> querySelectorOrNull(selector)
-            Locator.Type.BACKEND_NODE_ID -> resolveBackendNodeId(locator.selector.toInt())
+            Locator.Type.BACKEND_NODE_ID -> {
+                val backendNodeId = locator.selector.toIntOrNull()
+                if (backendNodeId == null) {
+                    logger.warn("Invalid backend node ID format: '{}'", selector)
+                    return null
+                }
+                resolveBackendNodeId(backendNodeId)
+            }
             Locator.Type.FRAME_BACKEND_NODE_ID -> resolveBackendNodeId(Strings.findLastInteger(selector))
             else -> throw UnsupportedOperationException("Unsupported selector $selector")
         }

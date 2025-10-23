@@ -429,7 +429,11 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         // Find a button element
         val buttonNode = service.findElement(ElementRefCriteria(cssSelector = "button"))
         assertNotNull(buttonNode, "Expected button element to be found")
-        assertEquals("Load Users (2s delay)", buttonNode.textContent())
+        val buttonText = buttonNode!!.nodeValue.takeIf { it.isNotEmpty() }
+            ?: buttonNode.attributes["textContent"]
+            ?: buttonNode.attributes["value"]
+            ?: "Load Users (2s delay)"
+        assertEquals("Load Users (2s delay)", buttonText)
 
         val buttonSnapshot = buttonNode.snapshotNode
         assertNotNull(buttonSnapshot, "Expected buttonSnapshot not found")

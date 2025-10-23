@@ -6,6 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.FBNLocator
 import ai.platon.pulsar.browser.driver.chrome.dom.LocatorMap
 import ai.platon.pulsar.common.math.roundTo
 import com.fasterxml.jackson.annotation.JsonIgnore
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.apache.commons.lang3.StringUtils
 import java.awt.Dimension
 import java.math.RoundingMode
@@ -321,6 +322,7 @@ data class CleanedDOMTreeNode(
     val clientRects: CompactRect?,
     val scrollRects: CompactRect?,
     val absoluteBounds: CompactRect? = null,
+    @JsonIgnore
     val paintOrder: Int? = null,
     val stackingContexts: Int? = null,
     val contentDocument: CleanedDOMTreeNode?

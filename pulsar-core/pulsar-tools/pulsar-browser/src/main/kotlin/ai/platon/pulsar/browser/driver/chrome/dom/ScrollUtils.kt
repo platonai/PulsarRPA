@@ -33,6 +33,17 @@ object ScrollUtils {
         val hasScrollOverflow = listOfNotNull(overflow, overflowX, overflowY)
             .any { it == "scroll" || it == "auto" }
 
+        // Check if ALL overflow properties are explicitly hidden - if so, element is not scrollable
+        // REVIEW CHANGE: Only reject if ALL overflow properties are hidden, allowing mixed cases
+        // like "overflow-x: auto" + "overflow-y: hidden" to still be scrollable
+        val overflowProperties = listOfNotNull(overflow, overflowX, overflowY)
+        val allHidden = overflowProperties.isNotEmpty() && overflowProperties.all { it == "hidden" }
+
+        // If ALL overflow properties are hidden, element cannot be scrollable
+        if (allHidden) {
+            return false
+        }
+
         // Get rects
         val clientRect = snapshot.clientRects
         val scrollRect = snapshot.scrollRects
