@@ -1,12 +1,14 @@
 package ai.platon.pulsar.browser.driver.chrome.dom.model
 
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
+import ai.platon.pulsar.browser.driver.chrome.dom.FBNLocator
 import ai.platon.pulsar.browser.driver.chrome.dom.LocatorMap
 import ai.platon.pulsar.common.math.roundTo
 import com.fasterxml.jackson.annotation.JsonIgnore
+import org.apache.commons.lang3.StringUtils
 import java.awt.Dimension
 import java.math.RoundingMode
-import java.util.Locale
+import java.util.*
 
 /**
  * DOM node types based on the DOM specification.
@@ -409,6 +411,21 @@ data class DOMState(
 
     @get:JsonIgnore
     val interactiveNodesLazyJson: String by lazy { DOMSerializer.toJson(interactiveNodes) }
+
+    fun getAbsoluteFBNLocator(locator: String?): FBNLocator? {
+        if (locator == null) return null
+
+        val fbnLocator = FBNLocator.parseRelaxed(locator) ?: return null
+        if (fbnLocator.isAbsolute) {
+            return fbnLocator
+        }
+
+        require(StringUtils.isNumeric(fbnLocator.frameId))
+        val index = fbnLocator.frameId.toIntOrNull() ?: return null
+        val absoluteFrameId = frameIds.getOrNull(index) ?: return null
+
+        return FBNLocator(absoluteFrameId, fbnLocator.backendNodeId)
+    }
 }
 
 data class ClientInfo(

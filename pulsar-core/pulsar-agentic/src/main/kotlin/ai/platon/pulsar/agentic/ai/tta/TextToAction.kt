@@ -3,7 +3,6 @@ package ai.platon.pulsar.agentic.ai.tta
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
-import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ExperimentalApi
@@ -18,7 +17,6 @@ import ai.platon.pulsar.skeleton.ai.support.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.google.gson.JsonElement
-import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import java.nio.file.Files
 
@@ -100,7 +98,7 @@ open class TextToAction(
     ): ActionDescription {
         val response = generateResponse(instruction, browserUseState, screenshotB64, toolCallLimit)
 
-        return modelResponseToActionDescription(response, toolCallLimit)
+        return modelResponseToActionDescription(response, browserUseState)
     }
 
     fun buildBrowserUseStatePrompt(params: ObserveParams, toolCallLimit: Int = 100): String {
@@ -132,7 +130,7 @@ $TTA_AGENT_SYSTEM_PROMPT
         """.trimIndent()
     }
 
-    protected fun modelResponseToActionDescription(response: ModelResponse, toolCallLimit: Int = 1): ActionDescription {
+    protected fun modelResponseToActionDescription(response: ModelResponse, browserUseState: BrowserUseState): ActionDescription {
         val content = response.content
         // Try new JSON formats first
         try {

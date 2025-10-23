@@ -423,17 +423,9 @@ class BrowserPerceptiveAgent(
                 inference.observe(params)
             }
             val results = internalResults.elements.map { ele ->
-                // Multi selectors are supported: `cssPath`, `xpath:`, `backend:`, `node:`, `hash:`, `fbn`, `index`
-//                var selector = ele.locator?.trim() ?: return@map ObserveResult(description = "No selector observation")
-//                if (selector.matches("\\d+,\\d+".toRegex())) {
-//                    selector = "fbn:$selector"
-//                }
-//
-//                val backendNodeId = selector.substringAfterLast(",").toIntOrNull()
-//                val locator = Locator.parse(selector)
-                val locator = FBNLocator.parseRelaxed(ele.locator)
-                requireNotNull(locator)
-                val node = browserUseState.domState.locatorMap[locator]
+                requireNotNull(ele.locator)
+                val locator = browserUseState.domState.getAbsoluteFBNLocator(ele.locator)
+                val node = if (locator != null) browserUseState.domState.locatorMap[locator] else null
                 if (node == null) {
                     logger.warn("Failed retrieving backend node | {} | {}", locator, Pson.toJson(ele))
                 }
@@ -442,7 +434,7 @@ class BrowserPerceptiveAgent(
                 ObserveResult(
                     description = ele.description ?: "(No comment ...)",
                     locator = xpathLocator.trim(),
-                    backendNodeId = locator.backendNodeId,
+                    backendNodeId = locator?.backendNodeId,
                     method = ele.method?.ifBlank { null },
                     arguments = ele.arguments?.takeIf { it.isNotEmpty() }
                 )

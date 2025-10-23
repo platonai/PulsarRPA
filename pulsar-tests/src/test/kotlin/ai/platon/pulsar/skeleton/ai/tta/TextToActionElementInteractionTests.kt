@@ -40,7 +40,8 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             val action = actionDescription.expressions.first()
             printlnPro("Input command: $command -> Generated action: $action")
             assertTrue(action.contains("fill") || action.contains("type"), "Should generate fill action")
-            assertTrue(action.contains(expectedField), "Should target the name field")
+            // no selectors since 20251023, advanced locators are supported
+//            assertTrue(action.contains(expectedField), "Should target the name field")
         }
     }
 
@@ -67,8 +68,9 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             assertTrue(action.contains("fill") || action.contains("type"), "Should generate fill action")
 
             // Should target one of the number fields
-            val targetsCorrectField = possibleFields.any { field -> action.contains(field) }
-            assertTrue(targetsCorrectField, "Should target one of: $possibleFields")
+            // no selectors since 20251023, advanced locators are supported
+//            val targetsCorrectField = possibleFields.any { field -> action.contains(field) }
+//            assertTrue(targetsCorrectField, "Should target one of: $possibleFields")
         }
     }
 
@@ -91,10 +93,11 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-                val action = actionDescription.expressions.first()
-                printlnPro("Select command: $command -> Generated action: $action")
-                assertTrue(action.contains("click") || action.contains("select"), "Should generate selection action")
-                assertTrue(action.contains(expectedField), "Should target the select field")
+                val expression = actionDescription.expressions.first()
+                printlnPro("Select command: $command -> Generated action: $expression")
+                assertTrue(expression.contains("click") || expression.contains("select"), "Should generate selection action")
+                // no selectors since 20251023, advanced locators are supported
+                // assertTrue(expression.contains(expectedField), "Should target the select field")
         }
     }
 
@@ -144,7 +147,8 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
                 val action = actionDescription.expressions.first()
                 printlnPro("Button click command: $command -> Generated action: $action")
                 assertTrue(action.contains("click"), "Should generate click action")
-                assertTrue(action.contains("button") || action.contains(expectedContext), "Should target button element")
+            // no selectors since 20251023, advanced locators are supported
+//                assertTrue(action.contains("button") || action.contains(expectedContext), "Should target button element")
         }
     }
 
@@ -168,7 +172,8 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
                 val action = actionDescription.expressions.first()
                 printlnPro("Show summary command: $command -> Generated action: $action")
                 assertTrue(action.contains("click"), "Should generate click action")
-                assertTrue(action.contains(expectedContext) || action.contains("button"), "Should target summary button")
+            // no selectors since 20251023, advanced locators are supported
+//                assertTrue(action.contains(expectedContext) || action.contains("button"), "Should target summary button")
         }
     }
 
@@ -194,7 +199,8 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
                 val action = actionDescription.expressions.first()
                 printlnPro("Checkbox command: $command -> Generated action: $action")
                 assertTrue(action.contains(expectedAction) || action.contains("click"), "Should generate check or click action")
-                assertTrue(action.contains("subscribeToggle") || action.contains("checkbox"), "Should target subscribe checkbox")
+            // no selectors since 20251023, advanced locators are supported
+//                assertTrue(action.contains("subscribeToggle") || action.contains("checkbox"), "Should target subscribe checkbox")
         }
     }
 
@@ -221,7 +227,8 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
                 val action = actionDescription.expressions.first()
                 printlnPro("Uncheck command: $command -> Generated action: $action")
                 assertTrue(action.contains(expectedAction) || action.contains("click"), "Should generate uncheck or click action")
-                assertTrue(action.contains("subscribeToggle") || action.contains("checkbox"), "Should target subscribe checkbox")
+            // no selectors since 20251023, advanced locators are supported
+//                assertTrue(action.contains("subscribeToggle") || action.contains("checkbox"), "Should target subscribe checkbox")
         }
     }
 
@@ -249,7 +256,8 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
                 // Slider might be handled via click, fill, or JavaScript evaluation
                 assertTrue(action.contains("click") || action.contains("fill") || action.contains("evaluate"),
                           "Should generate interaction for slider")
-                assertTrue(action.contains(expectedField) || action.contains("slider"), "Should target text size slider")
+            // no selectors since 20251023, advanced locators are supported
+//                assertTrue(action.contains(expectedField) || action.contains("slider"), "Should target text size slider")
         }
     }
 
@@ -405,9 +413,9 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
 
             assertNotNull(actionDescription)
             assertEquals(1, actionDescription.expressions.size, "Should generate exactly one action for valid command: $command")
-                val action = actionDescription.expressions.first()
-                printlnPro("Ambiguous command: $command -> Generated action: $action")
-                assertTrue(action.contains("click") || action.contains("fill"), "Should generate some action")
+                val expression = actionDescription.expressions.first()
+                printlnPro("Ambiguous command: $command -> Generated action: $expression")
+                assertTrue(expression.contains("click") || expression.contains("fill"), "Should generate some action")
                 // Should select one of the available elements
                 printlnPro("Selected element: ${actionDescription.selectedElement}")
         }

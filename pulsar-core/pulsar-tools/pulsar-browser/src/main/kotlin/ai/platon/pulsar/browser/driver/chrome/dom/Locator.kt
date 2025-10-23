@@ -73,6 +73,10 @@ class FBNLocator(
 
     constructor(frameId: Int, backendNodeId: Int): this(frameId.toString(), backendNodeId)
 
+    val isRelative: Boolean get() = StringUtils.isNumeric(frameId)
+
+    val isAbsolute: Boolean get() = !isRelative
+
     companion object {
         const val SEPARATOR = ","
         const val PREFIX = "fbn:"
