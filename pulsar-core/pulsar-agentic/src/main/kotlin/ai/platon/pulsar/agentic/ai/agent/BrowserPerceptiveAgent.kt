@@ -313,6 +313,9 @@ class BrowserPerceptiveAgent(
     }
 
     private suspend fun doObserve(options: ObserveOptions): List<ObserveResult> {
+        // Returns:
+        // `options.instruction`
+        // OR: "Find elements that can be used for any future actions in the page."
         val instruction = promptBuilder.initObserveUserInstruction(options.instruction)
 
         val browserUseState = getBrowserUseState()

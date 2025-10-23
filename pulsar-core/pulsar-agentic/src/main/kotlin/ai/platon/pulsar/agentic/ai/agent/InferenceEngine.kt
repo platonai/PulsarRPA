@@ -228,7 +228,7 @@ class InferenceEngine(
     suspend fun observe(params: ObserveParams): InternalObserveResult {
         if (params.returnAction) {
             require(params.instruction.contains("click")) {
-                "If `returnAction` is true, the tool specification has to be included in `params.instruction`" }
+                "If `returnAction` is true, the tool specifications has to be included in `params.instruction`" }
         }
 
         // Build dynamic schema hint for the LLM (prompt-enforced)

@@ -18,6 +18,9 @@ class PromptBuilder(val locale: Locale = Locale.CHINESE) {
 
     val isCN = locale in listOf(Locale.CHINESE, Locale.SIMPLIFIED_CHINESE, Locale.TRADITIONAL_CHINESE)
 
+    /**
+     * 构建“用户自定义指令”提示片段（中/英），在提示中原样附带用户输入；为空则返回空字符串。
+     */
     fun buildUserInstructionsString(userProvidedInstructions: String?): String {
         if (userProvidedInstructions.isNullOrBlank()) return ""
 
@@ -43,6 +46,10 @@ $userProvidedInstructions
     }
 
     // extract
+    /**
+     * 抽取任务的系统提示：强调“满足即停、提取全部请求信息、逐字输出DOM文本”，
+     * 链接提取仅返回元素ID，并可追加用户自定义指令。返回 system 角色消息。
+     */
     fun buildExtractSystemPrompt(userProvidedInstructions: String? = null): SimpleMessage {
         val baseInstructionCN = """你正在代表用户提取内容。
 如果用户要求你提取“列表”信息或“全部”信息，
@@ -86,6 +93,9 @@ Print null or an empty string if no new information is found.
         return SimpleMessage(role = "system", content = content)
     }
 
+    /**
+     * 提供抽取任务的默认用户指令；未指定时提示从页面提取关键的结构化数据。
+     */
     fun initExtractUserInstruction(instruction: String? = null): String {
         if (instruction.isNullOrBlank()) {
             return if (isCN) {
@@ -98,6 +108,10 @@ Print null or an empty string if no new information is found.
         return instruction
     }
 
+    /**
+     * 生成抽取阶段的 DOM 内容片段：拼接页面 nanoTree JSON 与严格 JSON Schema 提示，
+     * 要求模型严格按 Schema 返回 JSON，不包含多余说明。
+     */
     fun buildExtractDomContent(domState: DOMState, params: ExtractParams): String {
         val json = domState.nanoTreeLazyJson
 
@@ -115,6 +129,9 @@ Print null or an empty string if no new information is found.
         }
     }
 
+    /**
+     * 构建抽取任务的用户消息：包含“指令”和“DOM 内容”两部分，合成 user 角色消息。
+     */
     fun buildExtractUserPrompt(instruction: String, domContent: String): SimpleMessage {
         val instructionLabel = if (isCN) "指令: " else "Instruction: "
         val domLabel = if (isCN) "DOM: " else "DOM: "
@@ -153,6 +170,9 @@ Strictly abide by the following criteria:
 Each chunk corresponds to one viewport-sized section of the page (the first chunk is the first screen).
 """.trimIndent()
 
+    /**
+     * 元数据评估系统提示：定义“满足即完成、否则仅在未满足且仍有分片时继续”的判定准则。返回 system 角色消息。
+     */
     fun buildMetadataSystemPrompt(): SimpleMessage {
         val content = if (isCN) metadataSystemPromptCN else metadataSystemPromptEN
         return SimpleMessage(
@@ -161,6 +181,9 @@ Each chunk corresponds to one viewport-sized section of the page (the first chun
         )
     }
 
+    /**
+     * 元数据评估用户消息：包含指令、提取结果（序列化为 JSON）、已处理/总分片计数，供完成度判定使用。
+     */
     fun buildMetadataPrompt(
         instruction: String,
         extractionResponse: Any,
@@ -189,6 +212,10 @@ chunksTotal: $chunksTotal
     }
 
     // observe
+    /**
+     * 观察任务的系统提示：说明将提供“观察指令 + 无障碍树”，要求返回匹配元素数组（否则空数组），
+     * 支持附加用户自定义指令。返回 system 角色消息。
+     */
     fun buildObserveSystemPrompt(userProvidedInstructions: String? = null): SimpleMessage {
         fun observeSystemPromptCN() = """
 你正在通过根据用户希望观察的页面内容来查找元素，帮助用户实现浏览器操作自动化。
@@ -216,6 +243,9 @@ Return an array of elements that match the instruction if they exist, otherwise 
         return SimpleMessage(role = "system", content = content)
     }
 
+    /**
+     * 观察任务默认用户指令：在未指定时，请全面返回可用于后续操作的交互元素（链接、按钮、导航等）。
+     */
     fun initObserveUserInstruction(instruction: String?): String {
         return when {
             !instruction.isNullOrBlank() -> instruction
@@ -233,12 +263,9 @@ Be comprehensive: if there are multiple elements that may be relevant for future
     }
 
     /**
-     * Build observe user message. The message includes:
-     * - an instruction
-     * - the accessibility tree
-     * - the current browser state
-     * - the response's schema requirement
-     * */
+     * 构建观察任务的用户消息：包含观察指令、无障碍树（及说明）、当前浏览器状态以及返回结果的 Schema 约束。
+     * 返回 user 角色消息。
+     */
     fun buildObserveUserMessage(params: ObserveParams): SimpleMessage {
         val instruction = params.instruction
         val browserStateJson = params.browserUseState.browserState.lazyJson
@@ -344,7 +371,8 @@ $schema
     }
 
     /**
-     * Builds the instruction for the observeAct method to find the most relevant element for an action
+     * 为 observeAct 生成工具使用提示：给定用户动作与可用工具列表，提醒按钮/链接在感知上相似，
+     * 若无相关动作返回空数组，且仅返回最相关的一个动作。
      */
     fun buildToolUsePrompt(
         action: String, toolCalls: List<String>, variables: Map<String, String>? = null
@@ -384,6 +412,10 @@ ONLY return one action. If multiple actions are relevant, return the most releva
         return instruction
     }
 
+    /**
+     * 生成“当前步骤规划”的用户消息：给出近期历史摘要，要求产出严格单步原子动作；
+     * 若已完成/无法推进，需返回包含 isComplete/summary/suggestions 的对象，并附总体目标。
+     */
     fun buildCurrentStepUserMessage(overallGoal: String, history: List<String>): String {
         val his = if (history.isNotEmpty()) {
             history.takeLast(min(8, history.size)).joinToString("\n")
