@@ -6,12 +6,15 @@ import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 
 /**
  * Edge case and boundary condition tests for TextToAction.generateWebDriverAction() method
  */
+@Tag("ExternalServiceTest")
+@Tag("TimeConsumingTest")
 @SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionEdgeCasesTest : TextToActionTestBase() {
 

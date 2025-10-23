@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 
@@ -11,6 +12,8 @@ import org.springframework.boot.test.context.SpringBootTest
  * Element-specific interaction tests for TextToAction.generateWebDriverAction() method
  * Focus on different HTML element types and interaction patterns
  */
+@Tag("ExternalServiceTest")
+@Tag("TimeConsumingTest")
 @SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionElementInteractionTests : TextToActionTestBase() {
 
