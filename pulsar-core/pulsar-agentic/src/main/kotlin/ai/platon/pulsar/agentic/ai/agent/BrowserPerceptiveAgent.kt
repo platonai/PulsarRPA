@@ -255,15 +255,13 @@ class BrowserPerceptiveAgent(
         return try {
             val browserUseState = getBrowserUseState()
 
-            val totalHeight = browserUseState.browserState.scrollState.totalHeight
-            val viewportHeight = browserUseState.browserState.scrollState.viewport.height
-            val chunkSeen = 1 + browserUseState.browserState.scrollState.scrollYRatio * viewportHeight
+            val scrollState = browserUseState.browserState.scrollState
             val params = ExtractParams(
                 instruction = instruction,
                 browserUseState = browserUseState,
                 schema = schemaJson,
-                chunksSeen = chunkSeen.roundToInt(),
-                chunksTotal = ceil(totalHeight / viewportHeight).roundToInt(),
+                chunksSeen = scrollState.chunksSeen,
+                chunksTotal = scrollState.chunksTotal,
                 requestId = requestId,
                 logInferenceToFile = config.enableStructuredLogging
             )

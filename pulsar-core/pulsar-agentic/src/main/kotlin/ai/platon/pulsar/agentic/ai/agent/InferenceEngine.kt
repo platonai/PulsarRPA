@@ -50,8 +50,8 @@ data class ExtractParams(
     val browserUseState: BrowserUseState,
     /** JSON Schema string describing the desired extraction output */
     val schema: String,
-    val chunksSeen: Int = 0,
-    val chunksTotal: Int = 0,
+    val chunksSeen: Int = 1,
+    val chunksTotal: Int = 1,
     val requestId: String = UUID.randomUUID().toString(),
     val userProvidedInstructions: String? = null,
     val logInferenceToFile: Boolean = false,
