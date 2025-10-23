@@ -7,6 +7,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.alwaysFalse
 import java.util.*
+import kotlin.math.min
 
 class PromptBuilder(val locale: Locale = Locale.CHINESE) {
 
@@ -381,5 +382,25 @@ ONLY return one action. If multiple actions are relevant, return the most releva
         }
 
         return instruction
+    }
+
+    fun buildCurrentStepUserMessage(overallGoal: String, history: List<String>): String {
+        val his = if (history.isNotEmpty()) {
+            history.takeLast(min(8, history.size)).joinToString("\n")
+        } else "(无)"
+
+        return """
+此前动作摘要：
+$his
+
+请基于当前页面截图、交互元素与历史动作，规划下一步（严格单步原子动作）。若任务已完成或无法推进，请输出：
+{
+  "isComplete": true,
+  "summary": string,
+  "suggestions": [string]
+}
+总体目标：$overallGoal
+
+		""".trimIndent()
     }
 }

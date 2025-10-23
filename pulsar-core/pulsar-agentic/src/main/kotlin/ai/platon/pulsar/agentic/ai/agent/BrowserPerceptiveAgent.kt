@@ -91,7 +91,16 @@ class BrowserPerceptiveAgent(
         val startTime = Instant.now()
         val sessionId = uuid.toString()
 
-        return resolveProblemWithRetry(action, sessionId, startTime)
+        // Overall timeout to prevent indefinite hangs for a full resolve session
+        return try {
+            withTimeout(config.resolveTimeoutMs) {
+                resolveProblemWithRetry(action, sessionId, startTime)
+            }
+        } catch (_: kotlinx.coroutines.TimeoutCancellationException) {
+            val msg = "Resolve timed out after ${config.resolveTimeoutMs}ms: ${action.action}"
+            addToHistory("resolve TIMEOUT: ${action.action}")
+            ActResult(success = false, message = msg, action = action.action)
+        }
     }
 
     override suspend fun act(action: String): ActResult {
@@ -109,7 +118,7 @@ class BrowserPerceptiveAgent(
             withTimeout(config.actTimeoutMs) {
                 doObserveAct(action)
             }
-        } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
+        } catch (_: kotlinx.coroutines.TimeoutCancellationException) {
             val msg = "Action timed out after ${config.actTimeoutMs}ms: ${action.action}"
             addToHistory("act TIMEOUT: ${action.action}")
             ActResult(success = false, message = msg, action = action.action)
@@ -135,9 +144,9 @@ class BrowserPerceptiveAgent(
 
         // Inject selector only when the action targets an element
         val selectorActions = ToolCallExecutor.SELECTOR_ACTIONS
-        val noSelectorActions = ToolCallExecutor.NO_SELECTOR_ACTIONS
+        // val noSelectorActions = ToolCallExecutor.NO_SELECTOR_ACTIONS // unused
 
-        val domain = "driver"
+        // val domain = "driver" // unused
         val lowerMethod = method
         val backendNodeId = observe.backendNodeId
         // backend selector is supported since 20251020
@@ -215,7 +224,7 @@ class BrowserPerceptiveAgent(
                     state = ResponseState.STOP
                 )
             )
-            val result = execute(actionDesc)
+            execute(actionDesc)
 
             val msg = "Action [$lowerMethod] executed on selector: $locator".trim()
             addToHistory("observe.act -> ${toolCall.name}")
@@ -536,21 +545,22 @@ class BrowserPerceptiveAgent(
                 lastError = e
                 logError("Transient error on attempt ${attempt + 1}", e, sessionId)
                 if (attempt < config.maxRetries) {
-                    val delay = calculateRetryDelay(attempt)
-                    delay(delay)
+                    val backoffMs = calculateRetryDelay(attempt)
+                    delay(backoffMs)
                 }
             } catch (e: PerceptiveAgentError.TimeoutError) {
                 lastError = e
                 logError("Timeout error on attempt ${attempt + 1}", e, sessionId)
                 if (attempt < config.maxRetries) {
-                    delay(config.baseRetryDelayMs)
+                    val baseBackoffMs = config.baseRetryDelayMs
+                    delay(baseBackoffMs)
                 }
             } catch (e: Exception) {
                 lastError = e
                 logError("Unexpected error on attempt ${attempt + 1}", e, sessionId)
                 if (shouldRetryError(e) && attempt < config.maxRetries) {
-                    val delay = calculateRetryDelay(attempt)
-                    delay(delay)
+                    val backoffMs = calculateRetryDelay(attempt)
+                    delay(backoffMs)
                 } else {
                     // Non-retryable error, exit loop
                     break
@@ -630,30 +640,30 @@ class BrowserPerceptiveAgent(
                 } else {
                     null
                 }
-                val userMsg = buildUserMessage(overallGoal, browserUseState)
+                val userMsg = promptBuilder.buildCurrentStepUserMessage(overallGoal, _history)
 
-                // instruction: agent guide + overall goal + last action summary
-                val instruction = buildExecutionMessage(systemMsg, userMsg, screenshotB64)
+                // currentStepMessage: agent general guide + overall goal + action history + overall goal again
+                val currentStepMessage = buildCurrentStepMessage(systemMsg, userMsg, screenshotB64)
                 // interactive elements are already appended to message
-                val stepActionResult = generateStepAction(instruction, stepContext, browserUseState, screenshotB64)
+                val stepAction = generateStepAction(currentStepMessage, stepContext, browserUseState, screenshotB64)
 
-                if (stepActionResult == null) {
+                if (stepAction == null) {
                     consecutiveNoOps++
                     val stop = handleConsecutiveNoOps(consecutiveNoOps, step, stepContext)
                     if (stop) break
                     continue
                 }
 
-                val response = stepActionResult.modelResponse
-                val parsed = parseOperatorResponse(response.content)
+                val response = stepAction.modelResponse
+                val toolCallResponse = parseStepActionResponse(response.content)
 
                 // Check for task completion
-                if (shouldTerminate(parsed)) {
-                    handleTaskCompletion(parsed, step, stepContext)
+                if (shouldTerminate(toolCallResponse)) {
+                    handleTaskCompletion(toolCallResponse, step, stepContext)
                     break
                 }
 
-                val toolCall = parsed.toolCalls.firstOrNull()
+                val toolCall = toolCallResponse.toolCalls.firstOrNull()
                 if (toolCall == null) {
                     consecutiveNoOps++
                     val stop = handleConsecutiveNoOps(consecutiveNoOps, step, stepContext)
@@ -665,7 +675,7 @@ class BrowserPerceptiveAgent(
                 consecutiveNoOps = 0
 
                 // Execute the tool call with enhanced error handling
-                val execSummary = doExecuteToolCall(stepActionResult, step, stepContext)
+                val execSummary = doExecuteToolCall(stepAction, step, stepContext)
 
                 if (execSummary != null) {
                     addToHistory("#$step $execSummary")
@@ -695,7 +705,6 @@ class BrowserPerceptiveAgent(
             val summary = generateFinalSummary(overallGoal, context)
             val ok = summary.state != ResponseState.OTHER
             return ActResult(success = ok, message = summary.content, action = overallGoal)
-
         } catch (e: Exception) {
             val executionTime = Duration.between(startTime, Instant.now())
             logStructured(
@@ -1002,8 +1011,8 @@ class BrowserPerceptiveAgent(
             return true
         }
 
-        val delay = calculateConsecutiveNoOpDelay(consecutiveNoOps)
-        delay(delay)
+        val delayMs = calculateConsecutiveNoOpDelay(consecutiveNoOps)
+        delay(delayMs)
         return false
     }
 
@@ -1042,13 +1051,7 @@ class BrowserPerceptiveAgent(
     private fun updatePerformanceMetrics(step: Int, stepStartTime: Instant, success: Boolean) {
         val stepTime = Duration.between(stepStartTime, Instant.now()).toMillis()
         stepExecutionTimes[step] = stepTime
-
-        // Update metrics (simplified for brevity)
-        if (success) {
-            // Update success metrics
-        } else {
-            // Update failure metrics
-        }
+        // metrics update deferred
     }
 
     /**
@@ -1136,7 +1139,7 @@ class BrowserPerceptiveAgent(
      * @param screenshotB64 Optional base64 PNG/JPEG screenshot; if non-null, only a marker line is appended
      * @return A multi-line String ready for the LLM as the text part of a multimodal request
      */
-    private fun buildExecutionMessage(systemPrompt: String, userMsg: String, screenshotB64: String?): String {
+    private fun buildCurrentStepMessage(systemPrompt: String, userMsg: String, screenshotB64: String?): String {
         return buildString {
             appendLine(systemPrompt)
             appendLine(userMsg)
@@ -1161,25 +1164,7 @@ class BrowserPerceptiveAgent(
         }
     }
 
-    private suspend fun buildUserMessage(goal: String, browserUseState: BrowserUseState): String {
-        val his = if (_history.isEmpty()) "(无)" else _history.takeLast(min(8, _history.size)).joinToString("\n")
-
-        return """
-此前动作摘要：
-$his
-
-请基于当前页面截图、交互元素与历史动作，规划下一步（严格单步原子动作）。若任务已完成或无法推进，请输出：
-{
-  "isComplete": true,
-  "summary": string,
-  "suggestions": [string]
-}
-当前目标：$goal
-
-		""".trimIndent()
-    }
-
-    private fun parseOperatorResponse(content: String): ToolCallResponse {
+    private fun parseStepActionResponse(content: String): ToolCallResponse {
         val domain = "driver"
 
         // Support two JSON formats only: completion or elements-based action
@@ -1299,7 +1284,7 @@ $his
 
             // Medium Priority #12: Validate port with configurable whitelist
             val port = uri.port
-            if (port != -1 && port !in config.allowedPorts) {
+            if (port != -1 && !config.allowedPorts.contains(port)) {
                 logStructured(
                     "Blocked URL with non-whitelisted port", ExecutionContext(uuid.toString(), 0, "url_validation", ""),
                     mapOf("port" to port, "host" to host, "allowedPorts" to config.allowedPorts)
