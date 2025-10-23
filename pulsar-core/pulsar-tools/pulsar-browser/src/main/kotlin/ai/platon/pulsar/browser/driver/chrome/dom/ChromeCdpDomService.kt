@@ -183,7 +183,7 @@ class ChromeCdpDomService(
             val absolutePosition = snap?.absoluteBounds
 
             // Calculate XPath
-            val xPath = runCatching { XPathUtils.generateXPath(node, ancestors, siblingMap) }
+            val xpath = runCatching { XPathUtils.generateXPath(node, ancestors, siblingMap) }
                 .onFailure { tracer?.trace("XPath generation failed | nodeId={} | {} ", node.nodeId, it.toString()) }
                 .getOrNull()
 
@@ -207,7 +207,7 @@ class ChromeCdpDomService(
                 isInteractable = isInteractable,
                 interactiveIndex = interactiveIndex,
                 absolutePosition = absolutePosition,
-                xpath = xPath,
+                xpath = xpath,
                 elementHash = elementHash,
                 parentBranchHash = parentBranchHash
             )

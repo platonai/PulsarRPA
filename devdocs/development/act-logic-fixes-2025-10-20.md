@@ -12,7 +12,7 @@ This document summarizes the fixes applied to `BrowserPerceptiveAgent` to addres
 ### ✅ #1: Add overall timeout for act operations
 **Problem**: Actions could hang indefinitely without timeout protection.
 
-**Solution**: 
+**Solution**:
 - Added `actTimeoutMs` config (default: 30000ms)
 - Wrapped `doObserveAct()` with `withTimeout()` in `act()` method
 - Returns `ActResult` with timeout error message on cancellation
@@ -123,8 +123,8 @@ val internalResults = withTimeout(config.llmInferenceTimeoutMs) {
 - Reuse `toolCallExecutor` instance instead of creating new one
 
 ```kotlin
-val functionCalls = action.functionCalls  // No .take(1)
-val functionResults = functionCalls.map { fc -> toolCallExecutor.execute(fc, driver) }
+val expressions = action.expressions  // No .take(1)
+val functionResults = expressions.map { fc -> toolCallExecutor.execute(fc, driver) }
 ```
 
 ## Medium Priority Fixes
@@ -174,8 +174,8 @@ private fun calculatePageStateHash(browserState: BrowserState): Int {
 private fun validateElementAction(args: Map<String, Any?>): Boolean {
     val selector = args["selector"]?.toString() ?: return false
     if (selector.isBlank() || selector.length > config.maxSelectorLength) return false
-    
-    val hasValidPrefix = selector.startsWith("xpath:") || 
+
+    val hasValidPrefix = selector.startsWith("xpath:") ||
                         selector.startsWith("css:") || ...
     return hasValidPrefix
 }

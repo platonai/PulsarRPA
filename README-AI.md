@@ -82,7 +82,8 @@ Root layout (abridged):
 ```
 project-root/
 ├── pulsar-core/            # Core modules
-│    ├── pulsar-skeleton/   # WebDriver & AI translation logic
+│    ├── pulsar-skeleton/   # WebDriver core
+│    ├── pulsar-agentic/    # Agentic engine (sessions/agents/TextToAction)
 │    ├── pulsar-common/     # Shared utilities
 │    ├── pulsar-dom/        # DOM manipulation & parsing
 │    ├── pulsar-persist/    # Data persistence
@@ -108,6 +109,7 @@ Module guidelines:
 - Each module defines its own `pom.xml`
 - No cyclic dependencies
 - Shared utilities → `pulsar-core/pulsar-common`
+- Agentic/LLM-facing APIs → `pulsar-core/pulsar-agentic`
 - AI client/utilities → `pulsar-third/pulsar-llm`
 
 ---
