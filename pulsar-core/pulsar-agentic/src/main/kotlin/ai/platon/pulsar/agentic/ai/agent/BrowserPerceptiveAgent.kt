@@ -255,15 +255,13 @@ class BrowserPerceptiveAgent(
         return try {
             val browserUseState = getBrowserUseState()
 
-            val totalHeight = browserUseState.browserState.scrollState.totalHeight
-            val viewportHeight = browserUseState.browserState.scrollState.viewport.height
-            val chunkSeen = 1 + browserUseState.browserState.scrollState.scrollYRatio * viewportHeight
+            val scrollState = browserUseState.browserState.scrollState
             val params = ExtractParams(
                 instruction = instruction,
                 browserUseState = browserUseState,
                 schema = schemaJson,
-                chunksSeen = chunkSeen.roundToInt(),
-                chunksTotal = ceil(totalHeight / viewportHeight).roundToInt(),
+                chunksSeen = scrollState.chunksSeen,
+                chunksTotal = scrollState.chunksTotal,
                 requestId = requestId,
                 logInferenceToFile = config.enableStructuredLogging
             )
@@ -315,6 +313,9 @@ class BrowserPerceptiveAgent(
     }
 
     private suspend fun doObserve(options: ObserveOptions): List<ObserveResult> {
+        // Returns:
+        // `options.instruction`
+        // OR: "Find elements that can be used for any future actions in the page."
         val instruction = promptBuilder.initObserveUserInstruction(options.instruction)
 
         val browserUseState = getBrowserUseState()

@@ -50,8 +50,8 @@ data class ExtractParams(
     val browserUseState: BrowserUseState,
     /** JSON Schema string describing the desired extraction output */
     val schema: String,
-    val chunksSeen: Int = 0,
-    val chunksTotal: Int = 0,
+    val chunksSeen: Int = 1,
+    val chunksTotal: Int = 1,
     val requestId: String = UUID.randomUUID().toString(),
     val userProvidedInstructions: String? = null,
     val logInferenceToFile: Boolean = false,
@@ -228,7 +228,7 @@ class InferenceEngine(
     suspend fun observe(params: ObserveParams): InternalObserveResult {
         if (params.returnAction) {
             require(params.instruction.contains("click")) {
-                "If `returnAction` is true, the tool specification has to be included in `params.instruction`" }
+                "If `returnAction` is true, the tool specifications has to be included in `params.instruction`" }
         }
 
         // Build dynamic schema hint for the LLM (prompt-enforced)

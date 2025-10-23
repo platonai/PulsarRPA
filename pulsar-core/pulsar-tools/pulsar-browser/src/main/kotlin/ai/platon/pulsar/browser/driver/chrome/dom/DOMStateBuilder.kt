@@ -241,7 +241,7 @@ object DOMStateBuilder {
         addToLocatorMap(node.originalNode, frameIds, locatorMap)
 
         return MicroDOMTreeNode(
-            shouldDisplay = null, // Pruned nodes are not displayed
+            shouldDisplay = null, // Pruned nodes are not displayed (null means false)
             interactiveIndex = node.interactiveIndex,
             ignoredByPaintOrder = true, // Mark as ignored by paint order
             excludedByParent = node.excludedByParent.takeIf { it },
