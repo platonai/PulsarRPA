@@ -1,5 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome.dom.model
 
+import ai.platon.pulsar.browser.driver.chrome.dom.CSSSelectorUtils
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.FBNLocator
 import ai.platon.pulsar.browser.driver.chrome.dom.LocatorMap
@@ -177,7 +178,7 @@ data class SnapshotNodeEx constructor(
 /**
  * Enhanced DOM tree node containing merged information from DOM, AX, and Snapshot trees.
  */
-data class DOMTreeNodeEx(
+data class DOMTreeNodeEx constructor(
     // DOM Node data
     val nodeId: Int = 0,
     val backendNodeId: Int? = null,
@@ -244,6 +245,16 @@ data class DOMTreeNodeEx(
 
         return sb.toString().replace(Regex("\\s+"), " ").trim()
     }
+
+    /**
+     * Build a best-effort CSS selector for this node.
+     * Strategy:
+     * - If an id exists, prefer #id (or tag[id="..."] if id is not a valid identifier)
+     * - Else, use up to a few stable classes: tag.class1.class2
+     * - Else, fall back to stable attributes like data-*, aria-label, name, type, role
+     * - Else, return the lowercase tag name (or "*")
+     */
+    fun cssSelector(): String = CSSSelectorUtils.generateCSSSelector(this)
 }
 
 typealias DOMTreeEx = DOMTreeNodeEx
@@ -488,4 +499,3 @@ data class BrowserUseState(
     val browserState: BrowserState,
     val domState: DOMState
 )
-
