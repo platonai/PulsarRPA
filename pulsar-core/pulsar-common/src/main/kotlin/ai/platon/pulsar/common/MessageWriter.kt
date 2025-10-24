@@ -13,7 +13,7 @@ import kotlin.io.path.isRegularFile
 import kotlin.reflect.KClass
 
 class TmpFile(val fileName: String) {
-    val path = AppPaths.getProcTmpTmpDirectory("").resolve(fileName)
+    val path = AppPaths.getProcTmpTmpDirectory(fileName)
 }
 
 /**
