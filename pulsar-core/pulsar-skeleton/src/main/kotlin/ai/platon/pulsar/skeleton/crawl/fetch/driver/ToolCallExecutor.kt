@@ -3,6 +3,7 @@ package ai.platon.pulsar.skeleton.crawl.fetch.driver
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.support.ToolCall
+import javax.script.ScriptEngineManager
 
 /**
  * Executes WebDriver commands provided as string expressions.
@@ -27,6 +28,26 @@ import ai.platon.pulsar.skeleton.ai.support.ToolCall
  */
 class ToolCallExecutor {
     private val logger = getLogger(this)
+    private val engine = ScriptEngineManager().getEngineByExtension("kts")
+
+    /**
+     * Evaluate [expression].
+     *
+     * Slow, unsafe.
+     *
+     * ```kotlin
+     * eval("""driver.click("#submit")""", driver)
+     * ```
+     * */
+    fun eval(expression: String, driver: WebDriver): Any? {
+        return try {
+            engine.put("driver", driver)
+            engine.eval(expression)
+        } catch (e: Exception) {
+            logger.warn("Error eval expression: {} - {}", expression, e.brief())
+            null
+        }
+    }
 
     /**
      * Executes a WebDriver command provided as a string expression.
