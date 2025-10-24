@@ -6,8 +6,47 @@ import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.alwaysFalse
+import java.time.LocalDate
 import java.util.*
 import kotlin.math.min
+
+data class SimpleMessage(
+    val role: String,
+    val content: String,
+    val name: String? = null,
+) {
+    override fun toString() = content
+}
+
+class SimpleMessageList(
+    val messages: MutableList<SimpleMessage> = mutableListOf()
+) {
+    fun addSystem(content: String, key: String? = null) {
+        add("system", content, key)
+    }
+
+    fun addUser(content: String, key: String? = null) {
+        add("user", content, key)
+    }
+
+    fun add(role: String, content: String, key: String? = null) {
+        val msg = SimpleMessage(role, content, key)
+        messages.add(msg)
+    }
+
+    fun add(message: SimpleMessage) {
+        val msg = SimpleMessage(message.role, message.content, message.name)
+        messages.add(msg)
+    }
+
+    fun find(key: String): SimpleMessage? {
+        return messages.find { it.name == key }
+    }
+
+    fun systemMessages() = messages.filter { it.role == "system" }
+
+    fun userMessages() = messages.filter { it.role == "user" }
+}
 
 /**
  * Description:
@@ -20,12 +59,61 @@ import kotlin.math.min
  */
 class PromptBuilder(val locale: Locale = Locale.CHINESE) {
 
-    data class SimpleMessage(
-        val role: String,
-        val content: String
-    )
-
     val isCN = locale in listOf(Locale.CHINESE, Locale.SIMPLIFIED_CHINESE, Locale.TRADITIONAL_CHINESE)
+
+
+    private fun buildSystemPromptV20251025(
+        url: String,
+        executionInstruction: String,
+        systemInstructions: String? = null
+    ): String {
+        return if (systemInstructions != null) {
+            """
+        $systemInstructions
+        Your current goal: $executionInstruction
+        """.trimIndent()
+        } else {
+            """
+        You are a web automation assistant using browser automation tools to accomplish the user's goal.
+
+        Your task: $executionInstruction
+
+        You have access to various browser automation tools. Use them step by step to complete the task.
+
+        IMPORTANT GUIDELINES:
+        1. Always start by understanding the current page state
+        2. Use the screenshot tool to verify page state when needed
+        3. Use appropriate tools for each action
+        4. When the task is complete, use the "close" tool with success: true
+        5. If the task cannot be completed, use "close" with success: false
+
+        TOOLS OVERVIEW:
+        - screenshot: Take a compressed JPEG screenshot for quick visual context (use sparingly)
+        - ariaTree: Get an accessibility (ARIA) hybrid tree for full page context (preferred for understanding layout and elements)
+        - act: Perform a specific atomic action (click, type, etc.). For filling a field, you can say 'fill the field x with the value y'.
+        - extract: Extract structured data
+        - goto: Navigate to a URL
+        - wait/navback/refresh: Control timing and navigation
+        - scroll: Scroll the page x pixels up or down
+
+        STRATEGY:
+        - Prefer ariaTree to understand the page before acting; use screenshot for quick confirmation.
+        - Keep actions atomic and verify outcomes before proceeding.
+
+        For each action, provide clear reasoning about why you're taking that step.
+        Today's date is ${LocalDate.now()}. You're currently on the website: ${url}.
+        """.trimIndent()
+        }
+    }
+
+
+
+
+
+
+
+
+
 
     /**
      * Description:
@@ -346,15 +434,19 @@ Be comprehensive: if there are multiple elements that may be relevant for future
      * - Appends the observe-result schema contract
      * - Returns a user-role message
      */
-    fun buildObserveUserMessage(params: ObserveParams): SimpleMessage {
+    fun buildObserveUserMessage(messages: SimpleMessageList, params: ObserveParams) {
         val instruction = params.instruction
         val browserStateJson = params.browserUseState.browserState.lazyJson
         val nanoTreeJson = params.browserUseState.domState.nanoTreeLazyJson
 
+        if (isCN) {
+            messages.addUser("指令: $instruction")
+        } else {
+            messages.addUser("instruction: $instruction")
+        }
+
         val schemaContract = buildObserveResultSchemaContract(params)
         fun contentCN() = """
-指令: $instruction
-
 ## 无障碍树(Accessibility Tree):
 $nanoTreeJson
 
@@ -371,8 +463,6 @@ $schemaContract
 """
 
         fun contentEN() = """
-instruction: $instruction
-
 ## Accessibility Tree:
 $nanoTreeJson
 
@@ -393,7 +483,7 @@ $schemaContract
             else -> contentEN()
         }
 
-        return SimpleMessage(role = "user", content = content)
+        messages.add("user", content)
     }
 
     /**
@@ -525,19 +615,6 @@ ONLY return one action. If multiple actions are relevant, return the most releva
 $his
 
 请基于当前页面截图、交互元素与历史动作，规划下一步（严格单步原子动作）。
-
-若任务已完成或无法推进，请输出：
-{
-  "isComplete": true,
-  "summary": string,
-  "suggestions": [string]
-}
-
-总体目标：
-<overallGoal>
-$overallGoal
-</overallGoal>
-
 		""".trimIndent()
     }
 }

@@ -59,6 +59,7 @@ public interface AppConstants {
             "https://www.so.com/",
             "https://www.bing.com/"
     );
+    String SEARCH_ENGINE_URL = "https://cn.bing.com/";
     /**
      * The prefix of all pulsar specified urls
      * */

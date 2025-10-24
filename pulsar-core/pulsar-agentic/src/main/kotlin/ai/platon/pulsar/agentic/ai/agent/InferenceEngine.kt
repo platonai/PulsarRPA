@@ -1,6 +1,8 @@
 package ai.platon.pulsar.agentic.ai.agent
 
 import ai.platon.pulsar.agentic.ai.PromptBuilder
+import ai.platon.pulsar.agentic.ai.SimpleMessage
+import ai.platon.pulsar.agentic.ai.SimpleMessageList
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.common.getLogger
@@ -232,9 +234,11 @@ class InferenceEngine(
         }
 
         // observe guide
+        val messages = SimpleMessageList()
         val systemMsg = promptBuilder.buildObserveGuideSystemPrompt(params.userProvidedInstructions)
+        messages.add(systemMsg)
         // instruction + DOM + browser state + schema
-        val userMsg = promptBuilder.buildObserveUserMessage(params)
+        val userMsg = promptBuilder.buildObserveUserMessage(messages, params)
 
         val prefix = if (params.fromAct) "act" else "observe"
         var callFile = ""
@@ -252,7 +256,7 @@ class InferenceEngine(
             callTs = ts
         }
 
-        val (resp, elapsedMs) = doLangChainChat(systemMsg, userMsg)
+        val (resp, elapsedMs) = doLangChainChat(messages.systemMessages(), messages.userMessages())
         val usage = toUsage(resp)
 
         val raw = resp.aiMessage().text().trim()
@@ -434,11 +438,20 @@ class InferenceEngine(
     }
 
     private suspend fun doLangChainChat(
-        systemMessage: PromptBuilder.SimpleMessage, userMessage: PromptBuilder.SimpleMessage
+        systemMessage: SimpleMessage, userMessage: SimpleMessage
     ): Pair<ChatResponse, Long> {
         return doLangChainChat(
             SystemMessage.systemMessage(systemMessage.content),
             UserMessage.userMessage(userMessage.content)
+        )
+    }
+
+    private suspend fun doLangChainChat(
+        systemMessages: List<SimpleMessage>, userMessages: List<SimpleMessage>
+    ): Pair<ChatResponse, Long> {
+        return doLangChainChat(
+            SystemMessage.systemMessage(systemMessages.joinToString("\n") { it.content }),
+            UserMessage.userMessage(userMessages.joinToString("\n") { it.content })
         )
     }
 

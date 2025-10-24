@@ -1,6 +1,8 @@
 package ai.platon.pulsar.agentic.ai.agent
 
 import ai.platon.pulsar.agentic.ai.PromptBuilder
+import ai.platon.pulsar.agentic.ai.SimpleMessage
+import ai.platon.pulsar.agentic.ai.SimpleMessageList
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.InstructionResult
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
@@ -10,6 +12,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.Pson
 import ai.platon.pulsar.common.urls.URLUtils
@@ -536,7 +539,7 @@ class BrowserPerceptiveAgent(
         startTime: Instant
     ): ActResult {
         var lastError: Exception? = null
-        
+
         for (attempt in 0..config.maxRetries) {
             val attemptNo = attempt + 1
             addToRecordHistory("resolve ATTEMPT ${attemptNo}/${config.maxRetries + 1}")
@@ -608,7 +611,7 @@ class BrowserPerceptiveAgent(
         )
 
         // agent general guide + overall goal
-        val systemMsg = TextToAction.buildOperatorSystemPrompt(overallGoal)
+        val systemMsg = TextToAction.buildOperatorSystemPrompt()
         var consecutiveNoOps = 0
         var step = 0
 
@@ -617,6 +620,14 @@ class BrowserPerceptiveAgent(
                 step++
                 val stepStartTime = Instant.now()
                 val stepContext = context.copy(stepNumber = step, actionType = "step")
+
+                val messages = SimpleMessageList()
+                messages.add(SimpleMessage("system", systemMsg))
+
+                val url = driver.url()
+                if (url.isBlank() || url == "about:blank") {
+                    driver.navigateTo(AppConstants.SEARCH_ENGINE_URL)
+                }
 
                 val settleMs = action.domSettleTimeoutMs?.toLong()?.coerceAtLeast(0L) ?: config.domSettleTimeoutMs
                 if (settleMs > 0) {
@@ -659,15 +670,19 @@ class BrowserPerceptiveAgent(
                 } else {
                     null
                 }
-                // history + atom operation guide + completion condition + overall goal
-                val userMsg = promptBuilder.buildCurrentStepUserMessage(overallGoal, _history)
+
+                if (screenshotB64 != null) {
+                    messages.add(SimpleMessage("user", "[Current page screenshot provided as base64 image]"))
+                }
+                messages.add(SimpleMessage("user", buildHistoryMessage()))
+                messages.add(SimpleMessage("user", buildOverallGoalMessage(overallGoal), name = "overallGoal"))
 
                 // systemMsg + userMsg + screenshot reminder
                 //
                 // + agent general guide + overall goal
                 // + history + atom operation guide + completion condition + overall goal
                 // + screenshot reminder
-                val currentStepMessage = buildCurrentStepMessage(systemMsg, userMsg, screenshotB64)
+                // val currentStepMessage = buildCurrentStepMessage(systemMsg, screenshotB64)
 
                 // call the LLM to plan the next step to take.
                 // TTA will add more guide to generate the most relevant element with action suggestions
@@ -678,7 +693,7 @@ class BrowserPerceptiveAgent(
                 // + [instruction] + DOM + browser state + schema?
                 // + observe guide
                 // + tool specs + [observe guide] + completion guide
-                val stepAction = generateStepAction(currentStepMessage, stepContext, browserUseState, screenshotB64)
+                val stepAction = generateStepAction(messages, stepContext, browserUseState, screenshotB64)
 
                 if (stepAction == null) {
                     consecutiveNoOps++
@@ -848,14 +863,14 @@ class BrowserPerceptiveAgent(
      */
     private suspend fun generateStepAction(
         // instruction: agent guide + overall goal + last action summary
-        instruction: String,
+        messages: SimpleMessageList,
         context: ExecutionContext,
         browserUseState: BrowserUseState,
         screenshotB64: String?
     ): ActionDescription? {
         return try {
             // Use overload supplying extracted elements to avoid re-extraction
-            tta.generate(instruction, browserUseState, screenshotB64)
+            tta.generate(messages, browserUseState, screenshotB64)
         } catch (e: Exception) {
             logger.error("action.gen.fail sid={} msg={}", context.sessionId.take(8), e.message, e)
             consecutiveFailureCounter.incrementAndGet()
@@ -1063,10 +1078,9 @@ class BrowserPerceptiveAgent(
      * @param screenshotB64 Optional base64 PNG/JPEG screenshot; if non-null, only a marker line is appended
      * @return A multi-line String ready for the LLM as the text part of a multimodal request
      */
-    private fun buildCurrentStepMessage(systemPrompt: String, userMsg: String, screenshotB64: String?): String {
+    private fun buildCurrentStepMessage(systemPrompt: String, screenshotB64: String?): String {
         return buildString {
             appendLine(systemPrompt)
-            appendLine(userMsg)
             if (screenshotB64 != null) {
                 appendLine("[Current page screenshot provided as base64 image]")
             }
@@ -1351,5 +1365,34 @@ class BrowserPerceptiveAgent(
                 ResponseState.OTHER
             )
         }
+    }
+
+
+    // history + atom operation guide + completion condition
+    private fun buildHistoryMessage(): String {
+        val his = if (history.isNotEmpty()) {
+            history.takeLast(min(8, history.size)).joinToString("\n")
+        } else "(无)"
+
+        var msg = """
+此前动作摘要：
+$his
+
+请基于当前页面截图、交互元素与历史动作，规划下一步（严格单步原子动作）。
+		""".trimIndent()
+
+        return msg
+    }
+
+
+    private fun buildOverallGoalMessage(overallGoal: String): String {
+        val msg = """
+总体目标：
+<overallGoal>
+$overallGoal
+</overallGoal>
+                """.trimIndent()
+
+        return msg
     }
 }

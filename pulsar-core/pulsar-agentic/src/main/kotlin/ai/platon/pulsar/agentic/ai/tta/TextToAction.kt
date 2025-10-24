@@ -1,6 +1,8 @@
 package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.agentic.ai.PromptBuilder
+import ai.platon.pulsar.agentic.ai.SimpleMessage
+import ai.platon.pulsar.agentic.ai.SimpleMessageList
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
@@ -54,6 +56,24 @@ open class TextToAction(
         return generate(instruction, browserUseState, screenshotB64)
     }
 
+    @ExperimentalApi
+    open suspend fun generate(
+        messages: SimpleMessageList,
+        browserUseState: BrowserUseState,
+        screenshotB64: String? = null
+    ): ActionDescription {
+        try {
+            val response = generateResponse(messages, browserUseState, screenshotB64, 1)
+
+            return modelResponseToActionDescription(response, browserUseState)
+        } catch (e: Exception) {
+            val errorResponse = ModelResponse(
+                "Unknown exception" + e.brief(), ResponseState.OTHER
+            )
+            return ActionDescription(errorResponse)
+        }
+    }
+
     /**
      * Generate EXACT ONE WebDriver action with interactive elements.
      *
@@ -81,27 +101,39 @@ open class TextToAction(
     open suspend fun generateResponse(
         instruction: String, browserUseState: BrowserUseState, screenshotB64: String? = null, toolCallLimit: Int = 100,
     ): ModelResponse {
+        val messages = SimpleMessageList()
+        messages.add("user", instruction)
+        return generateResponse(messages, browserUseState, screenshotB64, toolCallLimit)
+    }
+
+    @ExperimentalApi
+    open suspend fun generateResponse(
+        messages: SimpleMessageList, browserUseState: BrowserUseState, screenshotB64: String? = null, toolCallLimit: Int = 100,
+    ): ModelResponse {
         // instruction from agent:
         // systemMsg + userMsg + screenshot reminder
         //
         // + [agent general guide + overall goal]
         // + [history + atom operation guide + completion condition + overall goal]
         // + [screenshot reminder]
-        val fromAgent = instruction.contains(TTA_AGENT_SYSTEM_PROMPT_PREFIX_20)
-        val agentGuidSystemMsg = if (fromAgent) instruction else buildOperatorSystemPrompt(instruction)
+//        val fromAgent = instruction.contains(TTA_AGENT_SYSTEM_PROMPT_PREFIX_20)
+//        val agentGuidSystemMsg = if (fromAgent) instruction else buildOperatorSystemPrompt()
 
-        val overallGoal = StringUtils.substringBetween(instruction, "<overallGoal>", "</overallGoal>")
+        var overallGoal = messages.find("overallGoal")?.content ?: ""
+        overallGoal = StringUtils.substringBetween(overallGoal, "<overallGoal>", "</overallGoal>")
         val params = ObserveParams(overallGoal, browserUseState = browserUseState, returnAction = true, logInferenceToFile = true)
         // observe guide:
         // + [instruction] + DOM + browser state + schema?
         // + observe guide
-        val observeGuide = PromptBuilder().buildObserveUserMessage(params)
+        PromptBuilder().buildObserveUserMessage(messages, params)
         // tool specs + [observe guide] + completion guide
-        val userMessage = buildBrowserUseStatePrompt(observeGuide, toolCallLimit)
+
+        val systemMessage = messages.systemMessages().joinToString("\n")
+        val userMessage = messages.userMessages().joinToString("\n")
         val response = if (screenshotB64 != null) {
-            chatModel.call(agentGuidSystemMsg, userMessage, null, screenshotB64, "image/jpeg")
+            chatModel.call(systemMessage, userMessage, null, screenshotB64, "image/jpeg")
         } else {
-            chatModel.call(agentGuidSystemMsg, userMessage)
+            chatModel.call(systemMessage, userMessage)
         }
 
         return response
@@ -250,6 +282,7 @@ open class TextToAction(
 
     companion object {
 
+        @Deprecated("Use PromptBuilder().buildSystemPromptV20251025() instead")
         val TTA_AGENT_GUIDE_SYSTEM_PROMPT = """
 你是一个网页通用代理，目标是基于用户目标一步一步完成任务。
 
@@ -299,11 +332,9 @@ ${ToolCallExecutor.TOOL_CALL_LIST}
          * Brief:
          * instruction + DOM + browser state + schema + completion guide
          * */
-        fun buildBrowserUseStatePrompt(observeMessage: PromptBuilder.SimpleMessage, toolCallLimit: Int = 1): String {
+        fun buildBrowserUseStatePrompt(toolCallLimit: Int = 1): String {
             val prompt = """
 每次最多调用 $toolCallLimit 个工具。
-
-${observeMessage.content}
 
 如果总体目标已经达成，则严格按如下格式输出 JSON 信息：
 
@@ -318,7 +349,7 @@ ${observeMessage.content}
             return prompt
         }
 
-        fun buildOperatorSystemPrompt(overallGoal: String): String {
+        fun buildOperatorSystemPrompt(): String {
             return """
 $TTA_AGENT_GUIDE_SYSTEM_PROMPT
         """.trimIndent()
