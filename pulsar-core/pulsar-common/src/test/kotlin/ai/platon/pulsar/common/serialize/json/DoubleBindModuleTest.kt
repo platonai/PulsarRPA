@@ -70,5 +70,32 @@ class DoubleBindModuleTest {
         // HALF_UP rounding with 3 decimals
         assertEquals("[1.235,0.005,-0.005]", m.writeValueAsString(list))
     }
-}
 
+    @Test
+    fun `nested structures format doubles without recursion`() {
+        val m = mapper()
+        val tree: Map<String, Any> = linkedMapOf(
+            "n" to 1.234,
+            "child" to linkedMapOf(
+                "v" to 2.0,
+                "arr" to listOf(3.0, 4.0, 5.005),
+                "grand" to linkedMapOf(
+                    "x" to listOf<Number>(6.0, 7.234, 8.0),
+                    "y" to 9.999
+                )
+            )
+        )
+        val json = m.writeValueAsString(tree)
+        assertEquals("{" +
+                "\"n\":1.23," +
+                "\"child\":{" +
+                "\"v\":2," +
+                "\"arr\":[3,4,5.01]," +
+                "\"grand\":{" +
+                "\"x\":[6,7.23,8]," +
+                "\"y\":10" +
+                "}" +
+                "}" +
+                "}", json)
+    }
+}

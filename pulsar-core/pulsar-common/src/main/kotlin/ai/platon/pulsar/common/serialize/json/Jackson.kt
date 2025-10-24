@@ -1,6 +1,5 @@
 package ai.platon.pulsar.common.serialize.json
 
-import ai.platon.pulsar.common.math.roundTo
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.JsonGenerator
 import com.fasterxml.jackson.core.JsonParser
@@ -8,7 +7,6 @@ import com.fasterxml.jackson.databind.*
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import org.apache.commons.lang3.StringUtils
 import java.math.BigDecimal
 import java.math.RoundingMode
 
@@ -31,36 +29,51 @@ class DoubleSerializer(val decimals: Int = 2): JsonSerializer<Double>() {
     }
 }
 
+/**
+ * A safe Number serializer that avoids recursion:
+ * - Formats Double/Float using DoubleSerializer
+ * - Writes other numeric types via direct generator methods
+ * - Falls back to runtime-type serializer when needed (never defaultSerializeValue)
+ */
+class SmartNumberSerializer(private val decimals: Int = 2) : JsonSerializer<Number>() {
+    private val doubleSerializer = DoubleSerializer(decimals)
+
+    override fun serialize(value: Number?, gen: JsonGenerator, serializers: SerializerProvider) {
+        if (value == null) {
+            gen.writeNull()
+            return
+        }
+        when (value) {
+            is Double -> doubleSerializer.serialize(value, gen, serializers)
+            is Float -> doubleSerializer.serialize(value.toDouble(), gen, serializers)
+            is Int -> gen.writeNumber(value)
+            is Long -> gen.writeNumber(value)
+            is Short -> gen.writeNumber(value.toInt())
+            is Byte -> gen.writeNumber(value.toInt())
+            is BigDecimal -> gen.writeNumber(value)
+            is java.math.BigInteger -> gen.writeNumber(value)
+            else -> {
+                // Delegate to serializer bound to the concrete runtime class to avoid Number->Number recursion
+                val s = serializers.findValueSerializer(value.javaClass, null)
+                s.serialize(value, gen, serializers)
+            }
+        }
+    }
+}
+
 fun doubleBindModule(decimals: Int = 2): SimpleModule {
     return SimpleModule().apply {
         val doubleSerializer = DoubleSerializer(decimals)
         addSerializer(Double::class.java, doubleSerializer)
         // Keep double value length minimal
         addSerializer(Double::class.javaPrimitiveType, doubleSerializer)
+        // Handle Number containers (List<Number>, Map<String, Number>, Any) without recursion
+        addSerializer(Number::class.java, SmartNumberSerializer(decimals))
 
-        // Ensure doubles inside containers (List/Map/Any) are also formatted by DoubleSerializer.
-        // Register a Number serializer that delegates to Double serializer for Double values,
-        // and falls back to the default provider for other numeric types.
-        addSerializer(Number::class.java, object : JsonSerializer<Number>() {
-            override fun serialize(
-                value: Number?,
-                gen: JsonGenerator,
-                serializers: SerializerProvider
-            ) {
-                if (value == null) {
-                    gen.writeNull()
-                    return
-                }
-
-                if (value is Double) {
-                    // Delegate to the configured Double serializer for consistent formatting
-                    doubleSerializer.serialize(value, gen, serializers)
-                } else {
-                    // For other numeric types, fall back to default serialization
-                    serializers.defaultSerializeValue(value, gen)
-                }
-            }
-        })
+        // IMPORTANT:
+        // We DO NOT call defaultSerializeValue inside SmartNumberSerializer; instead we resolve
+        // the runtime-type serializer via providers.findValueSerializer(...) to avoid infinite
+        // recursion for declared Number types in containers.
     }
 }
 
