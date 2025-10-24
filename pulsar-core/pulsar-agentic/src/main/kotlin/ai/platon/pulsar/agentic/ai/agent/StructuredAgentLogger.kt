@@ -1,6 +1,6 @@
 package ai.platon.pulsar.agentic.ai.agent
 
-import com.google.gson.JsonParser
+import ai.platon.pulsar.common.StructuredLogger
 import org.slf4j.Logger
 import java.time.Instant
 
@@ -13,9 +13,9 @@ import java.time.Instant
  * @author Vincent Zhang, ivincent.zhang@gmail.com, platon.ai
  */
 class StructuredAgentLogger(
-    private val logger: Logger,
+    ownerLogger: Logger,
     private val config: AgentConfig
-) {
+): StructuredLogger(ownerLogger = ownerLogger, enableStructuredLogging = config.enableStructuredLogging) {
     /**
      * Log a structured message with context and additional data.
      *
@@ -123,41 +123,6 @@ class StructuredAgentLogger(
             logger.info("{}", formatAsJson(logData))
         } else {
             logger.info(msg)
-        }
-    }
-
-    /**
-     * Format a map as a proper JSON string.
-     *
-     * @param data Map to format as JSON
-     * @return JSON string
-     */
-    private fun formatAsJson(data: Map<String, Any>): String {
-        return try {
-            JsonParser.parseString(
-                data.entries.joinToString(",", "{", "}") { (k, v) ->
-                    """"$k":${formatJsonValue(v)}"""
-                }
-            ).toString()
-        } catch (e: Exception) {
-            // Fallback to simple string representation
-            data.toString()
-        }
-    }
-
-    /**
-     * Format a value for JSON output.
-     *
-     * @param value The value to format
-     * @return JSON-formatted string representation
-     */
-    private fun formatJsonValue(value: Any): String {
-        return when (value) {
-            is String -> "\"${value.replace("\"", "\\\"").replace("\n", "\\n")}\""
-            is Number, is Boolean -> value.toString()
-            is Collection<*> -> value.joinToString(",", "[", "]") { formatJsonValue(it ?: "null") }
-            is Map<*, *> -> formatAsJson(value.mapKeys { it.key.toString() }.mapValues { it.value ?: "null" })
-            else -> "\"$value\""
         }
     }
 }

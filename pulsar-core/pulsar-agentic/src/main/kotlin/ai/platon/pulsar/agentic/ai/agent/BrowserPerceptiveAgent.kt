@@ -46,6 +46,7 @@ class BrowserPerceptiveAgent(
     val config: AgentConfig = AgentConfig(maxSteps = maxSteps)
 ) : PerceptiveAgent {
     private val logger = getLogger(this)
+    private val structuredLogger = StructuredAgentLogger(logger, config)
 
     private val baseDir = AppPaths.get("agent")
     private val conf get() = (driver as AbstractWebDriver).settings.config
@@ -61,7 +62,6 @@ class BrowserPerceptiveAgent(
     // Helper classes for better code organization
     private val pageStateTracker = PageStateTracker(driver, config)
     private val actionValidator = ActionValidator(config)
-    private val structuredLogger = StructuredAgentLogger(logger, config)
 
     // Action validation cache
     private val validationCache = ConcurrentHashMap<String, Boolean>()
