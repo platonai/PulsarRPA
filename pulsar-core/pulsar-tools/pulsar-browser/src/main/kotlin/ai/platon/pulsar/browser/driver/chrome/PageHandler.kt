@@ -296,12 +296,7 @@ class PageHandler(
      */
     @Throws(ChromeDriverException::class)
     private fun resolveSelector(selector: String): NodeRef? {
-printlnPro(this, "............ resolveSelector")
-printlnPro(selector)
-
         val locator = Locator.parse(selector) ?: return null
-printlnPro(locator.absoluteSelector + " " + locator.selector)
-
 
         val nodeRef = when (locator.type) {
             Locator.Type.CSS_PATH -> querySelectorOrNull(selector)
@@ -319,8 +314,6 @@ printlnPro(locator.absoluteSelector + " " + locator.selector)
             }
             else -> throw UnsupportedOperationException("Unsupported selector $selector")
         }
-
-        printlnPro(nodeRef)
 
         return nodeRef
     }
