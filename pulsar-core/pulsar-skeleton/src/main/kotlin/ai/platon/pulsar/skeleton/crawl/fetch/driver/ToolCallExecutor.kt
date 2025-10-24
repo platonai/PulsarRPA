@@ -62,7 +62,11 @@ class ToolCallExecutor {
      */
     suspend fun execute(expression: String, driver: WebDriver): Any? {
         return try {
-            execute0(expression, driver)
+            val r = execute0(expression, driver)
+            when (r) {
+                is Unit -> null
+                else -> r
+            }
         } catch (e: Exception) {
             logger.warn("Error executing expression: {} - {}", expression, e.brief())
             null
@@ -190,9 +194,14 @@ class ToolCallExecutor {
             "mouseWheelDown" -> {
                 // Simulate mouse wheel down with various parameter options
                 when (args.size) {
-                    0 -> driver.mouseWheelDown()
+                    0 -> driver.mouseWheelDown(1, 0.0, 0.0, 0)
                     1 -> driver.mouseWheelDown(arg0!!.toIntOrNull() ?: 1)
-                    2 -> driver.mouseWheelDown(arg0!!.toIntOrNull() ?: 1, arg1!!.toDoubleOrNull() ?: 0.0)
+                    2 -> driver.mouseWheelDown(
+                        arg0!!.toIntOrNull() ?: 1,
+                        arg1!!.toDoubleOrNull() ?: 0.0,
+                        0.0,
+                        0
+                    )
                     3 -> driver.mouseWheelDown(
                         arg0!!.toIntOrNull() ?: 1,
                         arg1!!.toDoubleOrNull() ?: 0.0,
@@ -211,9 +220,14 @@ class ToolCallExecutor {
             "mouseWheelUp" -> {
                 // Simulate mouse wheel up with various parameter options
                 when (args.size) {
-                    0 -> driver.mouseWheelUp()
+                    0 -> driver.mouseWheelUp(1, 0.0, 0.0, 0)
                     1 -> driver.mouseWheelUp(arg0!!.toIntOrNull() ?: 1)
-                    2 -> driver.mouseWheelUp(arg0!!.toIntOrNull() ?: 1, arg1!!.toDoubleOrNull() ?: 0.0)
+                    2 -> driver.mouseWheelUp(
+                        arg0!!.toIntOrNull() ?: 1,
+                        arg1!!.toDoubleOrNull() ?: 0.0,
+                        0.0,
+                        0
+                    )
                     3 -> driver.mouseWheelUp(
                         arg0!!.toIntOrNull() ?: 1,
                         arg1!!.toDoubleOrNull() ?: 0.0,
@@ -957,7 +971,7 @@ delay(millis: Long = 1000)
             "goto" -> tc.args["url"]?.toString()?.let { "driver.navigateTo(\"${it.esc()}\")" }
             // Wait
             "waitForSelector" -> tc.args["selector"]?.toString()?.let { sel ->
-                "driver.waitForSelector(\"${sel.esc()}\", ${(tc.args["timeoutMillis"] ?: 5000)}L)"
+                "driver.waitForSelector(\"${sel.esc()}\", ${(tc.args["timeoutMillis"] ?: 5000)})"
             }
             // Status checking (first batch of new tools)
             "exists" -> tc.args["selector"]?.toString()?.let { "driver.exists(\"${it.esc()}\")" }
@@ -1002,7 +1016,7 @@ delay(millis: Long = 1000)
             "waitForNavigation" -> {
                 val oldUrl = tc.args["oldUrl"]?.toString() ?: ""
                 val timeout = tc.args["timeoutMillis"] ?: 5000L
-                "driver.waitForNavigation(\"${oldUrl.esc()}\", ${timeout}L)"
+                "driver.waitForNavigation(\"${oldUrl.esc()}\", ${timeout})"
             }
 
             "goBack" -> "driver.goBack()"
@@ -1013,7 +1027,7 @@ delay(millis: Long = 1000)
                 if (sel.isNullOrBlank()) "driver.captureScreenshot()" else "driver.captureScreenshot(\"${sel.esc()}\")"
             }
             // Timing
-            "delay" -> "driver.delay(${tc.args["millis"] ?: 1000}L)"
+            "delay" -> "driver.delay(${tc.args["millis"] ?: 1000})"
             else -> null
         }
     }
