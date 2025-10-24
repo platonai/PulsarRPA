@@ -22,7 +22,7 @@ class ScreenshotHandler(
     private val page get() = devTools.page.takeIf { isActive }
     private val dom get() = devTools.dom.takeIf { isActive }
     private val debugLevel = System.getProperty("browser.additionalDebugLevel")?.toIntOrNull() ?: 0
-    
+
     /**
      * Capture page screenshot.
      * */
@@ -31,8 +31,8 @@ class ScreenshotHandler(
     }
 
     fun captureScreenshot(selector: String): String? {
-        val nodeId = pageHandler.querySelector(selector)
-        if (nodeId == null || nodeId <= 0) {
+        val node = pageHandler.querySelector(selector)
+        if (node == null) {
             logger.info("No such element <{}>", selector)
             return null
         }
@@ -40,17 +40,17 @@ class ScreenshotHandler(
 //        val vi = pageHandler.firstAttr(selector, "vi")
         val vi: String? = null
         return if (vi != null) {
-            captureScreenshotWithVi(nodeId, selector, vi)
+            captureScreenshotWithVi(node, selector, vi)
         } else {
-            captureScreenshotWithoutVi(nodeId, selector)
+            captureScreenshotWithoutVi(node, selector)
         }
     }
 
-    fun captureScreenshot(clip: RectD) = captureScreenshot0(0, clip)
+    fun captureScreenshot(clip: RectD) = captureScreenshot0(null, clip)
 
-    fun captureScreenshot(viewport: Viewport) = captureScreenshot0(0, viewport)
+    fun captureScreenshot(viewport: Viewport) = captureScreenshot0(null, viewport)
 
-    private fun captureScreenshotWithVi(nodeId: Int, selector: String, vi: String): String? {
+    private fun captureScreenshotWithVi(node: NodeRef, selector: String, vi: String): String? {
         val quad = vi.split(" ").map { it.toDoubleOrNull() ?: 0.0 }
         if (quad.size != 4) {
             logger.warn("Invalid node vi information for selector <{}>", selector)
@@ -59,11 +59,11 @@ class ScreenshotHandler(
 
         val rect = RectD(quad[0], quad[1], quad[2], quad[3])
 
-        return captureScreenshot0(nodeId, rect)
+        return captureScreenshot0(node, rect)
     }
 
-    private fun captureScreenshotWithoutVi(nodeId: Int, selector: String): String? {
-        val nodeClip = calculateNodeClip(nodeId, selector)
+    private fun captureScreenshotWithoutVi(node: NodeRef, selector: String): String? {
+        val nodeClip = calculateNodeClip(node, selector)
         if (nodeClip == null) {
             logger.info("Can not calculate node clip | {}", selector)
             return null
@@ -75,39 +75,29 @@ class ScreenshotHandler(
             return null
         }
 
-        // val clip = normalizeClip(rect)
-
-        return captureScreenshot0(nodeClip.nodeId, rect)
+        return captureScreenshot0(node, rect)
     }
 
-    private fun captureScreenshot0(nodeId: Int, clip: RectD): String? {
+    private fun captureScreenshot0(node: NodeRef?, clip: RectD): String? {
         val viewport = Viewport().apply {
             x = clip.x; y = clip.y
             width = clip.width; height = clip.height
             scale = 1.0
         }
-        return captureScreenshot0(nodeId, viewport)
+
+        return captureScreenshot0(node, viewport)
     }
 
-    private fun captureScreenshot0(nodeId: Int, viewport: Viewport): String? {
+    private fun captureScreenshot0(node: NodeRef?, viewport: Viewport): String? {
         val format = CaptureScreenshotFormat.JPEG
         val quality = BrowserSettings.SCREENSHOT_QUALITY
 
-        if (debugLevel > 50) {
-            println("viewport: ")
-            println("" + viewport.x + " " + viewport.y + " " + viewport.width + " " + viewport.height)
+        // The viewport has to be visible before screenshot
+        if (node != null) {
+            dom?.scrollIntoViewIfNeeded(node.nodeId, node.backendNodeId, node.objectId, null)
         }
 
-//        val cssLayoutViewport = p.layoutMetrics.cssLayoutViewport
-//        if (viewport.width > cssLayoutViewport.clientWidth || viewport.height > cssLayoutViewport.clientHeight) {
-//        }
-//        viewport.width = viewport.width.coerceAtMost(cssLayoutViewport.clientWidth.toDouble())
-//        viewport.height = viewport.height.coerceAtMost(cssLayoutViewport.clientHeight.toDouble())
-
-        // The viewport has to be visible before screenshot
-        dom?.scrollIntoViewIfNeeded(nodeId, null, null, null)
-
-        val visible = ClickableDOM.create(page, dom, nodeId)?.isVisible() ?: false
+        val visible = ClickableDOM.create(page, dom, node)?.isVisible() ?: false
         if (!visible) {
             return null
         }
@@ -119,15 +109,15 @@ class ScreenshotHandler(
             optimizeForSpeed = true)
     }
 
-    private fun calculateNodeClip(nodeId: Int, selector: String): NodeClip? {
+    private fun calculateNodeClip(node: NodeRef, selector: String): NodeClip? {
         if (debugLevel > 50) {
-            debugNodeClipDebug(nodeId, selector)
+            debugNodeClipDebug(node, selector)
         }
 
         // must scroll to top to calculate the client rect
         pageHandler.evaluate("__pulsar_utils__.scrollToTop()")
 
-        val rect = calculateNodeClip0(nodeId, selector)
+        val rect = calculateNodeClip0(node, selector)
 
         val p = page ?: return null
 //        val d = dom ?: return null
@@ -140,11 +130,11 @@ class ScreenshotHandler(
             println(Gson().toJson(viewport))
         }
 
-        return NodeClip(nodeId, pageX, pageY, rect)
+        return NodeClip(node, pageX, pageY, rect)
     }
 
-    private fun calculateNodeClip0(nodeId: Int, selector: String): RectD? {
-        val clickableDOM = ClickableDOM(page!!, dom!!, nodeId)
+    private fun calculateNodeClip0(node: NodeRef, selector: String): RectD? {
+        val clickableDOM = ClickableDOM(page!!, dom!!, node)
         return clickableDOM.boundingBox()
     }
 
@@ -163,13 +153,13 @@ class ScreenshotHandler(
         return RectD(quad[0], quad[1], quad[2], quad[3])
     }
 
-    private fun debugNodeClipDebug(nodeId: Int, selector: String) {
+    private fun debugNodeClipDebug(node: NodeRef, selector: String) {
         println("\n")
-        println("===== $selector $nodeId")
+        println("===== $selector ${node.nodeId}")
 
         var clientRects = pageHandler.evaluate("__pulsar_utils__.queryClientRects('$selector')")
         println(clientRects)
-        var contentQuads = dom?.getContentQuads(nodeId, null, null)
+        var contentQuads = dom?.getContentQuads(node.nodeId, null, null)
         println(contentQuads)
 
         var clientRect = pageHandler.evaluate("__pulsar_utils__.queryClientRect('$selector')")?.toString()
@@ -177,7 +167,7 @@ class ScreenshotHandler(
         println("clientRect: ")
         println(clientRect)
 
-        var clickableDOM = ClickableDOM(page!!, dom!!, nodeId)
+        var clickableDOM = ClickableDOM(page!!, dom!!, node)
         println(clickableDOM.boundingBox())
         println(clickableDOM.clickablePoint())
 
@@ -186,7 +176,7 @@ class ScreenshotHandler(
 
         clientRects = pageHandler.evaluate("__pulsar_utils__.queryClientRects('$selector')")
         println(clientRects)
-        contentQuads = dom?.getContentQuads(nodeId, null, null)
+        contentQuads = dom?.getContentQuads(node.nodeId, null, null)
         println(contentQuads)
 
         clientRect = pageHandler.evaluate("__pulsar_utils__.queryClientRect('$selector')")?.toString()
@@ -194,7 +184,7 @@ class ScreenshotHandler(
         println("clientRect: ")
         println(clientRect)
 
-        clickableDOM = ClickableDOM(page!!, dom!!, nodeId)
+        clickableDOM = ClickableDOM(page!!, dom!!, node)
         println(clickableDOM.boundingBox())
         println(clickableDOM.clickablePoint())
 
@@ -216,7 +206,7 @@ class ScreenshotHandler(
         val height = (clip.height + clip.y - y).roundToInt()
         return RectD(x.toDouble(), y.toDouble(), width.toDouble(), height.toDouble())
     }
-    
+
     /**
      * Capture page screenshot.
      *

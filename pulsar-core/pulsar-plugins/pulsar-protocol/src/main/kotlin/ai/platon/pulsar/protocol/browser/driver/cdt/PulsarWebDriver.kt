@@ -32,7 +32,6 @@ import com.github.kklisura.cdt.protocol.v2023.types.network.ErrorReason
 import com.github.kklisura.cdt.protocol.v2023.types.network.LoadNetworkResourceOptions
 import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
-import com.google.common.annotations.Beta
 import kotlinx.coroutines.channels.Channel
 import org.apache.commons.lang3.SystemUtils
 import org.apache.hc.core5.net.URIBuilder
@@ -208,7 +207,7 @@ class PulsarWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun exists(selector: String) = predicateOnElement(selector, "exists") { it > 0 }
+    override suspend fun exists(selector: String) = predicateOnElement(selector, "exists") { (it.nodeId ?: 0) > 0 }
 
     /**
      * Wait until [selector] for [timeout] at most
@@ -335,12 +334,12 @@ class PulsarWebDriver(
      */
     @Throws(WebDriverException::class)
     override suspend fun click(selector: String, count: Int) {
-        invokeOnElement(selector, "click", scrollIntoView = true) { nodeId ->
-            click(nodeId, count)
+        invokeOnElement(selector, "click", scrollIntoView = true) { node ->
+            click(node, count)
         }
     }
 
-    private suspend fun click(nodeId: Int, count: Int, position: String = "center") {
+    private suspend fun click(node: NodeRef, count: Int, position: String = "center") {
         val deltaX = 4.0 + Random.nextInt(4)
         val deltaY = 4.0
         val offset = OffsetD(deltaX, deltaY)
@@ -352,7 +351,7 @@ class PulsarWebDriver(
             return
         }
 
-        val clickableDOM = ClickableDOM(p, d, nodeId, offset)
+        val clickableDOM = ClickableDOM(p, d, node, offset)
         val point = clickableDOM.clickablePoint().value ?: return
         val box = clickableDOM.boundingBox()
         val width = box?.width ?: 0.0
@@ -380,9 +379,9 @@ class PulsarWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun type(selector: String, text: String) {
         invokeOnElement(selector, "type") {
-            val nodeId = page.focusOnSelector(selector)
-            if (nodeId > 0) {
-                click(nodeId, 1)
+            val node = page.focusOnSelector(selector)
+            if (node != null) {
+                click(node, 1)
                 keyboard?.type(text, randomDelayMillis("type"))
                 gap("type")
             }
@@ -435,7 +434,7 @@ class PulsarWebDriver(
             val deltaOffsetX = 4.0 + Random.nextInt(4)
             val deltaOffsetY = 4.0
             val offset = OffsetD(deltaOffsetX, deltaOffsetY)
-            
+
             val p = pageAPI
             val d = domAPI
             if (p != null && d != null) {
@@ -463,8 +462,8 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun outerHTML(selector: String): String? {
-        return invokeOnElement(selector, "outerHTML") { nodeId ->
-            domAPI?.getOuterHTML(nodeId, null, null)
+        return invokeOnElement(selector, "outerHTML") { node ->
+            domAPI?.getOuterHTML(node.nodeId, node.backendNodeId, node.objectId)
         }
     }
 
@@ -921,11 +920,11 @@ class PulsarWebDriver(
 
     private suspend fun <T> invokeOnElement(
         selector: String, name: String, focus: Boolean = false, scrollIntoView: Boolean = false,
-        action: suspend (Int) -> T
+        action: suspend (NodeRef) -> T
     ): T? {
         try {
             return rpc.invokeDeferred(name) {
-                val nodeId = if (focus) {
+                val node = if (focus) {
                     page.focusOnSelector(selector)
                 } else if (scrollIntoView) {
                     page.scrollIntoViewIfNeeded(selector)
@@ -933,8 +932,8 @@ class PulsarWebDriver(
                     page.querySelector(selector)
                 }
 
-                if (nodeId != null && nodeId > 0) {
-                    action(nodeId)
+                if (node != null) {
+                    action(node)
                 } else {
                     null
                 }
@@ -948,7 +947,7 @@ class PulsarWebDriver(
 
     private suspend fun predicateOnElement(
         selector: String, name: String, focus: Boolean = false, scrollIntoView: Boolean = false,
-        predicate: suspend (Int) -> Boolean
+        predicate: suspend (NodeRef) -> Boolean
     ): Boolean = invokeOnElement(selector, name, focus, scrollIntoView, predicate) == true
 
     private fun isValidNodeId(nodeId: Int?): Boolean {

@@ -31,7 +31,7 @@ internal data class DeviceMetrics(
 )
 
 data class NodeClip(
-    var nodeId: Int = 0,
+    var node: NodeRef? = null,
     var pageX: Int = 0,
     var pageY: Int = 0,
     var rect: RectD? = null,
@@ -45,20 +45,20 @@ data class NodeClip(
 class ClickableDOM(
     val page: Page,
     val dom: DOM,
-    val nodeId: Int,
+    val node: NodeRef,
     val offset: OffsetD? = null
 ) {
     companion object {
-        fun create(page: Page?, dom: DOM?, nodeId: Int?, offset: OffsetD? = null): ClickableDOM? {
-            if (nodeId == null || nodeId <= 0) return null
+        fun create(page: Page?, dom: DOM?, node: NodeRef?, offset: OffsetD? = null): ClickableDOM? {
+            if (node == null) return null
             if (page == null) return null
             if (dom == null) return null
-            return ClickableDOM(page, dom, nodeId, offset)
+            return ClickableDOM(page, dom, node, offset)
         }
     }
 
     fun clickablePoint(): DescriptiveResult<PointD> {
-        val contentQuads = kotlin.runCatching { dom.getContentQuads(nodeId, null, null) }.getOrNull()
+        val contentQuads = kotlin.runCatching { dom.getContentQuads(node.nodeId, node.backendNodeId, node.objectId) }.getOrNull()
         if (contentQuads == null) {
             // throw new Error('Node is either not clickable or not an HTMLElement');
             // return 'error:notvisible';
@@ -122,7 +122,7 @@ class ClickableDOM(
     }
 
     fun boundingBox(): RectD? {
-        val box = dom.runCatching { getBoxModel(nodeId, null, null) }.getOrNull() ?: return null
+        val box = dom.runCatching { getBoxModel(node.nodeId, node.backendNodeId, node.objectId) }.getOrNull() ?: return null
 
         val quad = box.border.takeIf { it.isNotEmpty() } ?: return null
 

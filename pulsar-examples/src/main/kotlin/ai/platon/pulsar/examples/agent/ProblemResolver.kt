@@ -9,7 +9,10 @@ class ProblemResolver {
     suspend fun run() {
         driver.navigateTo("https://news.ycombinator.com/news")
         session.bindDriver(driver)
-        session.resolve("find articles about browser")
+        val agent = session.resolve("find articles about browser")
+
+        println("Result: ")
+        agent.history.forEach { println("- $it") }
     }
 }
 
