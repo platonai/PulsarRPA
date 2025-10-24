@@ -25,9 +25,9 @@ env:
   NETWORK_NAME: 'browser4_backend'
   DOCKER_USERNAME: galaxyeye88
   PRODUCTION_JAR_MODULE_NAME: 'pulsar-browser4'
-  PRODUCTION_JAR_MODULE_PATH: 'pulsar-app/pulsar-browser4'
+  PRODUCTION_JAR_MODULE_PATH: 'pulsar-browser4'
   PRODUCTION_JAR_NAME: 'Browser4.jar'
-  PRODUCTION_JAR_PATH: 'pulsar-app/pulsar-browser4/target/Browser4.jar'
+  PRODUCTION_JAR_PATH: 'pulsar-browser4/target/Browser4.jar'
   JAVA_VERSION: '17'
   MAVEN_OPTS: '-Xmx3g -XX:+UseG1GC'
   MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
@@ -139,16 +139,37 @@ jobs:
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
 
-      - name: Run Integration Tests
-        id: integration-tests
-        if: success() && github.event.inputs.skip_tests != 'true'
-        uses: ./.github/actions/run-integration-tests
-        with:
-          script_path: './bin/tests/run-integration-test.sh'
-          application_url: 'http://localhost:8182'
-          network_name: ${{ env.NETWORK_NAME }}
-          container_name: ${{ env.CONTAINER_NAME }}
-          timeout_seconds: '600'
+      - name: Run End to End Tests
+        id: end-to-end-tests
+        shell: bash
+        run: |
+          echo "::group::🧪 End to End Tests"
+          
+          if [ -f "./bin/tests/run-e2e-test.sh" ]; then
+            echo "✅ Found E2E test script"
+            chmod +x ./bin/tests/run-e2e-test.sh
+          
+            echo "🚀 Running E2E tests..."
+            date
+            echo "Application URL: http://localhost:8182"
+            echo "Network: ${{ env.NETWORK_NAME }}"
+            echo "Container: ${{ env.CONTAINER_NAME }}"
+
+            if timeout 1200 ./bin/tests/run-e2e-test.sh; then
+              echo "✅ E2E tests passed"
+              echo "E2E_status=success" >> $GITHUB_OUTPUT
+            else
+              echo "❌ E2E tests failed"
+              echo "integration_status=failed" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+          else
+            echo "⚠️ E2E test script not found: ./bin/tests/run-E2E-test.sh"
+            echo "Skipping E2E tests..."
+            echo "E2E_status=skipped" >> $GITHUB_OUTPUT
+          fi
+          
+          echo "::endgroup::"
 
       - name: Build Browser4 JAR
         if: success()
