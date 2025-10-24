@@ -19,7 +19,6 @@ import org.springframework.context.annotation.ImportResource
 @ComponentScan(
     "ai.platon.pulsar.boot.autoconfigure",
     "ai.platon.pulsar.rest.api",
-    "ai.platon.pulsar.app.api",
 )
 class Browser4Application {
     private val logger = getLogger(Browser4Application::class)
@@ -45,7 +44,7 @@ class Browser4Application {
 
             logger.info("Welcome to Browser4! \n{}", help)
         } catch (e: Exception) {
-            logger.error("Failed to display help message: {}", e)
+            logger.error("Failed to display help message", e)
         }
     }
 
@@ -59,7 +58,7 @@ class Browser4Application {
                         "It is highly recommended to set DEEPSEEK_API_KEY or other LLM keys to enable LLM features."
             }
         } catch (e: Exception) {
-            logger.warn("Failed to check LLM configuration: {}", e)
+            logger.warn("Failed to check LLM configuration", e)
             "LLM configuration check failed. Please verify your setup."
         }
     }
