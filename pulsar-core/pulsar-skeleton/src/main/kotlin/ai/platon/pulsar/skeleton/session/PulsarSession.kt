@@ -571,6 +571,10 @@ interface PulsarSession : AutoCloseable {
     suspend fun capture(driver: WebDriver, url: String? = null, eventHandlers: PageEventHandlers? = null): WebPage
 
     /**
+     * Create the default driver and bind it to the session.
+     */
+    fun createBoundDriver(): WebDriver
+    /**
      * Bind a webdriver to the session.
      *
      * ```kotlin

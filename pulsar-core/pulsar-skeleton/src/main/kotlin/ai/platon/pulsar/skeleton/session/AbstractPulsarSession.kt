@@ -23,6 +23,7 @@ import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import org.jsoup.nodes.Element
@@ -202,6 +203,10 @@ abstract class AbstractPulsarSession(
         bindDriver(driver)
         val normURL = normalize(url ?: driver.currentUrl())
         return context.attach(normURL, driver)
+    }
+
+    override fun createBoundDriver(): WebDriver {
+        return context.launchDefaultBrowser().newDriver().also { bindDriver(it) }
     }
 
     override fun bindDriver(driver: WebDriver) {

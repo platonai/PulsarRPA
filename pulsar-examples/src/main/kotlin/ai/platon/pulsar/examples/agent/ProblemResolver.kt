@@ -4,12 +4,12 @@ import ai.platon.pulsar.agentic.context.AgenticContexts
 
 class ProblemResolver {
     val session = AgenticContexts.getOrCreateSession(spa = true)
-    val driver = session.context.launchDefaultBrowser().newDriver()
 
     suspend fun run() {
+        val driver = session.createBoundDriver()
         driver.navigateTo("https://news.ycombinator.com/news")
-        session.bindDriver(driver)
-        val agent = session.resolve("find articles about browser")
+        // val agent = session.resolve("find articles about browser and give me a summary")
+        val agent = session.resolve("find articles about browser and give me a summary")
 
         println("Result: ")
         agent.history.forEach { println("- $it") }
