@@ -231,9 +231,9 @@ class InferenceEngine(
                 "If `returnAction` is true, the tool specifications has to be included in `params.instruction`" }
         }
 
-        // Build dynamic schema hint for the LLM (prompt-enforced)
-        val systemMsg = promptBuilder.buildObserveSystemPrompt(params.userProvidedInstructions)
-        // and a function call requirement is contained in the message
+        // observe guide
+        val systemMsg = promptBuilder.buildObserveGuideSystemPrompt(params.userProvidedInstructions)
+        // instruction + DOM + browser state + schema
         val userMsg = promptBuilder.buildObserveUserMessage(params)
 
         val prefix = if (params.fromAct) "act" else "observe"

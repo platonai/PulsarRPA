@@ -345,17 +345,17 @@ class BrowserPerceptiveAgent(
         }
 
         // 3) Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
-        val browserState = getBrowserUseState()
+        val browserUseState = getBrowserUseState()
         val params = ObserveParams(
             instruction = instruction,
-            browserUseState = browserState,
+            browserUseState = browserUseState,
             requestId = UUID.randomUUID().toString(),
             returnAction = true,
             logInferenceToFile = config.enableStructuredLogging,
             fromAct = true,
         )
 
-        val results: List<ObserveResult> = doObserve1(params, browserState)
+        val results: List<ObserveResult> = doObserve1(params, browserUseState)
 
         if (results.isEmpty()) {
             val msg = "doObserveAct: No actionable element found"
@@ -596,6 +596,7 @@ class BrowserPerceptiveAgent(
             )
         )
 
+        // agent general guide + overall goal
         val systemMsg = TextToAction.buildOperatorSystemPrompt(overallGoal)
         var consecutiveNoOps = 0
         var step = 0
@@ -639,11 +640,18 @@ class BrowserPerceptiveAgent(
                 } else {
                     null
                 }
+                // history + atom operation guide + completion condition + overall goal
                 val userMsg = promptBuilder.buildCurrentStepUserMessage(overallGoal, _history)
 
-                // currentStepMessage: agent general guide + overall goal + action history + overall goal again
+                // systemMsg + userMsg + screenshot reminder
+                //
+                // + [agent general guide + overall goal]
+                // + [history + atom operation guide + completion condition + overall goal]
+                // + [screenshot reminder]
                 val currentStepMessage = buildCurrentStepMessage(systemMsg, userMsg, screenshotB64)
-                // interactive elements are already appended to message
+
+                // call the LLM to plan the next step to take.
+                // TTA will add more guide to generate the most relevant element with action suggestions
                 val stepAction = generateStepAction(currentStepMessage, stepContext, browserUseState, screenshotB64)
 
                 if (stepAction == null) {

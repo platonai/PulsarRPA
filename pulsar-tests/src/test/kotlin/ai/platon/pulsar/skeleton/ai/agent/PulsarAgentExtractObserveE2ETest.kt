@@ -67,9 +67,9 @@ class PulsarAgentExtractObserveE2ETest : WebDriverTestBase() {
         val agent = BrowserPerceptiveAgent(driver)
         val result = agent.extract("Extract key structured data from the page")
 
-        Assertions.assertTrue(result.success, "Extract should succeed")
+        assertTrue(result.success, "Extract should succeed")
         val jsonText = result.data.toString()
-        Assertions.assertTrue(jsonText.isNotBlank(), "Extracted data should be non-empty JSON")
+        assertTrue(jsonText.isNotBlank(), "Extracted data should be non-empty JSON")
 
         writeMetrics(
             Metrics(

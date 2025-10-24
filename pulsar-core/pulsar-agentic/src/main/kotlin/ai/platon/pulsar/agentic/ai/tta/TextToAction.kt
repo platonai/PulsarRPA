@@ -71,16 +71,26 @@ open class TextToAction(
     open suspend fun generateResponse(
         instruction: String, browserUseState: BrowserUseState, screenshotB64: String? = null, toolCallLimit: Int = 100,
     ): ModelResponse {
-        // instruction from agent: agent guide + tool specs + overall goal + last action summary
+        // instruction from agent:
+        // systemMsg + userMsg + screenshot reminder
+        //
+        // + [agent general guide + overall goal]
+        // + [history + atom operation guide + completion condition + overall goal]
+        // + [screenshot reminder]
         val fromAgent = instruction.startsWith(TTA_AGENT_SYSTEM_PROMPT_PREFIX_20)
-        val systemPrompt = if (fromAgent) instruction else buildOperatorSystemPrompt(instruction)
+        val agentGuidSystemMsg = if (fromAgent) instruction else buildOperatorSystemPrompt(instruction)
 
         val params = ObserveParams(instruction, browserUseState = browserUseState, returnAction = true, logInferenceToFile = true)
-        val userMessage = buildBrowserUseStatePrompt(params, toolCallLimit)
+        // observe guide:
+        // + [instruction] + DOM + browser state + schema?
+        // + observe guide
+        val observeGuide = PromptBuilder().buildObserveUserMessage(params)
+        // tool specs + [observe guide] + completion guide
+        val userMessage = buildBrowserUseStatePrompt(observeGuide, toolCallLimit)
         val response = if (screenshotB64 != null) {
-            chatModel.call(systemPrompt, userMessage, null, screenshotB64, "image/jpeg")
+            chatModel.call(agentGuidSystemMsg, userMessage, null, screenshotB64, "image/jpeg")
         } else {
-            chatModel.call(systemPrompt, userMessage)
+            chatModel.call(agentGuidSystemMsg, userMessage)
         }
 
         return response
@@ -229,7 +239,7 @@ open class TextToAction(
 
     companion object {
 
-        val TTA_AGENT_SYSTEM_PROMPT = """
+        val TTA_AGENT_GUIDE_SYSTEM_PROMPT = """
 你是一个网页通用代理，目标是基于用户目标一步一步完成任务。
 
 重要指南：
@@ -272,15 +282,17 @@ ${ToolCallExecutor.TOOL_CALL_LIST}
 
         """.trimIndent()
 
-        val TTA_AGENT_SYSTEM_PROMPT_PREFIX_20 = TTA_AGENT_SYSTEM_PROMPT.take(20)
+        val TTA_AGENT_SYSTEM_PROMPT_PREFIX_20 = TTA_AGENT_GUIDE_SYSTEM_PROMPT.take(20)
 
-        fun buildBrowserUseStatePrompt(params: ObserveParams, toolCallLimit: Int = 100): String {
-            val observeMessage = PromptBuilder().buildObserveUserMessage(params).content
-
+        /**
+         * Brief:
+         * instruction + DOM + browser state + schema + completion guide
+         * */
+        fun buildBrowserUseStatePrompt(observeMessage: PromptBuilder.SimpleMessage, toolCallLimit: Int = 1): String {
             val prompt = """
 每次最多调用 $toolCallLimit 个工具。
 
-$observeMessage
+${observeMessage.content}
 
 如果总体目标已经达成，则严格按如下格式输出 JSON 信息：
 
@@ -297,7 +309,7 @@ $observeMessage
 
         fun buildOperatorSystemPrompt(overallGoal: String): String {
             return """
-$TTA_AGENT_SYSTEM_PROMPT
+$TTA_AGENT_GUIDE_SYSTEM_PROMPT
 
 总体目标：$overallGoal
         """.trimIndent()

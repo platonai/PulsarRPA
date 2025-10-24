@@ -9,6 +9,15 @@ import ai.platon.pulsar.common.alwaysFalse
 import java.util.*
 import kotlin.math.min
 
+/**
+ * Description:
+ * Builder for language-localized prompt snippets used by agentic browser tasks.
+ *
+ * Prompt key points:
+ * - Locale-aware (CN/EN) output
+ * - Produces structured fragments for system/user roles
+ * - Minimizes extra text to steer LLM behavior
+ */
 class PromptBuilder(val locale: Locale = Locale.CHINESE) {
 
     data class SimpleMessage(
@@ -19,7 +28,14 @@ class PromptBuilder(val locale: Locale = Locale.CHINESE) {
     val isCN = locale in listOf(Locale.CHINESE, Locale.SIMPLIFIED_CHINESE, Locale.TRADITIONAL_CHINESE)
 
     /**
-     * 构建“用户自定义指令”提示片段（中/英），在提示中原样附带用户输入；为空则返回空字符串。
+     * Description:
+     * Builds the custom-instructions snippet (localized). Returns empty when input is blank.
+     *
+     * Prompt key points:
+     * - Echo user-provided instructions verbatim
+     * - Remind to follow only when relevant
+     * - Localized header/title (CN/EN)
+     * - Returns "" if instructions are null/blank
      */
     fun buildUserInstructionsString(userProvidedInstructions: String?): String {
         if (userProvidedInstructions.isNullOrBlank()) return ""
@@ -47,8 +63,15 @@ $userProvidedInstructions
 
     // extract
     /**
-     * 抽取任务的系统提示：强调“满足即停、提取全部请求信息、逐字输出DOM文本”，
-     * 链接提取仅返回元素ID，并可追加用户自定义指令。返回 system 角色消息。
+     * Description:
+     * Builds the extraction system prompt emphasizing full compliance, exact-text printing, and link-ID only policy.
+     *
+     * Prompt key points:
+     * - Extract ALL information when user asks for list/all
+     * - Print exact DOM text with symbols/newlines preserved
+     * - For links/URLs, return element IDs only
+     * - May append user custom instructions
+     * - Returns a system-role message
      */
     fun buildExtractSystemPrompt(userProvidedInstructions: String? = null): SimpleMessage {
         val baseInstructionCN = """你正在代表用户提取内容。
@@ -94,7 +117,13 @@ Print null or an empty string if no new information is found.
     }
 
     /**
-     * 提供抽取任务的默认用户指令；未指定时提示从页面提取关键的结构化数据。
+     * Description:
+     * Provides a default extraction user instruction when none is specified.
+     *
+     * Prompt key points:
+     * - Defaults to extracting key structured data from the page
+     * - Localized default text (CN/EN)
+     * - Returns the provided instruction if non-blank
      */
     fun initExtractUserInstruction(instruction: String? = null): String {
         if (instruction.isNullOrBlank()) {
@@ -109,8 +138,14 @@ Print null or an empty string if no new information is found.
     }
 
     /**
-     * 生成抽取阶段的 DOM 内容片段：拼接页面 nanoTree JSON 与严格 JSON Schema 提示，
-     * 要求模型严格按 Schema 返回 JSON，不包含多余说明。
+     * Description:
+     * Builds the DOM content fragment for extraction with nanoTree JSON and a strict JSON Schema hint.
+     *
+     * Prompt key points:
+     * - Includes page nanoTree JSON
+     * - Appends a strict JSON Schema the model MUST follow
+     * - Explicitly forbids any extra commentary
+     * - Strongly steers JSON-only output
      */
     fun buildExtractDomContent(domState: DOMState, params: ExtractParams): String {
         val json = domState.nanoTreeLazyJson
@@ -130,7 +165,13 @@ Print null or an empty string if no new information is found.
     }
 
     /**
-     * 构建抽取任务的用户消息：包含“指令”和“DOM 内容”两部分，合成 user 角色消息。
+     * Description:
+     * Builds the extraction user message composed of the instruction and DOM content.
+     *
+     * Prompt key points:
+     * - Two sections: Instruction and DOM
+     * - Uses localized labels
+     * - Returns a user-role message
      */
     fun buildExtractUserPrompt(instruction: String, domContent: String): SimpleMessage {
         val instructionLabel = if (isCN) "指令: " else "Instruction: "
@@ -171,7 +212,14 @@ Each chunk corresponds to one viewport-sized section of the page (the first chun
 """.trimIndent()
 
     /**
-     * 元数据评估系统提示：定义“满足即完成、否则仅在未满足且仍有分片时继续”的判定准则。返回 system 角色消息。
+     * Description:
+     * Builds the system prompt for metadata evaluation of extraction progress/completion.
+     *
+     * Prompt key points:
+     * - Stop immediately once instruction is satisfied
+     * - Continue only if not satisfied AND chunks remain
+     * - Defines chunk as one viewport screen
+     * - Returns a system-role message
      */
     fun buildMetadataSystemPrompt(): SimpleMessage {
         val content = if (isCN) metadataSystemPromptCN else metadataSystemPromptEN
@@ -182,7 +230,14 @@ Each chunk corresponds to one viewport-sized section of the page (the first chun
     }
 
     /**
-     * 元数据评估用户消息：包含指令、提取结果（序列化为 JSON）、已处理/总分片计数，供完成度判定使用。
+     * Description:
+     * Builds the user message for metadata evaluation with instruction, extracted JSON, and chunk counters.
+     *
+     * Prompt key points:
+     * - Includes instruction and serialized extraction result
+     * - Provides chunksSeen and chunksTotal for progress context
+     * - Aids completion decision logic
+     * - Returns a user-role message
      */
     fun buildMetadataPrompt(
         instruction: String,
@@ -213,10 +268,19 @@ chunksTotal: $chunksTotal
 
     // observe
     /**
-     * 观察任务的系统提示：说明将提供“观察指令 + 无障碍树”，要求返回匹配元素数组（否则空数组），
-     * 支持附加用户自定义指令。返回 system 角色消息。
+     * Description:
+     * Builds the observe system prompt: instruction + hybrid accessibility tree; return matching elements or empty.
+     *
+     * Brief:
+     * observe guide
+     *
+     * Prompt key points:
+     * - Input: observation instruction + accessibility/DOM hybrid tree
+     * - Output: array of matching elements, or [] if none
+     * - Can append user custom instructions
+     * - Returns a system-role message
      */
-    fun buildObserveSystemPrompt(userProvidedInstructions: String? = null): SimpleMessage {
+    fun buildObserveGuideSystemPrompt(userProvidedInstructions: String? = null): SimpleMessage {
         fun observeSystemPromptCN() = """
 你正在通过根据用户希望观察的页面内容来查找元素，帮助用户实现浏览器操作自动化。
 你将获得：
@@ -244,7 +308,13 @@ Return an array of elements that match the instruction if they exist, otherwise 
     }
 
     /**
-     * 观察任务默认用户指令：在未指定时，请全面返回可用于后续操作的交互元素（链接、按钮、导航等）。
+     * Description:
+     * Provides a default observe user instruction when none is specified.
+     *
+     * Prompt key points:
+     * - Default asks for interactive/navigational elements for future actions
+     * - Encourage comprehensive coverage (links, buttons, sections, related pages)
+     * - Localized default text (CN/EN)
      */
     fun initObserveUserInstruction(instruction: String?): String {
         return when {
@@ -263,8 +333,18 @@ Be comprehensive: if there are multiple elements that may be relevant for future
     }
 
     /**
-     * 构建观察任务的用户消息：包含观察指令、无障碍树（及说明）、当前浏览器状态以及返回结果的 Schema 约束。
-     * 返回 user 角色消息。
+     * Description:
+     * Builds the observe user message containing the instruction, accessibility tree/spec, browser state, and schema.
+     *
+     * Brief:
+     * instruction + DOM + browser state + schema
+     *
+     * Prompt key points:
+     * - Includes the hierarchical accessibility tree (nanoTree JSON)
+     * - States visibility/scrollable/interactive defaults and locator format
+     * - Includes current browser state JSON
+     * - Appends the observe-result schema contract
+     * - Returns a user-role message
      */
     fun buildObserveUserMessage(params: ObserveParams): SimpleMessage {
         val instruction = params.instruction
@@ -317,11 +397,16 @@ $schemaContract
     }
 
     /**
-     * Observe result schema:
-     * ```
-     * { "elements": [ { "locator": string, "description": string, "method": string, "arguments": [{"name": string, "value": string}] } ] }
-     * ```
-     * */
+     * Description:
+     * Builds the schema contract for observe results returned by the model.
+     *
+     * Prompt key points:
+     * - JSON object with { elements: [ { locator, description, (optional) method, arguments } ] }
+     * - If returnAction=true, include method and arguments
+     * - Locator must exactly match the accessibility tree node
+     * - Selector is derived from locator; no undetermined params
+     * - No extra text beyond valid JSON
+     */
     fun buildObserveResultSchemaContract(params: ObserveParams): String {
         // Build schema hint for the LLM (prompt-enforced)
 
@@ -371,9 +456,17 @@ $schema
     }
 
     /**
-     * 为 observeAct 生成工具使用提示：给定用户动作与可用工具列表，提醒按钮/链接在感知上相似，
-     * 若无相关动作返回空数组，且仅返回最相关的一个动作。
+     * Description:
+     * Builds a tool-use instruction mapping a user action to the most relevant element and available tool.
+     *
+     * Prompt key points:
+     * - Lists supported tool calls for selection
+     * - Reminds that buttons and links are perceptually similar
+     * - If action is unrelated, return an empty array
+     * - Return only one most relevant action
+     * - Localized content (CN/EN)
      */
+    @Suppress("UNUSED_PARAMETER")
     fun buildToolUsePrompt(
         action: String, toolCalls: List<String>, variables: Map<String, String>? = null
     ): String {
@@ -413,8 +506,14 @@ ONLY return one action. If multiple actions are relevant, return the most releva
     }
 
     /**
-     * 生成“当前步骤规划”的用户消息：给出近期历史摘要，要求产出严格单步原子动作；
-     * 若已完成/无法推进，需返回包含 isComplete/summary/suggestions 的对象，并附总体目标。
+     * Description:
+     * Builds a user message to plan the next single atomic step given recent history and overall goal.
+     *
+     * Prompt key points:
+     * - Summarizes up to the last 8 history entries
+     * - Request exactly one next atomic action
+     * - If done/blocked, return { isComplete, summary, suggestions }
+     * - Echo the overall goal for context
      */
     fun buildCurrentStepUserMessage(overallGoal: String, history: List<String>): String {
         val his = if (history.isNotEmpty()) {
@@ -425,7 +524,9 @@ ONLY return one action. If multiple actions are relevant, return the most releva
 此前动作摘要：
 $his
 
-请基于当前页面截图、交互元素与历史动作，规划下一步（严格单步原子动作）。若任务已完成或无法推进，请输出：
+请基于当前页面截图、交互元素与历史动作，规划下一步（严格单步原子动作）。
+
+若任务已完成或无法推进，请输出：
 {
   "isComplete": true,
   "summary": string,
