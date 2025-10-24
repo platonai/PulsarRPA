@@ -127,6 +127,8 @@ class PageStateTracker(
      * @param checkIntervalMs Interval between stability checks
      */
     suspend fun waitForDOMSettle(timeoutMs: Long, checkIntervalMs: Long) {
+        driver.waitForSelector("body", timeoutMs)
+
         val startTime = System.currentTimeMillis()
         var lastSignature: String? = null
         var stableCount = 0
