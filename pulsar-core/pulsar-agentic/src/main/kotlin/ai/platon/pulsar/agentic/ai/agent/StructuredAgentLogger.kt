@@ -23,7 +23,7 @@ class StructuredAgentLogger(
      * @param context Execution context containing session ID, step number, etc.
      * @param additionalData Additional data to include in the log
      */
-    fun log(
+    fun info(
         message: String,
         context: ExecutionContext,
         additionalData: Map<String, Any> = emptyMap()
@@ -46,6 +46,7 @@ class StructuredAgentLogger(
         } else {
             logData.remove("sessionId")
             logData.remove("timestamp")
+            logData.remove("message")
             val log = logData.entries.joinToString(", ") { (key, value) -> "$key:$value" }
             logger.info("{} - {} | {}", context.sessionId.take(8), message, log)
         }
