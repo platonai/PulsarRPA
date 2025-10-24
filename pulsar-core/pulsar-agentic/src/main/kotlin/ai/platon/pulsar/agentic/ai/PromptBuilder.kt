@@ -532,7 +532,11 @@ $his
   "summary": string,
   "suggestions": [string]
 }
-总体目标：$overallGoal
+
+总体目标：
+<overallGoal>
+$overallGoal
+</overallGoal>
 
 		""".trimIndent()
     }

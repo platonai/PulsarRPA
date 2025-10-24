@@ -19,6 +19,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
+import org.apache.commons.lang3.StringUtils
 import java.nio.file.Files
 
 open class TextToAction(
@@ -42,7 +43,11 @@ open class TextToAction(
      * @return The action description
      * */
     @ExperimentalApi
-    open suspend fun generate(instruction: String, driver: WebDriver, screenshotB64: String? = null): ActionDescription {
+    open suspend fun generate(
+        instruction: String,
+        driver: WebDriver,
+        screenshotB64: String? = null
+    ): ActionDescription {
         require(driver is PulsarWebDriver) { "PulsarWebDriver is required to use agents" }
         val browserUseState = driver.domService.getBrowserUseState(snapshotOptions = SnapshotOptions())
 
@@ -57,11 +62,16 @@ open class TextToAction(
      * @return The action description
      * */
     @ExperimentalApi
-    open suspend fun generate(instruction: String, browserUseState: BrowserUseState, screenshotB64: String? = null): ActionDescription {
+    open suspend fun generate(
+        instruction: String,
+        browserUseState: BrowserUseState,
+        screenshotB64: String? = null
+    ): ActionDescription {
         try {
             return generateWithToolCallSpecs(instruction, browserUseState, screenshotB64, 1)
         } catch (e: Exception) {
-            val errorResponse = ModelResponse("Unknown exception" + e.brief(), ResponseState.OTHER
+            val errorResponse = ModelResponse(
+                "Unknown exception" + e.brief(), ResponseState.OTHER
             )
             return ActionDescription(errorResponse)
         }
@@ -80,7 +90,8 @@ open class TextToAction(
         val fromAgent = instruction.contains(TTA_AGENT_SYSTEM_PROMPT_PREFIX_20)
         val agentGuidSystemMsg = if (fromAgent) instruction else buildOperatorSystemPrompt(instruction)
 
-        val params = ObserveParams(instruction, browserUseState = browserUseState, returnAction = true, logInferenceToFile = true)
+        val overallGoal = StringUtils.substringBetween(instruction, "<overallGoal>", "</overallGoal>")
+        val params = ObserveParams(overallGoal, browserUseState = browserUseState, returnAction = true, logInferenceToFile = true)
         // observe guide:
         // + [instruction] + DOM + browser state + schema?
         // + observe guide
@@ -310,8 +321,6 @@ ${observeMessage.content}
         fun buildOperatorSystemPrompt(overallGoal: String): String {
             return """
 $TTA_AGENT_GUIDE_SYSTEM_PROMPT
-
-总体目标：$overallGoal
         """.trimIndent()
         }
 

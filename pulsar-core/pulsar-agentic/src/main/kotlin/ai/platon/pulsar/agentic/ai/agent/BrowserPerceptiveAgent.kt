@@ -90,7 +90,7 @@ class BrowserPerceptiveAgent(
         val sessionId = uuid.toString()
 
         // Add start history for better traceability
-        addToHistory("resolve START session=${sessionId.take(8)} goal='${Strings.compactWhitespaces(action.action, 160)}' maxSteps=${config.maxSteps} maxRetries=${config.maxRetries}")
+        addToRecordHistory("resolve START session=${sessionId.take(8)} goal='${Strings.compactWhitespaces(action.action, 160)}' maxSteps=${config.maxSteps} maxRetries=${config.maxRetries}")
 
         // Overall timeout to prevent indefinite hangs for a full resolve session
         return try {
@@ -536,20 +536,20 @@ class BrowserPerceptiveAgent(
         startTime: Instant
     ): ActResult {
         var lastError: Exception? = null
-
+        
         for (attempt in 0..config.maxRetries) {
             val attemptNo = attempt + 1
-            addToHistory("resolve ATTEMPT ${attemptNo}/${config.maxRetries + 1}")
+            addToRecordHistory("resolve ATTEMPT ${attemptNo}/${config.maxRetries + 1}")
             try {
                 val res = doResolveProblem(action, sessionId, startTime, attempt)
-                addToHistory("resolve ATTEMPT ${attemptNo} OK")
+                addToRecordHistory("resolve ATTEMPT ${attemptNo} OK")
                 return res
             } catch (e: PerceptiveAgentError.TransientError) {
                 lastError = e
                 logger.error("resolve.transient attempt={} sid={} msg={}", attempt + 1, sessionId.take(8), e.message, e)
                 if (attempt < config.maxRetries) {
                     val backoffMs = calculateRetryDelay(attempt)
-                    addToHistory("resolve RETRY ${attemptNo} cause=Transient delay=${backoffMs}ms msg=${e.message}")
+                    addToRecordHistory("resolve RETRY ${attemptNo} cause=Transient delay=${backoffMs}ms msg=${e.message}")
                     delay(backoffMs)
                 }
             } catch (e: PerceptiveAgentError.TimeoutError) {
@@ -557,7 +557,7 @@ class BrowserPerceptiveAgent(
                 logger.error("resolve.timeout attempt={} sid={} msg={}", attempt + 1, sessionId.take(8), e.message, e)
                 if (attempt < config.maxRetries) {
                     val baseBackoffMs = config.baseRetryDelayMs
-                    addToHistory("resolve RETRY ${attemptNo} cause=Timeout delay=${baseBackoffMs}ms msg=${e.message}")
+                    addToRecordHistory("resolve RETRY ${attemptNo} cause=Timeout delay=${baseBackoffMs}ms msg=${e.message}")
                     delay(baseBackoffMs)
                 }
             } catch (e: Exception) {
@@ -565,7 +565,7 @@ class BrowserPerceptiveAgent(
                 logger.error("resolve.unexpected attempt={} sid={} msg={}", attempt + 1, sessionId.take(8), e.message, e)
                 if (shouldRetryError(e) && attempt < config.maxRetries) {
                     val backoffMs = calculateRetryDelay(attempt)
-                    addToHistory("resolve RETRY ${attemptNo} cause=Unexpected delay=${backoffMs}ms msg=${e.message}")
+                    addToRecordHistory("resolve RETRY ${attemptNo} cause=Unexpected delay=${backoffMs}ms msg=${e.message}")
                     delay(backoffMs)
                 } else {
                     // Non-retryable error, exit loop
@@ -574,7 +574,7 @@ class BrowserPerceptiveAgent(
             }
         }
 
-        addToHistory("resolve FAIL after ${config.maxRetries + 1} attempts: ${lastError?.message}")
+        addToRecordHistory("resolve FAIL after ${config.maxRetries + 1} attempts: ${lastError?.message}")
         return ActResult(
             success = false,
             message = "Failed after ${config.maxRetries + 1} attempts. Last error: ${lastError?.message}",
@@ -1019,6 +1019,10 @@ class BrowserPerceptiveAgent(
             // Remove oldest entries to prevent memory issues
             // _history.subList(0, config.maxHistorySize).clear()
         }
+    }
+
+    private fun addToRecordHistory(entry: String) {
+
     }
 
     /**
