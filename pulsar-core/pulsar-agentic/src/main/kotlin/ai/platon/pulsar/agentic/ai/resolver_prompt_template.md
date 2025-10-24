@@ -14,23 +14,10 @@
 输出严格使用以下两种 JSON 之一：
 
 1. 动作输出（仅含一个元素）：
-   {
-   "elements": [
-   {
-   "locator": string,
-   "description": string,
-   "method": string,
-   "arguments": [ { "name": string, "value": string } ]
-   }
-   ]
-   }
+   {"elements":[{"locator":string,"description":string,"method":string,"arguments":[{"name":string,"value":string}]}]}
 
 2. 任务完成输出：
-   {
-   "isComplete": true,
-   "summary": string,
-   "suggestions": [ string ]
-   }
+   {"taskComplete":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]}
 
 > 动作输出中，`method`, `arguments` 为可选项。
 
@@ -77,9 +64,5 @@
 如果总体目标已经达成，则严格按如下格式输出 JSON 信息：
 
 ```
-{
-"isComplete": true,
-"summary": string,
-"suggestions": [string]
-}
+{"taskComplete":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]}
 ```

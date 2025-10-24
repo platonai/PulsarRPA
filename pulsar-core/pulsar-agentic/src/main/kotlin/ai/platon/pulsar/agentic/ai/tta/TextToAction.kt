@@ -77,7 +77,7 @@ open class TextToAction(
         // + [agent general guide + overall goal]
         // + [history + atom operation guide + completion condition + overall goal]
         // + [screenshot reminder]
-        val fromAgent = instruction.startsWith(TTA_AGENT_SYSTEM_PROMPT_PREFIX_20)
+        val fromAgent = instruction.contains(TTA_AGENT_SYSTEM_PROMPT_PREFIX_20)
         val agentGuidSystemMsg = if (fromAgent) instruction else buildOperatorSystemPrompt(instruction)
 
         val params = ObserveParams(instruction, browserUseState = browserUseState, returnAction = true, logInferenceToFile = true)

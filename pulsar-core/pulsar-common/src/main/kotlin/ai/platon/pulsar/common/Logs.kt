@@ -210,29 +210,25 @@ fun printlnPro() {
     println()
 }
 
+fun printlnPro(o: Any?) {
+    printlnPro(null, o)
+}
+
 /**
  * A protected version for println which can be disabled.
  * */
-fun printlnPro(o: Any?) {
+fun printlnPro(ownerObj: Any?, o: Any?) {
     if (System.getProperty("logging.printlnPro.enabled") == "false") {
         return
     }
 
-    when (o) {
-        null -> println(o)
-        is Boolean -> println(o)
-        is Byte -> println(o)
-        is Short -> println(o)
-        is Int -> println(o)
-        is Long -> println(o)
-        is Float -> println(o)
-        is Double -> println(o)
-        is Char -> println(o)
-        is UByte -> println(o)
-        is UShort -> println(o)
-        is UInt -> println(o)
-        is ULong -> println(o)
-        is String -> println(o)
-        else -> println(o)
+    val prefix = if (ownerObj != null) {
+        readableClassName(ownerObj) + " - "
+    } else null
+
+    if (prefix != null) {
+        println(prefix + o?.toString())
+    } else {
+        println(o?.toString())
     }
 }

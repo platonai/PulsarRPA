@@ -89,14 +89,20 @@ class BrowserPerceptiveAgent(
         val startTime = Instant.now()
         val sessionId = uuid.toString()
 
+        // Add start history for better traceability
+        addToHistory("resolve START session=${sessionId.take(8)} goal='${Strings.compactWhitespaces(action.action, 160)}' maxSteps=${config.maxSteps} maxRetries=${config.maxRetries}")
+
         // Overall timeout to prevent indefinite hangs for a full resolve session
         return try {
-            withTimeout(config.resolveTimeoutMs) {
+            val result = withTimeout(config.resolveTimeoutMs) {
                 resolveProblemWithRetry(action, sessionId, startTime)
             }
+            val dur = Duration.between(startTime, Instant.now()).toMillis()
+            addToHistory("resolve DONE session=${sessionId.take(8)} success=${result.success} dur=${dur}ms")
+            result
         } catch (_: kotlinx.coroutines.TimeoutCancellationException) {
             val msg = "Resolve timed out after ${config.resolveTimeoutMs}ms: ${action.action}"
-            addToHistory("resolve TIMEOUT: ${action.action}")
+            addToHistory("resolve TIMEOUT: ${Strings.compactWhitespaces(action.action, 160)}")
             ActResult(success = false, message = msg, action = action.action)
         }
     }
@@ -191,7 +197,7 @@ class BrowserPerceptiveAgent(
             val ok = actionValidator.validateToolCall(ToolCall("driver", lowerMethod, toolArgs))
             if (!ok) {
                 val msg = "Tool call validation failed for $lowerMethod with selector ${selector?.take(120)}"
-                structuredLogger.log(
+                structuredLogger.info(
                     msg,
                     ExecutionContext(
                         uuid.toString(),
@@ -538,13 +544,18 @@ class BrowserPerceptiveAgent(
         var lastError: Exception? = null
 
         for (attempt in 0..config.maxRetries) {
+            val attemptNo = attempt + 1
+            addToHistory("resolve ATTEMPT ${attemptNo}/${config.maxRetries + 1}")
             try {
-                return doResolveProblem(action, sessionId, startTime, attempt)
+                val res = doResolveProblem(action, sessionId, startTime, attempt)
+                addToHistory("resolve ATTEMPT ${attemptNo} OK")
+                return res
             } catch (e: PerceptiveAgentError.TransientError) {
                 lastError = e
                 structuredLogger.logError("Transient error on attempt ${attempt + 1}", e, sessionId)
                 if (attempt < config.maxRetries) {
                     val backoffMs = calculateRetryDelay(attempt)
+                    addToHistory("resolve RETRY ${attemptNo} cause=Transient delay=${backoffMs}ms msg=${e.message}")
                     delay(backoffMs)
                 }
             } catch (e: PerceptiveAgentError.TimeoutError) {
@@ -552,6 +563,7 @@ class BrowserPerceptiveAgent(
                 structuredLogger.logError("Timeout error on attempt ${attempt + 1}", e, sessionId)
                 if (attempt < config.maxRetries) {
                     val baseBackoffMs = config.baseRetryDelayMs
+                    addToHistory("resolve RETRY ${attemptNo} cause=Timeout delay=${baseBackoffMs}ms msg=${e.message}")
                     delay(baseBackoffMs)
                 }
             } catch (e: Exception) {
@@ -559,6 +571,7 @@ class BrowserPerceptiveAgent(
                 structuredLogger.logError("Unexpected error on attempt ${attempt + 1}", e, sessionId)
                 if (shouldRetryError(e) && attempt < config.maxRetries) {
                     val backoffMs = calculateRetryDelay(attempt)
+                    addToHistory("resolve RETRY ${attemptNo} cause=Unexpected delay=${backoffMs}ms msg=${e.message}")
                     delay(backoffMs)
                 } else {
                     // Non-retryable error, exit loop
@@ -567,6 +580,7 @@ class BrowserPerceptiveAgent(
             }
         }
 
+        addToHistory("resolve FAIL after ${config.maxRetries + 1} attempts: ${lastError?.message}")
         return ActResult(
             success = false,
             message = "Failed after ${config.maxRetries + 1} attempts. Last error: ${lastError?.message}",
@@ -587,7 +601,7 @@ class BrowserPerceptiveAgent(
         val overallGoal = action.action
         val context = ExecutionContext(sessionId, 0, "execute", getCurrentUrl())
 
-        structuredLogger.log(
+        structuredLogger.info(
             "Starting PerceptiveAgent execution", context, mapOf(
                 "instruction" to overallGoal.take(100),
                 "attempt" to (attempt + 1),
@@ -607,20 +621,26 @@ class BrowserPerceptiveAgent(
                 val stepStartTime = Instant.now()
                 val stepContext = context.copy(stepNumber = step, actionType = "step")
 
-                // Extract interactive nodes each step (could be optimized via diffing later)
+                val settleMs = action.domSettleTimeoutMs?.toLong()?.coerceAtLeast(0L) ?: config.domSettleTimeoutMs
+                if (settleMs > 0) {
+                    // High Priority #3: Improved DOM settle detection
+                    pageStateTracker.waitForDOMSettle(settleMs, config.domSettleCheckIntervalMs)
+                }
+
+                // Extract nodes each step
                 val browserUseState = getBrowserUseState()
 
                 // Medium Priority #10: Detect if page state hasn't changed
                 val unchangedCount = pageStateTracker.checkStateChange(browserUseState)
                 if (unchangedCount >= 3) {
-                    structuredLogger.log(
+                    structuredLogger.info(
                         "Page state unchanged for $unchangedCount steps, potential loop detected",
                         stepContext
                     )
                     consecutiveNoOps++
                 }
 
-                structuredLogger.log(
+                structuredLogger.info(
                     "Executing step", stepContext, mapOf(
                         "step" to step,
                         "maxSteps" to config.maxSteps,
@@ -645,13 +665,20 @@ class BrowserPerceptiveAgent(
 
                 // systemMsg + userMsg + screenshot reminder
                 //
-                // + [agent general guide + overall goal]
-                // + [history + atom operation guide + completion condition + overall goal]
-                // + [screenshot reminder]
+                // + agent general guide + overall goal
+                // + history + atom operation guide + completion condition + overall goal
+                // + screenshot reminder
                 val currentStepMessage = buildCurrentStepMessage(systemMsg, userMsg, screenshotB64)
 
                 // call the LLM to plan the next step to take.
                 // TTA will add more guide to generate the most relevant element with action suggestions
+                //
+                // + agent general guide + overall goal
+                // + history + atom operation guide + completion condition + overall goal
+                // + screenshot reminder
+                // + [instruction] + DOM + browser state + schema?
+                // + observe guide
+                // + tool specs + [observe guide] + completion guide
                 val stepAction = generateStepAction(currentStepMessage, stepContext, browserUseState, screenshotB64)
 
                 if (stepAction == null) {
@@ -687,7 +714,7 @@ class BrowserPerceptiveAgent(
                 if (execSummary != null) {
                     addToHistory("#$step $execSummary")
                     updatePerformanceMetrics(step, stepStartTime, true)
-                    structuredLogger.log("Step completed successfully", stepContext, mapOf("summary" to execSummary))
+                    structuredLogger.info("Step completed successfully", stepContext, mapOf("summary" to execSummary))
                 } else {
                     // Treat validation failures or execution skips as no-ops to avoid infinite loops
                     consecutiveNoOps++
@@ -701,7 +728,7 @@ class BrowserPerceptiveAgent(
             }
 
             val executionTime = Duration.between(startTime, Instant.now())
-            structuredLogger.log(
+            structuredLogger.info(
                 "Execution completed", context, mapOf(
                     "steps" to step,
                     "executionTime" to executionTime.toString(),
@@ -714,7 +741,7 @@ class BrowserPerceptiveAgent(
             return ActResult(success = ok, message = summary.content, action = overallGoal)
         } catch (e: Exception) {
             val executionTime = Duration.between(startTime, Instant.now())
-            structuredLogger.log(
+            structuredLogger.info(
                 "Execution failed", context, mapOf(
                     "steps" to step,
                     "executionTime" to executionTime.toString(),
@@ -806,9 +833,9 @@ class BrowserPerceptiveAgent(
         return try {
             val screenshot = safeScreenshot()
             if (screenshot != null) {
-                structuredLogger.log("Screenshot captured successfully", context, mapOf("size" to screenshot.length))
+                structuredLogger.info("Screenshot captured successfully", context, mapOf("size" to screenshot.length))
             } else {
-                structuredLogger.log("Screenshot capture returned null", context)
+                structuredLogger.info("Screenshot capture returned null", context)
             }
             screenshot
         } catch (e: Exception) {
@@ -847,7 +874,7 @@ class BrowserPerceptiveAgent(
     ): String? {
         val toolCall = requireNotNull(action.toolCall) { "Tool call is required" }
         if (config.enablePreActionValidation && !actionValidator.validateToolCall(toolCall)) {
-            structuredLogger.log(
+            structuredLogger.info(
                 "Tool call validation failed",
                 context,
                 mapOf("toolCall" to toolCall.name, "args" to toolCall.args)
@@ -857,7 +884,7 @@ class BrowserPerceptiveAgent(
         }
 
         return try {
-            structuredLogger.log(
+            structuredLogger.info(
                 "Executing tool call", context,
                 mapOf("toolName" to toolCall.name, "toolArgs" to toolCall.args)
             )
@@ -884,10 +911,10 @@ class BrowserPerceptiveAgent(
      */
     private suspend fun handleConsecutiveNoOps(consecutiveNoOps: Int, step: Int, context: ExecutionContext): Boolean {
         addToHistory("#$step no-op (consecutive: $consecutiveNoOps)")
-        structuredLogger.log("No tool calls generated", context, mapOf("consecutiveNoOps" to consecutiveNoOps))
+        structuredLogger.info("No tool calls generated", context, mapOf("consecutiveNoOps" to consecutiveNoOps))
 
         if (consecutiveNoOps >= config.consecutiveNoOpLimit) {
-            structuredLogger.log("Too many consecutive no-ops, stopping execution", context)
+            structuredLogger.info("Too many consecutive no-ops, stopping execution", context)
             // Signal caller to stop loop gracefully
             return true
         }
@@ -917,7 +944,7 @@ class BrowserPerceptiveAgent(
      * Handles task completion
      */
     private fun handleTaskCompletion(parsed: ToolCallResponse, step: Int, context: ExecutionContext) {
-        structuredLogger.log(
+        structuredLogger.info(
             "Task completion detected", context, mapOf(
                 "taskComplete" to (parsed.taskComplete ?: false)
             )
@@ -957,7 +984,7 @@ class BrowserPerceptiveAgent(
             // Clean up history if it gets too large
             if (_history.size > config.maxHistorySize) {
                 val toRemove = _history.size - config.maxHistorySize + 10
-                _history.subList(0, toRemove).clear()
+                // _history.subList(0, toRemove).clear()
             }
 
             // Clear validation cache periodically
@@ -965,7 +992,7 @@ class BrowserPerceptiveAgent(
                 validationCache.clear()
             }
 
-            structuredLogger.log("Memory cleanup completed", context)
+            structuredLogger.info("Memory cleanup completed", context)
         } catch (e: Exception) {
             structuredLogger.logError("Memory cleanup failed", e, context.sessionId)
         }
@@ -978,7 +1005,7 @@ class BrowserPerceptiveAgent(
         _history.add(entry)
         if (_history.size > config.maxHistorySize * 2) {
             // Remove oldest entries to prevent memory issues
-            _history.subList(0, config.maxHistorySize).clear()
+            // _history.subList(0, config.maxHistorySize).clear()
         }
     }
 
@@ -1142,7 +1169,7 @@ class BrowserPerceptiveAgent(
 
             // Only allow http and https schemes
             if (scheme !in setOf("http", "https")) {
-                structuredLogger.log(
+                structuredLogger.info(
                     "Blocked unsafe URL scheme", ExecutionContext(uuid.toString(), 0, "url_validation", ""),
                     mapOf("scheme" to (scheme ?: "null"), "url" to url.take(50))
                 )
@@ -1156,7 +1183,7 @@ class BrowserPerceptiveAgent(
             if (!config.allowLocalhost) {
                 val dangerousPatterns = listOf("localhost", "127.0.0.1", "0.0.0.0", "::1")
                 if (dangerousPatterns.any { host.contains(it) }) {
-                    structuredLogger.log(
+                    structuredLogger.info(
                         "Blocked localhost URL (config)", ExecutionContext(uuid.toString(), 0, "url_validation", ""),
                         mapOf("host" to host, "reason" to "localhost_blocked")
                     )
@@ -1167,7 +1194,7 @@ class BrowserPerceptiveAgent(
             // Medium Priority #12: Validate port with configurable whitelist
             val port = uri.port
             if (port != -1 && !config.allowedPorts.contains(port)) {
-                structuredLogger.log(
+                structuredLogger.info(
                     "Blocked URL with non-whitelisted port", ExecutionContext(uuid.toString(), 0, "url_validation", ""),
                     mapOf("port" to port, "host" to host, "allowedPorts" to config.allowedPorts)
                 )
@@ -1186,12 +1213,12 @@ class BrowserPerceptiveAgent(
         val context = ExecutionContext(uuid.toString(), 0, "screenshot", currentUrl)
 
         return runCatching {
-            structuredLogger.log("Attempting to capture screenshot", context)
+            structuredLogger.info("Attempting to capture screenshot", context)
             val screenshot = driver.captureScreenshot()
             if (screenshot != null) {
-                structuredLogger.log("Screenshot captured successfully", context, mapOf("size" to screenshot.length))
+                structuredLogger.info("Screenshot captured successfully", context, mapOf("size" to screenshot.length))
             } else {
-                structuredLogger.log("Screenshot capture returned null", context)
+                structuredLogger.info("Screenshot capture returned null", context)
             }
             screenshot
         }.onFailure { e ->
@@ -1209,16 +1236,16 @@ class BrowserPerceptiveAgent(
         runCatching {
             // Validate base64 string
             if (b64.length > 50 * 1024 * 1024) { // 50MB limit
-                structuredLogger.log("Screenshot too large, skipping save", context, mapOf("size" to b64.length))
+                structuredLogger.info("Screenshot too large, skipping save", context, mapOf("size" to b64.length))
                 return
             }
 
             val ts = Instant.now().toEpochMilli()
             val p = baseDir.resolve("screenshot-${ts}.b64")
-            structuredLogger.log("Saving step screenshot", context, mapOf("path" to p.toString()))
+            structuredLogger.info("Saving step screenshot", context, mapOf("path" to p.toString()))
 
             Files.writeString(p, b64)
-            structuredLogger.log("Screenshot saved successfully", context, mapOf("size" to b64.length))
+            structuredLogger.info("Screenshot saved successfully", context, mapOf("size" to b64.length))
         }.onFailure { e ->
             structuredLogger.logError("Save screenshot failed", e, context.sessionId)
         }
@@ -1234,7 +1261,7 @@ class BrowserPerceptiveAgent(
         runCatching {
             val ts = Instant.now().toEpochMilli()
             val log = baseDir.resolve("session-${uuid}-${ts}.log")
-            structuredLogger.log("Persisting execution transcript", context, mapOf("path" to log.toString()))
+            structuredLogger.info("Persisting execution transcript", context, mapOf("path" to log.toString()))
 
             val sb = StringBuilder()
             sb.appendLine("SESSION_ID: ${uuid}")
@@ -1255,7 +1282,7 @@ class BrowserPerceptiveAgent(
             sb.appendLine("Consecutive failures: ${consecutiveFailureCounter.get()}")
 
             Files.writeString(log, sb.toString())
-            structuredLogger.log(
+            structuredLogger.info(
                 "Transcript persisted successfully", context,
                 mapOf("lines" to _history.size + 10, "path" to log.toString())
             )
@@ -1285,11 +1312,11 @@ class BrowserPerceptiveAgent(
 
         return try {
             val (system, user) = buildSummaryPrompt(goal)
-            structuredLogger.log("Generating final summary", context)
+            structuredLogger.info("Generating final summary", context)
 
             val response = tta.chatModel.callUmSm(user, system)
 
-            structuredLogger.log(
+            structuredLogger.info(
                 "Summary generated successfully", context, mapOf(
                     "responseLength" to response.content.length,
                     "responseState" to response.state

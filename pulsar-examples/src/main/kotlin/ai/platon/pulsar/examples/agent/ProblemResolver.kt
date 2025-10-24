@@ -13,6 +13,8 @@ class ProblemResolver {
 
         println("Result: ")
         agent.history.forEach { println("- $it") }
+
+        readln()
     }
 }
 
