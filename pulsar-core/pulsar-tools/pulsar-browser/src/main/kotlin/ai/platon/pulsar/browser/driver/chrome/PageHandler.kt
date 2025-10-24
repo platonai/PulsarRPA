@@ -17,10 +17,10 @@ import com.github.kklisura.cdt.protocol.v2023.types.page.TransitionType
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.SerializationOptions
 
-class NodeRef(
-    // backendNodeId comes first since it's more stable
-    val backendNodeId: Int? = null,
+data class NodeRef constructor(
     val nodeId: Int? = null,
+    // backend node id is more stable
+    val backendNodeId: Int? = null,
     val objectId: String? = null
 )
 
@@ -280,7 +280,8 @@ class PageHandler(
         val rootId = domAPI?.document?.nodeId
         return if (rootId != null && rootId > 0) {
             val nodeId = domAPI?.querySelector(rootId, selector)
-            NodeRef(nodeId, nodeId)
+            val node = domAPI?.describeNode(nodeId, null, null, null, null) ?: return null
+            NodeRef(node.nodeId, node.backendNodeId)
         } else null
     }
 
@@ -295,7 +296,7 @@ class PageHandler(
      */
     @Throws(ChromeDriverException::class)
     private fun resolveSelector(selector: String): NodeRef? {
-printlnPro("............ resolveSelector")
+printlnPro(this, "............ resolveSelector")
 printlnPro(selector)
 
         val locator = Locator.parse(selector) ?: return null
@@ -310,11 +311,11 @@ printlnPro(locator.absoluteSelector + " " + locator.selector)
                     logger.warn("Invalid backend node ID format: '{}'", selector)
                     return null
                 }
-                resolveBackendNodeId(backendNodeId)
+                resolveByBackendNodeId(backendNodeId)
             }
             Locator.Type.FRAME_BACKEND_NODE_ID -> {
                 val backendNodeId = selector.substringAfterLast(",").toIntOrNull()
-                resolveBackendNodeId(backendNodeId)
+                resolveByBackendNodeId(backendNodeId)
             }
             else -> throw UnsupportedOperationException("Unsupported selector $selector")
         }
@@ -324,6 +325,9 @@ printlnPro(locator.absoluteSelector + " " + locator.selector)
         return nodeRef
     }
 
+    @Throws(ChromeDriverException::class)
+    private fun resolveByBackendNodeId(backendNodeId: Int?): NodeRef? = resolve(null, backendNodeId)
+
     /**
      * Resolves a backend node ID to a regular node ID.
      *
@@ -331,12 +335,10 @@ printlnPro(locator.absoluteSelector + " " + locator.selector)
      * @return nodeId or null if resolution fails
      */
     @Throws(ChromeDriverException::class)
-    private fun resolveBackendNodeId(backendNodeId: Int?): NodeRef? {
-        backendNodeId ?: return null
-
+    private fun resolve(nodeId: Int?, backendNodeId: Int?): NodeRef? {
         return try {
             // Use DOM.resolveNode to convert backendNodeId to a runtime object
-            val remoteObject = domAPI?.resolveNode(null, backendNodeId, null, null)
+            val remoteObject = domAPI?.resolveNode(nodeId, backendNodeId, null, null)
 
             if (remoteObject?.objectId == null) {
                 logger.warn("Failed to resolve backend node ID: {}", backendNodeId)
@@ -349,7 +351,7 @@ printlnPro(locator.absoluteSelector + " " + locator.selector)
             // Release the remote object to avoid memory leaks
             runtimeAPI?.releaseObject(objectId)
 
-            NodeRef(backendNodeId, nodeId, objectId)
+            NodeRef(nodeId, backendNodeId, objectId)
         } catch (e: Exception) {
             logger.warn("Exception resolving backend node ID {}: {}", backendNodeId, e.message)
             null

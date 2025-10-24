@@ -23,13 +23,6 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
 
-internal data class DeviceMetrics(
-    val width: Int,
-    val height: Int,
-    val deviceScaleFactor: Double,
-    val mobile: Boolean,
-)
-
 data class NodeClip(
     var node: NodeRef? = null,
     var pageX: Int = 0,
