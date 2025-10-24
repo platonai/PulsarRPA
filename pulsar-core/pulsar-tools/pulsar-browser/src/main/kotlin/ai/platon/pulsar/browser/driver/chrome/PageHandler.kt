@@ -7,6 +7,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.printlnPro
 import com.github.kklisura.cdt.protocol.v2023.support.annotations.Experimental
 import com.github.kklisura.cdt.protocol.v2023.support.annotations.Optional
 import com.github.kklisura.cdt.protocol.v2023.support.annotations.ParamName
@@ -334,6 +335,7 @@ class PageHandler(
     @Throws(ChromeDriverException::class)
     private fun resolveSelector(selector: String): Int? {
         val locator = Locator.parse(selector) ?: return null
+
         return when (locator.type) {
             Locator.Type.CSS_PATH -> querySelectorOrNull(selector)
             Locator.Type.BACKEND_NODE_ID -> {
@@ -344,7 +346,10 @@ class PageHandler(
                 }
                 resolveBackendNodeId(backendNodeId)
             }
-            Locator.Type.FRAME_BACKEND_NODE_ID -> resolveBackendNodeId(Strings.findLastInteger(selector))
+            Locator.Type.FRAME_BACKEND_NODE_ID -> {
+                val backendNodeId = selector.substringAfterLast(",").toIntOrNull()
+                resolveBackendNodeId(backendNodeId)
+            }
             else -> throw UnsupportedOperationException("Unsupported selector $selector")
         }
     }
