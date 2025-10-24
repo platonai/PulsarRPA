@@ -29,11 +29,17 @@ mvnw.cmd -q -pl pulsar-core/pulsar-skeleton -am -DskipTests package
 mvnw.cmd -pl pulsar-core/pulsar-skeleton -am -DskipTests -B package
 
 cd D:\Browser4 && mvnw.cmd -pl pulsar-tests -Dtest="ai.platon.pulsar.skeleton.ai.PulsarAgentExtractObserveE2ETest" test -DskipITs
-# Failed: cd /d D:\Browser4 && mvnw.cmd -pl pulsar-tests -am -Dtest=ai.platon.pulsar.skeleton.ai.PulsarAgentExtractObserveE2ETest test -DskipITs
+
+# Failed: `-D"surefire.failIfNoSpecifiedTests=false"` required with `-am`
+# cd /d D:\Browser4 && mvnw.cmd -pl pulsar-tests -am -Dtest=ai.platon.pulsar.skeleton.ai.PulsarAgentExtractObserveE2ETest test -DskipITs
+cd /d D:\Browser4 && mvnw.cmd -pl pulsar-tests -am -Dtest="ai.platon.pulsar.skeleton.ai.PulsarAgentExtractObserveE2ETest" test -DskipITs -D"surefire.failIfNoSpecifiedTests=false"
 
 cmd /c "cd /d D:\Browser4 && mvnw.cmd -pl pulsar-core/pulsar-tools/pulsar-browser -Dtest=HashUtilsTests test"
 
 D:\Browser4\mvnw.cmd -pl pulsar-tests -Dtest="PulsarPerceptiveAgentTest" -D"surefire.excludedGroups=" test
+.\mvnw -pl pulsar-core/pulsar-skeleton -am test -Dtest="*ToolCallExecutorTest*" -D"surefire.failIfNoSpecifiedTests=false"
+cmd /c "cd /d D:\Browser4 && mvnw.cmd -pl pulsar-core/pulsar-skeleton -am test -Dtest=*ToolCallExecutorTest* -Dsurefire.failIfNoSpecifiedTests=false"
+
 ```
 
 ---

@@ -894,15 +894,28 @@ delay(millis: Long = 1000)
             return token.trim()
         }
 
-        // Simple unescape: treats backslash as escape for the next char.
+        // Unescape known sequences; preserve unknown ones (e.g. \p -> \p)
         private fun unescape(s: String): String {
             val sb = StringBuilder(s.length)
             var i = 0
             while (i < s.length) {
                 val c = s[i]
                 if (c == '\\' && i + 1 < s.length) {
-                    sb.append(s[i + 1])
-                    i += 2
+                    when (val n = s[i + 1]) {
+                        '\\' -> { sb.append('\\'); i += 2 }
+                        '"' -> { sb.append('"'); i += 2 }
+                        '\'' -> { sb.append('\''); i += 2 }
+                        'n' -> { sb.append('\n'); i += 2 }
+                        'r' -> { sb.append('\r'); i += 2 }
+                        't' -> { sb.append('\t'); i += 2 }
+                        'b' -> { sb.append('\b'); i += 2 }
+                        'f' -> { sb.append('\u000C'); i += 2 }
+                        else -> {
+                            // Unknown escape: keep the backslash and the char
+                            sb.append('\\').append(n)
+                            i += 2
+                        }
+                    }
                 } else {
                     sb.append(c)
                     i++
