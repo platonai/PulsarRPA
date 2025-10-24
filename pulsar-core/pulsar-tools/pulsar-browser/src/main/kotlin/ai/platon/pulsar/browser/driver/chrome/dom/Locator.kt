@@ -22,6 +22,7 @@ open class Locator(
             fun parse(str: String): Type? {
                 return when (str) {
                     "" -> CSS_PATH
+                    "css" -> CSS_PATH
                     "xpath" -> XPATH
                     "hash" -> HASH
                     "backend" -> BACKEND_NODE_ID
@@ -69,7 +70,7 @@ open class Locator(
 class FBNLocator(
     val frameId: String,
     val backendNodeId: Int
-): Locator(Type.FRAME_BACKEND_NODE_ID, "$PREFIX$frameId$SEPARATOR$backendNodeId") {
+): Locator(Type.FRAME_BACKEND_NODE_ID, "$frameId$SEPARATOR$backendNodeId") {
 
     constructor(frameId: Int, backendNodeId: Int): this(frameId.toString(), backendNodeId)
 
@@ -80,7 +81,10 @@ class FBNLocator(
     companion object {
         const val SEPARATOR = ","
         const val PREFIX = "fbn:"
-        const val PATTERN = "$PREFIX\\d+$SEPARATOR\\d+"
+        const val SIMPLIFIED_PATTERN = "\\d+$SEPARATOR\\d+"
+        val SIMPLIFIED_REGEX = SIMPLIFIED_PATTERN.toRegex()
+        const val PATTERN = "$PREFIX$SIMPLIFIED_PATTERN"
+        val REGEX = PATTERN.toRegex()
 
         fun parse(str: String): FBNLocator? {
             val trimmed = str.trim()

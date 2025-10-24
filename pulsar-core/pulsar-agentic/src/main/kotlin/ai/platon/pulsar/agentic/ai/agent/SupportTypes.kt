@@ -14,7 +14,7 @@ data class AgentConfig(
     val consecutiveNoOpLimit: Int = 5,
     val actionGenerationTimeoutMs: Long = 30000,
     val screenshotCaptureTimeoutMs: Long = 5000,
-    val enableStructuredLogging: Boolean = true,
+    val enableStructuredLogging: Boolean = false,
     val enableDebugMode: Boolean = false,
     val enablePerformanceMetrics: Boolean = true,
     val memoryCleanupIntervalSteps: Int = 50,
@@ -31,7 +31,7 @@ data class AgentConfig(
     val allowLocalhost: Boolean = false,
     val allowedPorts: Set<Int> = setOf(80, 443, 8080, 8443, 3000, 5000, 8000, 9000),
     val maxSelectorLength: Int = 1000,
-    val denyUnknownActions: Boolean = true,
+    val denyUnknownActions: Boolean = false,
     // Overall timeout for resolve() to avoid indefinite hangs
     val resolveTimeoutMs: Long = 60 * 60_000
 )

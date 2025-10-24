@@ -290,15 +290,14 @@ data class DOMInteractedElement(
     val isInteractable: Boolean? = null
 )
 
-
 /**
  * Cleaned original node without children_nodes and shadow_roots.
  * Enhanced with additional snapshot information for LLM consumption.
  * This prevents duplication since SimplifiedNode.children already contains them.
  */
-data class CleanedDOMTreeNode(
+data class CleanedDOMTreeNode constructor(
     /**
-     * Locator format: `frameIndex-backendNodeId`
+     * Locator format: `frameIndex,backendNodeId`
      * */
     val locator: String,
     val frameId: String?,
@@ -322,7 +321,6 @@ data class CleanedDOMTreeNode(
     val clientRects: CompactRect?,
     val scrollRects: CompactRect?,
     val absoluteBounds: CompactRect? = null,
-    @JsonIgnore
     val paintOrder: Int? = null,
     val stackingContexts: Int? = null,
     val contentDocument: CleanedDOMTreeNode?
@@ -330,7 +328,7 @@ data class CleanedDOMTreeNode(
 )
 
 /**
- * Serializable SimplifiedNode structure.
+ * Serializable DOMTreeNode structure.
  * Enhanced with compound component marking and paint order information.
  *
  * Naming conversion: mini -> tiny -> micro -> nano -> pico -> ...
@@ -349,9 +347,15 @@ data class MicroDOMTreeNode(
 
 typealias MicroDOMTree = MicroDOMTreeNode
 
+/**
+ * Serializable DOMTreeNode structure.
+ * Enhanced with compound component marking and paint order information.
+ *
+ * Naming conversion: mini -> tiny -> micro -> nano -> pico -> ...
+ */
 data class NanoDOMTreeNode(
     /**
-     * Locator format: `frameIndex-backendNodeId`
+     * Locator format: `frameIndex,backendNodeId`
      * */
     val locator: String? = null,
     val nodeName: String? = null,
@@ -387,7 +391,7 @@ data class NanoDOMTreeNode(
 
             // remove locator's prefix to reduce serialized size
             return NanoDOMTree(
-                o.locator.substringAfter(":"),
+                o.locator.substringAfterLast(":"),
                 o.nodeName,
                 o.nodeValue,
                 o.attributes,

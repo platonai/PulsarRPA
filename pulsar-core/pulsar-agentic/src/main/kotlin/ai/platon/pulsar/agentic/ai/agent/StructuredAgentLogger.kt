@@ -28,24 +28,27 @@ class StructuredAgentLogger(
         context: ExecutionContext,
         additionalData: Map<String, Any> = emptyMap()
     ) {
-        if (!config.enableStructuredLogging) {
-            logger.info("{} - {}", context.sessionId.take(8), message)
-            return
-        }
-
         // Build proper JSON log data
         val logData = buildMap {
-            put("sessionId", context.sessionId)
-            put("step", context.stepNumber)
             put("actionType", context.actionType)
-            put("timestamp", context.timestamp.toString())
+            put("step", context.stepNumber)
             put("message", message)
+            put("sessionId", context.sessionId)
+            put("timestamp", context.timestamp.toString())
             putAll(additionalData)
-        }
+        }.toMutableMap()
 
         // Create proper JSON string
-        val jsonLog = formatAsJson(logData)
-        logger.info("{}", jsonLog)
+
+        if (config.enableStructuredLogging) {
+            val jsonLog = formatAsJson(logData)
+            logger.info("{}", jsonLog)
+        } else {
+            logData.remove("sessionId")
+            logData.remove("timestamp")
+            val log = logData.entries.joinToString(", ") { (key, value) -> "$key:$value" }
+            logger.info("{} - {} | {}", context.sessionId.take(8), message, log)
+        }
     }
 
     /**

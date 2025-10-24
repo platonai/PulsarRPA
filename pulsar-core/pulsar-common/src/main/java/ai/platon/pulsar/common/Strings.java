@@ -642,7 +642,7 @@ public final class Strings {
   /**
    * Find the last integer in the string.
    *
-   * @return the last integer in the string, or null if not found
+   * @return the last integer in the string, [,-] separators are allowed, or null if not found
    */
   public static Integer findLastInteger(String s) {
     if (s == null) {

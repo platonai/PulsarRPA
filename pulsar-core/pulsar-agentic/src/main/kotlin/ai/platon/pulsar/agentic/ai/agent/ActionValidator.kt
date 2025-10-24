@@ -1,5 +1,6 @@
 package ai.platon.pulsar.agentic.ai.agent
 
+import ai.platon.pulsar.browser.driver.chrome.dom.FBNLocator
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.support.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -18,7 +19,6 @@ import java.util.concurrent.ConcurrentHashMap
  * @author Vincent Zhang, ivincent.zhang@gmail.com, platon.ai
  */
 class ActionValidator(
-    private val driver: WebDriver,
     private val config: AgentConfig
 ) {
     private val logger = getLogger(this)
@@ -27,22 +27,22 @@ class ActionValidator(
     private val validationCache = ConcurrentHashMap<String, Boolean>()
 
     /**
-     * Validates a tool call before execution.
-     *
-     * @param toolCall The tool call to validate
-     * @return true if the tool call is valid and safe to execute
+     * Validates tool calls before execution
+     * High Priority #5: Deny unknown actions by default for security
      */
     fun validateToolCall(toolCall: ToolCall): Boolean {
         val cacheKey = "${toolCall.name}:${toolCall.args}"
         return validationCache.getOrPut(cacheKey) {
             when (toolCall.name) {
                 "navigateTo" -> validateNavigateTo(toolCall.args)
-                "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "focus", "scrollTo" ->
-                    validateElementAction(toolCall.args)
+                "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "focus", "scrollTo" -> validateElementAction(
+                    toolCall.args
+                )
+
                 "waitForNavigation" -> validateWaitForNavigation(toolCall.args)
-                "goBack", "goForward", "delay" -> true // These don't need validation
+                "goBack", "goForward", "delay", "scrollToTop", "scrollToBottom" -> true // These don't need validation
+                // High Priority #5: Deny unknown actions by default
                 else -> {
-                    // Deny unknown actions by default for security
                     if (config.denyUnknownActions) {
                         logger.warn("Unknown action blocked: ${toolCall.name}")
                         false
@@ -56,24 +56,18 @@ class ActionValidator(
     }
 
     /**
-     * Validates navigation actions.
-     *
-     * @param args Action arguments containing URL
-     * @return true if the URL is safe to navigate to
+     * Validates navigation actions
      */
-    fun validateNavigateTo(args: Map<String, Any?>): Boolean {
+    private fun validateNavigateTo(args: Map<String, Any?>): Boolean {
         val url = args["url"]?.toString() ?: return false
         return isSafeUrl(url)
     }
 
     /**
-     * Validates element interaction actions.
-     * Checks selector syntax and length constraints.
-     *
-     * @param args Action arguments containing selector
-     * @return true if the selector is valid
+     * Validates element interaction actions
+     * Medium Priority #11: Improved validation with selector syntax checking
      */
-    fun validateElementAction(args: Map<String, Any?>): Boolean {
+    private fun validateElementAction(args: Map<String, Any?>): Boolean {
         val selector = args["selector"]?.toString() ?: return false
 
         // Basic validation
@@ -81,14 +75,19 @@ class ActionValidator(
             return false
         }
 
-        // Check for common selector syntax patterns
+        val isSimplifiedFBN = selector.matches(FBNLocator.SIMPLIFIED_REGEX)
+        if (isSimplifiedFBN) {
+            return true
+        }
+
+        // Medium Priority #11: Check for common selector syntax patterns
         val hasValidPrefix = selector.startsWith("xpath:") ||
-                            selector.startsWith("css:") ||
-                            selector.startsWith("#") ||
-                            selector.startsWith(".") ||
-                            selector.startsWith("//") ||
-                            selector.startsWith("fbn:") ||
-                            selector.matches(Regex("^[a-zA-Z][a-zA-Z0-9]*$")) // tag name
+                selector.startsWith("css:") ||
+                selector.startsWith("#") ||
+                selector.startsWith(".") ||
+                selector.startsWith("//") ||
+                selector.startsWith("fbn:") ||
+                selector.matches(Regex("^[a-zA-Z][a-zA-Z0-9]*$")) // tag name
 
         return hasValidPrefix
     }
@@ -99,7 +98,7 @@ class ActionValidator(
      * @param args Action arguments containing oldUrl and timeout
      * @return true if the parameters are valid
      */
-    fun validateWaitForNavigation(args: Map<String, Any?>): Boolean {
+    private fun validateWaitForNavigation(args: Map<String, Any?>): Boolean {
         val oldUrl = args["oldUrl"]?.toString() ?: ""
         val timeout = (args["timeoutMillis"] as? Number)?.toLong() ?: 5000L
         return timeout in 100L..60000L && oldUrl.length < 1000 // Reasonable timeout range and URL length
