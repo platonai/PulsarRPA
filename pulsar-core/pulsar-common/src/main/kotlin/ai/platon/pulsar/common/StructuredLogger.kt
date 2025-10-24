@@ -25,6 +25,16 @@ open class StructuredLogger(
 
     val logger = ownerLogger ?: getFlexibleLogger()
 
+    fun trace(format: String, vararg args: Any?) = logger.trace(format, *args)
+
+    fun debug(format: String, vararg args: Any?) = logger.debug(format, *args)
+
+    fun info(format: String, vararg args: Any?) = logger.info(format, *args)
+
+    fun warn(format: String, vararg args: Any?) = logger.warn(format, *args)
+
+    fun error(format: String, vararg args: Any?) = logger.error(format, *args)
+
     /**
      * Log a structured message with context and additional data.
      *
@@ -49,10 +59,10 @@ open class StructuredLogger(
             logData["target"] = readableClassName(targetClass)
 
             val jsonLog = formatAsJson(logData)
-            logger.info("{}", jsonLog)
+            info("{}", jsonLog)
         } else {
             val log = logData.entries.joinToString(", ") { (key, value) -> "$key:$value" }
-            logger.info("{} | {}", message, log)
+            info("{} | {}", message, log)
         }
     }
 
