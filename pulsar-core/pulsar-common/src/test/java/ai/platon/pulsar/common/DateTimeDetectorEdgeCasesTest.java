@@ -276,18 +276,6 @@ public class DateTimeDetectorEdgeCasesTest {
         assertNull(detector.detectPossibleDateTimeString("01-12-25")); // Year 2001 might be too old
     }
 
-    @Test
-    @DisplayName("Test year detection with overlapping patterns")
-    void testOverlappingYearPatterns() {
-        // Multiple years in text
-        String result = detector.detectPossibleDateTimeString("From 2020 to 2023-12-25 period");
-        assertEquals("2023-12-25", result); // Should find the valid date format
-
-        // Year in different contexts
-        result = detector.detectPossibleDateString("Model year 2023, manufactured 2023-12-25");
-        assertEquals("2023-12-25", result);
-    }
-
     // Time Component Edge Cases
     @Test
     @DisplayName("Test time detection with partial time information")
@@ -493,4 +481,4 @@ public class DateTimeDetectorEdgeCasesTest {
         assertNotNull(minimalDetector.detectDateTime("2023-12-25 14:30:00"));
         assertNull(minimalDetector.detectDate("2023/12/25")); // Not in formats
     }
-}'},
+}

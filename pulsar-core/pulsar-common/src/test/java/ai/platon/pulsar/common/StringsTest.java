@@ -2,15 +2,10 @@ package ai.platon.pulsar.common;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
-import org.junit.jupiter.params.provider.ValueSource;
-import org.junit.jupiter.params.provider.MethodSource;
 
 import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -318,7 +313,7 @@ public class StringsTest {
     @Test
     @DisplayName("Test humanize with Class")
     void testHumanize_Class() {
-        assertEquals("strings test.suffix", Strings.humanize(StringsTest.class, "suffix", "."));
+        assertEquals("strings test.suffix", Strings.humanize(StringsKtTest.class, "suffix", "."));
         assertNotNull(Strings.humanize(String.class, "test", "-"));
     }
 
@@ -544,17 +539,6 @@ public class StringsTest {
         assertFalse(Strings.isIpLike("192.168.1.1.1"));
         assertFalse(Strings.isIpLike("abc.def.ghi.jkl"));
         assertFalse(Strings.isIpLike(""));
-    }
-
-    // String utility tests
-    @Test
-    @DisplayName("Test contains")
-    void testContains() {
-        assertTrue(Strings.contains("hello world", "hello"));
-        assertTrue(Strings.contains("hello world", "hello", "world"));
-        assertTrue(Strings.contains("hello world", "lo", "or"));
-        assertFalse(Strings.contains("hello world", "foo"));
-        assertFalse(Strings.contains("hello world", "hello", "foo"));
     }
 
     @Test

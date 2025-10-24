@@ -1,48 +1,46 @@
 package ai.platon.pulsar.common
 
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import java.io.IOException
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
-import kotlin.test.assertFalse
 
-class StringsTest {
+class StringsKtTest {
 
     @Test
     fun `test readableClassName with simple class`() {
-        val obj = StringsTest()
+        val obj = StringsKtTest()
         val result = readableClassName(obj)
         assertEquals("s-c-StringsTest", result)
     }
 
     @Test
     fun `test readableClassName with fullNameCount parameter`() {
-        val obj = StringsTest()
+        val obj = StringsKtTest()
         val result = readableClassName(obj, fullNameCount = 2)
         assertEquals("s.c.StringsTest", result)
     }
 
     @Test
-    fun `test readableClassName with partCount parameter`() {
-        val obj = StringsTest()
-        val result = readableClassName(obj, partCount = 2)
+    fun `test readableClassName with maxPartCount parameter`() {
+        val obj = StringsKtTest()
+        val result = readableClassName(obj, maxPartCount = 2)
         assertEquals("c-StringsTest", result)
     }
 
     @Test
     fun `test readableClassName with Class object`() {
-        val clazz = StringsTest::class.java
+        val clazz = StringsKtTest::class.java
         val result = readableClassName(clazz)
         assertEquals("s-c-StringsTest", result)
     }
 
     @Test
     fun `test readableClassName with KClass object`() {
-        val kclass = StringsTest::class
+        val kclass = StringsKtTest::class
         val result = readableClassName(kclass)
         assertEquals("s-c-StringsTest", result)
     }
@@ -63,7 +61,7 @@ class StringsTest {
 
     @Test
     fun `test prependReadableClassName with default separator`() {
-        val obj = StringsTest()
+        val obj = StringsKtTest()
         val name = "testName"
         val result = prependReadableClassName(obj, name)
         assertEquals("s-c-StringsTest.testName", result)
@@ -71,7 +69,7 @@ class StringsTest {
 
     @Test
     fun `test prependReadableClassName with custom separator`() {
-        val obj = StringsTest()
+        val obj = StringsKtTest()
         val name = "testName"
         val separator = "-"
         val result = prependReadableClassName(obj, name, separator)
@@ -80,7 +78,7 @@ class StringsTest {
 
     @Test
     fun `test prependReadableClassName with multiple dots`() {
-        val obj = StringsTest()
+        val obj = StringsKtTest()
         val name = "test...name"
         val result = prependReadableClassName(obj, name)
         assertEquals("s-c-StringsTest.test.name", result)
@@ -88,7 +86,7 @@ class StringsTest {
 
     @Test
     fun `test prependReadableClassName with ident and default separator`() {
-        val obj = StringsTest()
+        val obj = StringsKtTest()
         val ident = "testIdent"
         val name = "testName"
         val result = prependReadableClassName(obj, ident, name, ".")
@@ -97,7 +95,7 @@ class StringsTest {
 
     @Test
     fun `test prependReadableClassName with blank ident`() {
-        val obj = StringsTest()
+        val obj = StringsKtTest()
         val ident = ""
         val name = "testName"
         val result = prependReadableClassName(obj, ident, name, ".")
@@ -106,7 +104,7 @@ class StringsTest {
 
     @Test
     fun `test prependReadableClassName with whitespace ident`() {
-        val obj = StringsTest()
+        val obj = StringsKtTest()
         val ident = "   "
         val name = "testName"
         val result = prependReadableClassName(obj, ident, name, ".")
@@ -115,7 +113,7 @@ class StringsTest {
 
     @Test
     fun `test prependReadableClassName with custom separator and ident`() {
-        val obj = StringsTest()
+        val obj = StringsKtTest()
         val ident = "testIdent"
         val name = "testName"
         val separator = "_"
@@ -235,13 +233,13 @@ class StringsTest {
     @Test
     fun `test readableClassName with very long class name`() {
         val obj = TestVeryLongClassNameThatGoesOnAndOn()
-        val result = readableClassName(obj, partCount = 5)
+        val result = readableClassName(obj, maxPartCount = 5)
         assertTrue(result.contains("TestVeryLongClassNameThatGoesOnAndOn"))
     }
 
     @Test
     fun `test readableClassName with different fullNameCount values`() {
-        val obj = StringsTest()
+        val obj = StringsKtTest()
         val result1 = readableClassName(obj, fullNameCount = 0)
         val result2 = readableClassName(obj, fullNameCount = 1)
         val result3 = readableClassName(obj, fullNameCount = 2)
@@ -262,16 +260,16 @@ class StringsTest {
         "2, 2, s.c.StringsTest",
         "2, 3, a.s.c.StringsTest"
     )
-    fun `test readableClassName with various parameter combinations`(fullNameCount: Int, partCount: Int, expected: String) {
-        val obj = StringsTest()
-        val result = readableClassName(obj, fullNameCount, partCount)
+    fun `test readableClassName with various parameter combinations`(fullNameCount: Int, maxPartCount: Int, expected: String) {
+        val obj = StringsKtTest()
+        val result = readableClassName(obj, fullNameCount, maxPartCount)
         assertEquals(expected, result)
     }
 
     @ParameterizedTest
     @ValueSource(strings = [".", "-", "_", "/", "|", "::"])
     fun `test prependReadableClassName with various separators`(separator: String) {
-        val obj = StringsTest()
+        val obj = StringsKtTest()
         val name = "testName"
         val result = prependReadableClassName(obj, name, separator)
         assertTrue(result.contains("StringsTest"))
