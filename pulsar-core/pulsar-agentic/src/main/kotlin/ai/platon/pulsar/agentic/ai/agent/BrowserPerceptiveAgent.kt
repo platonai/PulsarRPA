@@ -45,7 +45,8 @@ class BrowserPerceptiveAgent(
     val config: AgentConfig = AgentConfig(maxSteps = maxSteps)
 ) : PerceptiveAgent {
     private val ownerLogger = getLogger(this)
-    private val logger = StructuredAgentLogger(ownerLogger, config)
+    private val slogger = StructuredAgentLogger(ownerLogger, config)
+    private val logger = ownerLogger
 
     private val baseDir = AppPaths.get("agent")
     private val conf get() = (driver as AbstractWebDriver).settings.config
@@ -829,7 +830,7 @@ class BrowserPerceptiveAgent(
      */
     private suspend fun captureScreenshotWithRetry(context: ExecutionContext): String? {
         return try {
-            val screenshot = safeScreenshot()
+            val screenshot = safeScreenshot(context)
             if (screenshot != null) {
                 logger.info("screenshot.ok sid={} step={} size={} ", context.sessionId.take(8), context.stepNumber, screenshot.length)
             } else {
@@ -1226,21 +1227,18 @@ class BrowserPerceptiveAgent(
     /**
      * Enhanced screenshot capture with comprehensive error handling
      */
-    private suspend fun safeScreenshot(): String? {
-        val currentUrl = getCurrentUrl()
-        val context = ExecutionContext(uuid.toString(), 0, "screenshot", currentUrl)
-
+    private suspend fun safeScreenshot(context: ExecutionContext): String? {
         return runCatching {
-            logger.info("Attempting to capture screenshot", context)
+            slogger.info("Attempting to capture screenshot", context)
             val screenshot = driver.captureScreenshot()
             if (screenshot != null) {
-                logger.info("Screenshot captured successfully", context, mapOf("size" to screenshot.length))
+                slogger.info("Screenshot captured successfully", context, mapOf("size" to screenshot.length))
             } else {
-                logger.info("Screenshot capture returned null", context)
+                slogger.info("Screenshot capture returned null", context)
             }
             screenshot
         }.onFailure { e ->
-            logger.logError("Screenshot capture failed", e, context.sessionId)
+            slogger.logError("Screenshot capture failed", e, context.sessionId)
         }.getOrNull()
     }
 
@@ -1254,18 +1252,18 @@ class BrowserPerceptiveAgent(
         runCatching {
             // Validate base64 string
             if (b64.length > 50 * 1024 * 1024) { // 50MB limit
-                logger.info("Screenshot too large, skipping save", context, mapOf("size" to b64.length))
+                slogger.info("Screenshot too large, skipping save", context, mapOf("size" to b64.length))
                 return
             }
 
             val ts = Instant.now().toEpochMilli()
             val p = baseDir.resolve("screenshot-${ts}.b64")
-            logger.info("Saving step screenshot", context, mapOf("path" to p.toString()))
+            slogger.info("Saving step screenshot", context, mapOf("path" to p.toString()))
 
             Files.writeString(p, b64)
-            logger.info("Screenshot saved successfully", context, mapOf("size" to b64.length))
+            slogger.info("Screenshot saved successfully", context, mapOf("size" to b64.length))
         }.onFailure { e ->
-            logger.logError("Save screenshot failed", e, context.sessionId)
+            slogger.logError("Save screenshot failed", e, context.sessionId)
         }
     }
 
@@ -1279,7 +1277,7 @@ class BrowserPerceptiveAgent(
         runCatching {
             val ts = Instant.now().toEpochMilli()
             val log = baseDir.resolve("session-${uuid}-${ts}.log")
-            logger.info("Persisting execution transcript", context, mapOf("path" to log.toString()))
+            slogger.info("Persisting execution transcript", context, mapOf("path" to log.toString()))
 
             val sb = StringBuilder()
             sb.appendLine("SESSION_ID: ${uuid}")
@@ -1300,12 +1298,12 @@ class BrowserPerceptiveAgent(
             sb.appendLine("Consecutive failures: ${consecutiveFailureCounter.get()}")
 
             Files.writeString(log, sb.toString())
-            logger.info(
+            slogger.info(
                 "Transcript persisted successfully", context,
                 mapOf("lines" to _history.size + 10, "path" to log.toString())
             )
         }.onFailure { e ->
-            logger.logError("Failed to persist transcript", e, context.sessionId)
+            slogger.logError("Failed to persist transcript", e, context.sessionId)
         }
     }
 
@@ -1330,11 +1328,11 @@ class BrowserPerceptiveAgent(
 
         return try {
             val (system, user) = buildSummaryPrompt(goal)
-            logger.info("Generating final summary", context)
+            slogger.info("Generating final summary", context)
 
             val response = tta.chatModel.callUmSm(user, system)
 
-            logger.info(
+            slogger.info(
                 "Summary generated successfully", context, mapOf(
                     "responseLength" to response.content.length,
                     "responseState" to response.state
@@ -1343,7 +1341,7 @@ class BrowserPerceptiveAgent(
 
             response
         } catch (e: Exception) {
-            logger.logError("Summary generation failed", e, context.sessionId)
+            slogger.logError("Summary generation failed", e, context.sessionId)
             ModelResponse(
                 "Failed to generate summary: ${e.message}",
                 ResponseState.OTHER

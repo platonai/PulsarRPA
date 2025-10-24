@@ -242,21 +242,11 @@ class ChromeCdpDomService(
         val tinyTree = DOMTinyTreeBuilder(enhanced).build()
 
         if (!hasElements || tinyTree == null) {
-            // Write a lightweight diagnostic to help root cause empty DOM
-            val diagnostics = Gson().toJson(mapOf(
-                "timestamp" to Instant.now().toString(),
-                "reason" to "Empty DOM tree collected",
-                "devicePixelRatio" to trees.devicePixelRatio,
-                "axNodeCount" to trees.axTree.size,
-                "snapshotEntryCount" to trees.snapshotByBackendId.size,
-                "timingsMs" to trees.cdpTiming
-            ))
-            MessageWriter.writeOnce(TmpFile("dom-service-diagnostics.json"), diagnostics)
-
-            throw IllegalStateException("Empty DOM tree collected (AX=${trees.axTree.size}, SNAP=${trees.snapshotByBackendId.size}). See logs/chat-model/domservice-diagnostics.json")
+            logger.info("Empty DOM tree collected | trees: {}", DomDebug.summarize(trees))
+            // throw IllegalStateException("Empty DOM tree collected (AX=${trees.axTree.size}, SNAP=${trees.snapshotByBackendId.size})")
         }
 
-        return tinyTree
+        return tinyTree ?: TinyTree(DOMTreeNodeEx())
     }
 
     override fun buildTinyTree(root: DOMTreeNodeEx): TinyNode {

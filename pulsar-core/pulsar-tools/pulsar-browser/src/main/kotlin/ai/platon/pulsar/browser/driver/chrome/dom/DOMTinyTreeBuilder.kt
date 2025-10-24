@@ -129,7 +129,7 @@ class DOMTinyTreeBuilder(
                         originalNode = node,
                         children = emptyList(),
                         shouldDisplay = true,
-                        ignoredByPaintOrder = (node.snapshotNode?.paintOrder ?: Int.MIN_VALUE) > maxPaintOrderThreshold
+                        ignoredByPaintOrder = (node.snapshotNode.paintOrder ?: Int.MIN_VALUE) > maxPaintOrderThreshold
                     )
                 } else null
             }
