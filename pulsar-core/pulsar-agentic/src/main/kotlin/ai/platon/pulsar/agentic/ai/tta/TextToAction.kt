@@ -170,7 +170,7 @@ open class TextToAction(
         locator: String?,
         browserUseState: BrowserUseState? = null,
     ): ActionDescription {
-        val toolCall = ToolCall("driver", method, argsMap)
+        var toolCall = ToolCall("driver", method, argsMap)
 
         if (browserUseState == null) {
             return ActionDescription(modelResponse = response, toolCall = toolCall)
@@ -178,8 +178,16 @@ open class TextToAction(
 
         val fbnLocator = browserUseState.domState.getAbsoluteFBNLocator(locator)
         val node = if (fbnLocator != null) browserUseState.domState.locatorMap[fbnLocator] else null
-        val cssSelector = node?.cssSelector()
+        val fbnSelector = fbnLocator?.absoluteSelector
+
+        val revisedArgsMap = argsMap.toMutableMap()
+        if (revisedArgsMap.contains("selector")) {
+            revisedArgsMap["selector"] = fbnSelector
+            toolCall = ToolCall("driver", method, revisedArgsMap)
+        }
+
         // CSS friendly expression
+        val cssSelector = node?.cssSelector()
         val expression = ToolCallExecutor.toolCallToExpression(toolCall)
         val cssFriendlyExpression = if (locator != null && cssSelector != null) {
             expression?.replace(locator, cssSelector)
@@ -188,7 +196,7 @@ open class TextToAction(
         return ActionDescription(
             modelResponse = response,
             toolCall = toolCall,
-            locator = fbnLocator?.absoluteSelector,
+            locator = fbnSelector,
             xpath = node?.xpath,
             cssSelector = cssSelector,
             cssFriendlyExpressions = listOfNotNull(cssFriendlyExpression),

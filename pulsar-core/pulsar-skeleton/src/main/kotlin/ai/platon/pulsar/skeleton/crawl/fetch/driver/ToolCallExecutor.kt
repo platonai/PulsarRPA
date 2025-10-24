@@ -1,5 +1,7 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
+import ai.platon.pulsar.common.brief
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.support.ToolCall
 
 /**
@@ -17,13 +19,14 @@ import ai.platon.pulsar.skeleton.ai.support.ToolCall
  * ## Example Usage:
  *
  * ```kotlin
- * val dispatcher = SimpleCommandDispatcher()
- * val result = dispatcher.execute("driver.open('https://example.com')", driver)
+ * val executor = ToolCallExecutor()
+ * val result = executor.execute("driver.open('https://example.com')", driver)
  * ```
  *
  * @author Vincent Zhang, ivincent.zhang@gmail.com, platon.ai
  */
 class ToolCallExecutor {
+    private val logger = getLogger(this)
 
     /**
      * Executes a WebDriver command provided as a string expression.
@@ -32,26 +35,27 @@ class ToolCallExecutor {
      * the corresponding WebDriver method. For example, the string "driver.open('https://example.com')"
      * would be parsed and the driver.open() method would be called with the URL argument.
      *
-     * @param command The command in text format (e.g., "driver.method(arg1, arg2)").
+     * @param expression The expression(e.g., "driver.method(arg1, arg2)").
      * @param driver The WebDriver instance to execute the command on.
      * @return The result of the command execution, or null if the command could not be executed.
      */
-    suspend fun execute(command: String, driver: WebDriver): Any? {
+    suspend fun execute(expression: String, driver: WebDriver): Any? {
         return try {
-            execute0(command, driver)
+            execute0(expression, driver)
         } catch (e: Exception) {
-            println("Error executing command: $command - ${e.message}")
+            logger.warn("Error executing expression: {} - {}", expression, e.brief())
             null
         }
     }
 
     suspend fun execute(toolCall: ToolCall, driver: WebDriver): Any? {
         // require(toolCall.domain == "driver")
+        val expression = toolCallToExpression(toolCall) ?: return null
 
         return try {
-            execute1(toolCall.domain, toolCall.name, toolCall.args, driver)
+            execute(expression, driver)
         } catch (e: Exception) {
-            println("Error executing command: ${toolCall.name} - ${e.message}")
+            logger.warn("Error executing TOOL CALL: {} - {}", toolCall, e.brief())
             null
         }
     }
@@ -66,6 +70,7 @@ class ToolCallExecutor {
     /**
      * Extract function name and arguments from the command string
      * */
+    @Suppress("UNUSED_PARAMETER")
     private suspend fun execute1(
         objectName: String,
         functionName: String,
@@ -206,7 +211,17 @@ class ToolCallExecutor {
             "moveMouseTo" -> {
                 // Move mouse to coordinates or element with offset
                 when (args.size) {
-                    2 -> driver.moveMouseTo(arg0!!.toDoubleOrNull() ?: 0.0, arg1!!.toDoubleOrNull() ?: 0.0)
+                    2 -> {
+                        val x = arg0?.toDoubleOrNull()
+                        val y = arg1?.toDoubleOrNull()
+                        if (x != null && y != null) {
+                            driver.moveMouseTo(x, y)
+                        } else {
+                            // Treat as selector + deltaX (deltaY defaults to 0)
+                            val sel = arg0 ?: return null
+                            driver.moveMouseTo(sel, arg1?.toIntOrNull() ?: 0)
+                        }
+                    }
                     3 -> driver.moveMouseTo(arg0!!, arg1!!.toIntOrNull() ?: 0, arg2!!.toIntOrNull() ?: 0)
                     else -> null
                 }
@@ -262,7 +277,7 @@ class ToolCallExecutor {
                         arg0!!,
                         arg1!!,
                         arg2!!.toIntOrNull() ?: 0,
-                        arg3!!.toIntOrNull() ?: Integer.MAX_VALUE
+                        arg3!!.toIntOrNull() ?: 10000
                     )
 
                     else -> if (args.size >= 2) driver.selectAttributeAll(arg0!!, arg1!!) else null
@@ -293,7 +308,7 @@ class ToolCallExecutor {
                     1 -> driver.selectHyperlinks(arg0!!)
                     3 -> driver.selectHyperlinks(
                         arg0!!,
-                        arg1!!.toIntOrNull() ?: 0,
+                        arg1!!.toIntOrNull() ?: 1,
                         arg2!!.toIntOrNull() ?: Integer.MAX_VALUE
                     )
 
@@ -307,7 +322,7 @@ class ToolCallExecutor {
                     1 -> driver.selectAnchors(arg0!!)
                     3 -> driver.selectAnchors(
                         arg0!!,
-                        arg1!!.toIntOrNull() ?: 0,
+                        arg1!!.toIntOrNull() ?: 1,
                         arg2!!.toIntOrNull() ?: Integer.MAX_VALUE
                     )
 
@@ -321,7 +336,7 @@ class ToolCallExecutor {
                     1 -> driver.selectImages(arg0!!)
                     3 -> driver.selectImages(
                         arg0!!,
-                        arg1!!.toIntOrNull() ?: 0,
+                        arg1!!.toIntOrNull() ?: 1,
                         arg2!!.toIntOrNull() ?: Integer.MAX_VALUE
                     )
 
@@ -416,10 +431,10 @@ class ToolCallExecutor {
             "deleteCookies" -> {
                 // Delete cookies with various parameter options
                 when (args.size) {
-                    1 -> driver.deleteCookies(arg0!!)
+                    1 -> driver.deleteCookies(arg0!!, null, null, null)
                     2 -> driver.deleteCookies(arg0!!, arg1!!)
                     4 -> driver.deleteCookies(arg0!!, arg1, arg2, arg3)
-                    else -> if (args.isNotEmpty()) driver.deleteCookies(arg0!!) else null
+                    else -> if (args.isNotEmpty()) driver.deleteCookies(arg0!!, null, null, null) else null
                 }
             }
 
@@ -574,7 +589,7 @@ class ToolCallExecutor {
                         arg0!!,
                         arg1!!,
                         arg2!!.toIntOrNull() ?: 0,
-                        arg3!!.toIntOrNull() ?: Integer.MAX_VALUE
+                        arg3!!.toIntOrNull() ?: 10000
                     )
 
                     else -> if (args.size >= 2) driver.selectPropertyValueAll(arg0!!, arg1!!) else null
@@ -669,18 +684,8 @@ delay(millis: Long = 1000)
 
         val SUPPORTED_TOOL_CALLS = TOOL_CALL_LIST.split("\n").filter { it.contains("(") }.map { it.trim() }
 
+        @Suppress("unused")
         val SUPPORTED_ACTIONS = SUPPORTED_TOOL_CALLS.map { it.substringBefore("(") }
-
-//        export enum SUPPORTED_EXTRA_ACTIONS {
-//            CLICK = "click",
-//            FILL = "fill",
-//            TYPE = "type",
-//            PRESS = "press",
-//            SCROLL = "scrollTo",
-//            NEXT_CHUNK = "nextChunk",
-//            PREV_CHUNK = "prevChunk",
-//            SELECT_OPTION_FROM_DROPDOWN = "selectOptionFromDropdown",
-//        }
 
         val SELECTOR_ACTIONS = setOf(
             "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "visible", "focus",
@@ -692,6 +697,7 @@ delay(millis: Long = 1000)
             "boundingBox", "moveMouseTo", "dragAndDrop"
         )
 
+        @Suppress("unused")
         val NO_SELECTOR_ACTIONS = setOf(
             "navigateTo", "open", "waitForNavigation", "scrollDown", "scrollUp", "scrollToTop", "scrollToBottom",
             "scrollToMiddle", "mouseWheelDown", "mouseWheelUp", "waitForPage", "bringToFront", "delay",
@@ -910,7 +916,6 @@ delay(millis: Long = 1000)
             .replace("\\", "\\\\")
             .replace("\"", "\\\"")
 
-        @Deprecated("deprecated")
         fun toolCallToExpression(tc: ToolCall): String? = when (tc.name) {
             // Navigation
             "navigateTo" -> tc.args["url"]?.toString()?.let { "driver.navigateTo(\"${it.esc()}\")" }

@@ -123,4 +123,211 @@ class ToolCallExecutorTest {
         assertEquals(1, tc.args.size)
         assertEquals("0.75", tc.args["0"]) // trimmed numeric string
     }
+
+    @Test
+    fun testParseSimpleFunctionCall_validInput() {
+        val input = "driver.open(\"https://t.tt\")"
+        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        assertNotNull(result)
+        assertEquals("driver", result?.domain)
+        assertEquals("open", result?.name)
+        assertEquals(mapOf("0" to "https://t.tt"), result?.args)
+    }
+
+    @Test
+    fun testParseSimpleFunctionCall_noArguments() {
+        val input = "driver.scrollToTop()"
+        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        assertNotNull(result)
+        assertEquals("driver", result?.domain)
+        assertEquals("scrollToTop", result?.name)
+        assertTrue(result?.args?.isEmpty() ?: false)
+    }
+
+    @Test
+    fun testParseSimpleFunctionCall_singleArgument() {
+        val input = "driver.scrollToMiddle(0.4)"
+        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        assertNotNull(result)
+        assertEquals("driver", result?.domain)
+        assertEquals("scrollToMiddle", result?.name)
+        assertEquals(mapOf("0" to "0.4"), result?.args)
+    }
+
+    @Test
+    fun testParseSimpleFunctionCall_multipleArguments() {
+        val input = "driver.mouseWheelUp(2, 200, 200)"
+        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        assertNotNull(result)
+        assertEquals("driver", result?.domain)
+        assertEquals("mouseWheelUp", result?.name)
+        assertEquals(mapOf("0" to "2", "1" to "200", "2" to "200"), result?.args)
+    }
+
+    @Test
+    fun testParseSimpleFunctionCall_multipleArgumentsWithSpaces() {
+        val input = "driver.mouseWheelUp(2, 200, 200, 100)"
+        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        assertNotNull(result)
+        assertEquals("driver", result?.domain)
+        assertEquals("mouseWheelUp", result?.name)
+        assertEquals(mapOf("0" to "2", "1" to "200", "2" to "200", "3" to "100"), result?.args)
+    }
+
+    @Test
+    fun testParseSimpleFunctionCall_invalidInput() {
+        val input = "driver.open(\"https://t.tt"
+        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        assertNull(result)
+    }
+
+    @Test
+    fun testParseSimpleFunctionCall_emptyInput() {
+        val input = ""
+        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        assertNull(result)
+    }
+
+    @Test
+    fun testParseSimpleFunctionCall_noMethodCall() {
+        val input = "driver"
+        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        assertNull(result)
+    }
+
+    @Test
+    fun testParseSimpleFunctionCall_noParentheses() {
+        val input = "driver.open"
+        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        assertNull(result)
+    }
+
+    @Test
+    fun testParseSimpleFunctionCall_noObject() {
+        val input = ".open(\"https://t.tt\")"
+        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        assertNull(result)
+    }
+
+    @Test
+    fun testParseSimpleFunctionCall_extraSpaces() {
+        val input = "  driver  .  open  (  \"https://t.tt\"  )  "
+        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        assertNotNull(result)
+        assertEquals("driver", result?.domain)
+        assertEquals("open", result?.name)
+        assertEquals(mapOf("0" to "https://t.tt"), result?.args)
+    }
+
+    @Test
+    fun testParseSimpleFunctionCall_emptyArguments() {
+        val input = "driver.open(   )"
+        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        assertNotNull(result)
+        assertEquals("driver", result?.domain)
+        assertEquals("open", result?.name)
+        assertTrue(result?.args?.isEmpty() ?: false)
+    }
+
+    @Test
+    fun testParseSimpleFunctionCall_malformedArguments() {
+        val input = "driver.open(\"https://t.tt\", )"
+        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        assertEquals("driver", result?.domain)
+        assertEquals("open", result?.name)
+        assertEquals(mapOf("0" to "https://t.tt"), result?.args)
+    }
+
+    @Test
+    fun testParseSimpleFunctionCall_unquotedStringArgument() {
+        val input = "driver.open(https://t.tt)"
+        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        assertEquals("driver", result?.domain)
+        assertEquals("open", result?.name)
+        assertEquals(mapOf("0" to "https://t.tt"), result?.args)
+    }
+
+    @Test
+    fun testParseSimpleFunctionCall_specialCharactersInArgument() {
+        val input = "driver.open(\"https://t.tt?query=123&param=abc\")"
+        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        assertNotNull(result)
+        assertEquals("driver", result?.domain)
+        assertEquals("open", result?.name)
+        assertEquals(mapOf("0" to "https://t.tt?query=123&param=abc"), result?.args)
+    }
+
+    // Additional focused coverage
+    @Test
+    fun `parse input with trailing semicolon`() {
+        val input = "driver.open(\"https://t.tt\");"
+        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        assertNotNull(result)
+        assertEquals("driver", result?.domain)
+        assertEquals("open", result?.name)
+        assertEquals(mapOf("0" to "https://t.tt"), result?.args)
+    }
+
+    @Test
+    fun `parse double-quoted arg with escapes`() {
+        val src = "driver.fill(\"#input\", \"He said \"hi\" and \\path\")"
+        val tc = ToolCallExecutor.parseKotlinFunctionExpression(src)
+        assertNotNull(tc)
+        tc!!
+        assertEquals("driver", tc.domain)
+        assertEquals("fill", tc.name)
+        assertEquals("#input", tc.args["0"]) // unquoted
+        assertEquals("He said \"hi\" and \\path", tc.args["1"]) // unescaped
+    }
+
+    @Test
+    fun `toolCallToExpression waitForSelector with timeout`() {
+        val expr = ToolCallExecutor.toolCallToExpression(
+            ToolCall("driver", "waitForSelector", mapOf("selector" to "#a", "timeoutMillis" to 1234))
+        )
+        assertEquals("driver.waitForSelector(\"#a\", 1234L)", expr)
+    }
+
+    @Test
+    fun `toolCallToExpression captureScreenshot variants`() {
+        val none = ToolCallExecutor.toolCallToExpression(ToolCall("driver", "captureScreenshot", emptyMap()))
+        val withSel = ToolCallExecutor.toolCallToExpression(
+            ToolCall("driver", "captureScreenshot", mapOf("selector" to "#root"))
+        )
+        assertEquals("driver.captureScreenshot()", none)
+        assertEquals("driver.captureScreenshot(\"#root\")", withSel)
+    }
+
+    @Test
+    fun `toolCallToExpression scrollToMiddle default`() {
+        val expr = ToolCallExecutor.toolCallToExpression(ToolCall("driver", "scrollToMiddle", emptyMap()))
+        assertEquals("driver.scrollToMiddle(0.5)", expr)
+    }
+
+    @Test
+    fun `toolCallToExpression clickTextMatches escaping`() {
+        val expr = ToolCallExecutor.toolCallToExpression(
+            ToolCall("driver", "clickTextMatches", mapOf("selector" to "a", "pattern" to "He said \"hi\"", "count" to 2))
+        )
+        assertNotNull(expr)
+        assertTrue(expr!!.contains("\\\"hi\\\""))
+        assertTrue(expr.startsWith("driver.clickTextMatches(\"a\", \""))
+        assertTrue(expr.endsWith(", 2)"))
+    }
+
+    @Test
+    fun `toolCallToExpression goto alias`() {
+        val expr = ToolCallExecutor.toolCallToExpression(
+            ToolCall("driver", "goto", mapOf("url" to "https://example.com/x?q=\"y\""))
+        )
+        assertEquals("driver.navigateTo(\"https://example.com/x?q=\\\"y\\\"\")", expr)
+    }
+
+    @Test
+    fun `toolCallToExpression press generation`() {
+        val expr = ToolCallExecutor.toolCallToExpression(
+            ToolCall("driver", "press", mapOf("selector" to "#i", "key" to "Enter"))
+        )
+        assertEquals("driver.press(\"#i\", \"Enter\")", expr)
+    }
 }
