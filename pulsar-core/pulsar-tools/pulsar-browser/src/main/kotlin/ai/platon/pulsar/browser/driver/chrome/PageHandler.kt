@@ -5,6 +5,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.printlnPro
 import com.github.kklisura.cdt.protocol.v2023.support.annotations.Experimental
@@ -278,9 +279,17 @@ class PageHandler(
     @Throws(ChromeDriverException::class)
     private fun querySelectorOrNull(selector: String): NodeRef? {
         val rootId = domAPI?.document?.nodeId
-        return if (rootId != null && rootId > 0) {
+        return if (rootId != null) {
             val nodeId = domAPI?.querySelector(rootId, selector)
-            val node = domAPI?.describeNode(nodeId, null, null, null, null) ?: return null
+            val node = try {
+                domAPI?.describeNode(nodeId, null, null, null, null)
+            } catch (e: ChromeRPCException) {
+                // code: -3200 message: "Could not find node with given id"
+                logger.info("Exception from domAPI.describeNode | {}", e.brief())
+                null
+            }
+
+            node ?: return null
             NodeRef(node.nodeId, node.backendNodeId)
         } else null
     }

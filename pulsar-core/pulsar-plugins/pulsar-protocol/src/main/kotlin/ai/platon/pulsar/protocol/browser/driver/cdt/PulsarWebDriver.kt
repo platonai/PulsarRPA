@@ -207,7 +207,14 @@ class PulsarWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun exists(selector: String) = predicateOnElement(selector, "exists") { (it.nodeId ?: 0) > 0 }
+    override suspend fun exists(selector: String): Boolean {
+        try {
+            return predicateOnElement(selector, "exists") { it.nodeId != null }
+        } catch (e: Exception) {
+            logger.warn("Exception from exists -> predicateOnElement(selector, \"exists\")", e)
+            return false
+        }
+    }
 
     /**
      * Wait until [selector] for [timeout] at most
