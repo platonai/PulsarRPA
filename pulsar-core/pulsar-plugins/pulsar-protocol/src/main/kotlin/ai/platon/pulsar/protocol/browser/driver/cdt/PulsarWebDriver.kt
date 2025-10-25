@@ -208,7 +208,7 @@ class PulsarWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun exists(selector: String) = predicateOnElement(selector, "exists") { it > 0 }
+    override suspend fun exists(selector: String) = predicateOnElement(selector, "exists") { it.nodeId != null || it.backendNodeId != null }
 
     /**
      * Wait until [selector] for [timeout] at most
@@ -295,7 +295,7 @@ class PulsarWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun moveMouseTo(selector: String, deltaX: Int, deltaY: Int) {
         try {
-            val nodeId = rpc.invokeDeferred("scrollIntoViewIfNeeded") {
+            val node = rpc.invokeDeferred("scrollIntoViewIfNeeded") {
                 page.scrollIntoViewIfNeeded(selector)
             } ?: return
 
@@ -304,7 +304,7 @@ class PulsarWebDriver(
             val d = domAPI
             if (p != null && d != null) {
                 rpc.invokeDeferred("moveMouseTo") {
-                    val point = ClickableDOM(p, d, nodeId, offset).clickablePoint().value
+                    val point = ClickableDOM(p, d, node, offset).clickablePoint().value
                     if (point != null) {
                         val point2 = PointD(point.x + deltaX, point.y + deltaY)
                         mouse?.moveTo(point2)
@@ -335,12 +335,12 @@ class PulsarWebDriver(
      */
     @Throws(WebDriverException::class)
     override suspend fun click(selector: String, count: Int) {
-        invokeOnElement(selector, "click", scrollIntoView = true) { nodeId ->
-            click(nodeId, count)
+        invokeOnElement(selector, "click", scrollIntoView = true) { node ->
+            click(node, count)
         }
     }
 
-    private suspend fun click(nodeId: Int, count: Int, position: String = "center") {
+    private suspend fun click(node: NodeRef, count: Int, position: String = "center") {
         val deltaX = 4.0 + Random.nextInt(4)
         val deltaY = 4.0
         val offset = OffsetD(deltaX, deltaY)
@@ -352,7 +352,7 @@ class PulsarWebDriver(
             return
         }
 
-        val clickableDOM = ClickableDOM(p, d, nodeId, offset)
+        val clickableDOM = ClickableDOM(p, d, node, offset)
         val point = clickableDOM.clickablePoint().value ?: return
         val box = clickableDOM.boundingBox()
         val width = box?.width ?: 0.0
@@ -380,30 +380,28 @@ class PulsarWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun type(selector: String, text: String) {
         invokeOnElement(selector, "type") {
-            val nodeId = page.focusOnSelector(selector)
-            if (nodeId > 0) {
-                click(nodeId, 1)
-                keyboard?.type(text, randomDelayMillis("type"))
-                gap("type")
-            }
+            val node = page.focusOnSelector(selector) ?: return@invokeOnElement
+            click(node, 1)
+            keyboard?.type(text, randomDelayMillis("type"))
+            gap("type")
         }
     }
 
     @Throws(WebDriverException::class)
     override suspend fun fill(selector: String, text: String) {
-        invokeOnElement(selector, "fill", focus = true) { nodeId ->
+        invokeOnElement(selector, "fill", focus = true) { node ->
             // val value = evaluateDetail("document.querySelector('$selector').value")?.value?.toString() ?: ""
-            val value = page.getAttribute(nodeId, "value")
+            val value = page.getAttribute(node, "value")
             if (value != null) {
                 // it's an input element, we should click on the right side of the element,
                 // so the cursor appears at the tail of the text
-                click(nodeId, 1, "right")
+                click(node, 1, "right")
                 keyboard?.delete(value.length, randomDelayMillis("delete"))
                 // ensure the input is empty
-                // page.setAttribute(nodeId, "value", "")
+                // page.setAttribute(node, "value", "")
             }
 
-            click(nodeId, 1)
+            click(node, 1)
             // keyboard?.type(text, randomDelayMillis("fill"))
             // For fill, there is no delay between key presses
             keyboard?.type(text, 0)
@@ -414,7 +412,7 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun press(selector: String, key: String) {
-        invokeOnElement(selector, "press", focus = true) { nodeId ->
+        invokeOnElement(selector, "press", focus = true) { node ->
             keyboard?.press(key, randomDelayMillis("press"))
         }
     }
@@ -427,7 +425,7 @@ class PulsarWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int) {
         try {
-            val nodeId = rpc.invokeDeferred("scrollIntoViewIfNeeded") {
+            val node = rpc.invokeDeferred("scrollIntoViewIfNeeded") {
                 page.scrollIntoViewIfNeeded(selector)
             } ?: return
 
@@ -440,7 +438,7 @@ class PulsarWebDriver(
             val d = domAPI
             if (p != null && d != null) {
                 rpc.invokeDeferred("dragAndDrop") {
-                    val clickableDOM = ClickableDOM(p, d, nodeId, offset)
+                    val clickableDOM = ClickableDOM(p, d, node, offset)
                     val startPoint = clickableDOM.clickablePoint().value
                     if (startPoint != null) {
                         // Calculate target point relative to start point
@@ -463,21 +461,17 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun outerHTML(selector: String): String? {
-        return invokeOnElement(selector, "outerHTML") { nodeId ->
-            domAPI?.getOuterHTML(nodeId, null, null)
+        return invokeOnElement(selector, "outerHTML") { node ->
+            domAPI?.getOuterHTML(node.nodeId, node.backendNodeId, node.objectId)
         }
     }
 
     @Throws(WebDriverException::class)
     override suspend fun clickablePoint(selector: String): PointD? {
-//        invokeOnElementOrNull(selector, "clickablePoint") { nodeId ->
-//            ClickableDOM.create(pageAPI, domAPI, nodeId)?.clickablePoint()?.value
-//        }
-
         try {
             return rpc.invokeDeferred("clickablePoint") {
-                val nodeId = page.scrollIntoViewIfNeeded(selector)
-                ClickableDOM.create(pageAPI, domAPI, nodeId)?.clickablePoint()?.value
+                val node = page.scrollIntoViewIfNeeded(selector)
+                ClickableDOM.create(pageAPI, domAPI, node)?.clickablePoint()?.value
             }
         } catch (e: ChromeDriverException) {
             rpc.handleChromeException(e, "clickablePoint")
@@ -490,8 +484,8 @@ class PulsarWebDriver(
     override suspend fun boundingBox(selector: String): RectD? {
         try {
             return rpc.invokeDeferred("boundingBox") {
-                val nodeId = page.scrollIntoViewIfNeeded(selector)
-                ClickableDOM.create(pageAPI, domAPI, nodeId)?.boundingBox()
+                val node = page.scrollIntoViewIfNeeded(selector)
+                ClickableDOM.create(pageAPI, domAPI, node)?.boundingBox()
             }
         } catch (e: ChromeDriverException) {
             rpc.handleChromeException(e, "boundingBox")
@@ -525,7 +519,7 @@ class PulsarWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun captureScreenshot(selector: String): String? {
         return try {
-            val nodeId = page.scrollIntoViewIfNeeded(selector) ?: return null
+            val node = page.scrollIntoViewIfNeeded(selector) ?: return null
             // Force the page stop all navigations and pending resource fetches.
             rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot(selector) }
         } catch (e: ChromeDriverException) {
@@ -549,7 +543,8 @@ class PulsarWebDriver(
     override suspend fun pageSource(): String? {
         return invokeOnPage("pageSource") {
             // pageAPI?.getResourceContent(mainFrameAPI?.id, currentUrl())
-            domAPI?.getOuterHTML(domAPI?.getDocument()?.nodeId, null, null)
+            val document = domAPI?.getDocument() ?: return@invokeOnPage null
+            domAPI?.getOuterHTML(document.nodeId, document.backendNodeId)
         }
     }
 
@@ -662,7 +657,7 @@ class PulsarWebDriver(
     /**
      * Navigate to the page and inject scripts.
      * */
-    private fun navigateInvaded(entry: NavigateEntry) {
+    private suspend fun navigateInvaded(entry: NavigateEntry) {
         val url = entry.url
 
         addScriptToEvaluateOnNewDocument()
@@ -920,11 +915,11 @@ class PulsarWebDriver(
         name: String,
         focus: Boolean = false,
         scrollIntoView: Boolean = false,
-        action: suspend (Int) -> T
+        action: suspend (NodeRef) -> T
     ): T? {
         try {
             return rpc.invokeDeferred(name) {
-                val nodeId = if (focus) {
+                val node = if (focus) {
                     page.focusOnSelector(selector)
                 } else if (scrollIntoView) {
                     page.scrollIntoViewIfNeeded(selector)
@@ -932,8 +927,8 @@ class PulsarWebDriver(
                     page.querySelector(selector)
                 }
 
-                if (nodeId != null && nodeId > 0) {
-                    action(nodeId)
+                if (node != null) {
+                    action(node)
                 } else {
                     null
                 }
@@ -950,11 +945,11 @@ class PulsarWebDriver(
         name: String,
         focus: Boolean = false,
         scrollIntoView: Boolean = false,
-        predicate: suspend (Int) -> Boolean
+        predicate: suspend (NodeRef) -> Boolean
     ): Boolean = invokeOnElement(selector, name, focus, scrollIntoView, predicate) == true
 
-    private fun isValidNodeId(nodeId: Int?): Boolean {
-        return nodeId != null && nodeId > 0
+    private fun isValidNodeId(node: Int?): Boolean {
+        return node != null && node > 0
     }
 
     private suspend fun cdpDeleteCookies(

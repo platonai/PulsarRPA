@@ -79,36 +79,6 @@ class PageHandler(
     }
 
     /**
-     * Queries for all elements matching the selector.
-     *
-     * Note: Backend node ID format ("backend:123") will return a single-element list
-     * containing that node, as backend node IDs reference a specific node.
-     *
-     * @param selector CSS selector or "backend:nodeId" format
-     * @return List of nodeIds matching the selector
-     */
-    @Throws(ChromeDriverException::class)
-    suspend fun querySelectorAll(selector: String): List<Int> {
-        // For regular selectors, use querySelectorAll
-        return invokeOnElement(selector) { node ->
-            domAPI?.querySelectorAll(node.nodeId, selector)
-        } ?: listOf()
-    }
-
-    /**
-     * Gets all attributes for the element matching the selector.
-     *
-     * @param selector CSS selector or "backend:nodeId" format
-     * @return Map of attribute name to value
-     */
-    @Throws(ChromeDriverException::class)
-    suspend fun getAttributes(selector: String): Map<String, String> {
-        return invokeOnElement(selector) { nodeId ->
-            domAPI?.getAttributes(nodeId)?.zipWithNext()?.toMap()
-        } ?: emptyMap()
-    }
-
-    /**
      * Gets a specific attribute value for the element matching the selector.
      *
      * @param selector CSS selector or "backend:nodeId" format
@@ -120,6 +90,8 @@ class PageHandler(
 
     @Throws(ChromeDriverException::class)
     suspend fun getAttribute(node: NodeRef, attrName: String): String? {
+        node.nodeId ?: return null
+
         // `attributes`: n1, v1, n2, v2, n3, v3, ...
         val attributes = domAPI?.getAttributes(node.nodeId) ?: return null
         val nameIndex = attributes.indexOf(attrName)
@@ -146,6 +118,8 @@ class PageHandler(
 
     @Throws(ChromeDriverException::class)
     suspend fun visible(node: NodeRef): Boolean {
+        node.nodeId ?: return false
+
         var isVisible = true
 
         val properties = cssAPI?.getComputedStyleForNode(node.nodeId)
@@ -178,7 +152,7 @@ class PageHandler(
      * successfully focused. Returns 0 if there is no element matching selector.
      */
     @Throws(ChromeDriverException::class)
-    suspend fun focusOnSelector(selector: String): Int {
+    suspend fun focusOnSelector(selector: String): NodeRef? {
         val nodeRef = resolveSelector(selector) ?: return null
 
         // Fix: Only use nodeId parameter, others should be null
@@ -195,7 +169,7 @@ class PageHandler(
      * @return nodeId of the element, or null if not found
      */
     @Throws(ChromeDriverException::class)
-    suspend fun scrollIntoViewIfNeeded(selector: String, rect: Rect? = null): Int? {
+    suspend fun scrollIntoViewIfNeeded(selector: String, rect: Rect? = null): NodeRef? {
         val node = resolveSelector(selector) ?: return null
         if (node.nodeId == null) {
             logger.info("No node found for selector: $selector")
@@ -206,7 +180,7 @@ class PageHandler(
     }
 
     @Throws(ChromeDriverException::class)
-    suspend fun scrollIntoViewIfNeeded(nodeRef: NodeRef, selector: String? = null, rect: Rect? = null): Int? {
+    suspend fun scrollIntoViewIfNeeded(nodeRef: NodeRef, selector: String? = null, rect: Rect? = null): NodeRef? {
         try {
             val node = domAPI?.describeNode(nodeRef.nodeId, nodeRef.backendNodeId, nodeRef.objectId, null, false)
             if (node?.nodeType != ELEMENT_NODE) {
@@ -266,7 +240,9 @@ class PageHandler(
 //        val iife = JsUtils.toIIFE(confuser.confuse(expression))
 //        return evaluate(iife, returnByValue = true)
         val expression2 = confuser.confuse(expression)
-        return cdpEvaluate(expression2, returnByValue = true)
+        // return cdpEvaluate(expression2, returnByValue = true)
+
+        return runtimeAPI?.evaluate(expression, returnByValue = true)
     }
 
     /**
@@ -289,7 +265,7 @@ class PageHandler(
 
     @Throws(ChromeDriverException::class)
     private suspend fun querySelectorOrNull(selector: String): NodeRef? {
-        val rootId = domAPI?.document?.nodeId
+        val rootId = domAPI?.getDocument()?.nodeId
         return if (rootId != null && rootId > 0) {
             val nodeId = domAPI?.querySelector(rootId, selector)
             val node = domAPI?.describeNode(nodeId, null, null, null, null) ?: return null
@@ -329,6 +305,10 @@ class PageHandler(
 
         return nodeRef
     }
+
+    @Throws(ChromeDriverException::class)
+    private suspend fun resolveByBackendNodeId(backendNodeId: Int?): NodeRef? = resolve(null, backendNodeId)
+
     /**
      * Resolves a backend node ID to a regular node ID.
      *
@@ -336,7 +316,7 @@ class PageHandler(
      * @return nodeId or null if resolution fails
      */
     @Throws(ChromeDriverException::class)
-    private suspend fun resolveBackendNodeId(nodeId: Int?, backendNodeId: Int?): Int? {
+    private suspend fun resolve(nodeId: Int?, backendNodeId: Int?): NodeRef? {
         return try {
             // Use DOM.resolveNode to convert backendNodeId to a runtime object
             val remoteObject = domAPI?.resolveNode(nodeId, backendNodeId, null, null)
@@ -353,6 +333,38 @@ class PageHandler(
             runtimeAPI?.releaseObject(objectId)
 
             NodeRef(nodeId, backendNodeId, objectId)
+        } catch (e: Exception) {
+            logger.warn("Exception resolving backend node ID {}: {}", backendNodeId, e.message)
+            null
+        }
+    }
+
+    /**
+     * Resolves a backend node ID to a regular node ID.
+     *
+     * @param backendNodeId The backend node ID
+     * @return nodeId or null if resolution fails
+     */
+    @Throws(ChromeDriverException::class)
+    private suspend fun resolveBackendNodeId(backendNodeId: Int?): Int? {
+        backendNodeId ?: return null
+
+        return try {
+            // Use DOM.resolveNode to convert backendNodeId to a runtime object
+            val remoteObject = domAPI?.resolveNode(null, backendNodeId, null, null)
+
+            if (remoteObject?.objectId == null) {
+                logger.warn("Failed to resolve backend node ID: {}", backendNodeId)
+                return null
+            }
+
+            // Use DOM.requestNode to get the nodeId from the runtime object
+            val nodeId = domAPI?.requestNode(remoteObject.objectId)
+
+            // Release the remote object to avoid memory leaks
+            runtimeAPI?.releaseObject(remoteObject.objectId)
+
+            nodeId
         } catch (e: Exception) {
             logger.warn("Exception resolving backend node ID {}: {}", backendNodeId, e.message)
             null
