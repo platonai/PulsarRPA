@@ -28,6 +28,12 @@ class ChromeNavigateEntry(
         }
     }
 
+    /**
+     * Check if this is a minor resource.
+     *
+     * References:
+     * * [CDP Resource Check](https://chatgpt.com/s/t_68fcbdcd8c64819180900928074c6ee7)
+     * */
     fun isMinorResource(event: RequestWillBeSent): Boolean {
         val type = event.type ?: return true
         return navigateEntry.mainFrameReceived && isMinorResource(type)
