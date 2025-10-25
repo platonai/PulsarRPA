@@ -110,23 +110,11 @@ open class TextToAction(
     open suspend fun generateResponse(
         messages: SimpleMessageList, browserUseState: BrowserUseState, screenshotB64: String? = null, toolCallLimit: Int = 100,
     ): ModelResponse {
-        // instruction from agent:
-        // systemMsg + userMsg + screenshot reminder
-        //
-        // + [agent general guide + overall goal]
-        // + [history + atom operation guide + completion condition + overall goal]
-        // + [screenshot reminder]
-//        val fromAgent = instruction.contains(TTA_AGENT_SYSTEM_PROMPT_PREFIX_20)
-//        val agentGuidSystemMsg = if (fromAgent) instruction else buildOperatorSystemPrompt()
-
         var overallGoal = messages.find("overallGoal")?.content ?: ""
         overallGoal = StringUtils.substringBetween(overallGoal, "<overallGoal>", "</overallGoal>")
         val params = ObserveParams(overallGoal, browserUseState = browserUseState, returnAction = true, logInferenceToFile = true)
-        // observe guide:
-        // + [instruction] + DOM + browser state + schema?
-        // + observe guide
+
         PromptBuilder().buildObserveUserMessage(messages, params)
-        // tool specs + [observe guide] + completion guide
 
         val systemMessage = messages.systemMessages().joinToString("\n")
         val userMessage = messages.userMessages().joinToString("\n")
@@ -282,7 +270,6 @@ open class TextToAction(
 
     companion object {
 
-        @Deprecated("Use PromptBuilder().buildSystemPromptV20251025() instead")
         val TTA_AGENT_GUIDE_SYSTEM_PROMPT = """
 你是一个网页通用代理，目标是基于用户目标一步一步完成任务。
 
@@ -323,6 +310,8 @@ open class TextToAction(
 ```
 ${ToolCallExecutor.TOOL_CALL_LIST}
 ```
+
+请基于当前页面截图、交互元素与历史动作，规划下一步（严格单步原子动作）。
 
         """.trimIndent()
 

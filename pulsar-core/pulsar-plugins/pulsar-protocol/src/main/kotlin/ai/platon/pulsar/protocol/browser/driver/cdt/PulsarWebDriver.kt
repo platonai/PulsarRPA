@@ -742,12 +742,8 @@ class PulsarWebDriver(
     }
 
     private fun onWindowOpen(event: WindowOpen) {
-        val message = MessageFormat.format("Window opened | {0} | {1}", event.url, outgoingPages.size)
-        println(" === =======  === === ")
-        println(message)
-//        logger.info("Window opened | {}", event.url)
+        logger.info("Window opened | {} | {}", event.url, outgoingPages.size)
 
-        // TODO: handle BrowserUnavailableException
         val driver = browser.runCatching { newDriver(event.url) }.onFailure { warnInterruptible(this, it) }.getOrNull()
         if (driver != null) {
             driver.opener = this

@@ -2,6 +2,7 @@ package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import ai.platon.pulsar.skeleton.ai.support.ToolCall
 import javax.script.ScriptEngineManager
 
@@ -49,6 +50,22 @@ class ToolCallExecutor {
         }
     }
 
+    fun eval(expression: String, browser: Browser): Any? {
+        TODO("evaluate `expression` in browser domain")
+    }
+
+    fun eval(expression: String, agent: PerceptiveAgent): Any? {
+        TODO("evaluate `expression` in agent domain")
+    }
+
+    suspend fun execute(expression: String, browser: Browser): Any? {
+        TODO("execute `expression` in browser domain")
+    }
+
+    suspend fun execute(expression: String, agent: PerceptiveAgent): Any? {
+        TODO("execute `expression` in agent domain")
+    }
+
     /**
      * Executes a WebDriver command provided as a string expression.
      *
@@ -74,7 +91,6 @@ class ToolCallExecutor {
     }
 
     suspend fun execute(toolCall: ToolCall, driver: WebDriver): Any? {
-        // require(toolCall.domain == "driver")
         val expression = toolCallToExpression(toolCall) ?: return null
 
         return try {
@@ -83,6 +99,14 @@ class ToolCallExecutor {
             logger.warn("Error executing TOOL CALL: {} - {}", toolCall, e.brief())
             null
         }
+    }
+
+    suspend fun execute(toolCall: ToolCall, browser: Browser): Any? {
+        TODO("execute `toolCall` in browser domain")
+    }
+
+    suspend fun execute(toolCall: ToolCall, agent: PerceptiveAgent): Any? {
+        TODO("execute `toolCall` in browser domain")
     }
 
     private suspend fun execute0(command: String, driver: WebDriver): Any? {
@@ -690,28 +714,45 @@ class ToolCallExecutor {
 
     companion object {
 
+        /**
+         * The `TOOL_CALL_LIST` is written using kotlin syntax to express the tool's `domain`, `method`, `arguments`.
+         *
+         * */
         const val TOOL_CALL_LIST = """
-navigateTo(url: String)
-waitForSelector(selector: String, timeoutMillis: Long = 5000)
-exists(selector: String): Boolean
-isVisible(selector: String): Boolean
-focus(selector: String)
-click(selector: String)
-fill(selector: String, text: String)
-press(selector: String, key: String)
-check(selector: String)
-uncheck(selector: String)
-scrollDown(count: Int = 1)
-scrollUp(count: Int = 1)
-scrollTo(selector: String)
-scrollToTop()
-scrollToBottom()
-scrollToMiddle(ratio: Double = 0.5)
-scrollToScreen(screenNumber: Double)
-waitForNavigation(oldUrl: String = "", timeoutMillis: Long = 5000): Long
-goBack()
-goForward()
-delay(millis: Long = 1000)
+driver.navigateTo(url: String)
+driver.waitForSelector(selector: String, timeoutMillis: Long = 5000)
+driver.exists(selector: String): Boolean
+driver.isVisible(selector: String): Boolean
+driver.focus(selector: String)
+driver.click(selector: String)
+driver.fill(selector: String, text: String)
+driver.type(selector: String, text: String)
+driver.press(selector: String, key: String)
+driver.check(selector: String)
+driver.uncheck(selector: String)
+driver.scrollDown(count: Int = 1)
+driver.scrollUp(count: Int = 1)
+driver.scrollTo(selector: String)
+driver.scrollToTop()
+driver.scrollToBottom()
+driver.scrollToMiddle(ratio: Double = 0.5)
+driver.scrollToScreen(screenNumber: Double)
+driver.waitForNavigation(oldUrl: String = "", timeoutMillis: Long = 5000): Long
+driver.goBack()
+driver.goForward()
+driver.delay(millis: Long = 1000)
+
+// switch to a tab with tab id, the tab id will be added to BrowserState
+// the function returns the driver id can be used to locate the driver from Browser.drivers
+browser.switchTab(tabId: Int): Int
+
+agent.observe(instruction: String): List<ObserveResult>
+agent.observe(options: ObserveOptions): List<ObserveResult>
+agent.act(action: String): ActResult
+agent.act(action: ActionOptions): ActResult
+agent.act(observe: ObserveResult): ActResult
+agent.extract(instruction: String): ExtractResult
+agent.extract(options: ExtractOptions): ExtractResult
     """
 
         val SUPPORTED_TOOL_CALLS = TOOL_CALL_LIST.split("\n").filter { it.contains("(") }.map { it.trim() }

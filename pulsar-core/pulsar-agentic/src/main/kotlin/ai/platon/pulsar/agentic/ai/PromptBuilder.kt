@@ -594,27 +594,4 @@ ONLY return one action. If multiple actions are relevant, return the most releva
 
         return instruction
     }
-
-    /**
-     * Description:
-     * Builds a user message to plan the next single atomic step given recent history and overall goal.
-     *
-     * Prompt key points:
-     * - Summarizes up to the last 8 history entries
-     * - Request exactly one next atomic action
-     * - If done/blocked, return { isComplete, summary, suggestions }
-     * - Echo the overall goal for context
-     */
-    fun buildCurrentStepUserMessage(overallGoal: String, history: List<String>): String {
-        val his = if (history.isNotEmpty()) {
-            history.takeLast(min(8, history.size)).joinToString("\n")
-        } else "(无)"
-
-        return """
-此前动作摘要：
-$his
-
-请基于当前页面截图、交互元素与历史动作，规划下一步（严格单步原子动作）。
-		""".trimIndent()
-    }
 }
