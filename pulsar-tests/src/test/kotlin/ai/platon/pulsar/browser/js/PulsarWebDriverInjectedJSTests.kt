@@ -75,9 +75,12 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
         val expression = """__pulsar_utils__.getConfig()"""
 
         val result = driver.evaluateValue(expression)
+        val json = result?.toString()
+
         printlnPro(result)
-        assertTrue { result?.toString()?.contains("META_INFORMATION_ID") == true }
-        assertTrue { result?.toString()?.contains("propertyNames") == true }
+        assertNotNull(json) { "__pulsar_utils__.getConfig() should be evaluated as a JSON string" }
+        assertTrue { json.contains("META_INFORMATION_ID") }
+        assertTrue { json.contains("propertyNames") }
     }
 
     @Test
@@ -87,13 +90,15 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
         driver.browser.settings.scriptLoader.reload()
 
         // Find the actual utils object name (it has a random prefix)
-        val utilsObjectName = driver.evaluateValue("""
+        val utilsObjectName = driver.evaluateValue(
+            """
             (() => {
                 const globalKeys = Object.keys(window);
                 const utilsKey = globalKeys.find(key => key.endsWith('utils__'));
                 return utilsKey || null;
             })()
-        """)
+        """
+        )
         printlnPro("DEBUG: Found utils object name = $utilsObjectName")
 
         if (utilsObjectName == null) {
@@ -149,14 +154,16 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
             printlnPro("DEBUG: __pulsar_utils__ exists = $utilsExists")
 
             // Let's also test the raw JavaScript to see if the function works
-            val rawTest = driver.evaluateValue("""
+            val rawTest = driver.evaluateValue(
+                """
                 const btn = document.querySelector('button');
                 if (btn) {
                     const attrs = Array.from(btn.attributes).flatMap(a => [a.name, a.value]);
                     return attrs;
                 }
                 return null;
-            """)
+            """
+            )
             printlnPro("DEBUG: raw JavaScript test = $rawTest")
             printlnPro("DEBUG: raw test type = ${rawTest?.javaClass?.name}")
 
