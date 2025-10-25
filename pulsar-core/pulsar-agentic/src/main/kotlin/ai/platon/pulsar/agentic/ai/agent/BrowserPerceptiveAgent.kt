@@ -309,11 +309,11 @@ class BrowserPerceptiveAgent(
         )
 
         val baseState = domService.getBrowserUseState(snapshotOptions = snapshotOptions)
-        
+
         // Inject tabs information
         return injectTabsInfo(baseState)
     }
-    
+
     /**
      * Inject tabs information into BrowserUseState.
      * Collects all tabs from the current browser and marks the active tab.
@@ -321,13 +321,13 @@ class BrowserPerceptiveAgent(
     private suspend fun injectTabsInfo(baseState: BrowserUseState): BrowserUseState {
         val currentDriver = session.boundDriver ?: return baseState
         val browser = currentDriver.browser
-        
+
         val tabs = browser.drivers.map { (tabId, driver) ->
             val url = try { driver.currentUrl() } catch (e: Exception) { "about:blank" }
-            val title = try { 
+            val title = try {
                 driver.evaluate("document.title").toString().takeIf { it.isNotBlank() }
-            } catch (e: Exception) { 
-                null 
+            } catch (e: Exception) {
+                null
             }
             TabState(
                 id = tabId,
@@ -337,14 +337,14 @@ class BrowserPerceptiveAgent(
                 active = (driver == currentDriver)
             )
         }
-        
+
         val activeTabId = browser.drivers.entries.find { it.value == currentDriver }?.key
-        
+
         val enhancedBrowserState = baseState.browserState.copy(
             tabs = tabs,
             activeTabId = activeTabId
         )
-        
+
         return BrowserUseState(
             browserState = enhancedBrowserState,
             domState = baseState.domState
@@ -355,15 +355,15 @@ class BrowserPerceptiveAgent(
         val toolCall = action.toolCall ?: return InstructionResult(listOf(), listOf(), action.modelResponse)
         val driver = requireNotNull(activeDriver)
         val result = toolCallExecutor.execute(toolCall, driver)
-        
+
         // Handle browser.switchTab - bind the new driver to the session
         if (toolCall.domain == "browser" && toolCall.name == "switchTab" || toolCall.name == "switchTab") {
             handleSwitchTab(result)
         }
-        
+
         return InstructionResult(action.cssFriendlyExpressions, listOf(result), action.modelResponse, listOf(toolCall))
     }
-    
+
     /**
      * Handle switching to a new tab by binding the target driver to the session.
      */
@@ -760,7 +760,14 @@ class BrowserPerceptiveAgent(
                     messages.addUser("[Current page screenshot provided as base64 image]")
                 }
 
-                val stepAction = generateStepAction(messages, stepContext, browserUseState, screenshotB64)
+                val stepAction = try {
+                    // Use overload supplying extracted elements to avoid re-extraction
+                    tta.generate(messages, browserUseState, screenshotB64)
+                } catch (e: Exception) {
+                    logger.error("action.gen.fail sid={} msg={}", context.sessionId.take(8), e.message, e)
+                    consecutiveFailureCounter.incrementAndGet()
+                    null
+                }
 
                 if (stepAction == null) {
                     consecutiveNoOps++
@@ -947,12 +954,9 @@ class BrowserPerceptiveAgent(
     /**
      * Executes tool call with enhanced error handling and validation
      */
-    private suspend fun doExecuteToolCall(
-        action: ActionDescription,
-        step: Int,
-        context: ExecutionContext
-    ): String? {
-        val toolCall = requireNotNull(action.toolCall) { "Tool call is required" }
+    private suspend fun doExecuteToolCall(action: ActionDescription, step: Int, context: ExecutionContext): String? {
+        val toolCall = action.toolCall ?: return null
+
         if (config.enablePreActionValidation && !actionValidator.validateToolCall(toolCall)) {
             logger.info(
                 "tool.validate.fail sid={} step={} tool={} args={}",
