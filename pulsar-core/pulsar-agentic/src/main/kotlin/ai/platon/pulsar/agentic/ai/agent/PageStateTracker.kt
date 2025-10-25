@@ -119,12 +119,65 @@ class PageStateTracker(
         checkIntervalMs = config.domSettleCheckIntervalMs
     )
 
+    // Install the lightweight DOM stability probe once per page to avoid re-parsing JS in the loop
+    private suspend fun ensureDomStabilityProbeInstalled() {
+        val driver = requireNotNull(activeDriver)
+        driver.evaluateValue(
+            """
+            (() => {
+              try {
+                const w = window;
+                if (!w.__pulsarDomObserver) {
+                  w.__pulsarDomStamp = 0;
+                  w.__pulsarDomLastTs = (performance && performance.now) ? performance.now() : Date.now();
+                  const obs = new MutationObserver(() => {
+                    w.__pulsarDomStamp++;
+                    w.__pulsarDomLastTs = (performance && performance.now) ? performance.now() : Date.now();
+                  });
+                  // Observe subtree text/content/node additions; attributes are OFF to reduce noise
+                  const opts = { subtree: true, childList: true, characterData: true };
+                  // Intentionally DO NOT observe attributes or set attributeFilter
+                  // This avoids counting class/style/aria toggles as instability
+                  obs.observe(document, opts);
+                  w.__pulsarDomObserver = obs;
+                }
+                // Bind lifecycle/navigation-ish events once to bump the stamp on non-mutation transitions
+                if (!w.__pulsarDomEventsBound) {
+                  const bump = () => { try { w.__pulsarDomStamp++; } catch(_) {} };
+                  document.addEventListener('readystatechange', bump, { once: false, passive: true });
+                  document.addEventListener('DOMContentLoaded', bump, { once: true, passive: true });
+                  window.addEventListener('load', bump, { once: false, passive: true });
+                  window.addEventListener('pageshow', bump, { once: false, passive: true });
+                  window.addEventListener('hashchange', bump, { once: false, passive: true });
+                  window.addEventListener('popstate', bump, { once: false, passive: true });
+                  document.addEventListener('visibilitychange', bump, { once: false, passive: true });
+                  w.__pulsarDomEventsBound = true;
+                }
+                if (!w.__pulsarGetDomSignature) {
+                  w.__pulsarGetDomSignature = function () {
+                    const rs = document.readyState;
+                    const rsCode = rs === 'complete' ? 2 : (rs === 'interactive' ? 1 : 0);
+                    // Pack into a 53-bit safe integer: (stamp << 2) | rsCode
+                    return (w.__pulsarDomStamp * 4) + rsCode;
+                  }
+                }
+                return 1;
+              } catch (e) {
+                return 0;
+              }
+            })()
+            """.trimIndent()
+        )
+    }
+
     /**
      * Wait for DOM to stabilize by checking for mutations.
      *
-     * This method repeatedly checks a lightweight DOM stability signature to detect when
-     * the page has finished loading and rendering. Requires multiple consecutive
-     * stable checks before considering the DOM settled.
+     * Faster implementation details:
+     * - Install a single MutationObserver once (no reallocation per check)
+     * - Avoid layout-triggering reads (scrollHeight/offsets); rely on a stamp + readyState
+     * - Return a compact numeric signature to minimize JS<->JVM marshalling
+     * - Require fewer stable checks when document.readyState is 'complete'
      *
      * @param timeoutMs Maximum time to wait for DOM to settle
      * @param checkIntervalMs Interval between stability checks
@@ -133,37 +186,43 @@ class PageStateTracker(
         val driver = requireNotNull(activeDriver)
 
         driver.waitForSelector("body", timeoutMs)
+        // Install once to avoid re-parsing the script below on each poll
+        ensureDomStabilityProbeInstalled()
 
         val startTime = System.currentTimeMillis()
-        var lastSignature: String? = null
+        var lastSignature: Long? = null
+        var lastReadyStateCode: Int = -1
         var stableCount = 0
-        val requiredStableChecks = 3 // Require 3 consecutive stable checks
 
         while (System.currentTimeMillis() - startTime < timeoutMs) {
             try {
-                // Composite, lightweight stability signal: readyState, element count, and body text length
-                val signature = driver.evaluateValue(
+                // Call the cached function with minimal JS to reduce parser/bridge overhead
+                val signatureNum = (driver.evaluateValue(
                     """
-                    (() => {
-                      const ready = document.readyState;
-                      const nodes = document.getElementsByTagName('*').length;
-                      const textLen = (document.body?.innerText || '').length;
-                      return ready + ':' + nodes + ':' + textLen;
-                    })()
+                    (() => { try { const f = window.__pulsarGetDomSignature; return typeof f === 'function' ? f() : -1; } catch(e) { return -1; } })()
                     """.trimIndent()
-                ) as? String
+                ) as? Number)?.toLong()
 
-                if (signature != null && signature == lastSignature) {
-                    stableCount++
-                    if (stableCount >= requiredStableChecks) {
-                        logger.debug("DOM settled after ${System.currentTimeMillis() - startTime}ms")
-                        return
+                if (signatureNum != null && signatureNum >= 0) {
+                    val rsCode = (signatureNum % 4L).toInt()
+                    val isSame = signatureNum == lastSignature
+                    if (isSame) {
+                        stableCount++
+                        val requiredStableChecks = if (rsCode == 2) 2 else 3
+                        if (stableCount >= requiredStableChecks) {
+                            logger.debug("DOM settled after ${System.currentTimeMillis() - startTime}ms (rsCode=$rsCode, checks=$stableCount)")
+                            return
+                        }
+                    } else {
+                        stableCount = 0
                     }
+                    lastReadyStateCode = rsCode
+                    lastSignature = signatureNum
                 } else {
+                    // Treat as unstable and continue polling
                     stableCount = 0
                 }
 
-                lastSignature = signature
                 delay(checkIntervalMs)
             } catch (e: Exception) {
                 logger.warn("Error checking DOM stability: ${e.message}")
@@ -171,6 +230,6 @@ class PageStateTracker(
             }
         }
 
-        logger.debug("DOM settle timeout after ${timeoutMs}ms")
+        logger.debug("DOM settle timeout after ${timeoutMs}ms (lastReadyStateCode=$lastReadyStateCode)")
     }
 }
