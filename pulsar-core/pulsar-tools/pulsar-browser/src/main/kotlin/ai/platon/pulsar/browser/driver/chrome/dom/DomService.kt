@@ -9,6 +9,8 @@ interface DomService {
 
     suspend fun getBrowserUseState(target: PageTarget = PageTarget(), snapshotOptions: SnapshotOptions): BrowserUseState
 
+    suspend fun getDOMState(target: PageTarget = PageTarget(), snapshotOptions: SnapshotOptions): DOMState
+
     /**
      * Collect all trees (DOM, AX, Snapshot) for the given target.
      */

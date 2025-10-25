@@ -431,6 +431,10 @@ data class DOMState(
     @get:JsonIgnore
     val interactiveNodesLazyJson: String by lazy { DOMSerializer.toJson(interactiveNodes) }
 
+    fun getNanoTree(): NanoDOMTree {
+        return NanoDOMTreeNode.create(microTree)
+    }
+
     fun getAbsoluteFBNLocator(locator: String?): FBNLocator? {
         if (locator == null) return null
 
