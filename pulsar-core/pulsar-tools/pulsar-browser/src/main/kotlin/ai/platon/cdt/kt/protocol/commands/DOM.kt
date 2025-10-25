@@ -198,7 +198,7 @@ interface DOM {
    */
   @Experimental
   @Returns("quads")
-  @ReturnTypeParameter(Double::class)
+  @ReturnTypeParameter(List::class, Double::class)
   suspend fun getContentQuads(
     @ParamName("nodeId") @Optional nodeId: Int? = null,
     @ParamName("backendNodeId") @Optional backendNodeId: Int? = null,
@@ -207,7 +207,7 @@ interface DOM {
 
   @Experimental
   @Returns("quads")
-  @ReturnTypeParameter(Double::class)
+  @ReturnTypeParameter(List::class, Double::class)
   suspend fun getContentQuads(): List<List<Double>> {
     return getContentQuads(null, null, null)
   }

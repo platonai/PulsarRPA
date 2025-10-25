@@ -61,7 +61,7 @@ interface LayerTree {
    * @param clipRect The clip rectangle to apply when replaying the snapshot.
    */
   @Returns("timings")
-  @ReturnTypeParameter(Double::class)
+  @ReturnTypeParameter(List::class, Double::class)
   suspend fun profileSnapshot(
     @ParamName("snapshotId") snapshotId: String,
     @ParamName("minRepeatCount") @Optional minRepeatCount: Int? = null,
@@ -70,7 +70,7 @@ interface LayerTree {
   ): List<List<Double>>
 
   @Returns("timings")
-  @ReturnTypeParameter(Double::class)
+  @ReturnTypeParameter(List::class, Double::class)
   suspend fun profileSnapshot(@ParamName("snapshotId") snapshotId: String): List<List<Double>> {
     return profileSnapshot(snapshotId, null, null, null)
   }
