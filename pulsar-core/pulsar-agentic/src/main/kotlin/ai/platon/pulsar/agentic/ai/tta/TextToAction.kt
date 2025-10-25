@@ -295,48 +295,37 @@ open class TextToAction(
   ]
 }
 
+- 工具调用时，将 `locator` 视为 `selector`
+- 确保 `locator` 与对应的无障碍树节点属性完全匹配，可以定位该节点
+- 不提供不能确定的参数
+- 要求 json 输出时，禁止包含任何额外文本
+
 2) 任务完成输出：
-{
-  "isComplete": true,
-  "summary": string,
-  "suggestions": [ string ]
-}
+
+{"taskComplete":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]}
 
 ## 安全要求：
 - 仅操作可见的交互元素
 - 遇到验证码或安全提示时停止执行
 
 ## 工具规范：
-```
+
+```kotlin
 ${ToolCallExecutor.TOOL_CALL_LIST}
 ```
 
-请基于当前页面截图、交互元素与历史动作，规划下一步（严格单步原子动作）。
+## 无障碍树（Accessibility Tree）说明：
+
+无障碍树包含页面 DOM 关键节点的主要信息，包括节点文本内容，可见性，可交互性，坐标和尺寸等。
+
+- 节点唯一定位符 `locator` 由两个整数组成。
+- 所有节点可见，除非 `invisible` == true 显示指定。
+- 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
+- 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
+
+请基于当前页面截图、无障碍树与历史动作，规划下一步（严格单步原子动作）。
 
         """.trimIndent()
-
-        val TTA_AGENT_SYSTEM_PROMPT_PREFIX_20 = TTA_AGENT_GUIDE_SYSTEM_PROMPT.take(20)
-
-        /**
-         * Brief:
-         * instruction + DOM + browser state + schema + completion guide
-         * */
-        fun buildBrowserUseStatePrompt(toolCallLimit: Int = 1): String {
-            val prompt = """
-每次最多调用 $toolCallLimit 个工具。
-
-如果总体目标已经达成，则严格按如下格式输出 JSON 信息：
-
-{
-  "isComplete": true,
-  "summary": string,
-  "suggestions": [string]
-}
-
-"""
-
-            return prompt
-        }
 
         fun buildOperatorSystemPrompt(): String {
             return """
