@@ -463,7 +463,10 @@ class PulsarWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun outerHTML(selector: String): String? {
         return invokeOnElement(selector, "outerHTML") { node ->
-            domAPI?.getOuterHTML(node.nodeId, node.backendNodeId, node.objectId)
+            when {
+                node.isNull() -> null
+                else -> domAPI?.getOuterHTML(node.nodeId, node.backendNodeId, node.objectId)
+            }
         }
     }
 

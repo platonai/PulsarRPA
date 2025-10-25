@@ -17,10 +17,26 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 
+/**
+ * NodeId does not explicitly prohibit 0, but as seen in the internal implementation (Chromium source code):
+ * - All valid nodes are assigned NodeIds starting from 1
+ * - `0` is reserved as an "invalid / null node"
+ *
+ * DOM.NodeId #
+ * Unique DOM node identifier.
+ * Type: integer
+ *
+ * DOM.BackendNodeId #
+ * Unique DOM node identifier used to reference a node that may not have been pushed to the front-end.
+ * Type: integer
+ *
+ * References:
+ * - [NodeId](https://chromedevtools.github.io/devtools-protocol/tot/DOM/#type-NodeId)
+ * */
 data class NodeRef constructor(
-    val nodeId: Int? = null,
+    val nodeId: Int = 0,
     // backend node id is more stable
-    val backendNodeId: Int? = null,
+    val backendNodeId: Int = 0,
     val objectId: String? = null
 ) {
     /**
@@ -29,9 +45,11 @@ data class NodeRef constructor(
      * At least one of nodeId and backendNodeId is positive.
      * */
     fun mayExist(): Boolean {
-        val a = nodeId ?: 0
-        val b = backendNodeId ?: 0
-        return a + b > 0
+        return nodeId > 0 || backendNodeId > 0
+    }
+
+    fun isNull(): Boolean {
+        return nodeId == 0 && backendNodeId == 0
     }
 }
 
@@ -109,7 +127,9 @@ class PageHandler(
 
     @Throws(ChromeDriverException::class)
     suspend fun getAttribute(node: NodeRef, attrName: String): String? {
-        node.nodeId ?: return null
+        if (node.isNull()) {
+            return null
+        }
 
         // `attributes`: n1, v1, n2, v2, n3, v3, ...
         val attributes = domAPI?.getAttributes(node.nodeId) ?: return null
@@ -132,7 +152,9 @@ class PageHandler(
 
     @Throws(ChromeDriverException::class)
     suspend fun visible(node: NodeRef): Boolean {
-        node.nodeId ?: return false
+        if (node.isNull()) {
+            return false
+        }
 
         var isVisible = true
 
@@ -185,10 +207,6 @@ class PageHandler(
     @Throws(ChromeDriverException::class)
     suspend fun scrollIntoViewIfNeeded(selector: String, rect: Rect? = null): NodeRef? {
         val node = resolveSelector(selector) ?: return null
-        if (node.nodeId == null) {
-            logger.info("No node found for selector: $selector")
-            return null
-        }
 
         return scrollIntoViewIfNeeded(node, selector, rect)
     }
@@ -366,12 +384,11 @@ class PageHandler(
 
             val objectId = remoteObject.objectId
             // Use DOM.requestNode to get the nodeId from the runtime object
-            val nodeId = domAPI?.requestNode(objectId)
+            val nodeId = domAPI?.requestNode(objectId) ?: 0
             // Release the remote object to avoid memory leaks
             runtimeAPI?.releaseObject(objectId)
 
-
-            NodeRef(nodeId, backendNodeId, objectId)
+            NodeRef(nodeId, backendNodeId ?: 0, objectId)
         } catch (e: Exception) {
             logger.warn("Exception resolving backend node ID {}: {}", backendNodeId, e.message)
             null
@@ -421,7 +438,7 @@ class PageHandler(
     private suspend fun predicateOnElement(selector: String, action: suspend (NodeRef) -> Boolean): Boolean {
         val node = resolveSelector(selector) ?: return false
 
-        if (node.nodeId != null && node.nodeId > 0) {
+        if (node.nodeId > 0) {
             return action(node)
         }
 
