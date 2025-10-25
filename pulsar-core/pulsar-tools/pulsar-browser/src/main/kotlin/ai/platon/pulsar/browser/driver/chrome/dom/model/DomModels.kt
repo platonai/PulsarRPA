@@ -371,13 +371,13 @@ data class NanoDOMTreeNode(
     val children: List<NanoDOMTreeNode>? = null,
 ) {
     companion object {
-        fun create(microTree: MicroDOMTreeNode): NanoDOMTree {
+        fun create(microTree: MicroDOMTreeNode, startY: Int = 0, endY: Int = 100000): NanoDOMTree {
             // Create the current node from the micro node
             val root = newNode(microTree) ?: return NanoDOMTree()
 
             // Recursively create child nano nodes, filter out empty placeholders
             val childNanoList = microTree.children
-                ?.map { create(it) }
+                ?.map { create(it, startY, endY) }
                 ?.filter { child ->
                     // keep nodes that have any meaningful data (locator or nodeName or non-empty children)
                     !(child.locator == null && child.nodeName == null && (child.children == null || child.children.isEmpty()))
