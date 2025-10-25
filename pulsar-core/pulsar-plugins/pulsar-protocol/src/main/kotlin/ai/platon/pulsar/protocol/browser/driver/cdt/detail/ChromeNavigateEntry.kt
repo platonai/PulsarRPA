@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver.cdt.detail
 
 import ai.platon.cdt.kt.protocol.events.network.RequestWillBeSent
 import ai.platon.cdt.kt.protocol.events.network.ResponseReceived
+import ai.platon.cdt.kt.protocol.events.page.FrameNavigated
 import ai.platon.cdt.kt.protocol.types.network.ResourceType
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.NavigateEntry
@@ -14,28 +15,22 @@ class ChromeNavigateEntry(
     private val tracer = logger.takeIf { it.isTraceEnabled }
 
     fun updateStateBeforeRequestSent(event: RequestWillBeSent) {
-        // We may have better solution to do this
-//        if (!navigateEntry.documentTransferred) {
-//            navigateEntry.synchronized { updateStateBeforeRequestSent0(event) }
-//        } else {
-//            updateStateBeforeRequestSent0(event)
-//        }
         updateStateBeforeRequestSent0(event)
     }
 
     fun updateStateAfterResponseReceived(event: ResponseReceived) {
-        // We may have better solution to do this
-//        if (!navigateEntry.documentTransferred) {
-//            navigateEntry.synchronized { updateStateAfterResponseReceived0(event) }
-//        } else {
-//            updateStateAfterResponseReceived0(event)
-//        }
         updateStateAfterResponseReceived0(event)
+    }
+
+    fun updateStateAfterFrameNavigated(event: FrameNavigated) {
+        if (event.frame.parentId == null) {
+            navigateEntry.mainFrameId = event.frame.id
+        }
     }
 
     fun isMinorResource(event: RequestWillBeSent): Boolean {
         val type = event.type ?: return true
-        return navigateEntry.documentTransferred && isMinorResource(type)
+        return navigateEntry.mainFrameReceived && isMinorResource(type)
     }
 
     private fun updateStateBeforeRequestSent0(event: RequestWillBeSent) {
@@ -89,11 +84,11 @@ class ChromeNavigateEntry(
     }
 
     private fun isMajorRequestWillBeSent(event: RequestWillBeSent): Boolean {
-        return !navigateEntry.documentTransferred && event.type == ResourceType.DOCUMENT
+        return !navigateEntry.mainFrameReceived && event.type == ResourceType.DOCUMENT
     }
 
     private fun isMajorResponseReceived(event: ResponseReceived): Boolean {
-        return !navigateEntry.documentTransferred && event.type == ResourceType.DOCUMENT
+        return !navigateEntry.mainFrameReceived && event.type == ResourceType.DOCUMENT
     }
 
     private fun isMinorResource(type: ResourceType): Boolean {

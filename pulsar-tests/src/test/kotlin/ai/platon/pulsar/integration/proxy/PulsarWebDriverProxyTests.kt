@@ -60,7 +60,7 @@ class PulsarWebDriverProxyTests : WebDriverTestBase() {
         openEnhanced(ipTestUrl, driver, 1)
 
         val navigateEntry = driver.navigateEntry
-        assertTrue { navigateEntry.documentTransferred }
+        assertTrue { navigateEntry.mainFrameReceived }
         assertTrue { navigateEntry.networkRequestCount.get() > 0 }
         assertTrue { navigateEntry.networkResponseCount.get() > 0 }
 

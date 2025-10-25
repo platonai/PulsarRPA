@@ -60,7 +60,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
         openEnhanced(e2eProductUrl, driver, 1)
 
         val navigateEntry = driver.navigateEntry
-        assertTrue("Expect documentTransferred") { navigateEntry.documentTransferred }
+        assertTrue("Expect documentTransferred") { navigateEntry.mainFrameReceived }
         assertTrue { navigateEntry.networkRequestCount.get() > 0 }
         assertTrue { navigateEntry.networkResponseCount.get() > 0 }
 

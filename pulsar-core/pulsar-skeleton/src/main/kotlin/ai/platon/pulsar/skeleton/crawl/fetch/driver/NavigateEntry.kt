@@ -66,6 +66,9 @@ data class NavigateEntry(
     var mainResponseStatusText: String = ""
     var mainResponseHeaders: Map<String, Any> = mapOf()
 
+    var mainFrameId: String? = null
+    val mainFrameReceived get() = mainFrameId != null
+    @Deprecated("Use mainFrameReceived instead", ReplaceWith("mainFrameReceived"))
     val documentTransferred get() = mainResponseStatus > 0
 
     /**

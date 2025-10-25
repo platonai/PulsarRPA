@@ -144,10 +144,10 @@ class SessionLoadTests: TestBase() {
         options.eventHandlers.browseEventHandlers.onDidScroll.addLast { page, driver ->
             require(driver is PulsarWebDriver)
             val navigateEntry = driver.navigateEntry
-            assertTrue { navigateEntry.documentTransferred }
+            assertTrue { navigateEntry.mainFrameReceived }
             assertTrue { navigateEntry.networkRequestCount.get() > 0 }
             assertTrue { navigateEntry.networkResponseCount.get() > 0 }
-            
+
             assertEquals(200, driver.mainResponseStatus)
             assertTrue { driver.mainResponseStatus == 200 }
             assertTrue { driver.mainResponseHeaders.isNotEmpty() }

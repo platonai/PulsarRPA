@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver.cdt
 
 import ai.platon.cdt.kt.protocol.events.network.RequestWillBeSent
 import ai.platon.cdt.kt.protocol.events.network.ResponseReceived
+import ai.platon.cdt.kt.protocol.events.page.FrameNavigated
 import ai.platon.cdt.kt.protocol.events.page.WindowOpen
 import ai.platon.cdt.kt.protocol.types.fetch.RequestPattern
 import ai.platon.cdt.kt.protocol.types.network.ErrorReason
@@ -673,6 +674,9 @@ class PulsarWebDriver(
         networkManager.on1(NetworkEvents.ResponseReceived) { event: ResponseReceived ->
             onResponseReceived(entry, event)
         }
+        networkManager.on1(NetworkEvents.FrameNavigated) { event: FrameNavigated ->
+            onFrameNavigated(entry, event)
+        }
 
         pageAPI?.onDocumentOpened { entry.mainRequestCookies = getCookies0() }
         // TODO: seems not working
@@ -794,6 +798,12 @@ class PulsarWebDriver(
         }
 
         // handle user-defined events
+    }
+
+    private suspend fun onFrameNavigated(entry: NavigateEntry, event: FrameNavigated) {
+        val chromeNavigateEntry = ChromeNavigateEntry(entry)
+
+        chromeNavigateEntry.updateStateAfterFrameNavigated(event)
     }
 
     private suspend fun reportInterestingResources(entry: NavigateEntry, event: ResponseReceived) {

@@ -17,6 +17,7 @@ enum class NetworkEvents {
     Response,
     // may be removed, use Response instead
     ResponseReceived,
+    FrameNavigated,
     RequestFailed,
     RequestFinished
 }
