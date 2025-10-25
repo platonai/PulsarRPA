@@ -42,6 +42,11 @@ cmd /c "cd /d D:\Browser4 && mvnw.cmd -pl pulsar-core/pulsar-skeleton -am test -
 
 ```
 
+Test Command Examples for Linux (Ubuntu)
+```
+mvn -pl pulsar-tests -am -Dtest=PulsarWebDriverInjectedJSTests -Dsurefire.failIfNoSpecifiedTests=false
+```
+
 ---
 
 ## 0. Prerequisites
