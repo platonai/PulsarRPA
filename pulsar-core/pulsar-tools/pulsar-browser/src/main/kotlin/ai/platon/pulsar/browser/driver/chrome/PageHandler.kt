@@ -242,6 +242,7 @@ class PageHandler(
         val expression2 = confuser.confuse(expression)
         // return cdpEvaluate(expression2, returnByValue = true)
 
+        // returnByValue: Whether the result is expected to be a JSON object that should be sent by value.
         return runtimeAPI?.evaluate(expression, returnByValue = true)
     }
 

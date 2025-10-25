@@ -114,9 +114,9 @@ open class WebDriverService(
 //        driver.waitForSelector("input[id]")
 
         // make sure all metadata are available
-        driver.evaluateDetail("__pulsar_utils__.waitForReady()")
+        driver.evaluate("__pulsar_utils__.waitForReady()")
         // make sure all metadata are available
-        driver.evaluateDetail("__pulsar_utils__.compute()")
+        driver.evaluate("__pulsar_utils__.compute()")
 
 //        driver.bringToFront()
         var n = scrollCount

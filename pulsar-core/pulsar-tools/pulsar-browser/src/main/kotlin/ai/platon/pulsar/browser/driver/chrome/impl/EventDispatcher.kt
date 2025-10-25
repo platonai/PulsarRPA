@@ -3,6 +3,7 @@ package ai.platon.pulsar.browser.driver.chrome.impl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.getTracerOrNull
+import ai.platon.pulsar.common.printlnPro
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.DeserializationFeature
@@ -49,25 +50,25 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
         const val RESULT_PROPERTY = "result"
         const val METHOD_PROPERTY = "method"
         const val PARAMS_PROPERTY = "params"
-        
+
         val OBJECT_MAPPER = ObjectMapper()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL)
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     }
-    
+
     private val logger = getLogger(this)
-    
+
     private val tracer = getTracerOrNull(this)
-    
+
     private val closed = AtomicBoolean()
     private val invocationFutures: MutableMap<Long, InvocationFuture> = ConcurrentHashMap()
     private val eventListeners: ConcurrentHashMap<String, ConcurrentSkipListSet<DevToolsEventListener>> =
         ConcurrentHashMap()
-    
+
     private val eventDispatcherScope = CoroutineScope(Dispatchers.Default) + CoroutineName("EventDispatcher")
-    
+
     val isActive get() = !closed.get()
-    
+
     @Throws(JsonProcessingException::class)
     fun serialize(message: Any): String = OBJECT_MAPPER.writeValueAsString(message)
 
@@ -101,7 +102,7 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
         } else {
             javaType = typeFactory.constructParametricType(parameterizedClazz, classParameters[0])
         }
-        
+
         return OBJECT_MAPPER.readerFor(javaType).readValue(jsonNode)
     }
 
@@ -116,7 +117,7 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
         if (jsonNode == null) {
             throw ChromeRPCException("Failed converting null response to clazz " + clazz.name)
         }
-        
+
         try {
             // Here is a typical response sequence:
             // println(clazz)
@@ -134,17 +135,17 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
             throw e
         }
     }
-    
+
     fun hasFutures() = invocationFutures.isNotEmpty()
-    
+
     fun subscribe(id: Long, returnProperty: String?): InvocationFuture {
         return invocationFutures.computeIfAbsent(id) { InvocationFuture(returnProperty) }
     }
-    
+
     fun unsubscribe(id: Long) {
         invocationFutures.remove(id)
     }
-    
+
     fun unsubscribeAll() {
         // Complete any pending futures with a failed result to unblock waiters
         val ids = invocationFutures.keys.toList()
@@ -152,15 +153,15 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
             invocationFutures.remove(id)?.deferred?.complete(RpcResult(false, null))
         }
     }
-    
+
     fun registerListener(key: String, listener: DevToolsEventListener) {
         eventListeners.computeIfAbsent(key) { ConcurrentSkipListSet<DevToolsEventListener>() }.add(listener)
     }
-    
+
     fun unregisterListener(key: String, listener: DevToolsEventListener) {
         eventListeners[key]?.removeIf { listener.handler == it.handler }
     }
-    
+
     fun removeAllListeners() {
         eventListeners.clear()
     }
@@ -168,7 +169,7 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
     @Throws(ChromeRPCException::class, IOException::class)
     override fun accept(message: String) {
         tracer?.trace("◀ Accept {}", StringUtils.abbreviateMiddle(message, "...", 500))
-        
+
         ChromeDevToolsImpl.numAccepts.inc()
         try {
             val jsonNode = OBJECT_MAPPER.readTree(message)
@@ -177,10 +178,10 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
                 val id = idNode.asLong()
                 val future = invocationFutures.remove(id)
 
-                logger.info("==============================")
-                println(id)
-                println(future?.returnProperty)
-                println(message)
+//                printlnPro(this, "==============================")
+//                printlnPro(id)
+//                printlnPro(future?.returnProperty)
+//                printlnPro(message)
 
                 if (future != null) {
                     var resultNode = jsonNode.get(RESULT_PROPERTY)
@@ -208,7 +209,7 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
             logger.error("Failed reading web socket message", e)
         }
     }
-    
+
     /**
      * Closes the dispatcher. All event listeners will be removed and all waiting futures are signaled with failed.
      * */

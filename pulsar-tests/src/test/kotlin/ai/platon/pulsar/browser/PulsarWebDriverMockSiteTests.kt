@@ -3,11 +3,15 @@ package ai.platon.pulsar.browser
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.js.JsUtils
-import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.printlnPro
+import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import org.apache.commons.lang3.StringUtils
-import kotlin.test.*
+import org.junit.jupiter.api.assertNull
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
 
@@ -41,12 +45,13 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test evaluate that returns primitive values`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
-        val code = """1+1"""
+    fun `test evaluate that returns primitive values`() =
+        runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+            val code = """1+1"""
 
-        val result = driver.evaluate(code)
-        assertEquals(2, result)
-    }
+            val result = driver.evaluate(code)
+            assertEquals(2, result)
+        }
 
     @Test
     fun `test evaluate that returns object`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
@@ -59,7 +64,6 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         assertNull(result.exception)
         assertEquals("Object", result.className)
         assertEquals("Object", result.description)
-        // assertEquals(2, result)
 
         val result2 = driver.evaluateValueDetail(code)
         printlnPro(result2)
@@ -69,7 +73,6 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         assertNull(result2.description)
         val value2 = result2.value
         assertNotNull(value2)
-        // logPrintln(value2::class.qualifiedName)
         assertEquals("java.util.LinkedHashMap", value2::class.qualifiedName)
         assertTrue { value2 is Map<*, *> }
         value2 as Map<*, *>
@@ -77,22 +80,23 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
 
         val propertyNames = value2["propertyNames"]
         assertNotNull(propertyNames)
-        // logPrintln(propertyNames::class.qualifiedName)
         assertEquals("java.util.ArrayList", propertyNames::class.qualifiedName)
         assertTrue { propertyNames is List<*> }
     }
 
     @Test
-    fun `test evaluate single line expressions`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
-        val code = "(() => {\n  const a = 1;\n  const b = 2;\n  return a + b;\n})()"
+    fun `test evaluate single line expressions`() =
+        runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+            val code = "(() => {\n  const a = 1;\n  const b = 2;\n  return a + b;\n})()"
 
-        val result = driver.evaluate(code)
-        assertEquals(3, result)
-    }
+            val result = driver.evaluate(code)
+            assertEquals(3, result)
+        }
 
     @Test
-    fun `test evaluate multi-line expressions`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
-        val code = """
+    fun `test evaluate multi-line expressions`() =
+        runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+            val code = """
 () => {
   const a = 10;
   const b = 20;
@@ -100,29 +104,30 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
 }
         """.trimIndent()
 
-        val result = driver.evaluate(JsUtils.toIIFE(code))
-        assertEquals(200, result)
+            val result = driver.evaluate(JsUtils.toIIFE(code))
+            assertEquals(200, result)
 
-        val code2 = """
+            val code2 = """
   const a = 10;
   const b = 20;
   return a * b;
         """.trimIndent()
 
-        // converted to "// ❌ Unsupported format: not a valid JS function"
-        // so it's an empty expressions sent to the browser
+            // converted to "// ❌ Unsupported format: not a valid JS function"
+            // so it's an empty expressions sent to the browser
 
-        val result2 = driver.evaluateValueDetail(JsUtils.toIIFE(code2))
-        printlnPro(result2)
-        assertNotNull(result2)
-        val exception = result2.exception
-        assertNull(exception)
-        // assertIs<JsException>(exception)
-    }
+            val result2 = driver.evaluateValueDetail(JsUtils.toIIFE(code2))
+            printlnPro(result2)
+            assertNotNull(result2)
+            val exception = result2.exception
+            assertNull(exception)
+            // assertIs<JsException>(exception)
+        }
 
     @Test
-    fun `test evaluate IIFE (Immediately Invoked Function Expression)`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
-        val code = """
+    fun `test evaluate IIFE (Immediately Invoked Function Expression)`() =
+        runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+            val code = """
 (() => {
   const a = 10;
   const b = 20;
@@ -130,9 +135,9 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
 })()
         """.trimIndent()
 
-        val result = driver.evaluate(code)
-        assertEquals(200, result)
-    }
+            val result = driver.evaluate(code)
+            assertEquals(200, result)
+        }
 
     @Test
     fun `test fill form with JavaScript`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
@@ -159,15 +164,16 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test selectFirstPropertyValueOrNull`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
-        val selector = "input[id=input]"
+    fun `test selectFirstPropertyValueOrNull`() =
+        runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+            val selector = "input[id=input]"
 
-        driver.fill(selector, text)
+            driver.fill(selector, text)
 
-        val propValue = driver.selectFirstPropertyValueOrNull(selector, "value")
+            val propValue = driver.selectFirstPropertyValueOrNull(selector, "value")
 
-        assertEquals(text, propValue)
-    }
+            assertEquals(text, propValue)
+        }
 
     @Test
     fun `test selectPropertyValueAll`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->

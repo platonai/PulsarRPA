@@ -36,7 +36,7 @@ class CachedDevToolsInvocationHandlerProxies(impl: Any) : SuspendAwareHandler(im
     // Typical proxy:
     //   - jdk.proxy1.$Proxy24
     // Typical methods:
-    //   - public abstract void com.github.kklisura.cdt.protocol.v2023.commands.Page.enable()
+    //   - public abstract void com.github.kklisura.cdt.protocol.commands.Page.enable()
     //   - public abstract com...page.Navigate com...Page.navigate(java.lang.String)
     override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any? {
         return commands.computeIfAbsent(method) {

@@ -165,7 +165,7 @@ object ReflectUtils {
 object ProxyClasses {
     private val logger = getLogger(this)
 
-    private val isDebugEnabled get() = alwaysTrue() || logger.isDebugEnabled
+    private val isDebugEnabled get() = logger.isDebugEnabled
 
     /**
      * Creates a proxy class to a given abstract clazz supplied with invocation handler for
@@ -199,7 +199,7 @@ object ProxyClasses {
                 // Typical proxy:
                 //   - jdk.proxy1.$Proxy24
                 // Typical methods:
-                //   - public abstract void com.github.kklisura.cdt.protocol.v2023.commands.Page.enable()
+                //   - public abstract void ai.platon.pulsar.cdt.protocol.commands.Page.enable()
                 //   - public abstract com...page.Navigate com...Page.navigate(java.lang.String)
                 invocationHandler.invoke(o, method, objects)
             }
@@ -240,17 +240,6 @@ object ProxyClasses {
     fun <T> createProxy(clazz: Class<T>, invocationHandler: SuspendAwareHandler?): T {
         val bridgeHandler = toJvmInvocationHandler(invocationHandler)
 
-        if (isDebugEnabled) {
-            // Example
-            // class: com.github.kklisura.cdt.protocol.v2023.commands.Page
-            val message = """
-class: ${clazz.name}
-
-        """.trimIndent()
-
-            logger.info("createProxy: $message")
-        }
-
         val proxy = Proxy.newProxyInstance(clazz.classLoader, arrayOf<Class<*>>(clazz), bridgeHandler)
 
         @Suppress("UNCHECKED_CAST")
@@ -272,7 +261,7 @@ class: ${clazz.name}
                 // Typical proxy:
                 //   - jdk.proxy1.$Proxy24
                 // Typical methods:
-                //   - public abstract void com.github.kklisura.cdt.protocol.v2023.commands.Page.enable()
+                //   - public abstract void ai.platon.pulsar.cdt.protocol.commands.Page.enable()
                 //   - public abstract com...page.Navigate com...Page.navigate(java.lang.String)
                 debugParameters(proxy, method, methodArgs)
             }
@@ -324,7 +313,7 @@ args:
      *
      * proxy: ai.platon.pulsar.browser.driver.chrome.impl.ChromeDevToolsImpl_$$_jvst2b9_0@421a4ee1
      * method:
-     *   - public abstract com.github.kklisura.cdt.protocol.v2023.commands.Page com.github.kklisura.cdt.protocol.v2023.ChromeDevTools.getPage()
+     *   - public abstract ai.platon.pulsar.cdt.protocol.commands.Page ai.platon.pulsar.cdt.protocol.ChromeDevTools.getPage()
      * methodArgs:
      *   -
      * */
