@@ -126,6 +126,21 @@ class ToolCallExecutor {
         args: Map<String, Any?>,
         driver: WebDriver
     ): Any? {
+        // Handle browser-level commands
+        if (objectName == "browser" && functionName == "switchTab") {
+            val tabId = args["0"]?.toString() ?: return buildErrorResponse("tab_not_found", 
+                "Missing tabId parameter", driver.browser)
+            
+            val targetDriver = driver.browser.drivers[tabId]
+            if (targetDriver != null) {
+                logger.info("Switched to tab {} (driver {})", tabId, targetDriver.id)
+                return targetDriver.id
+            } else {
+                return buildErrorResponse("tab_not_found", 
+                    "Tab with id '$tabId' not found", driver.browser)
+            }
+        }
+        
         // Execute the appropriate WebDriver method based on the function name
         val arg0 = args["0"]?.toString()
         val arg1 = args["1"]?.toString()
@@ -711,6 +726,19 @@ class ToolCallExecutor {
             }
         }
     }
+    
+    /**
+     * Build a structured error response for browser operations.
+     * Returns a map with error information and available tabs.
+     */
+    private fun buildErrorResponse(errorType: String, message: String, browser: Browser): Map<String, Any> {
+        val availableTabs = browser.drivers.keys.toList()
+        return mapOf(
+            "error" to errorType,
+            "message" to message,
+            "availableTabs" to availableTabs
+        )
+    }
 
     companion object {
 
@@ -744,7 +772,7 @@ driver.delay(millis: Long = 1000)
 
 // switch to a tab with tab id, the tab id will be added to BrowserState
 // the function returns the driver id can be used to locate the driver from Browser.drivers
-browser.switchTab(tabId: Int): Int
+browser.switchTab(tabId: String): Int
 
 agent.observe(instruction: String): List<ObserveResult>
 agent.observe(options: ObserveOptions): List<ObserveResult>
@@ -1066,6 +1094,8 @@ agent.extract(options: ExtractOptions): ExtractResult
             }
             // Timing
             "delay" -> "driver.delay(${tc.args["millis"] ?: 1000})"
+            // Browser-level operations
+            "switchTab" -> tc.args["tabId"]?.toString()?.let { "browser.switchTab(\"${it.esc()}\")" }
             else -> null
         }
     }

@@ -262,7 +262,21 @@ Print null or an empty string if no new information is found.
      * - Returns a user-role message
      */
     fun buildExtractUserPrompt(instruction: String, domContent: String): SimpleMessage {
+        return buildExtractUserPrompt(instruction, domContent, null)
+    }
+
+    /**
+     * Description:
+     * Builds the extraction user message with optional browser state.
+     *
+     * Prompt key points:
+     * - Multiple sections: Instruction, Browser State (optional), and DOM
+     * - Uses localized labels
+     * - Returns a user-role message
+     */
+    fun buildExtractUserPrompt(instruction: String, domContent: String, browserStateJson: String?): SimpleMessage {
         val instructionLabel = if (isCN) "指令: " else "Instruction: "
+        val browserStateLabel = if (isCN) "当前浏览器状态" else "Current Browser State"
         val domLabel = if (isCN) "DOM: " else "DOM: "
 
         val sb = StringBuilder()
@@ -270,7 +284,17 @@ Print null or an empty string if no new information is found.
             .append('\n')
             .append(instruction)
             .append('\n')
-            .append(domLabel)
+        
+        if (browserStateJson != null) {
+            sb.append('\n')
+                .append("## ")
+                .append(browserStateLabel)
+                .append('\n')
+                .append(browserStateJson)
+                .append('\n')
+        }
+        
+        sb.append(domLabel)
             .append('\n')
             .append(domContent)
 

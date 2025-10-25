@@ -11,6 +11,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.DomDebug
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
+import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
@@ -307,14 +308,90 @@ class BrowserPerceptiveAgent(
             includeInteractivity = true
         )
 
-        return domService.getBrowserUseState(snapshotOptions = snapshotOptions)
+        val baseState = domService.getBrowserUseState(snapshotOptions = snapshotOptions)
+        
+        // Inject tabs information
+        return injectTabsInfo(baseState)
+    }
+    
+    /**
+     * Inject tabs information into BrowserUseState.
+     * Collects all tabs from the current browser and marks the active tab.
+     */
+    private suspend fun injectTabsInfo(baseState: BrowserUseState): BrowserUseState {
+        val currentDriver = session.boundDriver ?: return baseState
+        val browser = currentDriver.browser
+        
+        val tabs = browser.drivers.map { (tabId, driver) ->
+            val url = try { driver.currentUrl() } catch (e: Exception) { "about:blank" }
+            val title = try { 
+                driver.evaluate("document.title").toString().takeIf { it.isNotBlank() }
+            } catch (e: Exception) { 
+                null 
+            }
+            TabState(
+                id = tabId,
+                driverId = driver.id,
+                url = url,
+                title = title,
+                active = (driver == currentDriver)
+            )
+        }
+        
+        val activeTabId = browser.drivers.entries.find { it.value == currentDriver }?.key
+        
+        val enhancedBrowserState = baseState.browserState.copy(
+            tabs = tabs,
+            activeTabId = activeTabId
+        )
+        
+        return BrowserUseState(
+            browserState = enhancedBrowserState,
+            domState = baseState.domState
+        )
     }
 
     private suspend fun execute(action: ActionDescription): InstructionResult {
         val toolCall = action.toolCall ?: return InstructionResult(listOf(), listOf(), action.modelResponse)
         val driver = requireNotNull(activeDriver)
         val result = toolCallExecutor.execute(toolCall, driver)
+        
+        // Handle browser.switchTab - bind the new driver to the session
+        if (toolCall.domain == "browser" && toolCall.name == "switchTab" || toolCall.name == "switchTab") {
+            handleSwitchTab(result)
+        }
+        
         return InstructionResult(action.cssFriendlyExpressions, listOf(result), action.modelResponse, listOf(toolCall))
+    }
+    
+    /**
+     * Handle switching to a new tab by binding the target driver to the session.
+     */
+    private fun handleSwitchTab(result: Any?) {
+        when (result) {
+            is Int -> {
+                // result is the driverId
+                val browser = requireNotNull(session.boundDriver?.browser) {
+                    "No browser bound to session"
+                }
+                val targetDriver = browser.drivers.values.find { it.id == result }
+                if (targetDriver != null) {
+                    session.bindDriver(targetDriver)
+                    logger.info("Session bound to new driver {} after switchTab", result)
+                } else {
+                    logger.warn("switchTab returned driverId {} but driver not found in browser", result)
+                }
+            }
+            is Map<*, *> -> {
+                // Error response from switchTab
+                val error = result["error"] as? String
+                val message = result["message"] as? String
+                logger.warn("switchTab failed: {} - {}", error, message)
+            }
+            else -> {
+                logger.warn("Unexpected switchTab result type: {}", result?.javaClass?.simpleName)
+            }
+        }
     }
 
     private suspend fun doObserve(options: ObserveOptions): List<ObserveResult> {
