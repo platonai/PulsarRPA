@@ -128,19 +128,19 @@ class ToolCallExecutor {
     ): Any? {
         // Handle browser-level commands
         if (objectName == "browser" && functionName == "switchTab") {
-            val tabId = args["0"]?.toString() ?: return buildErrorResponse("tab_not_found", 
+            val tabId = args["0"]?.toString() ?: return buildErrorResponse("tab_not_found",
                 "Missing tabId parameter", driver.browser)
-            
+
             val targetDriver = driver.browser.drivers[tabId]
             if (targetDriver != null) {
                 logger.info("Switched to tab {} (driver {})", tabId, targetDriver.id)
                 return targetDriver.id
             } else {
-                return buildErrorResponse("tab_not_found", 
+                return buildErrorResponse("tab_not_found",
                     "Tab with id '$tabId' not found", driver.browser)
             }
         }
-        
+
         // Execute the appropriate WebDriver method based on the function name
         val arg0 = args["0"]?.toString()
         val arg1 = args["1"]?.toString()
@@ -726,7 +726,7 @@ class ToolCallExecutor {
             }
         }
     }
-    
+
     /**
      * Build a structured error response for browser operations.
      * Returns a map with error information and available tabs.
@@ -744,9 +744,30 @@ class ToolCallExecutor {
 
         /**
          * The `TOOL_CALL_LIST` is written using kotlin syntax to express the tool's `domain`, `method`, `arguments`.
-         *
          * */
         const val TOOL_CALL_LIST = """
+driver.navigateTo(url: String)
+driver.waitForSelector(selector: String, timeoutMillis: Long = 5000)
+driver.exists(selector: String): Boolean
+driver.isVisible(selector: String): Boolean
+driver.focus(selector: String)
+driver.click(selector: String)
+driver.fill(selector: String, text: String)
+driver.type(selector: String, text: String)
+driver.press(selector: String, key: String)
+driver.check(selector: String)
+driver.uncheck(selector: String)
+driver.scrollTo(selector: String)
+driver.scrollToTop()
+driver.scrollToBottom()
+driver.scrollToMiddle(ratio: Double = 0.5)
+driver.scrollToScreen(screenNumber: Double)
+driver.goBack()
+driver.goForward()
+browser.switchTab(tabId: String): Int
+    """
+
+        const val TOOL_CALL_LIST_1 = """
 driver.navigateTo(url: String)
 driver.waitForSelector(selector: String, timeoutMillis: Long = 5000)
 driver.exists(selector: String): Boolean

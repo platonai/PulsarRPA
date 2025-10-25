@@ -12,8 +12,6 @@ import org.springframework.boot.test.context.SpringBootTest
  * Comprehensive tests for TextToAction.generateWebDriverAction() method
  * Testing with real mocker server pages to ensure realistic scenarios
  */
-@Tag("ExternalServiceTest")
-@Tag("TimeConsumingTest")
 @SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionComprehensiveTests : TextToActionTestBase() {
 

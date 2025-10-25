@@ -12,6 +12,20 @@ class ChromeDomInteractiveDynamicE2ETest : WebDriverTestBase() {
 
     @Test
     @Tag("E2E")
+    fun `Given interactive-dynamic When performing simple interactions Then page behaviors and states are correct`() =
+        runEnhancedWebDriverTest(testURL) { driver ->
+            driver.waitForSelector("h1")
+            val title = driver.selectFirstTextOrNull("h1")
+            assertTrue(title?.contains("Dynamic Content Test Page") == true)
+            // Load users
+            driver.click("[data-testid='tta-load-users']")
+            driver.waitForSelector("#dynamicContent .loaded")
+            // Verify users list
+            assertTrue(driver.exists("#dynamicContent [data-testid^='tta-user-']"))
+        }
+
+    @Test
+    @Tag("E2E")
     fun `Given interactive-dynamic When performing full interactions Then page behaviors and states are correct`() =
         runEnhancedWebDriverTest(testURL) { driver ->
             // Basic smoke: title and hero content present

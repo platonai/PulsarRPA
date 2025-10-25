@@ -66,11 +66,11 @@ data class InteractSettings(
         "fill" to 10..50,
         "mouseWheel" to 800..1300,
         "dragAndDrop" to 800..1300,
-        "waitForNavigation" to 500..1000,
-        "waitForSelector" to 500..1000,
+        "waitForNavigation" to 1000..1500,
+        "waitForSelector" to 1000..1500,
         "waitUntil" to 500..1000,
-        "default" to 100..600,
-        "" to 100..600
+        "default" to 1000..2000,
+        "" to 1000..2000
     )
     /**
      * The minimum delay time in milliseconds.
@@ -116,7 +116,7 @@ data class InteractSettings(
      * */
     fun generateRestrictedDelayPolicy(): Map<String, IntRange> {
         val fallback = (minDelayMillis..maxDelayMillis)
-        
+
         delayPolicy.forEach { (action, delay) ->
             if (delay.first < minDelayMillis) {
                 delayPolicy[action] = minDelayMillis..delay.last.coerceAtLeast(minDelayMillis)
@@ -124,13 +124,13 @@ data class InteractSettings(
                 delayPolicy[action] = delay.first.coerceAtMost(maxDelayMillis)..maxDelayMillis
             }
         }
-        
+
         delayPolicy["default"] = delayPolicy["default"] ?: fallback
         delayPolicy[""] = delayPolicy["default"] ?: fallback
-        
+
         return delayPolicy
     }
-    
+
     /**
      * Timeout policy for each action.
      *
@@ -145,7 +145,7 @@ data class InteractSettings(
      * */
     fun generateRestrictedTimeoutPolicy(): Map<String, Duration> {
         val fallback = Duration.ofSeconds(60)
-        
+
         timeoutPolicy.forEach { (action, timeout) ->
             if (timeout < minTimeout) {
                 timeoutPolicy[action] = minTimeout
@@ -153,24 +153,24 @@ data class InteractSettings(
                 timeoutPolicy[action] = maxTimeout
             }
         }
-        
+
         timeoutPolicy["default"] = timeoutPolicy["default"] ?: fallback
         timeoutPolicy[""] = timeoutPolicy["default"] ?: fallback
-        
+
         return timeoutPolicy
     }
 
     fun overrideSystemProperties(): InteractSettings {
         Systems.setProperty(CapabilityTypes.BROWSER_INTERACT_SETTINGS, toJson())
-        
+
         Systems.setProperty(CapabilityTypes.FETCH_SCROLL_DOWN_COUNT, autoScrollCount)
         Systems.setProperty(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
         Systems.setProperty(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, scriptTimeout)
         Systems.setProperty(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
-        
+
         return this
     }
-    
+
     fun overrideConfiguration(conf: MutableConfig): InteractSettings {
         conf[CapabilityTypes.BROWSER_INTERACT_SETTINGS] = toJson()
 
@@ -178,7 +178,7 @@ data class InteractSettings(
         conf.setDuration(CapabilityTypes.FETCH_SCROLL_DOWN_INTERVAL, scrollInterval)
         conf.setDuration(CapabilityTypes.FETCH_SCRIPT_TIMEOUT, scriptTimeout)
         conf.setDuration(CapabilityTypes.FETCH_PAGE_LOAD_TIMEOUT, pageLoadTimeout)
-        
+
         return this
     }
 
@@ -333,7 +333,7 @@ data class InteractSettings(
         fun fromJson(json: String?, defaultValue: InteractSettings): InteractSettings {
             return fromJsonOrNull(json) ?: defaultValue
         }
-        
+
         /**
          * Parse the json string to an InteractSettings object.
          *

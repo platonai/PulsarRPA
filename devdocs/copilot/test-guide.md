@@ -40,6 +40,10 @@ D:\Browser4\mvnw.cmd -pl pulsar-tests -Dtest="PulsarPerceptiveAgentTest" -D"sure
 .\mvnw -pl pulsar-core/pulsar-skeleton -am test -Dtest="*ToolCallExecutorTest*" -D"surefire.failIfNoSpecifiedTests=false"
 cmd /c "cd /d D:\Browser4 && mvnw.cmd -pl pulsar-core/pulsar-skeleton -am test -Dtest=*ToolCallExecutorTest* -Dsurefire.failIfNoSpecifiedTests=false"
 
+.\mvnw -pl pulsar-core/pulsar-skeleton -am test -Dtest="*TextToActionComprehensiveTests*" -D"surefire.failIfNoSpecifiedTests=false"
+
+.\mvnw -pl pulsar-tests -am test -Dtest="*TextToActionComprehensiveTests*" -D"surefire.failIfNoSpecifiedTests=false" -D"surefire.excludedGroups="
+.\mvnw -pl pulsar-tests -am test -Dtest="*TextToActionComprehensiveTests*#*click add button*" -D"surefire.failIfNoSpecifiedTests=false" -D"surefire.excludedGroups="
 ```
 
 Test Command Examples for Linux (Ubuntu)
