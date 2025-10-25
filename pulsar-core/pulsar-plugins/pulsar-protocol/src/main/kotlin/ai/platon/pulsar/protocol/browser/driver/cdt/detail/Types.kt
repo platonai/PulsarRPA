@@ -1,10 +1,10 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt.detail
 
-import com.github.kklisura.cdt.protocol.v2023.events.network.LoadingFailed
-import com.github.kklisura.cdt.protocol.v2023.events.network.LoadingFinished
-import com.github.kklisura.cdt.protocol.v2023.events.network.RequestWillBeSent
-import com.github.kklisura.cdt.protocol.v2023.events.network.ResponseReceived
-import com.github.kklisura.cdt.protocol.v2023.types.fetch.HeaderEntry
+import ai.platon.cdt.kt.protocol.events.network.LoadingFailed
+import ai.platon.cdt.kt.protocol.events.network.LoadingFinished
+import ai.platon.cdt.kt.protocol.events.network.RequestWillBeSent
+import ai.platon.cdt.kt.protocol.events.network.ResponseReceived
+import ai.platon.cdt.kt.protocol.types.fetch.HeaderEntry
 
 /**
  * The network events, used to intercept requests.
@@ -68,7 +68,7 @@ class InterceptResolutionState {
  */
 class ResponseForRequest {
     val status: Int? = null
-    
+
     /**
      * Optional response headers. All values are converted to strings.
      */
@@ -78,12 +78,12 @@ class ResponseForRequest {
 }
 
 class QueuedEventGroup(
-        var responseReceivedEvent: ResponseReceived,
-        var loadingFinishedEvent: LoadingFinished? = null,
-        var loadingFailedEvent: LoadingFailed? = null,
+    var responseReceivedEvent: ResponseReceived,
+    var loadingFinishedEvent: LoadingFinished? = null,
+    var loadingFailedEvent: LoadingFailed? = null,
 )
 
 class RedirectInfo(
-        val event: RequestWillBeSent,
-        val fetchRequestId: FetchRequestId? = null
+    val event: RequestWillBeSent,
+    val fetchRequestId: FetchRequestId? = null
 )

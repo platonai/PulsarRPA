@@ -1,37 +1,27 @@
 package ai.platon.pulsar.browser.driver.chrome
 
+import ai.platon.cdt.kt.protocol.ChromeDevTools
+import ai.platon.cdt.kt.protocol.support.types.EventHandler
+import ai.platon.cdt.kt.protocol.support.types.EventListener
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
-import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeServiceException
-import com.github.kklisura.cdt.protocol.v2023.ChromeDevTools
-import com.github.kklisura.cdt.protocol.v2023.support.types.EventHandler
-import com.github.kklisura.cdt.protocol.v2023.support.types.EventListener
 import java.net.URI
-import java.util.concurrent.Future
 import java.util.function.Consumer
+import kotlin.reflect.KClass
 
-interface Transport: AutoCloseable {
+interface Transport : AutoCloseable {
     val isOpen: Boolean
 
     @Throws(ChromeIOException::class)
     fun connect(uri: URI)
 
     @Throws(ChromeIOException::class)
-    fun send(message: String)
-
-    @Throws(ChromeIOException::class)
-    fun sendAsync(message: String): Future<Void>
+    suspend fun send(message: String)
 
     fun addMessageHandler(consumer: Consumer<String>)
 }
 
-interface CoTransport: AutoCloseable {
-    val isClosed: Boolean
-    suspend fun connect(uri: URI)
-    suspend fun send(message: String): String?
-}
-
-interface RemoteChrome: AutoCloseable {
+interface ChromeService : AutoCloseable {
 
     val isActive: Boolean
 
@@ -59,40 +49,54 @@ interface RemoteChrome: AutoCloseable {
     fun closeTab(tab: ChromeTab)
 
     @Throws(ChromeServiceException::class)
-    fun createDevTools(tab: ChromeTab, config: DevToolsConfig): RemoteDevTools
+    fun createDevTools(tab: ChromeTab, config: DevToolsConfig = DevToolsConfig()): ChromeDevToolsService
+
+    // Compatibility
+    @Throws(ChromeServiceException::class)
+    fun createDevToolsService(tab: ChromeTab): ChromeDevToolsService = createDevTools(tab, DevToolsConfig())
+
+    // Compatibility
+    @Throws(ChromeServiceException::class)
+    fun createDevToolsService(tab: ChromeTab, config: DevToolsConfig = DevToolsConfig()): ChromeDevToolsService = createDevTools(tab, config)
 }
 
-interface RemoteDevTools: ChromeDevTools, AutoCloseable {
+interface ChromeDevToolsService : ChromeDevTools, AutoCloseable {
 
     val isOpen: Boolean
 
-    @Throws(ChromeIOException::class, ChromeRPCException::class)
-    operator fun <T> invoke(
-            returnProperty: String?,
-            clazz: Class<T>,
-            returnTypeClasses: Array<Class<out Any>>?,
-            method: MethodInvocation
-    ): T?
-
-    @Throws(InterruptedException::class)
-    fun awaitTermination()
-
-    fun addEventListener(domainName: String, eventName: String, eventHandler: EventHandler<Any>, eventType: Class<*>): EventListener
-
-    fun removeEventListener(eventListener: EventListener)
-}
-
-interface CoRemoteDevTools: ChromeDevTools, AutoCloseable {
-
-    val isOpen: Boolean
-
-    suspend operator fun <T> invoke(
-        returnProperty: String?,
+    suspend fun <T> invoke(
         clazz: Class<T>,
+        returnProperty: String?,
         returnTypeClasses: Array<Class<out Any>>?,
         method: MethodInvocation
     ): T?
 
-    @Throws(InterruptedException::class)
+    suspend operator fun <T : Any> invoke(
+        method: String,
+        params: Map<String, Any?>?,
+        returnClass: KClass<T>,
+        returnProperty: String? = null
+    ): T?
+
     fun awaitTermination()
+
+    fun addEventListener(
+        domainName: String,
+        eventName: String,
+        eventHandler: EventHandler<Any>,
+        eventType: Class<*>
+    ): EventListener
+
+    fun removeEventListener(eventListener: EventListener)
+
+    // Compatibility
+    fun waitUntilClosed() = awaitTermination()
 }
+
+suspend inline operator fun <reified T : Any> RemoteDevTools.invoke(
+    method: String, params: Map<String, Any?>?, returnProperty: String? = null
+): T? = invoke(method, params, T::class, returnProperty)
+
+// Compatibility
+typealias RemoteChrome = ChromeService
+typealias RemoteDevTools = ChromeDevToolsService

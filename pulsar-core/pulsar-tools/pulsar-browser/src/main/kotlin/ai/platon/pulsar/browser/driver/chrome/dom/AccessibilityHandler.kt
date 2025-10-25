@@ -1,9 +1,9 @@
 package ai.platon.pulsar.browser.driver.chrome.dom
 
+import ai.platon.cdt.kt.protocol.types.accessibility.AXNode
+import ai.platon.cdt.kt.protocol.types.page.FrameTree
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.common.getLogger
-import com.github.kklisura.cdt.protocol.v2023.types.accessibility.AXNode
-import com.github.kklisura.cdt.protocol.v2023.types.page.FrameTree
 
 class AccessibilityHandler(
     private val devTools: RemoteDevTools,
@@ -21,7 +21,7 @@ class AccessibilityHandler(
     @Volatile
     private var accessibilityEnabled = false
 
-    private fun ensureEnabled() {
+    private suspend fun ensureEnabled() {
         if (!isActive) return
         // Enable Page/DOM domains to stabilize frame tree & AX associations
         runCatching { devTools.page.enable() }
@@ -40,7 +40,7 @@ class AccessibilityHandler(
      * current page. Each returned node is annotated with a frameId so that callers can associate
      * AX information with DOM/backend nodes across frames.
      */
-    fun getFullAXTree(targetFrameId: String? = null, depth: Int? = null): AccessibilityTreeResult {
+    suspend fun getFullAXTree(targetFrameId: String? = null, depth: Int? = null): AccessibilityTreeResult {
         // Ensure the Accessibility domain is enabled
         ensureEnabled()
 
@@ -53,7 +53,7 @@ class AccessibilityHandler(
                 page.getFrameTree()
             } catch (e: Exception) {
                 tracer?.debug("Page.getFrameTree failed, using last known tree | err={}", e.toString())
-                page.frameTree
+                page.getFrameTree()
             }
 
             val frameById = linkedMapOf<String, FrameTree>()
@@ -69,14 +69,14 @@ class AccessibilityHandler(
 
             if (frameIds.isEmpty()) {
                 // Fallback: try fetching AX tree without specifying a frameId (root document)
-                val nodes = runCatching { accessibility.getFullAXTree(depth, null) }.getOrElse { emptyList() }
+                val nodes = runCatching { accessibility.getFullAXTree(depth) }.getOrElse { emptyList() }
                 if (nodes.isNotEmpty()) {
-                    val rootFrameId = frameTree?.frame?.id ?: ""
+                    val rootFrameId = frameTree.frame.id ?: ""
                     return singleFrameResult(nodes, rootFrameId)
                 }
                 // If a specific target frame was requested, try that directly as well
                 if (targetFrameId != null) {
-                    val targeted = runCatching { accessibility.getFullAXTree(depth, targetFrameId) }.getOrElse { emptyList() }
+                    val targeted = runCatching { accessibility.getFullAXTree(depth) }.getOrElse { emptyList() }
                     if (targeted.isNotEmpty()) return singleFrameResult(targeted, targetFrameId)
                 }
                 // Wait a bit and retry
@@ -88,7 +88,7 @@ class AccessibilityHandler(
                 val byBackend = LinkedHashMap<Int, MutableList<AXNode>>()
 
                 frameIds.forEach { frameId ->
-                    val nodes = runCatching { accessibility.getFullAXTree(depth, frameId) }
+                    val nodes = runCatching { accessibility.getFullAXTree(depth) }
                         .onFailure { e -> tracer?.debug("Accessibility.getFullAXTree failed | frameId={} err={}", frameId, e.toString()) }
                         .getOrElse { emptyList() }
                     if (nodes.isEmpty()) {
@@ -97,7 +97,7 @@ class AccessibilityHandler(
                     val frameBucket = byFrame.getOrPut(frameId) { mutableListOf() }
                     nodes.forEach { node ->
                         val stamped = stampFrameId(node, frameId)
-                        val key = stamped.frameId to stamped.nodeId
+                        val key = frameId to stamped.nodeId
                         if (seenPairs.add(key)) {
                             val backendId = stamped.backendDOMNodeId
                             if (backendId != null) {
@@ -151,9 +151,6 @@ class AccessibilityHandler(
     }
 
     private fun stampFrameId(node: AXNode, frameId: String): AXNode {
-        if (node.frameId == null) {
-            node.frameId = frameId
-        }
         return node
     }
 

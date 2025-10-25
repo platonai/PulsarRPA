@@ -1,7 +1,7 @@
 package ai.platon.pulsar.browser.driver.chrome
 
+import ai.platon.cdt.kt.protocol.types.network.LoadNetworkResourcePageResult
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.github.kklisura.cdt.protocol.v2023.types.network.LoadNetworkResourcePageResult
 import java.time.Duration
 import java.time.Instant
 
@@ -78,7 +78,7 @@ class NetworkResourceResponse(
             val netErrorName = res.netErrorName ?: ""
             val httpStatusCode = res.httpStatusCode?.toInt() ?: 400
             // All pulsar added headers have a prefix Q-
-            val headers = res.headers.toMutableMap()
+            val headers = res.headers?.toMutableMap() ?: mutableMapOf()
             headers["Q-client"] = "Chrome"
             return NetworkResourceResponse(success, netError, netErrorName, httpStatusCode, res.stream, headers)
         }

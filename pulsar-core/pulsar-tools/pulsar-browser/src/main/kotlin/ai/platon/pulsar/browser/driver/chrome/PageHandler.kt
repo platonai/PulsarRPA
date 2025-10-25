@@ -1,21 +1,20 @@
 package ai.platon.pulsar.browser.driver.chrome
 
+import ai.platon.cdt.kt.protocol.support.annotations.Experimental
+import ai.platon.cdt.kt.protocol.support.annotations.Optional
+import ai.platon.cdt.kt.protocol.support.annotations.ParamName
+import ai.platon.cdt.kt.protocol.types.dom.Rect
+import ai.platon.cdt.kt.protocol.types.page.Navigate
+import ai.platon.cdt.kt.protocol.types.page.ReferrerPolicy
+import ai.platon.cdt.kt.protocol.types.page.TransitionType
+import ai.platon.cdt.kt.protocol.types.runtime.Evaluate
 import ai.platon.pulsar.browser.common.ScriptConfuser
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.printlnPro
-import com.github.kklisura.cdt.protocol.v2023.support.annotations.Experimental
-import com.github.kklisura.cdt.protocol.v2023.support.annotations.Optional
-import com.github.kklisura.cdt.protocol.v2023.support.annotations.ParamName
-import com.github.kklisura.cdt.protocol.v2023.types.dom.Rect
-import com.github.kklisura.cdt.protocol.v2023.types.page.Navigate
-import com.github.kklisura.cdt.protocol.v2023.types.page.ReferrerPolicy
-import com.github.kklisura.cdt.protocol.v2023.types.page.TransitionType
-import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
-import com.github.kklisura.cdt.protocol.v2023.types.runtime.SerializationOptions
 
 data class NodeRef constructor(
     val nodeId: Int? = null,
@@ -49,12 +48,12 @@ class PageHandler(
     val keyboard = Keyboard(devTools)
 
     @Throws(ChromeDriverException::class)
-    fun navigate(@ParamName("url") url: String): Navigate? {
+    suspend fun navigate(@ParamName("url") url: String): Navigate? {
         return pageAPI?.navigate(url)
     }
 
     @Throws(ChromeDriverException::class)
-    fun navigate(
+    suspend fun navigate(
         @ParamName("url") url: String,
         @Optional @ParamName("referrer") referrer: String? = null,
         @Optional @ParamName("transitionType") transitionType: TransitionType? = null,
@@ -75,7 +74,7 @@ class PageHandler(
      * @return nodeId or null if not found
      */
     @Throws(ChromeDriverException::class)
-    fun querySelector(selector: String): NodeRef? {
+    suspend fun querySelector(selector: String): NodeRef? {
         return resolveSelector(selector)
     }
 
@@ -89,11 +88,24 @@ class PageHandler(
      * @return List of nodeIds matching the selector
      */
     @Throws(ChromeDriverException::class)
-    fun querySelectorAll(selector: String): List<Int> {
+    suspend fun querySelectorAll(selector: String): List<Int> {
         // For regular selectors, use querySelectorAll
         return invokeOnElement(selector) { node ->
             domAPI?.querySelectorAll(node.nodeId, selector)
         } ?: listOf()
+    }
+
+    /**
+     * Gets all attributes for the element matching the selector.
+     *
+     * @param selector CSS selector or "backend:nodeId" format
+     * @return Map of attribute name to value
+     */
+    @Throws(ChromeDriverException::class)
+    suspend fun getAttributes(selector: String): Map<String, String> {
+        return invokeOnElement(selector) { nodeId ->
+            domAPI?.getAttributes(nodeId)?.zipWithNext()?.toMap()
+        } ?: emptyMap()
     }
 
     /**
@@ -104,10 +116,10 @@ class PageHandler(
      * @return Attribute value or null if not found
      */
     @Throws(ChromeDriverException::class)
-    fun getAttribute(selector: String, attrName: String) = invokeOnElement(selector) { getAttribute(it, attrName) }
+    suspend fun getAttribute(selector: String, attrName: String) = invokeOnElement(selector) { getAttribute(it, attrName) }
 
     @Throws(ChromeDriverException::class)
-    fun getAttribute(node: NodeRef, attrName: String): String? {
+    suspend fun getAttribute(node: NodeRef, attrName: String): String? {
         // `attributes`: n1, v1, n2, v2, n3, v3, ...
         val attributes = domAPI?.getAttributes(node.nodeId) ?: return null
         val nameIndex = attributes.indexOf(attrName)
@@ -119,7 +131,7 @@ class PageHandler(
     }
 
     @Throws(ChromeDriverException::class)
-    fun setAttribute(nodeId: Int, attrName: String, attrValue: String) {
+    suspend fun setAttribute(nodeId: Int, attrName: String, attrValue: String) {
         domAPI?.setAttributeValue(nodeId, attrName, attrValue)
     }
 
@@ -130,10 +142,10 @@ class PageHandler(
      * @return true if visible, false otherwise
      */
     @Throws(ChromeDriverException::class)
-    fun visible(selector: String) = predicateOnElement(selector) { visible(it) }
+    suspend fun visible(selector: String) = predicateOnElement(selector) { visible(it) }
 
     @Throws(ChromeDriverException::class)
-    fun visible(node: NodeRef): Boolean {
+    suspend fun visible(node: NodeRef): Boolean {
         var isVisible = true
 
         val properties = cssAPI?.getComputedStyleForNode(node.nodeId)
@@ -166,7 +178,7 @@ class PageHandler(
      * successfully focused. Returns 0 if there is no element matching selector.
      */
     @Throws(ChromeDriverException::class)
-    fun focusOnSelector(selector: String): NodeRef? {
+    suspend fun focusOnSelector(selector: String): Int {
         val nodeRef = resolveSelector(selector) ?: return null
 
         // Fix: Only use nodeId parameter, others should be null
@@ -183,7 +195,7 @@ class PageHandler(
      * @return nodeId of the element, or null if not found
      */
     @Throws(ChromeDriverException::class)
-    fun scrollIntoViewIfNeeded(selector: String, rect: Rect? = null): NodeRef? {
+    suspend fun scrollIntoViewIfNeeded(selector: String, rect: Rect? = null): Int? {
         val node = resolveSelector(selector) ?: return null
         if (node.nodeId == null) {
             logger.info("No node found for selector: $selector")
@@ -194,7 +206,7 @@ class PageHandler(
     }
 
     @Throws(ChromeDriverException::class)
-    fun scrollIntoViewIfNeeded(nodeRef: NodeRef, selector: String? = null, rect: Rect? = null): NodeRef? {
+    suspend fun scrollIntoViewIfNeeded(nodeRef: NodeRef, selector: String? = null, rect: Rect? = null): Int? {
         try {
             val node = domAPI?.describeNode(nodeRef.nodeId, nodeRef.backendNodeId, nodeRef.objectId, null, false)
             if (node?.nodeType != ELEMENT_NODE) {
@@ -222,7 +234,7 @@ class PageHandler(
      * @return Remote object value in case of primitive values or JSON values (if it was requested).
      * */
     @Throws(ChromeDriverException::class)
-    fun evaluateDetail(expression: String): Evaluate? {
+    suspend fun evaluateDetail(expression: String): Evaluate? {
 //        val iife = JsUtils.toIIFE(confuser.confuse(expression))
 //        return runtime?.evaluate(iife)
         val evaluate = runtimeAPI?.evaluate(confuser.confuse(expression))
@@ -237,7 +249,7 @@ class PageHandler(
      * @return Remote object value in case of primitive values or JSON values (if it was requested).
      * */
     @Throws(ChromeDriverException::class)
-    fun evaluate(expression: String): Any? {
+    suspend fun evaluate(expression: String): Any? {
         val evaluate = evaluateDetail(expression)
 
         val exception = evaluate?.exceptionDetails?.exception
@@ -250,7 +262,7 @@ class PageHandler(
     }
 
     @Throws(ChromeDriverException::class)
-    fun evaluateValueDetail(expression: String): Evaluate? {
+    suspend fun evaluateValueDetail(expression: String): Evaluate? {
 //        val iife = JsUtils.toIIFE(confuser.confuse(expression))
 //        return evaluate(iife, returnByValue = true)
         val expression2 = confuser.confuse(expression)
@@ -264,7 +276,7 @@ class PageHandler(
      * @return Remote object value in case of primitive values or JSON values (if it was requested).
      * */
     @Throws(ChromeDriverException::class)
-    fun evaluateValue(expression: String): Any? {
+    suspend fun evaluateValue(expression: String): Any? {
         val evaluate = evaluateValueDetail(expression)
 
         val exception = evaluate?.exceptionDetails?.exception
@@ -276,7 +288,7 @@ class PageHandler(
     }
 
     @Throws(ChromeDriverException::class)
-    private fun querySelectorOrNull(selector: String): NodeRef? {
+    private suspend fun querySelectorOrNull(selector: String): NodeRef? {
         val rootId = domAPI?.document?.nodeId
         return if (rootId != null && rootId > 0) {
             val nodeId = domAPI?.querySelector(rootId, selector)
@@ -295,7 +307,7 @@ class PageHandler(
      * @return nodeId or null if not found
      */
     @Throws(ChromeDriverException::class)
-    private fun resolveSelector(selector: String): NodeRef? {
+    private suspend fun resolveSelector(selector: String): NodeRef? {
         val locator = Locator.parse(selector) ?: return null
 
         val nodeRef = when (locator.type) {
@@ -317,10 +329,6 @@ class PageHandler(
 
         return nodeRef
     }
-
-    @Throws(ChromeDriverException::class)
-    private fun resolveByBackendNodeId(backendNodeId: Int?): NodeRef? = resolve(null, backendNodeId)
-
     /**
      * Resolves a backend node ID to a regular node ID.
      *
@@ -328,7 +336,7 @@ class PageHandler(
      * @return nodeId or null if resolution fails
      */
     @Throws(ChromeDriverException::class)
-    private fun resolve(nodeId: Int?, backendNodeId: Int?): NodeRef? {
+    private suspend fun resolveBackendNodeId(nodeId: Int?, backendNodeId: Int?): Int? {
         return try {
             // Use DOM.resolveNode to convert backendNodeId to a runtime object
             val remoteObject = domAPI?.resolveNode(nodeId, backendNodeId, null, null)
@@ -352,14 +360,14 @@ class PageHandler(
     }
 
     @Throws(ChromeDriverException::class)
-    private fun <T> invokeOnElement(selector: String, action: (NodeRef) -> T): T? {
+    private suspend fun <T> invokeOnElement(selector: String, action: suspend (NodeRef) -> T): T? {
         val node = resolveSelector(selector) ?: return null
 
         return action(node)
     }
 
     @Throws(ChromeDriverException::class)
-    private fun predicateOnElement(selector: String, action: (NodeRef) -> Boolean): Boolean {
+    private suspend fun predicateOnElement(selector: String, action: suspend (NodeRef) -> Boolean): Boolean {
         val node = resolveSelector(selector) ?: return false
 
         if (node.nodeId != null && node.nodeId > 0) {
@@ -367,44 +375,5 @@ class PageHandler(
         }
 
         return false
-    }
-
-    private fun cdpEvaluate(
-        expression: String,
-        objectGroup: String? = null,
-        includeCommandLineAPI: Boolean? = null,
-        silent: Boolean? = null,
-        contextId: Int? = null,
-        returnByValue: Boolean? = null,
-        @Experimental generatePreview: Boolean? = null,
-        userGesture: Boolean? = null,
-        awaitPromise: Boolean? = null,
-        @Experimental throwOnSideEffect: Boolean? = null,
-        @Experimental timeout: Double? = null,
-        @Experimental disableBreaks: Boolean? = null,
-        @Experimental replMode: Boolean? = null,
-        @Experimental allowUnsafeEvalBlockedByCSP: Boolean? = null,
-        @Experimental uniqueContextId: String? = null,
-        @Experimental serializationOptions: SerializationOptions? = null,
-    ): Evaluate? {
-        return runtimeAPI?.evaluate(
-            expression,
-            objectGroup,
-            includeCommandLineAPI,
-            silent,
-            contextId,
-            returnByValue,
-            generatePreview,
-            userGesture,
-            awaitPromise,
-            throwOnSideEffect,
-            timeout,
-            disableBreaks,
-            replMode,
-            allowUnsafeEvalBlockedByCSP,
-            uniqueContextId,
-            null,
-            serializationOptions
-        )
     }
 }

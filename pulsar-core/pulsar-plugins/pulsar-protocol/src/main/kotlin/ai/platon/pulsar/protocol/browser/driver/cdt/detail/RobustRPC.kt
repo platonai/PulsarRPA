@@ -27,20 +27,20 @@ internal class RobustRPC(
 
         var MAX_RPC_FAILURES = 5
     }
-    
+
     private val logger = getLogger(this)
-    
+
     val isActive get() = driver.isActive
-    
+
     val rpcFailures = AtomicInteger()
     var maxRPCFailures = MAX_RPC_FAILURES
-    
+
     @Throws(ChromeRPCException::class)
-    fun <T> invoke(action: String, block: () -> T): T? {
+    suspend fun <T> invoke(action: String, block: suspend () -> T): T? {
         if (!driver.checkState(action)) {
             return null
         }
-        
+
         try {
             return block().also { decreaseRPCFailures() }
         } catch (e: ChromeRPCException) {
@@ -48,13 +48,13 @@ internal class RobustRPC(
             throw e
         }
     }
-    
+
     @Throws(Exception::class)
     suspend fun <T> invokeDeferred(action: String, maxRetry: Int = 2, block: suspend CoroutineScope.() -> T): T? {
         if (!driver.checkState(action)) {
             return null
         }
-        
+
         var i = maxRetry
         var result = kotlin.runCatching { invokeDeferred0(action, block) }
             .onFailure {
@@ -66,11 +66,11 @@ internal class RobustRPC(
                     // no handler here
                 }
         }
-        
+
         return result.getOrElse { throw it }
     }
-    
-    fun <T> invokeSilently(action: String, message: String? = null, block: () -> T): T? {
+
+    suspend fun <T> invokeSilently(action: String, message: String? = null, block: suspend () -> T): T? {
         return try {
             invoke(action, block)
         } catch (e: ChromeRPCException) {
@@ -78,7 +78,7 @@ internal class RobustRPC(
             null
         }
     }
-    
+
     suspend fun <T> invokeDeferredSilently(
         action: String, message: String? = null, maxRetry: Int = 2, block: suspend CoroutineScope.() -> T
     ): T? {
@@ -128,10 +128,10 @@ internal class RobustRPC(
             logger.warn("Too many RPC failures: {} ({}/{}) | {}", action, rpcFailures, maxRPCFailures, e.message)
             throw IllegalWebDriverStateException("Too many RPC failures", driver = driver)
         }
-        
+
         val count = exceptionCounts.computeIfAbsent(e.code) { AtomicInteger() }.get()
         traceException(e)
-        
+
         if (count < 10L) {
             logException(count, e, action, message)
         } else if (count < 100L && count % 10 == 0) {
@@ -163,7 +163,7 @@ internal class RobustRPC(
     }
 
     @Throws(ChromeIOException::class)
-    private fun fixCDTAgentIfNecessary(e: Exception) {
+    private suspend fun fixCDTAgentIfNecessary(e: Exception) {
         if (e.toString().contains("agent was not enabled")) {
             logger.warn(e.stringify())
             try {
@@ -182,7 +182,7 @@ internal class RobustRPC(
     private fun increaseRPCFailures() {
         rpcFailures.incrementAndGet()
     }
-    
+
     /**
      * Normalize message, remove all digits
      * */
@@ -190,16 +190,16 @@ internal class RobustRPC(
         if (message == null) {
             return ""
         }
-        
+
         return message.filterNot { it.isDigit() }
     }
-    
+
     private fun traceException(e: ChromeRPCException) {
         val code = e.code
         exceptionCounts.computeIfAbsent(code) { AtomicInteger() }.incrementAndGet()
         exceptionMessages[code] = normalizeMessage(e.message)
     }
-    
+
     private fun logException(count: Int, e: ChromeRPCException, action: String? = null, message: String? = null) {
         if (message == null) {
             logger.info("{}.\t[{}] ({}/{}) | code: {}, {}", count, action, rpcFailures, maxRPCFailures, e.code, e.message)

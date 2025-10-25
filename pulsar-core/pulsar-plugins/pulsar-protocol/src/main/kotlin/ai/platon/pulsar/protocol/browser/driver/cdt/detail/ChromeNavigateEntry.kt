@@ -1,10 +1,10 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt.detail
 
+import ai.platon.cdt.kt.protocol.events.network.RequestWillBeSent
+import ai.platon.cdt.kt.protocol.events.network.ResponseReceived
+import ai.platon.cdt.kt.protocol.types.network.ResourceType
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.NavigateEntry
-import com.github.kklisura.cdt.protocol.v2023.events.network.RequestWillBeSent
-import com.github.kklisura.cdt.protocol.v2023.events.network.ResponseReceived
-import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType
 
 class ChromeNavigateEntry(
     private val navigateEntry: NavigateEntry
@@ -34,7 +34,8 @@ class ChromeNavigateEntry(
     }
 
     fun isMinorResource(event: RequestWillBeSent): Boolean {
-        return navigateEntry.documentTransferred && isMinorResource(event.type)
+        val type = event.type ?: return true
+        return navigateEntry.documentTransferred && isMinorResource(type)
     }
 
     private fun updateStateBeforeRequestSent0(event: RequestWillBeSent) {
@@ -56,7 +57,9 @@ class ChromeNavigateEntry(
         }
 
         if (isMajorRequestWillBeSent(event)) {
-            navigateEntry.updateMainRequest(event.requestId, event.request.headers)
+            val headers = mutableMapOf<String, Any>()
+            event.request.headers.forEach { (key, value) -> if (value != null) headers[key] = value }
+            navigateEntry.updateMainRequest(event.requestId, headers)
         }
     }
 
@@ -79,7 +82,9 @@ class ChromeNavigateEntry(
 
         if (isMajorResponseReceived(event)) {
             tracer?.trace("onResponseReceived | driver, document | {}", event.requestId)
-            navigateEntry.updateMainResponse(response.status, response.statusText, response.headers)
+            val headers = mutableMapOf<String, Any>()
+            response.headers.forEach { (key, value) -> if (value != null) headers[key] = value }
+            navigateEntry.updateMainResponse(response.status, response.statusText, headers)
         }
     }
 

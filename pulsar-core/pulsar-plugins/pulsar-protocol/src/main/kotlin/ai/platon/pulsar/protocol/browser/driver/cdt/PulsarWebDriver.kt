@@ -1,5 +1,13 @@
 package ai.platon.pulsar.protocol.browser.driver.cdt
 
+import ai.platon.cdt.kt.protocol.events.network.RequestWillBeSent
+import ai.platon.cdt.kt.protocol.events.network.ResponseReceived
+import ai.platon.cdt.kt.protocol.events.page.WindowOpen
+import ai.platon.cdt.kt.protocol.types.fetch.RequestPattern
+import ai.platon.cdt.kt.protocol.types.network.ErrorReason
+import ai.platon.cdt.kt.protocol.types.network.LoadNetworkResourceOptions
+import ai.platon.cdt.kt.protocol.types.network.ResourceType
+import ai.platon.cdt.kt.protocol.types.runtime.Evaluate
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.dom.ChromeCdpDomService
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
@@ -23,16 +31,8 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.github.kklisura.cdt.protocol.v2023.events.network.RequestWillBeSent
-import com.github.kklisura.cdt.protocol.v2023.events.network.ResponseReceived
-import com.github.kklisura.cdt.protocol.v2023.events.page.WindowOpen
-import com.github.kklisura.cdt.protocol.v2023.types.fetch.RequestPattern
-import com.github.kklisura.cdt.protocol.v2023.types.network.Cookie
-import com.github.kklisura.cdt.protocol.v2023.types.network.ErrorReason
-import com.github.kklisura.cdt.protocol.v2023.types.network.LoadNetworkResourceOptions
-import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType
-import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.runBlocking
 import org.apache.commons.lang3.SystemUtils
 import org.apache.hc.core5.net.URIBuilder
 import java.nio.file.Files
@@ -62,7 +62,7 @@ class PulsarWebDriver(
     private val domAPI get() = devTools.dom.takeIf { isActive }
     private val cssAPI get() = devTools.css.takeIf { isActive }
     private val inputAPI get() = devTools.input.takeIf { isActive }
-    private val mainFrameAPI get() = pageAPI?.frameTree?.frame
+    private suspend fun mainFrameAPI() = pageAPI?.getFrameTree()?.frame
     private val networkAPI get() = devTools.network.takeIf { isActive }
     private val fetchAPI get() = devTools.fetch.takeIf { isActive }
     private val runtimeAPI get() = devTools.runtime.takeIf { isActive }
@@ -96,7 +96,7 @@ class PulsarWebDriver(
     init {
         val userAgent = browser.userAgentOverride
         if (!userAgent.isNullOrEmpty()) {
-            emulationAPI?.setUserAgentOverride(userAgent)
+            runBlocking { emulationAPI?.setUserAgentOverride(userAgent) }
         }
     }
 
@@ -122,9 +122,9 @@ class PulsarWebDriver(
 
     override suspend fun goBack() {
         invokeOnPage("goBack") {
-            val history = pageAPI?.navigationHistory ?: return@invokeOnPage
-            val currentIndex = history.currentIndex ?: return@invokeOnPage
-            val entries = history.entries ?: return@invokeOnPage
+            val history = pageAPI?.getNavigationHistory() ?: return@invokeOnPage
+            val currentIndex = history.currentIndex
+            val entries = history.entries
             val targetIndex = currentIndex - 1
             if (targetIndex >= 0 && targetIndex < entries.size) {
                 val entryId = entries[targetIndex].id
@@ -135,7 +135,7 @@ class PulsarWebDriver(
 
     override suspend fun goForward() {
         invokeOnPage("goForward") {
-            val history = pageAPI?.navigationHistory ?: return@invokeOnPage
+            val history = pageAPI?.getNavigationHistory() ?: return@invokeOnPage
             val currentIndex = history.currentIndex ?: return@invokeOnPage
             val entries = history.entries ?: return@invokeOnPage
             val targetIndex = currentIndex + 1
@@ -151,9 +151,10 @@ class PulsarWebDriver(
         return invokeOnPage("getCookies") { getCookies0() } ?: listOf()
     }
 
-    @Deprecated("Use deleteCookies(name, url, domain, path) instead." +
-            "[deleteCookies] (3/5) | code: -32602, At least one of the url and domain needs to be specified",
-        ReplaceWith("driver.deleteCookies(name, url, domain, path)"))
+    @Deprecated(
+        "Use deleteCookies(name, url, domain, path) instead." + "[deleteCookies] (3/5) | code: -32602, At least one of the url and domain needs to be specified",
+        ReplaceWith("driver.deleteCookies(name, url, domain, path)")
+    )
     override suspend fun deleteCookies(name: String) {
         invokeOnPage("deleteCookies") { cdpDeleteCookies(name) }
     }
@@ -199,15 +200,15 @@ class PulsarWebDriver(
     }
 
     override suspend fun currentUrl(): String {
-        val mainFrameUrl = runCatching { invokeOnPage("currentUrl") { mainFrameAPI?.url } }
-            .onFailure { logger.warn("Failed to retrieve the mainFrameUrl", it) }
-            .getOrNull()
+        val mainFrameUrl = runCatching { invokeOnPage("currentUrl") { mainFrameAPI()?.url } }.onFailure {
+                logger.warn("Failed to retrieve the mainFrameUrl", it)
+            }.getOrNull()
         navigateUrl = mainFrameUrl ?: navigateUrl
         return navigateUrl
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun exists(selector: String) = predicateOnElement(selector, "exists") { (it.nodeId ?: 0) > 0 }
+    override suspend fun exists(selector: String) = predicateOnElement(selector, "exists") { it > 0 }
 
     /**
      * Wait until [selector] for [timeout] at most
@@ -334,12 +335,12 @@ class PulsarWebDriver(
      */
     @Throws(WebDriverException::class)
     override suspend fun click(selector: String, count: Int) {
-        invokeOnElement(selector, "click", scrollIntoView = true) { node ->
-            click(node, count)
+        invokeOnElement(selector, "click", scrollIntoView = true) { nodeId ->
+            click(nodeId, count)
         }
     }
 
-    private suspend fun click(node: NodeRef, count: Int, position: String = "center") {
+    private suspend fun click(nodeId: Int, count: Int, position: String = "center") {
         val deltaX = 4.0 + Random.nextInt(4)
         val deltaY = 4.0
         val offset = OffsetD(deltaX, deltaY)
@@ -351,7 +352,7 @@ class PulsarWebDriver(
             return
         }
 
-        val clickableDOM = ClickableDOM(p, d, node, offset)
+        val clickableDOM = ClickableDOM(p, d, nodeId, offset)
         val point = clickableDOM.clickablePoint().value ?: return
         val box = clickableDOM.boundingBox()
         val width = box?.width ?: 0.0
@@ -379,9 +380,9 @@ class PulsarWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun type(selector: String, text: String) {
         invokeOnElement(selector, "type") {
-            val node = page.focusOnSelector(selector)
-            if (node != null) {
-                click(node, 1)
+            val nodeId = page.focusOnSelector(selector)
+            if (nodeId > 0) {
+                click(nodeId, 1)
                 keyboard?.type(text, randomDelayMillis("type"))
                 gap("type")
             }
@@ -462,8 +463,8 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun outerHTML(selector: String): String? {
-        return invokeOnElement(selector, "outerHTML") { node ->
-            domAPI?.getOuterHTML(node.nodeId, node.backendNodeId, node.objectId)
+        return invokeOnElement(selector, "outerHTML") { nodeId ->
+            domAPI?.getOuterHTML(nodeId, null, null)
         }
     }
 
@@ -548,7 +549,7 @@ class PulsarWebDriver(
     override suspend fun pageSource(): String? {
         return invokeOnPage("pageSource") {
             // pageAPI?.getResourceContent(mainFrameAPI?.id, currentUrl())
-            domAPI?.getOuterHTML(domAPI?.document?.nodeId, null, null)
+            domAPI?.getOuterHTML(domAPI?.getDocument()?.nodeId, null, null)
         }
     }
 
@@ -563,17 +564,14 @@ class PulsarWebDriver(
     }
 
     override suspend fun loadResource(url: String): NetworkResourceResponse {
-        val options = LoadNetworkResourceOptions().apply {
-            disableCache = false
-            includeCredentials = false
-        }
+        val options = LoadNetworkResourceOptions(
+            disableCache = false, includeCredentials = false
+        )
 
         val response = rpc.invokeDeferred("loadNetworkResource") {
-            val frameId = pageAPI?.frameTree?.frame?.id
-            val resource = networkAPI?.loadNetworkResource(frameId, url, options)
-            resource?.let {
-                NetworkResourceResponse.from(it)
-            }
+            val frameId = pageAPI?.getFrameTree()?.frame?.id ?: return@invokeDeferred null
+            val resource = networkAPI?.loadNetworkResource(frameId, url, options) ?: return@invokeDeferred null
+            NetworkResourceResponse.from(resource)
         }
 
         return response ?: NetworkResourceResponse()
@@ -638,7 +636,7 @@ class PulsarWebDriver(
      *
      * */
     @Throws(ChromeIOException::class)
-    fun enableAPIAgents() {
+    suspend fun enableAPIAgents() {
         try {
             pageAPI?.enable()
             domAPI?.enable()
@@ -674,10 +672,10 @@ class PulsarWebDriver(
             networkAPI?.setBlockedURLs(blockedURLs)
         }
 
-        networkManager.on(NetworkEvents.RequestWillBeSent) { event: RequestWillBeSent ->
+        networkManager.on1(NetworkEvents.RequestWillBeSent) { event: RequestWillBeSent ->
             onRequestWillBeSent(entry, event)
         }
-        networkManager.on(NetworkEvents.ResponseReceived) { event: ResponseReceived ->
+        networkManager.on1(NetworkEvents.ResponseReceived) { event: ResponseReceived ->
             onResponseReceived(entry, event)
         }
 
@@ -708,14 +706,14 @@ class PulsarWebDriver(
         }
     }
 
-    private fun openLocalFile(url: String) {
+    private suspend fun openLocalFile(url: String) {
         val path = URLUtils.localURLToPath(url)
         val uri = path.toUri()
         page.navigate(uri.toString())
     }
 
     @Deprecated("Use openLocalFile instead")
-    private fun openLocalFileDeprecated(url: String) {
+    private suspend fun openLocalFileDeprecated(url: String) {
         if (url.contains("?path=")) {
             val queryParams = URIBuilder(url).queryParams
             val path = queryParams.firstOrNull { it.name == "path" }?.value
@@ -748,7 +746,7 @@ class PulsarWebDriver(
         }
     }
 
-    private fun onRequestWillBeSent(entry: NavigateEntry, event: RequestWillBeSent) {
+    private suspend fun onRequestWillBeSent(entry: NavigateEntry, event: RequestWillBeSent) {
         if (!entry.url.startsWith("http")) {
             // This can happen for the following cases:
             // 1. non-http resources, for example, ftp, ws, etc.
@@ -789,7 +787,7 @@ class PulsarWebDriver(
         return false
     }
 
-    private fun onResponseReceived(entry: NavigateEntry, event: ResponseReceived) {
+    private suspend fun onResponseReceived(entry: NavigateEntry, event: ResponseReceived) {
         val chromeNavigateEntry = ChromeNavigateEntry(entry)
 
         tracer?.trace("onResponseReceived | driver | {}", event.requestId)
@@ -803,11 +801,11 @@ class PulsarWebDriver(
         // handle user-defined events
     }
 
-    private fun reportInterestingResources(entry: NavigateEntry, event: ResponseReceived) {
+    private suspend fun reportInterestingResources(entry: NavigateEntry, event: ResponseReceived) {
         runCatching { traceInterestingResources0(entry, event) }.onFailure { warnInterruptible(this, it) }
     }
 
-    private fun traceInterestingResources0(entry: NavigateEntry, event: ResponseReceived) {
+    private suspend fun traceInterestingResources0(entry: NavigateEntry, event: ResponseReceived) {
         val mimeType = event.response.mimeType
         val mimeTypes = listOf("application/json")
         if (mimeType !in mimeTypes) {
@@ -847,9 +845,8 @@ class PulsarWebDriver(
         messageWriter.writeTo(message, path)
 
         // configurable
-        val saveResourceBody = mimeType == "application/json"
-                && event.response.encodedDataLength < 1_000_000
-                && alwaysFalse()
+        val saveResourceBody =
+            mimeType == "application/json" && event.response.encodedDataLength < 1_000_000 && alwaysFalse()
         if (saveResourceBody) {
             val body = rpc.invokeSilently("getResponseBody") {
                 fetchAPI?.enable()
@@ -872,7 +869,7 @@ class PulsarWebDriver(
         }
     }
 
-    private fun addScriptToEvaluateOnNewDocument() {
+    private suspend fun addScriptToEvaluateOnNewDocument() {
         val js = settings.scriptLoader.getPreloadJs(false)
         if (js !in initScriptCache) {
             // utils comes first
@@ -896,12 +893,12 @@ class PulsarWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    private fun getCookies0(): List<Map<String, String>> {
-        val cookies = networkAPI?.cookies?.map { serialize(it) }
+    private suspend fun getCookies0(): List<Map<String, String>> {
+        val cookies = networkAPI?.getCookies()?.map { serialize(it) }
         return cookies ?: listOf()
     }
 
-    private fun serialize(cookie: Cookie): Map<String, String> {
+    private fun serialize(cookie: ai.platon.cdt.kt.protocol.types.network.Cookie): Map<String, String> {
         val mapper = jacksonObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL)
         return mapper.readValue(mapper.writeValueAsString(cookie))
     }
@@ -919,12 +916,15 @@ class PulsarWebDriver(
     }
 
     private suspend fun <T> invokeOnElement(
-        selector: String, name: String, focus: Boolean = false, scrollIntoView: Boolean = false,
-        action: suspend (NodeRef) -> T
+        selector: String,
+        name: String,
+        focus: Boolean = false,
+        scrollIntoView: Boolean = false,
+        action: suspend (Int) -> T
     ): T? {
         try {
             return rpc.invokeDeferred(name) {
-                val node = if (focus) {
+                val nodeId = if (focus) {
                     page.focusOnSelector(selector)
                 } else if (scrollIntoView) {
                     page.scrollIntoViewIfNeeded(selector)
@@ -932,8 +932,8 @@ class PulsarWebDriver(
                     page.querySelector(selector)
                 }
 
-                if (node != null) {
-                    action(node)
+                if (nodeId != null && nodeId > 0) {
+                    action(nodeId)
                 } else {
                     null
                 }
@@ -946,15 +946,20 @@ class PulsarWebDriver(
     }
 
     private suspend fun predicateOnElement(
-        selector: String, name: String, focus: Boolean = false, scrollIntoView: Boolean = false,
-        predicate: suspend (NodeRef) -> Boolean
+        selector: String,
+        name: String,
+        focus: Boolean = false,
+        scrollIntoView: Boolean = false,
+        predicate: suspend (Int) -> Boolean
     ): Boolean = invokeOnElement(selector, name, focus, scrollIntoView, predicate) == true
 
     private fun isValidNodeId(nodeId: Int?): Boolean {
         return nodeId != null && nodeId > 0
     }
 
-    private fun cdpDeleteCookies(name: String?, url: String? = null, domain: String? = null, path: String? = null) {
+    private suspend fun cdpDeleteCookies(
+        name: String, url: String? = null, domain: String? = null, path: String? = null
+    ) {
         networkAPI?.deleteCookies(name, url, domain, path)
     }
 

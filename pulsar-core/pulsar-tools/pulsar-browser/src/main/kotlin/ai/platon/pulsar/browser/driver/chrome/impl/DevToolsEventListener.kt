@@ -1,8 +1,8 @@
 package ai.platon.pulsar.browser.driver.chrome.impl
 
+import ai.platon.cdt.kt.protocol.support.types.EventHandler
+import ai.platon.cdt.kt.protocol.support.types.EventListener
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
-import com.github.kklisura.cdt.protocol.v2023.support.types.EventHandler
-import com.github.kklisura.cdt.protocol.v2023.support.types.EventListener
 
 class DevToolsEventListener(
     val key: String,

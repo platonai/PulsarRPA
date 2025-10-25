@@ -1,15 +1,11 @@
 package ai.platon.pulsar.browser.driver.chrome
 
+import ai.platon.cdt.kt.protocol.types.page.CaptureScreenshotFormat
+import ai.platon.cdt.kt.protocol.types.page.Viewport
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.math.geometric.RectD
-import com.github.kklisura.cdt.protocol.v2023.support.annotations.Experimental
-import com.github.kklisura.cdt.protocol.v2023.support.annotations.Optional
-import com.github.kklisura.cdt.protocol.v2023.support.annotations.ParamName
-import com.github.kklisura.cdt.protocol.v2023.support.annotations.Returns
-import com.github.kklisura.cdt.protocol.v2023.types.page.CaptureScreenshotFormat
-import com.github.kklisura.cdt.protocol.v2023.types.page.Viewport
 import com.google.gson.Gson
 import kotlin.math.roundToInt
 
@@ -26,11 +22,11 @@ class ScreenshotHandler(
     /**
      * Capture page screenshot.
      * */
-    fun captureScreenshot(): String? {
+    suspend fun captureScreenshot(): String? {
         return page?.captureScreenshot()
     }
 
-    fun captureScreenshot(selector: String): String? {
+    suspend fun captureScreenshot(selector: String): String? {
         val node = pageHandler.querySelector(selector)
         if (node == null) {
             logger.info("No such element <{}>", selector)
@@ -46,11 +42,11 @@ class ScreenshotHandler(
         }
     }
 
-    fun captureScreenshot(clip: RectD) = captureScreenshot0(null, clip)
+    suspend fun captureScreenshot(clip: RectD) = captureScreenshot0(null, clip)
 
-    fun captureScreenshot(viewport: Viewport) = captureScreenshot0(null, viewport)
+    suspend fun captureScreenshot(viewport: Viewport) = captureScreenshot0(null, viewport)
 
-    private fun captureScreenshotWithVi(node: NodeRef, selector: String, vi: String): String? {
+    private suspend fun captureScreenshotWithVi(node: NodeRef, selector: String, vi: String): String? {
         val quad = vi.split(" ").map { it.toDoubleOrNull() ?: 0.0 }
         if (quad.size != 4) {
             logger.warn("Invalid node vi information for selector <{}>", selector)
@@ -62,7 +58,7 @@ class ScreenshotHandler(
         return captureScreenshot0(node, rect)
     }
 
-    private fun captureScreenshotWithoutVi(node: NodeRef, selector: String): String? {
+    private suspend fun captureScreenshotWithoutVi(node: NodeRef, selector: String): String? {
         val nodeClip = calculateNodeClip(node, selector)
         if (nodeClip == null) {
             logger.info("Can not calculate node clip | {}", selector)
@@ -78,7 +74,7 @@ class ScreenshotHandler(
         return captureScreenshot0(node, rect)
     }
 
-    private fun captureScreenshot0(node: NodeRef?, clip: RectD): String? {
+    private suspend fun captureScreenshot0(node: NodeRef?, clip: RectD): String? {
         val viewport = Viewport().apply {
             x = clip.x; y = clip.y
             width = clip.width; height = clip.height
@@ -88,7 +84,7 @@ class ScreenshotHandler(
         return captureScreenshot0(node, viewport)
     }
 
-    private fun captureScreenshot0(node: NodeRef?, viewport: Viewport): String? {
+    private suspend fun captureScreenshot0(node: NodeRef?, viewport: Viewport): String? {
         val format = CaptureScreenshotFormat.JPEG
         val quality = BrowserSettings.SCREENSHOT_QUALITY
 
@@ -103,13 +99,12 @@ class ScreenshotHandler(
         }
 
         // return page?.captureScreenshot(format, quality, viewport, true, false, false)
-        return captureScreenshot(format, quality, viewport,
+        return page?.captureScreenshot(format, quality, viewport,
             fromSurface = true,
-            captureBeyondViewport = false,
-            optimizeForSpeed = true)
+            captureBeyondViewport = false)
     }
 
-    private fun calculateNodeClip(node: NodeRef, selector: String): NodeClip? {
+    private suspend fun calculateNodeClip(node: NodeRef, selector: String): NodeClip? {
         if (debugLevel > 50) {
             debugNodeClipDebug(node, selector)
         }
@@ -122,7 +117,7 @@ class ScreenshotHandler(
         val p = page ?: return null
 //        val d = dom ?: return null
 
-        val viewport = p.layoutMetrics.cssLayoutViewport
+        val viewport = p.getLayoutMetrics().cssLayoutViewport
         val pageX = viewport.pageX
         val pageY = viewport.pageY
 
@@ -133,12 +128,12 @@ class ScreenshotHandler(
         return NodeClip(node, pageX, pageY, rect)
     }
 
-    private fun calculateNodeClip0(node: NodeRef, selector: String): RectD? {
+    private suspend fun calculateNodeClip0(node: NodeRef, selector: String): RectD? {
         val clickableDOM = ClickableDOM(page!!, dom!!, node)
         return clickableDOM.boundingBox()
     }
 
-    private fun calculateNodeClip1(nodeId: Int, selector: String): RectD? {
+    private suspend fun calculateNodeClip1(nodeId: Int, selector: String): RectD? {
         val clientRect = pageHandler.evaluate("__pulsar_utils__.queryClientRect('$selector')")?.toString()
         if (clientRect == null) {
             logger.info("Can not query client rect for selector <{}>", selector)
@@ -153,7 +148,7 @@ class ScreenshotHandler(
         return RectD(quad[0], quad[1], quad[2], quad[3])
     }
 
-    private fun debugNodeClipDebug(node: NodeRef, selector: String) {
+    private suspend fun debugNodeClipDebug(node: NodeRef, selector: String) {
         println("\n")
         println("===== $selector ${node.nodeId}")
 
@@ -191,7 +186,7 @@ class ScreenshotHandler(
         val p = page ?: return
 //        val d = dom ?: return null
 
-        val viewport = p.layoutMetrics.cssLayoutViewport
+        val viewport = p.getLayoutMetrics().cssLayoutViewport
         val pageX = viewport.pageX
         val pageY = viewport.pageY
 
@@ -205,29 +200,5 @@ class ScreenshotHandler(
         val width = (clip.width + clip.x - x).roundToInt()
         val height = (clip.height + clip.y - y).roundToInt()
         return RectD(x.toDouble(), y.toDouble(), width.toDouble(), height.toDouble())
-    }
-
-    /**
-     * Capture page screenshot.
-     *
-     * @param format Image compression format (defaults to png).
-     * @param quality Compression quality from range [0..100] (jpeg only).
-     * @param clip Capture the screenshot of a given region only.
-     * @param fromSurface Capture the screenshot from the surface, rather than the view. Defaults to
-     * true.
-     * @param captureBeyondViewport Capture the screenshot beyond the viewport. Defaults to false.
-     * @param optimizeForSpeed Optimize image encoding for speed, not for resulting size (defaults to
-     * false)
-     */
-    @Returns("data")
-    private fun captureScreenshot(
-        @Optional @ParamName("format") format: CaptureScreenshotFormat?,
-        @Optional @ParamName("quality") quality: Int?,
-        @Optional @ParamName("clip") clip: Viewport?,
-        @Experimental @Optional @ParamName("fromSurface") fromSurface: Boolean?,
-        @Experimental @Optional @ParamName("captureBeyondViewport") captureBeyondViewport: Boolean?,
-        @Experimental @Optional @ParamName("optimizeForSpeed") optimizeForSpeed: Boolean?
-    ): String? {
-        return page?.captureScreenshot(format, quality, clip, fromSurface, captureBeyondViewport, optimizeForSpeed)
     }
 }

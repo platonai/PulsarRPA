@@ -1,12 +1,12 @@
 package ai.platon.pulsar.browser.driver.chrome.dom
 
+import ai.platon.cdt.kt.protocol.types.accessibility.AXNode
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.AccessibilityHandler.AccessibilityTreeResult
 import ai.platon.pulsar.browser.driver.chrome.dom.model.*
 import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.TmpFile
 import ai.platon.pulsar.common.getLogger
-import com.github.kklisura.cdt.protocol.v2023.types.accessibility.AXNode
 import com.google.gson.Gson
 import com.ibm.icu.util.TimeZone
 import java.awt.Dimension
@@ -277,11 +277,11 @@ class ChromeCdpDomService(
 
     override suspend fun buildBrowserState(domState: DOMState): BrowserUseState {
         // URL from DOM domain (resilient)
-        val url = runCatching { devTools.dom.document.documentURL }.getOrDefault("")
+        val url: String = runCatching { devTools.dom.getDocument().documentURL }.getOrNull() ?: ""
 
         // Navigation history for back/forward URLs (resilient)
         val (goBackUrl, goForwardUrl) = runCatching {
-            val history = devTools.page.navigationHistory
+            val history = devTools.page.getNavigationHistory()
             val currentIndex = history?.currentIndex ?: -1
             val entries = history?.entries ?: emptyList()
             val back = entries.getOrNull(currentIndex - 1)?.url
@@ -290,7 +290,7 @@ class ChromeCdpDomService(
         }.getOrElse { "" to "" }
 
         // Helper to evaluate numeric JS safely
-        fun evalDouble(expr: String): Double? {
+        suspend fun evalDouble(expr: String): Double? {
             return try {
                 val evaluation = devTools.runtime.evaluate(expr)
                 val result = evaluation?.result
@@ -301,7 +301,7 @@ class ChromeCdpDomService(
                 null
             }
         }
-        fun evalInt(expr: String): Int? = evalDouble(expr)?.toInt()
+        suspend fun evalInt(expr: String): Int? = evalDouble(expr)?.toInt()
 
         // Scroll positions and viewport size (resilient)
         val scrollX = evalDouble("window.scrollX || window.pageXOffset || 0") ?: 0.0
@@ -364,15 +364,15 @@ class ChromeCdpDomService(
 
     override suspend fun computeFullClientInfo(): FullClientInfo {
         // Helpers
-        fun evalString(expr: String): String? = try {
+        suspend fun evalString(expr: String): String? = try {
             devTools.runtime.evaluate(expr)?.result?.value?.toString()
         } catch (_: Exception) { null }
-        fun evalDouble(expr: String): Double? = try {
+        suspend fun evalDouble(expr: String): Double? = try {
             val res = devTools.runtime.evaluate(expr)?.result
             res?.value?.toString()?.toDoubleOrNull() ?: res?.unserializableValue?.toDoubleOrNull()
         } catch (_: Exception) { null }
-        fun evalInt(expr: String): Int? = evalDouble(expr)?.toInt()
-        fun evalBoolean(expr: String): Boolean? = try {
+        suspend fun evalInt(expr: String): Int? = evalDouble(expr)?.toInt()
+        suspend fun evalBoolean(expr: String): Boolean? = try {
             val v = devTools.runtime.evaluate(expr)?.result?.value
             when (v) {
                 is Boolean -> v
@@ -571,7 +571,7 @@ class ChromeCdpDomService(
         return snapshot?.cursorStyle?.equals("pointer", ignoreCase = true)
     }
 
-    private fun getDevicePixelRatio(): Double {
+    private suspend fun getDevicePixelRatio(): Double {
         return try {
             val evaluation = devTools.runtime.evaluate("window.devicePixelRatio")
             val result = evaluation?.result
@@ -758,7 +758,7 @@ class ChromeCdpDomService(
         return paintOrder + stackingFactor
     }
 
-    private fun getAccessibilityTree(target: PageTarget, options: SnapshotOptions): AccessibilityTreeResult {
+    private suspend fun getAccessibilityTree(target: PageTarget, options: SnapshotOptions): AccessibilityTreeResult {
         // Fetch AX tree (resilient)
         val axResult: AccessibilityTreeResult = if (options.includeAX) {
             val result = runCatching {
@@ -782,7 +782,7 @@ private fun AXNode.toEnhanced(): AXNodeEx {
         try {
             AXPropertyEx(
                 name = prop.name.toString(),
-                value = prop.value?.value
+                value = prop.value.value
             )
         } catch (e: Exception) {
             null
@@ -798,6 +798,6 @@ private fun AXNode.toEnhanced(): AXNodeEx {
         properties = props,
         childIds = childIds,
         backendNodeId = backendDOMNodeId,
-        frameId = frameId
+        frameId = null
     )
 }
