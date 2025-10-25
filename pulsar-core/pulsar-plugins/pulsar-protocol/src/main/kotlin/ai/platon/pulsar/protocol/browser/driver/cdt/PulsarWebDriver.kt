@@ -209,7 +209,7 @@ class PulsarWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun exists(selector: String) = predicateOnElement(selector, "exists") { it.nodeId != null || it.backendNodeId != null }
+    override suspend fun exists(selector: String) = page.exists(selector)
 
     /**
      * Wait until [selector] for [timeout] at most
@@ -957,10 +957,6 @@ class PulsarWebDriver(
         scrollIntoView: Boolean = false,
         predicate: suspend (NodeRef) -> Boolean
     ): Boolean = invokeOnElement(selector, name, focus, scrollIntoView, predicate) == true
-
-    private fun isValidNodeId(node: Int?): Boolean {
-        return node != null && node > 0
-    }
 
     private suspend fun cdpDeleteCookies(
         name: String, url: String? = null, domain: String? = null, path: String? = null

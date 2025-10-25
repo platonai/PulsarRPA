@@ -178,11 +178,6 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
                 val id = idNode.asLong()
                 val future = invocationFutures.remove(id)
 
-//                printlnPro(this, "==============================")
-//                printlnPro(id)
-//                printlnPro(future?.returnProperty)
-//                printlnPro(message)
-
                 if (future != null) {
                     var resultNode = jsonNode.get(RESULT_PROPERTY)
                     val errorNode = jsonNode.get(ERROR_PROPERTY)

@@ -22,7 +22,18 @@ data class NodeRef constructor(
     // backend node id is more stable
     val backendNodeId: Int? = null,
     val objectId: String? = null
-)
+) {
+    /**
+     * Check if the node may exist.
+     *
+     * At least one of nodeId and backendNodeId is positive.
+     * */
+    fun mayExist(): Boolean {
+        val a = nodeId ?: 0
+        val b = backendNodeId ?: 0
+        return a + b > 0
+    }
+}
 
 class PageHandler(
     private val devTools: RemoteDevTools,
@@ -64,6 +75,12 @@ class PageHandler(
         return pageAPI?.navigate(url, referrer, transitionType, frameId, referrerPolicy)
     }
 
+    suspend fun exists(selector: String): Boolean {
+        val rootId = domAPI?.getDocument()?.nodeId ?: return false
+        val nodeId = domAPI?.querySelector(rootId, selector)
+        return nodeId != null && nodeId > 0
+    }
+
     /**
      * Queries for an element using a CSS selector or backend node ID.
      *
@@ -74,6 +91,7 @@ class PageHandler(
      * @param selector CSS selector or "backend:nodeId" format
      * @return nodeId or null if not found
      */
+    @Deprecated("Use resolveSelector instead", ReplaceWith("resolveSelector(selector)"))
     @Throws(ChromeDriverException::class)
     suspend fun querySelector(selector: String): NodeRef? {
         return resolveSelector(selector)
@@ -103,11 +121,6 @@ class PageHandler(
         return attributes.getOrNull(valueIndex)
     }
 
-    @Throws(ChromeDriverException::class)
-    suspend fun setAttribute(nodeId: Int, attrName: String, attrValue: String) {
-        domAPI?.setAttributeValue(nodeId, attrName, attrValue)
-    }
-
     /**
      * Checks if the element matching the selector is visible.
      *
@@ -125,10 +138,10 @@ class PageHandler(
 
         val properties = cssAPI?.getComputedStyleForNode(node.nodeId)
         properties?.forEach { prop ->
-            when {
-                prop.name == "display" && prop.value == "none" -> isVisible = false
-                prop.name == "visibility" && prop.value == "hidden" -> isVisible = false
-                prop.name == "opacity" && prop.value == "0" -> isVisible = false
+            when (prop.name) {
+                "display" if prop.value == "none" -> isVisible = false
+                "visibility" if prop.value == "hidden" -> isVisible = false
+                "opacity" if prop.value == "0" -> isVisible = false
             }
         }
 
@@ -267,24 +280,33 @@ class PageHandler(
 
     @Throws(ChromeDriverException::class)
     private suspend fun querySelectorOrNull(selector: String): NodeRef? {
-        val rootId = domAPI?.getDocument()?.nodeId
-        return if (rootId != null) {
-            val nodeId = domAPI?.querySelector(rootId, selector)
-            val node = try {
-                domAPI?.describeNode(nodeId, null, null, null, null)
-            } catch (e: ChromeRPCException) {
-                // code: -3200 message: "Could not find node with given id"
-                // This exception is expected, will change this log to debug
-                val message = e.message
-                if (message == null || !message.contains("Could not find node with given id")) {
-                    logger.warn("Exception from domAPI.describeNode | {}", e.brief())
-                }
-                null
-            }
+        val rootId = domAPI?.getDocument()?.nodeId ?: return null
 
-            node ?: return null
-            NodeRef(node.nodeId, node.backendNodeId)
-        } else null
+        val nodeId = domAPI?.querySelector(rootId, selector)
+        if (nodeId == null || nodeId == 0) {
+            return null
+        }
+
+        val node = try {
+            domAPI?.describeNode(nodeId, null, null, null, null)
+        } catch (e: ChromeRPCException) {
+            // code: -3200 message: "Could not find node with given id"
+            // This exception is expected, will change this log to debug
+            val message = e.message
+            if (message == null || !message.contains("Could not find node with given id")) {
+                logger.warn("Exception from domAPI.describeNode | {}", e.brief())
+            }
+            null
+        }
+
+        node ?: return null
+
+        if (node.nodeId == 0 || node.backendNodeId == 0) {
+            logger.info("Both nodeId and backendNodeId are not found (value: 0)")
+            return null
+        }
+
+        return NodeRef(node.nodeId, node.backendNodeId)
     }
 
     /**
@@ -299,6 +321,8 @@ class PageHandler(
     @Throws(ChromeDriverException::class)
     private suspend fun resolveSelector(selector: String): NodeRef? {
         val locator = Locator.parse(selector) ?: return null
+
+        require(Locator.Type.CSS_PATH.text.isEmpty())
 
         val nodeRef = when (locator.type) {
             Locator.Type.CSS_PATH -> querySelectorOrNull(selector)

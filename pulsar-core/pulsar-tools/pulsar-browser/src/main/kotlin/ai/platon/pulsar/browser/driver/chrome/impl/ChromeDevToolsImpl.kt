@@ -139,11 +139,10 @@ abstract class ChromeDevToolsImpl(
         // Handle the result based on its success status and the expected return type.
         return when {
             // If the result indicates failure, handle the error and throw an exception.
-            !rpcResult.isSuccess -> handleFailedFurther(rpcResult.result).let {
-                throw ChromeRPCException(
-                    it.first.code,
-                    it.second
-                )
+            !rpcResult.isSuccess -> {
+                handleFailedFurther(rpcResult.result).let {
+                    throw ChromeRPCException(it.first.code, it.second)
+                }
             }
 
             // If the expected return type is `Void`, return null.

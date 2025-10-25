@@ -9,6 +9,7 @@ import ai.platon.cdt.kt.protocol.types.input.DispatchMouseEventType
 import ai.platon.cdt.kt.protocol.types.input.DragData
 import ai.platon.cdt.kt.protocol.types.input.MouseButton
 import ai.platon.pulsar.common.DescriptiveResult
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.io.VirtualKey
 import ai.platon.pulsar.common.io.VirtualKeyboard
 import ai.platon.pulsar.common.io.VirtualKeyboard.KEYPAD_LOCATION
@@ -52,7 +53,12 @@ class ClickableDOM(
     }
 
     suspend fun clickablePoint(): DescriptiveResult<PointD> {
-        val contentQuads = kotlin.runCatching { dom.getContentQuads(node.nodeId, node.backendNodeId, node.objectId) }.getOrNull()
+        val contentQuads = kotlin.runCatching {
+            // dom.getContentQuads(node.nodeId, node.backendNodeId, node.objectId)
+            dom.getContentQuads(node.nodeId)
+        }
+            .onFailure { getLogger(this).warn("Failed to get content quads for node ${node.nodeId}", it) }
+            .getOrNull()
         if (contentQuads == null) {
             // throw new Error('Node is either not clickable or not an HTMLElement');
             // return 'error:notvisible';
@@ -64,7 +70,7 @@ class ClickableDOM(
         val viewport = layoutMetrics.cssLayoutViewport
 
         val dim = DimD(viewport.clientWidth.toDouble(), viewport.clientHeight.toDouble())
-        val quads = contentQuads.filterNotNull()
+        val quads = contentQuads
             .map { fromProtocolQuad(it) }
             .map { intersectQuadWithViewport(it, dim.width, dim.height) }
             .filter { computeQuadArea(it) > 0.99 }

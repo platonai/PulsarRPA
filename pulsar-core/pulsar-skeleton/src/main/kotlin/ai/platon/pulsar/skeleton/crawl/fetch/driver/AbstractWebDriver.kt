@@ -562,7 +562,11 @@ abstract class AbstractWebDriver(
      * this suspending function is waiting, this function immediately resumes with CancellationException.
      * */
     protected suspend fun gap(type: String) {
-        if (!isActive) return; delay(randomDelayMillis(type))
+        if (!isActive) {
+            return
+        }
+
+        delay(randomDelayMillis(type))
     }
 
     /**

@@ -303,11 +303,6 @@ interface DOM {
     @ParamName("objectId") @Optional objectId: String? = null,
   ): String
 
-  @Returns("outerHTML")
-  suspend fun getOuterHTML(): String {
-    return getOuterHTML(null, null, null)
-  }
-
   /**
    * Returns the id of the nearest ancestor that is a relayout boundary.
    * @param nodeId Id of the node.
