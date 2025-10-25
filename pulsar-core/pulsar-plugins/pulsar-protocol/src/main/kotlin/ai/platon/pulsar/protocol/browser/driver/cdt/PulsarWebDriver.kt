@@ -12,6 +12,9 @@ import ai.platon.cdt.kt.protocol.types.runtime.Evaluate
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.dom.ChromeCdpDomService
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
+import ai.platon.pulsar.browser.driver.chrome.dom.model.NanoDOMTree
+import ai.platon.pulsar.browser.driver.chrome.dom.model.PageTarget
+import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
@@ -550,6 +553,11 @@ class PulsarWebDriver(
             val document = domAPI?.getDocument() ?: return@invokeOnPage null
             domAPI?.getOuterHTML(document.nodeId, document.backendNodeId)
         }
+    }
+
+    override suspend fun nanoDOMTree(): NanoDOMTree {
+        val snapshotOptions = SnapshotOptions()
+        return domService.getDOMState(snapshotOptions = snapshotOptions).getNanoTree()
     }
 
     override suspend fun bringToFront() {

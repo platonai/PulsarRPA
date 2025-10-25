@@ -37,6 +37,10 @@ class ChromeCdpDomService(
     private var lastDomByBackend: Map<Int, DOMTreeNodeEx> = emptyMap()
 
     override suspend fun getBrowserUseState(target: PageTarget, snapshotOptions: SnapshotOptions): BrowserUseState {
+        return buildBrowserState(getDOMState(target, snapshotOptions))
+    }
+
+    override suspend fun getDOMState(target: PageTarget, snapshotOptions: SnapshotOptions): DOMState {
         val allTrees = getMultiDOMTrees(options = snapshotOptions)
         if (logger.isDebugEnabled) {
             logger.debug("allTrees summary: \n{}", DomDebug.summarize(allTrees))
@@ -54,7 +58,7 @@ class ChromeCdpDomService(
             logger.debug("browserState.json: \nlength: {}\n{}", json.length, json)
         }
 
-        return buildBrowserState(domState)
+        return domState
     }
 
     override suspend fun getMultiDOMTrees(target: PageTarget, options: SnapshotOptions): TargetMultiTrees {
