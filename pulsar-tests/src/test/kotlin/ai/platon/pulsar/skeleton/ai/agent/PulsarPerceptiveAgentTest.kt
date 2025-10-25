@@ -63,7 +63,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     maxRetries = 2,
                     consecutiveNoOpLimit = 3
                 )
-                val agent = BrowserPerceptiveAgent(driver, config = customConfig)
+                val agent = BrowserPerceptiveAgent(driver, session, config = customConfig)
 
                 assertNotNull(agent.uuid)
                 assertTrue(agent.history.isEmpty())
@@ -346,7 +346,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     maxRetries = 1,
                     maxSteps = 5
                 )
-                val agent = BrowserPerceptiveAgent(driver, config = config)
+                val agent = BrowserPerceptiveAgent(driver, session, config = config)
 
                 // Navigate to blank page which may cause issues
                 runBlocking {
@@ -411,8 +411,8 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 val config1 = AgentConfig(maxSteps = 10)
                 val config2 = AgentConfig(maxSteps = 100)
 
-                val agent1 = BrowserPerceptiveAgent(driver, maxSteps = 10, config = config1)
-                val agent2 = BrowserPerceptiveAgent(driver, maxSteps = 100, config = config2)
+                val agent1 = BrowserPerceptiveAgent(driver, session, maxSteps = 10, config = config1)
+                val agent2 = BrowserPerceptiveAgent(driver, session, maxSteps = 100, config = config2)
 
                 assertNotNull(agent1)
                 assertNotNull(agent2)
@@ -427,7 +427,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     enablePerformanceMetrics = true
                 )
 
-                val agent = BrowserPerceptiveAgent(driver, config = config)
+                val agent = BrowserPerceptiveAgent(driver, session, config = config)
 
                 assertNotNull(agent)
             }
@@ -442,7 +442,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     maxRetryDelayMs = 5000
                 )
 
-                val agent = BrowserPerceptiveAgent(driver, config = config)
+                val agent = BrowserPerceptiveAgent(driver, session, config = config)
 
                 assertNotNull(agent)
             }
@@ -455,7 +455,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     enablePreActionValidation = true
                 )
 
-                val agent = BrowserPerceptiveAgent(driver, config = config)
+                val agent = BrowserPerceptiveAgent(driver, session, config = config)
 
                 assertNotNull(agent)
             }
@@ -498,7 +498,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                     maxHistorySize = 20
                 )
 
-                val agent = BrowserPerceptiveAgent(driver, config = config)
+                val agent = BrowserPerceptiveAgent(driver, session, config = config)
 
                 assertNotNull(agent)
 

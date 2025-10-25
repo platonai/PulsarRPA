@@ -14,6 +14,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 
 data class NodeRef constructor(
@@ -267,9 +268,21 @@ class PageHandler(
     @Throws(ChromeDriverException::class)
     private suspend fun querySelectorOrNull(selector: String): NodeRef? {
         val rootId = domAPI?.getDocument()?.nodeId
-        return if (rootId != null && rootId > 0) {
+        return if (rootId != null) {
             val nodeId = domAPI?.querySelector(rootId, selector)
-            val node = domAPI?.describeNode(nodeId, null, null, null, null) ?: return null
+            val node = try {
+                domAPI?.describeNode(nodeId, null, null, null, null)
+            } catch (e: ChromeRPCException) {
+                // code: -3200 message: "Could not find node with given id"
+                // This exception is expected, will change this log to debug
+                val message = e.message
+                if (message == null || !message.contains("Could not find node with given id")) {
+                    logger.warn("Exception from domAPI.describeNode | {}", e.brief())
+                }
+                null
+            }
+
+            node ?: return null
             NodeRef(node.nodeId, node.backendNodeId)
         } else null
     }
@@ -332,6 +345,7 @@ class PageHandler(
             val nodeId = domAPI?.requestNode(objectId)
             // Release the remote object to avoid memory leaks
             runtimeAPI?.releaseObject(objectId)
+
 
             NodeRef(nodeId, backendNodeId, objectId)
         } catch (e: Exception) {

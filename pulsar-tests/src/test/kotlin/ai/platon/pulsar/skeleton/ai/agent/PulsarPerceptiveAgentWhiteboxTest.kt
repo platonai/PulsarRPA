@@ -53,7 +53,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
     @Test
     fun `calculateRetryDelay should grow exponentially and respect cap`() = runEnhancedWebDriverTest { driver ->
         val config = AgentConfig(baseRetryDelayMs = 100, maxRetryDelayMs = 1000)
-        val agent = BrowserPerceptiveAgent(driver, config = config)
+        val agent = BrowserPerceptiveAgent(driver, session, config = config)
         val m = getMethod(agent, "calculateRetryDelay", Int::class.javaPrimitiveType!!)
 
         val d0 = m.invoke(agent, 0) as Long
