@@ -1,5 +1,13 @@
 package ai.platon.pulsar.browser.driver.chrome
 
+import ai.platon.cdt.kt.protocol.ChromeDevTools
+import ai.platon.cdt.kt.protocol.commands.DOM
+import ai.platon.cdt.kt.protocol.commands.Page
+import ai.platon.cdt.kt.protocol.types.input.DispatchDragEventType
+import ai.platon.cdt.kt.protocol.types.input.DispatchKeyEventType
+import ai.platon.cdt.kt.protocol.types.input.DispatchMouseEventType
+import ai.platon.cdt.kt.protocol.types.input.DragData
+import ai.platon.cdt.kt.protocol.types.input.MouseButton
 import ai.platon.pulsar.common.DescriptiveResult
 import ai.platon.pulsar.common.io.VirtualKey
 import ai.platon.pulsar.common.io.VirtualKeyboard
@@ -44,7 +52,7 @@ class ClickableDOM(
     }
 
     suspend fun clickablePoint(): DescriptiveResult<PointD> {
-        val contentQuads = kotlin.runCatching { dom.getContentQuads(nodeId, null, null) }.getOrNull()
+        val contentQuads = kotlin.runCatching { dom.getContentQuads(node.nodeId, node.backendNodeId, node.objectId) }.getOrNull()
         if (contentQuads == null) {
             // throw new Error('Node is either not clickable or not an HTMLElement');
             // return 'error:notvisible';
@@ -52,11 +60,6 @@ class ClickableDOM(
         }
 
         val layoutMetrics = page.getLayoutMetrics()
-        if (layoutMetrics == null) {
-            // throw new Error('Node is either not clickable or not an HTMLElement');
-            // return 'error:notvisible';
-            return DescriptiveResult("error:notvisible")
-        }
 
         val viewport = layoutMetrics.cssLayoutViewport
 

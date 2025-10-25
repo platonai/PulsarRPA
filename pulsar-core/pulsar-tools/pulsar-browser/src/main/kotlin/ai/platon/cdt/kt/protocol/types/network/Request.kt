@@ -23,7 +23,7 @@ data class Request(
   @param:JsonProperty("method")
   val method: String,
   @param:JsonProperty("headers")
-  val headers: Map<String, Any?>,
+  val headers: MutableMap<String, Any?>,
   @param:JsonProperty("postData")
   @param:Optional
   val postData: String? = null,

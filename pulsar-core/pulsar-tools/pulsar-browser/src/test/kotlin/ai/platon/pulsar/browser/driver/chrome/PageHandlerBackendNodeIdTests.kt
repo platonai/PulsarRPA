@@ -25,7 +25,7 @@ class PageHandlerBackendNodeIdTests {
 //        val runtimeAPI = mock(Runtime::class.java)
 //
 //        `when`(devTools.isOpen).thenReturn(true)
-//        `when`(devTools.dOM).thenReturn(domAPI)
+//        `when`(devTools.dom).thenReturn(domAPI)
 //        `when`(devTools.runtime).thenReturn(runtimeAPI)
 //
 //        val pageHandler = PageHandler(devTools, confuser)
@@ -56,7 +56,7 @@ class PageHandlerBackendNodeIdTests {
 //        val document = mock(Node::class.java)
 //
 //        `when`(devTools.isOpen).thenReturn(true)
-//        `when`(devTools.dOM).thenReturn(domAPI)
+//        `when`(devTools.dom).thenReturn(domAPI)
 //        `when`(domAPI.document).thenReturn(document)
 //        `when`(document.nodeId).thenReturn(1)
 //        `when`(domAPI.querySelector(1, "div.test")).thenReturn(789)
@@ -100,7 +100,7 @@ class PageHandlerBackendNodeIdTests {
 //        val runtimeAPI = mock(Runtime::class.java)
 //
 //        `when`(devTools.isOpen).thenReturn(true)
-//        `when`(devTools.dOM).thenReturn(domAPI)
+//        `when`(devTools.dom).thenReturn(domAPI)
 //        `when`(devTools.runtime).thenReturn(runtimeAPI)
 //
 //        val pageHandler = PageHandler(devTools, confuser)
@@ -129,7 +129,7 @@ class PageHandlerBackendNodeIdTests {
 //        val runtimeAPI = mock(Runtime::class.java)
 //
 //        `when`(devTools.isOpen).thenReturn(true)
-//        `when`(devTools.dOM).thenReturn(domAPI)
+//        `when`(devTools.dom).thenReturn(domAPI)
 //        `when`(devTools.runtime).thenReturn(runtimeAPI)
 //
 //        val pageHandler = PageHandler(devTools, confuser)

@@ -243,19 +243,9 @@ internal class NetworkManager(
 
         tracer?.trace("onResponseReceived | {}", requestId)
 
-        var extraInfo: ResponseReceivedExtraInfo? = null
-        val request = networkEventManager.getCDPRequest(requestId)
-        if (request != null && !request.fromMemoryCache) {
-            extraInfo = networkEventManager.takeFirstResponseExtraInfo(requestId)
-            if (extraInfo == null) {
-                networkEventManager.addQueuedEventGroup(requestId, QueuedEventGroup(event))
-                return
-            }
-        }
-
         emit(NetworkEvents.ResponseReceived, event)
 
-        emitResponseEvent(event, extraInfo)
+        emitResponseEvent(event)
     }
 
     private fun onResponseReceivedExtraInfo(event: ResponseReceivedExtraInfo) {
@@ -277,7 +267,7 @@ internal class NetworkManager(
         val queuedEvents = networkEventManager.getQueuedEventGroup(requestId)
         if (queuedEvents != null) {
             networkEventManager.deleteQueuedEventGroup(requestId)
-            emitResponseEvent(queuedEvents.responseReceivedEvent, event)
+            emitResponseEvent(queuedEvents.responseReceivedEvent)
             queuedEvents.loadingFinishedEvent?.let { emitLoadingFinished(it) }
             queuedEvents.loadingFailedEvent?.let { emitLoadingFailed(it) }
             return
@@ -307,7 +297,7 @@ internal class NetworkManager(
         request.finalizeInterceptions()
     }
 
-    private fun emitResponseEvent(event: ResponseReceived, extraInfo: ResponseReceivedExtraInfo?) {
+    private fun emitResponseEvent(event: ResponseReceived) {
         val requestId = event.requestId
         val request = networkEventManager.getCDPRequest(requestId) ?: return
         val extraInfos = networkEventManager.computeResponseExtraInfoList(requestId)
@@ -315,15 +305,7 @@ internal class NetworkManager(
             logger.debug("Unexpected extraInfo events for request | {} events | {}", extraInfos.size, requestId)
         }
 
-        var extraInfo0 = extraInfo
-        // Chromium sends wrong extraInfo events for responses served from cache.
-        // See https://github.com/puppeteer/puppeteer/issues/9965 and
-        // https://crbug.com/1340398.
-        if (event.response.fromDiskCache == true) {
-            extraInfo0 = null
-        }
-
-        val response = CDPResponse(driver, request, event.response, extraInfo0)
+        val response = CDPResponse(driver, request, event.response)
         request.response = response
 
         emit(NetworkEvents.Response, response)

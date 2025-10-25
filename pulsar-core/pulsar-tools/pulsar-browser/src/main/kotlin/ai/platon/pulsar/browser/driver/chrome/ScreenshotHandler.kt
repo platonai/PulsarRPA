@@ -75,11 +75,11 @@ class ScreenshotHandler(
     }
 
     private suspend fun captureScreenshot0(node: NodeRef?, clip: RectD): String? {
-        val viewport = Viewport().apply {
-            x = clip.x; y = clip.y
-            width = clip.width; height = clip.height
+        val viewport = Viewport(
+            x = clip.x, y = clip.y,
+            width = clip.width, height = clip.height,
             scale = 1.0
-        }
+        )
 
         return captureScreenshot0(node, viewport)
     }
@@ -99,9 +99,11 @@ class ScreenshotHandler(
         }
 
         // return page?.captureScreenshot(format, quality, viewport, true, false, false)
-        return page?.captureScreenshot(format, quality, viewport,
+        return page?.captureScreenshot(
+            format, quality, viewport,
             fromSurface = true,
-            captureBeyondViewport = false)
+            captureBeyondViewport = false
+        )
     }
 
     private suspend fun calculateNodeClip(node: NodeRef, selector: String): NodeClip? {

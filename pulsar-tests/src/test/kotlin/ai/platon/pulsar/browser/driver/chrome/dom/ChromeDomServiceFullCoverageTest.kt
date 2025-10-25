@@ -397,12 +397,12 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
             includeInteractivity = true
         )
 
-        fun jsNumber(expr: String): Double? = runCatching {
+        suspend fun jsNumber(expr: String): Double? = runCatching {
             val r = devTools.runtime.evaluate(expr)?.result
             r?.value?.toString()?.toDoubleOrNull() ?: r?.unserializableValue?.toDoubleOrNull()
         }.getOrNull()
 
-        fun getBcr(selector: String): Map<String, Double> {
+        suspend fun getBcr(selector: String): Map<String, Double> {
             val script = """
                 (function(){
                   var el = document.querySelector("$selector");
