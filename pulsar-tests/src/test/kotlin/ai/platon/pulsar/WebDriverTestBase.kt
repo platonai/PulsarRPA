@@ -8,12 +8,12 @@ import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.PageTarget
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.protocol.browser.impl.DefaultBrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
-import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.util.server.EnabledMockServerApplication
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
@@ -51,8 +51,6 @@ open class WebDriverTestBase : TestWebSiteAccess() {
 
     val browserFactory
         get() = context.getBeanOrNull(BrowserFactory::class) ?: DefaultBrowserFactory(session.configuration)
-
-//    open val webDriverService get() = WebDriverService(browserFactory)
 
     open val webDriverService get() = FastWebDriverService(browserFactory)
 

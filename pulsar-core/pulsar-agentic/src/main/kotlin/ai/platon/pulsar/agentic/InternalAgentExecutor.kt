@@ -11,17 +11,19 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 
 internal class InternalAgentExecutor(
+    val session: AgenticSession,
     val driver: WebDriver,
     val conf: ImmutableConfig
 ) {
     constructor(session: AgenticSession): this(
+        session,
         requireNotNull(session.boundDriver) { "Bind a driver for agentic functionalities: `session.bind(driver)`" },
         session.sessionConfig
     )
 
     private val dispatcher = ToolCallExecutor()
 
-    val agent = BrowserPerceptiveAgent(driver)
+    val agent = BrowserPerceptiveAgent(driver, session)
 
     suspend fun resolve(action: String): ActResult {
         return agent.resolve(action)

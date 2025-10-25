@@ -21,7 +21,7 @@ class PulsarPerceptiveAgentActIT : WebDriverTestBase() {
     fun `Given mock act page When act click Then history updates`() = runEnhancedWebDriverTest(actMockSiteHomeURL) { driver ->
         Assumptions.assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping act IT")
 
-        val agent = BrowserPerceptiveAgent(driver)
+        val agent = BrowserPerceptiveAgent(driver, session)
         val result = agent.act("搜索browser")
         printlnPro(result)
 
@@ -33,7 +33,7 @@ class PulsarPerceptiveAgentActIT : WebDriverTestBase() {
     fun `Given ActionOptions When act navigate Then result returns action text`() = runEnhancedWebDriverTest(actMockSiteHomeURL) { driver ->
         Assumptions.assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping act IT")
 
-        val agent = BrowserPerceptiveAgent(driver)
+        val agent = BrowserPerceptiveAgent(driver, session)
         val opts = ActionOptions(action = "打开首页")
         val result = agent.act(opts)
         printlnPro(result)

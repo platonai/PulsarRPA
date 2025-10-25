@@ -40,7 +40,7 @@ class PulsarAgentExtractObserveE2ETest : WebDriverTestBase() {
     fun `Given interactive page When observe Then get actionable elements`() = runEnhancedWebDriverTest(testURL) { driver ->
         Assumptions.assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping observe E2E test")
 
-        val agent = BrowserPerceptiveAgent(driver)
+        val agent = BrowserPerceptiveAgent(driver, session)
         val observed = agent.observe("Understand the page and list actionable elements")
 
         Assertions.assertTrue(observed.isNotEmpty(), "Observed elements should not be empty")
@@ -64,7 +64,7 @@ class PulsarAgentExtractObserveE2ETest : WebDriverTestBase() {
     fun `Given interactive page When extract Then get structured data`() = runEnhancedWebDriverTest(testURL) { driver ->
         Assumptions.assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping extract E2E test")
 
-        val agent = BrowserPerceptiveAgent(driver)
+        val agent = BrowserPerceptiveAgent(driver, session)
         val result = agent.extract("Extract key structured data from the page")
 
         assertTrue(result.success, "Extract should succeed")
@@ -86,7 +86,7 @@ class PulsarAgentExtractObserveE2ETest : WebDriverTestBase() {
     @Test
     fun `test element bounds calculation with positioned elements`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
         driver.waitForSelector("body", 5000)
-        val agent = BrowserPerceptiveAgent(driver)
+        val agent = BrowserPerceptiveAgent(driver, session)
 
         // Test bounds-related functionality
         val prompt = "分析页面中元素的定位和尺寸信息"
@@ -97,7 +97,7 @@ class PulsarAgentExtractObserveE2ETest : WebDriverTestBase() {
     @Test
     fun `test element visibility detection with interactive elements`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
         driver.waitForSelector("body", 5000)
-        val agent = BrowserPerceptiveAgent(driver)
+        val agent = BrowserPerceptiveAgent(driver, session)
 
         // Test visibility-related functionality
         val prompt = "分析页面中元素的可见性状态"

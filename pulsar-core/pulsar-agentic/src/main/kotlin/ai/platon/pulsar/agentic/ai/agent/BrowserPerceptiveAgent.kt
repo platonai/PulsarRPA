@@ -1,5 +1,6 @@
 package ai.platon.pulsar.agentic.ai.agent
 
+import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.SimpleMessage
 import ai.platon.pulsar.agentic.ai.SimpleMessageList
@@ -44,6 +45,7 @@ import kotlin.math.pow
 
 class BrowserPerceptiveAgent(
     val driver: WebDriver,
+    val session: AgenticSession,
     val maxSteps: Int = 100,
     val config: AgentConfig = AgentConfig(maxSteps = maxSteps)
 ) : PerceptiveAgent {
@@ -51,11 +53,12 @@ class BrowserPerceptiveAgent(
     private val slogger = StructuredAgentLogger(ownerLogger, config)
     private val logger = ownerLogger
 
+    private val activeDriver get() = session.boundDriver ?: driver
     private val baseDir = AppPaths.get("agent")
-    private val conf get() = (driver as AbstractWebDriver).settings.config
+    private val conf get() = (activeDriver as AbstractWebDriver).settings.config
 
     private val tta by lazy { TextToAction(conf) }
-    private val inference by lazy { InferenceEngine(driver, tta.chatModel) }
+    private val inference by lazy { InferenceEngine(session, tta.chatModel) }
     private val domService get() = inference.domService
     private val promptBuilder = PromptBuilder()
 
@@ -63,7 +66,7 @@ class BrowserPerceptiveAgent(
     private val toolCallExecutor = ToolCallExecutor()
 
     // Helper classes for better code organization
-    private val pageStateTracker = PageStateTracker(driver, config)
+    private val pageStateTracker = PageStateTracker(session, config)
     private val actionValidator = ActionValidator(config)
 
     // Action validation cache
@@ -168,6 +171,7 @@ class BrowserPerceptiveAgent(
             }
         }
 
+        val driver = requireNotNull(activeDriver)
         // For waitForNavigation validation, provide oldUrl if not present
         if (lowerMethod == "waitForNavigation") {
             if (toolArgs["oldUrl"]?.toString().isNullOrBlank()) {
@@ -308,7 +312,7 @@ class BrowserPerceptiveAgent(
 
     private suspend fun execute(action: ActionDescription): InstructionResult {
         val toolCall = action.toolCall ?: return InstructionResult(listOf(), listOf(), action.modelResponse)
-
+        val driver = requireNotNull(activeDriver)
         val result = toolCallExecutor.execute(toolCall, driver)
         return InstructionResult(action.cssFriendlyExpressions, listOf(result), action.modelResponse, listOf(toolCall))
     }
@@ -378,6 +382,7 @@ class BrowserPerceptiveAgent(
             }
 
             // 5) Execute action, and optionally wait for navigation if caller provided timeoutMs
+            val driver = requireNotNull(activeDriver)
             val oldUrl = driver.currentUrl()
             val execResult = try {
                 act(chosen)
@@ -610,7 +615,7 @@ class BrowserPerceptiveAgent(
             config.maxRetries
         )
 
-        // agent general guide + overall goal
+        // agent general guide
         val systemMsg = TextToAction.buildOperatorSystemPrompt()
         var consecutiveNoOps = 0
         var step = 0
@@ -622,8 +627,9 @@ class BrowserPerceptiveAgent(
                 val stepContext = context.copy(stepNumber = step, actionType = "step")
 
                 val messages = SimpleMessageList()
-                messages.add(SimpleMessage("system", systemMsg))
+                messages.addSystem(systemMsg)
 
+                val driver = requireNotNull(activeDriver)
                 val url = driver.url()
                 if (url.isBlank() || url == "about:blank") {
                     driver.navigateTo(AppConstants.SEARCH_ENGINE_URL)
@@ -671,28 +677,12 @@ class BrowserPerceptiveAgent(
                     null
                 }
 
-                if (screenshotB64 != null) {
-                    messages.add(SimpleMessage("user", "[Current page screenshot provided as base64 image]"))
-                }
-                messages.add(SimpleMessage("user", buildHistoryMessage()))
                 messages.add(SimpleMessage("user", buildOverallGoalMessage(overallGoal), name = "overallGoal"))
+                messages.addUser(buildHistoryMessage())
+                if (screenshotB64 != null) {
+                    messages.addUser("[Current page screenshot provided as base64 image]")
+                }
 
-                // systemMsg + userMsg + screenshot reminder
-                //
-                // + agent general guide + overall goal
-                // + history + atom operation guide + completion condition + overall goal
-                // + screenshot reminder
-                // val currentStepMessage = buildCurrentStepMessage(systemMsg, screenshotB64)
-
-                // call the LLM to plan the next step to take.
-                // TTA will add more guide to generate the most relevant element with action suggestions
-                //
-                // + agent general guide + overall goal
-                // + history + atom operation guide + completion condition + overall goal
-                // + screenshot reminder
-                // + [instruction] + DOM + browser state + schema?
-                // + observe guide
-                // + tool specs + [observe guide] + completion guide
                 val stepAction = generateStepAction(messages, stepContext, browserUseState, screenshotB64)
 
                 if (stepAction == null) {
@@ -862,7 +852,6 @@ class BrowserPerceptiveAgent(
      * Generates action with retry mechanism
      */
     private suspend fun generateStepAction(
-        // instruction: agent guide + overall goal + last action summary
         messages: SimpleMessageList,
         context: ExecutionContext,
         browserUseState: BrowserUseState,
@@ -1044,6 +1033,7 @@ class BrowserPerceptiveAgent(
      * Gets current URL with error handling
      */
     private suspend fun getCurrentUrl(): String {
+        val driver = requireNotNull(activeDriver)
         return runCatching { driver.currentUrl() }.getOrNull().orEmpty()
     }
 
@@ -1248,6 +1238,7 @@ class BrowserPerceptiveAgent(
     private suspend fun safeScreenshot(context: ExecutionContext): String? {
         return runCatching {
             slogger.info("Attempting to capture screenshot", context)
+            val driver = requireNotNull(activeDriver)
             val screenshot = driver.captureScreenshot()
             if (screenshot != null) {
                 slogger.info("Screenshot captured successfully", context, mapOf("size" to screenshot.length))
@@ -1374,11 +1365,9 @@ class BrowserPerceptiveAgent(
             history.takeLast(min(8, history.size)).joinToString("\n")
         } else "(无)"
 
-        var msg = """
+        val msg = """
 此前动作摘要：
 $his
-
-请基于当前页面截图、交互元素与历史动作，规划下一步（严格单步原子动作）。
 		""".trimIndent()
 
         return msg

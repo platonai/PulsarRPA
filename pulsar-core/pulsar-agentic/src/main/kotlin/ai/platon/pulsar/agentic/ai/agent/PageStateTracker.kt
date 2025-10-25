@@ -1,8 +1,8 @@
 package ai.platon.pulsar.agentic.ai.agent
 
+import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.delay
 
 /**
@@ -16,11 +16,12 @@ import kotlinx.coroutines.delay
  * @author Vincent Zhang, ivincent.zhang@gmail.com, platon.ai
  */
 class PageStateTracker(
-    private val driver: WebDriver,
+    private val session: AgenticSession,
     private val config: AgentConfig
 ) {
     private val logger = getLogger(this)
 
+    private val activeDriver get() = session.boundDriver
     private var lastPageStateHash: Int? = null
     private var sameStateCount = 0
 
@@ -36,6 +37,8 @@ class PageStateTracker(
      * @return Hash code representing the page state
      */
     suspend fun calculatePageStateHash(browserUseState: BrowserUseState): Int {
+        val driver = requireNotNull(activeDriver)
+
         // Combine URL, DOM structure, and interactive elements for fingerprint
         val urlHash = runCatching { driver.currentUrl() }.getOrNull()?.hashCode() ?: 0
         // Prefer cached microTree JSON from DOMState to avoid repeated serialization cost
@@ -127,6 +130,8 @@ class PageStateTracker(
      * @param checkIntervalMs Interval between stability checks
      */
     suspend fun waitForDOMSettle(timeoutMs: Long, checkIntervalMs: Long) {
+        val driver = requireNotNull(activeDriver)
+
         driver.waitForSelector("body", timeoutMs)
 
         val startTime = System.currentTimeMillis()

@@ -1,5 +1,6 @@
 package ai.platon.pulsar.agentic.ai.agent
 
+import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.SimpleMessage
 import ai.platon.pulsar.agentic.ai.SimpleMessageList
@@ -71,7 +72,7 @@ data class ObserveParams constructor(
 )
 
 class InferenceEngine(
-    private val driver: WebDriver,
+    private val session: AgenticSession,
     private val chatModel: BrowserChatModel,
     private val promptLocale: Locale = Locale.CHINESE,
 ) {
@@ -80,6 +81,8 @@ class InferenceEngine(
 
     // Reuse a single ObjectMapper for JSON parsing within this class
     private val mapper = ObjectMapper()
+
+    private val driver get() = session.boundDriver
 
     val domService: DomService = (driver as AbstractWebDriver).domService!!
 
