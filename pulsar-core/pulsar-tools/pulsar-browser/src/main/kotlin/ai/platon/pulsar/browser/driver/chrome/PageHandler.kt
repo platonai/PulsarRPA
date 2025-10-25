@@ -60,10 +60,6 @@ class PageHandler(
     companion object {
         // see org.w3c.dom.Node.ELEMENT_NODE
         const val ELEMENT_NODE = 1
-
-        // Backend node ID selector prefix
-        private val BACKEND_NODE_PREFIX = Locator.Type.BACKEND_NODE_ID.text
-        private val FBN_PREFIX = Locator.Type.FRAME_BACKEND_NODE_ID.text
     }
 
     private val logger = getLogger(this)
