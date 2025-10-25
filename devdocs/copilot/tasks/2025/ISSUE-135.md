@@ -37,7 +37,7 @@
 - 位置：`pulsar-core/pulsar-tools/pulsar-browser/.../dom/model/DomModels.kt`
 - 新增：
   - `data class TabState(
-      val id: String,
+      val id: String,           // 对齐 Browser.drivers 的 String key
       val driverId: Int? = null,
       val url: String,
       val title: String? = null,
@@ -45,21 +45,23 @@
     )`
   - `data class BrowserState(..., val tabs: List<TabState> = emptyList(), val activeTabId: String? = null)`
 - 说明：
-  - id 对齐浏览器内部 tabId（建议等于 `Browser.drivers` 的 key）【审核员：采纳，可修改相应字段类型】；
-  - driverId 方便诊断/调试；
+  - id 类型为 String，直接对齐浏览器内部 `Browser.drivers` 的 key，避免类型转换；
+  - driverId 方便诊断/调试（关联到具体的 WebDriver 实例）；
   - activeTabId 标记当前活动 tab（即 `session.boundDriver` 对应的 tab）。
+  - url 使用 `driver.currentUrl`（获取当前实际 URL，含重定向后的结果）。
 
 ### B. tabs 信息来源与注入（会话绑定）
 - 位置：`pulsar-core/pulsar-agentic/.../InferenceEngine.kt` 或辅助类（保持 DomService 无跨层依赖）
 - 策略：
   - 通过 `session.boundDriver?.browser` 获取当前浏览器上下文；
   - 从 `browser.drivers: Map<String, WebDriver>` 构建 `List<TabState>`：
-    - `id = drivers.key`（String）；
+    - `id = drivers.key`（String，直接使用 map key）；
     - `driverId = driver.id`；
-    - `url = driver.currentUrl()`（或 `driver.url()`，二者差异见接口说明）
+    - `url = driver.currentUrl`（获取当前实际 URL，含重定向）；
+    - `title = driver.title`（可选，若获取失败则为 null）；
     - `active = (driver == session.boundDriver)`；
   - `activeTabId =` 活动 driver 对应的 map key；
-  - 对 `domService.getBrowserUseState(...)` 的结果进行“补丁合成”（复制 BrowserState，填入 tabs/activeTabId），作为最终返回。
+  - 对 `domService.getBrowserUseState(...)` 的结果进行"补丁合成"（复制 BrowserState，填入 tabs/activeTabId），作为最终返回。
 - 备注：避免改动 DomService/ChromeCdpDomService 的职责与依赖。
 
 ### C. LLM 消息注入点
@@ -73,10 +75,12 @@
 - 位置：`pulsar-core/pulsar-skeleton/.../ToolCallExecutor.kt`
 - 实现执行分支：
   - 解析到 `objectName == "browser" && functionName == "switchTab"`；
-  - 取 `tabId` 参数（Int），与 `browser.drivers` 的 key 对齐：
-    - 若 drivers 的 key 为 String，优先采用 `tabId.toString()` 进行匹配；
-    - 找到目标 `WebDriver` 后，返回其 `driver.id`（Int）作为执行结果；
-  - 找不到时，返回可读错误摘要（不抛异常，避免 LLM 进入失败循环）。
+  - 取 `tabId` 参数（String），直接与 `browser.drivers` 的 key 匹配；
+  - 找到目标 `WebDriver` 后，返回其 `driver.id`（Int）作为执行结果；
+  - 找不到时，返回结构化错误（JSON 格式）：`{"error": "tab_not_found", "message": "Tab with id '${tabId}' not found", "availableTabs": [...]}`；
+- 错误处理策略：
+  - 不抛异常，返回包含 error 字段的结构化响应，便于 LLM 理解并重试；
+  - 包含可用 tab 列表，帮助 LLM 选择正确的 tabId。
 - 说明：ToolCallExecutor 不负责绑定 session，仅负责解析/定位并返回 driverId（遵循现框架职责分离）。
 
 ### E. Agent 会话绑定切换
@@ -90,11 +94,16 @@
 - 注意：如 `parseStepActionResponse` 仍无法提供 domain，需以 `toolCall.name == "switchTab"` 作为兜底触发器。
 
 ### F. InferenceEngine domService 动态化（关键修正）
-- 现状：`InferenceEngine` 中 `val domService: DomService = (driver as AbstractWebDriver).domService!!` 在构造期绑定 driver，切换后会“陈旧”。
-- 修正方案（二选一，推荐 A）：
-  - A) 改为动态 getter：`val domService get() = (session.boundDriver as AbstractWebDriver).domService!!`；
-  - B) 在 `browser.switchTab` 绑定成功后，重建 `InferenceEngine(session, tta.chatModel)`（但需改写引用处，成本更高）。
-- 结论：采用 A，风险更低、改动更小。
+- 现状：`InferenceEngine` 中 `val domService: DomService = (driver as AbstractWebDriver).domService!!` 在构造期绑定 driver，切换后会"陈旧"。
+- 修正方案（采用 A）：
+  - A) 改为动态 getter，增加空安全处理：
+    ```kotlin
+    val domService: DomService
+        get() = (session.boundDriver as? AbstractWebDriver)?.domService
+            ?: throw IllegalStateException("No active driver bound to session or driver is not AbstractWebDriver")
+    ```
+  - B) ~~在 `browser.switchTab` 绑定成功后，重建 `InferenceEngine(session, tta.chatModel)`~~（改动成本更高，放弃）。
+- 结论：采用 A，风险更低、改动更小，且增加了空安全与类型检查。
 
 ### G. 工具调用的 domain 兼容处理（重要补充）
 - 现状：`BrowserPerceptiveAgent.parseStepActionResponse(...)` 中构造 `ToolCall` 时将 `domain` 硬编码为 `"driver"`，这会导致 LLM 即使选择了 `browser.switchTab(...)`，也只能解析到 `method = "switchTab"` 且 `domain = "driver"`。
@@ -132,9 +141,13 @@
 ---
 
 ## 风险与缓解（更新）
-- domService 陈旧：已以动态 getter 方案规避（必须落地）。
-- tabId 类型与 drivers key 类型不一致（Int vs String）：先用 `tabId.toString()` 桥接；在文档中明确类型约定；如有需要可改为 `String`。
-- LLM token 增长：`tabs` 字段使用最小集（id/driverId/url/active），必要时可在多 tab 时截断或摘要（后续优化）。
+- domService 陈旧：已以动态 getter 方案规避（必须落地），并增加空安全检查。
+- tabId 类型统一：工具签名改为 `switchTab(tabId: String): Int`，与 `Browser.drivers` 的 key 类型一致，避免类型转换。
+- LLM token 增长：`tabs` 字段使用最小集（id/driverId/url/title/active），必要时可在多 tab 时截断或摘要（后续优化）。
+- 并发安全：当前设计基于单 agent 场景；多 agent 并发切换 tab 需要额外的同步机制（后续增强）。
+- Tab 生命周期：
+  - Tab 关闭后，driver 应从 `browser.drivers` 移除（由现有浏览器管理逻辑处理）；
+  - 若 agent 尝试切换到已关闭的 tab，返回结构化错误，LLM 可基于 availableTabs 重新选择。
 
 ---
 
@@ -174,5 +187,8 @@
 ## 后续增强（非本次必需）
 - switchTab 参数扩展：`index: Int`、`urlContains: String` 等更多定位方式；
 - 提供 `getTabs()` 工具用于显式拉取 tabs 列表（当 tabs 很多时按需获取，进一步节省 token）；
-- 在 BrowserState 中加入更多上下文字段（如 targetId/focusedWindow 等）。
+- 在 BrowserState 中加入更多上下文字段（如 targetId/focusedWindow 等）；
+- 新增 `closeTab(tabId: String)` 工具，允许 agent 关闭不需要的 tab；
+- 新增 `newTab(url: String)` 工具，允许 agent 打开新 tab；
+- 并发控制：为多 agent 场景添加 tab 切换锁机制。
 

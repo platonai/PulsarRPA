@@ -84,7 +84,9 @@ class InferenceEngine(
 
     private val driver get() = session.boundDriver
 
-    val domService: DomService = (driver as AbstractWebDriver).domService!!
+    val domService: DomService
+        get() = (session.boundDriver as? AbstractWebDriver)?.domService
+            ?: throw IllegalStateException("No active driver bound to session or driver is not AbstractWebDriver")
 
     /**
      * Returns an ObjectNode with extracted fields expanded at top-level, plus:
@@ -97,7 +99,9 @@ class InferenceEngine(
         val userMsg = promptBuilder.buildExtractUserPrompt(
             params.instruction,
             // Inject schema hint to strongly guide JSON output
-            promptBuilder.buildExtractDomContent(params.browserUseState.domState, params)
+            promptBuilder.buildExtractDomContent(params.browserUseState.domState, params),
+            // Include browser state JSON for tabs information
+            params.browserUseState.browserState.lazyJson
         )
 
         val messages = listOf(systemMsg, userMsg)

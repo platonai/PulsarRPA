@@ -495,12 +495,25 @@ data class ScrollState(
     val chunksTotal get() = ceil(totalHeight / viewport.height).roundToInt()
 }
 
+/**
+ * Tab state information for multi-tab browser context.
+ */
+data class TabState(
+    val id: String,           // Tab ID, aligned with Browser.drivers key
+    val driverId: Int? = null, // Driver ID for diagnostics
+    val url: String,          // Current URL of the tab
+    val title: String? = null, // Tab title
+    val active: Boolean = false // Whether this is the active tab
+)
+
 data class BrowserState(
     val url: String,
     val goBackUrl: String? = null,
     val goForwardUrl: String? = null,
     val clientInfo: ClientInfo,
-    val scrollState: ScrollState
+    val scrollState: ScrollState,
+    val tabs: List<TabState> = emptyList(),
+    val activeTabId: String? = null
 ) {
     @get:JsonIgnore
     val lazyJson: String by lazy { DOMSerializer.toJson(this) }
