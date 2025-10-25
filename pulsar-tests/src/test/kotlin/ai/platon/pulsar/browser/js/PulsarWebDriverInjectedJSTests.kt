@@ -76,6 +76,8 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
 
         val result = driver.evaluateValue(expression)
         printlnPro(result)
+        assertTrue { result?.toString()?.contains("META_INFORMATION_ID") == true }
+        assertTrue { result?.toString()?.contains("propertyNames") == true }
     }
 
     @Test
@@ -86,9 +88,11 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
 
         // Find the actual utils object name (it has a random prefix)
         val utilsObjectName = driver.evaluateValue("""
-            const globalKeys = Object.keys(window);
-            const utilsKey = globalKeys.find(key => key.endsWith('utils__'));
-            return utilsKey || null;
+            (() => {
+                const globalKeys = Object.keys(window);
+                const utilsKey = globalKeys.find(key => key.endsWith('utils__'));
+                return utilsKey || null;
+            })()
         """)
         printlnPro("DEBUG: Found utils object name = $utilsObjectName")
 

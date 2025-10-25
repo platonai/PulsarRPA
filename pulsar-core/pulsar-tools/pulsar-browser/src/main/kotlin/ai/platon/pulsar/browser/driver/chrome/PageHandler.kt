@@ -243,7 +243,7 @@ class PageHandler(
         // return cdpEvaluate(expression2, returnByValue = true)
 
         // returnByValue: Whether the result is expected to be a JSON object that should be sent by value.
-        return runtimeAPI?.evaluate(expression, returnByValue = true)
+        return runtimeAPI?.evaluate(expression2, returnByValue = true)
     }
 
     /**
