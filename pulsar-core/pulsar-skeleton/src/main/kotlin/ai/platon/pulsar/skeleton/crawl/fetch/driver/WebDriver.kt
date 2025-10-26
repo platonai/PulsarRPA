@@ -1111,6 +1111,19 @@ interface WebDriver : Closeable {
     suspend fun outerHTML(selector: String): String?
 
     /**
+     * Returns the document's text content.
+     *
+     * If the document does not exist, returns null.
+     *
+     * ```kotlin
+     * val text = driver.textContent()
+     * ```
+     *
+     * @return The text content of the document.
+     * */
+    suspend fun textContent(): String?
+
+    /**
      * Returns the node's text content, the node is located by [selector].
      *
      * If the node does not exist, returns null.

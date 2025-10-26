@@ -386,6 +386,10 @@ abstract class AbstractWebDriver(
         return evaluate("__pulsar_utils__.outerHTML('$selector')")?.toString()
     }
 
+    override suspend fun textContent(): String? {
+        return evaluate("document.body.textContent")?.toString()
+    }
+
     @Throws(WebDriverException::class)
     override suspend fun selectFirstTextOrNull(selector: String): String? {
         return evaluate("__pulsar_utils__.selectFirstText('$selector')")?.toString()
