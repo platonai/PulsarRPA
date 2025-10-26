@@ -4,11 +4,10 @@ import ai.platon.pulsar.agentic.context.AgenticContexts
 
 class InstructionsExample {
     val session = AgenticContexts.getOrCreateSession(spa = true)
-    val driver = session.context.launchDefaultBrowser().newDriver()
 
     suspend fun run() {
+        val driver = session.createBoundDriver()
         driver.navigateTo("https://news.ycombinator.com/news")
-        session.bindDriver(driver)
         session.act("search for 'browser'")
     }
 }
