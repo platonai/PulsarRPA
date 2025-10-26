@@ -4,39 +4,6 @@ import ai.platon.pulsar.skeleton.ai.support.ToolCall
 import java.time.Instant
 
 /**
- * Configuration for enhanced error handling and retry mechanisms
- */
-data class AgentConfig(
-    val maxSteps: Int = 100,
-    val maxRetries: Int = 3,
-    val baseRetryDelayMs: Long = 1000,
-    val maxRetryDelayMs: Long = 30000,
-    val consecutiveNoOpLimit: Int = 5,
-    val actionGenerationTimeoutMs: Long = 30000,
-    val screenshotCaptureTimeoutMs: Long = 5000,
-    val enableStructuredLogging: Boolean = false,
-    val enableDebugMode: Boolean = false,
-    val enablePerformanceMetrics: Boolean = true,
-    val memoryCleanupIntervalSteps: Int = 50,
-    val maxHistorySize: Int = 100,
-    val enableAdaptiveDelays: Boolean = true,
-    val enablePreActionValidation: Boolean = true,
-    // New configuration options for fixes
-    val actTimeoutMs: Long = 30_000,
-    val llmInferenceTimeoutMs: Long = 60_000,
-    val maxResultsToTry: Int = 3,
-    val screenshotEveryNSteps: Int = 1,
-    val domSettleTimeoutMs: Long = 2000,
-    val domSettleCheckIntervalMs: Long = 100,
-    val allowLocalhost: Boolean = false,
-    val allowedPorts: Set<Int> = setOf(80, 443, 8080, 8443, 3000, 5000, 8000, 9000),
-    val maxSelectorLength: Int = 1000,
-    val denyUnknownActions: Boolean = false,
-    // Overall timeout for resolve() to avoid indefinite hangs
-    val resolveTimeoutMs: Long = 60 * 60_000
-)
-
-/**
  * Enhanced error classification for better retry strategies
  */
 sealed class PerceptiveAgentError(message: String, cause: Throwable? = null) : Exception(message, cause) {

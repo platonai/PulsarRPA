@@ -17,7 +17,7 @@ import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import ai.platon.pulsar.skeleton.ai.support.ToolCall
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
+import ai.platon.pulsar.skeleton.ai.support.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser

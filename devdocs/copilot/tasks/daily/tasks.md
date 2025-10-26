@@ -36,3 +36,7 @@ Read root README-AI.md and `devdocs/copilot/test-guide.md` for guidelines
 ### CDP scrolling methods in PulsarWebDriver
 
 使用 CDP 方法实现 PulsarWebDriver 的 scroll 方法。
+
+## Notes
+
+- if a tool call not handled by parser in ToolCallExecutor, fallback to ToolCallExecutor.eval()

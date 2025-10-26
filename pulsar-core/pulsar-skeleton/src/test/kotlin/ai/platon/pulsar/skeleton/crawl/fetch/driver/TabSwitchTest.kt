@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.ClientInfo
 import ai.platon.pulsar.browser.driver.chrome.dom.model.ScrollState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
+import ai.platon.pulsar.skeleton.ai.support.ToolCallExecutor
 import ai.platon.pulsar.skeleton.ai.support.ToolCall
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.junit.jupiter.api.Assertions.*
@@ -14,7 +15,7 @@ import java.util.Locale
 class TabSwitchTest {
 
     private val mapper = jacksonObjectMapper()
-    
+
     private fun createTestClientInfo() = ClientInfo(
         timeZone = "UTC",
         locale = Locale.US,
@@ -23,7 +24,7 @@ class TabSwitchTest {
         screenWidth = 1920,
         screenHeight = 1080
     )
-    
+
     private fun createTestScrollState() = ScrollState(
         x = 0.0,
         y = 0.0,

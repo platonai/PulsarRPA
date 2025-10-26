@@ -1,9 +1,12 @@
-package ai.platon.pulsar.skeleton.crawl.fetch.driver
+package ai.platon.pulsar.skeleton.ai.support
 
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
-import ai.platon.pulsar.skeleton.ai.support.ToolCall
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.NavigateEntry
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import java.time.Duration
 import javax.script.ScriptEngineManager
 
 /**
@@ -113,14 +116,14 @@ class ToolCallExecutor {
         // Extract function name and arguments from the command string
         val (objectName, functionName, args) = parseKotlinFunctionExpression(command) ?: return null
 
-        return execute1(objectName, functionName, args, driver)
+        return doExecute(objectName, functionName, args, driver)
     }
 
     /**
      * Extract function name and arguments from the command string
      * */
     @Suppress("UNUSED_PARAMETER")
-    private suspend fun execute1(
+    private suspend fun doExecute(
         objectName: String,
         functionName: String,
         args: Map<String, Any?>,
@@ -529,9 +532,9 @@ class ToolCallExecutor {
             "waitForPage" -> {
                 // Wait for navigation to a specific URL
                 if (args.size >= 2) {
-                    driver.waitForPage(arg0!!, java.time.Duration.ofMillis(arg1!!.toLongOrNull() ?: 30000L))
+                    driver.waitForPage(arg0!!, Duration.ofMillis(arg1!!.toLongOrNull() ?: 30000L))
                 } else if (args.isNotEmpty()) {
-                    driver.waitForPage(arg0!!, java.time.Duration.ofMillis(30000L))
+                    driver.waitForPage(arg0!!, Duration.ofMillis(30000L))
                 } else {
                     null
                 }
@@ -764,37 +767,17 @@ driver.scrollToMiddle(ratio: Double = 0.5)
 driver.scrollToScreen(screenNumber: Double)
 driver.goBack()
 driver.goForward()
+
+driver.outerHTML(selector: String): String?
+// Returns the node's text content, the node is located by [selector]. If the node does not exist, returns null.
+driver.selectFirstTextOrNull(selector: String): String?
+// Returns a list of text contents of all the elements matching the specified selector within the page.
+driver.selectTextAll(selector: String): List<String>
+
 browser.switchTab(tabId: String): Int
     """
 
-        const val TOOL_CALL_LIST_1 = """
-driver.navigateTo(url: String)
-driver.waitForSelector(selector: String, timeoutMillis: Long = 5000)
-driver.exists(selector: String): Boolean
-driver.isVisible(selector: String): Boolean
-driver.focus(selector: String)
-driver.click(selector: String)
-driver.fill(selector: String, text: String)
-driver.type(selector: String, text: String)
-driver.press(selector: String, key: String)
-driver.check(selector: String)
-driver.uncheck(selector: String)
-driver.scrollDown(count: Int = 1)
-driver.scrollUp(count: Int = 1)
-driver.scrollTo(selector: String)
-driver.scrollToTop()
-driver.scrollToBottom()
-driver.scrollToMiddle(ratio: Double = 0.5)
-driver.scrollToScreen(screenNumber: Double)
-driver.waitForNavigation(oldUrl: String = "", timeoutMillis: Long = 5000): Long
-driver.goBack()
-driver.goForward()
-driver.delay(millis: Long = 1000)
-
-// switch to a tab with tab id, the tab id will be added to BrowserState
-// the function returns the driver id can be used to locate the driver from Browser.drivers
-browser.switchTab(tabId: String): Int
-
+        const val AGENT_TOOL_CALL_LIST = """
 agent.observe(instruction: String): List<ObserveResult>
 agent.observe(options: ObserveOptions): List<ObserveResult>
 agent.act(action: String): ActResult

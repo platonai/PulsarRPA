@@ -10,7 +10,7 @@ import kotlin.concurrent.withLock
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2023 Platon AI. All rights reserved.
  */
-data class NavigateEntry(
+data class NavigateEntry constructor(
     /**
      * The url to navigate.
      *
@@ -19,7 +19,7 @@ data class NavigateEntry(
      * */
     val url: String,
     /**
-     * The page id, 0 means there is no WebPage.
+     * The in-process page id, 0 means there is no WebPage.
      * */
     val pageId: Long = 0,
     /**
@@ -31,6 +31,10 @@ data class NavigateEntry(
      * The referrer claimed by the page.
      */
     var pageReferrer: String? = null,
+    /**
+     * The user typed url return from the browser, should be the same as `url`.
+     * */
+    var userTypedUrl: String? = null,
     /**
      * Indicate if the navigation is stopped.
      */

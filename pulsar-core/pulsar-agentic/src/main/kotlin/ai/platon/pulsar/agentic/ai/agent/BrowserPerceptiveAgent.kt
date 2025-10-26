@@ -4,14 +4,7 @@ import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.SimpleMessage
 import ai.platon.pulsar.agentic.ai.SimpleMessageList
-import ai.platon.pulsar.agentic.ai.agent.detail.ActionValidator
-import ai.platon.pulsar.agentic.ai.agent.detail.AgentConfig
-import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
-import ai.platon.pulsar.agentic.ai.agent.detail.PageStateTracker
-import ai.platon.pulsar.agentic.ai.agent.detail.PerceptiveAgentError
-import ai.platon.pulsar.agentic.ai.agent.detail.PerformanceMetrics
-import ai.platon.pulsar.agentic.ai.agent.detail.StructuredAgentLogger
-import ai.platon.pulsar.agentic.ai.agent.detail.ToolCallResponse
+import ai.platon.pulsar.agentic.ai.agent.detail.*
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.InstructionResult
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
@@ -31,7 +24,7 @@ import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.ai.support.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.ToolCallExecutor
+import ai.platon.pulsar.skeleton.ai.support.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.google.gson.JsonElement
@@ -51,6 +44,39 @@ import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
 import kotlin.math.pow
+
+/**
+ * Configuration for enhanced error handling and retry mechanisms
+ */
+data class AgentConfig(
+    val maxSteps: Int = 100,
+    val maxRetries: Int = 3,
+    val baseRetryDelayMs: Long = 1000,
+    val maxRetryDelayMs: Long = 30000,
+    val consecutiveNoOpLimit: Int = 5,
+    val actionGenerationTimeoutMs: Long = 30000,
+    val screenshotCaptureTimeoutMs: Long = 5000,
+    val enableStructuredLogging: Boolean = false,
+    val enableDebugMode: Boolean = false,
+    val enablePerformanceMetrics: Boolean = true,
+    val memoryCleanupIntervalSteps: Int = 50,
+    val maxHistorySize: Int = 100,
+    val enableAdaptiveDelays: Boolean = true,
+    val enablePreActionValidation: Boolean = true,
+    // New configuration options for fixes
+    val actTimeoutMs: Long = 30_000,
+    val llmInferenceTimeoutMs: Long = 60_000,
+    val maxResultsToTry: Int = 3,
+    val screenshotEveryNSteps: Int = 1,
+    val domSettleTimeoutMs: Long = 2000,
+    val domSettleCheckIntervalMs: Long = 100,
+    val allowLocalhost: Boolean = false,
+    val allowedPorts: Set<Int> = setOf(80, 443, 8080, 8443, 3000, 5000, 8000, 9000),
+    val maxSelectorLength: Int = 1000,
+    val denyUnknownActions: Boolean = false,
+    // Overall timeout for resolve() to avoid indefinite hangs
+    val resolveTimeoutMs: Long = 60 * 60_000
+)
 
 class BrowserPerceptiveAgent(
     val driver: WebDriver,
