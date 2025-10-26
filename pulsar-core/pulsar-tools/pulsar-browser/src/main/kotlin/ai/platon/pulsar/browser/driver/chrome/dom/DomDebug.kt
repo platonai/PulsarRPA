@@ -57,6 +57,23 @@ object DomDebug {
         return TreeStats(maxDepth, count, leaves)
     }
 
+    // New: stats for NanoDOMTree
+    fun stats(root: NanoDOMTree): TreeStats {
+        var maxDepth = 0
+        var count = 0
+        var leaves = 0
+        fun dfs(n: NanoDOMTree?, d: Int) {
+            if (n == null) return
+            count++
+            if (d > maxDepth) maxDepth = d
+            val children = n.children ?: emptyList()
+            if (children.isEmpty()) leaves++
+            children.forEach { dfs(it, d + 1) }
+        }
+        dfs(root, 1)
+        return TreeStats(maxDepth, count, leaves)
+    }
+
     // ----- Bounds stats calculators -----
 
     private fun rectOf(n: DOMTreeNodeEx): DOMRect? {
@@ -97,13 +114,35 @@ object DomDebug {
         return BoundsStats(zero, positive, missing)
     }
 
+    // New: bounds stats for NanoDOMTree using CompactRect precedence clientRects -> absoluteBounds -> bounds
+    fun boundsStats(root: NanoDOMTree): BoundsStats {
+        var zero = 0
+        var positive = 0
+        var missing = 0
+        fun toNonZero(w: Double?): Double = w ?: 0.0
+        fun dfs(n: NanoDOMTree?) {
+            if (n == null) return
+            val r = n.clientRects ?: n.absoluteBounds ?: n.bounds
+            if (r == null) {
+                missing++
+            } else {
+                val w = toNonZero(r.width)
+                val h = toNonZero(r.height)
+                if (w > 0.0 && h > 0.0) positive++ else zero++
+            }
+            n.children?.forEach { dfs(it) }
+        }
+        dfs(root)
+        return BoundsStats(zero, positive, missing)
+    }
+
     // ----- Summaries -----
 
-    fun summarize(trees: TargetMultiTrees): String {
+    fun summarize(trees: TargetTrees): String {
         val s = stats(trees.domTree)
         val b = boundsStats(trees.domTree)
         return buildString {
-            appendLine("TargetAllTrees")
+            appendLine("TargetTrees")
             appendLine("- devicePixelRatio=${trees.devicePixelRatio}")
             appendLine("- timingsMs=${trees.cdpTiming}")
             appendLine("- options=${trees.options}")
@@ -160,9 +199,34 @@ object DomDebug {
         val original = root.originalNode
         val hashShort = original.elementHash?.take(12)
         return buildString {
-            appendLine("SlimNode")
+            appendLine("TinyNode")
             appendLine("- from nodeId=${original.nodeId} name=${original.nodeName} hash=${hashShort}")
             appendLine("- shouldDisplay=${root.shouldDisplay} interactiveIndex=${root.interactiveIndex}")
+            appendLine("- stats=($s)")
+            appendLine("- boundsStats=($b)")
+            // Also report zero vs non-zero bounds counts explicitly
+            appendLine("- bounds.zeroNonZero=(zero=${b.zero}, nonZero=${b.positive})")
+        }
+    }
+
+    fun summarize(root: NanoDOMTree): String {
+        val s = stats(root)
+        val b = boundsStats(root)
+        val label = buildString {
+            val name = root.nodeName ?: "?"
+            append(name)
+            val id = (root.attributes?.get("id") as? String)?.takeIf { it.isNotBlank() }
+            if (!id.isNullOrBlank()) append("#").append(id)
+            val cls = (root.attributes?.get("class") as? String)
+                ?.trim()?.split(Regex("\\s+")).orEmpty().take(2)
+                .filter { it.isNotBlank() }
+            if (cls.isNotEmpty()) append(".").append(cls.joinToString("."))
+        }
+        return buildString {
+            appendLine("NanoDOMTree")
+            appendLine("- root locator=${root.locator} label=${label}")
+            appendLine("- scrollable=${root.scrollable} interactive=${root.interactive} invisible=${root.invisible}")
+            appendLine("- bounds=${root.clientRects ?: root.absoluteBounds ?: root.bounds}")
             appendLine("- stats=($s)")
             appendLine("- boundsStats=($b)")
             // Also report zero vs non-zero bounds counts explicitly

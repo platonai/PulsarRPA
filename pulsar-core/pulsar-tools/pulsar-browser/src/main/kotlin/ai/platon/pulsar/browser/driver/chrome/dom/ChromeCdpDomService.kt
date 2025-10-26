@@ -4,13 +4,9 @@ import ai.platon.cdt.kt.protocol.types.accessibility.AXNode
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.AccessibilityHandler.AccessibilityTreeResult
 import ai.platon.pulsar.browser.driver.chrome.dom.model.*
-import ai.platon.pulsar.common.MessageWriter
-import ai.platon.pulsar.common.TmpFile
 import ai.platon.pulsar.common.getLogger
-import com.google.gson.Gson
 import com.ibm.icu.util.TimeZone
 import java.awt.Dimension
-import java.time.Instant
 import java.util.*
 import kotlin.math.abs
 
@@ -61,7 +57,7 @@ class ChromeCdpDomService(
         return domState
     }
 
-    override suspend fun getMultiDOMTrees(target: PageTarget, options: SnapshotOptions): TargetMultiTrees {
+    override suspend fun getMultiDOMTrees(target: PageTarget, options: SnapshotOptions): TargetTrees {
         val startTime = System.currentTimeMillis()
         val timings = mutableMapOf<String, Long>()
 
@@ -121,7 +117,7 @@ class ChromeCdpDomService(
             enhancedAx.size, snapshotByBackendId.size, devicePixelRatio, timings
         )
 
-        return TargetMultiTrees(
+        return TargetTrees(
             domTree = dom,
             axTree = enhancedAx,
             snapshotByBackendId = snapshotByBackendId,
@@ -134,7 +130,7 @@ class ChromeCdpDomService(
         )
     }
 
-    override fun buildEnhancedDomTree(trees: TargetMultiTrees): DOMTreeNodeEx {
+    override fun buildEnhancedDomTree(trees: TargetTrees): DOMTreeNodeEx {
         val options = trees.options
         // Build ancestor map for XPath and hash generation
         val ancestorMap = buildAncestorMap(trees.domTree)
@@ -238,7 +234,7 @@ class ChromeCdpDomService(
         return buildTinyTree(trees)
     }
 
-    override fun buildTinyTree(trees: TargetMultiTrees): TinyTree {
+    override fun buildTinyTree(trees: TargetTrees): TinyTree {
         val enhanced = buildEnhancedDomTree(trees)
         val hasElements = enhanced.children.isNotEmpty() ||
                 enhanced.shadowRoots.isNotEmpty() ||
@@ -286,8 +282,8 @@ class ChromeCdpDomService(
         // Navigation history for back/forward URLs (resilient)
         val (goBackUrl, goForwardUrl) = runCatching {
             val history = devTools.page.getNavigationHistory()
-            val currentIndex = history?.currentIndex ?: -1
-            val entries = history?.entries ?: emptyList()
+            val currentIndex = history.currentIndex
+            val entries = history.entries
             val back = entries.getOrNull(currentIndex - 1)?.url
             val forward = entries.getOrNull(currentIndex + 1)?.url
             back to forward

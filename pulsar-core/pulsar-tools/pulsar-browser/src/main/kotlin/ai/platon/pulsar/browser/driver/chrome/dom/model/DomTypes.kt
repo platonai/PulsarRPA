@@ -27,7 +27,7 @@ data class SnapshotOptions(
 /**
  * Result from collecting all trees (DOM, AX, Snapshot) for a target.
  */
-data class TargetMultiTrees(
+data class TargetTrees(
     val snapshot: Map<String, Any>? = null,
     val domTree: DOMTreeEx = DOMTreeEx(),
     val axTree: List<AXNodeEx> = emptyList(),

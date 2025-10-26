@@ -295,11 +295,6 @@ open class TextToAction(
   ]
 }
 
-- 工具调用时，将 `locator` 视为 `selector`
-- 确保 `locator` 与对应的无障碍树节点属性完全匹配，可以定位该节点
-- 不提供不能确定的参数
-- 要求 json 输出时，禁止包含任何额外文本
-
 2) 任务完成输出：
 
 {"taskComplete":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]}
@@ -314,6 +309,10 @@ open class TextToAction(
 ${ToolCallExecutor.TOOL_CALL_LIST}
 ```
 
+- 将 `locator` 视为 `selector`
+- 确保 `locator` 与对应的无障碍树节点属性完全匹配，准确定位该节点
+- 不提供不能确定的参数
+- 要求 json 输出时，禁止包含任何额外文本
 - 注意：用户难以区分按钮和链接
 - 若操作与页面无关，返回空数组
 - 只返回一个最相关的操作
