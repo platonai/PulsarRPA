@@ -154,9 +154,9 @@ abstract class ChromeDevToolsImpl(
                     throw ChromeRPCException(it.first.code, it.second)
                 }
             }
-
             // If the expected return type is `Void`, return null.
             Void.TYPE == clazz -> null
+            rpcResult.result == null -> null
 
             // If returnTypeClasses is provided, use it for deserialization.
             returnTypeClasses != null -> dispatcher.deserialize(returnTypeClasses, clazz, rpcResult.result)
@@ -166,7 +166,7 @@ abstract class ChromeDevToolsImpl(
         }
     }
 
-    @Throws(ChromeIOException::class, InterruptedException::class)
+    @Throws(ChromeIOException::class)
     private suspend fun sendAndReceive(
         methodId: Long, method: String, returnProperty: String?, rawMessage: String
     ): RpcResult? {

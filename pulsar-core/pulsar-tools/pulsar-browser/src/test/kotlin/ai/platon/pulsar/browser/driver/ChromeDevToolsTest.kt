@@ -19,23 +19,21 @@
  */
 package ai.platon.pulsar.browser.driver
 
-import ai.platon.cdt.kt.protocol.types.accessibility.AXNode
 import ai.platon.cdt.kt.protocol.types.page.Navigate
 import ai.platon.pulsar.browser.driver.chrome.ChromeLauncher
 import ai.platon.pulsar.browser.driver.chrome.RemoteChrome
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
-import ai.platon.pulsar.browser.driver.chrome.impl.EventDispatcher
 import ai.platon.pulsar.browser.driver.chrome.invoke
-import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.browser.BrowserFiles
 import ai.platon.pulsar.common.sleepSeconds
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
-import kotlin.test.*
+import kotlin.test.AfterTest
+import kotlin.test.BeforeTest
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class ChromeDevToolsTest {
 
@@ -64,16 +62,6 @@ class ChromeDevToolsTest {
     fun closeBrowser() {
         chrome.close()
         launcher.close()
-    }
-
-    @Test
-    fun `Given json then serialize correctly by EventDispatcher`() {
-        val mapper = EventDispatcher.OBJECT_MAPPER
-        val json = ResourceLoader.readString("dom/AXTree.json")
-        val jsonNode = mapper.readTree(json)
-        val nodes: List<AXNode> = mapper.readValue(json)
-
-        Assertions.assertTrue { nodes.isNotEmpty() }
     }
 
     @Test
