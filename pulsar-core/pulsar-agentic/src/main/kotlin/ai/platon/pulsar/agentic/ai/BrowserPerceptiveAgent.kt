@@ -116,6 +116,7 @@ class BrowserPerceptiveAgent(
 
     // Enhanced state management
     private val _actionHistory = mutableListOf<String>()
+    private val _recordHistory = mutableListOf<String>()
     private val performanceMetrics = PerformanceMetrics()
     private val retryCounter = AtomicInteger(0)
     private val consecutiveFailureCounter = AtomicInteger(0)
@@ -1137,7 +1138,7 @@ class BrowserPerceptiveAgent(
     }
 
     /**
-     * Enhanced history management
+     * history management
      */
     private fun addToHistory(entry: String) {
         _actionHistory.add(entry)
@@ -1148,55 +1149,15 @@ class BrowserPerceptiveAgent(
     }
 
     private fun addToRecordHistory(entry: String) {
-
+        _recordHistory.add(entry)
     }
 
     /**
      * Gets current URL with error handling
      */
     private suspend fun getCurrentUrl(): String {
-        val driver = requireNotNull(activeDriver)
+        val driver = activeDriver
         return runCatching { driver.currentUrl() }.getOrNull().orEmpty()
-    }
-
-    /**
-     * Builds the full model execution message by concatenating the system prompt, the user/context block,
-     * and an optional screenshot marker on separate lines.
-     *
-     * Result format (lines separated by '\n'):
-     *  1) systemPrompt
-     *  2) userMsg
-     *  3) "[Current page screenshot provided as base64 image]" (only if screenshotB64 != null)
-     *
-     * Notes:
-     * - The base64 screenshot itself is NOT embedded to reduce token usage; only a marker line is added so the model
-     *   understands an image attachment is present in the multimodal payload handled elsewhere.
-     * - Each call to appendLine adds a trailing newline. When no screenshot is provided, the returned string ends with
-     *   a newline after userMsg.
-     *
-     * Example:
-     *   systemPrompt = "You are a browsing agent..."
-     *   userMsg = "Goal: Buy a laptop...\nCurrent URL: https://example.com"
-     *   screenshotB64 = "iVBORw0KGgo..." (omitted)
-     *
-     *   Returns:
-     *   You are a browsing agent...
-     *   Goal: Buy a laptop...
-     *   Current URL: https://example.com
-     *   [Current page screenshot provided as base64 image]
-     *
-     * @param systemPrompt Agent system instructions placed at the top of the message
-     * @param userMsg Human-readable state/instruction assembled for the current step
-     * @param screenshotB64 Optional base64 PNG/JPEG screenshot; if non-null, only a marker line is appended
-     * @return A multi-line String ready for the LLM as the text part of a multimodal request
-     */
-    private fun buildCurrentStepMessage(systemPrompt: String, screenshotB64: String?): String {
-        return buildString {
-            appendLine(systemPrompt)
-            if (screenshotB64 != null) {
-                appendLine("[Current page screenshot provided as base64 image]")
-            }
-        }
     }
 
     /**
@@ -1371,31 +1332,6 @@ class BrowserPerceptiveAgent(
         }.onFailure { e ->
             slogger.logError("Screenshot capture failed", e, context.sessionId)
         }.getOrNull()
-    }
-
-    /**
-     * Enhanced screenshot saving with error handling and validation
-     */
-    private suspend fun saveStepScreenshot(b64: String) {
-        val currentUrl = getCurrentUrl()
-        val context = ExecutionContext(uuid.toString(), 0, "save_screenshot", currentUrl)
-
-        runCatching {
-            // Validate base64 string
-            if (b64.length > 50 * 1024 * 1024) { // 50MB limit
-                slogger.info("Screenshot too large, skipping save", context, mapOf("size" to b64.length))
-                return
-            }
-
-            val ts = Instant.now().toEpochMilli()
-            val p = baseDir.resolve("screenshot-${ts}.b64")
-            slogger.info("Saving step screenshot", context, mapOf("path" to p.toString()))
-
-            Files.writeString(p, b64)
-            slogger.info("Screenshot saved successfully", context, mapOf("size" to b64.length))
-        }.onFailure { e ->
-            slogger.logError("Save screenshot failed", e, context.sessionId)
-        }
     }
 
     /**

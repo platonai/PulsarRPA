@@ -11,7 +11,10 @@ driver.waitForSelector(selector: String, timeoutMillis: Long = 5000)
 driver.exists(selector: String): Boolean
 driver.isVisible(selector: String): Boolean
 driver.focus(selector: String)
+// focus on an element with [selector] and click it
 driver.click(selector: String)
+// focus on an element with [selector] and click it with modifier pressed
+driver.check(selector: String, modifier: String)
 driver.fill(selector: String, text: String)
 driver.type(selector: String, text: String)
 driver.press(selector: String, key: String)
@@ -21,11 +24,11 @@ driver.scrollTo(selector: String)
 driver.scrollToTop()
 driver.scrollToBottom()
 driver.scrollToMiddle(ratio: Double = 0.5)
-driver.scrollToScreen(screenNumber: Double)
+// scroll to the [n]th viewport position, 0-based
+driver.scrollToViewport(n: Double)
 driver.goBack()
 driver.goForward()
 
-driver.outerHTML(selector: String): String?
 // Returns the node's text content, the node is located by [selector]. If the node does not exist, returns null.
 driver.selectFirstTextOrNull(selector: String): String?
 // Returns a list of text contents of all the elements matching the specified selector within the page.

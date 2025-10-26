@@ -72,8 +72,6 @@ data class NavigateEntry constructor(
 
     var mainFrameId: String? = null
     val mainFrameReceived get() = mainFrameId != null
-    @Deprecated("Use mainFrameReceived instead", ReplaceWith("mainFrameReceived"))
-    val documentTransferred get() = mainResponseStatus > 0
 
     /**
      * The time when the document is ready.
