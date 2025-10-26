@@ -1,7 +1,7 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.common.printlnPro
-import ai.platon.pulsar.util.server.EnabledMockServerApplication
+import ai.platon.pulsar.util.server.EnableMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -15,7 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest
  * These tests verify that the new tools are properly exposed to AI models and work correctly
  * with the Mock Server test pages.
  */
-@SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = [EnableMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class NewToolsIntegrationTest : TextToActionTestBase() {
 
     @BeforeEach

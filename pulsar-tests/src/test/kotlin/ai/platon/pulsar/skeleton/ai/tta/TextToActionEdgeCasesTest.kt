@@ -3,7 +3,7 @@ package ai.platon.pulsar.skeleton.ai.tta
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
-import ai.platon.pulsar.util.server.EnabledMockServerApplication
+import ai.platon.pulsar.util.server.EnableMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
@@ -15,7 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest
  */
 @Tag("ExternalServiceTest")
 @Tag("TimeConsumingTest")
-@SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = [EnableMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionEdgeCasesTest : TextToActionTestBase() {
 
     @BeforeEach

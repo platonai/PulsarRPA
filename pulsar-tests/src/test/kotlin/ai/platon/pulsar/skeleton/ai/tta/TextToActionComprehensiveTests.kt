@@ -1,10 +1,9 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.common.printlnPro
-import ai.platon.pulsar.util.server.EnabledMockServerApplication
+import ai.platon.pulsar.util.server.EnableMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
 
@@ -12,7 +11,7 @@ import org.springframework.boot.test.context.SpringBootTest
  * Comprehensive tests for TextToAction.generateWebDriverAction() method
  * Testing with real mocker server pages to ensure realistic scenarios
  */
-@SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = [EnableMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionComprehensiveTests : TextToActionTestBase() {
 
     @BeforeEach

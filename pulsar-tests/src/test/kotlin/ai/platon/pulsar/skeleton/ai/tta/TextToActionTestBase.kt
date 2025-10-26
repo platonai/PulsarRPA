@@ -8,13 +8,13 @@ import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.common.printlnPro
-import ai.platon.pulsar.util.server.EnabledMockServerApplication
+import ai.platon.pulsar.util.server.EnableMockServerApplication
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll
 import org.springframework.boot.test.context.SpringBootTest
 
-@SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = [EnableMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionTestBase : WebDriverTestBase() {
 
     companion object {

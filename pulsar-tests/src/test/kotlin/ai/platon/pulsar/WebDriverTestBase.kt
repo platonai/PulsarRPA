@@ -14,14 +14,14 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
-import ai.platon.pulsar.util.server.EnabledMockServerApplication
+import ai.platon.pulsar.util.server.EnableMockServerApplication
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeEach
 import org.springframework.boot.test.context.SpringBootTest
 import java.util.concurrent.atomic.AtomicBoolean
 
 @SpringBootTest(
-    classes = [EnabledMockServerApplication::class],
+    classes = [EnableMockServerApplication::class],
     webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
 )
 open class WebDriverTestBase : TestWebSiteAccess() {

@@ -13,4 +13,4 @@ import org.springframework.test.context.ContextConfiguration
 )
 @ImportResource("classpath:test-beans/app-context.xml")
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
-class EnabledMockServerApplication
+class EnableMockServerApplication

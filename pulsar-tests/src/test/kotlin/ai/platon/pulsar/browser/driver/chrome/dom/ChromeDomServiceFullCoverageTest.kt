@@ -16,10 +16,11 @@ import java.nio.file.Paths
 import kotlin.test.assertIs
 
 class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
+    private val testURL = interactiveDynamicURL
 
     @Test
     fun `Get trees, build and serialize end-to-end with assertions`() =
-        runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
+        runEnhancedWebDriverTest(testURL) { driver ->
             assertIs<PulsarWebDriver>(driver)
             val devTools = driver.implementation as RemoteDevTools
             val service = ChromeCdpDomService(devTools)
@@ -64,7 +65,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
 
     @Test
     fun `Find element using css, xpath, backend id, element hash and convert to interacted element`() =
-        runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
+        runEnhancedWebDriverTest(testURL) { driver ->
             assertIs<PulsarWebDriver>(driver)
             val devTools = driver.implementation as RemoteDevTools
             val service = ChromeCdpDomService(devTools)
@@ -184,7 +185,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
 
     @Test
     fun `Scrollability and interactivity analysis on dynamic content`() =
-        runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
+        runEnhancedWebDriverTest(testURL) { driver ->
             assertIs<PulsarWebDriver>(driver)
             val devTools = driver.implementation as RemoteDevTools
             val service = driver.domService
@@ -290,7 +291,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
 
     @Test
     fun `Dynamic content load is reflected in enhanced DOM tree`() =
-        runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
+        runEnhancedWebDriverTest(testURL) { driver ->
             assertIs<PulsarWebDriver>(driver)
             val devTools = driver.implementation as RemoteDevTools
             val service = ChromeCdpDomService(devTools)
@@ -329,7 +330,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
             val dynamic = service.findElement(ElementRefCriteria(cssSelector = "#dynamicContent"))
                 ?: findNodeById(root, "dynamicContent")
             assertNotNull(dynamic, "Expected #dynamicContent to exist in DOM")
-            val klass = dynamic!!.attributes["class"] ?: ""
+            val klass = dynamic.attributes["class"] ?: ""
             printlnPro(DomDebug.summarize(dynamic))
 
             // Hard assertion: ensure 'loaded' class is present in the enhanced DOM snapshot as well
@@ -341,7 +342,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
 
     @Test
     fun `SnapshotNodeEx bounds and rects are populated correctly`() =
-        runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
+        runEnhancedWebDriverTest(testURL) { driver ->
             assertIs<PulsarWebDriver>(driver)
             val devTools = driver.implementation as RemoteDevTools
             val service = ChromeCdpDomService(devTools)
@@ -365,13 +366,13 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
             // Test bounds on body element
             val bodyNode = service.findElement(ElementRefCriteria(cssSelector = "body"))
             assertNotNull(bodyNode, "Expected body element to be found")
-            val bodySnapshot = bodyNode!!.snapshotNode
+            val bodySnapshot = bodyNode.snapshotNode
             assertNotNull(bodySnapshot, "Expected body to have snapshot data")
 
             // Test clientRects property (CDP may not populate bounds for body/html, but clientRects should be available)
-            val bounds = bodySnapshot!!.bounds ?: bodySnapshot.clientRects
+            val bounds = bodySnapshot.bounds ?: bodySnapshot.clientRects
             assertNotNull(bounds, "Expected body snapshot to have bounds or clientRects")
-            assertTrue(bounds!!.width > 0, "Expected bounds width to be positive")
+            assertTrue(bounds.width > 0, "Expected bounds width to be positive")
             assertTrue(bounds.height > 0, "Expected bounds height to be positive")
             printlnPro("Body bounds: x=${bounds.x}, y=${bounds.y}, width=${bounds.width}, height=${bounds.height}")
 
@@ -403,7 +404,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         }
 
     @Test
-    fun `SnapshotNodeEx bounds on interactive elements`() = runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
+    fun `SnapshotNodeEx bounds on interactive elements`() = runEnhancedWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
         val devTools = driver.implementation as RemoteDevTools
         val service = ChromeCdpDomService(devTools)
@@ -575,7 +576,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
 
     @Test
     fun `SnapshotNodeEx scrollRects on scrollable container`() =
-        runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
+        runEnhancedWebDriverTest(testURL) { driver ->
             assertIs<PulsarWebDriver>(driver)
             val devTools = driver.implementation as RemoteDevTools
             val service = ChromeCdpDomService(devTools)
@@ -585,14 +586,14 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
 
             // Wait for container to be present
             var hasContainer = false
-            repeat(50) {
+            repeat(2) {
                 val ok = runCatching {
                     devTools.runtime.evaluate("document.getElementById('virtualScrollContainer') != null")
                 }.getOrNull()?.result?.value?.toString()?.equals("true", ignoreCase = true) == true
                 if (ok) {
                     hasContainer = true; return@repeat
                 }
-                Thread.sleep(200)
+                Thread.sleep(1000)
             }
             assertTrue(hasContainer, "Expected #virtualScrollContainer to be present")
 
@@ -614,14 +615,14 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
             val scrollContainer = service.findElement(ElementRefCriteria(cssSelector = "#virtualScrollContainer"))
             assertNotNull(scrollContainer, "Expected scroll container to be found")
 
-            val snapshot = scrollContainer!!.snapshotNode
+            val snapshot = scrollContainer.snapshotNode
             assertNotNull(snapshot, "Expected scroll container to have snapshot data")
             printlnPro(DomDebug.summarize(scrollContainer))
 
             // Test bounds (use clientRects as fallback since CDP may not populate bounds for all elements)
-            val bounds = snapshot!!.bounds ?: snapshot.clientRects
+            val bounds = snapshot.bounds ?: snapshot.clientRects
             assertNotNull(bounds, "Expected scroll container to have bounds or clientRects")
-            assertTrue(bounds!!.width > 0, "Expected scroll container bounds width to be positive")
+            assertTrue(bounds.width > 0, "Expected scroll container bounds width to be positive")
             assertTrue(bounds.height > 0, "Expected scroll container bounds height to be positive")
             printlnPro("ScrollContainer bounds: x=${bounds.x}, y=${bounds.y}, width=${bounds.width}, height=${bounds.height}")
 

@@ -26,10 +26,10 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
         includeDomRects: Boolean = true,
         includeAbsoluteCoords: Boolean = true
     ): Map<Int, SnapshotNodeEx> {
-        val computed = if (includeStyles) REQUIRED_COMPUTED_STYLES else emptyList()
+        val computedStyles = if (includeStyles) REQUIRED_COMPUTED_STYLES else emptyList()
         val capture = try {
             domSnapshot.captureSnapshot(
-                computed,
+                computedStyles,
                 includePaintOrder = includePaintOrder,
                 includeDOMRects = includeDomRects,
                 includeBlendedBackgroundColors = null,
@@ -81,7 +81,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
             }
 
             // Analyze stacking contexts
-            val stackingContexts: List<Int> = layout.stackingContexts.index?.let { rareIndices ->
+            val stackingContexts: List<Int> = layout.stackingContexts.index.let { rareIndices ->
                 if (rareIndices.isEmpty()) {
                     emptyList()
                 } else {
@@ -93,7 +93,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
                     }
                     flags.toList()
                 }
-            } ?: emptyList()
+            }
 
             for (row in 0 until rows) {
                 val nIdx = nodeIndex.getOrNull(row) ?: continue

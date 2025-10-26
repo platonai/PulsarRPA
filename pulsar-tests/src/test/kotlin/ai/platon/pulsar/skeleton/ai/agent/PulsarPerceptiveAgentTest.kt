@@ -8,7 +8,7 @@ import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.ExtractOptions
 import ai.platon.pulsar.skeleton.ai.ObserveOptions
-import ai.platon.pulsar.util.server.EnabledMockServerApplication
+import ai.platon.pulsar.util.server.EnableMockServerApplication
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.*
@@ -31,7 +31,7 @@ import kotlin.test.assertContains
  * - State management and history tracking
  */
 @Tag("IntegrationTest")
-@SpringBootTest(classes = [EnabledMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(classes = [EnableMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
     private val mapper = ObjectMapper()
