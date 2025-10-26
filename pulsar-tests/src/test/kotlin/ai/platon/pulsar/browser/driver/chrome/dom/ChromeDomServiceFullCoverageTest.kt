@@ -102,7 +102,6 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
 
             val direct = findNodeById(root, "loadingContainer")
             assertNotNull(direct)
-            requireNotNull(direct)
             printlnPro(DomDebug.summarize(direct))
 
             val viaXPath = direct.xpath?.let { service.findElement(ElementRefCriteria(xPath = it)) }
@@ -112,14 +111,8 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
             target = service.findElement(ElementRefCriteria(cssSelector = "body"))
             assertNotNull(target)
 
-            if (target == null) {
-                // As a last resort, use the enhanced root to exercise toInteractedElement
-                target = root
-            }
-            assertNotNull(target)
-
             // Obtain stable references from the resolved node
-            val t = requireNotNull(target) { "Expected a non-null target element" }
+            val t = target
             val xPath = t.xpath
             val backendId = t.backendNodeId
             val elementHash = t.elementHash
@@ -135,14 +128,14 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
             if (backendId != null) {
                 val byBackend = service.findElement(ElementRefCriteria(backendNodeId = backendId))
                 assertNotNull(byBackend)
-                assertEquals(t.nodeId, byBackend!!.nodeId)
+                assertEquals(t.nodeId, byBackend.nodeId)
             }
 
             // By element hash
             if (!elementHash.isNullOrBlank()) {
                 val byHash = service.findElement(ElementRefCriteria(elementHash = elementHash))
                 assertNotNull(byHash)
-                assertEquals(t.nodeId, byHash!!.nodeId)
+                assertEquals(t.nodeId, byHash.nodeId)
             }
 
             // Convert to interacted element (should include hash)

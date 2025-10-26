@@ -13,7 +13,6 @@ import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 
@@ -109,6 +108,56 @@ class PageHandler(
     @Throws(ChromeDriverException::class)
     suspend fun querySelector(selector: String): NodeRef? {
         return resolveSelector(selector)
+    }
+
+    /**
+     * Resolves a selector to a `NodeRef` object, which contains information about the DOM node.
+     * This method supports two types of selectors:
+     * 1. Regular CSS selector: Resolves to a `NodeRef` using `querySelectorOrNull`.
+     * 2. Backend node ID selector: Resolves to a `NodeRef` using `resolveByBackendNodeId`.
+     *
+     * @param selector A string representing the selector. It can be:
+     * - A CSS selector (e.g., "div.class", "#id").
+     * - A backend node ID in the format "backend:123".
+     * - A frame-backendNode int the format "fbn:FRAMExID,123"
+     *
+     * @return A `NodeRef` object if the selector resolves successfully, or `null` if not found.
+     *
+     * @throws ChromeDriverException If an error occurs during the resolution process.
+     */
+    @Throws(ChromeDriverException::class)
+    suspend fun resolveSelector(selector: String): NodeRef? {
+        // Parse the selector into a Locator object. If parsing fails, return null.
+        val locator = Locator.parse(selector) ?: return null
+
+        require(Locator.Type.CSS_PATH.text.isEmpty())
+
+        // Determine the type of the locator and resolve accordingly.
+        val nodeRef = when (locator.type) {
+            // For CSS_PATH type, use querySelectorOrNull to resolve the selector.
+            Locator.Type.CSS_PATH -> resolveCSSSelector0(selector)
+
+            // For BACKEND_NODE_ID type, parse the backend node ID and resolve it.
+            Locator.Type.BACKEND_NODE_ID -> {
+                val backendNodeId = locator.selector.toIntOrNull()
+                if (backendNodeId == null) {
+                    logger.warn("Invalid backend node ID format: '{}'", selector)
+                    return null
+                }
+                resolveByBackendNodeId(backendNodeId)
+            }
+
+            // For FRAME_BACKEND_NODE_ID type, extract the backend node ID and resolve it.
+            Locator.Type.FRAME_BACKEND_NODE_ID -> {
+                val backendNodeId = selector.substringAfterLast(",").toIntOrNull()
+                resolveByBackendNodeId(backendNodeId)
+            }
+
+            else -> throw UnsupportedOperationException("Unsupported selector $selector")
+        }
+
+        // Return the resolved NodeRef or null if resolution failed.
+        return nodeRef
     }
 
     /**
@@ -293,7 +342,7 @@ class PageHandler(
     }
 
     @Throws(ChromeDriverException::class)
-    private suspend fun querySelectorOrNull(selector: String): NodeRef? {
+    private suspend fun resolveCSSSelector0(selector: String): NodeRef? {
         val rootId = domAPI?.getDocument()?.nodeId ?: return null
 
         val nodeId = domAPI?.querySelector(rootId, selector)
@@ -321,41 +370,6 @@ class PageHandler(
         }
 
         return NodeRef(node.nodeId, node.backendNodeId)
-    }
-
-    /**
-     * Parses the selector and returns the node ID.
-     * Supports two formats:
-     * 1. Regular CSS selector: returns nodeId via querySelector
-     * 2. Backend node ID selector: "backend:123" returns nodeId via resolveNode
-     *
-     * @param selector CSS selector or "backend:nodeId" format
-     * @return nodeId or null if not found
-     */
-    @Throws(ChromeDriverException::class)
-    private suspend fun resolveSelector(selector: String): NodeRef? {
-        val locator = Locator.parse(selector) ?: return null
-
-        require(Locator.Type.CSS_PATH.text.isEmpty())
-
-        val nodeRef = when (locator.type) {
-            Locator.Type.CSS_PATH -> querySelectorOrNull(selector)
-            Locator.Type.BACKEND_NODE_ID -> {
-                val backendNodeId = locator.selector.toIntOrNull()
-                if (backendNodeId == null) {
-                    logger.warn("Invalid backend node ID format: '{}'", selector)
-                    return null
-                }
-                resolveByBackendNodeId(backendNodeId)
-            }
-            Locator.Type.FRAME_BACKEND_NODE_ID -> {
-                val backendNodeId = selector.substringAfterLast(",").toIntOrNull()
-                resolveByBackendNodeId(backendNodeId)
-            }
-            else -> throw UnsupportedOperationException("Unsupported selector $selector")
-        }
-
-        return nodeRef
     }
 
     @Throws(ChromeDriverException::class)

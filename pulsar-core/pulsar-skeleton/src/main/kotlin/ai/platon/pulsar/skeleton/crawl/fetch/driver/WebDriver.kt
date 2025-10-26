@@ -399,6 +399,15 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun pageSource(): String?
 
+    /**
+     * Retrieve a nano version of the DOM tree, which is based on the accessibility tree, enhanced by DOM and document snapshot.
+     *
+     * References:
+     *
+     * - [ai.platon.cdt.kt.protocol.commands.Accessibility.getFullAXTree]
+     * - [ai.platon.cdt.kt.protocol.commands.DOM.getDocument]
+     * - [ai.platon.cdt.kt.protocol.types.domsnapshot.DocumentSnapshot]
+     * */
     suspend fun nanoDOMTree(): NanoDOMTree
 
     /**

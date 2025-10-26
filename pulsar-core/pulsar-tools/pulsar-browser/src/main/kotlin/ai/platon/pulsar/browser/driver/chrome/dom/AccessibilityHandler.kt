@@ -6,8 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.common.getLogger
 
 class AccessibilityHandler(
-    private val devTools: RemoteDevTools,
-    private val experimental: Boolean = true
+    private val devTools: RemoteDevTools
 ) {
     private val logger = getLogger(this)
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
@@ -57,9 +56,7 @@ class AccessibilityHandler(
             }
 
             val frameById = linkedMapOf<String, FrameTree>()
-            if (frameTree != null) {
-                collectFrameTree(frameTree, frameById)
-            }
+            collectFrameTree(frameTree, frameById)
 
             val frameIds: List<String> = when {
                 targetFrameId == null -> frameById.keys.toList()
@@ -71,7 +68,7 @@ class AccessibilityHandler(
                 // Fallback: try fetching AX tree without specifying a frameId (root document)
                 val nodes = runCatching { accessibility.getFullAXTree(depth) }.getOrElse { emptyList() }
                 if (nodes.isNotEmpty()) {
-                    val rootFrameId = frameTree.frame.id ?: ""
+                    val rootFrameId = frameTree.frame.id
                     return singleFrameResult(nodes, rootFrameId)
                 }
                 // If a specific target frame was requested, try that directly as well

@@ -59,13 +59,6 @@ interface Accessibility {
   @ReturnTypeParameter(AXNode::class)
   suspend fun getFullAXTree(@ParamName("max_depth") @Optional max_depth: Int? = null): List<AXNode>
 
-  @Experimental
-  @Returns("nodes")
-  @ReturnTypeParameter(AXNode::class)
-  suspend fun getFullAXTree(): List<AXNode> {
-    return getFullAXTree(null)
-  }
-
   /**
    * Fetches a particular accessibility node by AXNodeId.
    * Requires `enable()` to have been called previously.

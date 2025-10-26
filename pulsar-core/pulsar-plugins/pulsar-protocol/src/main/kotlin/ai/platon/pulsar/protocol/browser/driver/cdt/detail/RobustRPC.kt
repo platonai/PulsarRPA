@@ -50,16 +50,16 @@ internal class RobustRPC(
     }
 
     @Throws(Exception::class)
-    suspend fun <T> invokeDeferred(action: String, maxRetry: Int = 2, block: suspend CoroutineScope.() -> T): T? {
+    suspend fun <T> invokeDeferred(action: String, maxRetry: Int = 2, block: suspend () -> T): T? {
         if (!driver.checkState(action)) {
             return null
         }
 
-        var i = maxRetry
         var result = kotlin.runCatching { invokeDeferred0(action, block) }
             .onFailure {
                 // no handler here
             }
+        var i = maxRetry
         while (result.isFailure && i-- > 0 && driver.checkState()) {
             result = kotlin.runCatching { invokeDeferred0(action, block) }
                 .onFailure {
@@ -80,7 +80,7 @@ internal class RobustRPC(
     }
 
     suspend fun <T> invokeDeferredSilently(
-        action: String, message: String? = null, maxRetry: Int = 2, block: suspend CoroutineScope.() -> T
+        action: String, message: String? = null, maxRetry: Int = 2, block: suspend () -> T
     ): T? {
         return try {
             invokeDeferred(action, maxRetry, block)
@@ -142,23 +142,17 @@ internal class RobustRPC(
     }
 
     @Throws(ChromeRPCException::class)
-    private suspend fun <T> invokeDeferred0(action: String, block: suspend CoroutineScope.() -> T): T? {
-        return withContext(Dispatchers.IO) {
-            if (!driver.checkState(action)) {
-                return@withContext null
-            }
+    private suspend fun <T> invokeDeferred0(action: String, block: suspend () -> T): T? {
+        if (!driver.checkState(action)) {
+            return null
+        }
 
-            try {
-                // It's bad if block() is blocking, it will block the whole thread and no other coroutine can run within this
-                // thread, so we should avoid blocking in the block(). Unfortunately, the block() is usually a rpc call,
-                // the rpc call blocks its calling thread and wait for the response.
-                // We should find a way to avoid the blocking in the block() and make it non-blocking.
-                block().also { decreaseRPCFailures() }
-            } catch (e: ChromeRPCException) {
-                increaseRPCFailures()
-                fixCDTAgentIfNecessary(e)
-                throw e
-            }
+        try {
+            return block().also { decreaseRPCFailures() }
+        } catch (e: ChromeRPCException) {
+            increaseRPCFailures()
+            fixCDTAgentIfNecessary(e)
+            throw e
         }
     }
 

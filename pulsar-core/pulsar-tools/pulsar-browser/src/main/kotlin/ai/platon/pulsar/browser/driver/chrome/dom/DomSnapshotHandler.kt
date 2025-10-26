@@ -30,10 +30,10 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
         val capture = try {
             domSnapshot.captureSnapshot(
                 computed,
-                /* includePaintOrder */ includePaintOrder,
-                /* includeDOMRects */ includeDomRects,
-                /* includeBlendedBackgroundColors */ null,
-                /* includeTextColorOpacities */ null,
+                includePaintOrder = includePaintOrder,
+                includeDOMRects = includeDomRects,
+                includeBlendedBackgroundColors = null,
+                includeTextColorOpacities = null,
             )
         } catch (e: Exception) {
             logger.warn("DOMSnapshot.captureSnapshot failed | err={}", e.toString())
@@ -42,17 +42,17 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
         }
 
         val byBackend = mutableMapOf<Int, SnapshotNodeEx>()
-        val strings = capture.strings ?: emptyList()
+        val strings = capture.strings
 
         var totalRows = 0
-        for (doc in capture.documents ?: emptyList()) {
-            val nodeTree = doc.nodes ?: continue
-            val layout = doc.layout ?: continue
+        for (doc in capture.documents) {
+            val nodeTree = doc.nodes
+            val layout = doc.layout
 
             val backendIds: List<Int> = nodeTree.backendNodeId ?: emptyList()
-            val nodeIndex: List<Int> = layout.nodeIndex ?: emptyList()
+            val nodeIndex: List<Int> = layout.nodeIndex
 
-            val bounds = layout.bounds ?: emptyList()
+            val bounds = layout.bounds
             // The offset rect of nodes. Only available when includeDOMRects is set to true
             val offsetRects = layout.offsetRects
             val scrollRects = layout.scrollRects ?: emptyList()
@@ -63,8 +63,8 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
             totalRows += rows
 
             // Build style maps per layout row
-            val stylesIdx = layout.styles ?: emptyList()
-            val styleMaps: List<Map<String, String>> = if (includeStyles && layout.styles != null) {
+            val stylesIdx = layout.styles
+            val styleMaps: List<Map<String, String>> = if (includeStyles) {
                 stylesIdx.map { idxs ->
                     val m = mutableMapOf<String, String>()
                     var i = 0
@@ -81,7 +81,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
             }
 
             // Analyze stacking contexts
-            val stackingContexts: List<Int> = layout.stackingContexts?.index?.let { rareIndices ->
+            val stackingContexts: List<Int> = layout.stackingContexts.index?.let { rareIndices ->
                 if (rareIndices.isEmpty()) {
                     emptyList()
                 } else {

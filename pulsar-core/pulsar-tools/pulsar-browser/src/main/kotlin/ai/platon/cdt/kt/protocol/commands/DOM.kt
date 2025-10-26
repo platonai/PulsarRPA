@@ -222,11 +222,6 @@ interface DOM {
   @Returns("root")
   suspend fun getDocument(@ParamName("depth") @Optional depth: Int? = null, @ParamName("pierce") @Optional pierce: Boolean? = null): Node
 
-  @Returns("root")
-  suspend fun getDocument(): Node {
-    return getDocument(null, null)
-  }
-
   /**
    * Returns the root DOM node (and optionally the subtree) to the caller.
    * Deprecated, as it is not designed to work well with the rest of the DOM agent.

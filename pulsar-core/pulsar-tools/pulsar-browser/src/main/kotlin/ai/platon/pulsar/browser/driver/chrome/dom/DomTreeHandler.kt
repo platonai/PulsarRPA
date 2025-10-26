@@ -37,9 +37,8 @@ class DomTreeHandler(private val devTools: RemoteDevTools) {
         val depth = maxDepth.takeIf { it > 0 }
         val document = try {
             when {
-                dom == null -> null
-                depth != null -> dom.getDocument(depth, /* pierce */ true)
-                else -> dom.getDocument(null, /* pierce */ true)
+                depth != null -> dom.getDocument(depth, pierce = true)
+                else -> dom.getDocument(null, pierce = true)
             }
         } catch (e: Exception) {
             logger.warn("DOM.getDocument failed | frameId={} | err={}", target?.frameId, e.toString())
