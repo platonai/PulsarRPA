@@ -16,8 +16,8 @@ import java.nio.file.Paths
 import kotlin.test.assertIs
 
 class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
-//    private val testURL = interactiveDynamicURL
-    private val testURL = "https://news.ycombinator.com/news"
+    private val testURL = interactiveDynamicURL
+//    private val testURL = "https://news.ycombinator.com/news"
 
     @Test
     fun `Get trees, build and serialize end-to-end with assertions`() =

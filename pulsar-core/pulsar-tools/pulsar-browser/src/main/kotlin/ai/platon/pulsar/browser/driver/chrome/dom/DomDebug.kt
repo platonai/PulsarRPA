@@ -24,6 +24,88 @@ object DomDebug {
         override fun toString(): String = "zero=$zero, positive=$positive, missing=$missing"
     }
 
+    // ----- Helpers -----
+
+    private fun rectOf(n: DOMTreeNodeEx): DOMRect? {
+        val s = n.snapshotNode
+        return s?.clientRects ?: s?.absoluteBounds ?: s?.bounds ?: n.absolutePosition
+    }
+
+    private fun labelOfNode(n: DOMTreeNodeEx): String {
+        val attrs = n.attributes
+        val id = attrs["id"]?.let { "#${it}" } ?: ""
+        val klass = attrs["class"]?.let { "." + it.split(Regex("\\s+")).take(2).joinToString(".") } ?: ""
+        val name = n.nodeName.ifBlank { "?" }
+        return (name + id + klass).trim()
+    }
+
+    private fun labelOfNano(n: NanoDOMTree): String {
+        return buildString {
+            val name = n.nodeName ?: "?"
+            append(name)
+            val id = (n.attributes?.get("id") as? String)?.takeIf { it.isNotBlank() }
+            if (!id.isNullOrBlank()) append("#").append(id)
+            val cls = (n.attributes?.get("class") as? String)
+                ?.trim()?.split(Regex("\\s+")).orEmpty().take(2)
+                .filter { it.isNotBlank() }
+            if (cls.isNotEmpty()) append(".").append(cls.joinToString("."))
+        }
+    }
+
+    private fun briefWithBounds(n: DOMTreeNodeEx): String {
+        val r = rectOf(n)
+        val hashShort = n.elementHash?.take(12)
+        return "nodeId=${n.nodeId}, name=${n.nodeName}, label=${labelOfNode(n)}, hash=${hashShort}, bounds=${r}"
+    }
+
+    private fun briefWithBounds(n: TinyNode): String {
+        val o = n.originalNode
+        val r = rectOf(o)
+        val hashShort = o.elementHash?.take(12)
+        return "nodeId=${o.nodeId}, name=${o.nodeName}, label=${labelOfNode(o)}, hash=${hashShort}, bounds=${r}"
+    }
+
+    private fun briefWithBounds(n: NanoDOMTree): String {
+        val r = n.clientRects ?: n.absoluteBounds ?: n.bounds
+        return "locator=${n.locator}, label=${labelOfNano(n)}, bounds=${r}"
+    }
+
+    private fun midTwoWithBounds(root: DOMTreeNodeEx): Pair<DOMTreeNodeEx?, DOMTreeNodeEx?> {
+        val eligible = mutableListOf<DOMTreeNodeEx>()
+        fun dfs(n: DOMTreeNodeEx) {
+            val r = rectOf(n)
+            if (hasNonZeroXY(r)) eligible += n
+            n.children.forEach { dfs(it) }
+            n.shadowRoots.forEach { dfs(it) }
+            n.contentDocument?.let { dfs(it) }
+        }
+        dfs(root)
+        return middleTwo(eligible)
+    }
+
+    private fun midTwoWithBounds(root: TinyNode): Pair<TinyNode?, TinyNode?> {
+        val eligible = mutableListOf<TinyNode>()
+        fun dfs(n: TinyNode) {
+            val r = rectOf(n.originalNode)
+            if (hasNonZeroXY(r)) eligible += n
+            n.children.forEach { dfs(it) }
+        }
+        dfs(root)
+        return middleTwo(eligible)
+    }
+
+    private fun midTwoWithBounds(root: NanoDOMTree): Pair<NanoDOMTree?, NanoDOMTree?> {
+        val eligible = mutableListOf<NanoDOMTree>()
+        fun dfs(n: NanoDOMTree?) {
+            if (n == null) return
+            val r = n.clientRects ?: n.absoluteBounds ?: n.bounds
+            if (hasNonZeroXY(r)) eligible += n
+            n.children?.forEach { dfs(it) }
+        }
+        dfs(root)
+        return middleTwo(eligible)
+    }
+
     // ----- Stats calculators -----
 
     fun stats(root: DOMTreeNodeEx): TreeStats {
@@ -75,11 +157,6 @@ object DomDebug {
     }
 
     // ----- Bounds stats calculators -----
-
-    private fun rectOf(n: DOMTreeNodeEx): DOMRect? {
-        val s = n.snapshotNode
-        return s?.clientRects ?: s?.absoluteBounds ?: s?.bounds ?: n.absolutePosition
-    }
 
     fun boundsStats(root: DOMTreeNodeEx): BoundsStats {
         var zero = 0
@@ -136,11 +213,24 @@ object DomDebug {
         return BoundsStats(zero, positive, missing)
     }
 
+    // ----- Helpers (added) -----
+    private fun hasNonZeroXY(r: DOMRect?): Boolean = r?.let { it.x != 0.0 || it.y != 0.0 } == true
+    private fun hasNonZeroXY(r: CompactRect?): Boolean = r?.let { (it.x ?: 0.0) != 0.0 || (it.y ?: 0.0) != 0.0 } == true
+
+    private fun <T> middleTwo(list: List<T>): Pair<T?, T?> {
+        if (list.isEmpty()) return Pair(null, null)
+        if (list.size == 1) return Pair(list[0], null)
+        val j = (list.size - 1) / 2
+        val k = minOf(j + 1, list.size - 1)
+        return Pair(list[j], list[k])
+    }
+
     // ----- Summaries -----
 
     fun summarize(trees: TargetTrees): String {
         val s = stats(trees.domTree)
         val b = boundsStats(trees.domTree)
+        val (mid1, mid2) = midTwoWithBounds(trees.domTree)
         return buildString {
             appendLine("TargetTrees")
             appendLine("- devicePixelRatio=${trees.devicePixelRatio}")
@@ -151,8 +241,9 @@ object DomDebug {
             appendLine("- domByBackendId.size=${trees.domByBackendId.size}")
             appendLine("- domTree.stats=($s)")
             appendLine("- domTree.boundsStats=($b)")
-            // Also report zero vs non-zero bounds counts explicitly
             appendLine("- domTree.bounds.zeroNonZero=(zero=${b.zero}, nonZero=${b.positive})")
+            if (mid1 != null) appendLine("- domTree.midBoundsNode1={ ${briefWithBounds(mid1)} }")
+            if (mid2 != null && mid2 !== mid1) appendLine("- domTree.midBoundsNode2={ ${briefWithBounds(mid2)} }")
         }
     }
 
@@ -167,6 +258,7 @@ object DomDebug {
             if (includeTreeStats) stats(node).toString() else "children=${node.children.size} shadowRoots=${node.shadowRoots.size} contentDocument=${node.contentDocument != null}"
         val b = if (includeTreeStats) boundsStats(node).toString() else null
         val bz = if (includeTreeStats) boundsStats(node) else null
+        val midPair = if (includeTreeStats) midTwoWithBounds(node) else null
         return buildString {
             appendLine("DOMTreeNodeEx")
             appendLine("- nodeId=${node.nodeId} backendId=${node.backendNodeId} type=${node.nodeType} name=${node.nodeName}")
@@ -178,6 +270,9 @@ object DomDebug {
             appendLine("- ${counts}")
             if (b != null) appendLine("- boundsStats=($b)")
             if (bz != null) appendLine("- bounds.zeroNonZero=(zero=${bz.zero}, nonZero=${bz.positive})")
+            val (mid1, mid2) = midPair ?: Pair(null, null)
+            if (mid1 != null) appendLine("- midBoundsNode1={ ${briefWithBounds(mid1)} }")
+            if (mid2 != null && mid2 !== mid1) appendLine("- midBoundsNode2={ ${briefWithBounds(mid2)} }")
         }
     }
 
@@ -198,14 +293,16 @@ object DomDebug {
         val b = boundsStats(root)
         val original = root.originalNode
         val hashShort = original.elementHash?.take(12)
+        val (mid1, mid2) = midTwoWithBounds(root)
         return buildString {
             appendLine("TinyNode")
             appendLine("- from nodeId=${original.nodeId} name=${original.nodeName} hash=${hashShort}")
             appendLine("- shouldDisplay=${root.shouldDisplay} interactiveIndex=${root.interactiveIndex}")
             appendLine("- stats=($s)")
             appendLine("- boundsStats=($b)")
-            // Also report zero vs non-zero bounds counts explicitly
             appendLine("- bounds.zeroNonZero=(zero=${b.zero}, nonZero=${b.positive})")
+            if (mid1 != null) appendLine("- midBoundsNode1={ ${briefWithBounds(mid1)} }")
+            if (mid2 != null && mid2 !== mid1) appendLine("- midBoundsNode2={ ${briefWithBounds(mid2)} }")
         }
     }
 
@@ -222,6 +319,7 @@ object DomDebug {
                 .filter { it.isNotBlank() }
             if (cls.isNotEmpty()) append(".").append(cls.joinToString("."))
         }
+        val (mid1, mid2) = midTwoWithBounds(root)
         return buildString {
             appendLine("NanoDOMTree")
             appendLine("- root locator=${root.locator} label=${label}")
@@ -229,8 +327,9 @@ object DomDebug {
             appendLine("- bounds=${root.clientRects ?: root.absoluteBounds ?: root.bounds}")
             appendLine("- stats=($s)")
             appendLine("- boundsStats=($b)")
-            // Also report zero vs non-zero bounds counts explicitly
             appendLine("- bounds.zeroNonZero=(zero=${b.zero}, nonZero=${b.positive})")
+            if (mid1 != null) appendLine("- midBoundsNode1={ ${briefWithBounds(mid1)} }")
+            if (mid2 != null && mid2 !== mid1) appendLine("- midBoundsNode2={ ${briefWithBounds(mid2)} }")
         }
     }
 
@@ -242,25 +341,47 @@ object DomDebug {
         var withAbsolute = 0
         var withBounds = 0
 
-        snapshotNode.values.forEach { s ->
+        val eligible = mutableListOf<Map.Entry<Int, SnapshotNodeEx>>()
+
+        snapshotNode.entries.forEach { (k, s) ->
             val r = s.clientRects ?: s.absoluteBounds ?: s.bounds
             if (s.clientRects != null) withClientRects++
             if (s.absoluteBounds != null) withAbsolute++
             if (s.bounds != null) withBounds++
             when {
                 r == null -> missing++
-                r.width > 0 && r.height > 0 -> positive++
-                else -> zero++
+                r.width > 0 && r.height > 0 -> {
+                    positive++
+                    if (hasNonZeroXY(r)) eligible += java.util.AbstractMap.SimpleEntry(k, s)
+                }
+                else -> {
+                    zero++
+                    if (hasNonZeroXY(r)) eligible += java.util.AbstractMap.SimpleEntry(k, s)
+                }
             }
         }
 
+        fun brief(entry: Map.Entry<Int, SnapshotNodeEx>): String {
+            val s = entry.value
+            val source = when {
+                s.clientRects != null -> "clientRects"
+                s.absoluteBounds != null -> "absoluteBounds"
+                s.bounds != null -> "bounds"
+                else -> "none"
+            }
+            val r = s.clientRects ?: s.absoluteBounds ?: s.bounds
+            return "key=${entry.key}, source=${source}, rect=${r}"
+        }
+
+        val (mid1, mid2) = middleTwo(eligible)
         return buildString {
             appendLine("SnapshotNodeExMap")
             appendLine("- entries=${snapshotNode.size}")
             appendLine("- boundsStats=(zero=${zero}, positive=${positive}, missing=${missing})")
             appendLine("- with: clientRects=${withClientRects}, absoluteBounds=${withAbsolute}, bounds=${withBounds}")
-            // Also report zero vs non-zero bounds counts explicitly
             appendLine("- bounds.zeroNonZero=(zero=${zero}, nonZero=${positive})")
+            if (mid1 != null) appendLine("- midBoundsEntry1={ ${brief(mid1)} }")
+            if (mid2 != null && mid2.key != mid1?.key) appendLine("- midBoundsEntry2={ ${brief(mid2)} }")
         }
     }
 
@@ -272,7 +393,6 @@ object DomDebug {
         val nodeKeys = keys.count { it.startsWith("node:") }
         val hashKeys = totalEntries - xpathKeys - backendKeys - nodeKeys
 
-        // Deduplicate nodes by nodeId to avoid double counting
         val uniqueNodes = state.selectorMap.values.distinctBy { it.nodeId }
         val uniqueCount = uniqueNodes.size
 
@@ -295,6 +415,9 @@ object DomDebug {
         val sample = uniqueNodes.take(3).joinToString(", ") { labelOf(it) }
         val json = DOMSerializer.toJson(state.microTree)
 
+        val eligible = uniqueNodes.filter { hasNonZeroXY(rectOf(it)) }
+        val (mid1, mid2) = middleTwo(eligible)
+
         return buildString {
             appendLine("DOMState")
             appendLine("- json.length=${json.length}")
@@ -302,6 +425,8 @@ object DomDebug {
             appendLine("- selectorMap.uniqueNodes=${uniqueCount} (hashKeys=${hashKeys}, xpathKeys=${xpathKeys}, backendKeys=${backendKeys}, nodeKeys=${nodeKeys})")
             appendLine("- nodes: interactable=${interactable}, visible=${visible}, scrollable=${scrollable}, withXPath=${withXPath}, withHash=${withHash}, withSnapshot=${withSnapshot}, withBounds=${withBounds}")
             if (sample.isNotBlank()) appendLine("- sample=${sample}")
+            if (mid1 != null) appendLine("- midBoundsNode1={ ${briefWithBounds(mid1)} }")
+            if (mid2 != null && mid2 !== mid1) appendLine("- midBoundsNode2={ ${briefWithBounds(mid2)} }")
         }
     }
 }
