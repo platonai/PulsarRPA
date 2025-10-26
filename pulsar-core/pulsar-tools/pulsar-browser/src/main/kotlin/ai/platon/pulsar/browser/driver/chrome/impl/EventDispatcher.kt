@@ -54,6 +54,7 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
         val OBJECT_MAPPER = ObjectMapper()
             .setSerializationInclusion(JsonInclude.Include.NON_NULL)
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+            .configure(DeserializationFeature.READ_UNKNOWN_ENUM_VALUES_USING_DEFAULT_VALUE, true)
     }
 
     private val logger = getLogger(this)
@@ -168,7 +169,7 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
 
     @Throws(ChromeRPCException::class, IOException::class)
     override fun accept(message: String) {
-        tracer?.trace("◀ Accept {}", StringUtils.abbreviateMiddle(message, "...", 500))
+        tracer?.trace("◀ Accept {}", StringUtils.abbreviateMiddle(message, "...", 20000))
 
         ChromeDevToolsImpl.numAccepts.inc()
         try {
@@ -182,6 +183,7 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
                     var resultNode = jsonNode.get(RESULT_PROPERTY)
                     val errorNode = jsonNode.get(ERROR_PROPERTY)
                     if (errorNode != null) {
+                        logger.debug("Error node: {}", StringUtils.abbreviateMiddle(message, "...", 20000))
                         future.deferred.complete(RpcResult(false, errorNode, message))
                     } else {
                         if (future.returnProperty != null) {

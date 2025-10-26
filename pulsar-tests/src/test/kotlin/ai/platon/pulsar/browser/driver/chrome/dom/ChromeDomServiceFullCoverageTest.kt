@@ -16,7 +16,8 @@ import java.nio.file.Paths
 import kotlin.test.assertIs
 
 class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
-    private val testURL = interactiveDynamicURL
+//    private val testURL = interactiveDynamicURL
+    private val testURL = "https://news.ycombinator.com/news"
 
     @Test
     fun `Get trees, build and serialize end-to-end with assertions`() =
@@ -177,7 +178,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
             val node = service.findElement(ElementRefCriteria(cssSelector = "body"))
 
             assertNotNull(node)
-            assertNull(node!!.snapshotNode)
+            assertNull(node.snapshotNode)
             assertNull(node.axNode)
             assertNull(node.isVisible)
             assertNull(node.isInteractable)
@@ -425,8 +426,8 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         )
 
         suspend fun jsNumber(expr: String): Double? = runCatching {
-            val r = devTools.runtime.evaluate(expr)?.result
-            r?.value?.toString()?.toDoubleOrNull() ?: r?.unserializableValue?.toDoubleOrNull()
+            val r = devTools.runtime.evaluate(expr).result
+            r.value?.toString()?.toDoubleOrNull() ?: r.unserializableValue?.toDoubleOrNull()
         }.getOrNull()
 
         suspend fun getBcr(selector: String): Map<String, Double> {
@@ -438,7 +439,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
                   return {x:r.x, y:r.y, width:r.width, height:r.height};
                 })();
             """.trimIndent()
-            val v = runCatching { devTools.runtime.evaluate(script)?.result?.value }.getOrNull()
+            val v = runCatching { devTools.runtime.evaluate(script).result.value }.getOrNull()
 
             @Suppress("UNCHECKED_CAST")
             val m = v as? Map<String, Any?> ?: emptyMap()
@@ -457,7 +458,7 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
         // Find a button element
         val buttonNode = service.findElement(ElementRefCriteria(cssSelector = "button"))
         assertNotNull(buttonNode, "Expected button element to be found")
-        val buttonText = buttonNode!!.nodeValue.takeIf { it.isNotEmpty() }
+        val buttonText = buttonNode.nodeValue.takeIf { it.isNotEmpty() }
             ?: buttonNode.attributes["textContent"]
             ?: buttonNode.attributes["value"]
             ?: "Load Users (2s delay)"
@@ -465,7 +466,6 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
 
         val buttonSnapshot = buttonNode.snapshotNode
         assertNotNull(buttonSnapshot, "Expected buttonSnapshot not found")
-        requireNotNull(buttonSnapshot)
 
         printlnPro(DomDebug.summarize(buttonNode))
 

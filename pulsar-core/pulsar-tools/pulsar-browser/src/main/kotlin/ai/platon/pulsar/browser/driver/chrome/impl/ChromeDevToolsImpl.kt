@@ -122,12 +122,22 @@ abstract class ChromeDevToolsImpl(
         returnProperty: String?,
         returnTypeClasses: Array<Class<out Any>>?,
         method: MethodInvocation
+    ): T? = invokeInternal(clazz, returnProperty, returnTypeClasses, method, null)
+
+    @Throws(ChromeRPCException::class)
+    internal suspend fun <T> invokeInternal(
+        clazz: Class<T>,
+        returnProperty: String?,
+        returnTypeClasses: Array<Class<out Any>>?,
+        method: MethodInvocation,
+        // for test purpose
+        mockRpcResult: RpcResult? = null
     ): T? {
         // Serialize the method invocation into a message to be sent to the remote server.
         val message = dispatcher.serialize(method)
 
         // Send the request and await the result in a coroutine-friendly way.
-        val rpcResult = sendAndReceive(method.id, method.method, returnProperty, message)
+        val rpcResult = mockRpcResult ?: sendAndReceive(method.id, method.method, returnProperty, message)
 
         // If no result is received within the timeout, throw a timeout exception.
         if (rpcResult == null) {

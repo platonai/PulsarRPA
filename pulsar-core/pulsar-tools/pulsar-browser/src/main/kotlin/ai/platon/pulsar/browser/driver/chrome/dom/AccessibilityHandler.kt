@@ -86,7 +86,7 @@ class AccessibilityHandler(
 
                 frameIds.forEach { frameId ->
                     val nodes = runCatching { accessibility.getFullAXTree(depth) }
-                        .onFailure { e -> tracer?.debug("Accessibility.getFullAXTree failed | frameId={} err={}", frameId, e.toString()) }
+                        .onFailure { e -> logger.warn("Accessibility.getFullAXTree failed | frameId={} err={}", frameId, e.toString()) }
                         .getOrElse { emptyList() }
                     if (nodes.isEmpty()) {
                         return@forEach
