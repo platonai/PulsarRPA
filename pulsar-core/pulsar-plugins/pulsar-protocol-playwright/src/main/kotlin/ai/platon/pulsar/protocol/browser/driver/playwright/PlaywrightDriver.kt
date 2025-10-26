@@ -12,6 +12,7 @@ import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.microsoft.playwright.ElementHandle
 import com.microsoft.playwright.Page
 import com.microsoft.playwright.options.KeyboardModifier
 import com.microsoft.playwright.options.WaitUntilState
@@ -464,9 +465,7 @@ class PlaywrightDriver(
     override suspend fun click(selector: String, count: Int) {
         try {
             rpc.invokeDeferred("click") {
-                repeat(count) {
-                    page.querySelector(selector).click()
-                }
+                page.querySelector(selector).click(ElementHandle.ClickOptions().setClickCount(count))
             }
         } catch (e: Exception) {
             rpc.handleWebDriverException(e, "click", "selector: $selector, count: $count")
