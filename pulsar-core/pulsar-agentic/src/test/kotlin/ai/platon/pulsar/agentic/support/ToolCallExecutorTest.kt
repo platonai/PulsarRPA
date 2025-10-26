@@ -1,7 +1,7 @@
-package ai.platon.pulsar.skeleton.crawl.fetch.driver
+package ai.platon.pulsar.agentic.support
 
-import ai.platon.pulsar.skeleton.ai.support.ToolCallExecutor
-import ai.platon.pulsar.skeleton.ai.support.ToolCall
+import ai.platon.pulsar.agentic.ai.support.ToolCall
+import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
@@ -308,7 +308,11 @@ class ToolCallExecutorTest {
     @Test
     fun `toolCallToExpression clickTextMatches escaping`() {
         val expr = ToolCallExecutor.toolCallToExpression(
-            ToolCall("driver", "clickTextMatches", mapOf("selector" to "a", "pattern" to "He said \"hi\"", "count" to 2))
+            ToolCall(
+                "driver",
+                "clickTextMatches",
+                mapOf("selector" to "a", "pattern" to "He said \"hi\"", "count" to 2)
+            )
         )
         assertNotNull(expr)
         assertTrue(expr!!.contains("\\\"hi\\\""))

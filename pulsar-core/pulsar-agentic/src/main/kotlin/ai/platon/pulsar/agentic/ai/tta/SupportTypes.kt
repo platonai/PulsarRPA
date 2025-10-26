@@ -3,7 +3,7 @@ package ai.platon.pulsar.agentic.ai.tta
 import ai.platon.pulsar.agentic.ai.agent.ObserveElement
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.ai.support.ToolCall
+import ai.platon.pulsar.agentic.ai.support.ToolCall
 
 data class InteractiveElement(
     val id: String,

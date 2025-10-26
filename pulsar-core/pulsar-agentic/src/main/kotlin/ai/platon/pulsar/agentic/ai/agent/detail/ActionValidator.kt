@@ -1,8 +1,9 @@
 package ai.platon.pulsar.agentic.ai.agent.detail
 
+import ai.platon.pulsar.agentic.ai.agent.AgentConfig
+import ai.platon.pulsar.agentic.ai.support.ToolCall
 import ai.platon.pulsar.browser.driver.chrome.dom.FBNLocator
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.skeleton.ai.support.ToolCall
 import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 

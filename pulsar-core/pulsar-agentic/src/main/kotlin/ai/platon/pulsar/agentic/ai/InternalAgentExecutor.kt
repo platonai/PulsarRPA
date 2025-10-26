@@ -1,13 +1,14 @@
-package ai.platon.pulsar.agentic
+package ai.platon.pulsar.agentic.ai
 
+import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.ai.agent.BrowserPerceptiveAgent
+import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.InstructionResult
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.ai.ActResult
 import ai.platon.pulsar.skeleton.ai.ActionOptions
-import ai.platon.pulsar.skeleton.ai.support.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 
 internal class InternalAgentExecutor(
@@ -50,7 +51,11 @@ internal class InternalAgentExecutor(
             expressions.map { fc -> dispatcher.execute(fc, driver) }.firstOrNull()
         }
 
-        return InstructionResult(action.cssFriendlyExpressions, functionResults = listOf(result), modelResponse = action.modelResponse)
+        return InstructionResult(
+            action.cssFriendlyExpressions,
+            functionResults = listOf(result),
+            modelResponse = action.modelResponse
+        )
     }
 
     suspend fun execute(action: ActionDescription) = performAct(action)

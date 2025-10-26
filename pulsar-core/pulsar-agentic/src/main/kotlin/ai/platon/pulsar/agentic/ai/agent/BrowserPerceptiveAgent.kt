@@ -5,6 +5,8 @@ import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.SimpleMessage
 import ai.platon.pulsar.agentic.ai.SimpleMessageList
 import ai.platon.pulsar.agentic.ai.agent.detail.*
+import ai.platon.pulsar.agentic.ai.support.ToolCall
+import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.InstructionResult
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
@@ -22,9 +24,7 @@ import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.*
-import ai.platon.pulsar.skeleton.ai.support.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.skeleton.ai.support.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.google.gson.JsonElement

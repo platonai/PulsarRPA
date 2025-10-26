@@ -1,7 +1,7 @@
-package ai.platon.pulsar.skeleton.crawl.fetch.driver
+package ai.platon.pulsar.agentic.support
 
-import ai.platon.pulsar.skeleton.ai.support.ToolCallExecutor
-import ai.platon.pulsar.skeleton.ai.support.ToolCall
+import ai.platon.pulsar.agentic.ai.support.ToolCall
+import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*
@@ -248,12 +248,14 @@ class ToolCallExecutorExecuteTest {
         executor.execute(tc1, driver)
         coVerify { driver.exists("#a") }
         // clickMatches
-        val tc2 = ToolCall("driver", "clickMatches", mapOf(
-            "selector" to "a",
-            "attrName" to "href",
-            "pattern" to "foo",
-            "count" to 2
-        ))
+        val tc2 = ToolCall(
+            "driver", "clickMatches", mapOf(
+                "selector" to "a",
+                "attrName" to "href",
+                "pattern" to "foo",
+                "count" to 2
+            )
+        )
         executor.execute(tc2, driver)
         coVerify { driver.clickMatches("a", "href", "foo", 2) }
         // waitForNavigation

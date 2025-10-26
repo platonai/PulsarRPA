@@ -1,4 +1,4 @@
-package ai.platon.pulsar.skeleton.ai.support
+package ai.platon.pulsar.agentic.ai.support
 
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger

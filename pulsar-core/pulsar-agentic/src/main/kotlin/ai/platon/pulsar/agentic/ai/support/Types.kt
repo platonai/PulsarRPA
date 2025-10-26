@@ -1,4 +1,4 @@
-package ai.platon.pulsar.skeleton.ai.support
+package ai.platon.pulsar.agentic.ai.support
 
 data class ToolCall(
     val domain: String,
