@@ -71,7 +71,7 @@ data class AgentConfig(
     val enableAdaptiveDelays: Boolean = true,
     val enablePreActionValidation: Boolean = true,
     // New configuration options for fixes
-    val actTimeoutMs: Long = 30_000,
+    val actTimeoutMs: Long = 60_000,
     val llmInferenceTimeoutMs: Long = 60_000,
     val maxResultsToTry: Int = 3,
     val screenshotEveryNSteps: Int = 1,
@@ -200,6 +200,7 @@ class BrowserPerceptiveAgent(
         // val noSelectorActions = ToolCallExecutor.NO_SELECTOR_ACTIONS // unused
 
         // val domain = "driver" // unused
+        val domain = observe.domain ?: "unknown"
         val lowerMethod = method
         val backendNodeId = observe.backendNodeId
         // backend selector is supported since 20251020
@@ -244,7 +245,7 @@ class BrowserPerceptiveAgent(
 
         // Pre-action validation (lightweight), reuse local ToolCall(data) class
         if (config.enablePreActionValidation) {
-            val ok = actionValidator.validateToolCall(ToolCall("driver", lowerMethod, toolArgs))
+            val ok = actionValidator.validateToolCall(ToolCall(domain, lowerMethod, toolArgs))
             if (!ok) {
                 val msg = "Tool call validation failed for $lowerMethod with selector ${selector?.take(120)}"
                 val sid = uuid.toString().take(8)
@@ -458,7 +459,7 @@ class BrowserPerceptiveAgent(
     private suspend fun doObserveAct(action: ActionOptions): ActResult {
         // 1) Build instruction for action-oriented observe
         val toolCalls = AgentTool.SUPPORTED_TOOL_CALLS
-        val instruction = promptBuilder.buildToolUsePrompt(action.action, toolCalls, action.variables)
+        val instruction = promptBuilder.buildObserveActToolUsePrompt(action.action, toolCalls, action.variables)
         require(instruction.contains("click")) {
             "Instruction must contains tool list for action: $action"
         }
@@ -566,6 +567,7 @@ class BrowserPerceptiveAgent(
                     description = ele.description ?: "(No comment ...)",
                     locator = xpathLocator.trim(),
                     backendNodeId = locator?.backendNodeId,
+                    domain = ele.domain?.ifBlank { null },
                     method = ele.method?.ifBlank { null },
                     arguments = ele.arguments?.takeIf { it.isNotEmpty() }
                 )
@@ -735,7 +737,7 @@ class BrowserPerceptiveAgent(
         )
 
         // agent general guide
-        val systemMsg = TextToAction.buildOperatorSystemPrompt()
+        val systemMsg = PromptBuilder().buildOperatorSystemPrompt()
         var consecutiveNoOps = 0
         var step = 0
 

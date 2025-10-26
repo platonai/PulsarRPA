@@ -51,6 +51,7 @@ data class ObserveResult constructor(
     val description: String,
     val locator: String? = null,
     val backendNodeId: Int? = null,
+    val domain: String? = null,
     val method: String? = null,
     val arguments: Map<String, String>? = null
 )

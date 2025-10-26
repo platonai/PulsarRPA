@@ -3,6 +3,7 @@ package ai.platon.pulsar.agentic.ai.agent.detail
 import ai.platon.pulsar.agentic.ai.AgentConfig
 import ai.platon.pulsar.agentic.ai.support.ToolCall
 import ai.platon.pulsar.browser.driver.chrome.dom.FBNLocator
+import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.common.getLogger
 import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
@@ -80,6 +81,8 @@ class ActionValidator(
             return true
         }
 
+        val locator = Locator.parse(selector) ?: return false
+
         // Medium Priority #11: Check for common selector syntax patterns
         val hasValidPrefix = selector.startsWith("xpath:") ||
                 selector.startsWith("css:") ||
@@ -87,6 +90,7 @@ class ActionValidator(
                 selector.startsWith(".") ||
                 selector.startsWith("//") ||
                 selector.startsWith("fbn:") ||
+                selector.startsWith("backend:") ||
                 selector.matches(Regex("^[a-zA-Z][a-zA-Z0-9]*$")) // tag name
 
         return hasValidPrefix

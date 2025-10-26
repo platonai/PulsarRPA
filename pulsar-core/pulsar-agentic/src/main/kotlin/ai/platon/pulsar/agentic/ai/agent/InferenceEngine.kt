@@ -37,6 +37,7 @@ data class Metadata(val progress: String = "", val completed: Boolean = false)
 data class ObserveElement(
     val locator: String? = null,
     val description: String? = null,
+    val domain: String? = null,
     val method: String? = null,
     val arguments: Map<String, String>? = null,
 )
@@ -240,12 +241,7 @@ class InferenceEngine(
                 "If `returnAction` is true, the tool specifications has to be included in `params.instruction`" }
         }
 
-        // observe guide
-        val messages = SimpleMessageList()
-        val systemMsg = promptBuilder.buildObserveGuideSystemPrompt(params.userProvidedInstructions)
-        messages.add(systemMsg)
-        // instruction + DOM + browser state + schema
-        val userMsg = promptBuilder.buildObserveUserMessage(messages, params)
+        val messages = promptBuilder.buildObservePrompt(params)
 
         val prefix = if (params.fromAct) "act" else "observe"
         var callFile = ""
@@ -256,7 +252,7 @@ class InferenceEngine(
                 kind = "${prefix}_call",
                 requestId = params.requestId,
                 modelCall = prefix,
-                messages = listOf(systemMsg, userMsg),
+                messages = messages.messages,
                 enabled = true
             )
             callFile = f
@@ -337,6 +333,7 @@ class InferenceEngine(
             val el: JsonNode = arr.get(i)
             val locator = el.path("locator").asText("")
             val desc = el.path("description").asText("")
+            val domain = el.path("domain").asText(null)
             val baseMethod = el.path("method").asText(null)
 
             // Parse arguments according to schema: array of { name, value }
@@ -378,6 +375,7 @@ class InferenceEngine(
             val item = ObserveElement(
                 locator = locator,
                 description = desc,
+                domain = domain,
                 method = baseMethod.takeIf { returnAction },
                 arguments = argsMap.takeIf { returnAction }
             )
