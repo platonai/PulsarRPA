@@ -825,7 +825,7 @@ interface WebDriver : Closeable {
     suspend fun press(selector: String, key: String)
 
     /**
-     * This method clicks an element with [selector] and focuses it. If there's no
+     * This method focuses an element with [selector] and clicks it. If there's no
      * element matching `selector`, nothing to do.
      *
      * ```kotlin
@@ -839,6 +839,12 @@ interface WebDriver : Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun click(selector: String, count: Int = 1)
+
+    /**
+     * focus on an element with [selector] and click it with modifier pressed
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun click(selector: String, modifier: String)
 
     /**
      * This method clicks an element with [selector] whose text content matches [pattern], and then focuses it.
@@ -989,21 +995,25 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun scrollToMiddle(ratio: Double)
 
+    @Deprecated("Inappropriate name", ReplaceWith("scrollToViewport"))
+    @Throws(WebDriverException::class)
+    suspend fun scrollToScreen(screenNumber: Double) = scrollToViewport(screenNumber)
+
     /**
-     * The current page frame scrolls to the middle.
+     * Scroll to the 2.5th viewport position.
      *
      * ```kotlin
-     * driver.scrollToScreen(0.0)
-     * driver.scrollToScreen(0.5)
-     * driver.scrollToScreen(1.5)
-     * driver.scrollToScreen(3.0)
+     * driver.scrollToViewport(0.0)
+     * driver.scrollToViewport(0.5)
+     * driver.scrollToViewport(1.5)
+     * driver.scrollToViewport(3.0)
      * ```
      *
-     * @param screenNumber The screen number of the page to scroll to (0-based).
+     * @param n The viewport number of the page to scroll to (0-based).
      * 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.
      */
     @Throws(WebDriverException::class)
-    suspend fun scrollToScreen(screenNumber: Double)
+    suspend fun scrollToViewport(n: Double)
 
     /**
      * The mouse wheels down for [count] times.

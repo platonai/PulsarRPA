@@ -13,6 +13,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.playwright.Page
+import com.microsoft.playwright.options.KeyboardModifier
 import com.microsoft.playwright.options.WaitUntilState
 import org.jsoup.Connection
 import java.time.Duration
@@ -470,6 +471,11 @@ class PlaywrightDriver(
         } catch (e: Exception) {
             rpc.handleWebDriverException(e, "click", "selector: $selector, count: $count")
         }
+    }
+
+    override suspend fun click(selector: String, modifier: String) {
+        val modifier = KeyboardModifier.valueOf(modifier)
+        page.click(selector, Page.ClickOptions().setModifiers(listOf(modifier)))
     }
 
     override suspend fun clickTextMatches(selector: String, pattern: String, count: Int) {

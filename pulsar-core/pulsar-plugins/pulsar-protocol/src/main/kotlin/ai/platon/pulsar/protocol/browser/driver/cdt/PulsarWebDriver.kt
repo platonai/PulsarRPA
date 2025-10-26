@@ -70,6 +70,7 @@ class PulsarWebDriver(
     private val mouse get() = page.mouse.takeIf { isActive }
     private val keyboard get() = page.keyboard.takeIf { isActive }
     private val screenshot = ScreenshotHandler(page, devTools)
+    private val emulator get() = EmulationHandler(pageAPI, domAPI, keyboard, mouse)
 
     private val rpc = RobustRPC(this)
     private val networkManager by lazy { NetworkManager(this, rpc) }
@@ -135,8 +136,8 @@ class PulsarWebDriver(
     override suspend fun goForward() {
         invokeOnPage("goForward") {
             val history = pageAPI?.getNavigationHistory() ?: return@invokeOnPage
-            val currentIndex = history.currentIndex ?: return@invokeOnPage
-            val entries = history.entries ?: return@invokeOnPage
+            val currentIndex = history.currentIndex
+            val entries = history.entries
             val targetIndex = currentIndex + 1
             if (targetIndex >= 0 && targetIndex < entries.size) {
                 val entryId = entries[targetIndex].id
@@ -332,38 +333,17 @@ class PulsarWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun click(selector: String, count: Int) {
         invokeOnElement(selector, "click", scrollIntoView = true) { node ->
-            click(node, count)
+            val delayMillis = randomDelayMillis("click")
+            emulator.click(node, count, position = "center", modifier = null, delayMillis = delayMillis)
         }
     }
 
-    private suspend fun click(node: NodeRef, count: Int, position: String = "center") {
-        val deltaX = 4.0 + Random.nextInt(4)
-        val deltaY = 4.0
-        val offset = OffsetD(deltaX, deltaY)
-        val minDeltaX = 2.0
-
-        val p = pageAPI
-        val d = domAPI
-        if (p == null || d == null) {
-            return
+    @Throws(WebDriverException::class)
+    override suspend fun click(selector: String, modifier: String) {
+        invokeOnElement(selector, "click", scrollIntoView = true) { node ->
+            val delayMillis = randomDelayMillis("click")
+            emulator.click(node, 1, position = "center", modifier = modifier, delayMillis = delayMillis)
         }
-
-        val clickableDOM = ClickableDOM(p, d, node, offset)
-        val point = clickableDOM.clickablePoint().value ?: return
-        val box = clickableDOM.boundingBox()
-        val width = box?.width ?: 0.0
-        // if it's an input element, we should click on the right side of the element,
-        // so the cursor is at the tail of the text
-        var offsetX = when (position) {
-            "left" -> 0.0 + deltaX
-            "right" -> width - deltaX
-            else -> width / 2 + deltaX
-        }
-        offsetX = offsetX.coerceAtMost(width - minDeltaX).coerceAtLeast(minDeltaX)
-
-        point.x += offsetX
-
-        mouse?.click(point.x, point.y, count, randomDelayMillis("click"))
     }
 
     @Throws(WebDriverException::class)
@@ -377,7 +357,7 @@ class PulsarWebDriver(
     override suspend fun type(selector: String, text: String) {
         invokeOnElement(selector, "type") {
             val node = page.focusOnSelector(selector) ?: return@invokeOnElement
-            click(node, 1)
+            emulator.click(node, 1)
             keyboard?.type(text, randomDelayMillis("type"))
             gap("type")
         }
@@ -391,13 +371,13 @@ class PulsarWebDriver(
             if (value != null) {
                 // it's an input element, we should click on the right side of the element,
                 // so the cursor appears at the tail of the text
-                click(node, 1, "right")
+                emulator.click(node, 1, "right")
                 keyboard?.delete(value.length, randomDelayMillis("delete"))
                 // ensure the input is empty
                 // page.setAttribute(node, "value", "")
             }
 
-            click(node, 1)
+            emulator.click(node, 1)
             // keyboard?.type(text, randomDelayMillis("fill"))
             // For fill, there is no delay between key presses
             keyboard?.type(text, 0)

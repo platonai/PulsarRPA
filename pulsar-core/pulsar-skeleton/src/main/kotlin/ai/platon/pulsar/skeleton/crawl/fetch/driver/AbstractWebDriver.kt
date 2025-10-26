@@ -368,8 +368,8 @@ abstract class AbstractWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun scrollToScreen(screenNumber: Double) {
-        evaluate("__pulsar_utils__.scrollToScreen($screenNumber)")
+    override suspend fun scrollToViewport(n: Double) {
+        evaluate("__pulsar_utils__.scrollToScreen($n)")
     }
 
     @Throws(WebDriverException::class)

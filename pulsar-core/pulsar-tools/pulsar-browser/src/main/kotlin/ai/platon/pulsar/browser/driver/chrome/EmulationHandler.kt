@@ -3,11 +3,7 @@ package ai.platon.pulsar.browser.driver.chrome
 import ai.platon.cdt.kt.protocol.ChromeDevTools
 import ai.platon.cdt.kt.protocol.commands.DOM
 import ai.platon.cdt.kt.protocol.commands.Page
-import ai.platon.cdt.kt.protocol.types.input.DispatchDragEventType
-import ai.platon.cdt.kt.protocol.types.input.DispatchKeyEventType
-import ai.platon.cdt.kt.protocol.types.input.DispatchMouseEventType
-import ai.platon.cdt.kt.protocol.types.input.DragData
-import ai.platon.cdt.kt.protocol.types.input.MouseButton
+import ai.platon.cdt.kt.protocol.types.input.*
 import ai.platon.pulsar.common.DescriptiveResult
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.io.VirtualKey
@@ -24,6 +20,7 @@ import org.apache.commons.math3.util.Precision
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.random.Random
 
 data class NodeClip(
     var node: NodeRef? = null,
@@ -126,8 +123,6 @@ class ClickableDOM(
         val width = arrayOf(quad[0], quad[2], quad[4], quad[6]).maxOrNull()!! - x
         val height = arrayOf(quad[1], quad[3], quad[5], quad[7]).maxOrNull()!! - y
 
-        // TODO: handle iframes
-
         return RectD(x, y, width, height)
     }
 
@@ -156,7 +151,7 @@ class ClickableDOM(
         while (i < quad.size) {
             val p1 = quad[i]
             val p2 = quad[(i + 1) % quad.size]
-            area += (p1.x * p2.y - p2.x * p1.y) / 2;
+            area += (p1.x * p2.y - p2.x * p1.y) / 2
 
             ++i
         }
@@ -176,28 +171,25 @@ class Mouse(private val devTools: ChromeDevTools) {
 
     var currentX = 0.0
     var currentY = 0.0
+    // Track current pressed buttons bitfield. For left button only, we use 1 as Chromium does.
+    private var buttonsState: Int = 0
 
     /**
      * Shortcut for `mouse.move`, `mouse.down` and `mouse.up`.
      * @param x - Horizontal position of the mouse.
      * @param y - Vertical position of the mouse.
      */
-    suspend fun click(x: Double, y: Double, clickCount: Int = 1, delayMillis: Long = 500) {
-// println("click($x, $y, $clickCount, $delayMillis)")
-
+    suspend fun click(x: Double, y: Double, clickCount: Int = 1, modifiers: Int? = null, delayMillis: Long = 500) {
         moveTo(x, y)
 
-//        down(x, y, clickCount)
-//        if (delayMillis > 0) {
-//            delay(delayMillis)
-//        }
-//        up(x, y, clickCount)
-
-        for (cc in 1..clickCount) {
-            down(x, y, cc)
-            delay(delayMillis)
-            up(x, y, cc)
-            if (cc < clickCount) {
+        // Proper multi-click semantics: for each click i, use clickCount=i on press/release
+        for (cc in 1..max(1, clickCount)) {
+            down(x, y, cc, modifiers)
+            if (delayMillis > 0) {
+                delay(delayMillis)
+            }
+            up(x, y, cc, modifiers)
+            if (cc < clickCount && delayMillis > 0) {
                 delay(delayMillis)
             }
         }
@@ -214,12 +206,15 @@ class Mouse(private val devTools: ChromeDevTools) {
         currentX = x
         currentY = y
 
-        var i = 0
-        while (i < steps) {
-            val x1 = fromX + (currentX - fromX) * (i.toDouble() / steps)
-            val y1 = fromY + (currentY - fromY) * (i.toDouble() / steps)
+        // Ensure we always emit a final move to the target, even when steps == 1
+        val s = if (steps < 1) 1 else steps
+        var i = 1
+        while (i <= s) {
+            val t = i.toDouble() / s
+            val x1 = fromX + (currentX - fromX) * t
+            val y1 = fromY + (currentY - fromY) * t
 
-            chromeMoveTo(x1, y1)
+            cdpMoveTo(x1, y1)
 
             if (delayMillis > 0) {
                 delay(delayMillis)
@@ -229,15 +224,12 @@ class Mouse(private val devTools: ChromeDevTools) {
         }
     }
 
-    /**
-     * TODO: input.dispatchMouseEvent(MOUSE_MOVED) not work, the reason is unknown. Robot.mouseMove works.
-     * */
-    private suspend fun chromeMoveTo(x: Double, y: Double) {
+    private suspend fun cdpMoveTo(x: Double, y: Double) {
         input.dispatchMouseEvent(
             type = DispatchMouseEventType.MOUSE_MOVED, x = x, y = y,
             modifiers = null, timestamp = null,
             button = null, // button
-            buttons = null, // buttons
+            buttons = buttonsState, // buttons
             clickCount = null,
             force = null, // force
             tangentialPressure = null,
@@ -253,15 +245,15 @@ class Mouse(private val devTools: ChromeDevTools) {
     /**
      * Dispatches a `mousedown` event.
      */
-    suspend fun down(clickCount: Int = 1) {
-        down(currentX, currentY, clickCount)
+    suspend fun down(clickCount: Int = 1, modifiers: Int? = null) {
+        down(currentX, currentY, clickCount, modifiers)
     }
 
     /**
      * Dispatches a `mousedown` event.
      */
-    suspend fun down(point: PointD, clickCount: Int = 1) {
-        down(point.x, point.y, clickCount)
+    suspend fun down(point: PointD, clickCount: Int = 1, modifiers: Int? = null) {
+        down(point.x, point.y, clickCount, modifiers)
     }
 
     /**
@@ -269,13 +261,17 @@ class Mouse(private val devTools: ChromeDevTools) {
      *
      * @param x X coordinate
      * @param y Y coordinate
+     * @param modifiers Bit field representing pressed modifier keys. Alt=1, Ctrl=2, Meta/Command=4, Shift=8
+     * * (default: 0).
      */
-    suspend fun down(x: Double, y: Double, clickCount: Int = 1) {
+    suspend fun down(x: Double, y: Double, clickCount: Int = 1, modifiers: Int? = null) {
+        // Update buttons bitfield to include left button (1)
+        buttonsState = buttonsState or 1
         input.dispatchMouseEvent(
             type = DispatchMouseEventType.MOUSE_PRESSED, x = x, y = y,
-            modifiers = null, timestamp = null,
             button = MouseButton.LEFT,
-            buttons = null, // buttons
+            modifiers = modifiers, timestamp = null,
+            buttons = buttonsState, // buttons after press
             clickCount = clickCount,
             force = 0.5, // force
             tangentialPressure = null,
@@ -296,11 +292,15 @@ class Mouse(private val devTools: ChromeDevTools) {
         up(point.x, point.y)
     }
 
-    suspend fun up(x: Double, y: Double, clickCount: Int = 1) {
+    suspend fun up(x: Double, y: Double, clickCount: Int = 1, modifiers: Int? = null) {
+        // Update buttons bitfield to reflect release of left button
+        buttonsState = buttonsState and 1.inv()
         input.dispatchMouseEvent(
             type = DispatchMouseEventType.MOUSE_RELEASED, x = x, y = y,
             button = MouseButton.LEFT,
-            clickCount = clickCount
+            clickCount = clickCount,
+            modifiers = modifiers,
+            buttons = buttonsState
         )
     }
 
@@ -414,9 +414,15 @@ class Mouse(private val devTools: ChromeDevTools) {
             }
         }
 
-        moveTo(start, 5, 100)
-        down(currentX, currentY)
-        moveTo(target, 3, 500)
+        try {
+            moveTo(start, 5, 100)
+            down(currentX, currentY)
+            moveTo(target, 3, 500)
+        } finally {
+            // Always release button and disable interception
+            runCatching { up() }
+            runCatching { input.setInterceptDrags(false) }
+        }
 
         return dragData
     }
@@ -490,10 +496,19 @@ class Keyboard(private val devTools: ChromeDevTools) {
 
     suspend fun type(text: String, delayMillis: Long) {
         text.forEach { char ->
-            if (Character.isISOControl(char)) {
-                press("$char", delayMillis)
-            } else {
-                input.insertText("$char")
+            when (char) {
+                '\n', '\r' -> {
+                    // Map newline/return to an Enter key press to avoid unknown control char handling
+                    press("Enter", delayMillis)
+                }
+                '\t' -> {
+                    // Map tab to a Tab key press
+                    press("Tab", delayMillis)
+                }
+                else -> {
+                    // Use insertText for regular characters to leverage IME and proper input behavior
+                    input.insertText("$char")
+                }
             }
 
             if (delayMillis > 0) {
@@ -579,7 +594,7 @@ class Keyboard(private val devTools: ChromeDevTools) {
      * The key string can be a single character, a key name, or a combination of both.
      * For example, 'a', 'A', 'KeyA', 'Enter', 'Shift+A', and 'Control+Shift+Tab' are all valid key strings.
      * */
-    private fun splitKeyString(keyString: String): List<String> {
+    fun splitKeyString(keyString: String): List<String> {
         val keys = mutableListOf<String>()
         val token = StringBuilder()
 
@@ -599,7 +614,7 @@ class Keyboard(private val devTools: ChromeDevTools) {
         return keys
     }
 
-    private fun createVirtualKeyForSingleKeyString(singleKey: String): VirtualKey {
+    fun createVirtualKeyForSingleKeyString(singleKey: String): VirtualKey {
         var virtualKey =
             VirtualKeyboard.KEYBOARD_LAYOUT[singleKey] ?: throw IllegalArgumentException("Unknown key: >$singleKey<")
 
@@ -671,5 +686,73 @@ class Keyboard(private val devTools: ChromeDevTools) {
             code = key.code,
             location = key.location,
         )
+    }
+}
+
+class EmulationHandler(
+    private val pageAPI: Page?,
+    private val domAPI: DOM?,
+    private val keyboard: Keyboard?,
+    private val mouse: Mouse?
+) {
+    private fun modifierMaskForKeyString(key: String): Int {
+        return when (key.trim().lowercase()) {
+            "alt" -> 1
+            "control", "ctrl" -> 2
+            "meta", "command", "cmd", "win", "super" -> 4
+            "shift" -> 8
+            else -> 0
+        }
+    }
+
+    suspend fun click(
+        node: NodeRef, count: Int, position: String = "center", modifier: String? = null,
+        delayMillis: Long = 100
+    ) {
+        val deltaX = 4.0 + Random.nextInt(4)
+        val deltaY = 4.0
+        val offset = OffsetD(deltaX, deltaY)
+        val minDeltaX = 2.0
+
+        val p = pageAPI
+        val d = domAPI
+        if (p == null || d == null) {
+            return
+        }
+
+        val clickableDOM = ClickableDOM(p, d, node, offset)
+        val point = clickableDOM.clickablePoint().value ?: return
+        val box = clickableDOM.boundingBox()
+        val width = box?.width ?: 0.0
+        // if it's an input element, we should click on the right side of the element to activate the input box,
+        // so the cursor is at the tail of the text
+        if (box != null && width > 0.0) {
+            var offsetX = when (position) {
+                "left" -> 0.0 + deltaX
+                "right" -> width - deltaX
+                else -> width / 2 + deltaX
+            }
+            offsetX = offsetX.coerceAtMost((width - minDeltaX).coerceAtLeast(0.0)).coerceAtLeast(minDeltaX)
+            // Base X on the element's left edge to avoid overshooting from a center-based point
+            point.x = box.x + offsetX
+        }
+
+        var modifiers = 0
+        if (modifier != null) {
+            val virtualKey = keyboard?.createVirtualKeyForSingleKeyString(modifier)
+            if (virtualKey?.isModifier == true) {
+                // Use CDP-compliant modifier bitmask for mouse events
+                modifiers = modifierMaskForKeyString(modifier)
+            }
+            keyboard?.down(modifier)
+        }
+
+        mouse?.click(point.x, point.y, count,
+            modifiers = modifiers,
+            delayMillis = delayMillis)
+
+        if (modifier != null) {
+            keyboard?.up(modifier)
+        }
     }
 }
