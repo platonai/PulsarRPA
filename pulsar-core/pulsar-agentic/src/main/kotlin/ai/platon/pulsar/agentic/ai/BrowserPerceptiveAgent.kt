@@ -1,10 +1,14 @@
-package ai.platon.pulsar.agentic.ai.agent
+package ai.platon.pulsar.agentic.ai
 
 import ai.platon.pulsar.agentic.AgenticSession
-import ai.platon.pulsar.agentic.ai.PromptBuilder
-import ai.platon.pulsar.agentic.ai.SimpleMessage
-import ai.platon.pulsar.agentic.ai.SimpleMessageList
+import ai.platon.pulsar.agentic.ai.agent.ExtractParams
+import ai.platon.pulsar.agentic.ai.agent.ExtractionField
+import ai.platon.pulsar.agentic.ai.agent.ExtractionSchema
+import ai.platon.pulsar.agentic.ai.agent.InferenceEngine
+import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.agent.detail.*
+import ai.platon.pulsar.agentic.ai.agent.legacyMapToExtractionSchema
+import ai.platon.pulsar.agentic.ai.support.AgentTool
 import ai.platon.pulsar.agentic.ai.support.ToolCall
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
@@ -29,11 +33,13 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
 import java.io.IOException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
+import java.net.URI
 import java.net.UnknownHostException
 import java.nio.file.Files
 import java.time.Duration
@@ -42,6 +48,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.collections.get
 import kotlin.math.min
 import kotlin.math.pow
 
@@ -141,7 +148,7 @@ class BrowserPerceptiveAgent(
             val dur = Duration.between(startTime, Instant.now()).toMillis()
             addToHistory("resolve DONE session=${sessionId.take(8)} success=${result.success} dur=${dur}ms")
             result
-        } catch (_: kotlinx.coroutines.TimeoutCancellationException) {
+        } catch (_: TimeoutCancellationException) {
             val msg = "Resolve timed out after ${config.resolveTimeoutMs}ms: ${action.action}"
             addToHistory("resolve TIMEOUT: ${Strings.compactWhitespaces(action.action, 160)}")
             ActResult(success = false, message = msg, action = action.action)
@@ -163,7 +170,7 @@ class BrowserPerceptiveAgent(
             withTimeout(config.actTimeoutMs) {
                 doObserveAct(action)
             }
-        } catch (_: kotlinx.coroutines.TimeoutCancellationException) {
+        } catch (_: TimeoutCancellationException) {
             val msg = "Action timed out after ${config.actTimeoutMs}ms: ${action.action}"
             addToHistory("act TIMEOUT: ${action.action}")
             ActResult(success = false, message = msg, action = action.action)
@@ -188,7 +195,7 @@ class BrowserPerceptiveAgent(
         argsMap.forEach { (k, v) -> toolArgs[k] = v }
 
         // Inject selector only when the action targets an element
-        val selectorActions = ToolCallExecutor.SELECTOR_ACTIONS
+        val selectorActions = AgentTool.SELECTOR_ACTIONS
         // val noSelectorActions = ToolCallExecutor.NO_SELECTOR_ACTIONS // unused
 
         // val domain = "driver" // unused
@@ -449,7 +456,7 @@ class BrowserPerceptiveAgent(
 
     private suspend fun doObserveAct(action: ActionOptions): ActResult {
         // 1) Build instruction for action-oriented observe
-        val toolCalls = ToolCallExecutor.SUPPORTED_TOOL_CALLS
+        val toolCalls = AgentTool.SUPPORTED_TOOL_CALLS
         val instruction = promptBuilder.buildToolUsePrompt(action.action, toolCalls, action.variables)
         require(instruction.contains("click")) {
             "Instruction must contains tool list for action: $action"
@@ -493,7 +500,7 @@ class BrowserPerceptiveAgent(
             }
 
             // 5) Execute action, and optionally wait for navigation if caller provided timeoutMs
-            val driver = requireNotNull(activeDriver)
+            val driver = activeDriver
             val oldUrl = driver.currentUrl()
             val execResult = try {
                 act(chosen)
@@ -510,7 +517,7 @@ class BrowserPerceptiveAgent(
 
             // If a timeout is provided and the action likely triggers navigation, wait for navigation
             val timeoutMs = action.timeoutMs?.toLong()?.takeIf { it > 0 }
-            val maybeNavMethod = method in ToolCallExecutor.MAY_NAVIGATE_ACTIONS
+            val maybeNavMethod = method in AgentTool.MAY_NAVIGATE_ACTIONS
             if (timeoutMs != null && maybeNavMethod) {
                 // High Priority #4: Fail explicitly on navigation timeout
                 val remainingTime = driver.waitForNavigation(oldUrl, timeoutMs)
@@ -1299,7 +1306,7 @@ class BrowserPerceptiveAgent(
         }
 
         return runCatching {
-            val uri = java.net.URI(url)
+            val uri = URI(url)
             val scheme = uri.scheme?.lowercase()
 
             // Only allow http and https schemes

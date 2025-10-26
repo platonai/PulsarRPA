@@ -1,7 +1,7 @@
 package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.WebDriverTestBase
-import ai.platon.pulsar.agentic.ai.agent.BrowserPerceptiveAgent
+import ai.platon.pulsar.agentic.ai.BrowserPerceptiveAgent
 import ai.platon.pulsar.agentic.ai.agent.detail.AgentConfig
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.agentic.ai.agent.detail
 
-import ai.platon.pulsar.agentic.ai.agent.AgentConfig
+import ai.platon.pulsar.agentic.ai.AgentConfig
 import ai.platon.pulsar.common.StructuredLogger
 import org.slf4j.Logger
 import java.time.Instant

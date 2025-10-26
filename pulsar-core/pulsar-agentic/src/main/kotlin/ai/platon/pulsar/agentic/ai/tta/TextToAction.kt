@@ -3,6 +3,7 @@ package ai.platon.pulsar.agentic.ai.tta
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.SimpleMessageList
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
+import ai.platon.pulsar.agentic.ai.support.AgentTool
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
@@ -305,7 +306,7 @@ open class TextToAction(
 ## 工具规范：
 
 ```kotlin
-${ToolCallExecutor.TOOL_CALL_LIST}
+${AgentTool.TOOL_CALL_LIST}
 ```
 
 - 将 `locator` 视为 `selector`

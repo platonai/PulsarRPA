@@ -2,6 +2,8 @@ package ai.platon.pulsar.agentic.support
 
 import ai.platon.pulsar.agentic.ai.support.ToolCall
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.NavigateEntry
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import io.mockk.*
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.*

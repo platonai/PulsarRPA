@@ -37,36 +37,32 @@ class ToolCallExecutor {
     /**
      * Evaluate [expression].
      *
-     * Slow, unsafe.
+     * Slower and unsafe.
      *
      * ```kotlin
      * eval("""driver.click("#submit")""", driver)
      * ```
      * */
     fun eval(expression: String, driver: WebDriver): Any? {
+        return eval(expression, mapOf("driver" to driver))
+    }
+
+    fun eval(expression: String, browser: Browser): Any? {
+        return eval(expression, mapOf("browser" to browser))
+    }
+
+    fun eval(expression: String, agent: PerceptiveAgent): Any? {
+        return eval(expression, mapOf("agent" to agent))
+    }
+
+    fun eval(expression: String, variables: Map<String, Any>): Any? {
         return try {
-            engine.put("driver", driver)
+            variables.forEach { (key, value) -> engine.put(key, value) }
             engine.eval(expression)
         } catch (e: Exception) {
             logger.warn("Error eval expression: {} - {}", expression, e.brief())
             null
         }
-    }
-
-    fun eval(expression: String, browser: Browser): Any? {
-        TODO("evaluate `expression` in browser domain")
-    }
-
-    fun eval(expression: String, agent: PerceptiveAgent): Any? {
-        TODO("evaluate `expression` in agent domain")
-    }
-
-    suspend fun execute(expression: String, browser: Browser): Any? {
-        TODO("execute `expression` in browser domain")
-    }
-
-    suspend fun execute(expression: String, agent: PerceptiveAgent): Any? {
-        TODO("execute `expression` in agent domain")
     }
 
     /**
@@ -744,74 +740,6 @@ class ToolCallExecutor {
     }
 
     companion object {
-
-        /**
-         * The `TOOL_CALL_LIST` is written using kotlin syntax to express the tool's `domain`, `method`, `arguments`.
-         * */
-        const val TOOL_CALL_LIST = """
-driver.navigateTo(url: String)
-driver.waitForSelector(selector: String, timeoutMillis: Long = 5000)
-driver.exists(selector: String): Boolean
-driver.isVisible(selector: String): Boolean
-driver.focus(selector: String)
-driver.click(selector: String)
-driver.fill(selector: String, text: String)
-driver.type(selector: String, text: String)
-driver.press(selector: String, key: String)
-driver.check(selector: String)
-driver.uncheck(selector: String)
-driver.scrollTo(selector: String)
-driver.scrollToTop()
-driver.scrollToBottom()
-driver.scrollToMiddle(ratio: Double = 0.5)
-driver.scrollToScreen(screenNumber: Double)
-driver.goBack()
-driver.goForward()
-
-driver.outerHTML(selector: String): String?
-// Returns the node's text content, the node is located by [selector]. If the node does not exist, returns null.
-driver.selectFirstTextOrNull(selector: String): String?
-// Returns a list of text contents of all the elements matching the specified selector within the page.
-driver.selectTextAll(selector: String): List<String>
-
-browser.switchTab(tabId: String): Int
-    """
-
-        const val AGENT_TOOL_CALL_LIST = """
-agent.observe(instruction: String): List<ObserveResult>
-agent.observe(options: ObserveOptions): List<ObserveResult>
-agent.act(action: String): ActResult
-agent.act(action: ActionOptions): ActResult
-agent.act(observe: ObserveResult): ActResult
-agent.extract(instruction: String): ExtractResult
-agent.extract(options: ExtractOptions): ExtractResult
-    """
-
-        val SUPPORTED_TOOL_CALLS = TOOL_CALL_LIST.split("\n").filter { it.contains("(") }.map { it.trim() }
-
-        @Suppress("unused")
-        val SUPPORTED_ACTIONS = SUPPORTED_TOOL_CALLS.map { it.substringBefore("(") }
-
-        val SELECTOR_ACTIONS = setOf(
-            "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "visible", "focus",
-            "scrollTo", "captureScreenshot", "outerHTML", "selectFirstTextOrNull", "selectTextAll",
-            "selectFirstAttributeOrNull", "selectAttributes", "selectAttributeAll", "selectHyperlinks",
-            "selectAnchors", "selectImages", "selectFirstPropertyValueOrNull", "selectPropertyValueAll",
-            "setAttribute", "setAttributeAll", "setProperty", "setPropertyAll", "evaluate", "evaluateValue",
-            "evaluateDetail", "evaluateValueDetail", "clickMatches", "clickTextMatches", "clickablePoint",
-            "boundingBox", "moveMouseTo", "dragAndDrop"
-        )
-
-        @Suppress("unused")
-        val NO_SELECTOR_ACTIONS = setOf(
-            "navigateTo", "open", "waitForNavigation", "scrollDown", "scrollUp", "scrollToTop", "scrollToBottom",
-            "scrollToMiddle", "mouseWheelDown", "mouseWheelUp", "waitForPage", "bringToFront", "delay",
-            "instruct", "getCookies", "deleteCookies", "clearBrowserCookies", "pause", "stop", "currentUrl",
-            "url", "documentURI", "baseURI", "referrer", "pageSource", "newJsoupSession", "loadJsoupResource",
-            "loadResource", "waitUntil"
-        )
-
-        val MAY_NAVIGATE_ACTIONS = setOf("navigateTo", "click", "goBack", "goForward")
 
         /**
          * Parses a function call from a text string into its components.
