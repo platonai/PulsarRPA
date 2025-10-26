@@ -19,8 +19,8 @@ class TestWebSiteAccess {
     @Autowired
     lateinit var session: AgenticSession
 
-    @Value("\${server.port}")
-    val port: Int = 18080
+    @Value($$"${server.port}")
+    var port: Int = 18080
 
     @Autowired
     lateinit var restTemplate: TestRestTemplate

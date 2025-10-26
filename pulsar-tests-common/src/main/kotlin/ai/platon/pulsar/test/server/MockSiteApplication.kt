@@ -2,6 +2,7 @@ package ai.platon.pulsar.test.server
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import org.springframework.context.annotation.Profile
 
 @SpringBootApplication(
     scanBasePackages = [
@@ -11,5 +12,7 @@ import org.springframework.boot.runApplication
 class MockSiteApplication
 
 fun main() {
-    runApplication<MockSiteApplication>()
+    runApplication<MockSiteApplication> {
+        setAdditionalProfiles("test")
+    }
 }
