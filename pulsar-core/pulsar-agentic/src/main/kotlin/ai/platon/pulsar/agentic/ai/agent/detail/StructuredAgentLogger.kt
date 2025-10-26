@@ -1,4 +1,4 @@
-package ai.platon.pulsar.agentic.ai.agent
+package ai.platon.pulsar.agentic.ai.agent.detail
 
 import ai.platon.pulsar.common.StructuredLogger
 import org.slf4j.Logger

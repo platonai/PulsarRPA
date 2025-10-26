@@ -1,4 +1,4 @@
-package ai.platon.pulsar.agentic.ai.agent
+package ai.platon.pulsar.agentic.ai.agent.detail
 
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState

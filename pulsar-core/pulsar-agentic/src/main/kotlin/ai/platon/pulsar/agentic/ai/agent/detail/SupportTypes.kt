@@ -1,4 +1,4 @@
-package ai.platon.pulsar.agentic.ai.agent
+package ai.platon.pulsar.agentic.ai.agent.detail
 
 import ai.platon.pulsar.skeleton.ai.support.ToolCall
 import java.time.Instant

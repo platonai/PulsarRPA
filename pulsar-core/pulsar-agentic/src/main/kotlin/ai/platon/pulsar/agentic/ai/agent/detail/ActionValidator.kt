@@ -1,9 +1,8 @@
-package ai.platon.pulsar.agentic.ai.agent
+package ai.platon.pulsar.agentic.ai.agent.detail
 
 import ai.platon.pulsar.browser.driver.chrome.dom.FBNLocator
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.support.ToolCall
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 
@@ -75,7 +74,7 @@ class ActionValidator(
             return false
         }
 
-        val isSimplifiedFBN = selector.matches(FBNLocator.SIMPLIFIED_REGEX)
+        val isSimplifiedFBN = selector.matches(FBNLocator.Companion.SIMPLIFIED_REGEX)
         if (isSimplifiedFBN) {
             return true
         }

@@ -61,7 +61,6 @@ class PromptBuilder(val locale: Locale = Locale.CHINESE) {
 
     val isCN = locale in listOf(Locale.CHINESE, Locale.SIMPLIFIED_CHINESE, Locale.TRADITIONAL_CHINESE)
 
-
     private fun buildSystemPromptV20251025(
         url: String,
         executionInstruction: String,
