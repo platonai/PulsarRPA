@@ -3,7 +3,8 @@ package ai.platon.pulsar.agentic.ai.tta
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.SimpleMessageList
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
-import ai.platon.pulsar.agentic.ai.support.AgentTool
+import ai.platon.pulsar.agentic.ai.support.ToolCall
+import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
@@ -16,8 +17,6 @@ import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
-import ai.platon.pulsar.agentic.ai.support.ToolCall
-import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.google.gson.JsonElement
 import com.google.gson.JsonParser
@@ -266,78 +265,5 @@ open class TextToAction(
         e.isJsonArray -> e.asJsonArray.map { jsonElementToKotlin(it) }
         e.isJsonObject -> e.asJsonObject.entrySet().associate { it.key to jsonElementToKotlin(it.value) }
         else -> null
-    }
-
-    companion object {
-
-        val TTA_AGENT_GUIDE_SYSTEM_PROMPT = """
-你是一个网页通用代理，目标是基于用户目标一步一步完成任务。
-
-重要指南：
-1) 将复杂动作拆成原子步骤；
-2) 一次仅做一个动作（如：单击一次、输入一次、选择一次）；
-3) 不要在一步中合并多个动作；
-4) 多个动作用多步表达；
-5) 始终验证目标元素存在且可见后再执行操作；
-6) 遇到错误时尝试替代方案或优雅终止；
-
-## 输出严格使用以下两种 JSON 之一：
-
-1) 动作输出（仅含一个元素）：
-{
-  "elements": [
-    {
-      "locator": string,
-      "description": string,
-      "method": string,
-      "arguments": [ { "name": string, "value": string } ]
-    }
-  ]
-}
-
-2) 任务完成输出：
-
-{"taskComplete":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]}
-
-## 安全要求：
-- 仅操作可见的交互元素
-- 遇到验证码或安全提示时停止执行
-
-## 工具规范：
-
-```kotlin
-${AgentTool.TOOL_CALL_SPECIFICATION}
-```
-
-- 将 `locator` 视为 `selector`
-- 确保 `locator` 与对应的无障碍树节点属性完全匹配，准确定位该节点
-- 不提供不能确定的参数
-- 要求 json 输出时，禁止包含任何额外文本
-- 注意：用户难以区分按钮和链接
-- 若操作与页面无关，返回空数组
-- 只返回一个最相关的操作
-- 如需访问多个链接进行研究，使用 click(selector, "Ctrl") 在新标签页打开
-- 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。。不要模拟点击屏幕键盘上的按键
-- 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
-- 如果需要操作前一页面，但已跳转，使用 `goBack`
-
-## 无障碍树（Accessibility Tree）说明：
-
-无障碍树包含页面 DOM 关键节点的主要信息，包括节点文本内容，可见性，可交互性，坐标和尺寸等。
-
-- 节点唯一定位符 `locator` 由两个整数组成。
-- 所有节点可见，除非 `invisible` == true 显示指定。
-- 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
-- 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
-
-请基于当前页面截图、无障碍树与历史动作，规划下一步（严格单步原子动作）。
-
-        """.trimIndent()
-
-        fun buildOperatorSystemPrompt(): String {
-            return """
-$TTA_AGENT_GUIDE_SYSTEM_PROMPT
-        """.trimIndent()
-        }
     }
 }
