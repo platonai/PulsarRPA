@@ -20,7 +20,7 @@ class SessionAct {
     private fun step(label: String) { logger.info("[STEP ${++stepNo}] $label") }
     private fun result(label: String, value: Any?) {
         val text = if (value is PerceptiveAgent) {
-            value.history.lastOrNull()?.replace("\n", " ")?.take(240)
+            value.actionHistory.lastOrNull()?.replace("\n", " ")?.take(240)
         } else {
             value?.toString()?.replace("\n", " ")?.take(240)
         }

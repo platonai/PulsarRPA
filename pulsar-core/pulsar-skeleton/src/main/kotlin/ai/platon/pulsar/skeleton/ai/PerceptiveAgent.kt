@@ -57,7 +57,7 @@ data class ObserveResult constructor(
 
 interface PerceptiveAgent {
     val uuid: UUID
-    val history: List<String>
+    val actionHistory: List<String>
 
     /**
      * Run `observe -> act -> observe -> act -> ...` loop to resolve the problem.

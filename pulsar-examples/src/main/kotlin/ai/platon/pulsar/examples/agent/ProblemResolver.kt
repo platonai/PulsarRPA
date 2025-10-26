@@ -12,7 +12,7 @@ class ProblemResolver {
         val agent = session.resolve("read top 3 articles and give me a summary")
 
         println("Result: ")
-        agent.history.forEach { println("- $it") }
+        agent.actionHistory.forEach { println("- $it") }
 
         readln()
     }

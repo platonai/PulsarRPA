@@ -115,14 +115,14 @@ class BrowserPerceptiveAgent(
     private val validationCache = ConcurrentHashMap<String, Boolean>()
 
     // Enhanced state management
-    private val _history = mutableListOf<String>()
+    private val _actionHistory = mutableListOf<String>()
     private val performanceMetrics = PerformanceMetrics()
     private val retryCounter = AtomicInteger(0)
     private val consecutiveFailureCounter = AtomicInteger(0)
     private val stepExecutionTimes = ConcurrentHashMap<Int, Long>()
 
     override val uuid = UUID.randomUUID()
-    override val history: List<String> get() = _history
+    override val actionHistory: List<String> get() = _actionHistory
 
     override suspend fun resolve(problem: String): ActResult {
         val opts = ActionOptions(action = problem)
@@ -884,7 +884,7 @@ class BrowserPerceptiveAgent(
     // Enhanced helper methods for improved functionality
 
     override fun toString(): String {
-        return history.lastOrNull() ?: "(no history)"
+        return actionHistory.lastOrNull() ?: "(no history)"
     }
 
     /**
@@ -1120,9 +1120,9 @@ class BrowserPerceptiveAgent(
     private fun performMemoryCleanup(context: ExecutionContext) {
         try {
             // Clean up history if it gets too large
-            if (_history.size > config.maxHistorySize) {
-                val toRemove = _history.size - config.maxHistorySize + 10
-                // _history.subList(0, toRemove).clear()
+            if (actionHistory.size > config.maxHistorySize) {
+                val toRemove = actionHistory.size - config.maxHistorySize + 10
+                _actionHistory.subList(0, toRemove).clear()
             }
 
             // Clear validation cache periodically
@@ -1140,10 +1140,10 @@ class BrowserPerceptiveAgent(
      * Enhanced history management
      */
     private fun addToHistory(entry: String) {
-        _history.add(entry)
-        if (_history.size > config.maxHistorySize * 2) {
-            // Remove oldest entries to prevent memory issues
-            // _history.subList(0, config.maxHistorySize).clear()
+        _actionHistory.add(entry)
+        if (actionHistory.size > config.maxHistorySize * 2) {
+            // Remove the oldest entries to prevent memory issues
+            _actionHistory.subList(0, config.maxHistorySize).clear()
         }
     }
 
@@ -1416,7 +1416,7 @@ class BrowserPerceptiveAgent(
             sb.appendLine("INSTRUCTION: $instruction")
             sb.appendLine("RESPONSE_STATE: ${finalResp.state}")
             sb.appendLine("EXECUTION_HISTORY:")
-            _history.forEach { sb.appendLine(it) }
+            actionHistory.forEach { sb.appendLine(it) }
             sb.appendLine()
             sb.appendLine("FINAL_SUMMARY:")
             sb.appendLine(finalResp.content)
@@ -1431,7 +1431,7 @@ class BrowserPerceptiveAgent(
             Files.writeString(log, sb.toString())
             slogger.info(
                 "Transcript persisted successfully", context,
-                mapOf("lines" to _history.size + 10, "path" to log.toString())
+                mapOf("lines" to actionHistory.size + 10, "path" to log.toString())
             )
         }.onFailure { e ->
             slogger.logError("Failed to persist transcript", e, context.sessionId)
@@ -1443,7 +1443,7 @@ class BrowserPerceptiveAgent(
         val user = buildString {
             appendLine("原始目标：$goal")
             appendLine("执行轨迹(按序)：")
-            _history.forEach { appendLine(it) }
+            actionHistory.forEach { appendLine(it) }
             appendLine()
             appendLine("""请严格输出 JSON：{"taskComplete":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]} 无多余文字。""")
         }
@@ -1483,8 +1483,8 @@ class BrowserPerceptiveAgent(
 
     // history + atom operation guide + completion condition
     private fun buildHistoryMessage(): String {
-        val his = if (history.isNotEmpty()) {
-            history.takeLast(min(8, history.size)).joinToString("\n")
+        val his = if (actionHistory.isNotEmpty()) {
+            actionHistory.takeLast(min(8, actionHistory.size)).joinToString("\n")
         } else "(无)"
 
         val msg = """
