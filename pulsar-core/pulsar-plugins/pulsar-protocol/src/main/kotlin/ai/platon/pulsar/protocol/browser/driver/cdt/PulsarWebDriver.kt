@@ -54,19 +54,21 @@ class PulsarWebDriver(
 
     override val browserType: BrowserType = BrowserType.PULSAR_CHROME
 
-    private val browserAPI = devTools.browser.takeIf { isActive }
-    private val pageAPI = devTools.page.takeIf { isActive }
-    private val domAPI = devTools.dom.takeIf { isActive }
-    private val cssAPI = devTools.css.takeIf { isActive }
-    private val mainFrameAPI = runBlocking { pageAPI?.getFrameTree()?.frame }
-    private val networkAPI = devTools.network.takeIf { isActive }
-    private val fetchAPI = devTools.fetch.takeIf { isActive }
-    private val runtimeAPI = devTools.runtime.takeIf { isActive }
-    private val emulationAPI = devTools.emulation.takeIf { isActive }
+    private val browserAPI get() = devTools.browser.takeIf { isActive }
+    private val pageAPI get() = devTools.page.takeIf { isActive }
+    private val targetAPI get() = devTools.target.takeIf { isActive }
+    private val domAPI get() = devTools.dom.takeIf { isActive }
+    private val cssAPI get() = devTools.css.takeIf { isActive }
+    private val inputAPI get() = devTools.input.takeIf { isActive }
+    private val mainFrameAPI get() = runBlocking { pageAPI?.getFrameTree()?.frame }
+    private val networkAPI get() = devTools.network.takeIf { isActive }
+    private val fetchAPI get() = devTools.fetch.takeIf { isActive }
+    private val runtimeAPI get() = devTools.runtime.takeIf { isActive }
+    private val emulationAPI get() = devTools.emulation.takeIf { isActive }
 
     private val page = PageHandler(devTools, settings.confuser)
-    private val mouse = page.mouse.takeIf { isActive }
-    private val keyboard = page.keyboard.takeIf { isActive }
+    private val mouse get() = page.mouse.takeIf { isActive }
+    private val keyboard get() = page.keyboard.takeIf { isActive }
     private val screenshot = ScreenshotHandler(page, devTools)
 
     private val rpc = RobustRPC(this)
@@ -540,7 +542,7 @@ class PulsarWebDriver(
         return invokeOnPage("pageSource") {
             // pageAPI?.getResourceContent(mainFrameAPI?.id, currentUrl())
             val document = domAPI?.getDocument() ?: return@invokeOnPage null
-            domAPI.getOuterHTML(document.nodeId, document.backendNodeId)
+            domAPI?.getOuterHTML(document.nodeId, document.backendNodeId)
         }
     }
 
