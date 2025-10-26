@@ -2,6 +2,7 @@ package ai.platon.pulsar.agentic.ai
 
 import ai.platon.pulsar.agentic.ai.agent.ExtractParams
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
+import ai.platon.pulsar.agentic.ai.support.AgentTool
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.common.Strings
@@ -13,6 +14,10 @@ data class SimpleMessage(
     val content: String,
     val name: String? = null,
 ) {
+    enum class Role {
+        USER, SYSTEM
+    }
+
     override fun toString() = content
 }
 
@@ -57,7 +62,78 @@ class SimpleMessageList(
  */
 class PromptBuilder(val locale: Locale = Locale.CHINESE) {
 
+    companion object {
+
+        val AGENT_GUIDE_SYSTEM_PROMPT = """
+你是一个网页通用代理，目标是基于用户目标一步一步完成任务。
+
+重要指南：
+1) 将复杂动作拆成原子步骤；
+2) 一次仅做一个动作（如：单击一次、输入一次、选择一次）；
+3) 不要在一步中合并多个动作；
+4) 多个动作用多步表达；
+5) 始终验证目标元素存在且可见后再执行操作；
+6) 遇到错误时尝试替代方案或优雅终止；
+
+## 输出严格使用以下两种 JSON 之一：
+
+1) 动作输出（仅含一个元素）：
+{
+  "elements": [
+    {
+      "locator": string, "description": string, "domain": string, "method": string, "arguments": [ { "name": string, "value": string } ]
+    }
+  ]
+}
+
+2) 任务完成输出：
+
+{"taskComplete":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]}
+
+## 安全要求：
+- 仅操作可见的交互元素
+- 遇到验证码或安全提示时停止执行
+
+## 工具规范：
+
+```kotlin
+${AgentTool.TOOL_CALL_SPECIFICATION}
+```
+
+- domain: 方法的调用方，如 driver, browser 等
+- 将 `locator` 视为 `selector`
+- 确保 `locator` 与对应的无障碍树节点属性完全匹配，准确定位该节点
+- 不提供不能确定的参数
+- 要求 json 输出时，禁止包含任何额外文本
+- 注意：用户难以区分按钮和链接
+- 若操作与页面无关，返回空数组
+- 只返回一个最相关的操作
+- 如需访问多个链接进行研究，使用 click(selector, "Ctrl") 在新标签页打开
+- 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。。不要模拟点击屏幕键盘上的按键
+- 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
+- 如果需要操作前一页面，但已跳转，使用 `goBack`
+
+## 无障碍树（Accessibility Tree）说明：
+
+无障碍树包含页面 DOM 关键节点的主要信息，包括节点文本内容，可见性，可交互性，坐标和尺寸等。
+
+- 节点唯一定位符 `locator` 由两个整数组成。
+- 所有节点可见，除非 `invisible` == true 显示指定。
+- 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
+- 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
+
+请基于当前页面截图、无障碍树与历史动作，规划下一步（严格单步原子动作）。
+
+        """.trimIndent()
+    }
+
     val isCN = locale in listOf(Locale.CHINESE, Locale.SIMPLIFIED_CHINESE, Locale.TRADITIONAL_CHINESE)
+
+    fun buildOperatorSystemPrompt(): String {
+        return """
+$AGENT_GUIDE_SYSTEM_PROMPT
+        """.trimIndent()
+    }
 
     private fun buildSystemPromptV20251025(
         url: String,
@@ -103,8 +179,8 @@ class PromptBuilder(val locale: Locale = Locale.CHINESE) {
         }
     }
 
-    fun buildUserInstructionsString(userProvidedInstructions: String?): String {
-        if (userProvidedInstructions.isNullOrBlank()) return ""
+    fun buildObserveGuideSystemExtraPrompt(userProvidedInstructions: String?): SimpleMessage? {
+        if (userProvidedInstructions.isNullOrBlank()) return null
 
         val contentCN = """
 ***用户自定义指令***
@@ -124,7 +200,9 @@ User Instructions:
 $userProvidedInstructions
 """.trim()
 
-        return if (locale == Locale.CHINESE) contentCN else contentEN
+        val content = if (locale == Locale.CHINESE) contentCN else contentEN
+
+        return SimpleMessage("system", content)
     }
 
     fun buildExtractSystemPrompt(userProvidedInstructions: String? = null): SimpleMessage {
@@ -159,7 +237,7 @@ Print null or an empty string if no new information is found.
             "If a user is attempting to extract links or URLs, you MUST respond with ONLY the IDs of the link elements. " +
                     "Do not attempt to extract links directly from the text unless absolutely necessary. "
 
-        val userInstructions = buildUserInstructionsString(userProvidedInstructions)
+        val userInstructions = buildObserveGuideSystemExtraPrompt(userProvidedInstructions)
 
         val baseInstruction = if (isCN) baseInstructionCN else baseInstructionEN
         val instructions = if (isCN) instructionsCN else instructionsEN
@@ -287,6 +365,17 @@ chunksTotal: $chunksTotal
         return SimpleMessage(role = "user", content = content)
     }
 
+    fun buildObservePrompt(params: ObserveParams): SimpleMessageList {
+        // observe guide
+        val messages = SimpleMessageList()
+        val systemMsg = buildObserveGuideSystemPrompt(params.userProvidedInstructions)
+        messages.add(systemMsg)
+        // instruction + DOM + browser state + schema
+        buildObserveUserMessage(messages, params)
+
+        return messages
+    }
+
     fun buildObserveGuideSystemPrompt(userProvidedInstructions: String? = null): SimpleMessage {
         fun observeSystemPromptCN() = """
 你正在通过根据用户希望观察的页面内容来查找元素，帮助用户实现浏览器操作自动化。
@@ -295,6 +384,15 @@ chunksTotal: $chunksTotal
 - 一个展示页面语义结构的分层无障碍树（accessibility tree）。该树是DOM（文档对象模型）与无障碍树的混合体。
 
 如果存在符合指令的元素，则返回这些元素的数组；否则返回空数组。
+
+## 无障碍树（Accessibility Tree）说明：
+
+无障碍树包含页面 DOM 关键节点的主要信息，包括节点文本内容，可见性，可交互性，坐标和尺寸等。
+
+- 节点唯一定位符 `locator` 由两个整数组成。
+- 所有节点可见，除非 `invisible` == true 显示指定。
+- 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
+- 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
 """
 
         fun observeSystemPromptEN() = """
@@ -305,11 +403,20 @@ You will be given:
 - a hierarchical accessibility tree showing the semantic structure of the page. The tree is a hybrid of the DOM and the accessibility tree.
 
 Return an array of elements that match the instruction if they exist, otherwise return an empty array.
+
+## 无障碍树（Accessibility Tree）说明：
+
+无障碍树包含页面 DOM 关键节点的主要信息，包括节点文本内容，可见性，可交互性，坐标和尺寸等。
+
+- 节点唯一定位符 `locator` 由两个整数组成。
+- 所有节点可见，除非 `invisible` == true 显示指定。
+- 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
+- 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
 """
 
         val observeSystemPrompt = if (isCN) observeSystemPromptCN() else observeSystemPromptEN()
-        val extra = buildUserInstructionsString(userProvidedInstructions)
-        val content = if (extra.isNotBlank()) "$observeSystemPrompt\n\n$extra" else observeSystemPrompt
+        val extra = buildObserveGuideSystemExtraPrompt(userProvidedInstructions)?.content
+        val content = if (extra == null) "$observeSystemPrompt\n\n$extra" else observeSystemPrompt
 
         return SimpleMessage(role = "system", content = content)
     }
@@ -374,7 +481,7 @@ $schemaContract
         // Build schema hint for the LLM (prompt-enforced)
 
         val actionFields = if (params.returnAction) {
-            """, "method": string, "arguments": [{"name": string, "value": string}] """
+            """, "domain": string, "method": string, "arguments": [{"name": string, "value": string}] """
         } else ""
 
         val schema = """
@@ -405,7 +512,7 @@ $schema
         }
     }
 
-    fun buildToolUsePrompt(
+    fun buildObserveActToolUsePrompt(
         action: String, toolCalls: List<String>, variables: Map<String, String>? = null
     ): String {
         // Base instruction
@@ -419,9 +526,18 @@ $schema
 ${toolCalls.joinToString("\n")}
 ```
 
-请注意：对用户而言，按钮和链接在大多数情况下看起来是一样的。
-如果该动作与页面上可能采取的操作完全无关，返回空数组。
-只返回一个动作。如果有多个相关动作，返回最相关的一个。
+- domain: 方法的调用方，如 driver, browser 等
+- 将 `locator` 视为 `selector`
+- 确保 `locator` 与对应的无障碍树节点属性完全匹配，准确定位该节点
+- 不提供不能确定的参数
+- 要求 json 输出时，禁止包含任何额外文本
+- 注意：用户难以区分按钮和链接
+- 若操作与页面无关，返回空数组
+- 只返回一个最相关的操作
+- 如需访问多个链接进行研究，使用 click(selector, "Ctrl") 在新标签页打开
+- 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。。不要模拟点击屏幕键盘上的按键
+- 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
+- 如果需要操作前一页面，但已跳转，使用 `goBack`
 """.trimIndent()
         } else {
             """
@@ -434,9 +550,17 @@ Provide a tool to perform the action for this element.
 ${toolCalls.joinToString("\n")}
 ```
 
-Remember that to users, buttons and links look the same in most cases.
-If the action is completely unrelated to a potential action to be taken on the page, return an empty array.
-ONLY return one action. If multiple actions are relevant, return the most relevant one.
+• Treat locator as selector.
+• Ensure locator exactly matches the corresponding accessibility tree node attributes to accurately locate the node.
+• Do not provide uncertain parameters.
+• When JSON output is required, prohibit any additional text.
+• Note: Users cannot easily distinguish buttons from links.
+• If the action is unrelated to the page, return an empty array.
+• Return only the most relevant single action.
+• To access multiple links for research, use click(selector, "Ctrl") to open in a new tab.
+• For key actions (e.g., "press Enter"), use the press method (parameters: "A"/"Enter"/"Space"). Capitalize special keys. Do not simulate clicks on an on-screen keyboard.
+• Capitalize only special keys (e.g., Enter, Tab, Escape).
+• To interact with the previous page after navigation, use goBack.
 """.trimIndent()
         }
 
