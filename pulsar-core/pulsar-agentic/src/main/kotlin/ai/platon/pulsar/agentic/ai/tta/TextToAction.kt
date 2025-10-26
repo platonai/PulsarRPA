@@ -306,7 +306,7 @@ open class TextToAction(
 ## 工具规范：
 
 ```kotlin
-${AgentTool.TOOL_CALL_LIST}
+${AgentTool.TOOL_CALL_SPECIFICATION}
 ```
 
 - 将 `locator` 视为 `selector`
@@ -316,6 +316,7 @@ ${AgentTool.TOOL_CALL_LIST}
 - 注意：用户难以区分按钮和链接
 - 若操作与页面无关，返回空数组
 - 只返回一个最相关的操作
+- 如需访问多个链接进行研究，使用 click(selector, "Ctrl") 在新标签页打开
 - 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。。不要模拟点击屏幕键盘上的按键
 - 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
 - 如果需要操作前一页面，但已跳转，使用 `goBack`

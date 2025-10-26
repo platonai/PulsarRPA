@@ -6,6 +6,7 @@ import ai.platon.cdt.kt.protocol.commands.Page
 import ai.platon.cdt.kt.protocol.types.input.*
 import ai.platon.pulsar.common.DescriptiveResult
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.io.KeyboardModifier
 import ai.platon.pulsar.common.io.VirtualKey
 import ai.platon.pulsar.common.io.VirtualKeyboard
 import ai.platon.pulsar.common.io.VirtualKeyboard.KEYPAD_LOCATION
@@ -739,12 +740,15 @@ class EmulationHandler(
 
         var modifiers = 0
         if (modifier != null) {
-            val virtualKey = keyboard?.createVirtualKeyForSingleKeyString(modifier)
-            if (virtualKey?.isModifier == true) {
-                // Use CDP-compliant modifier bitmask for mouse events
-                modifiers = modifierMaskForKeyString(modifier)
+            val normModifier = KeyboardModifier.entries.map { it.name.uppercase() }.find { it == modifier.uppercase() }
+            if (normModifier != null) {
+                val virtualKey = keyboard?.createVirtualKeyForSingleKeyString(normModifier)
+                if (virtualKey?.isModifier == true) {
+                    // Use CDP-compliant modifier bitmask for mouse events
+                    modifiers = modifierMaskForKeyString(normModifier)
+                }
+                keyboard?.down(normModifier)
             }
-            keyboard?.down(modifier)
         }
 
         mouse?.click(point.x, point.y, count,

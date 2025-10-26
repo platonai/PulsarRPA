@@ -474,7 +474,7 @@ class PlaywrightDriver(
     }
 
     override suspend fun click(selector: String, modifier: String) {
-        val modifier = KeyboardModifier.valueOf(modifier)
+        val modifier = KeyboardModifier.valueOf(modifier.uppercase())
         page.click(selector, Page.ClickOptions().setModifiers(listOf(modifier)))
     }
 

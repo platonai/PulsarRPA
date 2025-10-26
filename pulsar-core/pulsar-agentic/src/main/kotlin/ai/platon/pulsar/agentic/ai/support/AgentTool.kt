@@ -5,7 +5,7 @@ object AgentTool {
     /**
      * The `TOOL_CALL_LIST` is written using kotlin syntax to express the tool's `domain`, `method`, `arguments`.
      * */
-    const val TOOL_CALL_LIST = """
+    const val TOOL_CALL_SPECIFICATION = """
 driver.navigateTo(url: String)
 driver.waitForSelector(selector: String, timeoutMillis: Long = 5000)
 driver.exists(selector: String): Boolean
@@ -47,7 +47,12 @@ agent.extract(instruction: String): ExtractResult
 agent.extract(options: ExtractOptions): ExtractResult
     """
 
-    val SUPPORTED_TOOL_CALLS = TOOL_CALL_LIST.split("\n").filter { it.contains("(") }.map { it.trim() }
+    val SUPPORTED_TOOL_CALLS = TOOL_CALL_SPECIFICATION
+        .split("\n").asSequence()
+        .map { it.trim() }
+        .filterNot { it.startsWith("//") }
+        .filter { it.contains("(") }
+        .toList()
 
     @Suppress("unused")
     val SUPPORTED_ACTIONS = SUPPORTED_TOOL_CALLS.map { it.substringBefore("(") }
