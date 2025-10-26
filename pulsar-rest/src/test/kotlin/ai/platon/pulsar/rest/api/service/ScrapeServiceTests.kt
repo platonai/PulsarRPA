@@ -30,9 +30,9 @@ import kotlin.test.assertTrue
 @Import(MockEcServerConfiguration::class)
 class ScrapeServiceTests : MockEcServerTestBase() {
 
-    private val productListURL = "http://localhost:18182/ec/b?node=1292115012"
+    private val productListURL = "http://localhost:18080/ec/b?node=1292115012"
 
-    private val productDetailURL = "http://localhost:18182/ec/dp/B0E000001"
+    private val productDetailURL = "http://localhost:18080/ec/dp/B0E000001"
 
     @Autowired
     private lateinit var config: ImmutableConfig

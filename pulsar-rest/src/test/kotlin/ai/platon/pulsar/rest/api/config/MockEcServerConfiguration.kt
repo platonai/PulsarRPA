@@ -28,7 +28,7 @@ class MockEcServerConfiguration : InitializingBean, DisposableBean {
     private var isServerStarted = false
 
     companion object {
-        const val MOCK_SERVER_PORT = 18182
+        const val MOCK_SERVER_PORT = 18080
         const val MOCK_SERVER_STARTUP_TIMEOUT_MS = 60000L // 60 seconds
     }
 

@@ -23,7 +23,7 @@ abstract class MockEcServerTestBase {
     @Autowired
     protected lateinit var restTemplate: RestTemplate
 
-    protected val mockServerBaseUrl = "http://localhost:18182"
+    protected val mockServerBaseUrl = "http://localhost:18080"
 
     // Common mock URLs for testing
     protected val mockProductListUrl = "$mockServerBaseUrl/ec/b?node=1292115012"

@@ -8,9 +8,9 @@ object TestHelper {
     val session = PulsarContexts.getOrCreateSession()
 
     // Using mock EC server URLs instead of real Amazon URLs
-    const val PRODUCT_LIST_URL = "http://localhost:18182/ec/b?node=1292115012"
+    const val PRODUCT_LIST_URL = "http://localhost:18080/ec/b?node=1292115012"
 
-    const val PRODUCT_DETAIL_URL = "http://localhost:18182/ec/dp/B0E000001"
+    const val PRODUCT_DETAIL_URL = "http://localhost:18080/ec/dp/B0E000001"
 
     fun ensurePage(url: String) {
         val pageRequirement = { page: WebPage -> page.protocolStatus.isSuccess && page.persistedContentLength > 8000 }
