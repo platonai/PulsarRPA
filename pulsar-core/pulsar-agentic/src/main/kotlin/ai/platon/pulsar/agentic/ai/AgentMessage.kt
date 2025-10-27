@@ -15,16 +15,16 @@ data class SimpleMessage(
 class AgentMessageList(
     val messages: MutableList<SimpleMessage> = mutableListOf()
 ) {
-    fun addSystem(content: String, key: String? = null) {
-        add("system", content, key)
+    fun addSystem(content: String, name: String? = null) {
+        add("system", content, name)
     }
 
-    fun addUser(content: String, key: String? = null) {
-        add("user", content, key)
+    fun addUser(content: String, name: String? = null) {
+        add("user", content, name)
     }
 
-    fun add(role: String, content: String, key: String? = null) {
-        val msg = SimpleMessage(role, content, key)
+    fun add(role: String, content: String, name: String? = null) {
+        val msg = SimpleMessage(role, content, name)
         messages.add(msg)
     }
 

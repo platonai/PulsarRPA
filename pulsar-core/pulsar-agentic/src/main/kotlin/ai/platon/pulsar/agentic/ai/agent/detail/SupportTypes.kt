@@ -39,8 +39,3 @@ data class ExecutionContext(
     val timestamp: Instant = Instant.now(),
     val additionalContext: Map<String, Any> = emptyMap()
 )
-
-data class ToolCallResponse(
-    val toolCalls: List<ToolCall>,
-    val taskComplete: Boolean?,
-)

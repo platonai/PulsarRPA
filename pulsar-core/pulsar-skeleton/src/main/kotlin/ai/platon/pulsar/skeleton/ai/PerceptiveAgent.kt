@@ -65,6 +65,7 @@ data class ObserveElement constructor(
 
     val toolCall: ToolCall? = null,
     val node: DOMTreeNodeEx? = null,
+    val backendNodeId: Int? = null,
     val xpath: String? = null,
     val cssSelector: String? = null,
     val expressions: List<String> = emptyList(),

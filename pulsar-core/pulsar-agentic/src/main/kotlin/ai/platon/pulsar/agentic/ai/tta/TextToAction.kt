@@ -120,10 +120,10 @@ open class TextToAction(
         screenshotB64: String? = null,
         toolCallLimit: Int = 100,
     ): ModelResponse {
-        var overallGoal = messages.find("overallGoal")?.content ?: ""
+        var overallGoal: String? = messages.find("overallGoal")?.content
         overallGoal = StringUtils.substringBetween(overallGoal, "<overallGoal>", "</overallGoal>")
         val params = ObserveParams(
-            overallGoal,
+            overallGoal ?: "",
             browserUseState = browserUseState,
             returnAction = true,
             logInferenceToFile = true
@@ -329,6 +329,7 @@ open class TextToAction(
 
         val revisedObserveElement = observeElement.copy(
             node = node,
+            backendNodeId = node?.backendNodeId,
             cssSelector = cssSelector,
             expressions = expression?.let { listOf(it) } ?: emptyList(),
             cssFriendlyExpressions = cssFriendlyExpression?.let { listOf(it) } ?: emptyList(),

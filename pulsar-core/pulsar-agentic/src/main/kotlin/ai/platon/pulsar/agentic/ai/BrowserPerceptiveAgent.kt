@@ -19,7 +19,6 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.Pson
-import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
@@ -108,6 +107,10 @@ class BrowserPerceptiveAgent(
     private val validationCache = ConcurrentHashMap<String, Boolean>()
 
     // Enhanced state management
+    // The history exists to give the AI agent a concise, sequential memory of what has been done.
+    // This helps the model select the next step and summarize outcomes.
+    // For this to work well, the history should reflect only the agent’s actual, single-step actions
+    // with clear success/failure signals and the observation context that impacted/was impacted by the action.
     private val _history = mutableListOf<AgentState>()
     private val _recordHistory = mutableListOf<String>()
     private val performanceMetrics = PerformanceMetrics()
@@ -115,8 +118,8 @@ class BrowserPerceptiveAgent(
     private val consecutiveFailureCounter = AtomicInteger(0)
     private val stepExecutionTimes = ConcurrentHashMap<Int, Long>()
 
-    // Jackson mapper aligned with project conventions
-    private val jsonMapper by lazy { pulsarObjectMapper() }
+    // Jackson mapper aligned with project conventions (unused)
+    // private val jsonMapper by lazy { pulsarObjectMapper() }
 
     override val uuid = UUID.randomUUID()
     override val history: List<AgentState> get() = _history
@@ -134,7 +137,7 @@ class BrowserPerceptiveAgent(
         val startTime = Instant.now()
         val sessionId = uuid.toString()
 
-        // Add start history for better traceability
+        // Add start history for better traceability (meta record only)
         addToRecordHistory("resolve START session=${sessionId.take(8)} goal='${Strings.compactWhitespaces(action.action, 160)}' maxSteps=${config.maxSteps} maxRetries=${config.maxRetries}")
 
         // Overall timeout to prevent indefinite hangs for a full resolve session
@@ -143,11 +146,12 @@ class BrowserPerceptiveAgent(
                 resolveProblemWithRetry(action, sessionId, startTime)
             }
             val dur = Duration.between(startTime, Instant.now()).toMillis()
-            addToHistory("resolve DONE session=${sessionId.take(8)} success=${result.success} dur=${dur}ms")
+            // Not a single-step action, keep it out of AgentState history
+            addToRecordHistory("resolve DONE session=${sessionId.take(8)} success=${result.success} dur=${dur}ms")
             result
         } catch (_: TimeoutCancellationException) {
             val msg = "Resolve timed out after ${config.resolveTimeoutMs}ms: ${action.action}"
-            addToHistory("resolve TIMEOUT: ${Strings.compactWhitespaces(action.action, 160)}")
+            addToRecordHistory("resolve TIMEOUT: ${Strings.compactWhitespaces(action.action, 160)}")
             ActResult(success = false, message = msg, action = action.action)
         }
     }
@@ -169,7 +173,7 @@ class BrowserPerceptiveAgent(
             }
         } catch (_: TimeoutCancellationException) {
             val msg = "Action timed out after ${config.actTimeoutMs}ms: ${action.action}"
-            addToHistory("act TIMEOUT: ${action.action}")
+            addToRecordHistory("act TIMEOUT: ${action.action}")
             ActResult(success = false, message = msg, action = action.action)
         }
     }
@@ -177,68 +181,57 @@ class BrowserPerceptiveAgent(
     override suspend fun act(observe: ObserveResult): ActResult {
         val method = observe.method?.trim()?.takeIf { it.isNotEmpty() }
         val locator = observe.locator?.let { Locator.parse(it) }
-        // Use the correct type for arguments from ObserveResult
         val argsMap: Map<String, Any?> = observe.arguments ?: emptyMap()
 
         if (method == null || locator == null) {
             val msg = "No valuable observations were made | " + Pson.toJson(observe)
-            addToHistory(msg)
+            // Not an executed action
+            addToRecordHistory(msg)
             return ActResult(success = false, message = msg, action = "")
         }
 
-        // Build a minimal ToolCall-like map for validation and execution
         val toolArgs = mutableMapOf<String, Any?>()
-        // Copy provided arguments first (string values)
         argsMap.forEach { (k, v) -> toolArgs[k] = v }
 
-        // Inject selector only when the action targets an element
         val selectorActions = AgentTool.SELECTOR_ACTIONS
-        // val noSelectorActions = ToolCallExecutor.NO_SELECTOR_ACTIONS // unused
-
-        // val domain = "driver" // unused
         val domain = observe.domain ?: "unknown"
         val lowerMethod = method
         val backendNodeId = observe.backendNodeId
-        // backend selector is supported since 20251020; fallback to provided locator string when absent
         val selector = observe.backendNodeId?.let { "backend:$backendNodeId" } ?: observe.locator?.takeIf { it.isNotBlank() }
         if (lowerMethod in selectorActions) {
             toolArgs["selector"] = selector
             if (selector == null) {
                 val msg = "No selector observation were made $locator | $observe"
-                addToHistory(msg)
+                addToRecordHistory(msg)
                 return ActResult(success = false, message = msg, action = method)
             }
         }
 
         val driver = requireNotNull(activeDriver)
-        // For waitForNavigation validation, provide oldUrl if not present
         if (lowerMethod == "waitForNavigation") {
             if (toolArgs["oldUrl"]?.toString().isNullOrBlank()) {
                 toolArgs["oldUrl"] = driver.currentUrl()
             }
-            // Provide a reasonable default timeout if not set
             if (toolArgs["timeoutMillis"] == null) {
                 toolArgs["timeoutMillis"] = 5000L
             }
         }
 
-        // For navigateTo safety, validate URL; map a single unnamed arg to url if necessary
         if (lowerMethod == "navigateTo") {
             val url = toolArgs["url"]?.toString()
             if (url == null) {
                 val msg = "No url observation were made | " + Pson.toJson(observe)
-                addToHistory(msg)
+                addToRecordHistory(msg)
                 return ActResult(false, msg, action = method)
             }
 
             if (!isSafeUrl(url)) {
                 val msg = "Blocked unsafe URL: $url"
-                addToHistory(msg)
+                addToRecordHistory(msg)
                 return ActResult(false, msg, action = method)
             }
         }
 
-        // Pre-action validation (lightweight), reuse local ToolCall(data) class
         if (config.enablePreActionValidation) {
             val ok = actionValidator.validateToolCall(ToolCall(domain, lowerMethod, toolArgs))
             if (!ok) {
@@ -246,31 +239,60 @@ class BrowserPerceptiveAgent(
                 val sid = uuid.toString().take(8)
                 val curUrl = runCatching { driver.currentUrl() }.getOrDefault("")
                 logger.info("observe_act.validate.fail sid={} url={} msg={} ", sid, curUrl, msg)
-                addToHistory(msg)
+                addToRecordHistory(msg)
                 return ActResult(false, msg, action = method)
             }
         }
 
-        // Prefer using ToolCallExecutor's canonical driver line builder
         val toolCall = ToolCall(
             domain = observe.domain ?: "unknown",
             method = lowerMethod,
-            arguments = toolArgs
+            arguments = toolArgs,
+            description = observe.description
         )
 
-        // Execute via WebDriver dispatcher
         return try {
-            val observeElement = observe.observeElements?.firstOrNull()
+            val observeElement = ObserveElement(
+                locator = observe.locator,
+                currentPageContentSummary = observe.currentPageContentSummary,
+                actualLastActionImpact = observe.actualLastActionImpact,
+                expectedNextActionImpact = observe.expectedNextActionImpact,
+                toolCall = toolCall,
+                node = null,
+                backendNodeId = observe.backendNodeId,
+                xpath = null,
+                cssSelector = null,
+                expressions = observe.observeElements?.flatMap { it.expressions } ?: emptyList(),
+                cssFriendlyExpressions = observe.observeElements?.flatMap { it.cssFriendlyExpressions } ?: emptyList(),
+                modelResponse = null
+            )
             val action = ActionDescription(observeElement = observeElement)
-            doExecute(action)
 
-            val msg = "Action [$lowerMethod] executed on selector: $locator".trim()
-            addToHistory("observe.act -> ${toolCall.method}")
+            val result = doExecute(action)
+
+            val msg = "Action [$lowerMethod] executed on selector: ${observe.locator}".trim()
+            // Record exactly once for this executed action
+            recordAction(step = null, method = lowerMethod, success = true, observe = observeElement, message = msg)
             ActResult(success = true, message = msg, action = toolCall.method)
         } catch (e: Exception) {
             logger.error("observe.act execution failed sid={} msg={}", uuid.toString().take(8), e.message, e)
             val msg = e.message ?: "Execution failed"
-            addToHistory("observe.act FAIL $lowerMethod ${locator.absoluteSelector} -> $msg")
+            // Record failed action attempt once
+            val observeElement = ObserveElement(
+                locator = observe.locator,
+                currentPageContentSummary = observe.currentPageContentSummary,
+                actualLastActionImpact = observe.actualLastActionImpact,
+                expectedNextActionImpact = observe.expectedNextActionImpact,
+                toolCall = toolCall,
+                node = null,
+                backendNodeId = observe.backendNodeId,
+                xpath = null,
+                cssSelector = null,
+                expressions = observe.observeElements?.flatMap { it.expressions } ?: emptyList(),
+                cssFriendlyExpressions = observe.observeElements?.flatMap { it.cssFriendlyExpressions } ?: emptyList(),
+                modelResponse = null
+            )
+            recordAction(step = null, method = lowerMethod, success = false, observe = observeElement, message = msg)
             ActResult(success = false, message = msg, action = toolCall.method)
         }
     }
@@ -464,11 +486,10 @@ class BrowserPerceptiveAgent(
 
         if (results.isEmpty()) {
             val msg = "doObserveAct: No actionable element found"
-            addToHistory(msg)
+            addToRecordHistory(msg)
             return ActResult(false, msg, action = action.action)
         }
 
-        // High Priority #2: Try multiple results with fallback instead of only first()
         val resultsToTry = results.take(config.maxResultsToTry)
         var lastError: String? = null
 
@@ -504,59 +525,46 @@ class BrowserPerceptiveAgent(
                 if (remainingTime <= 0) {
                     val navError = "Navigation timeout after ${timeoutMs}ms for action: ${action.action}"
                     logger.warn(navError)
-                    addToHistory("act NAVIGATION_TIMEOUT: ${action.action}")
+                    addToRecordHistory("act NAVIGATION_TIMEOUT: ${action.action}")
                     return ActResult(success = false, message = navError, action = action.action)
                 }
             }
 
-            // Success! Return with original action text
-            addToHistory("act SUCCESS (candidate ${index + 1}/${resultsToTry.size}): ${action.action}")
+            // Success! Return with original action text (act(chosen) already recorded one history entry)
+            addToRecordHistory("act SUCCESS (candidate ${index + 1}/${resultsToTry.size}): ${action.action}")
             return execResult.copy(action = action.action)
         }
 
         // All candidates failed
         val msg = "All ${resultsToTry.size} candidates failed. Last error: $lastError"
-        addToHistory(msg)
+        addToRecordHistory(msg)
         return ActResult(false, msg, action = action.action)
     }
 
     private suspend fun doObserve1(params: ObserveParams, browserUseState: BrowserUseState): List<ObserveResult> {
         val requestId: String = params.requestId
-
-        // params.instruction:
-        // "Find the most relevant element to perform an action on given the following action ..."
         logObserveStart(params.instruction, requestId)
-
         return try {
-            // High Priority #6: Add timeout to LLM inference calls
             val internalResults = withTimeout(config.llmInferenceTimeoutMs) {
                 inference.observe(params)
             }
-            val results = internalResults.elements.map { ele ->
-                requireNotNull(ele.locator)
-                val locator = browserUseState.domState.getAbsoluteFBNLocator(ele.locator)
-                val node = if (locator != null) browserUseState.domState.locatorMap[locator] else null
-                if (node == null) {
-                    logger.warn("Failed retrieving backend node | {} | {}", locator, Pson.toJson(ele))
-                }
-                // Use xpath here
-                val xpathLocator = node?.xpath?.let { "xpath:$it" } ?: ""
-
+            val observeElements = internalResults.elements
+            val results = observeElements.map { ele ->
                 ObserveResult(
-                    description = ele.description ?: "(No comment ...)",
-                    locator = xpathLocator.trim(),
-                    backendNodeId = locator?.backendNodeId,
+                    locator = ele.locator,
                     domain = ele.domain?.ifBlank { null },
                     method = ele.method?.ifBlank { null },
                     arguments = ele.arguments?.takeIf { it.isNotEmpty() },
-
+                    description = ele.description ?: "(No comment ...)",
                     currentPageContentSummary = ele.currentPageContentSummary,
                     actualLastActionImpact = ele.actualLastActionImpact,
                     expectedNextActionImpact = ele.expectedNextActionImpact,
+                    backendNodeId = ele.backendNodeId,
+                    observeElements = observeElements,
                 )
             }
             addHistoryObserve(params.instruction, requestId, results.size, results.isNotEmpty())
-            results
+            return results
         } catch (e: Exception) {
             logger.error("observeAct.observe.error requestId={} msg={}", requestId.take(8), e.message, e)
             addHistoryObserve(params.instruction, requestId, 0, false)
@@ -616,19 +624,39 @@ class BrowserPerceptiveAgent(
         )
     }
 
+    /**
+     * history management: strictly record one AgentState per executed action with complete fields
+     */
+    private fun recordAction(step: Int?, method: String, success: Boolean, observe: ObserveElement?, message: String?) {
+        val computedStep = step?.takeIf { it > 0 } ?: ((history.lastOrNull()?.step ?: 0) + 1)
+        val descPrefix = if (success) "OK" else "FAIL"
+        val descMsg = buildString {
+            append(descPrefix)
+            if (!message.isNullOrBlank()) {
+                append(": ")
+                append(Strings.compactWhitespaces(message, 200))
+            }
+        }
+        val entry = AgentState(
+            step = computedStep,
+            action = method,
+            description = descMsg,
+            currentPageContentSummary = observe?.currentPageContentSummary,
+            actualLastActionImpact = observe?.actualLastActionImpact,
+            expectedNextActionImpact = observe?.expectedNextActionImpact,
+        )
+        addToHistory(entry)
+    }
+
     private fun addHistoryExtract(instruction: String, requestId: String, success: Boolean) {
         val compactPrompt = PromptBuilder.compactPrompt(instruction, 200)
-        addToHistory("extract[$requestId] ${if (success) "OK" else "FAIL"} $compactPrompt")
+        // Extraction is not a tool action; keep it in record history only
+        addToRecordHistory("extract[$requestId] ${if (success) "OK" else "FAIL"} $compactPrompt")
     }
 
     private fun addHistoryObserve(instruction: String, requestId: String, size: Int, success: Boolean) {
-        addToHistory(
-            "observe[$requestId] ${if (success) "OK" else "FAIL"} ${
-                Strings.compactWhitespaces(
-                    instruction,
-                    200
-                )
-            } -> $size elements"
+        addToRecordHistory(
+            "observe[$requestId] ${if (success) "OK" else "FAIL"} ${Strings.compactWhitespaces(instruction, 200)} -> $size elements"
         )
     }
 
@@ -727,7 +755,7 @@ class BrowserPerceptiveAgent(
                 val messages = AgentMessageList()
                 messages.addSystem(systemMsg)
 
-                val driver = requireNotNull(activeDriver)
+                val driver = activeDriver
                 val url = driver.url()
                 if (url.isBlank() || url == "about:blank") {
                     driver.navigateTo(AppConstants.SEARCH_ENGINE_URL)
@@ -775,8 +803,8 @@ class BrowserPerceptiveAgent(
                     null
                 }
 
-                messages.add(SimpleMessage("user", promptBuilder.buildOverallGoalMessage(overallGoal), name = "overallGoal"))
-                messages.addUser(promptBuilder.buildHistoryMessage(history))
+                messages.add("user", promptBuilder.buildOverallGoalMessage(overallGoal), name = "overallGoal")
+                messages.addUser(promptBuilder.buildAgentStateHistoryMessage(history))
                 if (screenshotB64 != null) {
                     messages.addUser("[Current page screenshot provided as base64 image]")
                 }
@@ -818,20 +846,18 @@ class BrowserPerceptiveAgent(
                 val result = doExecuteToolCall(stepAction, step, stepContext)
                 if (result != null) {
                     val observe = result.action.observeElement
-                    val record = AgentState(
-                        step,
-                        action = observe?.toolCall?.method ?: "no-op",
-                        description = observe?.description ?: "no-op (consecutive: ${0})",
-                        currentPageContentSummary = observe?.currentPageContentSummary,
-                        actualLastActionImpact = observe?.actualLastActionImpact,
-                        expectedNextActionImpact = observe?.expectedNextActionImpact,
+                    // Record exactly once for the executed action in this step
+                    recordAction(
+                        step = step,
+                        method = observe?.toolCall?.method ?: "no-op",
+                        success = true,
+                        observe = observe,
+                        message = result.summary
                     )
-
-                    addToHistory(record)
                     updatePerformanceMetrics(step, stepStartTime, true)
                     logger.info("step.done sid={} step={} summary={}", sid, step, result.summary)
                 } else {
-                    // Treat validation failures or execution skips as no-ops to avoid infinite loops
+                    // Treat validation failures or execution skips as no-ops; no AgentState record
                     consecutiveNoOps++
                     val stop = handleConsecutiveNoOps(consecutiveNoOps, step, stepContext)
                     if (stop) break
@@ -959,22 +985,29 @@ class BrowserPerceptiveAgent(
         }
     }
 
-    /**
-     * Executes tool call with enhanced error handling and validation
-     */
+    private suspend fun getCurrentUrl(): String {
+        val driver = activeDriver
+        return runCatching { driver.currentUrl() }.getOrNull().orEmpty()
+    }
+
     private suspend fun doExecuteToolCall(action: ActionDescription, step: Int, context: ExecutionContext): ActionExecuteResult? {
         val toolCall = action.toolCall ?: return null
 
         if (config.enablePreActionValidation && !actionValidator.validateToolCall(toolCall)) {
-            logger.info("tool.validate.fail sid={} step={} tool={} args={}",
-                context.sessionId.take(8), context.stepNumber, toolCall.method, toolCall.arguments)
-            addToHistory("#$step validation-failed ${toolCall.method}")
+            logger.info(
+                "tool.validate.fail sid={} step={} tool={} args={}",
+                context.sessionId.take(8), context.stepNumber, toolCall.method, toolCall.arguments
+            )
+            // Validation failure is meta info
+            addToRecordHistory("#$step validation-failed ${toolCall.method}")
             return null
         }
 
         return try {
-            logger.info("tool.exec sid={} step={} tool={} args={}",
-                context.sessionId.take(8), context.stepNumber, toolCall.method, toolCall.arguments)
+            logger.info(
+                "tool.exec sid={} step={} tool={} args={}",
+                context.sessionId.take(8), context.stepNumber, toolCall.method, toolCall.arguments
+            )
 
             val instructionResult = doExecute(action)
             consecutiveFailureCounter.set(0) // Reset on success
@@ -983,8 +1016,14 @@ class BrowserPerceptiveAgent(
             ActionExecuteResult(action, instructionResult, success = true, summary)
         } catch (e: Exception) {
             val failures = consecutiveFailureCounter.incrementAndGet()
-            logger.error("tool.exec.fail sid={} step={} failures={} msg={}",
-                context.sessionId.take(8), context.stepNumber, failures, e.message, e)
+            logger.error(
+                "tool.exec.fail sid={} step={} failures={} msg={}",
+                context.sessionId.take(8), context.stepNumber, failures, e.message, e
+            )
+
+            // Record a failed action exactly once
+            val msg = e.message ?: "execution failed"
+            recordAction(step = step, method = toolCall.method, success = false, observe = action.observeElement, message = msg)
 
             if (failures >= 3) {
                 throw PerceptiveAgentError.PermanentError("Too many consecutive failures at step $step", e)
@@ -994,16 +1033,16 @@ class BrowserPerceptiveAgent(
         }
     }
 
-    /**
-     * Handles consecutive no-op scenarios with intelligent backoff
-     */
     private suspend fun handleConsecutiveNoOps(consecutiveNoOps: Int, step: Int, context: ExecutionContext): Boolean {
-        addToHistory("#$step no-op (consecutive: $consecutiveNoOps)")
+        // No-op is meta info only
+        addToRecordHistory("#$step no-op (consecutive: $consecutiveNoOps)")
         logger.info("noop sid={} step={} consecutive={}", context.sessionId.take(8), step, consecutiveNoOps)
 
         if (consecutiveNoOps >= config.consecutiveNoOpLimit) {
-            logger.info("noop.stop sid={} step={} limit={}", context.sessionId.take(8), step, config.consecutiveNoOpLimit)
-            // Signal caller to stop loop gracefully
+            logger.info(
+                "noop.stop sid={} step={} limit={}",
+                context.sessionId.take(8), step, config.consecutiveNoOpLimit
+            )
             return true
         }
 
@@ -1012,118 +1051,76 @@ class BrowserPerceptiveAgent(
         return false
     }
 
-    /**
-     * Calculates delay for consecutive no-ops with exponential backoff
-     */
     private fun calculateConsecutiveNoOpDelay(consecutiveNoOps: Int): Long {
         val baseDelay = 250L
         val exponentialDelay = baseDelay * consecutiveNoOps
-        return min(exponentialDelay, 5000L) // Cap at 5 seconds
+        return min(exponentialDelay, 5000L)
     }
 
-    /**
-     * Checks if execution should terminate
-     */
-    private fun shouldTerminate(action: ActionDescription): Boolean {
-        return action.isComplete
-    }
+    private fun shouldTerminate(action: ActionDescription): Boolean = action.isComplete
 
-    /**
-     * Handles task completion
-     */
     private fun handleTaskCompletion(action: ActionDescription, step: Int, context: ExecutionContext) {
-        logger.info("task.complete sid={} step={} complete={}",
-            context.sessionId.take(8), step, action.isComplete)
-
-        addToHistory("#$step complete: taskComplete=${action.isComplete}")
+        logger.info(
+            "task.complete sid={} step={} complete={}",
+            context.sessionId.take(8), step, action.isComplete
+        )
+        addToRecordHistory("#$step complete: taskComplete=${action.isComplete}")
     }
 
-    /**
-     * Updates performance metrics
-     */
     private fun updatePerformanceMetrics(step: Int, stepStartTime: Instant, success: Boolean) {
         val stepTime = Duration.between(stepStartTime, Instant.now()).toMillis()
         stepExecutionTimes[step] = stepTime
-        // Update counters
         performanceMetrics.totalSteps += 1
         if (success) performanceMetrics.successfulActions += 1 else performanceMetrics.failedActions += 1
     }
 
-    /**
-     * Calculates adaptive delay based on performance metrics
-     */
     private fun calculateAdaptiveDelay(): Long {
-        if (!config.enableAdaptiveDelays) return 100L // Default delay
-
-        val avgStepTime = stepExecutionTimes.values.average()
+        if (!config.enableAdaptiveDelays) return 100L
+        val avgStepTime = stepExecutionTimes.values.takeIf { it.isNotEmpty() }?.average() ?: 0.0
         return when {
-            avgStepTime < 500 -> 50L  // Fast steps, short delay
-            avgStepTime < 2000 -> 100L // Normal steps, standard delay
-            else -> 200L // Slow steps, longer delay
+            avgStepTime < 500 -> 50L
+            avgStepTime < 2000 -> 100L
+            else -> 200L
         }
     }
 
-    /**
-     * Performs memory cleanup
-     */
     private fun performMemoryCleanup(context: ExecutionContext) {
         try {
-            // Clean up history if it gets too large
             if (history.size > config.maxHistorySize) {
                 val toRemove = history.size - config.maxHistorySize + 10
                 _history.subList(0, toRemove).clear()
             }
-
-            // Clear validation cache periodically
             if (validationCache.size > 1000) {
                 validationCache.clear()
             }
-
             logger.info("mem.cleanup sid={} step={}", context.sessionId.take(8), context.stepNumber)
         } catch (e: Exception) {
             logger.error("mem.cleanup.fail sid={} msg={}", context.sessionId.take(8), e.message, e)
         }
     }
 
-    /**
-     * history management
-     */
-    private fun addToHistoryCore(h: AgentState) {
-        _history.add(h)
-        if (history.size > config.maxHistorySize * 2) {
-            // Remove the oldest entries to prevent memory issues
-            _history.subList(0, config.maxHistorySize).clear()
-        }
-    }
-
-    private fun addToHistory(entry: AgentState) = addToHistoryCore(entry)
-    private fun addToHistory(entry: String) = addToHistoryCore(AgentState(0, action = entry))
-
-    private fun addToRecordHistory(entry: String) {
-        _recordHistory.add(entry)
-    }
-
-    /**
-     * Gets current URL with error handling
-     */
-    private suspend fun getCurrentUrl(): String {
-        val driver = activeDriver
-        return runCatching { driver.currentUrl() }.getOrNull().orEmpty()
-    }
-
-    /**
-     * Generates final summary with enhanced error handling
-     */
     private suspend fun generateFinalSummary(instruction: String, context: ExecutionContext): ModelResponse {
         return try {
             val summary = summarize(instruction)
-            addToHistory("FINAL ${summary.content.take(200)}")
+            // Final summary is meta info
+            addToRecordHistory("FINAL ${summary.content.take(200)}")
             persistTranscript(instruction, summary)
             summary
         } catch (e: Exception) {
             logger.error("agent.summary.fail sid={} msg={}", context.sessionId.take(8), e.message, e)
             ModelResponse("Failed to generate summary: ${e.message}", ResponseState.OTHER)
         }
+    }
+
+    private fun addToHistory(h: AgentState) {
+        _history.add(h)
+        if (history.size > config.maxHistorySize * 2) {
+            _history.subList(0, config.maxHistorySize).clear()
+        }
+    }
+
+    private fun addToRecordHistory(entry: String) {
+        _recordHistory.add(entry)
     }
 
     /**

@@ -90,7 +90,13 @@ class PageHandler(
 
     suspend fun exists(selector: String): Boolean {
         val rootId = domAPI?.getDocument()?.nodeId ?: return false
-        val nodeId = domAPI?.querySelector(rootId, selector)
+        val nodeId = try {
+            // Executes `querySelector` on a given node.
+            domAPI?.querySelector(rootId, selector)
+        } catch (e: Exception) {
+            logger.warn("Exception executing `querySelector` on node $rootId.", e)
+            null
+        }
         return nodeId != null && nodeId > 0
     }
 
@@ -345,20 +351,29 @@ class PageHandler(
     private suspend fun resolveCSSSelector0(selector: String): NodeRef? {
         val rootId = domAPI?.getDocument()?.nodeId ?: return null
 
-        val nodeId = domAPI?.querySelector(rootId, selector)
+        val nodeId = try {
+            domAPI?.querySelector(rootId, selector)
+        } catch (e: ChromeRPCException) {
+            // code: -3200 message: "Could not find node with given id"
+            // This exception is expected, will change this log to debug
+            val message = e.message
+            if (message == null || !message.contains("Could not find node with given id")) {
+                logger.warn("Exception from domAPI?.querySelector | {}", e.brief())
+            }
+            null
+        } catch (e: Exception) {
+            logger.warn("Unexpected exception from domAPI?.querySelector ", e)
+            null
+        }
+
         if (nodeId == null || nodeId == 0) {
             return null
         }
 
         val node = try {
             domAPI?.describeNode(nodeId, null, null, null, null)
-        } catch (e: ChromeRPCException) {
-            // code: -3200 message: "Could not find node with given id"
-            // This exception is expected, will change this log to debug
-            val message = e.message
-            if (message == null || !message.contains("Could not find node with given id")) {
-                logger.warn("Exception from domAPI.describeNode | {}", e.brief())
-            }
+        } catch (e: Exception) {
+            logger.warn("Exception from domAPI?.describeNode ", e)
             null
         }
 

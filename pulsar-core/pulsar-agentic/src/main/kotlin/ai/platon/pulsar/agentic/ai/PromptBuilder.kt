@@ -255,7 +255,7 @@ Print null or an empty string if no new information is found.
         return SimpleMessage(role = "system", content = content)
     }
 
-    fun buildHistoryMessage(history: List<AgentState>): String {
+    fun buildAgentStateHistoryMessage(history: List<AgentState>): String {
         if (history.isEmpty()) return ""
 
         val his = history.takeLast(min(8, history.size))

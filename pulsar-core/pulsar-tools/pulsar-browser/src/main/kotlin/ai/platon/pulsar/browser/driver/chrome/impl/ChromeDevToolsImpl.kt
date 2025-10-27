@@ -152,6 +152,7 @@ abstract class ChromeDevToolsImpl(
             !rpcResult.isSuccess -> {
                 handleFailedFurther(rpcResult.result).let {
                     // TODO: handle "Could not find node with given id"
+                    logger.info("Protocol return error: {}", message)
                     throw ChromeRPCException(it.first.code, it.second)
                 }
             }
