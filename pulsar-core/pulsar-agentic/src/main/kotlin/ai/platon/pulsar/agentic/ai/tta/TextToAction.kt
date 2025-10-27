@@ -1,7 +1,7 @@
 package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.agentic.ai.PromptBuilder
-import ai.platon.pulsar.agentic.ai.SimpleMessageList
+import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
@@ -62,7 +62,7 @@ open class TextToAction(
 
     @ExperimentalApi
     open suspend fun generate(
-        messages: SimpleMessageList,
+        messages: AgentMessageList,
         browserUseState: BrowserUseState,
         screenshotB64: String? = null
     ): ActionDescription {
@@ -96,6 +96,7 @@ open class TextToAction(
         try {
             return generateWithToolCallSpecs(instruction, browserUseState, screenshotB64, 1)
         } catch (e: Exception) {
+            e.printStackTrace()
             val errorResponse = ModelResponse(
                 "Unknown exception" + e.brief(), ResponseState.OTHER
             )
@@ -107,14 +108,14 @@ open class TextToAction(
     open suspend fun generateResponse(
         instruction: String, browserUseState: BrowserUseState, screenshotB64: String? = null, toolCallLimit: Int = 100,
     ): ModelResponse {
-        val messages = SimpleMessageList()
+        val messages = AgentMessageList()
         messages.add("user", instruction)
         return generateResponse(messages, browserUseState, screenshotB64, toolCallLimit)
     }
 
     @ExperimentalApi
     open suspend fun generateResponse(
-        messages: SimpleMessageList,
+        messages: AgentMessageList,
         browserUseState: BrowserUseState,
         screenshotB64: String? = null,
         toolCallLimit: Int = 100,
@@ -148,6 +149,18 @@ open class TextToAction(
         val response = generateResponse(instruction, browserUseState, screenshotB64, toolCallLimit)
 
         return reviseActionDescription(modelResponseToActionDescription(response), browserUseState)
+    }
+
+    fun parseObserveElements1(root: JsonNode, returnAction: Boolean): List<ObserveElement> {
+        if (root.isEmpty) {
+            return emptyList()
+        }
+
+        var node = root
+        if (node.has("elements")) {
+            node = node.get("elements")
+        }
+        return pulsarObjectMapper().readerForArrayOf(ObserveElement::class.java).readValue(node)
     }
 
     // ----------------------------------- Helpers -----------------------------------
@@ -239,10 +252,10 @@ open class TextToAction(
             val expectedNextActionImpact = el.path("expectedNextActionImpact").asText(null)
 
             var toolCall: ToolCall? = null
-            if (domain != null && methodField != null) {
+            if (domain != null && methodName != null) {
                 toolCall = ToolCall(
                     domain = domain,
-                    method = methodName ?: "",
+                    method = methodName,
                     description = description,
                 )
                 arguments?.forEach { (key, value) -> toolCall.arguments[key] = value }
@@ -291,13 +304,9 @@ open class TextToAction(
             modelResponse = response,
             observeElement = elements.firstOrNull()
         )
-        // return getRevisedActionDescription(response, elements.firstOrNull(), browserUseState)
     }
 
-    fun reviseActionDescription(
-        action: ActionDescription,
-        browserUseState: BrowserUseState,
-    ): ActionDescription {
+    fun reviseActionDescription(action: ActionDescription, browserUseState: BrowserUseState): ActionDescription {
         val observeElement = action.observeElement ?: return action
         val toolCall = observeElement.toolCall ?: return action
 

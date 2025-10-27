@@ -46,7 +46,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
             printlnPro("Complex workflow command: $command")
             printlnPro("Generated action: ${actionDescription.cssFriendlyExpressions}")
-            printlnPro("Model response: ${actionDescription.modelResponse.content}")
+            printlnPro("Model response: ${actionDescription.modelResponse?.content}")
 
             // Should handle complex instructions in some way
 
@@ -165,7 +165,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
             printlnPro("Malformed command: '$command'")
             printlnPro("Generated action: ${actionDescription.cssFriendlyExpressions}")
-            printlnPro("Model response state: ${actionDescription.modelResponse.state}")
+            printlnPro("Model response state: ${actionDescription.modelResponse?.state}")
 
             // Should not crash and should return some response
             assertNotNull(actionDescription.modelResponse, "Should have model response")
@@ -223,7 +223,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
         printlnPro("Very long command length: ${veryLongCommand.length}")
         printlnPro("Generated action: ${actionDescription.cssFriendlyExpressions}")
-        printlnPro("Model response length: ${actionDescription.modelResponse.content.length}")
+        printlnPro("Model response length: ${actionDescription.modelResponse?.content?.length}")
 
         // Should handle long commands without crashing
         assertNotNull(actionDescription.modelResponse, "Should have model response")
@@ -382,8 +382,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         printlnPro("Command: $testCommand")
         printlnPro("Function calls: ${actionDescription.cssFriendlyExpressions}")
         printlnPro("Number of function calls: ${actionDescription.cssFriendlyExpressions.size}")
-        printlnPro("Model response state: ${actionDescription.modelResponse.state}")
-        printlnPro("Model response content length: ${actionDescription.modelResponse.content.length}")
+        printlnPro("Model response state: ${actionDescription.modelResponse?.state}")
+        printlnPro("Model response content length: ${actionDescription.modelResponse?.content?.length}")
 
 
         // Validate response structure
@@ -401,7 +401,7 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
         // Validate model response
         assertTrue(
-            actionDescription.modelResponse.content.isNotBlank() ||
+            actionDescription.modelResponse!!.content.isNotBlank() ||
             actionDescription.modelResponse == ModelResponse.LLM_NOT_AVAILABLE,
             "Model response should have content or be LLM_NOT_AVAILABLE"
         )

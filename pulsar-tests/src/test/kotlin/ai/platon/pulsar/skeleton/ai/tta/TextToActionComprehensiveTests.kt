@@ -292,7 +292,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
         // Should handle the complex instruction in some way (might pick the most important action)
         printlnPro("Complex command: $command -> Generated: ${actionDescription.cssFriendlyExpressions}")
-        printlnPro("Model response: ${actionDescription.modelResponse.content}")
+        printlnPro("Model response: ${actionDescription.modelResponse!!.content}")
     }
 
     @Test
@@ -325,7 +325,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 
         // Should handle non-existent elements gracefully
         printlnPro("Non-existent element command: $command -> Generated: ${actionDescription.cssFriendlyExpressions}")
-        printlnPro("Model response: ${actionDescription.modelResponse.content}")
+        printlnPro("Model response: ${actionDescription.modelResponse!!.content}")
     }
 
     // ======== LANGUAGE AND CULTURAL TESTS ========
@@ -388,7 +388,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
 
         printlnPro("Empty command -> Generated: ${actionDescription.cssFriendlyExpressions}")
-        printlnPro("Model response: ${actionDescription.modelResponse.content}")
+        printlnPro("Model response: ${actionDescription.modelResponse!!.content}")
     }
 
     @Test
@@ -403,7 +403,7 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
         assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command")
 
         printlnPro("Very long command -> Generated: ${actionDescription.cssFriendlyExpressions}")
-        printlnPro("Model response length: ${actionDescription.modelResponse.content.length}")
+        printlnPro("Model response length: ${actionDescription.modelResponse!!.content.length}")
     }
 
     @Test

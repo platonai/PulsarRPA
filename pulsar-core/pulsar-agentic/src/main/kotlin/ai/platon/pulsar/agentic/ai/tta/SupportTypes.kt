@@ -1,43 +1,12 @@
 package ai.platon.pulsar.agentic.ai.tta
 
+import ai.platon.pulsar.agentic.ai.AgentMessageList
+import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.ai.ToolCall
-
-data class InteractiveElement(
-    val id: String,
-    val tagName: String,
-    val selector: String,
-    val text: String,
-    val type: String?,
-    val href: String?,
-    val className: String?,
-    val placeholder: String?,
-    val value: String?,
-    val isVisible: Boolean,
-    val bounds: ElementBounds
-) {
-    val description: String
-        get() = buildString {
-            append("[$tagName")
-            if (type != null) append(" type='$type'")
-            append("] ")
-            if (text.isNotBlank()) append("'$text' ")
-            if (placeholder != null) append("placeholder='$placeholder' ")
-            if (value != null) append("value='$value' ")
-            append("selector='$selector'")
-        }
-
-    override fun toString() = description
-}
-
-data class ElementBounds(
-    val x: Double,
-    val y: Double,
-    val width: Double,
-    val height: Double
-)
 
 data class ActionDescription constructor(
     val observeElement: ObserveElement? = null,
@@ -73,10 +42,26 @@ data class InstructionResult(
     }
 }
 
-data class ActExecuteResult(
+data class ActionExecuteResult(
     val action: ActionDescription,
     val instructionResult: InstructionResult? = null,
     val success: Boolean = false,
     val summary: String? = null,
 ) {
 }
+
+data class AgentAction(
+    val step: Int,
+    val userInstruction: String,
+    val messages: AgentMessageList,
+
+    val agentState: AgentState,
+    val browserUseState: BrowserUseState? = null,
+    val actionDescription: ActionDescription? = null,
+    val actionExecuteResult: ActionExecuteResult? = null,
+
+    val prevAction: AgentAction? = null,
+    val nextAction: AgentAction? = null,
+    val parent: AgentAction? = null,
+    val children: List<AgentAction> = emptyList(),
+)

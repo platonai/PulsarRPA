@@ -7,7 +7,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.serialize.json.Pson
-import ai.platon.pulsar.skeleton.ai.History
+import ai.platon.pulsar.skeleton.ai.AgentState
 import java.time.LocalDate
 import java.util.*
 import kotlin.math.min
@@ -24,7 +24,7 @@ data class SimpleMessage(
     override fun toString() = content
 }
 
-class SimpleMessageList(
+class AgentMessageList(
     val messages: MutableList<SimpleMessage> = mutableListOf()
 ) {
     fun addSystem(content: String, key: String? = null) {
@@ -252,7 +252,7 @@ Print null or an empty string if no new information is found.
         return SimpleMessage(role = "system", content = content)
     }
 
-    fun buildHistoryMessage(history: List<History>): String {
+    fun buildHistoryMessage(history: List<AgentState>): String {
         if (history.isEmpty()) return ""
 
         val his = history.takeLast(min(8, history.size))
@@ -394,9 +394,9 @@ chunksTotal: $chunksTotal
         return SimpleMessage(role = "user", content = content)
     }
 
-    fun buildObservePrompt(params: ObserveParams): SimpleMessageList {
+    fun buildObservePrompt(params: ObserveParams): AgentMessageList {
         // observe guide
-        val messages = SimpleMessageList()
+        val messages = AgentMessageList()
         val systemMsg = buildObserveGuideSystemPrompt(params.userProvidedInstructions)
         messages.add(systemMsg)
         // instruction + DOM + browser state + schema
@@ -466,7 +466,7 @@ Be comprehensive: if there are multiple elements that may be relevant for future
         }
     }
 
-    fun buildObserveUserMessage(messages: SimpleMessageList, params: ObserveParams) {
+    fun buildObserveUserMessage(messages: AgentMessageList, params: ObserveParams) {
         val instruction = params.instruction
         val browserStateJson = params.browserUseState.browserState.lazyJson
         val nanoTreeJson = params.browserUseState.domState.nanoTreeLazyJson

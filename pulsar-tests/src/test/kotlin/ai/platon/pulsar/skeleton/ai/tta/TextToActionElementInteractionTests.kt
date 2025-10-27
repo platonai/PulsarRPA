@@ -393,7 +393,7 @@ class TextToActionElementInteractionTests : TextToActionTestBase() {
             assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
 
             printlnPro("Non-existent element command: $command -> Generated: ${actionDescription.cssFriendlyExpressions}")
-            printlnPro("Model response: ${actionDescription.modelResponse.content}")
+            printlnPro("Model response: ${actionDescription.modelResponse!!.content}")
 
             // Should handle non-existent elements gracefully - might generate empty function or fallback
             assertTrue(actionDescription.cssFriendlyExpressions.size <= 1, "Should handle non-existent elements gracefully")

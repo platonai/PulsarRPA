@@ -44,7 +44,7 @@ class PulsarPerceptiveAgentExtractObserveE2ETest : WebDriverTestBase() {
         val observed = agent.observe("Understand the page and list actionable elements")
 
         assertTrue(observed.isNotEmpty())
-        assertTrue(observed.all { it.description.isNotBlank() })
+        assertTrue(observed.all { it.description!!.isNotBlank() })
 
         writeMetrics(
             Metrics(

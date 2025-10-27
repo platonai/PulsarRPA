@@ -339,7 +339,7 @@ class TextToActionEdgeCasesTest : TextToActionTestBase() {
         assertNotNull(actionDescription.modelResponse, "Model response should not be null")
 
         if (actionDescription.modelResponse != ModelResponse.LLM_NOT_AVAILABLE) {
-            assertTrue(actionDescription.modelResponse.content.isNotBlank(),
+            assertTrue(actionDescription.modelResponse!!.content.isNotBlank(),
                       "Model response content should not be blank")
         }
 

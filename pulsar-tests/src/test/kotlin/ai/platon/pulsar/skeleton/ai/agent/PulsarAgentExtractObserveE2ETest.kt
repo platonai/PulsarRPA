@@ -45,7 +45,7 @@ class PulsarAgentExtractObserveE2ETest : WebDriverTestBase() {
 
         Assertions.assertTrue(observed.isNotEmpty(), "Observed elements should not be empty")
         Assertions.assertTrue(
-            observed.all { it.description.isNotBlank() },
+            observed.all { it.description!!.isNotBlank() },
             "Each observed item should have a non-blank description"
         )
 
