@@ -37,10 +37,17 @@ Read root README-AI.md and `devdocs/copilot/test-guide.md` for guidelines
 
 使用 CDP 方法实现 PulsarWebDriver 的 scroll 方法。
 
+## Failed tests
+
+ai.platon.pulsar.browser.PulsarWebDriverMockSite2Tests#When navigate to a HTML page then the navigate state are correct
+
+ai.platon.pulsar.browser.driver.chrome.dom.ChromeDomServiceIsScrollableTest#isScrollable basics - regular elements and overflow hidden
+
+ai.platon.pulsar.browser.driver.chrome.dom.ChromeDomServiceIsScrollableTest#isScrollable special - body html and toggle overflow
+
 ## Notes
 
 - if a tool call not handled by parser in ToolCallExecutor, fallback to ToolCallExecutor.eval()
 - NanoDOMTreeNode 确保每一个可见元素的文档坐标均存在
 - highlight 非常重要
 - click() 增加 Key 参数，譬如 Ctrl + click
--

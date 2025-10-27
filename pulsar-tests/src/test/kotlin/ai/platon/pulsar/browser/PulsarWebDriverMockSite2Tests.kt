@@ -29,7 +29,7 @@ class PulsarWebDriverMockSite2Tests : WebDriverTestBase() {
         openEnhanced(interactiveUrl, driver, 1)
 
         val navigateEntry = driver.navigateEntry
-        assertTrue("Expect documentTransferred") { navigateEntry.mainFrameReceived }
+        assertTrue("Expect mainFrameReceived") { navigateEntry.mainFrameReceived }
         assertTrue { navigateEntry.networkRequestCount.get() > 0 }
         assertTrue { navigateEntry.networkResponseCount.get() > 0 }
 

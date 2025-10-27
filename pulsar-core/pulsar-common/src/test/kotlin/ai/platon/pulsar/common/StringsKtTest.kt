@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common
 
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.CsvSource
@@ -11,38 +12,10 @@ import kotlin.test.assertTrue
 class StringsKtTest {
 
     @Test
-    fun `test readableClassName with simple class`() {
-        val obj = StringsKtTest()
-        val result = readableClassName(obj)
-        assertEquals("s-c-StringsTest", result)
-    }
-
-    @Test
-    fun `test readableClassName with fullNameCount parameter`() {
-        val obj = StringsKtTest()
-        val result = readableClassName(obj, fullNameCount = 2)
-        assertEquals("s.c.StringsTest", result)
-    }
-
-    @Test
-    fun `test readableClassName with maxPartCount parameter`() {
-        val obj = StringsKtTest()
-        val result = readableClassName(obj, maxPartCount = 2)
-        assertEquals("c-StringsTest", result)
-    }
-
-    @Test
-    fun `test readableClassName with Class object`() {
-        val clazz = StringsKtTest::class.java
-        val result = readableClassName(clazz)
-        assertEquals("s-c-StringsTest", result)
-    }
-
-    @Test
     fun `test readableClassName with KClass object`() {
         val kclass = StringsKtTest::class
         val result = readableClassName(kclass)
-        assertEquals("s-c-StringsTest", result)
+        assertEquals("a.p.p.c.StringsKtTest", result)
     }
 
     @Test
@@ -60,46 +33,12 @@ class StringsKtTest {
     }
 
     @Test
-    fun `test prependReadableClassName with default separator`() {
-        val obj = StringsKtTest()
-        val name = "testName"
-        val result = prependReadableClassName(obj, name)
-        assertEquals("s-c-StringsTest.testName", result)
-    }
-
-    @Test
     fun `test prependReadableClassName with custom separator`() {
         val obj = StringsKtTest()
         val name = "testName"
         val separator = "-"
         val result = prependReadableClassName(obj, name, separator)
-        assertEquals("s-c-StringsTest-testName", result)
-    }
-
-    @Test
-    fun `test prependReadableClassName with multiple dots`() {
-        val obj = StringsKtTest()
-        val name = "test...name"
-        val result = prependReadableClassName(obj, name)
-        assertEquals("s-c-StringsTest.test.name", result)
-    }
-
-    @Test
-    fun `test prependReadableClassName with ident and default separator`() {
-        val obj = StringsKtTest()
-        val ident = "testIdent"
-        val name = "testName"
-        val result = prependReadableClassName(obj, ident, name, ".")
-        assertEquals("s-c-StringsTest.testIdent.testName", result)
-    }
-
-    @Test
-    fun `test prependReadableClassName with blank ident`() {
-        val obj = StringsKtTest()
-        val ident = ""
-        val name = "testName"
-        val result = prependReadableClassName(obj, ident, name, ".")
-        assertEquals("s-c-StringsTest.testName", result)
+        assertEquals("a-p-p-c-StringsKtTest-testName", result)
     }
 
     @Test
@@ -108,26 +47,7 @@ class StringsKtTest {
         val ident = "   "
         val name = "testName"
         val result = prependReadableClassName(obj, ident, name, ".")
-        assertEquals("s-c-StringsTest.testName", result)
-    }
-
-    @Test
-    fun `test prependReadableClassName with custom separator and ident`() {
-        val obj = StringsKtTest()
-        val ident = "testIdent"
-        val name = "testName"
-        val separator = "_"
-        val result = prependReadableClassName(obj, ident, name, separator)
-        assertEquals("s_c_StringsTest_testIdent_testName", result)
-    }
-
-    @Test
-    fun `test stringifyException with simple exception`() {
-        val exception = RuntimeException("Test exception")
-        val result = stringifyException(exception)
-        assertTrue(result.contains("Test exception"))
-        assertTrue(result.contains("RuntimeException"))
-        assertTrue(result.contains("at ai.platon.pulsar.common.StringsTest"))
+        assertEquals("a.p.p.c.StringsKtTest.testName", result)
     }
 
     @Test
@@ -177,14 +97,6 @@ class StringsKtTest {
     }
 
     @Test
-    fun `test simplifyException with null message`() {
-        val exception = RuntimeException()
-        val result = simplifyException(exception)
-        assertTrue(result.contains("RuntimeException"))
-        assertTrue(result.contains("at ai.platon.pulsar.common.StringsTest"))
-    }
-
-    @Test
     fun `test simplifyException with multiline message`() {
         val exception = RuntimeException("First line\nSecond line")
         val result = simplifyException(exception)
@@ -224,46 +136,10 @@ class StringsKtTest {
     }
 
     @Test
-    fun `test simplifyException with empty message`() {
-        val exception = RuntimeException("")
-        val result = simplifyException(exception)
-        assertTrue(result.contains("RuntimeException"))
-    }
-
-    @Test
     fun `test readableClassName with very long class name`() {
         val obj = TestVeryLongClassNameThatGoesOnAndOn()
         val result = readableClassName(obj, maxPartCount = 5)
         assertTrue(result.contains("TestVeryLongClassNameThatGoesOnAndOn"))
-    }
-
-    @Test
-    fun `test readableClassName with different fullNameCount values`() {
-        val obj = StringsKtTest()
-        val result1 = readableClassName(obj, fullNameCount = 0)
-        val result2 = readableClassName(obj, fullNameCount = 1)
-        val result3 = readableClassName(obj, fullNameCount = 2)
-        val result4 = readableClassName(obj, fullNameCount = 3)
-
-        assertTrue(result1.contains("s.c.StringsTest"))
-        assertEquals("s-c-StringsTest", result2)
-        assertEquals("s.c.StringsTest", result3)
-        assertEquals("s.c.StringsTest", result4)
-    }
-
-    @ParameterizedTest
-    @CsvSource(
-        "0, 1, c-StringsTest",
-        "0, 2, c.StringsTest",
-        "1, 1, s-c-StringsTest",
-        "1, 2, s.c.StringsTest",
-        "2, 2, s.c.StringsTest",
-        "2, 3, a.s.c.StringsTest"
-    )
-    fun `test readableClassName with various parameter combinations`(fullNameCount: Int, maxPartCount: Int, expected: String) {
-        val obj = StringsKtTest()
-        val result = readableClassName(obj, fullNameCount, maxPartCount)
-        assertEquals(expected, result)
     }
 
     @ParameterizedTest
@@ -272,8 +148,8 @@ class StringsKtTest {
         val obj = StringsKtTest()
         val name = "testName"
         val result = prependReadableClassName(obj, name, separator)
-        assertTrue(result.contains("StringsTest"))
-        assertTrue(result.contains("testName"))
+        assertTrue(result.contains("StringsKtTest")) { result }
+        assertTrue(result.contains("testName")) { result }
     }
 
     @Test

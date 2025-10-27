@@ -656,10 +656,8 @@ class PulsarWebDriver(
         networkManager.on1(NetworkEvents.ResponseReceived) { event: ResponseReceived ->
             onResponseReceived(entry, event)
         }
-        networkManager.on1(NetworkEvents.FrameNavigated) { event: FrameNavigated ->
-            onFrameNavigated(entry, event)
-        }
 
+        pageAPI?.onFrameNavigated { onFrameNavigated(entry, it) }
         pageAPI?.onDocumentOpened { entry.mainRequestCookies = getCookies0() }
         pageAPI?.onWindowOpen { onWindowOpen(it) }
 
