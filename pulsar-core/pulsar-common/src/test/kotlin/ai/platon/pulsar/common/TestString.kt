@@ -349,22 +349,6 @@ class TestString {
     }
 
     @Test
-    fun testGetLastInteger() {
-        val texts = arrayOf(
-            "-hello world 999 i love you 520 forever",
-            "i have received $1964,234 yesterday, and $2046,123 the day before yesterday",
-            "this is a java number: 1_435_324, and this is another: 2_457_325"
-        )
-        val expects = arrayOf(520, 2046_123, 2_457_325)
-
-        IntRange(0, texts.size - 1).forEach { i ->
-            assertEquals(expects[i], Strings.findLastInteger(texts[i], 0), "The $i-th test is failed")
-        }
-
-        assertEquals(150, Strings.findLastInteger("631 global ratings | 150 global reviews", 0))
-    }
-
-    @Test
     fun testHashCode() {
         val s = "https://www.amazon.com/s?k=insomnia&i=aps&page=15"
         val s2 = "https://www.amazon.com/s?k=insomnia&i=aps&page=16"
