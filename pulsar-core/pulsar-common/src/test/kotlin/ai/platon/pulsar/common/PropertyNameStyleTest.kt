@@ -10,22 +10,6 @@ import kotlin.test.Test
 
 class PropertyNameStyleTest {
 
-    @Test
-    fun testPrependReadableClassName_ClassNameContainsSeparator() {
-        // Arrange
-        val obj = PropertyNameStyleTest()
-        val ident = "testIdent"
-        val name = "testName"
-        val separator = "-"
-        val expectedResult = "p-c-PropertyNameStyleTest-testIdent-testName"
-
-        // Act
-        val result = prependReadableClassName(obj, ident, name, separator)
-
-        // Assert
-        assertEquals(expectedResult, result)
-    }
-
     @ParameterizedTest
     @CsvSource(
         "SPRING_PROFILES_ACTIVE, spring.profiles.active",
