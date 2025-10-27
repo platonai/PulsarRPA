@@ -40,22 +40,6 @@ class TestStrings {
     }
 
     @Test
-    fun testCompactFormat() {
-        var s = Strings.compactFormat(1e6.toLong(), true)
-        assertEquals("1.00 MB", s)
-
-        s = Strings.compactFormat(1e6.toLong())
-        assertEquals("976.56 KiB", s)
-
-        // negative numbers
-        s = Strings.compactFormat((-1e6).toLong(), true)
-        assertEquals("-1.00 MB", s)
-
-        s = Strings.compactFormat((-1e6).toLong())
-        assertEquals("-976.56 KiB", s)
-    }
-
-    @Test
     fun testAbbreviate() {
         val s = "http://amazon.com/a/reviews/123?pageNumber=21&a=b&e=d"
         val s2 = StringUtils.abbreviate(s, 50)

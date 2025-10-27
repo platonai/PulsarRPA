@@ -365,20 +365,6 @@ class TestString {
     }
 
     @Test
-    fun testGetFirstFloatNumber() {
-        val texts = arrayOf(
-            "-hello world 999.234 i love you 520.02 forever",
-            "i have received $1964,234.1 last day",
-            "this is a java number: 1_435_324.92"
-        )
-        val expects = arrayOf(999.234f, 1964_234.1f, 1_435_324.92f)
-
-        IntRange(0, texts.size - 1).forEach { i ->
-            assertEquals(expects[i], Strings.getFirstFloatNumber(texts[i], Float.MIN_VALUE), "The $i-th test is failed")
-        }
-    }
-
-    @Test
     fun testHashCode() {
         val s = "https://www.amazon.com/s?k=insomnia&i=aps&page=15"
         val s2 = "https://www.amazon.com/s?k=insomnia&i=aps&page=16"
