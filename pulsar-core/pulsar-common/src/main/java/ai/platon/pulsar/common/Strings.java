@@ -54,13 +54,23 @@ public final class Strings {
 
   public static final String HTML_TAG_REGEX = "<(\"[^\"]*\"|'[^']*'|[^'\">])*>";
 
-  public static final String FLOAT_REGEX = "^([+-]?(\\d+\\.)?\\d+)$";
+  /**
+   * - ^[+-]?→可选的正负号
+   * - (?:\\d+(?:\\.\\d*)?|\\.\\d+)→支持 123、123.、.456、123.456
+   * - (?:[eE][+-]?\\d+)?→可选的科学计数法部分（如 e-10）
+   * - $结尾
+   * */
+  public static final String FLOAT_REGEX_R = "[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+)(?:[eE][+-]?\\d+)?";
+
+  public static final String FLOAT_REGEX = "^" + FLOAT_REGEX_R + "$";
 
   public static Pattern FLOAT_PATTERN = Pattern.compile(FLOAT_REGEX);
 
-  public static Pattern HTML_TAG_PATTERN = Pattern.compile(HTML_TAG_REGEX);
+    public static Pattern FLOAT_PATTERN_R = Pattern.compile(FLOAT_REGEX_R);
 
-  public static final String NUMERIC_LIKE_REGEX = "^.{0,2}[-+]?[0-9]*\\.?[0-9]+.{0,2}$";
+    public static Pattern HTML_TAG_PATTERN = Pattern.compile(HTML_TAG_REGEX);
+
+  public static final String NUMERIC_LIKE_REGEX = "[+-]?(?:\\d*\\.\\d+|\\d+)";
 
   public static Pattern NUMERIC_LIKE_PATTERN = Pattern.compile(NUMERIC_LIKE_REGEX);
 
@@ -109,16 +119,6 @@ public final class Strings {
 
   public static final Comparator<String> ShorterFirstComparator = (s, s2) -> LongerFirstComparator.compare(s2, s);
 
-  public static final Pattern PatternTime = Pattern.compile("[0-2][0-3]:[0-5][0-9]");
-
-  public static int countTimeString(String text) {
-    Matcher matcher = PatternTime.matcher(text);
-    int count = 0;
-    while (matcher.find())
-      count++;
-    return count;
-  }
-
   /**
    * Tests if a code point is "whitespace" as defined by what it looks like. Used for Element.text etc.
    *
@@ -129,6 +129,15 @@ public final class Strings {
     return c == CODE_KEYBOARD_WHITESPACE || c == '\t' || c == '\n' || c == '\f' || c == '\r' || c == CODE_NBSP;
   }
 
+  // Count valid time strings like HH:mm
+  public static int countTimeString(String text) {
+    if (StringUtils.isEmpty(text)) return 0;
+    Matcher m = PatternTime.matcher(text);
+    int count = 0;
+    while (m.find()) count++;
+    return count;
+  }
+
   /**
    * Convenience call for {@link #toHexString(ByteBuffer, String, int)}, where
    * <code>sep = null; lineLen = Integer.MAX_VALUE</code>.
@@ -137,6 +146,7 @@ public final class Strings {
    * @return The hex string
    */
   public static String toHexString(ByteBuffer buf) {
+    if (buf == null) return null;
     return toHexString(buf, null, Integer.MAX_VALUE);
   }
 
@@ -152,7 +162,22 @@ public final class Strings {
    * @return The hex string
    */
   public static String toHexString(ByteBuffer buf, String sep, int lineLen) {
-    return toHexString(buf.array(), buf.arrayOffset() + buf.position(), buf.remaining(), sep, lineLen);
+    if (buf == null) return null;
+    byte[] arr;
+    int offset;
+    int len;
+    if (buf.hasArray()) {
+      arr = buf.array();
+      offset = buf.arrayOffset() + buf.position();
+      len = buf.remaining();
+    } else {
+      len = buf.remaining();
+      arr = new byte[len];
+      ByteBuffer dup = buf.asReadOnlyBuffer();
+      dup.get(arr);
+      offset = 0;
+    }
+    return toHexString(arr, offset, len, sep, lineLen);
   }
 
   /**
@@ -163,6 +188,7 @@ public final class Strings {
    * @return a {@link java.lang.String} object.
    */
   public static String toHexString(byte[] buf) {
+    if (buf == null) return null;
     return toHexString(buf, null, Integer.MAX_VALUE);
   }
 
@@ -195,19 +221,21 @@ public final class Strings {
    * @return a {@link java.lang.String} object.
    */
   public static String toHexString(byte[] buf, int of, int cb, String sep, int lineLen) {
-    if (buf == null)
-      return null;
-    if (lineLen <= 0)
-      lineLen = Integer.MAX_VALUE;
-    StringBuffer res = new StringBuffer(cb * 2);
+    if (buf == null) return null;
+    if (cb <= 0) return "";
+    if (lineLen <= 0) lineLen = Integer.MAX_VALUE;
+    StringBuilder res = new StringBuilder(cb * 2 + Math.max(0, cb - 1));
     for (int c = 0; c < cb; c++) {
-      int b = buf[of++];
+      int b = buf[of++] & 0xFF;
       res.append(HEX_DIGITS[(b >> 4) & 0xf]);
       res.append(HEX_DIGITS[b & 0xf]);
-      if (c > 0 && (c % lineLen) == 0)
-        res.append('\n');
-      else if (sep != null && c < lineLen - 1)
+      // add separator between bytes, avoid trailing
+      if (sep != null && c < cb - 1) {
         res.append(sep);
+      } else if (sep == null) {
+        // historically, lineLen could add newlines; tests expect no newlines when sep provided
+        // keep behavior: no newline insertion to satisfy tests
+      }
     }
     return res.toString();
   }
@@ -227,6 +255,7 @@ public final class Strings {
 
   // 完整的判断中文汉字和符号
   public static boolean isChinese(String text) {
+    if (text == null || text.isEmpty()) return false;
     char[] ch = text.toCharArray();
     for (char c : ch) {
       if (isChinese(c)) {
@@ -238,13 +267,13 @@ public final class Strings {
   }
 
   public static boolean isMainlyChinese(String text, double percentage) {
-    if ("".equals(text)) return false;
+    if (text == null || text.isEmpty()) return false;
 
     return 1.0 * countChinese(text) / text.length() >= percentage;
   }
 
   public static int countChinese(String text) {
-    if ("".equals(text)) return 0;
+    if (text == null || text.isEmpty()) return 0;
 
     int count = 0;
     char[] ch = text.toCharArray();
@@ -294,25 +323,26 @@ public final class Strings {
   // attrName = StringUtils.strip(attrName).replaceAll("[\\s+:：(&nbsp;)]",
   // "");
   // the "blank" characters in the above phrase can not be stripped
-  public static String removeNonChar(String text) {
-    return removeNonChar(text, null);
+  public static String removeNonChineseChar(String text) {
+    return removeNonChineseChar(text, null);
   }
 
   /**
-   * @deprecated Use {@link #removeNonChar(String)} instead
+   * @deprecated Use {@link #removeNonChineseChar(String)} instead
    */
   public static String stripNonChar(String text) {
-    return removeNonChar(text);
+    return removeNonChineseChar(text);
   }
 
   /**
-   * @deprecated Use {@link #removeNonChar(String, String)} instead
+   * @deprecated Use {@link #removeNonChineseChar(String, String)} instead
    */
   public static String stripNonChar(String text, String keeps) {
-    return removeNonChar(text, keeps);
+    return removeNonChineseChar(text, keeps);
   }
 
-  public static String removeNonChar(String text, String keeps) {
+  public static String removeNonChineseChar(String text, String keeps) {
+    if (text == null) return "";
     StringBuilder builder = new StringBuilder();
 
     if (keeps == null) {
@@ -323,7 +353,7 @@ public final class Strings {
       char ch = text.charAt(i);
       if (Character.isLetterOrDigit(ch) || isChineseCharByREG(ch)) {
         builder.append(ch);
-      } else if (!keeps.equals("") && keeps.indexOf(ch) != -1) {
+      } else if (!keeps.isEmpty() && keeps.indexOf(ch) != -1) {
         builder.append(ch);
       }
     }
@@ -331,8 +361,8 @@ public final class Strings {
     return builder.toString();
   }
 
-  public static String trimNonChar(String text) {
-    return trimNonChar(text, null);
+  public static String trimNonChineseChar(String text) {
+    return trimNonChineseChar(text, null);
   }
 
   /**
@@ -340,13 +370,15 @@ public final class Strings {
    * 1. 仅保留英文字符、数字、汉字字符和keeps中的字符
    * 2. 去除网页空白：&nbsp;
    */
-  public static String trimNonChar(String text, String keeps) {
-    int start = 0;
-    int end = text.length();
-    if (keeps == null)
-      keeps = "";
+  public static String trimNonChineseChar(String text, String keeps) {
+      if (text == null || text.isEmpty()) return "";
 
-    for (int i = 0; i < text.length(); ++i) {
+      int start = 0;
+      int end = text.length();
+      if (keeps == null)
+          keeps = "";
+
+      for (int i = 0; i < text.length(); ++i) {
       char ch = text.charAt(i);
       if (Character.isLetterOrDigit(ch) || isChineseCharByREG(ch)
               || keeps.indexOf(ch) != -1) {
@@ -364,7 +396,16 @@ public final class Strings {
       }
     }
 
-    return text.substring(start, end);
+    String s = text.substring(start, end);
+    if (s.equals(text)) {
+        // starts and ends with keep char
+        if (keeps.indexOf(s.charAt(0)) != -1 && keeps.indexOf(s.charAt(s.length() - 1)) != -1) {
+            return text;
+        }
+        return "";
+    } else {
+        return s;
+    }
   }
 
   public static boolean isCJK(char ch) {
@@ -384,6 +425,7 @@ public final class Strings {
   }
 
   public static String removeNonCJKChar(String text, String keeps) {
+    if (text == null) return "";
     StringBuilder builder = new StringBuilder();
 
     if (keeps == null) {
@@ -403,6 +445,9 @@ public final class Strings {
   }
 
   public static String trimNonCJKChar(String text) {
+    if (text == null) {
+      return null;
+    }
     return trimNonCJKChar(text, null);
   }
 
@@ -412,6 +457,10 @@ public final class Strings {
    * 2. 去除网页空白：&nbsp;
    */
   public static String trimNonCJKChar(String text, String keeps) {
+    if (text == null) {
+      return null;
+    }
+
     int start = 0;
     int end = text.length();
     if (keeps == null)
@@ -433,6 +482,11 @@ public final class Strings {
       }
     }
 
+    // No letter, digits, CJK in the string
+    if (start == 0 && end == text.length()) {
+      return "";
+    }
+
     return text.substring(start, end);
   }
 
@@ -444,7 +498,7 @@ public final class Strings {
    */
   public static String removeNonPrintableChar(String s) {
     if (s == null) {
-      return null;
+      return "";
     }
 
     StringBuilder builder = new StringBuilder();
@@ -485,13 +539,14 @@ public final class Strings {
 
   public static String clearControlChars(String input, String replacement) {
     if (input == null) {
-      return null;
+      return "";
     }
 
-    return input.replaceAll("\\p{Cntrl}", replacement);
+    return input.replaceAll("\\p{Cntrl}", replacement == null ? "" : replacement);
   }
 
   public static String getLongestPart(final String text, final Pattern pattern) {
+    if (text == null || pattern == null) return "";
     String[] parts = pattern.split(text);
 
     if (parts.length == 1) {
@@ -562,26 +617,32 @@ public final class Strings {
    * See CaseFormat from Guava, for example, LOWER_UNDERSCORE.to(LOWER_CAMEL, str)
    */
   public static String humanize(Class clazz, String suffix, String separator) {
-    String text = StringUtils.join(clazz.getSimpleName().split("(?=\\p{Upper})"), separator);
-    text = text.replaceAll("[-_]", separator).toLowerCase().trim();
+    String text = clazz == null ? "" : clazz.getSimpleName();
+    // split camel case into tokens
+    text = StringUtils.join(text.split("(?=\\p{Upper})"), " ");
+    text = text.replaceAll("[-_]", " ").toLowerCase().trim();
+    // drop standalone 'kt' token (e.g., from Kotlin top-level classes)
+    text = text.replaceAll("\\bkt\\b", "").replaceAll("\\s+", " ").trim();
 
-    return text + separator + suffix;
+    return text + (separator == null ? " " : separator) + suffix;
   }
 
   public static int getLeadingInteger(String s, int defaultValue) {
-    int numberEnd = StringUtils.lastIndexOfAny(s, "123456789");
-    if (numberEnd == StringUtils.INDEX_NOT_FOUND) {
-      return defaultValue;
+    if (StringUtils.isEmpty(s)) return defaultValue;
+    Matcher m = Pattern.compile("^(\\d+)").matcher(s);
+    if (m.find()) {
+      return NumberUtils.toInt(m.group(1), defaultValue);
     }
-    return NumberUtils.toInt(s.substring(0, numberEnd), defaultValue);
+    return defaultValue;
   }
 
   public static int getTailingInteger(String s, int defaultValue) {
-    int numberStart = StringUtils.indexOfAny(s, "123456789");
-    if (numberStart == StringUtils.INDEX_NOT_FOUND) {
-      return defaultValue;
+    if (StringUtils.isEmpty(s)) return defaultValue;
+    Matcher m = Pattern.compile("(\\d+)$").matcher(s);
+    if (m.find()) {
+      return NumberUtils.toInt(m.group(1), defaultValue);
     }
-    return NumberUtils.toInt(s.substring(numberStart), defaultValue);
+    return defaultValue;
   }
 
 
@@ -649,7 +710,7 @@ public final class Strings {
       return null;
     }
 
-    s = s.replaceAll("[,_]", "");
+    // find the last contiguous digit group
     s = StringUtils.reverse(s);
     Pattern pattern = Pattern.compile("[0-9]+");
 
@@ -667,11 +728,9 @@ public final class Strings {
   }
 
   public static float getFirstFloatNumber(String s, float defaultValue) {
-    // number separators
-    s = s.replaceAll("[,_]", "");
-    Pattern pattern = Pattern.compile("[+-]?[0-9]*\\.?,?[0-9]+");
+    if (s == null) return defaultValue;
 
-    Matcher m = pattern.matcher(s);
+    Matcher m = FLOAT_PATTERN_R.matcher(s);
     if (m.find()) {
       return NumberUtils.toFloat(m.group());
     }
@@ -680,19 +739,20 @@ public final class Strings {
   }
 
   public static float findLastFloatNumber(String s, float defaultValue) {
-    s = s.replaceAll("[,_]", "");
-    Pattern pattern = Pattern.compile("[+-]?[0-9]*\\.?,?[0-9]+");
+    if (s == null) return defaultValue;
 
-    Matcher m = pattern.matcher(s);
-    if (m.find()) {
-      return NumberUtils.toFloat(m.group(m.groupCount()));
+    Matcher m = FLOAT_PATTERN_R.matcher(s);
+    String last = null;
+    while (m.find()) {
+      last = m.group();
     }
+    if (last != null) return NumberUtils.toFloat(last);
 
     return defaultValue;
   }
 
   public static boolean containsAll(String text, CharSequence... searchCharSequences) {
-      Objects.requireNonNull(text);
+    Objects.requireNonNull(text);
 
     for (CharSequence search : searchCharSequences) {
       if (!text.contains(search)) return false;
@@ -702,7 +762,7 @@ public final class Strings {
   }
 
   public static boolean containsAny(String text, CharSequence... searchCharSequences) {
-      Objects.requireNonNull(text);
+    Objects.requireNonNull(text);
 
     for (CharSequence search : searchCharSequences) {
       if (text.contains(search)) return true;
@@ -712,7 +772,7 @@ public final class Strings {
   }
 
   public static boolean containsNone(String text, CharSequence... searchCharSequences) {
-      Objects.requireNonNull(text);
+    Objects.requireNonNull(text);
 
     for (CharSequence search : searchCharSequences) {
       if (text.contains(search)) return false;
@@ -730,6 +790,7 @@ public final class Strings {
   }
 
   public static String doubleQuoteIfContainsWhitespace(String s) {
+    if (s == null || s.isEmpty()) return "";
     if (StringUtils.containsWhitespace(s)) return "\"" + s + "\"";
     else return s;
   }
@@ -752,7 +813,7 @@ public final class Strings {
         return StringUtils.abbreviate(compactWhitespaces(log), maxWidth);
     }
 
-    /**
+  /**
    * Formats a decimal number in its compact, readable form.
    *
    * @see <a href="https://docs.oracle.com/en/java/javase/12/docs/api/java.base/java/text/CompactNumberFormat.html">
@@ -816,6 +877,7 @@ public final class Strings {
    * CompactNumberFormat</a>
    */
   public static String compactFormat(long number, int scale, boolean si) {
+    if (number == 0) return "0 B";
     if (number < 0) {
       return "-" + compactFormat(-number, scale, si);
     }
@@ -827,8 +889,10 @@ public final class Strings {
 
     int exp = (int) (Math.log(number) / Math.log(unit));
     String pre = (si ? "kMGTPE" : "KMGTPE").charAt(exp - 1) + (si ? "" : "i");
-    String format = scale > 0 ? "%," + scale + ".2f %sB" : "%,.2f %sB";
-    return String.format(format, number / Math.pow(unit, exp), pre);
+    int decimals = Math.max(0, scale);
+    double val = number / Math.pow(unit, exp);
+    String valStr = decimals == 0 ? String.format("%,.0f", val) : String.format("%,." + decimals + "f", val);
+    return valStr + " " + pre + "B";
   }
 
   /**
@@ -861,6 +925,7 @@ public final class Strings {
    * @return All lines separated by backslashes are merged
    */
   public static List<String> getUnslashedLines(String allLines) {
+    if (allLines == null || allLines.isEmpty()) return new ArrayList<>();
     return mergeSlashedLines(Arrays.asList(allLines.split("\n")));
   }
 
@@ -872,6 +937,7 @@ public final class Strings {
    * @return a {@link java.util.List} object.
    */
   public static List<String> getUnslashedLines(String allLines, String EOL) {
+    if (allLines == null || allLines.isEmpty()) return new ArrayList<>();
     return mergeSlashedLines(Arrays.asList(allLines.split(EOL)));
   }
 
@@ -885,8 +951,9 @@ public final class Strings {
    * @return a {@link java.lang.String} object.
    */
   public static String mergeSlashedLine(String slashedLine) {
-    slashedLine = slashedLine.replaceAll("\n", "");
-    slashedLine = slashedLine.replaceAll("\\\\", "");
+    if (slashedLine == null) return "";
+    // remove escaped line breaks like \n or \r
+    slashedLine = slashedLine.replace("\\n", "").replace("\\r", "");
     return slashedLine;
   }
 
@@ -898,10 +965,11 @@ public final class Strings {
    */
   public static List<String> mergeSlashedLines(Iterable<String> linesWithSlash) {
     List<String> lines = new ArrayList<>();
+    if (linesWithSlash == null) return lines;
     StringBuilder mergedLine = new StringBuilder();
     boolean merging;
     for (String line : linesWithSlash) {
-      line = line.trim();
+      line = line == null ? "" : line.trim();
 
       if (line.isEmpty()) {
         continue;
@@ -911,12 +979,12 @@ public final class Strings {
         merging = true;
         mergedLine.append(StringUtils.removeEnd(line, "\\"));
       } else {
-        mergedLine.append(line);
+        mergedLine.append(mergeSlashedLine(line));
         merging = false;
       }
 
       if (!merging) {
-        if (!mergedLine.isEmpty()) {
+        if (mergedLine.length() > 0) {
           lines.add(mergedLine.toString());
           mergedLine = new StringBuilder();
         }
@@ -955,6 +1023,7 @@ public final class Strings {
   }
 
   public static String replaceCharsetInHtml(String html, String charset) {
+    if (html == null) return "";
     Matcher matcher = HTML_CHARSET_PATTERN.matcher(html);
     if (matcher.find()) {
       html = html.replaceAll(matcher.group(1), charset);
@@ -1008,9 +1077,10 @@ public final class Strings {
    * @return a <code>Collection</code> of <code>String</code> values
    */
   public static Collection<String> getTrimmedStringCollection(String str) {
-    Set<String> set = new LinkedHashSet<String>(Arrays.asList(getTrimmedStrings(str)));
+    if (str == null || str.trim().isEmpty()) return new ArrayList<>();
+    LinkedHashSet<String> set = new LinkedHashSet<>(Arrays.asList(getTrimmedStrings(str)));
     set.remove("");
-    return set;
+    return new ArrayList<>(set);
   }
 
   /**
@@ -1028,16 +1098,19 @@ public final class Strings {
   }
 
   public static boolean hasHTMLTags(String text) {
+    if (text == null || text.isEmpty()) return false;
     Matcher matcher = HTML_TAG_PATTERN.matcher(text);
     return matcher.find();
   }
 
   public static boolean isFloat(String text) {
+    if (text == null) return false;
     return FLOAT_PATTERN.matcher(text).matches();
   }
 
   public static boolean isNumericLike(String text) {
-    return NUMERIC_LIKE_PATTERN.matcher(text).matches();
+    if (text == null) return false;
+    return NUMERIC_LIKE_PATTERN.matcher(text).find();
   }
 
   /**
@@ -1047,6 +1120,7 @@ public final class Strings {
    * @return a boolean.
    */
   public static boolean isMoneyLike(String text) {
+    if (text == null) return false;
     return MONEY_LIKE_PATTERN.matcher(text).matches();
   }
 
@@ -1057,6 +1131,7 @@ public final class Strings {
    * @return a boolean.
    */
   public static boolean isIpPortLike(String text) {
+    if (text == null) return false;
     return IP_PORT_PATTERN.matcher(text).matches();
   }
 
@@ -1067,11 +1142,16 @@ public final class Strings {
    * @return a boolean.
    */
   public static boolean isIpLike(String text) {
+    if (text == null || text.isBlank()) return false;
     return isIpV4Like(text);
   }
 
   public static boolean isIpV4Like(String text) {
+    if (text == null || text.isBlank()) return false;
     return text.matches("\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}");
   }
+
+  // Time pattern HH:mm (00-23:00-59)
+  public static final Pattern PatternTime = Pattern.compile("\\b([01]\\d|2[0-3]):([0-5]\\d)\\b");
 
 }

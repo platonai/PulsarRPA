@@ -116,6 +116,7 @@ class MessageWriter(
         printWriter?.flush()
     }
 
+    @Synchronized
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             closeWriter("close writer")
