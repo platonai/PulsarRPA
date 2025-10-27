@@ -1,6 +1,6 @@
 package ai.platon.pulsar.agentic.support
 
-import ai.platon.pulsar.agentic.ai.support.ToolCall
+import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -13,8 +13,8 @@ class ToolCallExecutorTest {
         assertNotNull(tc)
         tc!!
         assertEquals("driver", tc.domain)
-        assertEquals("goBack", tc.name)
-        assertTrue(tc.args.isEmpty())
+        assertEquals("goBack", tc.method)
+        assertTrue(tc.arguments.isEmpty())
     }
 
     @Test
@@ -23,15 +23,15 @@ class ToolCallExecutorTest {
         assertNotNull(tc)
         tc!!
         assertEquals("driver", tc.domain)
-        assertEquals("scrollToMiddle", tc.name)
-        assertEquals("0.4", tc.args["0"])
+        assertEquals("scrollToMiddle", tc.method)
+        assertEquals("0.4", tc.arguments["0"])
     }
 
     @Test
     fun `generate expression escapes quotes and backslashes`() {
         val url = "https://example.com?q=\"a b\"\\tail"
         val expr = ToolCallExecutor.toolCallToExpression(
-            ToolCall("driver", "navigateTo", mapOf("url" to url))
+            ToolCall("driver", "navigateTo", mutableMapOf("url" to url))
         )
         assertNotNull(expr)
         // Expect the embedded string to have escaped quotes and backslashes
@@ -41,8 +41,8 @@ class ToolCallExecutorTest {
 
     @Test
     fun `generate expression for goBack and goForward`() {
-        val back = ToolCallExecutor.toolCallToExpression(ToolCall("driver", "goBack", emptyMap()))
-        val forward = ToolCallExecutor.toolCallToExpression(ToolCall("driver", "goForward", emptyMap()))
+        val back = ToolCallExecutor.toolCallToExpression(ToolCall("driver", "goBack", mutableMapOf()))
+        val forward = ToolCallExecutor.toolCallToExpression(ToolCall("driver", "goForward", mutableMapOf()))
         assertEquals("driver.goBack()", back)
         assertEquals("driver.goForward()", forward)
     }
@@ -52,7 +52,7 @@ class ToolCallExecutorTest {
         val tc = ToolCall(
             "driver",
             "clickMatches",
-            mapOf(
+            mutableMapOf(
                 "selector" to "a.link",
                 "attrName" to "data-title",
                 "pattern" to "He said \"hi\"",
@@ -73,10 +73,10 @@ class ToolCallExecutorTest {
         assertNotNull(tc)
         tc!!
         assertEquals("driver", tc.domain)
-        assertEquals("clickTextMatches", tc.name)
-        assertEquals("a.link", tc.args["0"]) // first arg
-        assertEquals("hello, world", tc.args["1"]) // quoted comma preserved
-        assertEquals("2", tc.args["2"]) // third arg
+        assertEquals("clickTextMatches", tc.method)
+        assertEquals("a.link", tc.arguments["0"]) // first arg
+        assertEquals("hello, world", tc.arguments["1"]) // quoted comma preserved
+        assertEquals("2", tc.arguments["2"]) // third arg
     }
 
     @Test
@@ -86,9 +86,9 @@ class ToolCallExecutorTest {
         assertNotNull(tc)
         tc!!
         assertEquals("driver", tc.domain)
-        assertEquals("fill", tc.name)
-        assertEquals("#input", tc.args["0"]) // unquoted
-        assertEquals("He said 'hi' and \\path", tc.args["1"]) // unescaped
+        assertEquals("fill", tc.method)
+        assertEquals("#input", tc.arguments["0"]) // unquoted
+        assertEquals("He said 'hi' and \\path", tc.arguments["1"]) // unescaped
     }
 
     @Test
@@ -99,8 +99,8 @@ class ToolCallExecutorTest {
         assertNotNull(tc)
         tc!!
         assertEquals("driver", tc.domain)
-        assertEquals("evaluate", tc.name)
-        assertEquals(arg, tc.args["0"]) // content preserved
+        assertEquals("evaluate", tc.method)
+        assertEquals(arg, tc.arguments["0"]) // content preserved
     }
 
     @Test
@@ -109,9 +109,9 @@ class ToolCallExecutorTest {
         val tc = ToolCallExecutor.parseKotlinFunctionExpression(src)
         assertNotNull(tc)
         tc!!
-        assertEquals("click", tc.name)
-        assertEquals(1, tc.args.size)
-        assertEquals("a.link", tc.args["0"]) // single arg despite trailing comma
+        assertEquals("click", tc.method)
+        assertEquals(1, tc.arguments.size)
+        assertEquals("a.link", tc.arguments["0"]) // single arg despite trailing comma
     }
 
     @Test
@@ -120,9 +120,9 @@ class ToolCallExecutorTest {
         val tc = ToolCallExecutor.parseKotlinFunctionExpression(src)
         assertNotNull(tc)
         tc!!
-        assertEquals("scrollToMiddle", tc.name)
-        assertEquals(1, tc.args.size)
-        assertEquals("0.75", tc.args["0"]) // trimmed numeric string
+        assertEquals("scrollToMiddle", tc.method)
+        assertEquals(1, tc.arguments.size)
+        assertEquals("0.75", tc.arguments["0"]) // trimmed numeric string
     }
 
     @Test
@@ -131,8 +131,8 @@ class ToolCallExecutorTest {
         val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNotNull(result)
         assertEquals("driver", result?.domain)
-        assertEquals("open", result?.name)
-        assertEquals(mapOf("0" to "https://t.tt"), result?.args)
+        assertEquals("open", result?.method)
+        assertEquals(mutableMapOf("0" to "https://t.tt"), result?.arguments)
     }
 
     @Test
@@ -141,8 +141,8 @@ class ToolCallExecutorTest {
         val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNotNull(result)
         assertEquals("driver", result?.domain)
-        assertEquals("scrollToTop", result?.name)
-        assertTrue(result?.args?.isEmpty() ?: false)
+        assertEquals("scrollToTop", result?.method)
+        assertTrue(result?.arguments?.isEmpty() ?: false)
     }
 
     @Test
@@ -151,8 +151,8 @@ class ToolCallExecutorTest {
         val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNotNull(result)
         assertEquals("driver", result?.domain)
-        assertEquals("scrollToMiddle", result?.name)
-        assertEquals(mapOf("0" to "0.4"), result?.args)
+        assertEquals("scrollToMiddle", result?.method)
+        assertEquals(mutableMapOf("0" to "0.4"), result?.arguments)
     }
 
     @Test
@@ -161,8 +161,8 @@ class ToolCallExecutorTest {
         val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNotNull(result)
         assertEquals("driver", result?.domain)
-        assertEquals("mouseWheelUp", result?.name)
-        assertEquals(mapOf("0" to "2", "1" to "200", "2" to "200"), result?.args)
+        assertEquals("mouseWheelUp", result?.method)
+        assertEquals(mutableMapOf("0" to "2", "1" to "200", "2" to "200"), result?.arguments)
     }
 
     @Test
@@ -171,8 +171,8 @@ class ToolCallExecutorTest {
         val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNotNull(result)
         assertEquals("driver", result?.domain)
-        assertEquals("mouseWheelUp", result?.name)
-        assertEquals(mapOf("0" to "2", "1" to "200", "2" to "200", "3" to "100"), result?.args)
+        assertEquals("mouseWheelUp", result?.method)
+        assertEquals(mutableMapOf("0" to "2", "1" to "200", "2" to "200", "3" to "100"), result?.arguments)
     }
 
     @Test
@@ -216,8 +216,8 @@ class ToolCallExecutorTest {
         val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNotNull(result)
         assertEquals("driver", result?.domain)
-        assertEquals("open", result?.name)
-        assertEquals(mapOf("0" to "https://t.tt"), result?.args)
+        assertEquals("open", result?.method)
+        assertEquals(mutableMapOf("0" to "https://t.tt"), result?.arguments)
     }
 
     @Test
@@ -226,8 +226,8 @@ class ToolCallExecutorTest {
         val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNotNull(result)
         assertEquals("driver", result?.domain)
-        assertEquals("open", result?.name)
-        assertTrue(result?.args?.isEmpty() ?: false)
+        assertEquals("open", result?.method)
+        assertTrue(result?.arguments?.isEmpty() ?: false)
     }
 
     @Test
@@ -235,8 +235,8 @@ class ToolCallExecutorTest {
         val input = "driver.open(\"https://t.tt\", )"
         val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
         assertEquals("driver", result?.domain)
-        assertEquals("open", result?.name)
-        assertEquals(mapOf("0" to "https://t.tt"), result?.args)
+        assertEquals("open", result?.method)
+        assertEquals(mutableMapOf("0" to "https://t.tt"), result?.arguments)
     }
 
     @Test
@@ -244,8 +244,8 @@ class ToolCallExecutorTest {
         val input = "driver.open(https://t.tt)"
         val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
         assertEquals("driver", result?.domain)
-        assertEquals("open", result?.name)
-        assertEquals(mapOf("0" to "https://t.tt"), result?.args)
+        assertEquals("open", result?.method)
+        assertEquals(mutableMapOf("0" to "https://t.tt"), result?.arguments)
     }
 
     @Test
@@ -254,8 +254,8 @@ class ToolCallExecutorTest {
         val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNotNull(result)
         assertEquals("driver", result?.domain)
-        assertEquals("open", result?.name)
-        assertEquals(mapOf("0" to "https://t.tt?query=123&param=abc"), result?.args)
+        assertEquals("open", result?.method)
+        assertEquals(mutableMapOf("0" to "https://t.tt?query=123&param=abc"), result?.arguments)
     }
 
     // Additional focused coverage
@@ -265,8 +265,8 @@ class ToolCallExecutorTest {
         val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNotNull(result)
         assertEquals("driver", result?.domain)
-        assertEquals("open", result?.name)
-        assertEquals(mapOf("0" to "https://t.tt"), result?.args)
+        assertEquals("open", result?.method)
+        assertEquals(mutableMapOf("0" to "https://t.tt"), result?.arguments)
     }
 
     @Test
@@ -276,24 +276,24 @@ class ToolCallExecutorTest {
         assertNotNull(tc)
         tc!!
         assertEquals("driver", tc.domain)
-        assertEquals("fill", tc.name)
-        assertEquals("#input", tc.args["0"]) // unquoted
-        assertEquals("He said \"hi\" and \\path", tc.args["1"]) // unescaped
+        assertEquals("fill", tc.method)
+        assertEquals("#input", tc.arguments["0"]) // unquoted
+        assertEquals("He said \"hi\" and \\path", tc.arguments["1"]) // unescaped
     }
 
     @Test
     fun `toolCallToExpression waitForSelector with timeout`() {
         val expr = ToolCallExecutor.toolCallToExpression(
-            ToolCall("driver", "waitForSelector", mapOf("selector" to "#a", "timeoutMillis" to 1234))
+            ToolCall("driver", "waitForSelector", mutableMapOf("selector" to "#a", "timeoutMillis" to 1234))
         )
         assertEquals("driver.waitForSelector(\"#a\", 1234L)", expr)
     }
 
     @Test
     fun `toolCallToExpression captureScreenshot variants`() {
-        val none = ToolCallExecutor.toolCallToExpression(ToolCall("driver", "captureScreenshot", emptyMap()))
+        val none = ToolCallExecutor.toolCallToExpression(ToolCall("driver", "captureScreenshot", mutableMapOf()))
         val withSel = ToolCallExecutor.toolCallToExpression(
-            ToolCall("driver", "captureScreenshot", mapOf("selector" to "#root"))
+            ToolCall("driver", "captureScreenshot", mutableMapOf("selector" to "#root"))
         )
         assertEquals("driver.captureScreenshot()", none)
         assertEquals("driver.captureScreenshot(\"#root\")", withSel)
@@ -301,7 +301,7 @@ class ToolCallExecutorTest {
 
     @Test
     fun `toolCallToExpression scrollToMiddle default`() {
-        val expr = ToolCallExecutor.toolCallToExpression(ToolCall("driver", "scrollToMiddle", emptyMap()))
+        val expr = ToolCallExecutor.toolCallToExpression(ToolCall("driver", "scrollToMiddle", mutableMapOf()))
         assertEquals("driver.scrollToMiddle(0.5)", expr)
     }
 
@@ -311,7 +311,7 @@ class ToolCallExecutorTest {
             ToolCall(
                 "driver",
                 "clickTextMatches",
-                mapOf("selector" to "a", "pattern" to "He said \"hi\"", "count" to 2)
+                mutableMapOf("selector" to "a", "pattern" to "He said \"hi\"", "count" to 2)
             )
         )
         assertNotNull(expr)
@@ -323,7 +323,7 @@ class ToolCallExecutorTest {
     @Test
     fun `toolCallToExpression goto alias`() {
         val expr = ToolCallExecutor.toolCallToExpression(
-            ToolCall("driver", "goto", mapOf("url" to "https://example.com/x?q=\"y\""))
+            ToolCall("driver", "goto", mutableMapOf("url" to "https://example.com/x?q=\"y\""))
         )
         assertEquals("driver.navigateTo(\"https://example.com/x?q=\\\"y\\\"\")", expr)
     }
@@ -331,7 +331,7 @@ class ToolCallExecutorTest {
     @Test
     fun `toolCallToExpression press generation`() {
         val expr = ToolCallExecutor.toolCallToExpression(
-            ToolCall("driver", "press", mapOf("selector" to "#i", "key" to "Enter"))
+            ToolCall("driver", "press", mutableMapOf("selector" to "#i", "key" to "Enter"))
         )
         assertEquals("driver.press(\"#i\", \"Enter\")", expr)
     }

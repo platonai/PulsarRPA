@@ -3,13 +3,13 @@ package ai.platon.pulsar.agentic.ai.agent
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.SimpleMessage
-import ai.platon.pulsar.agentic.ai.SimpleMessageList
+import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
+import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ArrayNode
@@ -33,14 +33,6 @@ data class LLMUsage(
 )
 
 data class Metadata(val progress: String = "", val completed: Boolean = false)
-
-data class ObserveElement(
-    val locator: String? = null,
-    val description: String? = null,
-    val domain: String? = null,
-    val method: String? = null,
-    val arguments: Map<String, String>? = null,
-)
 
 data class InternalObserveResult(
     val elements: List<ObserveElement>,
@@ -82,6 +74,7 @@ class InferenceEngine(
 
     // Reuse a single ObjectMapper for JSON parsing within this class
     private val mapper = ObjectMapper()
+    private val tta = TextToAction(session.sessionConfig)
 
     private val driver get() = session.boundDriver
 
@@ -262,12 +255,14 @@ class InferenceEngine(
         val (resp, elapsedMs) = doLangChainChat(messages.systemMessages(), messages.userMessages())
         val usage = toUsage(resp)
 
-        val raw = resp.aiMessage().text().trim()
+        val response = resp.aiMessage().text().trim()
         // Parse as generic JsonNode to support both object and array roots
-        val root: JsonNode = runCatching { mapper.readTree(raw) as? JsonNode ?: JsonNodeFactory.instance.objectNode() }
+        val root: JsonNode = runCatching { mapper.readTree(response) ?: JsonNodeFactory.instance.objectNode() }
             .getOrElse { JsonNodeFactory.instance.objectNode() }
 
-        val elements: List<ObserveElement> = parseObserveElements(root, params.returnAction)
+        val elements: List<ObserveElement> = tta.parseObserveElements(root, params.returnAction)
+
+        // val elements: List<ObserveElement> = pulsarObjectMapper().readValue(response)
 
         var respFile = ""
         if (params.logInferenceToFile) {
@@ -277,7 +272,7 @@ class InferenceEngine(
                 payload = mapOf(
                     "requestId" to params.requestId,
                     "modelResponse" to prefix,
-                    "rawResponse" to safeJsonPreview(raw)
+                    "rawResponse" to safeJsonPreview(response)
                 )
             ).first
 
@@ -301,88 +296,6 @@ class InferenceEngine(
             completionTokens = usage.completionTokens,
             inferenceTimeMs = elapsedMs
         )
-    }
-
-    // ----------------------------------- Helpers -----------------------------------
-    /**
-     * Observe elements schema:
-     * ```json
-     *  { "elements": [ { "selector": string, "description": string, "method": string, "arguments": [{"name": string, "value": string}] } ] }
-     * ```
-     *
-     * This schema is build by [PromptBuilder.buildObserveResultSchemaContract] and is passed to LLM for a restricted response.
-     * */
-    private fun parseObserveElements(root: JsonNode, returnAction: Boolean): List<ObserveElement> {
-        // Determine the array of items to read
-        val arr: ArrayNode = when {
-            root.isObject && root.has("elements") && root.get("elements").isArray -> root.get("elements") as ArrayNode
-            root.isArray -> root as ArrayNode
-            root.isObject -> {
-                // Single element object fallback
-                val single = root as ObjectNode
-                val tmp = JsonNodeFactory.instance.arrayNode()
-                tmp.add(single)
-                tmp
-            }
-
-            else -> JsonNodeFactory.instance.arrayNode()
-        }
-
-        val result = mutableListOf<ObserveElement>()
-        for (i in 0 until arr.size()) {
-            val el: JsonNode = arr.get(i)
-            val locator = el.path("locator").asText("")
-            val desc = el.path("description").asText("")
-            val domain = el.path("domain").asText(null)
-            val baseMethod = el.path("method").asText(null)
-
-            // Parse arguments according to schema: array of { name, value }
-            val argsNode = el.get("arguments")
-            val argsMap: Map<String, String>? = when {
-                argsNode == null || argsNode.isNull -> null
-                argsNode.isArray -> {
-                    val m = linkedMapOf<String, String>()
-                    for (j in 0 until argsNode.size()) {
-                        val item = argsNode.get(j)
-                        val name = item.path("name").asText(null)
-                        // Accept both "value" and fallback to text of node if needed
-                        val value = item.path("value").asText(null)
-                        if (!name.isNullOrBlank()) {
-                            m[name] = value ?: ""
-                        }
-                    }
-                    if (m.isEmpty()) null else m
-                }
-                argsNode.isObject -> {
-                    // Be tolerant: support either a single {name,value} object or a map-like object
-                    if (argsNode.has("name") || argsNode.has("value")) {
-                        val name = argsNode.path("name").asText(null)
-                        val value = argsNode.path("value").asText(null)
-                        if (!name.isNullOrBlank()) mapOf(name to (value ?: "")) else null
-                    } else {
-                        val m = linkedMapOf<String, String>()
-                        val fields = argsNode.fields()
-                        while (fields.hasNext()) {
-                            val (k, v) = fields.next().let { it.key to it.value }
-                            m[k] = v.asText("")
-                        }
-                        if (m.isEmpty()) null else m
-                    }
-                }
-                else -> null
-            }
-
-            val item = ObserveElement(
-                locator = locator,
-                description = desc,
-                domain = domain,
-                method = baseMethod.takeIf { returnAction },
-                arguments = argsMap.takeIf { returnAction }
-            )
-
-            result.add(item)
-        }
-        return result
     }
 
     private fun safeJsonPreview(raw: String, limit: Int = 2000): String {

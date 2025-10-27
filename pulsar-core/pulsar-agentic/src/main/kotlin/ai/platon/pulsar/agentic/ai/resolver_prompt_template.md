@@ -45,7 +45,7 @@
 
 ## 无障碍树说明：
 - 节点唯一定位符 `locator` 由两个整数组成。
-- 所有节点可见，除非 `invisible` == true 显示指定。
+- 所有节点可见，除非 `invisible` == true 显式指定。
 - 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
 - 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
 

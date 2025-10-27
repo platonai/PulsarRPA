@@ -13,7 +13,7 @@ driver.exists(selector: String): Boolean
 driver.isVisible(selector: String): Boolean
 driver.focus(selector: String)
 driver.click(selector: String)                         // focus on an element with [selector] and click it
-driver.check(selector: String, modifier: String)       // focus on an element with [selector] and click it with modifier pressed
+driver.click(selector: String, modifier: String)       // focus on an element with [selector] and click it with modifier pressed
 driver.fill(selector: String, text: String)
 driver.type(selector: String, text: String)
 driver.press(selector: String, key: String)

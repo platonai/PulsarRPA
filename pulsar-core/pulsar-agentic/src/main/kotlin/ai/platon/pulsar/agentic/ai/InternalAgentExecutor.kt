@@ -21,7 +21,7 @@ internal class InternalAgentExecutor(
         session.sessionConfig
     )
 
-    private val dispatcher = ToolCallExecutor()
+    private val toolCallExecutor = ToolCallExecutor()
 
     val agent = BrowserPerceptiveAgent(driver, session)
 
@@ -37,23 +37,22 @@ internal class InternalAgentExecutor(
         return agent.act(action)
     }
 
-
     suspend fun performAct(action: ActionDescription): InstructionResult {
-        if (action.cssFriendlyExpressions.isEmpty() && action.toolCall == null) {
-            return InstructionResult(listOf(), functionResults = listOf(), modelResponse = action.modelResponse)
+        val toolCall = action.toolCall
+        if (action.expressions.isEmpty() && toolCall == null) {
+            return InstructionResult(action = action)
         }
 
-        val result = if (action.toolCall != null) {
-            dispatcher.execute(action.toolCall, driver)
+        val result = if (toolCall != null) {
+            toolCallExecutor.execute(toolCall, driver)
         } else {
-            val expressions = action.cssFriendlyExpressions.take(1)
-            expressions.map { fc -> dispatcher.execute(fc, driver) }.firstOrNull()
+            action.expressions.take(1).map { expr -> toolCallExecutor.execute(expr, driver) }.firstOrNull()
         }
 
         return InstructionResult(
-            action.cssFriendlyExpressions,
+            action.expressions,
             functionResults = listOf(result),
-            modelResponse = action.modelResponse
+            action = action
         )
     }
 
@@ -66,13 +65,6 @@ internal class InternalAgentExecutor(
 
         val action = tta.generate(prompt, driver)
 
-        val result = if (action.toolCall != null) {
-            dispatcher.execute(action.toolCall, driver)
-        } else {
-            val expressions = action.cssFriendlyExpressions.take(1)
-            expressions.map { fc -> dispatcher.execute(fc, driver) }.firstOrNull()
-        }
-
-        return InstructionResult(action.cssFriendlyExpressions, listOf(result), action.modelResponse)
+        return performAct(action)
     }
 }

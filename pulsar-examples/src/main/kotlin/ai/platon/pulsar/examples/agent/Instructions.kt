@@ -8,7 +8,7 @@ class InstructionsExample {
     suspend fun run() {
         val driver = session.createBoundDriver()
         driver.navigateTo("https://news.ycombinator.com/news")
-        session.act("search for 'browser'")
+        session.act("click the second article")
     }
 }
 

@@ -1,16 +1,11 @@
 package ai.platon.pulsar.agentic.ai
 
 import ai.platon.pulsar.agentic.AgenticSession
-import ai.platon.pulsar.agentic.ai.agent.ExtractParams
-import ai.platon.pulsar.agentic.ai.agent.ExtractionField
-import ai.platon.pulsar.agentic.ai.agent.ExtractionSchema
-import ai.platon.pulsar.agentic.ai.agent.InferenceEngine
-import ai.platon.pulsar.agentic.ai.agent.ObserveParams
+import ai.platon.pulsar.agentic.ai.agent.*
 import ai.platon.pulsar.agentic.ai.agent.detail.*
-import ai.platon.pulsar.agentic.ai.agent.legacyMapToExtractionSchema
 import ai.platon.pulsar.agentic.ai.support.AgentTool
-import ai.platon.pulsar.agentic.ai.support.ToolCall
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
+import ai.platon.pulsar.agentic.ai.tta.ActExecuteResult
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.InstructionResult
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
@@ -24,15 +19,15 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.Pson
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import com.google.gson.JsonElement
-import com.google.gson.JsonParser
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
@@ -48,7 +43,6 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.collections.get
 import kotlin.math.min
 import kotlin.math.pow
 
@@ -115,15 +109,18 @@ class BrowserPerceptiveAgent(
     private val validationCache = ConcurrentHashMap<String, Boolean>()
 
     // Enhanced state management
-    private val _actionHistory = mutableListOf<String>()
+    private val _history = mutableListOf<History>()
     private val _recordHistory = mutableListOf<String>()
     private val performanceMetrics = PerformanceMetrics()
     private val retryCounter = AtomicInteger(0)
     private val consecutiveFailureCounter = AtomicInteger(0)
     private val stepExecutionTimes = ConcurrentHashMap<Int, Long>()
 
+    // Jackson mapper aligned with project conventions
+    private val jsonMapper by lazy { pulsarObjectMapper() }
+
     override val uuid = UUID.randomUUID()
-    override val actionHistory: List<String> get() = _actionHistory
+    override val history: List<History> get() = _history
 
     override suspend fun resolve(problem: String): ActResult {
         val opts = ActionOptions(action = problem)
@@ -182,7 +179,7 @@ class BrowserPerceptiveAgent(
         val method = observe.method?.trim()?.takeIf { it.isNotEmpty() }
         val locator = observe.locator?.let { Locator.parse(it) }
         // Use the correct type for arguments from ObserveResult
-        val argsMap: Map<String, String> = observe.arguments ?: emptyMap()
+        val argsMap: Map<String, Any?> = observe.arguments ?: emptyMap()
 
         if (method == null || locator == null) {
             val msg = "No valuable observations were made | " + Pson.toJson(observe)
@@ -203,10 +200,9 @@ class BrowserPerceptiveAgent(
         val domain = observe.domain ?: "unknown"
         val lowerMethod = method
         val backendNodeId = observe.backendNodeId
-        // backend selector is supported since 20251020
-        val selector = observe.backendNodeId?.let { "backend:$backendNodeId" }
+        // backend selector is supported since 20251020; fallback to provided locator string when absent
+        val selector = observe.backendNodeId?.let { "backend:$backendNodeId" } ?: observe.locator?.takeIf { it.isNotBlank() }
         if (lowerMethod in selectorActions) {
-            // val selector = locator?.absoluteSelector ?: toolArgs["selector"]?.toString()
             toolArgs["selector"] = selector
             if (selector == null) {
                 val msg = "No selector observation were made $locator | $observe"
@@ -258,35 +254,29 @@ class BrowserPerceptiveAgent(
 
         // Prefer using ToolCallExecutor's canonical driver line builder
         val toolCall = ToolCall(
-            domain = "driver",
-            name = lowerMethod,
-            args = toolArgs
+            domain = observe.domain ?: "unknown",
+            method = lowerMethod,
+            arguments = toolArgs
         )
 
         // Execute via WebDriver dispatcher
         return try {
-            val actionDesc = ActionDescription(
-                cssFriendlyExpressions = listOf(),
-                toolCall = toolCall,
-                modelResponse = ModelResponse(
-                    content = "ObserveResult action: ${observe.description}",
-                    state = ResponseState.STOP
-                )
-            )
-            execute(actionDesc)
+            val observeElement = observe.observeElements?.firstOrNull()
+            val action = ActionDescription(observeElement = observeElement)
+            doExecute(action)
 
             val msg = "Action [$lowerMethod] executed on selector: $locator".trim()
-            addToHistory("observe.act -> ${toolCall.name}")
+            addToHistory("observe.act -> ${toolCall.method}")
             ActResult(
                 success = true,
                 message = msg,
-                action = toolCall.name
+                action = toolCall.method
             )
         } catch (e: Exception) {
             logger.error("observe.act execution failed sid={} msg={}", uuid.toString().take(8), e.message, e)
             val msg = e.message ?: "Execution failed"
             addToHistory("observe.act FAIL $lowerMethod ${locator.absoluteSelector} -> $msg")
-            ActResult(success = false, message = msg, action = toolCall.name)
+            ActResult(success = false, message = msg, action = toolCall.method)
         }
     }
 
@@ -366,10 +356,10 @@ class BrowserPerceptiveAgent(
         val browser = currentDriver.browser
 
         val tabs = browser.drivers.map { (tabId, driver) ->
-            val url = try { driver.currentUrl() } catch (e: Exception) { "about:blank" }
+            val url = try { driver.currentUrl() } catch (_: Exception) { "about:blank" }
             val title = try {
                 driver.evaluate("document.title").toString().takeIf { it.isNotBlank() }
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 null
             }
             TabState(
@@ -394,17 +384,17 @@ class BrowserPerceptiveAgent(
         )
     }
 
-    private suspend fun execute(action: ActionDescription): InstructionResult {
-        val toolCall = action.toolCall ?: return InstructionResult(listOf(), listOf(), action.modelResponse)
-        val driver = requireNotNull(activeDriver)
+    private suspend fun doExecute(action: ActionDescription): InstructionResult {
+        val toolCall = action.toolCall ?: return InstructionResult(action = action)
+        val driver = activeDriver
         val result = toolCallExecutor.execute(toolCall, driver)
 
         // Handle browser.switchTab - bind the new driver to the session
-        if (toolCall.domain == "browser" && toolCall.name == "switchTab" || toolCall.name == "switchTab") {
+        if (toolCall.method == "switchTab") {
             handleSwitchTab(result)
         }
 
-        return InstructionResult(action.cssFriendlyExpressions, listOf(result), action.modelResponse, listOf(toolCall))
+        return InstructionResult(action.expressions, listOf(result), action = action)
     }
 
     /**
@@ -462,13 +452,6 @@ class BrowserPerceptiveAgent(
         val instruction = promptBuilder.buildObserveActToolUsePrompt(action.action, toolCalls, action.variables)
         require(instruction.contains("click")) {
             "Instruction must contains tool list for action: $action"
-        }
-
-        // 2) Optional settle wait before observing DOM (if provided)
-        val settleMs = action.domSettleTimeoutMs?.toLong()?.coerceAtLeast(0L) ?: config.domSettleTimeoutMs
-        if (settleMs > 0) {
-            // High Priority #3: Improved DOM settle detection
-            pageStateTracker.waitForDOMSettle(settleMs, config.domSettleCheckIntervalMs)
         }
 
         // 3) Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
@@ -563,13 +546,18 @@ class BrowserPerceptiveAgent(
                 }
                 // Use xpath here
                 val xpathLocator = node?.xpath?.let { "xpath:$it" } ?: ""
+
                 ObserveResult(
                     description = ele.description ?: "(No comment ...)",
                     locator = xpathLocator.trim(),
                     backendNodeId = locator?.backendNodeId,
                     domain = ele.domain?.ifBlank { null },
                     method = ele.method?.ifBlank { null },
-                    arguments = ele.arguments?.takeIf { it.isNotEmpty() }
+                    arguments = ele.arguments?.takeIf { it.isNotEmpty() },
+
+                    currentPageContentSummary = ele.currentPageContentSummary,
+                    actualLastActionImpact = ele.actualLastActionImpact,
+                    expectedNextActionImpact = ele.expectedNextActionImpact,
                 )
             }
             addHistoryObserve(params.instruction, requestId, results.size, results.isNotEmpty())
@@ -798,8 +786,8 @@ class BrowserPerceptiveAgent(
                     null
                 }
 
-                messages.add(SimpleMessage("user", buildOverallGoalMessage(overallGoal), name = "overallGoal"))
-                messages.addUser(buildHistoryMessage())
+                messages.add(SimpleMessage("user", promptBuilder.buildOverallGoalMessage(overallGoal), name = "overallGoal"))
+                messages.addUser(promptBuilder.buildHistoryMessage(history))
                 if (screenshotB64 != null) {
                     messages.addUser("[Current page screenshot provided as base64 image]")
                 }
@@ -820,17 +808,14 @@ class BrowserPerceptiveAgent(
                     continue
                 }
 
-                val response = stepAction.modelResponse
-                val toolCallResponse = parseStepActionResponse(response.content)
-
                 // Check for task completion
-                if (shouldTerminate(toolCallResponse)) {
-                    handleTaskCompletion(toolCallResponse, step, stepContext)
+                if (shouldTerminate(stepAction)) {
+                    handleTaskCompletion(stepAction, step, stepContext)
                     break
                 }
 
-                val toolCall = toolCallResponse.toolCalls.firstOrNull()
-                if (toolCall == null) {
+                val hasModelToolCall = stepAction.toolCall != null
+                if (!hasModelToolCall) {
                     consecutiveNoOps++
                     val stop = handleConsecutiveNoOps(consecutiveNoOps, step, stepContext)
                     if (stop) break
@@ -841,12 +826,21 @@ class BrowserPerceptiveAgent(
                 consecutiveNoOps = 0
 
                 // Execute the tool call with enhanced error handling
-                val execSummary = doExecuteToolCall(stepAction, step, stepContext)
+                val result = doExecuteToolCall(stepAction, step, stepContext)
+                if (result != null) {
+                    val observe = result.action.observeElement
+                    val record = History(
+                        step,
+                        action = observe?.toolCall?.method ?: "no-op",
+                        description = observe?.description ?: "no-op (consecutive: ${0})",
+                        currentPageContentSummary = observe?.currentPageContentSummary,
+                        actualLastActionImpact = observe?.actualLastActionImpact,
+                        expectedNextActionImpact = observe?.expectedNextActionImpact,
+                    )
 
-                if (execSummary != null) {
-                    addToHistory("#$step $execSummary")
+                    addToHistory(record)
                     updatePerformanceMetrics(step, stepStartTime, true)
-                    logger.info("step.done sid={} step={} summary={}", sid, step, execSummary)
+                    logger.info("step.done sid={} step={} summary={}", sid, step, result.summary)
                 } else {
                     // Treat validation failures or execution skips as no-ops to avoid infinite loops
                     consecutiveNoOps++
@@ -887,7 +881,7 @@ class BrowserPerceptiveAgent(
     // Enhanced helper methods for improved functionality
 
     override fun toString(): String {
-        return actionHistory.lastOrNull() ?: "(no history)"
+        return history.lastOrNull()?.toString() ?: "(no history)"
     }
 
     /**
@@ -977,28 +971,9 @@ class BrowserPerceptiveAgent(
     }
 
     /**
-     * Generates action with retry mechanism
-     */
-    private suspend fun generateStepAction(
-        messages: SimpleMessageList,
-        context: ExecutionContext,
-        browserUseState: BrowserUseState,
-        screenshotB64: String?
-    ): ActionDescription? {
-        return try {
-            // Use overload supplying extracted elements to avoid re-extraction
-            tta.generate(messages, browserUseState, screenshotB64)
-        } catch (e: Exception) {
-            logger.error("action.gen.fail sid={} msg={}", context.sessionId.take(8), e.message, e)
-            consecutiveFailureCounter.incrementAndGet()
-            null
-        }
-    }
-
-    /**
      * Executes tool call with enhanced error handling and validation
      */
-    private suspend fun doExecuteToolCall(action: ActionDescription, step: Int, context: ExecutionContext): String? {
+    private suspend fun doExecuteToolCall(action: ActionDescription, step: Int, context: ExecutionContext): ActExecuteResult? {
         val toolCall = action.toolCall ?: return null
 
         if (config.enablePreActionValidation && !actionValidator.validateToolCall(toolCall)) {
@@ -1006,10 +981,10 @@ class BrowserPerceptiveAgent(
                 "tool.validate.fail sid={} step={} tool={} args={}",
                 context.sessionId.take(8),
                 context.stepNumber,
-                toolCall.name,
-                toolCall.args
+                toolCall.method,
+                toolCall.arguments
             )
-            addToHistory("#$step validation-failed ${toolCall.name}")
+            addToHistory("#$step validation-failed ${toolCall.method}")
             return null
         }
 
@@ -1018,15 +993,18 @@ class BrowserPerceptiveAgent(
                 "tool.exec sid={} step={} tool={} args={}",
                 context.sessionId.take(8),
                 context.stepNumber,
-                toolCall.name,
-                toolCall.args
+                toolCall.method,
+                toolCall.arguments
             )
 
-            execute(action)
+            val instructionResult = doExecute(action)
             consecutiveFailureCounter.set(0) // Reset on success
 
-            // Extract summary from InstructionResult
-            "${toolCall.name} executed successfully"
+            ActExecuteResult(
+                action,
+                instructionResult,
+                success = true,
+                summary = "${toolCall.method} executed successfully")
         } catch (e: Exception) {
             val failures = consecutiveFailureCounter.incrementAndGet()
             logger.error(
@@ -1076,22 +1054,22 @@ class BrowserPerceptiveAgent(
     /**
      * Checks if execution should terminate
      */
-    private fun shouldTerminate(parsed: ToolCallResponse): Boolean {
-        return parsed.taskComplete == true
+    private fun shouldTerminate(action: ActionDescription): Boolean {
+        return action.isComplete
     }
 
     /**
      * Handles task completion
      */
-    private fun handleTaskCompletion(parsed: ToolCallResponse, step: Int, context: ExecutionContext) {
+    private fun handleTaskCompletion(action: ActionDescription, step: Int, context: ExecutionContext) {
         logger.info(
             "task.complete sid={} step={} complete={}",
             context.sessionId.take(8),
             step,
-            parsed.taskComplete ?: false
+            action.isComplete
         )
 
-        addToHistory("#$step complete: taskComplete=${parsed.taskComplete}")
+        addToHistory("#$step complete: taskComplete=${action.isComplete}")
     }
 
     /**
@@ -1100,7 +1078,9 @@ class BrowserPerceptiveAgent(
     private fun updatePerformanceMetrics(step: Int, stepStartTime: Instant, success: Boolean) {
         val stepTime = Duration.between(stepStartTime, Instant.now()).toMillis()
         stepExecutionTimes[step] = stepTime
-        // metrics update deferred
+        // Update counters
+        performanceMetrics.totalSteps += 1
+        if (success) performanceMetrics.successfulActions += 1 else performanceMetrics.failedActions += 1
     }
 
     /**
@@ -1123,9 +1103,9 @@ class BrowserPerceptiveAgent(
     private fun performMemoryCleanup(context: ExecutionContext) {
         try {
             // Clean up history if it gets too large
-            if (actionHistory.size > config.maxHistorySize) {
-                val toRemove = actionHistory.size - config.maxHistorySize + 10
-                _actionHistory.subList(0, toRemove).clear()
+            if (history.size > config.maxHistorySize) {
+                val toRemove = history.size - config.maxHistorySize + 10
+                _history.subList(0, toRemove).clear()
             }
 
             // Clear validation cache periodically
@@ -1142,13 +1122,16 @@ class BrowserPerceptiveAgent(
     /**
      * history management
      */
-    private fun addToHistory(entry: String) {
-        _actionHistory.add(entry)
-        if (actionHistory.size > config.maxHistorySize * 2) {
+    private fun addToHistoryCore(h: History) {
+        _history.add(h)
+        if (history.size > config.maxHistorySize * 2) {
             // Remove the oldest entries to prevent memory issues
-            _actionHistory.subList(0, config.maxHistorySize).clear()
+            _history.subList(0, config.maxHistorySize).clear()
         }
     }
+
+    private fun addToHistory(entry: History) = addToHistoryCore(entry)
+    private fun addToHistory(entry: String) = addToHistoryCore(History(0, action = entry))
 
     private fun addToRecordHistory(entry: String) {
         _recordHistory.add(entry)
@@ -1182,23 +1165,23 @@ class BrowserPerceptiveAgent(
 
         // Support two JSON formats only: completion or elements-based action
         return try {
-            val root = JsonParser.parseString(content)
-            if (root.isJsonObject) {
-                val obj = root.asJsonObject
+            val root: JsonNode = jsonMapper.readTree(content) ?: return ToolCallResponse(emptyList(), null)
+            if (root.isObject) {
+                val obj = root
 
                 // Completion JSON
-                if (obj.has("isComplete")) {
-                    val complete = obj.get("isComplete")?.takeIf { it.isJsonPrimitive }?.asBoolean ?: false
+                obj.get("isComplete")?.takeIf { it.isBoolean }?.let { isCompleteNode ->
+                    val complete = isCompleteNode.asBoolean(false)
                     return ToolCallResponse(emptyList(), if (complete) true else null)
                 }
 
                 // Elements-based action JSON
-                if (obj.has("elements") && obj.get("elements").isJsonArray) {
-                    val arr = obj.getAsJsonArray("elements")
-                    val first = arr.firstOrNull()?.takeIf { it.isJsonObject }?.asJsonObject
-                    if (first != null) {
-                        val method = first.get("method")?.takeIf { it.isJsonPrimitive }?.asString
-                        val locator = first.get("locator")?.takeIf { it.isJsonPrimitive }?.asString
+                val elements = obj.get("elements")
+                if (elements != null && elements.isArray) {
+                    val first: JsonNode? = elements.firstOrNull()
+                    if (first != null && first.isObject) {
+                        val method = first.get("method")?.takeIf { it.isTextual }?.asText()
+                        val locator = first.get("locator")?.takeIf { it.isTextual }?.asText()
                         if (!method.isNullOrBlank()) {
                             val args = linkedMapOf<String, Any?>()
                             var i = 0
@@ -1207,17 +1190,16 @@ class BrowserPerceptiveAgent(
                                 i++
                             }
                             val a = first.get("arguments")
-                            if (a?.isJsonArray == true) {
-                                a.asJsonArray.forEach { el ->
+                            if (a != null && a.isArray) {
+                                a.forEach { el ->
                                     when {
-                                        el.isJsonObject -> {
-                                            val v = el.asJsonObject.get("value")
-                                            args[i.toString()] = if (v == null) null else jsonElementToKotlin(v)
+                                        el.isObject -> {
+                                            val v = el.get("value")
+                                            args[i.toString()] = jsonNodeToKotlin(v)
                                             i++
                                         }
-
-                                        el.isJsonPrimitive -> {
-                                            args[i.toString()] = el.asString
+                                        el.isValueNode -> {
+                                            args[i.toString()] = el.asText()
                                             i++
                                         }
                                     }
@@ -1236,24 +1218,19 @@ class BrowserPerceptiveAgent(
         }
     }
 
-    private fun jsonElementToKotlin(e: JsonElement): Any? = when {
-        e.isJsonNull -> null
-        e.isJsonPrimitive -> {
-            val p = e.asJsonPrimitive
-            when {
-                p.isBoolean -> p.asBoolean
-                p.isNumber -> {
-                    val n = p.asNumber
-                    val d = n.toDouble()
-                    val i = n.toInt(); if (d == i.toDouble()) i else d
-                }
+    private fun JsonNode.firstOrNull(): JsonNode? = if (this.isArray && this.size() > 0) this.get(0) else null
 
-                else -> p.asString
-            }
+    private fun jsonNodeToKotlin(n: JsonNode?): Any? = when {
+        n == null || n.isNull -> null
+        n.isBoolean -> n.asBoolean()
+        n.isNumber -> {
+            val d = n.asDouble()
+            val i = n.asInt()
+            if (d == i.toDouble()) i else d
         }
-
-        e.isJsonArray -> e.asJsonArray.map { jsonElementToKotlin(it) }
-        e.isJsonObject -> e.asJsonObject.entrySet().associate { it.key to jsonElementToKotlin(it.value) }
+        n.isTextual -> n.asText()
+        n.isArray -> n.map { jsonNodeToKotlin(it) }
+        n.isObject -> n.fields().asSequence().associate { it.key to jsonNodeToKotlin(it.value) }
         else -> null
     }
 
@@ -1354,7 +1331,7 @@ class BrowserPerceptiveAgent(
             sb.appendLine("INSTRUCTION: $instruction")
             sb.appendLine("RESPONSE_STATE: ${finalResp.state}")
             sb.appendLine("EXECUTION_HISTORY:")
-            actionHistory.forEach { sb.appendLine(it) }
+            history.forEach { sb.appendLine(it) }
             sb.appendLine()
             sb.appendLine("FINAL_SUMMARY:")
             sb.appendLine(finalResp.content)
@@ -1369,7 +1346,7 @@ class BrowserPerceptiveAgent(
             Files.writeString(log, sb.toString())
             slogger.info(
                 "Transcript persisted successfully", context,
-                mapOf("lines" to actionHistory.size + 10, "path" to log.toString())
+                mapOf("lines" to history.size + 10, "path" to log.toString())
             )
         }.onFailure { e ->
             slogger.logError("Failed to persist transcript", e, context.sessionId)
@@ -1381,7 +1358,7 @@ class BrowserPerceptiveAgent(
         val user = buildString {
             appendLine("原始目标：$goal")
             appendLine("执行轨迹(按序)：")
-            actionHistory.forEach { appendLine(it) }
+            history.forEach { appendLine(it) }
             appendLine()
             appendLine("""请严格输出 JSON：{"taskComplete":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]} 无多余文字。""")
         }
@@ -1418,30 +1395,4 @@ class BrowserPerceptiveAgent(
         }
     }
 
-
-    // history + atom operation guide + completion condition
-    private fun buildHistoryMessage(): String {
-        val his = if (actionHistory.isNotEmpty()) {
-            actionHistory.takeLast(min(8, actionHistory.size)).joinToString("\n")
-        } else "(无)"
-
-        val msg = """
-此前动作摘要：
-$his
-		""".trimIndent()
-
-        return msg
-    }
-
-
-    private fun buildOverallGoalMessage(overallGoal: String): String {
-        val msg = """
-总体目标：
-<overallGoal>
-$overallGoal
-</overallGoal>
-                """.trimIndent()
-
-        return msg
-    }
 }

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.agentic.support
 
-import ai.platon.pulsar.agentic.ai.support.ToolCall
+import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.ClientInfo
@@ -83,8 +83,8 @@ class TabSwitchTest {
         assertNotNull(tc)
         tc!!
         assertEquals("browser", tc.domain)
-        assertEquals("switchTab", tc.name)
-        assertEquals("tab-1", tc.args["0"])
+        assertEquals("switchTab", tc.method)
+        assertEquals("tab-1", tc.arguments["0"])
     }
 
     @Test
@@ -94,13 +94,13 @@ class TabSwitchTest {
         assertNotNull(tc)
         tc!!
         assertEquals("browser", tc.domain)
-        assertEquals("switchTab", tc.name)
-        assertEquals("123", tc.args["0"])
+        assertEquals("switchTab", tc.method)
+        assertEquals("123", tc.arguments["0"])
     }
 
     @Test
     fun `generate expression for browser switchTab`() {
-        val tc = ToolCall("browser", "switchTab", mapOf("tabId" to "tab-42"))
+        val tc = ToolCall("browser", "switchTab", mutableMapOf("tabId" to "tab-42"))
         val expr = ToolCallExecutor.toolCallToExpression(tc)
         assertNotNull(expr)
         assertEquals("browser.switchTab(\"tab-42\")", expr)

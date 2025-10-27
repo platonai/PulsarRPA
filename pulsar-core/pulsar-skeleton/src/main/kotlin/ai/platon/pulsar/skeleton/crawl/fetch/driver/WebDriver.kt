@@ -995,7 +995,7 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun scrollToMiddle(ratio: Double)
 
-    @Deprecated("Inappropriate name", ReplaceWith("scrollToViewport"))
+    @Deprecated("Inappropriate name", ReplaceWith("scrollToViewport(screenNumber)"))
     @Throws(WebDriverException::class)
     suspend fun scrollToScreen(screenNumber: Double) = scrollToViewport(screenNumber)
 

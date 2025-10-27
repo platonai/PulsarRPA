@@ -1,6 +1,6 @@
 package ai.platon.pulsar.agentic.ai.agent.detail
 
-import ai.platon.pulsar.agentic.ai.support.ToolCall
+import ai.platon.pulsar.skeleton.ai.ToolCall
 import java.time.Instant
 
 /**
@@ -18,9 +18,9 @@ sealed class PerceptiveAgentError(message: String, cause: Throwable? = null) : E
  * Performance metrics for monitoring and optimization
  */
 data class PerformanceMetrics(
-    val totalSteps: Int = 0,
-    val successfulActions: Int = 0,
-    val failedActions: Int = 0,
+    var totalSteps: Int = 0,
+    var successfulActions: Int = 0,
+    var failedActions: Int = 0,
     val averageActionTimeMs: Double = 0.0,
     val totalExecutionTimeMs: Long = 0,
     val memoryUsageMB: Double = 0.0,

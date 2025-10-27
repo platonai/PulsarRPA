@@ -6,8 +6,11 @@ import ai.platon.pulsar.agentic.ai.support.AgentTool
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.serialize.json.Pson
+import ai.platon.pulsar.skeleton.ai.History
 import java.time.LocalDate
 import java.util.*
+import kotlin.math.min
 
 data class SimpleMessage(
     val role: String,
@@ -64,7 +67,17 @@ class PromptBuilder(val locale: Locale = Locale.CHINESE) {
 
     companion object {
 
-        val AGENT_GUIDE_SYSTEM_PROMPT = """
+        val ACTION_SCHEMA = """
+        |{"domain": string, "method": string, "arguments": [{"name": string, "value": string}],
+        |"currentPageContentSummary": string,
+        |"actualLastActionImpact": string, "expectedNextActionImpact": string
+        |}
+        |""".trimMargin()
+    }
+
+    val isCN = locale in listOf(Locale.CHINESE, Locale.SIMPLIFIED_CHINESE, Locale.TRADITIONAL_CHINESE)
+
+    val AGENT_GUIDE_SYSTEM_PROMPT = """
 你是一个网页通用代理，目标是基于用户目标一步一步完成任务。
 
 重要指南：
@@ -78,13 +91,7 @@ class PromptBuilder(val locale: Locale = Locale.CHINESE) {
 ## 输出严格使用以下两种 JSON 之一：
 
 1) 动作输出（仅含一个元素）：
-{
-  "elements": [
-    {
-      "locator": string, "description": string, "domain": string, "method": string, "arguments": [ { "name": string, "value": string } ]
-    }
-  ]
-}
+${buildObserveResultSchema(true)}
 
 2) 任务完成输出：
 
@@ -108,7 +115,7 @@ ${AgentTool.TOOL_CALL_SPECIFICATION}
 - 注意：用户难以区分按钮和链接
 - 若操作与页面无关，返回空数组
 - 只返回一个最相关的操作
-- 如需访问多个链接进行研究，使用 click(selector, "Ctrl") 在新标签页打开
+- 如需连续点击打开多个链接，使用 click(selector, "Ctrl") 在新标签页打开
 - 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。。不要模拟点击屏幕键盘上的按键
 - 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
 - 如果需要操作前一页面，但已跳转，使用 `goBack`
@@ -118,16 +125,13 @@ ${AgentTool.TOOL_CALL_SPECIFICATION}
 无障碍树包含页面 DOM 关键节点的主要信息，包括节点文本内容，可见性，可交互性，坐标和尺寸等。
 
 - 节点唯一定位符 `locator` 由两个整数组成。
-- 所有节点可见，除非 `invisible` == true 显示指定。
+- 所有节点可见，除非 `invisible` == true 显式指定。
 - 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
 - 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
 
 请基于当前页面截图、无障碍树与历史动作，规划下一步（严格单步原子动作）。
 
         """.trimIndent()
-    }
-
-    val isCN = locale in listOf(Locale.CHINESE, Locale.SIMPLIFIED_CHINESE, Locale.TRADITIONAL_CHINESE)
 
     fun buildOperatorSystemPrompt(): String {
         return """
@@ -246,6 +250,31 @@ Print null or an empty string if no new information is found.
         val content = "$baseInstruction\n$instructions\n$additionalInstructions\n$userInstructions"
 
         return SimpleMessage(role = "system", content = content)
+    }
+
+    fun buildHistoryMessage(history: List<History>): String {
+        if (history.isEmpty()) return ""
+
+        val his = history.takeLast(min(8, history.size))
+            .joinToString("\n") { Pson.toJson(it) }
+
+        val msg = """
+此前动作摘要：
+$his
+		""".trimIndent()
+
+        return msg
+    }
+
+    fun buildOverallGoalMessage(overallGoal: String): String {
+        val msg = """
+总体目标：
+<overallGoal>
+$overallGoal
+</overallGoal>
+                """.trimIndent()
+
+        return msg
     }
 
     fun initExtractUserInstruction(instruction: String? = null): String {
@@ -390,7 +419,7 @@ chunksTotal: $chunksTotal
 无障碍树包含页面 DOM 关键节点的主要信息，包括节点文本内容，可见性，可交互性，坐标和尺寸等。
 
 - 节点唯一定位符 `locator` 由两个整数组成。
-- 所有节点可见，除非 `invisible` == true 显示指定。
+- 所有节点可见，除非 `invisible` == true 显式指定。
 - 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
 - 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
 """
@@ -409,14 +438,14 @@ Return an array of elements that match the instruction if they exist, otherwise 
 无障碍树包含页面 DOM 关键节点的主要信息，包括节点文本内容，可见性，可交互性，坐标和尺寸等。
 
 - 节点唯一定位符 `locator` 由两个整数组成。
-- 所有节点可见，除非 `invisible` == true 显示指定。
+- 所有节点可见，除非 `invisible` == true 显式指定。
 - 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
 - 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
 """
 
         val observeSystemPrompt = if (isCN) observeSystemPromptCN() else observeSystemPromptEN()
         val extra = buildObserveGuideSystemExtraPrompt(userProvidedInstructions)?.content
-        val content = if (extra == null) "$observeSystemPrompt\n\n$extra" else observeSystemPrompt
+        val content = if (extra != null) "$observeSystemPrompt\n\n$extra" else observeSystemPrompt
 
         return SimpleMessage(role = "system", content = content)
     }
@@ -477,12 +506,8 @@ $schemaContract
         messages.add("user", content)
     }
 
-    fun buildObserveResultSchemaContract(params: ObserveParams): String {
-        // Build schema hint for the LLM (prompt-enforced)
-
-        val actionFields = if (params.returnAction) {
-            """, "domain": string, "method": string, "arguments": [{"name": string, "value": string}] """
-        } else ""
+    fun buildObserveResultSchema(returnAction: Boolean): String {
+        val actionFields = if (returnAction) ACTION_SCHEMA else ""
 
         val schema = """
 {
@@ -494,6 +519,12 @@ $schemaContract
   ]
 }
 """.let { Strings.compactWhitespaces(it) }
+
+        return schema
+    }
+
+    fun buildObserveResultSchemaContract(params: ObserveParams): String {
+        val schema = buildObserveResultSchema(params.returnAction)
 
         return if (isCN) {
             """
@@ -518,7 +549,7 @@ $schema
         // Base instruction
         val instruction = if (isCN) {
             """
-根据以下动作查找最相关的页面元素：$action。为该元素提供一个工具来执行该动作。
+根据以下动作查找最相关的页面元素：$action。为该元素提供一个工具来执行该动作。分析执行后的影响和预期结果。
 
 ## 支持的工具列表
 
@@ -526,7 +557,7 @@ $schema
 ${toolCalls.joinToString("\n")}
 ```
 
-- domain: 方法的调用方，如 driver, browser 等
+- domain: 方法的调用方，如 `driver`, `browser` 等
 - 将 `locator` 视为 `selector`
 - 确保 `locator` 与对应的无障碍树节点属性完全匹配，准确定位该节点
 - 不提供不能确定的参数
@@ -534,15 +565,15 @@ ${toolCalls.joinToString("\n")}
 - 注意：用户难以区分按钮和链接
 - 若操作与页面无关，返回空数组
 - 只返回一个最相关的操作
-- 如需访问多个链接进行研究，使用 click(selector, "Ctrl") 在新标签页打开
-- 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。。不要模拟点击屏幕键盘上的按键
+- 如需连续点击打开多个链接，使用 click(selector, "Ctrl") 在新标签页打开
+- 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。不要模拟点击屏幕键盘上的按键
 - 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
 - 如果需要操作前一页面，但已跳转，使用 `goBack`
 """.trimIndent()
         } else {
             """
 Find the most relevant element to perform an action on given the following action: $action.
-Provide a tool to perform the action for this element.
+Provide a tool to perform the action for this element. Analyze the impact and expected outcomes after execution.
 
 ## Supported Tool List
 

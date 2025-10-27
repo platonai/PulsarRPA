@@ -151,6 +151,7 @@ abstract class ChromeDevToolsImpl(
             // If the result indicates failure, handle the error and throw an exception.
             !rpcResult.isSuccess -> {
                 handleFailedFurther(rpcResult.result).let {
+                    // TODO: handle "Could not find node with given id"
                     throw ChromeRPCException(it.first.code, it.second)
                 }
             }

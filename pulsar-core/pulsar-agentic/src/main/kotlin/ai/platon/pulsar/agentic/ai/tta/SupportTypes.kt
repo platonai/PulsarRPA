@@ -1,9 +1,9 @@
 package ai.platon.pulsar.agentic.ai.tta
 
-import ai.platon.pulsar.agentic.ai.agent.ObserveElement
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.agentic.ai.support.ToolCall
+import ai.platon.pulsar.skeleton.ai.ObserveElement
+import ai.platon.pulsar.skeleton.ai.ToolCall
 
 data class InteractiveElement(
     val id: String,
@@ -39,39 +39,44 @@ data class ElementBounds(
     val height: Double
 )
 
-data class ActionResponse(
-    val elements: List<ObserveElement>,
-    val isComplete: Boolean = false,
-    val summary: String? = null,
-    val suggestions: List<String> = emptyList()
-)
-
 data class ActionDescription constructor(
-    val modelResponse: ModelResponse,
-    val toolCall: ToolCall? = null,
-    val locator: String? = null,
-    val node: DOMTreeNodeEx? = null,
-    val xpath: String? = null,
-    val cssSelector: String? = null,
-    val expressions: List<String> = emptyList(),
-    val cssFriendlyExpressions: List<String> = emptyList(),
+    val observeElement: ObserveElement? = null,
+
     val isComplete: Boolean = false,
     val summary: String? = null,
-    val suggestions: List<String> = emptyList()
-)
+    val suggestions: List<String> = emptyList(),
+
+    val modelResponse: ModelResponse? = null
+) {
+    val toolCall: ToolCall? get() = observeElement?.toolCall
+    val locator: String? get() = observeElement?.locator
+    val node: DOMTreeNodeEx? get() = observeElement?.node
+    val xpath: String? get() = observeElement?.xpath
+    val cssSelector: String? get() = observeElement?.cssSelector
+    val expressions: List<String> get() = observeElement?.expressions ?: emptyList()
+    val cssFriendlyExpressions: List<String> get() = observeElement?.cssFriendlyExpressions ?: emptyList()
+}
 
 data class InstructionResult(
-    val expressions: List<String>,
-    val functionResults: List<Any?>,
-    val modelResponse: ModelResponse,
-    val toolCall: List<ToolCall> = emptyList(),
+    val expressions: List<String> = emptyList(),
+    val functionResults: List<Any?> = emptyList(),
+    val action: ActionDescription? = null,
 ) {
+    val modelResponse: ModelResponse get() = action?.modelResponse ?: ModelResponse.LLM_NOT_AVAILABLE
+    val toolCalls: List<ToolCall>? get() = action?.toolCall?.let { listOf(it) }
+
     companion object {
         val LLM_NOT_AVAILABLE = InstructionResult(
             emptyList(),
             emptyList(),
-            modelResponse = ModelResponse.LLM_NOT_AVAILABLE,
-            emptyList(),
         )
     }
+}
+
+data class ActExecuteResult(
+    val action: ActionDescription,
+    val instructionResult: InstructionResult? = null,
+    val success: Boolean = false,
+    val summary: String? = null,
+) {
 }

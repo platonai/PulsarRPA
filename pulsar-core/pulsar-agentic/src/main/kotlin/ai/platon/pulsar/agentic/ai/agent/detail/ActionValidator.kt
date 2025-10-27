@@ -1,7 +1,7 @@
 package ai.platon.pulsar.agentic.ai.agent.detail
 
 import ai.platon.pulsar.agentic.ai.AgentConfig
-import ai.platon.pulsar.agentic.ai.support.ToolCall
+import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.browser.driver.chrome.dom.FBNLocator
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.common.getLogger
@@ -32,23 +32,23 @@ class ActionValidator(
      * High Priority #5: Deny unknown actions by default for security
      */
     fun validateToolCall(toolCall: ToolCall): Boolean {
-        val cacheKey = "${toolCall.name}:${toolCall.args}"
+        val cacheKey = "${toolCall.method}:${toolCall.arguments}"
         return validationCache.getOrPut(cacheKey) {
-            when (toolCall.name) {
-                "navigateTo" -> validateNavigateTo(toolCall.args)
+            when (toolCall.method) {
+                "navigateTo" -> validateNavigateTo(toolCall.arguments)
                 "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "focus", "scrollTo" -> validateElementAction(
-                    toolCall.args
+                    toolCall.arguments
                 )
 
-                "waitForNavigation" -> validateWaitForNavigation(toolCall.args)
+                "waitForNavigation" -> validateWaitForNavigation(toolCall.arguments)
                 "goBack", "goForward", "delay", "scrollToTop", "scrollToBottom" -> true // These don't need validation
                 // High Priority #5: Deny unknown actions by default
                 else -> {
                     if (config.denyUnknownActions) {
-                        logger.warn("Unknown action blocked: ${toolCall.name}")
+                        logger.warn("Unknown action blocked: ${toolCall.method}")
                         false
                     } else {
-                        logger.warn("Unknown action allowed (config): ${toolCall.name}")
+                        logger.warn("Unknown action allowed (config): ${toolCall.method}")
                         true
                     }
                 }
@@ -59,7 +59,9 @@ class ActionValidator(
     /**
      * Validates navigation actions
      */
-    private fun validateNavigateTo(args: Map<String, Any?>): Boolean {
+    private fun validateNavigateTo(args: Map<String, Any?>?): Boolean {
+        args ?: return true
+
         val url = args["url"]?.toString() ?: return false
         return isSafeUrl(url)
     }
@@ -68,7 +70,9 @@ class ActionValidator(
      * Validates element interaction actions
      * Medium Priority #11: Improved validation with selector syntax checking
      */
-    private fun validateElementAction(args: Map<String, Any?>): Boolean {
+    private fun validateElementAction(args: Map<String, Any?>?): Boolean {
+        args ?: return false
+
         val selector = args["selector"]?.toString() ?: return false
 
         // Basic validation
@@ -102,7 +106,9 @@ class ActionValidator(
      * @param args Action arguments containing oldUrl and timeout
      * @return true if the parameters are valid
      */
-    private fun validateWaitForNavigation(args: Map<String, Any?>): Boolean {
+    private fun validateWaitForNavigation(args: Map<String, Any?>?): Boolean {
+        args ?: return true
+
         val oldUrl = args["oldUrl"]?.toString() ?: ""
         val timeout = (args["timeoutMillis"] as? Number)?.toLong() ?: 5000L
         return timeout in 100L..60000L && oldUrl.length < 1000 // Reasonable timeout range and URL length

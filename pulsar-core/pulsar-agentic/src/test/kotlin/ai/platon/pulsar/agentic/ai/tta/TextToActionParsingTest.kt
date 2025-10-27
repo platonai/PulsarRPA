@@ -20,10 +20,11 @@ class TextToActionParsingTest {
             {
               "elements": [
                 {
-                  "locator": "#submit",
+                  "locator": "0,19",
                   "description": "Submit button",
+                  "domain": "driver",
                   "method": "click",
-                  "arguments": []
+                  "arguments": [{"name": "selector", "value": "#submit"}]
                 }
               ]
             }
@@ -33,8 +34,8 @@ class TextToActionParsingTest {
         val ad = tta.parse(resp)
         assertNotNull(ad.toolCall)
         assertEquals("driver", ad.toolCall!!.domain)
-        assertEquals("click", ad.toolCall!!.name)
-        assertEquals("#submit", ad.toolCall!!.args["selector"])
+        assertEquals("click", ad.toolCall!!.method)
+        assertEquals("#submit", ad.toolCall!!.arguments["selector"])
         assertFalse(ad.isComplete)
         assertNull(ad.summary)
         assertTrue(ad.suggestions.isEmpty())
@@ -48,6 +49,7 @@ class TextToActionParsingTest {
                 {
                   "locator": "#q",
                   "description": "Search input",
+                  "domain": "driver",
                   "method": "type",
                   "arguments": [ { "name": "text", "value": "hello" } ]
                 }
@@ -59,9 +61,8 @@ class TextToActionParsingTest {
         val ad = tta.parse(resp)
         val tc = requireNotNull(ad.toolCall)
         assertEquals("driver", tc.domain)
-        assertEquals("type", tc.name)
-        assertEquals("#q", tc.args["selector"])
-        assertEquals("hello", tc.args["text"]) // named mapping for argument values
+        assertEquals("type", tc.method)
+        assertEquals("hello", tc.arguments["text"]) // named mapping for argument values
 
         assertFalse(ad.isComplete)
     }

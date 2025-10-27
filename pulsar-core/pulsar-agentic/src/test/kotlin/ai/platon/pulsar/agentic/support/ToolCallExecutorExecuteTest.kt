@@ -1,6 +1,6 @@
 package ai.platon.pulsar.agentic.support
 
-import ai.platon.pulsar.agentic.ai.support.ToolCall
+import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -39,9 +39,9 @@ class ToolCallExecutorExecuteTest {
     fun `click type fill press with conversions`() = runBlocking {
         val driver = mockk<WebDriver>(relaxed = true)
 
-        coEvery { driver.click(any(), any()) } just Runs
+        coEvery { driver.click(any(), 1) } just Runs
         executor.execute("driver.click(\"#btn\")", driver)
-        coVerify { driver.click("#btn", any()) }
+        coVerify { driver.click("#btn", 1) }
         executor.execute("driver.click(\"#btn\", 3)", driver)
         coVerify { driver.click("#btn", 3) }
 
@@ -227,8 +227,8 @@ class ToolCallExecutorExecuteTest {
         coVerify { driver.scrollToTop() }
         coVerify { driver.scrollToBottom() }
         coVerify { driver.scrollToMiddle(0.7) }
-        coVerify { driver.scrollToScreen(0.5) }
-        coVerify { driver.scrollToScreen(1.25) }
+        coVerify { driver.scrollToViewport(0.5) }
+        coVerify { driver.scrollToViewport(1.25) }
         coVerify { driver.goBack() }
         coVerify { driver.goForward() }
     }
@@ -236,7 +236,7 @@ class ToolCallExecutorExecuteTest {
     @Test
     fun `error handling returns null`() = runBlocking {
         val driver = mockk<WebDriver>()
-        coEvery { driver.click(any(), any()) } throws IllegalStateException("boom")
+        coEvery { driver.click(any(), 1) } throws IllegalStateException("boom")
 
         val r = executor.execute("driver.click(\"#a\")", driver)
         assertNull(r)
@@ -246,12 +246,12 @@ class ToolCallExecutorExecuteTest {
     fun `toolCall to expression end-to-end few samples`() = runBlocking {
         val driver = mockk<WebDriver>(relaxed = true)
         // exists
-        val tc1 = ToolCall("driver", "exists", mapOf("selector" to "#a"))
+        val tc1 = ToolCall("driver", "exists", mutableMapOf("selector" to "#a"))
         executor.execute(tc1, driver)
         coVerify { driver.exists("#a") }
         // clickMatches
         val tc2 = ToolCall(
-            "driver", "clickMatches", mapOf(
+            "driver", "clickMatches", mutableMapOf(
                 "selector" to "a",
                 "attrName" to "href",
                 "pattern" to "foo",
@@ -261,7 +261,7 @@ class ToolCallExecutorExecuteTest {
         executor.execute(tc2, driver)
         coVerify { driver.clickMatches("a", "href", "foo", 2) }
         // waitForNavigation
-        val tc3 = ToolCall("driver", "waitForNavigation", mapOf("oldUrl" to "u", "timeoutMillis" to 10))
+        val tc3 = ToolCall("driver", "waitForNavigation", mutableMapOf("oldUrl" to "u", "timeoutMillis" to 10))
         coEvery { driver.waitForNavigation("u", 10) } returns 5L
         val r = executor.execute(tc3, driver)
         assertEquals(5L, r)

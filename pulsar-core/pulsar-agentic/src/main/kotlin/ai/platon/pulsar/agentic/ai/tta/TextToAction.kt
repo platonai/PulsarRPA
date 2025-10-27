@@ -3,7 +3,6 @@ package ai.platon.pulsar.agentic.ai.tta
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.SimpleMessageList
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
-import ai.platon.pulsar.agentic.ai.support.ToolCall
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
@@ -12,14 +11,20 @@ import ai.platon.pulsar.common.ExperimentalApi
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
+import ai.platon.pulsar.skeleton.ai.ObserveElement
+import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import com.fasterxml.jackson.databind.JsonNode
+import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.databind.node.JsonNodeFactory
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.google.gson.JsonElement
-import com.google.gson.JsonParser
 import org.apache.commons.lang3.StringUtils
 import java.nio.file.Files
 
@@ -64,12 +69,14 @@ open class TextToAction(
         try {
             val response = generateResponse(messages, browserUseState, screenshotB64, 1)
 
-            return modelResponseToActionDescription(response, browserUseState)
+            val action = modelResponseToActionDescription(response)
+
+            return reviseActionDescription(action, browserUseState)
         } catch (e: Exception) {
             val errorResponse = ModelResponse(
                 "Unknown exception" + e.brief(), ResponseState.OTHER
             )
-            return ActionDescription(errorResponse)
+            return ActionDescription(modelResponse = errorResponse)
         }
     }
 
@@ -92,7 +99,7 @@ open class TextToAction(
             val errorResponse = ModelResponse(
                 "Unknown exception" + e.brief(), ResponseState.OTHER
             )
-            return ActionDescription(errorResponse)
+            return ActionDescription(modelResponse = errorResponse)
         }
     }
 
@@ -107,11 +114,19 @@ open class TextToAction(
 
     @ExperimentalApi
     open suspend fun generateResponse(
-        messages: SimpleMessageList, browserUseState: BrowserUseState, screenshotB64: String? = null, toolCallLimit: Int = 100,
+        messages: SimpleMessageList,
+        browserUseState: BrowserUseState,
+        screenshotB64: String? = null,
+        toolCallLimit: Int = 100,
     ): ModelResponse {
         var overallGoal = messages.find("overallGoal")?.content ?: ""
         overallGoal = StringUtils.substringBetween(overallGoal, "<overallGoal>", "</overallGoal>")
-        val params = ObserveParams(overallGoal, browserUseState = browserUseState, returnAction = true, logInferenceToFile = true)
+        val params = ObserveParams(
+            overallGoal,
+            browserUseState = browserUseState,
+            returnAction = true,
+            logInferenceToFile = true
+        )
 
         PromptBuilder().buildObserveUserMessage(messages, params)
 
@@ -132,98 +147,168 @@ open class TextToAction(
     ): ActionDescription {
         val response = generateResponse(instruction, browserUseState, screenshotB64, toolCallLimit)
 
-        return modelResponseToActionDescription(response, browserUseState)
+        return reviseActionDescription(modelResponseToActionDescription(response), browserUseState)
     }
 
-    protected fun modelResponseToActionDescription(response: ModelResponse, browserUseState: BrowserUseState? = null): ActionDescription {
-        val content = response.content
-        // Try new JSON formats first
-        try {
-            val root = JsonParser.parseString(content)
-            if (root.isJsonObject) {
-                val obj = root.asJsonObject
+    // ----------------------------------- Helpers -----------------------------------
+    /**
+     * Observe elements schema:
+     * ```json
+     *  { "elements": [ { "selector": string, "description": string, "method": string, "arguments": [{"name": string, "value": string}] } ] }
+     * ```
+     *
+     * This schema is build by [PromptBuilder.buildObserveResultSchemaContract] and is passed to LLM for a restricted response.
+     * */
+    fun parseObserveElements(root: JsonNode, returnAction: Boolean): List<ObserveElement> {
+        // Determine the array of items to read
+        val arr: ArrayNode = when {
+            root.isObject && root.has("elements") && root.get("elements").isArray -> root.get("elements") as ArrayNode
+            root.isArray -> root as ArrayNode
+            root.isObject -> {
+                // Single element object fallback
+                val single = root as ObjectNode
+                val tmp = JsonNodeFactory.instance.arrayNode()
+                tmp.add(single)
+                tmp
+            }
 
-                // Completion shape: { isComplete, summary, suggestions }
-                if (obj.has("isComplete")) {
-                    val isComplete = obj.get("isComplete")?.takeIf { it.isJsonPrimitive }?.asBoolean ?: false
-                    val summary = obj.get("summary")?.takeIf { it.isJsonPrimitive }?.asString
-                    val suggestionsEl = obj.get("suggestions")
-                    val suggestions = if (suggestionsEl?.isJsonArray == true) {
-                        suggestionsEl.asJsonArray.mapNotNull { if (it.isJsonPrimitive) it.asString else null }
-                    } else emptyList()
+            else -> JsonNodeFactory.instance.arrayNode()
+        }
 
-                    return ActionDescription(
-                        cssFriendlyExpressions = emptyList(),
-                        modelResponse = response,
-                        isComplete = isComplete,
-                        summary = summary,
-                        suggestions = suggestions
-                    )
-                }
+        val result = mutableListOf<ObserveElement>()
+        for (i in 0 until arr.size()) {
+            val el: JsonNode = arr.get(i)
+            // Support both "locator" and a tolerant fallback "selector"
+            val locator = el.path("locator").asText(null)
+            val description = el.path("description").asText("")
 
-                // Action shape: { elements: [ { locator, description, method, arguments: [{name,value}] } ] }
-                if (obj.has("elements") && obj.get("elements").isJsonArray) {
-                    val arr = obj.getAsJsonArray("elements")
-                    val first = arr.firstOrNull()?.let { if (it.isJsonObject) it.asJsonObject else null }
-                    if (first != null) {
-                        val method = first.get("method")?.takeIf { it.isJsonPrimitive }?.asString
-                        val locator = first.get("locator")?.takeIf { it.isJsonPrimitive }?.asString
-                        if (!method.isNullOrBlank()) {
-                            val argsMap = linkedMapOf<String, Any?>()
-                            if (!locator.isNullOrBlank()) {
-                                argsMap["selector"] = locator
-                            }
-                            val argsArr = first.get("arguments")
-                            if (argsArr?.isJsonArray == true) {
-                                argsArr.asJsonArray.forEach { argEl ->
-                                    if (argEl.isJsonObject) {
-                                        val name = argEl.asJsonObject.get("name")?.takeIf { it.isJsonPrimitive }?.asString
-                                        val valueEl = argEl.asJsonObject.get("value")
-                                        if (!name.isNullOrBlank()) {
-                                            argsMap[name] = if (valueEl != null) jsonElementToKotlin(valueEl) else null
-                                        }
-                                    } else if (argEl.isJsonPrimitive) {
-                                        // No name provided; skip to keep strict schema
-                                    }
-                                }
-                            }
-
-                            return createActionDescription(response, method, argsMap, locator, browserUseState)
-                        }
-                    }
+            // Parse domain + method, allowing combined form like "browser.switchTab"
+            val domainField = el.path("domain").asText(null)
+            val methodField = el.path("method").asText(null)
+            var domain: String? = domainField
+            var methodName: String? = methodField
+            if (!methodField.isNullOrBlank() && methodField.contains('.')) {
+                val parts = methodField.split('.', limit = 2)
+                if (parts.size == 2) {
+                    if (domain.isNullOrBlank()) domain = parts[0]
+                    methodName = parts[1]
                 }
             }
-        } catch (e: Exception) {
-            logger.debug("Model response is not valid JSON or parse failed: {}", e.message)
+
+            // Parse arguments according to schema: array of { name, value } or tolerant object map
+            val argsNode = el.get("arguments")
+            val arguments: Map<String, Any?>? = when {
+                argsNode == null || argsNode.isNull -> null
+                argsNode.isArray -> {
+                    val m = linkedMapOf<String, String>()
+                    for (j in 0 until argsNode.size()) {
+                        val item = argsNode.get(j)
+                        val name = item.path("name").asText(null)
+                        // Accept both "value" and fallback to text of node if needed
+                        val value = item.path("value").asText(null)
+                        if (!name.isNullOrBlank()) {
+                            m[name] = value ?: ""
+                        }
+                    }
+                    if (m.isEmpty()) null else m
+                }
+
+                argsNode.isObject -> {
+                    // Be tolerant: support either a single {name,value} object or a map-like object
+                    if (argsNode.has("name") || argsNode.has("value")) {
+                        val name = argsNode.path("name").asText(null)
+                        val value = argsNode.path("value").asText(null)
+                        if (!name.isNullOrBlank()) mapOf(name to (value ?: "")) else null
+                    } else {
+                        val m = linkedMapOf<String, String>()
+                        val fields = argsNode.fields()
+                        while (fields.hasNext()) {
+                            val entry = fields.next()
+                            m[entry.key] = entry.value.asText("")
+                        }
+                        if (m.isEmpty()) null else m
+                    }
+                }
+
+                else -> null
+            }
+
+            // Additional fields per ACTION_SCHEMA
+            val currentPageContentSummary = el.path("currentPageContentSummary").asText(null)
+            val actualLastActionImpact = el.path("actualLastActionImpact").asText(null)
+            val expectedNextActionImpact = el.path("expectedNextActionImpact").asText(null)
+
+            var toolCall: ToolCall? = null
+            if (domain != null && methodField != null) {
+                toolCall = ToolCall(
+                    domain = domain,
+                    method = methodName ?: "",
+                    description = description,
+                )
+                arguments?.forEach { (key, value) -> toolCall.arguments[key] = value }
+            }
+
+            val item = ObserveElement(
+                locator = locator,
+                toolCall = toolCall,
+                currentPageContentSummary = currentPageContentSummary,
+                actualLastActionImpact = actualLastActionImpact,
+                expectedNextActionImpact = expectedNextActionImpact,
+            )
+
+            result.add(item)
         }
 
-        // Fallback: plain driver.* expressions
-        val expressions = content.split("\n").map { it.trim() }
-            .filter { it.startsWith("driver.") && it.contains("(") }
-        return ActionDescription(response, expressions = expressions)
+        return result
     }
 
-    private fun createActionDescription(
-        response: ModelResponse,
-        method: String,
-        argsMap: Map<String, Any?>,
-        locator: String?,
-        browserUseState: BrowserUseState? = null,
-    ): ActionDescription {
-        var toolCall = ToolCall("driver", method, argsMap)
+    fun modelResponseToActionDescription(response: ModelResponse): ActionDescription {
+        val content = response.content
 
-        if (browserUseState == null) {
-            return ActionDescription(modelResponse = response, toolCall = toolCall)
+        // Parse as generic JsonNode to support both object and array roots
+        val root: JsonNode =
+            runCatching { pulsarObjectMapper().readTree(content) ?: JsonNodeFactory.instance.objectNode() }
+                .getOrElse { JsonNodeFactory.instance.objectNode() }
+
+        if (root.isObject && root.has("isComplete")) {
+            val isComplete = root.get("isComplete")?.asBoolean() ?: false
+            val summary = root.get("summary")?.asText()
+            val suggestions = root.get("suggestions")
+                ?.takeIf { it.isArray }?.let { it.mapNotNull { it.asText() } }
+                ?: emptyList()
+
+            return ActionDescription(
+                modelResponse = response,
+                isComplete = isComplete,
+                summary = summary,
+                suggestions = suggestions
+            )
         }
 
+        val elements = parseObserveElements(root, true)
+
+        return ActionDescription(
+            modelResponse = response,
+            observeElement = elements.firstOrNull()
+        )
+        // return getRevisedActionDescription(response, elements.firstOrNull(), browserUseState)
+    }
+
+    fun reviseActionDescription(
+        action: ActionDescription,
+        browserUseState: BrowserUseState,
+    ): ActionDescription {
+        val observeElement = action.observeElement ?: return action
+        val toolCall = observeElement.toolCall ?: return action
+
+        val locator = observeElement.locator
+        val arguments = observeElement.toolCall?.arguments
         val fbnLocator = browserUseState.domState.getAbsoluteFBNLocator(locator)
         val node = if (fbnLocator != null) browserUseState.domState.locatorMap[fbnLocator] else null
         val fbnSelector = fbnLocator?.absoluteSelector
 
-        val revisedArgsMap = argsMap.toMutableMap()
-        if (revisedArgsMap.contains("selector")) {
-            revisedArgsMap["selector"] = fbnSelector
-            toolCall = ToolCall("driver", method, revisedArgsMap)
+        if (arguments != null && arguments.contains("selector")) {
+            arguments["selector"] = fbnSelector
         }
 
         // CSS friendly expression
@@ -233,15 +318,15 @@ open class TextToAction(
             expression?.replace(locator, cssSelector)
         } else null
 
-        return ActionDescription(
-            modelResponse = response,
-            toolCall = toolCall,
-            locator = fbnSelector,
-            xpath = node?.xpath,
+        val revisedObserveElement = observeElement.copy(
+            node = node,
             cssSelector = cssSelector,
-            cssFriendlyExpressions = listOfNotNull(cssFriendlyExpression),
-            expressions = listOfNotNull(expression),
-            node = node
+            expressions = expression?.let { listOf(it) } ?: emptyList(),
+            cssFriendlyExpressions = cssFriendlyExpression?.let { listOf(it) } ?: emptyList(),
+        )
+
+        return action.copy(
+            observeElement = revisedObserveElement
         )
     }
 

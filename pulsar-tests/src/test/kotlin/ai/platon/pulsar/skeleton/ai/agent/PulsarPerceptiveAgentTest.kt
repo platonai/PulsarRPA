@@ -50,7 +50,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 val agent = BrowserPerceptiveAgent(driver, session)
 
                 assertNotNull(agent.uuid)
-                assertTrue(agent.actionHistory.isEmpty())
+                assertTrue(agent.history.isEmpty())
                 assertTrue(agent.toString().contains("no history"))
             }
         }
@@ -66,7 +66,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 val agent = BrowserPerceptiveAgent(driver, session, config = customConfig)
 
                 assertNotNull(agent.uuid)
-                assertTrue(agent.actionHistory.isEmpty())
+                assertTrue(agent.history.isEmpty())
             }
         }
     }
@@ -91,8 +91,8 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 assertFalse(result.data.isEmpty, "Extracted data should not be empty")
 
                 // History should be updated
-                assertTrue(agent.actionHistory.isNotEmpty())
-                assertContains(agent.actionHistory.last(), "extract")
+                assertTrue(agent.history.isNotEmpty())
+                assertContains(agent.history.last(), "extract")
             }
         }
 
@@ -189,8 +189,8 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 }
 
                 // History should be updated
-                assertTrue(agent.actionHistory.isNotEmpty())
-                assertContains(agent.actionHistory.last(), "observe")
+                assertTrue(agent.history.isNotEmpty())
+                assertContains(agent.history.last(), "observe")
             }
         }
 
@@ -273,7 +273,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
                 assertNotNull(result)
                 kotlin.test.assertEquals("click", result.action)
-                assertTrue(agent.actionHistory.isNotEmpty())
+                assertTrue(agent.history.isNotEmpty())
             }
         }
 
@@ -306,10 +306,10 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 assertTrue(agent.toString().contains("no history"))
 
                 // Manually add to history (simulating execution)
-                val history = agent.actionHistory as? MutableList
+                val history = agent.history as? MutableList
                 history?.add("Test action completed")
 
-                if (agent.actionHistory.isNotEmpty()) {
+                if (agent.history.isNotEmpty()) {
                     assertFalse(agent.toString().contains("no history"))
                 }
             }
@@ -374,14 +374,14 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
             runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = BrowserPerceptiveAgent(driver, session)
 
-                val initialHistorySize = agent.actionHistory.size
+                val initialHistorySize = agent.history.size
 
                 val r1 = agent.extract("Extract title")
                 printlnPro(r1)
                 val r2 = agent.observe("List elements")
                 printlnPro(r2)
 
-                assertTrue(agent.actionHistory.size >= initialHistorySize + 2,
+                assertTrue(agent.history.size >= initialHistorySize + 2,
                     "History should grow with operations")
             }
         }
@@ -391,10 +391,10 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
             runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = BrowserPerceptiveAgent(driver, session)
 
-                if (agent.actionHistory.isEmpty()) {
+                if (agent.history.isEmpty()) {
                     assertTrue(agent.toString().contains("no history"))
                 } else {
-                    val lastEntry = agent.actionHistory.last()
+                    val lastEntry = agent.history.last()
                     assertEquals(lastEntry, agent.toString())
                 }
             }

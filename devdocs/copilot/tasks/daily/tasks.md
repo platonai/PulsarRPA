@@ -42,4 +42,5 @@ Read root README-AI.md and `devdocs/copilot/test-guide.md` for guidelines
 - if a tool call not handled by parser in ToolCallExecutor, fallback to ToolCallExecutor.eval()
 - NanoDOMTreeNode 确保每一个可见元素的文档坐标均存在
 - highlight 非常重要
+- click() 增加 Key 参数，譬如 Ctrl + click
 -
