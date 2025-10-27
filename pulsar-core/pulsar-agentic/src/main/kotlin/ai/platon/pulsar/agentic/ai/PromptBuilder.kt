@@ -12,48 +12,6 @@ import java.time.LocalDate
 import java.util.*
 import kotlin.math.min
 
-data class SimpleMessage(
-    val role: String,
-    val content: String,
-    val name: String? = null,
-) {
-    enum class Role {
-        USER, SYSTEM
-    }
-
-    override fun toString() = content
-}
-
-class AgentMessageList(
-    val messages: MutableList<SimpleMessage> = mutableListOf()
-) {
-    fun addSystem(content: String, key: String? = null) {
-        add("system", content, key)
-    }
-
-    fun addUser(content: String, key: String? = null) {
-        add("user", content, key)
-    }
-
-    fun add(role: String, content: String, key: String? = null) {
-        val msg = SimpleMessage(role, content, key)
-        messages.add(msg)
-    }
-
-    fun add(message: SimpleMessage) {
-        val msg = SimpleMessage(message.role, message.content, message.name)
-        messages.add(msg)
-    }
-
-    fun find(key: String): SimpleMessage? {
-        return messages.find { it.name == key }
-    }
-
-    fun systemMessages() = messages.filter { it.role == "system" }
-
-    fun userMessages() = messages.filter { it.role == "user" }
-}
-
 /**
  * Description:
  * Builder for language-localized prompt snippets used by agentic browser tasks.
@@ -63,9 +21,12 @@ class AgentMessageList(
  * - Produces structured fragments for system/user roles
  * - Minimizes extra text to steer LLM behavior
  */
-class PromptBuilder(val locale: Locale = Locale.CHINESE) {
+class PromptBuilder() {
 
     companion object {
+        var locale: Locale = Locale.CHINESE
+
+        val isZH = locale in listOf(Locale.CHINESE, Locale.SIMPLIFIED_CHINESE, Locale.TRADITIONAL_CHINESE)
 
         val ACTION_SCHEMA = """
         |{"domain": string, "method": string, "arguments": [{"name": string, "value": string}],
@@ -73,11 +34,45 @@ class PromptBuilder(val locale: Locale = Locale.CHINESE) {
         |"actualLastActionImpact": string, "expectedNextActionImpact": string
         |}
         |""".trimMargin()
+
+        fun buildObserveResultSchema(returnAction: Boolean): String {
+            val actionFields = if (returnAction) ACTION_SCHEMA else ""
+
+            val schema = """
+{
+  "elements": [
+    {
+      "locator": string,
+      "description": string$actionFields
     }
+  ]
+}
+""".let { Strings.compactWhitespaces(it) }
 
-    val isCN = locale in listOf(Locale.CHINESE, Locale.SIMPLIFIED_CHINESE, Locale.TRADITIONAL_CHINESE)
+            return schema
+        }
 
-    val AGENT_GUIDE_SYSTEM_PROMPT = """
+        fun buildObserveResultSchemaContract(params: ObserveParams): String {
+            val schema = buildObserveResultSchema(params.returnAction)
+
+            return if (isZH) {
+                """
+## Schema 要求
+你必须返回一个与以下模式匹配的有效 JSON 对象：
+$schema
+
+""".trimIndent()
+            } else {
+                """
+## Schema Contract
+You MUST respond with a valid JSON object matching this schema:
+$schema
+
+""".trimIndent()
+            }
+        }
+
+        val AGENT_GUIDE_SYSTEM_PROMPT = """
 你是一个网页通用代理，目标是基于用户目标一步一步完成任务。
 
 重要指南：
@@ -132,6 +127,14 @@ ${AgentTool.TOOL_CALL_SPECIFICATION}
 请基于当前页面截图、无障碍树与历史动作，规划下一步（严格单步原子动作）。
 
         """.trimIndent()
+
+        fun compactPrompt(prompt: String, maxWidth: Int = 200): String {
+            val brief = prompt
+                .replace(AGENT_GUIDE_SYSTEM_PROMPT, "{{AGENT_GUIDE_SYSTEM_PROMPT}}")
+                .replace(AgentTool.TOOL_CALL_SPECIFICATION, "{{TOOL_CALL_SPECIFICATION}}")
+            return Strings.compactWhitespaces(brief, maxWidth)
+        }
+    }
 
     fun buildOperatorSystemPrompt(): String {
         return """
@@ -243,9 +246,9 @@ Print null or an empty string if no new information is found.
 
         val userInstructions = buildObserveGuideSystemExtraPrompt(userProvidedInstructions)
 
-        val baseInstruction = if (isCN) baseInstructionCN else baseInstructionEN
-        val instructions = if (isCN) instructionsCN else instructionsEN
-        val additionalInstructions = if (isCN) additionalInstructionsCN else additionalInstructionsEN
+        val baseInstruction = if (isZH) baseInstructionCN else baseInstructionEN
+        val instructions = if (isZH) instructionsCN else instructionsEN
+        val additionalInstructions = if (isZH) additionalInstructionsCN else additionalInstructionsEN
 
         val content = "$baseInstruction\n$instructions\n$additionalInstructions\n$userInstructions"
 
@@ -279,7 +282,7 @@ $overallGoal
 
     fun initExtractUserInstruction(instruction: String? = null): String {
         if (instruction.isNullOrBlank()) {
-            return if (isCN) {
+            return if (isZH) {
                 "从网页中提取关键数据结构"
             } else {
                 "Extract key structured data from the page"
@@ -296,7 +299,7 @@ $overallGoal
         val hintCN = "你必须返回一个严格符合以下JSON Schema的有效JSON对象。不要包含任何额外说明。"
         val hintEN =
             "You MUST respond with a valid JSON object that strictly conforms to the following JSON Schema. Do not include any extra commentary."
-        val hint = if (isCN) hintCN else hintEN
+        val hint = if (isZH) hintCN else hintEN
 
         return buildString {
             append(json)
@@ -311,9 +314,9 @@ $overallGoal
     }
 
     fun buildExtractUserPrompt(instruction: String, domContent: String, browserStateJson: String?): SimpleMessage {
-        val instructionLabel = if (isCN) "指令: " else "Instruction: "
-        val browserStateLabel = if (isCN) "当前浏览器状态" else "Current Browser State"
-        val domLabel = if (isCN) "DOM: " else "DOM: "
+        val instructionLabel = if (isZH) "指令: " else "Instruction: "
+        val browserStateLabel = if (isZH) "当前浏览器状态" else "Current Browser State"
+        val domLabel = if (isZH) "DOM: " else "DOM: "
 
         val sb = StringBuilder()
             .append(instructionLabel)
@@ -360,7 +363,7 @@ Each chunk corresponds to one viewport-sized section of the page (the first chun
 """.trimIndent()
 
     fun buildMetadataSystemPrompt(): SimpleMessage {
-        val content = if (isCN) metadataSystemPromptCN else metadataSystemPromptEN
+        val content = if (isZH) metadataSystemPromptCN else metadataSystemPromptEN
         return SimpleMessage(
             role = "system",
             content = content,
@@ -375,7 +378,7 @@ Each chunk corresponds to one viewport-sized section of the page (the first chun
     ): SimpleMessage {
         val extractedJson = DOMSerializer.MAPPER.writeValueAsString(extractionResponse)
 
-        val content = if (isCN) {
+        val content = if (isZH) {
             """
 指令: $instruction
 提取结果: $extractedJson
@@ -443,7 +446,7 @@ Return an array of elements that match the instruction if they exist, otherwise 
 - 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
 """
 
-        val observeSystemPrompt = if (isCN) observeSystemPromptCN() else observeSystemPromptEN()
+        val observeSystemPrompt = if (isZH) observeSystemPromptCN() else observeSystemPromptEN()
         val extra = buildObserveGuideSystemExtraPrompt(userProvidedInstructions)?.content
         val content = if (extra != null) "$observeSystemPrompt\n\n$extra" else observeSystemPrompt
 
@@ -453,7 +456,7 @@ Return an array of elements that match the instruction if they exist, otherwise 
     fun initObserveUserInstruction(instruction: String?): String {
         return when {
             !instruction.isNullOrBlank() -> instruction
-            isCN -> """
+            isZH -> """
 查找页面中可用于后续任何操作的元素，包括导航链接、相关页面链接、章节/子章节链接、按钮或其他交互元素。
 请尽可能全面：如果存在多个可能与未来操作相关的元素，需全部返回。
                 """.trimIndent()
@@ -471,7 +474,7 @@ Be comprehensive: if there are multiple elements that may be relevant for future
         val browserStateJson = params.browserUseState.browserState.lazyJson
         val nanoTreeJson = params.browserUseState.domState.nanoTreeLazyJson
 
-        if (isCN) {
+        if (isZH) {
             messages.addUser("指令: $instruction")
         } else {
             messages.addUser("instruction: $instruction")
@@ -499,55 +502,18 @@ $schemaContract
 """
 
         val content = when {
-            isCN -> contentCN()
+            isZH -> contentCN()
             else -> contentEN()
         }
 
         messages.add("user", content)
     }
 
-    fun buildObserveResultSchema(returnAction: Boolean): String {
-        val actionFields = if (returnAction) ACTION_SCHEMA else ""
-
-        val schema = """
-{
-  "elements": [
-    {
-      "locator": string,
-      "description": string$actionFields
-    }
-  ]
-}
-""".let { Strings.compactWhitespaces(it) }
-
-        return schema
-    }
-
-    fun buildObserveResultSchemaContract(params: ObserveParams): String {
-        val schema = buildObserveResultSchema(params.returnAction)
-
-        return if (isCN) {
-            """
-## Schema 要求
-你必须返回一个与以下模式匹配的有效 JSON 对象：
-$schema
-
-""".trimIndent()
-        } else {
-            """
-## Schema Contract
-You MUST respond with a valid JSON object matching this schema:
-$schema
-
-""".trimIndent()
-        }
-    }
-
     fun buildObserveActToolUsePrompt(
         action: String, toolCalls: List<String>, variables: Map<String, String>? = null
     ): String {
         // Base instruction
-        val instruction = if (isCN) {
+        val instruction = if (isZH) {
             """
 根据以下动作查找最相关的页面元素：$action。为该元素提供一个工具来执行该动作。分析执行后的影响和预期结果。
 

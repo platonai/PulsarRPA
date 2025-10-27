@@ -67,10 +67,9 @@ data class ObserveParams constructor(
 class InferenceEngine(
     private val session: AgenticSession,
     private val chatModel: BrowserChatModel,
-    private val promptLocale: Locale = Locale.CHINESE,
 ) {
     private val logger = getLogger(this)
-    private val promptBuilder = PromptBuilder(promptLocale)
+    private val promptBuilder = PromptBuilder()
 
     // Reuse a single ObjectMapper for JSON parsing within this class
     private val mapper = ObjectMapper()

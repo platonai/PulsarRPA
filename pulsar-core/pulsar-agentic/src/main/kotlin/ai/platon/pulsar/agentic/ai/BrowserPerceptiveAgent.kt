@@ -5,8 +5,8 @@ import ai.platon.pulsar.agentic.ai.agent.*
 import ai.platon.pulsar.agentic.ai.agent.detail.*
 import ai.platon.pulsar.agentic.ai.support.AgentTool
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
-import ai.platon.pulsar.agentic.ai.tta.ActionExecuteResult
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
+import ai.platon.pulsar.agentic.ai.tta.ActionExecuteResult
 import ai.platon.pulsar.agentic.ai.tta.InstructionResult
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.browser.driver.chrome.dom.DomDebug
@@ -26,7 +26,6 @@ import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
@@ -267,11 +266,7 @@ class BrowserPerceptiveAgent(
 
             val msg = "Action [$lowerMethod] executed on selector: $locator".trim()
             addToHistory("observe.act -> ${toolCall.method}")
-            ActResult(
-                success = true,
-                message = msg,
-                action = toolCall.method
-            )
+            ActResult(success = true, message = msg, action = toolCall.method)
         } catch (e: Exception) {
             logger.error("observe.act execution failed sid={} msg={}", uuid.toString().take(8), e.message, e)
             val msg = e.message ?: "Execution failed"
@@ -609,7 +604,7 @@ class BrowserPerceptiveAgent(
         logger.info(
             "extract.start requestId={} instruction='{}'",
             requestId.take(8),
-            Strings.compactWhitespaces(instruction, 200)
+            PromptBuilder.compactPrompt(instruction, 200)
         )
     }
 
@@ -617,19 +612,13 @@ class BrowserPerceptiveAgent(
         logger.info(
             "observe.start requestId={} instruction='{}'",
             requestId.take(8),
-            Strings.compactWhitespaces(instruction, 200)
+            PromptBuilder.compactPrompt(instruction, 200)
         )
     }
 
     private fun addHistoryExtract(instruction: String, requestId: String, success: Boolean) {
-        addToHistory(
-            "extract[$requestId] ${if (success) "OK" else "FAIL"} ${
-                Strings.compactWhitespaces(
-                    instruction,
-                    200
-                )
-            }"
-        )
+        val compactPrompt = PromptBuilder.compactPrompt(instruction, 200)
+        addToHistory("extract[$requestId] ${if (success) "OK" else "FAIL"} $compactPrompt")
     }
 
     private fun addHistoryObserve(instruction: String, requestId: String, size: Int, success: Boolean) {
