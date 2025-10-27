@@ -29,10 +29,11 @@ class PromptBuilder() {
         val isZH = locale in listOf(Locale.CHINESE, Locale.SIMPLIFIED_CHINESE, Locale.TRADITIONAL_CHINESE)
 
         val ACTION_SCHEMA = """
-        |{"domain": string, "method": string, "arguments": [{"name": string, "value": string}],
+        |,
+        |"domain": string, "method": string, "arguments": [{"name": string, "value": string}],
         |"currentPageContentSummary": string,
         |"actualLastActionImpact": string, "expectedNextActionImpact": string
-        |}
+        |
         |""".trimMargin()
 
         fun buildObserveResultSchema(returnAction: Boolean): String {

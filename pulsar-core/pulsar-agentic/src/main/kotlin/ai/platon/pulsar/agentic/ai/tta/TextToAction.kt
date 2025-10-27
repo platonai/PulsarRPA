@@ -11,6 +11,7 @@ import ai.platon.pulsar.common.ExperimentalApi
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
@@ -24,6 +25,8 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonElement
 import org.apache.commons.lang3.StringUtils
 import java.nio.file.Files
@@ -172,7 +175,7 @@ open class TextToAction(
      *
      * This schema is build by [PromptBuilder.buildObserveResultSchemaContract] and is passed to LLM for a restricted response.
      * */
-    fun parseObserveElements(root: JsonNode, returnAction: Boolean): List<ObserveElement> {
+    fun parseObserveElementsLegacy(root: JsonNode, returnAction: Boolean): List<ObserveElement> {
         // Determine the array of items to read
         val arr: ArrayNode = when {
             root.isObject && root.has("elements") && root.get("elements").isArray -> root.get("elements") as ArrayNode
@@ -209,8 +212,8 @@ open class TextToAction(
             }
 
             // Parse arguments according to schema: array of { name, value } or tolerant object map
-            val argsNode = el.get("arguments")
-            val arguments: Map<String, Any?>? = when {
+            val argsNode = el.get("tool")?.get("arguments")
+            val arguments: Map<String, String?>? = when {
                 argsNode == null || argsNode.isNull -> null
                 argsNode.isArray -> {
                     val m = linkedMapOf<String, String>()
@@ -258,7 +261,7 @@ open class TextToAction(
                     method = methodName,
                     description = description,
                 )
-                arguments?.forEach { (key, value) -> toolCall.arguments[key] = value }
+                arguments?.forEach { (key, value) -> toolCall.arguments[key] = value?.toString() }
             }
 
             val item = ObserveElement(
@@ -277,33 +280,46 @@ open class TextToAction(
 
     fun modelResponseToActionDescription(response: ModelResponse): ActionDescription {
         val content = response.content
+        printlnPro(content)
 
-        // Parse as generic JsonNode to support both object and array roots
-        val root: JsonNode =
-            runCatching { pulsarObjectMapper().readTree(content) ?: JsonNodeFactory.instance.objectNode() }
-                .getOrElse { JsonNodeFactory.instance.objectNode() }
+        val mapper = pulsarObjectMapper()
+        return when {
+            content.contains("isComplete") -> {
+                val complete: ObserveResponseComplete = mapper.readValue(content)
+                ActionDescription(
+                    isComplete = true,
+                    summary = complete.summary,
+                    suggestions = complete.nextSuggestions ?: emptyList()
+                )
+            }
+            else -> {
+                val elements: ObserveResponseElements = mapper.readValue(content)
+                when (val ele = elements.elements?.firstOrNull()) {
+                    null -> ActionDescription(modelResponse = response)
+                    else -> {
+                        val observeElement = ObserveElement(
+                            locator = ele.locator,
 
-        if (root.isObject && root.has("isComplete")) {
-            val isComplete = root.get("isComplete")?.asBoolean() ?: false
-            val summary = root.get("summary")?.asText()
-            val suggestions = root.get("suggestions")
-                ?.takeIf { it.isArray }?.let { it.mapNotNull { it.asText() } }
-                ?: emptyList()
+                            currentPageContentSummary = ele.currentPageContentSummary,
+                            actualLastActionImpact = ele.actualLastActionImpact,
+                            expectedNextActionImpact = ele.expectedNextActionImpact,
 
-            return ActionDescription(
-                modelResponse = response,
-                isComplete = isComplete,
-                summary = summary,
-                suggestions = suggestions
-            )
+                            toolCall = ToolCall(
+                                domain = ele.domain ?: "",
+                                method = ele.method ?: "",
+                                arguments = ele.arguments?.flatMap { it?.entries ?: emptyList() }
+                                    ?.associate { it.toPair() }?.toMutableMap()
+                                    ?: mutableMapOf(),
+                            ),
+
+                            modelResponse = response,
+                        )
+
+                        ActionDescription(observeElement = observeElement, modelResponse = response)
+                    }
+                }
+            }
         }
-
-        val elements = parseObserveElements(root, true)
-
-        return ActionDescription(
-            modelResponse = response,
-            observeElement = elements.firstOrNull()
-        )
     }
 
     fun reviseActionDescription(action: ActionDescription, browserUseState: BrowserUseState): ActionDescription {

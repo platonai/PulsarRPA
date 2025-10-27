@@ -3,11 +3,14 @@ package ai.platon.pulsar.agentic.ai.agent
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.SimpleMessage
+import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
+import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.external.TokenUsage
 import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import com.fasterxml.jackson.databind.JsonNode
@@ -227,7 +230,7 @@ class InferenceEngine(
         return result
     }
 
-    suspend fun observe(params: ObserveParams): InternalObserveResult {
+    suspend fun observe(params: ObserveParams): ActionDescription {
         if (params.returnAction) {
             require(params.instruction.contains("click")) {
                 "If `returnAction` is true, the tool specifications has to be included in `params.instruction`" }
@@ -252,16 +255,22 @@ class InferenceEngine(
         }
 
         val (resp, elapsedMs) = doLangChainChat(messages.systemMessages(), messages.userMessages())
-        val usage = toUsage(resp)
 
-        val response = resp.aiMessage().text().trim()
+        val tu = resp.tokenUsage()
+        val tokenUsage = TokenUsage(
+            inputTokenCount = tu.inputTokenCount(), outputTokenCount = tu.outputTokenCount(), totalTokenCount = tu.outputTokenCount()
+        )
+
+        val responseContent = resp.aiMessage().text().trim()
         // Parse as generic JsonNode to support both object and array roots
-        val root: JsonNode = runCatching { mapper.readTree(response) ?: JsonNodeFactory.instance.objectNode() }
+        val root: JsonNode = runCatching { mapper.readTree(responseContent) ?: JsonNodeFactory.instance.objectNode() }
             .getOrElse { JsonNodeFactory.instance.objectNode() }
 
-        val elements: List<ObserveElement> = tta.parseObserveElements(root, params.returnAction)
+        // val elements: List<ObserveElement> = tta.parseObserveElements(root, params.returnAction)
 
-        // val elements: List<ObserveElement> = pulsarObjectMapper().readValue(response)
+        val modeResponse = ModelResponse(content = responseContent, tokenUsage = tokenUsage)
+        var actionDescription = tta.modelResponseToActionDescription(modeResponse)
+        actionDescription = tta.reviseActionDescription(actionDescription, browserUseState = params.browserUseState)
 
         var respFile = ""
         if (params.logInferenceToFile) {
@@ -271,7 +280,7 @@ class InferenceEngine(
                 payload = mapOf(
                     "requestId" to params.requestId,
                     "modelResponse" to prefix,
-                    "rawResponse" to safeJsonPreview(response)
+                    "rawResponse" to safeJsonPreview(responseContent)
                 )
             ).first
 
@@ -282,19 +291,14 @@ class InferenceEngine(
                     "timestamp" to callTs,
                     "LLM_input_file" to callFile,
                     "LLM_output_file" to respFile,
-                    "prompt_tokens" to usage.promptTokens,
-                    "completion_tokens" to usage.completionTokens,
+                    "inputTokenCount" to tokenUsage.inputTokenCount,
+                    "outputTokenCount" to tokenUsage.outputTokenCount,
                     "inference_time_ms" to elapsedMs
                 )
             )
         }
 
-        return InternalObserveResult(
-            elements = elements,
-            promptTokens = usage.promptTokens,
-            completionTokens = usage.completionTokens,
-            inferenceTimeMs = elapsedMs
-        )
+        return actionDescription
     }
 
     private fun safeJsonPreview(raw: String, limit: Int = 2000): String {

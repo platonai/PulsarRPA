@@ -8,6 +8,31 @@ import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.ai.ToolCall
 
+data class ObserveResponseComplete(
+    val taskComplete: Boolean = false,
+    val summary: String? = null,
+    val keyFindings: List<String>? = null,
+    val nextSuggestions: List<String>? = null,
+)
+
+data class ObserveResponseElements(
+    val elements: List<ObserveResponseElement>? = null
+)
+
+data class ObserveResponseElement(
+    val locator: String? = null,
+    val description: String? = null,
+
+    val domain: String? = null,
+    val method: String? = null,
+
+    val arguments: List<Map<String, String>?>? = null,
+
+    val currentPageContentSummary: String? = null,
+    val actualLastActionImpact: String? = null,
+    val expectedNextActionImpact: String? = null,
+)
+
 data class ActionDescription constructor(
     val observeElement: ObserveElement? = null,
 
@@ -15,6 +40,7 @@ data class ActionDescription constructor(
     val summary: String? = null,
     val suggestions: List<String> = emptyList(),
 
+    val errors: String? = null,
     val modelResponse: ModelResponse? = null
 ) {
     val toolCall: ToolCall? get() = observeElement?.toolCall

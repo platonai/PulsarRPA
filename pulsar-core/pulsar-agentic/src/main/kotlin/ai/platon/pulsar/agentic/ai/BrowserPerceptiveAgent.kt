@@ -19,6 +19,7 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.Pson
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
@@ -50,11 +51,11 @@ import kotlin.math.pow
 data class AgentConfig(
     val maxSteps: Int = 100,
     val maxRetries: Int = 3,
-    val baseRetryDelayMs: Long = 1000,
-    val maxRetryDelayMs: Long = 30000,
+    val baseRetryDelayMs: Long = 1_000,
+    val maxRetryDelayMs: Long = 30_000,
     val consecutiveNoOpLimit: Int = 5,
-    val actionGenerationTimeoutMs: Long = 30000,
-    val screenshotCaptureTimeoutMs: Long = 5000,
+    val actionGenerationTimeoutMs: Long = 30_000,
+    val screenshotCaptureTimeoutMs: Long = 5_000,
     val enableStructuredLogging: Boolean = false,
     val enableDebugMode: Boolean = false,
     val enablePerformanceMetrics: Boolean = true,
@@ -63,8 +64,8 @@ data class AgentConfig(
     val enableAdaptiveDelays: Boolean = true,
     val enablePreActionValidation: Boolean = true,
     // New configuration options for fixes
-    val actTimeoutMs: Long = 60_000,
-    val llmInferenceTimeoutMs: Long = 60_000,
+    val actTimeoutMs: Long = 600_000,
+    val llmInferenceTimeoutMs: Long = 600_000,
     val maxResultsToTry: Int = 3,
     val screenshotEveryNSteps: Int = 1,
     val domSettleTimeoutMs: Long = 2000,
@@ -74,7 +75,7 @@ data class AgentConfig(
     val maxSelectorLength: Int = 1000,
     val denyUnknownActions: Boolean = false,
     // Overall timeout for resolve() to avoid indefinite hangs
-    val resolveTimeoutMs: Long = 60 * 60_000
+    val resolveTimeoutMs: Long = 600_000
 )
 
 class BrowserPerceptiveAgent(
@@ -138,7 +139,14 @@ class BrowserPerceptiveAgent(
         val sessionId = uuid.toString()
 
         // Add start history for better traceability (meta record only)
-        addToRecordHistory("resolve START session=${sessionId.take(8)} goal='${Strings.compactWhitespaces(action.action, 160)}' maxSteps=${config.maxSteps} maxRetries=${config.maxRetries}")
+        addToRecordHistory(
+            "resolve START session=${sessionId.take(8)} goal='${
+                Strings.compactWhitespaces(
+                    action.action,
+                    160
+                )
+            }' maxSteps=${config.maxSteps} maxRetries=${config.maxRetries}"
+        )
 
         // Overall timeout to prevent indefinite hangs for a full resolve session
         return try {
@@ -190,14 +198,15 @@ class BrowserPerceptiveAgent(
             return ActResult(success = false, message = msg, action = "")
         }
 
-        val toolArgs = mutableMapOf<String, Any?>()
-        argsMap.forEach { (k, v) -> toolArgs[k] = v }
+        val toolArgs = mutableMapOf<String, String?>()
+        argsMap.forEach { (k, v) -> toolArgs[k] = v?.toString() }
 
         val selectorActions = AgentTool.SELECTOR_ACTIONS
         val domain = observe.domain ?: "unknown"
         val lowerMethod = method
         val backendNodeId = observe.backendNodeId
-        val selector = observe.backendNodeId?.let { "backend:$backendNodeId" } ?: observe.locator?.takeIf { it.isNotBlank() }
+        val selector =
+            observe.backendNodeId?.let { "backend:$backendNodeId" } ?: observe.locator?.takeIf { it.isNotBlank() }
         if (lowerMethod in selectorActions) {
             toolArgs["selector"] = selector
             if (selector == null) {
@@ -213,7 +222,7 @@ class BrowserPerceptiveAgent(
                 toolArgs["oldUrl"] = driver.currentUrl()
             }
             if (toolArgs["timeoutMillis"] == null) {
-                toolArgs["timeoutMillis"] = 5000L
+                toolArgs["timeoutMillis"] = 5000L.toString()
             }
         }
 
@@ -342,7 +351,25 @@ class BrowserPerceptiveAgent(
     }
 
     override suspend fun observe(options: ObserveOptions): List<ObserveResult> {
-        return doObserve(options)
+        val action = doObserveAndReturnActionDescription(options)
+
+        val observeElements = listOfNotNull(action.observeElement)
+        val results = observeElements.map { ele ->
+            ObserveResult(
+                locator = ele.locator,
+                domain = ele.domain?.ifBlank { null },
+                method = ele.method?.ifBlank { null },
+                arguments = ele.arguments?.takeIf { it.isNotEmpty() },
+                description = ele.description ?: "(No comment ...)",
+                currentPageContentSummary = ele.currentPageContentSummary,
+                actualLastActionImpact = ele.actualLastActionImpact,
+                expectedNextActionImpact = ele.expectedNextActionImpact,
+                backendNodeId = ele.backendNodeId,
+                observeElements = observeElements,
+            )
+        }
+
+        return results
     }
 
     private suspend fun getBrowserUseState(): BrowserUseState {
@@ -373,7 +400,11 @@ class BrowserPerceptiveAgent(
         val browser = currentDriver.browser
 
         val tabs = browser.drivers.map { (tabId, driver) ->
-            val url = try { driver.currentUrl() } catch (_: Exception) { "about:blank" }
+            val url = try {
+                driver.currentUrl()
+            } catch (_: Exception) {
+                "about:blank"
+            }
             val title = try {
                 driver.evaluate("document.title").toString().takeIf { it.isNotBlank() }
             } catch (_: Exception) {
@@ -432,19 +463,21 @@ class BrowserPerceptiveAgent(
                     logger.warn("switchTab returned driverId {} but driver not found in browser", result)
                 }
             }
+
             is Map<*, *> -> {
                 // Error response from switchTab
                 val error = result["error"] as? String
                 val message = result["message"] as? String
                 logger.warn("switchTab failed: {} - {}", error, message)
             }
+
             else -> {
                 logger.warn("Unexpected switchTab result type: {}", result?.javaClass?.simpleName)
             }
         }
     }
 
-    private suspend fun doObserve(options: ObserveOptions): List<ObserveResult> {
+    private suspend fun doObserveAndReturnActionDescription(options: ObserveOptions): ActionDescription {
         // Returns:
         // `options.instruction`
         // OR: "Find elements that can be used for any future actions in the page."
@@ -460,7 +493,7 @@ class BrowserPerceptiveAgent(
             fromAct = false
         )
 
-        return doObserve1(params, browserUseState)
+        return doObserveAndReturnActionDescription(params)
     }
 
     private suspend fun doObserveAct(action: ActionOptions): ActResult {
@@ -482,7 +515,7 @@ class BrowserPerceptiveAgent(
             fromAct = true,
         )
 
-        val results: List<ObserveResult> = doObserve1(params, browserUseState)
+        val results = doObserve(params)
 
         if (results.isEmpty()) {
             val msg = "doObserveAct: No actionable element found"
@@ -541,34 +574,41 @@ class BrowserPerceptiveAgent(
         return ActResult(false, msg, action = action.action)
     }
 
-    private suspend fun doObserve1(params: ObserveParams, browserUseState: BrowserUseState): List<ObserveResult> {
+    private suspend fun doObserve(params: ObserveParams): List<ObserveResult> {
+        val actionDescription = doObserveAndReturnActionDescription(params)
+
+        val observeElements = listOfNotNull(actionDescription.observeElement)
+        return observeElements.map { ele ->
+            ObserveResult(
+                locator = ele.locator,
+                domain = ele.domain?.ifBlank { null },
+                method = ele.method?.ifBlank { null },
+                arguments = ele.arguments?.takeIf { it.isNotEmpty() },
+                description = ele.description ?: "(No comment ...)",
+                currentPageContentSummary = ele.currentPageContentSummary,
+                actualLastActionImpact = ele.actualLastActionImpact,
+                expectedNextActionImpact = ele.expectedNextActionImpact,
+                backendNodeId = ele.backendNodeId,
+                observeElements = observeElements,
+            )
+        }
+    }
+
+    private suspend fun doObserveAndReturnActionDescription(params: ObserveParams): ActionDescription {
         val requestId: String = params.requestId
         logObserveStart(params.instruction, requestId)
         return try {
-            val internalResults = withTimeout(config.llmInferenceTimeoutMs) {
+            val actionDescription = withTimeout(config.llmInferenceTimeoutMs) {
                 inference.observe(params)
             }
-            val observeElements = internalResults.elements
-            val results = observeElements.map { ele ->
-                ObserveResult(
-                    locator = ele.locator,
-                    domain = ele.domain?.ifBlank { null },
-                    method = ele.method?.ifBlank { null },
-                    arguments = ele.arguments?.takeIf { it.isNotEmpty() },
-                    description = ele.description ?: "(No comment ...)",
-                    currentPageContentSummary = ele.currentPageContentSummary,
-                    actualLastActionImpact = ele.actualLastActionImpact,
-                    expectedNextActionImpact = ele.expectedNextActionImpact,
-                    backendNodeId = ele.backendNodeId,
-                    observeElements = observeElements,
-                )
-            }
+
+            val results = listOfNotNull(actionDescription.observeElement)
             addHistoryObserve(params.instruction, requestId, results.size, results.isNotEmpty())
-            return results
+            return actionDescription
         } catch (e: Exception) {
             logger.error("observeAct.observe.error requestId={} msg={}", requestId.take(8), e.message, e)
             addHistoryObserve(params.instruction, requestId, 0, false)
-            emptyList()
+            ActionDescription(errors = e.stringify())
         }
     }
 
@@ -656,7 +696,12 @@ class BrowserPerceptiveAgent(
 
     private fun addHistoryObserve(instruction: String, requestId: String, size: Int, success: Boolean) {
         addToRecordHistory(
-            "observe[$requestId] ${if (success) "OK" else "FAIL"} ${Strings.compactWhitespaces(instruction, 200)} -> $size elements"
+            "observe[$requestId] ${if (success) "OK" else "FAIL"} ${
+                Strings.compactWhitespaces(
+                    instruction,
+                    200
+                )
+            } -> $size elements"
         )
     }
 
@@ -696,7 +741,13 @@ class BrowserPerceptiveAgent(
                 }
             } catch (e: Exception) {
                 lastError = e
-                logger.error("resolve.unexpected attempt={} sid={} msg={}", attempt + 1, sessionId.take(8), e.message, e)
+                logger.error(
+                    "resolve.unexpected attempt={} sid={} msg={}",
+                    attempt + 1,
+                    sessionId.take(8),
+                    e.message,
+                    e
+                )
                 if (shouldRetryError(e) && attempt < config.maxRetries) {
                     val backoffMs = calculateRetryDelay(attempt)
                     addToRecordHistory("resolve RETRY ${attemptNo} cause=Unexpected delay=${backoffMs}ms msg=${e.message}")
@@ -974,7 +1025,12 @@ class BrowserPerceptiveAgent(
         return try {
             val screenshot = safeScreenshot(context)
             if (screenshot != null) {
-                logger.info("screenshot.ok sid={} step={} size={} ", context.sessionId.take(8), context.stepNumber, screenshot.length)
+                logger.info(
+                    "screenshot.ok sid={} step={} size={} ",
+                    context.sessionId.take(8),
+                    context.stepNumber,
+                    screenshot.length
+                )
             } else {
                 logger.info("screenshot.null sid={} step={}", context.sessionId.take(8), context.stepNumber)
             }
@@ -990,7 +1046,11 @@ class BrowserPerceptiveAgent(
         return runCatching { driver.currentUrl() }.getOrNull().orEmpty()
     }
 
-    private suspend fun doExecuteToolCall(action: ActionDescription, step: Int, context: ExecutionContext): ActionExecuteResult? {
+    private suspend fun doExecuteToolCall(
+        action: ActionDescription,
+        step: Int,
+        context: ExecutionContext
+    ): ActionExecuteResult? {
         val toolCall = action.toolCall ?: return null
 
         if (config.enablePreActionValidation && !actionValidator.validateToolCall(toolCall)) {
@@ -1023,7 +1083,13 @@ class BrowserPerceptiveAgent(
 
             // Record a failed action exactly once
             val msg = e.message ?: "execution failed"
-            recordAction(step = step, method = toolCall.method, success = false, observe = action.observeElement, message = msg)
+            recordAction(
+                step = step,
+                method = toolCall.method,
+                success = false,
+                observe = action.observeElement,
+                message = msg
+            )
 
             if (failures >= 3) {
                 throw PerceptiveAgentError.PermanentError("Too many consecutive failures at step $step", e)
@@ -1168,8 +1234,10 @@ class BrowserPerceptiveAgent(
             // Medium Priority #12: Validate port with configurable whitelist
             val port = uri.port
             if (port != -1 && !config.allowedPorts.contains(port)) {
-                logger.info("url.block.port sid={} port={} host={} allowedPorts={}",
-                    uuid.toString().take(8), port, host, config.allowedPorts)
+                logger.info(
+                    "url.block.port sid={} port={} host={} allowedPorts={}",
+                    uuid.toString().take(8), port, host, config.allowedPorts
+                )
                 return false
             }
 

@@ -9,11 +9,6 @@ import ai.platon.pulsar.test.server.DemoSiteStarter
 import kotlinx.coroutines.runBlocking
 
 class SessionAct {
-    init {
-        // Single Page Application
-        PulsarSettings.withSPA()
-    }
-
     private val logger = getLogger(this)
 
     private var stepNo = 0
@@ -28,8 +23,8 @@ class SessionAct {
         logger.info("[RESULT ${stepNo}] $label => $text")
     }
 
-    val context = AgenticContexts.create()
-    val session = context.createSession()
+    private val session = AgenticContexts.getOrCreateSession(spa = true)
+    val context = session.context
 
     suspend fun run() {
         check(session.isActive) { "Session is not active" }
@@ -41,8 +36,7 @@ class SessionAct {
         starter.start(url)
         context.registerClosable(starter)
 
-        val driver = context.launchDefaultBrowser().newDriver()
-        session.bindDriver(driver)
+        val driver = session.createBoundDriver()
 
         step("Open URL: $url")
         var page = session.open(url)

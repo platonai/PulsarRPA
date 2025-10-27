@@ -52,7 +52,7 @@ data class ObserveOptions(
 data class ToolCall(
     val domain: String,
     val method: String,
-    val arguments: MutableMap<String, Any?> = mutableMapOf(),
+    val arguments: MutableMap<String, String?> = mutableMapOf(),
     val description: String? = null,
 )
 
@@ -63,15 +63,16 @@ data class ObserveElement constructor(
     val actualLastActionImpact: String? = null,
     val expectedNextActionImpact: String? = null,
 
+    val modelResponse: ModelResponse? = null,
+
+    // Revised fields
     val toolCall: ToolCall? = null,
     val node: DOMTreeNodeEx? = null,
     val backendNodeId: Int? = null,
     val xpath: String? = null,
     val cssSelector: String? = null,
     val expressions: List<String> = emptyList(),
-    val cssFriendlyExpressions: List<String> = emptyList(),
-
-    val modelResponse: ModelResponse? = null
+    val cssFriendlyExpressions: List<String> = emptyList()
 ) {
     val description: String? get() = toolCall?.description
     val domain: String? get() = toolCall?.domain

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.external
 
-data class ModelResponse(
+data class ModelResponse constructor(
     var content: String,
     var state: ResponseState = ResponseState.STOP,
     var tokenUsage: TokenUsage = TokenUsage(),
