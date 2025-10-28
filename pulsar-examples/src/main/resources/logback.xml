@@ -1,26 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <configuration scan="true" scanPeriod="30 seconds" debug="false">
-    <timestamp key="byMinute" datePattern="yyyyMMdd'T'HHmm"/>
-
     <property name="logging.dir" value="${logging.dir:-logs}" />
     <property name="logging.prefix" value="${logging.prefix:-pulsar}" />
     <property name="logging.file" value="${logging.prefix}.log" />
-
-    <!-- Special task relative logs -->
-    <property name="logging.hv.file" value="${logging.prefix}.hv.log" />
-    <property name="logging.pg.file" value="${logging.prefix}.pg.log" />
-    <property name="logging.irr.file" value="${logging.prefix}.irr.log" />
-    <property name="logging.api.file" value="${logging.prefix}.api.log" />
-
-    <!-- Special task relative logs -->
-    <property name="logging.c.file" value="${logging.prefix}.c.log" />
-    <property name="logging.m.file" value="${logging.prefix}.m.log" />
-    <property name="logging.json.file" value="${logging.prefix}.json.${byMinute}.log" />
-    <property name="logging.report.file" value="${logging.prefix}.report.${byMinute}.log" />
-    <property name="logging.dc.file" value="${logging.prefix}.dc.${byMinute}.log" />
-    <property name="logging.bs.file" value="${logging.prefix}.bs.log" />
-    <property name="logging.sql.file" value="${logging.prefix}.sql.log" />
 
     <!--0. 日志格式和颜色渲染 -->
     <!-- 彩色日志依赖的渲染类 -->
@@ -30,6 +13,9 @@
     <!-- 彩色日志格式 -->
     <property name="CONSOLE_LOG_PATTERN" value="${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%.10t]){faint} %clr(%c{2}){cyan} %clr(-){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"/>
     <property name="DRFA_LOG_PATTERN" value="%d{HH:mm:ss.SSS} [%.10thread] %-5level %logger{26} - %msg%n"/>
+
+    <!-- Stop logback status INFO at the start -->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
 
     <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
@@ -47,222 +33,13 @@
         </rollingPolicy>
     </appender>
 
-    <appender name="HARVEST" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>${logging.dir}/${logging.hv.file}</File>
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%.10thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${logging.dir}/${logging.hv.file}.%d{.yyyy-MM-dd}</fileNamePattern>
-        </rollingPolicy>
-    </appender>
-
-    <appender name="PAGES" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>${logging.dir}/${logging.pg.file}</File>
-        <encoder>
-            <pattern>${DRFA_LOG_PATTERN}</pattern>
-        </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${logging.dir}/${logging.pg.file}.%d{.yyyy-MM-dd}</fileNamePattern>
-        </rollingPolicy>
-    </appender>
-
-    <appender name="API" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>${logging.dir}/${logging.api.file}</File>
-        <encoder>
-            <pattern>${DRFA_LOG_PATTERN}</pattern>
-        </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${logging.dir}/${logging.api.file}.%d{.yyyy-MM-dd}</fileNamePattern>
-        </rollingPolicy>
-    </appender>
-
-    <appender name="Irr" class="ch.qos.logback.core.FileAppender">
-        <File>${logging.dir}/${logging.irr.file}</File>
-        <append>true</append>
-        <encoder>
-            <pattern>%d{ISO8601} --- %m%n</pattern>
-        </encoder>
-    </appender>
-
-    <appender name="BROWSER" class="ch.qos.logback.core.FileAppender">
-        <File>${logging.dir}/${logging.bs.file}</File>
-        <append>true</append>
-        <encoder>
-            <pattern>%d{ISO8601} --- %m%n</pattern>
-        </encoder>
-    </appender>
-
-    <appender name="METRICS" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>${logging.dir}/${logging.m.file}</File>
-        <encoder>
-            <pattern>%d{ISO8601} --- %m%n</pattern>
-        </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${logging.dir}/${logging.m.file}.%d{.yyyy-MM-dd}</fileNamePattern>
-        </rollingPolicy>
-    </appender>
-
-    <appender name="COUNTERS" class="ch.qos.logback.core.FileAppender">
-        <File>${logging.dir}/${logging.c.file}</File>
-        <append>true</append>
-        <encoder>
-            <pattern>%d{ISO8601} --- %m%n</pattern>
-        </encoder>
-    </appender>
-
-    <appender name="SQL" class="ch.qos.logback.core.FileAppender">
-        <File>${logging.dir}/${logging.sql.file}</File>
-        <encoder>
-            <pattern>%d{ISO8601} --- %m%n</pattern>
-        </encoder>
-    </appender>
-
-    <appender name="JSON" class="ch.qos.logback.core.FileAppender">
-        <File>${logging.dir}/${logging.json.file}</File>
-        <encoder>
-            <pattern>%d{ISO8601} --- %m%n</pattern>
-        </encoder>
-    </appender>
-
-    <appender name="COLLECT" class="ch.qos.logback.core.FileAppender">
-        <File>${logging.dir}/${logging.dc.file}</File>
-        <encoder>
-            <pattern>%d{ISO8601} --- %m%n</pattern>
-        </encoder>
-    </appender>
-
-    <appender name="REPORT" class="ch.qos.logback.core.FileAppender">
-        <File>${logging.dir}/${logging.report.file}</File>
-        <encoder>
-            <pattern>%d{ISO8601} --- %m%n</pattern>
-        </encoder>
-    </appender>
-
-
     <root level="${log.level:-INFO}">
         <appender-ref ref="DRFA"/>
         <appender-ref ref="Console"/>
     </root>
 
-    <!-- Stop logback status INFO at the start -->
-    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
-
-    <logger name="ai.platon.exotic.amazon.crawl.boot.component.json" level="INFO" additivity="false">
-        <appender-ref ref="JSON"/>
-    </logger>
-    <logger name="ai.platon.exotic.amazon.tools.io" level="INFO" additivity="true">
-        <appender-ref ref="REPORT"/>
-    </logger>
-    <logger name="ai.platon.exotic.amazon.tools.io.validate.AbstractPageEntityValidator.Report"
-            level="INFO" additivity="false">
-        <appender-ref ref="REPORT"/>
-    </logger>
-
-    <logger name="ai.platon.scent" level="INFO"/>
-    <logger name="ai.platon.scent.proxy" level="INFO"/>
-    <logger name="ai.platon.scent.crawl.parser" level="INFO"/>
-    <logger name="ai.platon.scent.examples" level="INFO"/>
-    <logger name="ai.platon.scent.amazon" level="INFO"/>
-
-    <logger name="ai.platon.scent.rest.api.schedule" level="INFO"/>
-    <logger name="ai.platon.scent.rest.api.service.scrape" level="INFO"/>
-
-    <logger name="ai.platon.scent.rest.api.service.v1.ScrapeServiceV1.Task" level="INFO" additivity="false">
-        <appender-ref ref="API"/>
-    </logger>
-    <logger name="ai.platon.scent.rest.api.service.v2.ScrapeServiceV2.Task" level="INFO" additivity="false">
-        <appender-ref ref="API"/>
-    </logger>
-
-    <logger name="ai.platon.scent.parse.html.AbstractSQLExtractor.Irr" level="INFO" additivity="false">
-        <appender-ref ref="Irr"/>
-    </logger>
-    <logger name="ai.platon.scent.parse.html.AbstractSinkAwareSQLExtractor.Task" level="DEBUG" additivity="false">
-        <appender-ref ref="PAGES"/>
-    </logger>
-    <logger name="ai.platon.scent.crawl.diffusing.AbstractPageProcessor.Task" level="INFO" additivity="false">
-        <appender-ref ref="PAGES"/>
-    </logger>
-
-    <logger name="ai.platon.scent.analysis.diagnosis.ClusterTaskDiagnotor.Timing" level="WARN"/>
-    <logger name="ai.platon.scent.analysis.corpus.AnalysablePageCorpus.Task" level="INFO" additivity="false">
-        <appender-ref ref="HARVEST"/>
-    </logger>
-    <logger name="ai.platon.scent.ml.semisupervised.NodeClusterRunner.Task" level="INFO" additivity="false">
-        <appender-ref ref="HARVEST"/>
-    </logger>
-    <logger name="ai.platon.exotic.amazon.tools.scrapers.google.RegexExtractor.Task"
-            level="INFO" additivity="false">
-        <appender-ref ref="REPORT"/>
-    </logger>
-    <logger name="ai.platon.exotic.amazon.tools.scrapers.google.GoogleAgent.Task"
-            level="INFO" additivity="false">
-        <appender-ref ref="REPORT"/>
-    </logger>
-
     <logger name="ai.platon.pulsar" level="INFO"/>
     <logger name="ai.platon.pulsar.common" level="INFO"/>
-    <logger name="ai.platon.pulsar.ql" level="INFO"/>
-    <logger name="ai.platon.pulsar.net" level="INFO"/>
-    <logger name="ai.platon.pulsar.browser" level="INFO"/>
-    <logger name="ai.platon.pulsar.parse.html" level="INFO"/>
-    <logger name="ai.platon.pulsar.crawl.parse" level="INFO"/>
-    <logger name="ai.platon.pulsar.cli.shell" level="INFO"/>
-    <logger name="ai.platon.pulsar.crawl" level="INFO"/>
-    <logger name="ai.platon.pulsar.crawl.protocol" level="INFO"/>
-    <logger name="ai.platon.pulsar.protocol.browser" level="INFO"/>
-    <logger name="ai.platon.pulsar.protocol.browser.driver" level="INFO"/>
-    <!-- supress message: Chrome RPC exception: [scrollTo] (3/5) | DOM Error while querying -->
-    <logger name="ai.platon.pulsar.protocol.browser.driver.cdt.RobustRPC" level="WARN"/>
-
-    <logger name="ai.platon.pulsar.crawl.component" level="INFO"/>
-    <logger name="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulateEventHandler" level="INFO"/>
-
-    <logger name="ai.platon.pulsar.protocol.browser.emulator.context" level="INFO"/>
-
-    <logger name="ai.platon.pulsar.common.distributed.lock" level="INFO"/>
-
-    <logger name="ai.platon.pulsar.examples" level="INFO"/>
-
-    <logger name="ai.platon.pulsar.crawl.StreamingCrawler.Task" level="INFO" additivity="false">
-        <appender-ref ref="PAGES"/>
-    </logger>
-    <logger name="ai.platon.pulsar.crawl.component.LoadComponent.Task" level="INFO" additivity="false">
-        <appender-ref ref="PAGES"/>
-    </logger>
-    <logger name="ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator.Task" level="INFO" additivity="false">
-        <appender-ref ref="PAGES"/>
-    </logger>
-    <logger name="ai.platon.exotic.amazon.tools.scrapers.google.GoogleAgent.Task" level="INFO" additivity="false">
-        <appender-ref ref="PAGES"/>
-    </logger>
-    <logger name="ai.platon.pulsar.common.collect.HyperlinkExtractor" level="INFO" additivity="false">
-        <appender-ref ref="PAGES"/>
-    </logger>
-    <logger name="ai.platon.pulsar.common.collect.FatLinkExtractor" level="INFO" additivity="false">
-        <appender-ref ref="PAGES"/>
-    </logger>
-    <logger name="ai.platon.pulsar.browser" level="INFO" additivity="false">
-        <appender-ref ref="BROWSER"/>
-    </logger>
-
-    <logger name="ai.platon.pulsar.common.metrics.MetricsSystem" level="INFO" additivity="false">
-        <appender-ref ref="METRICS"/>
-    </logger>
-    <logger name="ai.platon.pulsar.common.metrics.AppMetrics" level="INFO" additivity="false">
-        <appender-ref ref="METRICS"/>
-    </logger>
-
-    <logger name="ai.platon.pulsar.common.CounterReporter" level="INFO" additivity="false">
-        <appender-ref ref="COUNTERS"/>
-    </logger>
-    <logger name="ai.platon.pulsar.ql.h2.utils.Jdbc" level="INFO" additivity="false">
-        <appender-ref ref="SQL"/>
-    </logger>
-    <logger name="ai.platon.pulsar.common.collect" level="INFO" additivity="false">
-        <appender-ref ref="COLLECT"/>
-    </logger>
 
     <logger name="org.springframework.core" level="INFO"/>
     <logger name="org.springframework.core.env" level="INFO"/>
@@ -270,14 +47,9 @@
     <logger name="org.springframework.orm.jpa" level="DEBUG"/>
     <logger name="org.springframework.transaction" level="DEBUG"/>
 
-    <logger name="org.apache.hadoop.conf.Configuration" level="WARN"/>
     <logger name="org.apache.gora" level="ERROR"/>
-    <logger name="org.apache.zookeeper" level="ERROR"/>
-    <logger name="org.apache.solr" level="INFO"/>
     <logger name="org.apache.hadoop" level="WARN"/>
-    <logger name="io.netty" level="WARN"/>
-    <logger name="org.apache.hadoop.mapreduce.Job" level="WARN"/>
-    <logger name="io.netty.handler.logging" level="INFO"/>
+
     <logger name="dev.langchain4j.http.client.log" level="WARN" />
 
 </configuration>
