@@ -85,16 +85,19 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test selector with special characters`() = runEnhancedWebDriverTest(testURL, browser) { driver ->
+    fun `Given JS with escaped special characters When execute Then success`() = runEnhancedWebDriverTest(testURL, browser) { driver ->
         val selectors = """
 #itemList [data-id='1'] input[type='text']
         """.trimIndent().split("\n")
 
         selectors.forEach { selector ->
-            val selector0 = Strings.escapeForJsString(selector)
-            val expression = String.format("__pulsar_utils__.selectFirstText('%s')", selector0)
-            val result = driver.evaluateDetail(expression)
+            var result = driver.evaluateDetail("__pulsar_utils__.selectFirstText('$selector')")
             printlnPro(result)
+            assertNotNull(result)
+            assertNotNull(result.exception)
+
+            val safeSelector = Strings.escapeForJsString(selector)
+            result = driver.evaluateDetail("__pulsar_utils__.selectFirstText('$safeSelector')")
             assertNotNull(result)
             assertNull(result.exception)
         }
