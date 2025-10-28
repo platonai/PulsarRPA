@@ -3,7 +3,7 @@ package ai.platon.pulsar
 import ai.platon.pulsar.browser.FastWebDriverService
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.SimpleScriptConfuser
-import ai.platon.pulsar.browser.driver.chrome.dom.DomDebug
+import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.PageTarget

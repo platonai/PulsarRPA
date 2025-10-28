@@ -1,4 +1,4 @@
-package ai.platon.pulsar.browser.driver.chrome.dom
+package ai.platon.pulsar.browser.driver.chrome.dom.util
 
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMRect
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
@@ -12,75 +12,50 @@ object ScrollUtils {
      * Determine if a node is actually scrollable.
      *
      * Rules:
-     * - Check CSS overflow properties (scroll or auto)
-     * - Compare scrollRect vs clientRect dimensions
-     * - Special handling for iframe/body/html elements
-     * - Nested scroll container deduplication
-     *
-     * @param node The DOM node to check
-     * @return true if the node is scrollable
+     * - Respect CDP isScrollable early return
+     * - Require snapshot and rects
+     * - Compare scrollRect vs clientRect dimensions (+1 tolerance)
+     * - Allow scrolling only if CSS overflow allows (auto/scroll/overlay)
+     * - If no CSS info, allow only common scrollable container tags
      */
     fun isActuallyScrollable(node: DOMTreeNodeEx): Boolean {
+        // Respect CDP detection first
+        if (node.isScrollable == true) {
+            return true
+        }
+
         val snapshot = node.snapshotNode ?: return false
-        val styles = snapshot.computedStyles ?: emptyMap()
 
-        // Get overflow properties
-        val overflow = styles["overflow"]
-        val overflowX = styles["overflow-x"]
-        val overflowY = styles["overflow-y"]
+        // Get rects; both must exist
+        val clientRect = snapshot.clientRects ?: return false
+        val scrollRect = snapshot.scrollRects ?: return false
 
-        // Check if any overflow property indicates scrollability
-        val hasScrollOverflow = listOfNotNull(overflow, overflowX, overflowY)
-            .any { it == "scroll" || it == "auto" }
-
-        // Check if ALL overflow properties are explicitly hidden - if so, element is not scrollable
-        // REVIEW CHANGE: Only reject if ALL overflow properties are hidden, allowing mixed cases
-        // like "overflow-x: auto" + "overflow-y: hidden" to still be scrollable
-        val overflowProperties = listOfNotNull(overflow, overflowX, overflowY)
-        val allHidden = overflowProperties.isNotEmpty() && overflowProperties.all { it == "hidden" }
-
-        // If ALL overflow properties are hidden, element cannot be scrollable
-        if (allHidden) {
+        // Content larger than visible area indicates potential scrolling
+        val hasVerticalScroll = scrollRect.height > clientRect.height + 1.0
+        val hasHorizontalScroll = scrollRect.width > clientRect.width + 1.0
+        if (!hasVerticalScroll && !hasHorizontalScroll) {
             return false
         }
 
-        // Get rects
-        val clientRect = snapshot.clientRects
-        val scrollRect = snapshot.scrollRects
+        // Check computed CSS to ensure scrolling is allowed
+        val styles = snapshot.computedStyles
+        if (styles != null && styles.isNotEmpty()) {
+            val overflow = styles["overflow"]?.lowercase() ?: "visible"
+            val overflowX = styles["overflow-x"]?.lowercase() ?: overflow
+            val overflowY = styles["overflow-y"]?.lowercase() ?: overflow
 
-        if (clientRect == null || scrollRect == null) return false
+            // Only allow if any overflow property explicitly allows scrolling
+            val allows = overflow in setOf("auto", "scroll", "overlay") ||
+                overflowX in setOf("auto", "scroll", "overlay") ||
+                overflowY in setOf("auto", "scroll", "overlay")
 
-        // Special handling for iframe, body, html
+            return allows
+        }
+
+        // No CSS info: be conservative, allow only common scrollable containers
         val tag = node.nodeName.uppercase()
-        if (tag == "IFRAME" || tag == "FRAME") {
-            // Iframes are scrollable if they have scroll dimensions
-            return scrollRect.width > clientRect.width + 1.0 ||
-                   scrollRect.height > clientRect.height + 1.0
-        }
-
-        if (tag == "BODY" || tag == "HTML") {
-            // Body/HTML are scrollable if document is larger than viewport
-            return scrollRect.width > clientRect.width + 1.0 ||
-                   scrollRect.height > clientRect.height + 1.0
-        }
-
-        // For regular elements, check dimensions first as a strong indicator
-        val isHorizontallyScrollable = scrollRect.width > clientRect.width + 1.0
-        val isVerticallyScrollable = scrollRect.height > clientRect.height + 1.0
-        val hasDimensionBasedScrollability = isHorizontallyScrollable || isVerticallyScrollable
-
-        // If dimensions indicate scrollability but overflow is not set, it might be:
-        // 1. Computed styles not captured fully by CDP
-        // 2. Dynamic content where CSS is applied via inline styles or not captured
-        // So we use overflow as a hint but don't strictly require it
-        if (hasScrollOverflow) {
-            return hasDimensionBasedScrollability
-        }
-
-        // If overflow properties are not available or not set to scroll/auto,
-        // but dimensions clearly indicate scrollability, trust the dimensions
-        // This handles cases where CDP doesn't capture all computed styles
-        return hasDimensionBasedScrollability
+        val scrollableTags = setOf("DIV", "MAIN", "SECTION", "ARTICLE", "ASIDE", "BODY", "HTML")
+        return tag in scrollableTags
     }
 
     /**
@@ -167,12 +142,5 @@ object ScrollUtils {
         }
 
         return true
-    }
-
-    /**
-     * Calculate rect area for comparison.
-     */
-    private fun area(rect: DOMRect): Double {
-        return rect.width * rect.height
     }
 }

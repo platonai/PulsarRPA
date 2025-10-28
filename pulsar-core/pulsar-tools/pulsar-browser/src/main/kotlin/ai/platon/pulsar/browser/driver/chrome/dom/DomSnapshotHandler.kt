@@ -4,6 +4,7 @@ import ai.platon.cdt.kt.protocol.commands.DOMSnapshot
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMRect
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotNodeEx
+import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
 import ai.platon.pulsar.common.getLogger
 
 /**

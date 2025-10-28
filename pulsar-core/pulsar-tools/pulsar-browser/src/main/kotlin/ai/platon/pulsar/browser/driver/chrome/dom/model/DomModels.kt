@@ -1,6 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome.dom.model
 
-import ai.platon.pulsar.browser.driver.chrome.dom.CSSSelectorUtils
+import ai.platon.pulsar.browser.driver.chrome.dom.util.CSSSelectorUtils
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.FBNLocator
 import ai.platon.pulsar.browser.driver.chrome.dom.LocatorMap

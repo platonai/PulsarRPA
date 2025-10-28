@@ -1,6 +1,17 @@
-package ai.platon.pulsar.browser.driver.chrome.dom
+package ai.platon.pulsar.browser.driver.chrome.dom.util
 
-import ai.platon.pulsar.browser.driver.chrome.dom.model.*
+import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
+import ai.platon.pulsar.browser.driver.chrome.dom.model.CompactRect
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMInteractedElement
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMRect
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
+import ai.platon.pulsar.browser.driver.chrome.dom.model.NanoDOMTree
+import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotNodeEx
+import ai.platon.pulsar.browser.driver.chrome.dom.model.TargetTrees
+import ai.platon.pulsar.browser.driver.chrome.dom.model.TinyNode
+import java.util.AbstractMap
+import kotlin.math.round
 
 /**
  * Debugging helpers to summarize core DOM types for quick inspection.
@@ -230,7 +241,7 @@ object DomDebug {
     private fun xyOf(r: DOMRect?): Pair<Double, Double>? = r?.let { it.x to it.y }
     private fun xyOf(r: CompactRect?): Pair<Double, Double>? = r?.let { (it.x ?: 0.0) to (it.y ?: 0.0) }
 
-    private fun round1(v: Double): Double = kotlin.math.round(v * 10.0) / 10.0
+    private fun round1(v: Double): Double = round(v * 10.0) / 10.0
 
     private fun formatXYList(pairs: List<Pair<Double, Double>>, limit: Int = 20): String {
         if (pairs.isEmpty()) return "[]"
@@ -435,11 +446,11 @@ object DomDebug {
                 r == null -> missing++
                 r.width > 0 && r.height > 0 -> {
                     positive++
-                    if (hasNonZeroXY(r)) eligible += java.util.AbstractMap.SimpleEntry(k, s)
+                    if (hasNonZeroXY(r)) eligible += AbstractMap.SimpleEntry(k, s)
                 }
                 else -> {
                     zero++
-                    if (hasNonZeroXY(r)) eligible += java.util.AbstractMap.SimpleEntry(k, s)
+                    if (hasNonZeroXY(r)) eligible += AbstractMap.SimpleEntry(k, s)
                 }
             }
         }

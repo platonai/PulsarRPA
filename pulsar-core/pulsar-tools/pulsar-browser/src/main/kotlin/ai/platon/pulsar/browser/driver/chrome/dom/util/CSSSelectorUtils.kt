@@ -1,9 +1,8 @@
-package ai.platon.pulsar.browser.driver.chrome.dom
+package ai.platon.pulsar.browser.driver.chrome.dom.util
 
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.NodeType
 import java.util.Locale
-import kotlin.text.trim
 
 object CSSSelectorUtils {
 

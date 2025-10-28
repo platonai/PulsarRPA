@@ -1,4 +1,4 @@
-package ai.platon.pulsar.browser.driver.chrome.dom
+package ai.platon.pulsar.browser.driver.chrome.dom.util
 
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.StaticAttributes

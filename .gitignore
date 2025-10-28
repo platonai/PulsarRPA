@@ -119,3 +119,4 @@ application-private.properties
 /test-results/
 /release_notes.md
 /node_modules/
+*/**/py/dom/
