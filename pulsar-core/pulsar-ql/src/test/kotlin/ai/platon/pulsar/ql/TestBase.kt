@@ -7,6 +7,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.common.options.LoadOptionDefaults
+import ai.platon.pulsar.test.TestResourceUtil
 import org.junit.jupiter.api.Assumptions
 import org.slf4j.LoggerFactory
 import java.sql.ResultSet
@@ -55,8 +56,8 @@ abstract class TestBase {
 
     val logger = getLogger(this)
 
-    val productIndexUrl = TestResource.productIndexUrl
-    val productDetailUrl = TestResource.productDetailUrl
+    val productIndexUrl = TestResourceUtil.PRODUCT_INDEX_URL_ZH
+    val productDetailUrl = TestResourceUtil.PRODUCT_DETAIL_URL_ZH
 
     fun execute(sql: String, printResult: Boolean = true) {
         context.run { connection ->
