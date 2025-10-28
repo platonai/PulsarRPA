@@ -4,13 +4,17 @@ import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.persist.WebDb
+import ai.platon.pulsar.test.TestResourceUtil
 import ai.platon.pulsar.util.server.EnableMockServerApplication
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.client.TestRestTemplate
 
-@SpringBootTest(classes = [EnableMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(
+    classes = [EnableMockServerApplication::class],
+    webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
+)
 class TestWebSiteAccess {
 
     @Autowired
@@ -38,7 +42,7 @@ class TestWebSiteAccess {
 
     protected val warnUpUrl = "https://www.amazon.com/"
     protected val e2eOriginUrl = "https://www.amazon.com/"
-    protected val e2eProductUrl = "https://www.amazon.com/dp/B08PP5MSVB"
+    protected val e2eProductUrl = TestResourceUtil.PRODUCT_DETAIL_URL
 
     protected val resourceUrl2 = "https://www.amazon.com/robots.txt"
 
@@ -73,22 +77,27 @@ class TestWebSiteAccess {
      * @see [ai.platon.pulsar.test.mock2.server.MockSiteController.text]
      * */
     protected val plainTextUrl get() = "$baseURL/text"
+
     /**
      * @see [ai.platon.pulsar.test.mock2.server.MockSiteController.csv]
      * */
     protected val csvTextUrl get() = "$baseURL/csv"
+
     /**
      * @see [ai.platon.pulsar.test.mock2.server.MockSiteController.json]
      * */
     protected val jsonUrl get() = "$baseURL/json"
+
     /**
      * @see [ai.platon.pulsar.test.mock2.server.MockSiteController.robots]
      * */
     protected val robotsUrl get() = "$baseURL/robots.txt"
+
     /**
      * @see [ai.platon.pulsar.test.mock2.server.MockSiteController.amazonHome]
      * */
     protected val amazonHomeCopyUrl get() = "$baseURL/amazon/home.htm"
+
     /**
      * @see [ai.platon.pulsar.test.mock2.server.MockSiteController.amazonProduct]
      * */

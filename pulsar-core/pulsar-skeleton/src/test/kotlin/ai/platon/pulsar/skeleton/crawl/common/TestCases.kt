@@ -1,17 +1,17 @@
 package ai.platon.pulsar.skeleton.crawl.common
 
+
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.printlnPro
+import ai.platon.pulsar.common.urls.URLUtils.splitUrlArgs
+import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.skeleton.common.options.LoadOptionDefaults
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
-import ai.platon.pulsar.common.urls.URLUtils.splitUrlArgs
-import ai.platon.pulsar.common.printlnPro
-import ai.platon.pulsar.persist.metadata.PageCategory
+import ai.platon.pulsar.test.TestResourceUtil
 import com.google.common.collect.Lists
 import com.google.common.collect.Sets
 import org.apache.avro.util.Utf8
 import org.apache.commons.lang3.StringUtils
-
-
 import java.io.IOException
 import java.net.MalformedURLException
 import java.net.URL
@@ -21,7 +21,10 @@ import java.time.Instant
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.function.Consumer
-import kotlin.test.*
+import kotlin.test.Ignore
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Created by vincent on 16-7-20.
@@ -132,7 +135,7 @@ class TestCases {
     fun testSplitUrlArgs() {
         assertTrue { LoadOptionDefaults.storeContent }
 //        val configuredUrl = "https://www.amazon.com/dp/B08PP5MSVB -prst --expires PT1S --auto-flush --fetch-mode NATIVE --browser NONE"
-        val configuredUrl = "https://www.amazon.com/dp/B08PP5MSVB"
+        val configuredUrl = TestResourceUtil.PRODUCT_DETAIL_URL
         val (url, args) = splitUrlArgs(configuredUrl)
         assertEquals(configuredUrl, url)
         assertEquals("", args)

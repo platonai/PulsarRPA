@@ -53,6 +53,11 @@
             <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-tests-common</artifactId>
+            <scope>test</scope>
+        </dependency>
 
     </dependencies>
 

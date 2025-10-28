@@ -4,6 +4,7 @@ import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.test.TestResourceUtil
 import kotlinx.coroutines.delay
 import kotlin.test.Test
 
@@ -14,8 +15,8 @@ import kotlin.test.Test
 class WebDriverSimpleTests: WebDriverTestBase() {
     companion object {
         // Mock EC server URLs for testing
-        const val PRODUCT_LIST_URL = "http://localhost:18080/ec/b?node=1292115012"
-        const val PRODUCT_DETAIL_URL = "http://localhost:18080/ec/dp/B0E000001"
+        const val PRODUCT_LIST_URL = TestResourceUtil.MOCK_PRODUCT_LIST_URL
+        const val PRODUCT_DETAIL_URL = TestResourceUtil.MOCK_PRODUCT_DETAIL_URL
     }
 
     private val url = "https://www.amazon.com/"

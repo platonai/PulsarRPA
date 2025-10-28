@@ -6,16 +6,9 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
 object BasicTestHelper {
     val session = PulsarContexts.getOrCreateSession()
 
-    // TODO: use a mock site for stability and speed: https://mock-product-list.lovable.app/
-    const val PRODUCT_LIST_URL = "https://www.amazon.com/b?node=1292115011"
-
-    // TODO: use a mock site for stability and speed: https://mock-ecommerce.lovable.app/
-    // or local host: http://localhost:12345/generated/mock-amazon/product
-    const val PRODUCT_DETAIL_URL = "https://www.amazon.com/dp/B08PP5MSVB"
-
     val productURLs = mapOf(
-        "productListPage" to PRODUCT_LIST_URL,
-        "productDetailPage" to PRODUCT_DETAIL_URL
+        "productListPage" to TestResourceUtil.PRODUCT_LIST_URL,
+        "productDetailPage" to TestResourceUtil.PRODUCT_DETAIL_URL
     )
 
     fun ensurePages() {

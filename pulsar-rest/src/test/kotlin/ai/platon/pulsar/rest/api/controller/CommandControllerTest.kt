@@ -1,7 +1,7 @@
 package ai.platon.pulsar.rest.api.controller
 
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
-import ai.platon.pulsar.rest.api.TestHelper.PRODUCT_DETAIL_URL
+import ai.platon.pulsar.rest.api.TestHelper.MOCK_PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.entities.CommandRequest
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.rest.api.entities.CommandStatus
@@ -77,7 +77,7 @@ class CommandControllerTest : ScrapeControllerTestBase() {
     fun `test executeCommand with X-SQL + sync mode`() {
         val sqlTemplate = sqlTemplates["productDetailPage"]!!.template
         val request = CommandRequest(
-            PRODUCT_DETAIL_URL,
+            MOCK_PRODUCT_DETAIL_URL,
             xsql = sqlTemplate,
             mode = "sync",
         )

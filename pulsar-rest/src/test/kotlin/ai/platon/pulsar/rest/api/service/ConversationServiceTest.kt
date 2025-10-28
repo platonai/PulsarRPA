@@ -2,15 +2,15 @@ package ai.platon.pulsar.rest.api.service
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.ChatModelFactory
-import ai.platon.pulsar.rest.api.TestHelper.PRODUCT_DETAIL_URL
-import ai.platon.pulsar.rest.api.TestHelper.PRODUCT_LIST_URL
+import ai.platon.pulsar.rest.api.TestHelper.MOCK_PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.common.MockEcServerTestBase
 import ai.platon.pulsar.rest.api.config.MockEcServerConfiguration
 import ai.platon.pulsar.rest.api.entities.CommandRequest
-import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.rest.api.entities.PromptRequest
+import ai.platon.pulsar.test.TestResourceUtil
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
@@ -205,7 +205,7 @@ Page summary prompt: Provide a brief introduction of this product.
      * */
     @Test
     fun `When chat about a page then the result is not empty`() {
-        val request = PromptRequest(PRODUCT_LIST_URL, "Tell me something about the page")
+        val request = PromptRequest(TestResourceUtil.MOCK_PRODUCT_LIST_URL, "Tell me something about the page")
 
         val response = runBlocking { conversationService.chat(request) }
         printlnPro(response.toString())
@@ -221,7 +221,7 @@ Page summary prompt: Provide a brief introduction of this product.
             get the text of the element with id 'title'
         """.trimIndent().split("\n")
         val request = PromptRequest(
-            PRODUCT_DETAIL_URL, "Tell me something about the page", "", actions = actions
+            MOCK_PRODUCT_DETAIL_URL, "Tell me something about the page", "", actions = actions
         )
 
         val response = runBlocking { conversationService.chat(request) }

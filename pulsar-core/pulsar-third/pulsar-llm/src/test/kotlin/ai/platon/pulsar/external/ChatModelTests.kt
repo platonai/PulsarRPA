@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.dom.Documents
+import ai.platon.pulsar.test.TestResourceUtil
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeAll
@@ -16,7 +17,7 @@ import kotlin.test.assertTrue
 class ChatModelTests {
 
     companion object {
-        private val url = "https://www.amazon.com/dp/B08PP5MSVB"
+        private val url = TestResourceUtil.PRODUCT_DETAIL_URL
         private val args = "-requireSize 200000"
         private val productHtml = ResourceLoader.readString("pages/amazon/B08PP5MSVB.original.htm")
         private val productText = ResourceLoader.readString("prompts/product.txt")

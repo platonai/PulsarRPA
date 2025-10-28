@@ -3,7 +3,7 @@ package ai.platon.pulsar.rest.api.service
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.external.ChatModelFactory
-import ai.platon.pulsar.rest.api.TestHelper.PRODUCT_DETAIL_URL
+import ai.platon.pulsar.rest.api.TestHelper.MOCK_PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.common.MockEcServerTestBase
 import ai.platon.pulsar.rest.api.config.MockEcServerConfiguration
 import ai.platon.pulsar.common.printlnPro
@@ -39,7 +39,7 @@ class ExtractServiceTest : MockEcServerTestBase() {
 
     @Test
     fun `test extract`() {
-        val request = PromptRequest(PRODUCT_DETAIL_URL, "title, price, images")
+        val request = PromptRequest(MOCK_PRODUCT_DETAIL_URL, "title, price, images")
         val response = runBlocking { extractService.extract(request) }
         printlnPro(response.toString())
         assertTrue { response.isNotEmpty() }
@@ -54,7 +54,7 @@ class ExtractServiceTest : MockEcServerTestBase() {
             get the text of the element with id 'title'
         """.trimIndent().split("\n")
         val request = PromptRequest(
-            PRODUCT_DETAIL_URL, "title, price, images", "", actions = actions
+            MOCK_PRODUCT_DETAIL_URL, "title, price, images", "", actions = actions
         )
 
         val response = runBlocking { extractService.extract(request) }

@@ -15,7 +15,7 @@ fun main() {
     PulsarSettings.withDefaultBrowser().withSPA()
 
     val session = AgenticContexts.createSession()
-    val url = "https://www.amazon.com/dp/B08PP5MSVB"
+    val url = TestResourceUtil.PRODUCT_DETAIL_URL
 
     val prompts = """
 move cursor to the element with id 'title' and click it

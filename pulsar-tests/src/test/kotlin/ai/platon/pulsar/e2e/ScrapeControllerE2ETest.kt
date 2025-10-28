@@ -3,6 +3,7 @@ package ai.platon.pulsar.e2e
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.integration.rest.IntegrationTestBase
+import ai.platon.pulsar.test.TestResourceUtil
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import kotlin.test.Ignore
@@ -27,7 +28,7 @@ class ScrapeControllerE2ETest : IntegrationTestBase() {
     @Test
     fun testScraping() {
         testScraping("https://www.amazon.com")
-        testScraping("https://www.amazon.com/dp/B08PP5MSVB")
+        testScraping(TestResourceUtil.PRODUCT_DETAIL_URL)
 
         testScraping("https://www.jd.com/")
         testScraping("https://www.ebay.com/")
@@ -36,7 +37,7 @@ class ScrapeControllerE2ETest : IntegrationTestBase() {
     @Test
     fun testLLMScraping() {
         testLLMScraping("https://www.amazon.com")
-        testLLMScraping("https://www.amazon.com/dp/B08PP5MSVB")
+        testLLMScraping(TestResourceUtil.PRODUCT_DETAIL_URL)
     }
 }
 

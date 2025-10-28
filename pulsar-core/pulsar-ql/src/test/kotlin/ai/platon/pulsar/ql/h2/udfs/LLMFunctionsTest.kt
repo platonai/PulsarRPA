@@ -4,6 +4,7 @@ import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.ql.TestBase
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
+import ai.platon.pulsar.test.TestResourceUtil
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Ignore
@@ -11,7 +12,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class LLMFunctionsTest : TestBase() {
-    val url = "https://www.amazon.com/dp/B08PP5MSVB"
+    val url = TestResourceUtil.PRODUCT_DETAIL_URL
     val sql = """
   select
       llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,

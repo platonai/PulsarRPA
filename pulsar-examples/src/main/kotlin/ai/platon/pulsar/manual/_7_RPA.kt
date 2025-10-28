@@ -53,7 +53,7 @@ internal class RPACrawler(private val session: PulsarSession = createSession()) 
 fun main() {
     PulsarSettings.withDefaultBrowser()
 
-    val url = "https://www.amazon.com/dp/B08PP5MSVB"
+    val url = TestResourceUtil.PRODUCT_DETAIL_URL
     val args = "-refresh -parse"
     val session = createSession()
     val crawler = RPACrawler(session)

@@ -125,5 +125,10 @@
             <artifactId>junit-jupiter-api</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-tests-common</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

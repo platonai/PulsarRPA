@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.browser.BrowserProfileMode
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.ChatModelFactory
-import ai.platon.pulsar.rest.api.TestHelper.PRODUCT_DETAIL_URL
+import ai.platon.pulsar.rest.api.TestHelper.MOCK_PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.common.MockEcServerTestBase
 import ai.platon.pulsar.rest.api.config.MockEcServerConfiguration
 import ai.platon.pulsar.common.printlnPro
@@ -43,7 +43,7 @@ class CommandServiceTest : MockEcServerTestBase() {
 
     @Test
     fun `test executeCommand WITHOUT instructions`() {
-        val request = CommandRequest(PRODUCT_DETAIL_URL)
+        val request = CommandRequest(MOCK_PRODUCT_DETAIL_URL)
         val status = runBlocking { commandService.executeCommand(request) }
         val result = status.commandResult
         // nothing to do if page is not loaded
@@ -63,7 +63,7 @@ class CommandServiceTest : MockEcServerTestBase() {
             get the text of the element with id 'title'
         """.trimIndent().split("\n")
         val request = CommandRequest(
-            PRODUCT_DETAIL_URL, "",
+            MOCK_PRODUCT_DETAIL_URL, "",
             pageSummaryPrompt = "Tell me something about the page",
             onPageReadyActions = actions
         )
@@ -87,10 +87,10 @@ class CommandServiceTest : MockEcServerTestBase() {
     fun `test executeCommand with onBrowserLaunchedActions`() {
         val actions = """
             clear cookies
-            goto origin url of $PRODUCT_DETAIL_URL
+            goto origin url of $MOCK_PRODUCT_DETAIL_URL
         """.trimIndent().split("\n")
         val request = CommandRequest(
-            PRODUCT_DETAIL_URL, "",
+            MOCK_PRODUCT_DETAIL_URL, "",
             onBrowserLaunchedActions = actions,
             pageSummaryPrompt = "Tell me something about the page",
         )
@@ -113,7 +113,7 @@ class CommandServiceTest : MockEcServerTestBase() {
     @Test
     fun `test executeCommand with pageSummaryPrompt`() {
         val request = CommandRequest(
-            PRODUCT_DETAIL_URL,
+            MOCK_PRODUCT_DETAIL_URL,
             pageSummaryPrompt = "Give me the product name",
         )
 
@@ -137,7 +137,7 @@ class CommandServiceTest : MockEcServerTestBase() {
     @Test
     fun `test executeCommand with dataExtractionRules`() {
         val request = CommandRequest(
-            PRODUCT_DETAIL_URL,
+            MOCK_PRODUCT_DETAIL_URL,
             dataExtractionRules = "product name, ratings, price"
         )
 
@@ -169,7 +169,7 @@ class CommandServiceTest : MockEcServerTestBase() {
 //        assertTrue { testURL.matches(testRegex) }
 
         val request = CommandRequest(
-            PRODUCT_DETAIL_URL,
+            MOCK_PRODUCT_DETAIL_URL,
             uriExtractionRules = "links containing /dp/"
         )
 
@@ -197,7 +197,7 @@ class CommandServiceTest : MockEcServerTestBase() {
     @Test
     fun `test translate plain command to CommandRequest with X-SQL`() {
         val request = CommandRequest(
-            PRODUCT_DETAIL_URL,
+            MOCK_PRODUCT_DETAIL_URL,
             xsql = """
                 select
                   dom_base_uri(dom) as url,
@@ -231,7 +231,7 @@ class CommandServiceTest : MockEcServerTestBase() {
     @Test
     fun `test executeCommand with uriExtractionRules in regex`() {
         val request = CommandRequest(
-            PRODUCT_DETAIL_URL,
+            MOCK_PRODUCT_DETAIL_URL,
             uriExtractionRules = "Regex: http://localhost:8182/ec/dp/\\w+"
         )
 

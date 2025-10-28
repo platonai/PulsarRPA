@@ -41,7 +41,7 @@ interface WebPage : Comparable<WebPage> {
 
     /**
      * The key associated with the web page, typically used for indexing or identification purposes.
-     * The key is defined as the reserved url, for example, the key for page "https://www.amazon.com/dp/B08PP5MSVB"
+     * The key is defined as the reserved url, for example, the key for page TestResourceUtil.PRODUCT_DETAIL_URL
      * is "uk.co.amazon.www:https/dp/B08PP5MSVB".
      */
     val key: String
