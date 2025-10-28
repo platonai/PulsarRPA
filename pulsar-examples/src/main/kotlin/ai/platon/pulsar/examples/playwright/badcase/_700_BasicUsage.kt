@@ -3,6 +3,7 @@ package ai.platon.pulsar.examples.playwright.badcase
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.test.TestResourceUtil
 import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
 

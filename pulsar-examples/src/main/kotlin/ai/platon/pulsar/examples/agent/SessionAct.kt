@@ -23,7 +23,6 @@ class SessionAct {
     }
 
     private val session = AgenticContexts.getOrCreateSession(spa = true)
-    val context = session.context
 
     suspend fun run() {
         check(session.isActive) { "Session is not active" }
@@ -33,7 +32,7 @@ class SessionAct {
         // one more short wait after potential start (shorter, less verbose)
         val starter = DemoSiteStarter()
         starter.start(url)
-        context.registerClosable(starter)
+        session.registerClosable(starter)
 
         val driver = session.createBoundDriver()
 
@@ -67,6 +66,21 @@ class SessionAct {
         step("Capture body text in the live DOM after clicking 3rd link (snippet)")
         content = driver.selectFirstTextOrNull("body")
         result("body snippet", content?.take(160))
+
+        step("Action: go back")
+        actOptions = ActionOptions("go back")
+        agent = session.act(actOptions)
+        result("action result", agent)
+
+        step("Action: open the 4th link in new tab")
+        actOptions = ActionOptions("open the 4th link in new tab")
+        agent = session.act(actOptions)
+        result("action result", agent)
+
+        step("Action: switch to the newly open tab")
+        actOptions = ActionOptions("switch to the newly open tab")
+        agent = session.act(actOptions)
+        result("action result", agent)
 
         // More typical session.act() examples
 
@@ -152,7 +166,7 @@ class SessionAct {
         logger.info("Sample page content snippet: ${content?.take(120)}")
         logger.info("Last action result: $agent")
 
-        context.close()
+        session.context.close()
     }
 }
 
