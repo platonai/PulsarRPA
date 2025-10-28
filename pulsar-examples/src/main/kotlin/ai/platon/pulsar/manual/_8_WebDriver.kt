@@ -5,6 +5,7 @@ import ai.platon.pulsar.agentic.context.AgenticContexts
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.test.TestResourceUtil
 import org.slf4j.LoggerFactory
 
 internal class WebDriverDemo(private val session: AgenticSession = AgenticContexts.createSession()) {

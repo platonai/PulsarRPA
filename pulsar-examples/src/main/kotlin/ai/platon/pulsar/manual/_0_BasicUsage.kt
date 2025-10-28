@@ -2,6 +2,7 @@ package ai.platon.pulsar.manual
 
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.test.TestResourceUtil
 import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
 

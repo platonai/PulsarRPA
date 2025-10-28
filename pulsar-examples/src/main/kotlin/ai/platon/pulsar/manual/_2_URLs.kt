@@ -8,6 +8,7 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.common.url.CompletableListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
+import ai.platon.pulsar.test.TestResourceUtil
 
 /**
  * Demonstrates various URLs in Browser4.

@@ -2,6 +2,7 @@ package ai.platon.pulsar.examples.llm
 
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.test.TestResourceUtil
 
 /**
  * Demonstrates chat with a webpage.
