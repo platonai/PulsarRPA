@@ -25,7 +25,8 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
         includeStyles: Boolean = true,
         includePaintOrder: Boolean = true,
         includeDomRects: Boolean = true,
-        includeAbsoluteCoords: Boolean = true
+        includeAbsoluteCoords: Boolean = true,
+        devicePixelRatio: Double = 1.0
     ): Map<Int, SnapshotNodeEx> {
         val computedStyles = if (includeStyles) REQUIRED_COMPUTED_STYLES else emptyList()
         val capture = try {
@@ -55,7 +56,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
 
             val bounds = layout.bounds
             // The offset rect of nodes. Only available when includeDOMRects is set to true
-            val offsetRects = layout.offsetRects
+            // val offsetRects = layout.offsetRects // not used currently
             val scrollRects = layout.scrollRects ?: emptyList()
             val clientRects = layout.clientRects ?: emptyList()
             val paintOrders = if (includePaintOrder) layout.paintOrders ?: emptyList() else emptyList()
@@ -96,6 +97,26 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
                 }
             }
 
+            fun parseBoundsRow(rowIdx: Int): DOMRect? {
+                val arr = bounds.getOrNull(rowIdx) ?: return null
+                return when (arr.size) {
+                    8 -> DOMRect.fromBoundsArray(arr)
+                    4, 5, 6, 7 -> DOMRect.fromRectArray(arr)
+                    else -> null
+                }
+            }
+
+            fun scaleRectToCssPx(rect: DOMRect?): DOMRect? {
+                if (rect == null) return null
+                val dpr = if (devicePixelRatio.takeIf { it.isFinite() && it > 0 } != null) devicePixelRatio else 1.0
+                return if (dpr == 1.0) rect else DOMRect(
+                    rect.x / dpr,
+                    rect.y / dpr,
+                    rect.width / dpr,
+                    rect.height / dpr
+                )
+            }
+
             for (row in 0 until rows) {
                 val nIdx = nodeIndex.getOrNull(row) ?: continue
                 val backendId = backendIds.getOrNull(nIdx) ?: continue
@@ -105,8 +126,9 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
                 val cursor = styles["cursor"]
                 val isClickable = cursor in setOf("pointer", "hand")
 
-                // CDP layout.bounds are already document-absolute; treat them as absoluteBounds directly
-                val boundsRect = DOMRect.fromBoundsArray(bounds.getOrNull(row) ?: emptyList())
+                // Parse layout bounds and scale to CSS pixels
+                val rawBoundsRect = parseBoundsRow(row)
+                val boundsRect = scaleRectToCssPx(rawBoundsRect)
                 val absoluteBounds = if (includeAbsoluteCoords) boundsRect else null
 
                 val snap = SnapshotNodeEx(
@@ -127,7 +149,13 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
 
         logger.info("Bounds summary: {}", DomDebug.summarize(byBackend))
 
-        tracer?.debug("DOMSnapshot captured | entries={} rowsApprox={} styles={} paintOrder={}", byBackend.size, totalRows, includeStyles, includePaintOrder)
+        tracer?.debug(
+            "DOMSnapshot captured | entries={} rowsApprox={} styles={} paintOrder={}",
+            byBackend.size,
+            totalRows,
+            includeStyles,
+            includePaintOrder
+        )
         return byBackend
     }
 

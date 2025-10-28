@@ -12,7 +12,6 @@ import ai.platon.pulsar.common.getLogger
 import com.ibm.icu.util.TimeZone
 import java.awt.Dimension
 import java.util.*
-import kotlin.math.abs
 
 /**
  * CDP-backed implementation of DomService using RemoteDevTools.
@@ -76,10 +75,14 @@ class ChromeCdpDomService(
             .onFailure { e ->
                 logger.warn("DOM tree collection failed | frameId={} | err={}", target.frameId, e.toString())
                 tracer?.trace("DOM tree exception", e)
-            }
-            .getOrElse { DOMTreeNodeEx() }
+            }.getOrElse { DOMTreeNodeEx() }
         val domByBackend = runCatching { domTree.lastBackendNodeLookup() }.getOrDefault(emptyMap())
         timings["dom_tree"] = System.currentTimeMillis() - domStart
+
+        // Get device pixel ratio first for snapshot scaling
+        val dprStart = System.currentTimeMillis()
+        val devicePixelRatio = runCatching { getDevicePixelRatio() }.getOrDefault(1.0)
+        timings["dpr"] = System.currentTimeMillis() - dprStart
 
         // Fetch snapshot (resilient)
         val snapshotStart = System.currentTimeMillis()
@@ -89,7 +92,8 @@ class ChromeCdpDomService(
                     includeStyles = options.includeStyles,
                     includePaintOrder = options.includePaintOrder,
                     includeDomRects = options.includeDOMRects,
-                    includeAbsoluteCoords = true // absolute coordinates help analysis
+                    includeAbsoluteCoords = true,
+                    devicePixelRatio = devicePixelRatio
                 )
             }.onFailure { e ->
                 logger.warn("Snapshot collection failed | err={} ", e.toString())
@@ -99,8 +103,6 @@ class ChromeCdpDomService(
             emptyMap()
         }
         timings["snapshot"] = System.currentTimeMillis() - snapshotStart
-
-        val devicePixelRatio = getDevicePixelRatio()
 
         // Build AX mappings
         val enhancedAx = axResult.nodes.map { it.toEnhanced() }
@@ -150,48 +152,102 @@ class ChromeCdpDomService(
         // Build stacking context map for z-index analysis
         val stackingContextMap = buildStackingContextMap(trees.snapshotByBackendId)
 
-        // Merge trees recursively with enhanced metrics
-        fun merge(node: DOMTreeNodeEx, ancestors: List<DOMTreeNodeEx>, depth: Int = 0): DOMTreeNodeEx {
+        data class FrameNode(val node: DOMTreeNodeEx)
+
+        fun visibilityStyleCheck(snap: SnapshotNodeEx?): Boolean? {
+            snap ?: return null
+            val styles = snap.computedStyles ?: return null
+            val display = styles["display"]
+            if (display != null && display.equals("none", true)) return false
+            val visibility = styles["visibility"]
+            if (visibility != null && visibility.equals("hidden", true)) return false
+            val opacity = styles["opacity"]?.toDoubleOrNull()
+            if (opacity != null && opacity <= 0.0) return false
+            val pointerEvents = styles["pointer-events"]
+            if (pointerEvents != null && pointerEvents.equals("none", true)) return false
+            return true
+        }
+
+        fun isElementVisibleAccordingToAllParents(node: DOMTreeNodeEx, htmlFrames: List<DOMTreeNodeEx>): Boolean {
+            val snap = node.snapshotNode ?: return false
+            var current = snap.bounds?.let { DOMRect(it.x, it.y, it.width, it.height) } ?: return false
+
+            // Reverse iterate through frame stack
+            for (frame in htmlFrames.asReversed()) {
+                val tag = frame.nodeName.uppercase()
+                val fsnap = frame.snapshotNode
+                if (tag == "IFRAME" || tag == "FRAME") {
+                    val fb = fsnap?.bounds
+                    if (fb != null) {
+                        current = DOMRect(current.x + fb.x, current.y + fb.y, current.width, current.height)
+                    }
+                }
+                if (tag == "HTML" && fsnap?.scrollRects != null && fsnap.clientRects != null) {
+                    val viewportLeft = 0.0
+                    val viewportTop = 0.0
+                    val viewportRight = fsnap.clientRects!!.width
+                    val viewportBottom = fsnap.clientRects!!.height
+
+                    val adjustedX = current.x - fsnap.scrollRects!!.x
+                    val adjustedY = current.y - fsnap.scrollRects!!.y
+
+                    val intersects = adjustedX < viewportRight &&
+                            adjustedX + current.width > viewportLeft &&
+                            adjustedY < viewportBottom + 1000 &&
+                            adjustedY + current.height > viewportTop - 1000
+                    if (!intersects) return false
+
+                    // Keep adjustment like Python for proper propagation
+                    current = DOMRect(adjustedX, adjustedY, current.width, current.height)
+                }
+            }
+            return true
+        }
+
+        // Merge trees recursively with enhanced metrics and frame-aware offsets
+        fun merge(
+            node: DOMTreeNodeEx,
+            ancestors: List<DOMTreeNodeEx>,
+            htmlFrames: List<DOMTreeNodeEx>,
+            offsetX: Double,
+            offsetY: Double,
+            depth: Int = 0
+        ): DOMTreeNodeEx {
             val backendId = node.backendNodeId
 
-            // Get snapshot data
+            // Get snapshot and AX
             val snap = if (options.includeSnapshot && backendId != null) trees.snapshotByBackendId[backendId] else null
-
-            // Get AX data
             val ax = if (options.includeAX && backendId != null) trees.axByBackendId[backendId] else null
 
-            // Calculate enhanced metrics
-            val evaluatedNode = node.copy(snapshotNode = snap, axNode = ax)
+            // Calculate absolute position based on accumulated offsets
+            val absolutePosition = snap?.bounds?.let { DOMRect(it.x + offsetX, it.y + offsetY, it.width, it.height) }
 
-            // Calculate scroll ability with enhanced logic
-            val isScrollable = if (options.includeScrollAnalysis) {
-                calculateScrollability(evaluatedNode, snap, ancestors)
-            } else null
-
-            // Calculate visibility with stacking context consideration
+            // Visibility: style check first, then frame viewport check
             val isVisible = if (options.includeVisibility) {
-                calculateVisibility(evaluatedNode, snap, stackingContextMap[backendId])
+                val styleVisible = visibilityStyleCheck(snap)
+                if (styleVisible == false) false else isElementVisibleAccordingToAllParents(
+                    node.copy(snapshotNode = snap), htmlFrames
+                )
             } else null
 
-            // Calculate interactivity with paint order
+            // Interactivity and indices
+            val isScrollable = if (options.includeScrollAnalysis) {
+                calculateScrollability(node, snap, ancestors)
+            } else null
+
             val isInteractable = if (options.includeInteractivity) {
-                calculateInteractivity(evaluatedNode, snap, paintOrderMap[backendId])
+                calculateInteractivity(node, snap, null)
             } else null
 
-            // Calculate interactive index based on paint order and stacking context
             val interactiveIndex = if (options.includeInteractivity && snap?.paintOrder != null) {
-                calculateInteractiveIndex(snap, stackingContextMap[backendId], paintOrderMap[backendId])
+                calculateInteractiveIndex(snap, null, snap.paintOrder)
             } else null
 
-            // Calculate absolute position from snapshot absolute bounds
-            val absolutePosition = snap?.absoluteBounds
-
-            // Calculate XPath
+            // XPath and hashes
             val xpath = runCatching { XPathUtils.generateXPath(node, ancestors, siblingMap) }
                 .onFailure { tracer?.trace("XPath generation failed | nodeId={} | {} ", node.nodeId, it.toString()) }
                 .getOrNull()
 
-            // Calculate hashes with enhanced logic
             val parentBranchHash = if (ancestors.isNotEmpty()) {
                 runCatching { HashUtils.parentBranchHash(ancestors) }
                     .onFailure { tracer?.trace("Parent branch hash failed | nodeId={} | {} ", node.nodeId, it.toString())}
@@ -202,8 +258,7 @@ class ChromeCdpDomService(
                 .onFailure { tracer?.trace("Element hash failed | nodeId={} | {} ", node.nodeId, it.toString()) }
                 .getOrNull()
 
-            // Merge children recursively with depth tracking
-            val mergedNode = node.copy(
+            var mergedNode = node.copy(
                 snapshotNode = snap,
                 axNode = ax,
                 isScrollable = isScrollable,
@@ -217,9 +272,46 @@ class ChromeCdpDomService(
             )
 
             val newAncestors = ancestors + mergedNode
-            val mergedChildren = node.children.map { merge(it, newAncestors, depth + 1) }
-            val mergedShadowRoots = node.shadowRoots.map { merge(it, newAncestors, depth + 1) }
-            val mergedContentDocument = node.contentDocument?.let { merge(it, newAncestors, depth + 1) }
+
+            // Update frame stack and offsets for descendants
+            var nextHtmlFrames = htmlFrames
+            var nextOffsetX = offsetX
+            var nextOffsetY = offsetY
+
+            val tag = node.nodeName.uppercase()
+            if (tag == "HTML") {
+                nextHtmlFrames = htmlFrames + mergedNode
+                val s = snap
+                if (s?.scrollRects != null) {
+                    nextOffsetX -= s.scrollRects.x
+                    nextOffsetY -= s.scrollRects.y
+                }
+            }
+
+            val mergedChildren = node.children.map { child ->
+                merge(child, newAncestors, nextHtmlFrames, nextOffsetX, nextOffsetY, depth + 1)
+            }
+
+            val mergedShadowRoots = node.shadowRoots.map { shadow ->
+                merge(shadow, newAncestors, nextHtmlFrames, nextOffsetX, nextOffsetY, depth + 1)
+            }
+
+            var mergedContentDocument: DOMTreeNodeEx? = null
+            if (node.contentDocument != null) {
+                // If current node is an IFRAME/FRAME, push frame and add its bounds to offset for content doc
+                var cFrames = nextHtmlFrames
+                var cOffsetX = nextOffsetX
+                var cOffsetY = nextOffsetY
+                if (tag == "IFRAME" || tag == "FRAME") {
+                    cFrames = nextHtmlFrames + mergedNode
+                    val b = snap?.bounds
+                    if (b != null) {
+                        cOffsetX += b.x
+                        cOffsetY += b.y
+                    }
+                }
+                mergedContentDocument = merge(node.contentDocument, newAncestors, cFrames, cOffsetX, cOffsetY, depth + 1)
+            }
 
             return mergedNode.copy(
                 children = mergedChildren,
@@ -228,7 +320,7 @@ class ChromeCdpDomService(
             )
         }
 
-        val merged = merge(trees.domTree, emptyList())
+        val merged = merge(trees.domTree, emptyList(), emptyList(), 0.0, 0.0)
         lastEnhancedRoot = merged
         return merged
     }
@@ -648,8 +740,10 @@ class ChromeCdpDomService(
     ): Boolean? {
         if (snap == null) return null
 
-        // Use existing ScrollUtils for basic scrollability detection
-        val basicScrollable = ScrollUtils.isActuallyScrollable(node)
+        // Use the provided snapshot for basic detection (prevents null snapshotNode on pre-merge node)
+        val basicScrollable = ScrollUtils.isActuallyScrollable(
+            node.copy(snapshotNode = snap)
+        )
         if (!basicScrollable) return false
 
         // Enhanced logic for iframe/body/html special cases
@@ -678,10 +772,10 @@ class ChromeCdpDomService(
 
             // Check if current element has significantly different scroll area
             ancestorScrollAreas.none { ancestorArea ->
-                abs(ancestorArea.x - currentScrollArea.x) < 5 &&
-                        abs(ancestorArea.y - currentScrollArea.y) < 5 &&
-                        abs(ancestorArea.width - currentScrollArea.width) < 5 &&
-                        abs(ancestorArea.height - currentScrollArea.height) < 5
+                kotlin.math.abs(ancestorArea.x - currentScrollArea.x) < 5 &&
+                        kotlin.math.abs(ancestorArea.y - currentScrollArea.y) < 5 &&
+                        kotlin.math.abs(ancestorArea.width - currentScrollArea.width) < 5 &&
+                        kotlin.math.abs(ancestorArea.height - currentScrollArea.height) < 5
             }
         } else {
             basicScrollable

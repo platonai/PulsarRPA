@@ -100,7 +100,8 @@ open class WebDriverTestBase : TestWebSiteAccess() {
         webDriverService.open(url, driver, scrollCount)
 
     // Helper to DFS find the first node by id in the enhanced tree
-    protected fun findNodeById(root: DOMTreeNodeEx, id: String): DOMTreeNodeEx? {
+    protected fun findNodeById(root: DOMTreeNodeEx?, id: String): DOMTreeNodeEx? {
+        root ?: return null
         if (root.attributes["id"] == id) return root
         root.children.forEach { findNodeById(it, id)?.let { return it } }
         root.shadowRoots.forEach { findNodeById(it, id)?.let { return it } }
