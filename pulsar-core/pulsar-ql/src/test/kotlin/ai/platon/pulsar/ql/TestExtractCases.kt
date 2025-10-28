@@ -1,6 +1,5 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.persist.model.WebPageFormatter
 import ai.platon.pulsar.test.TestResourceUtil
 import kotlin.test.Test
 
