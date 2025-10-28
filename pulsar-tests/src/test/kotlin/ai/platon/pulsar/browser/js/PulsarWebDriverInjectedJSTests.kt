@@ -3,6 +3,7 @@ package ai.platon.pulsar.browser.js
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.browser.FastWebDriverService
 import ai.platon.pulsar.browser.common.ScriptLoader
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
@@ -81,6 +82,22 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
         assertNotNull(json) { "__pulsar_utils__.getConfig() should be evaluated as a JSON string" }
         assertTrue { json.contains("META_INFORMATION_ID") }
         assertTrue { json.contains("propertyNames") }
+    }
+
+    @Test
+    fun `test selector with special characters`() = runEnhancedWebDriverTest(testURL, browser) { driver ->
+        val selectors = """
+#itemList [data-id='1'] input[type='text']
+        """.trimIndent().split("\n")
+
+        selectors.forEach { selector ->
+            val selector0 = Strings.escapeForJsString(selector)
+            val expression = String.format("__pulsar_utils__.selectFirstText('%s')", selector0)
+            val result = driver.evaluateDetail(expression)
+            printlnPro(result)
+            assertNotNull(result)
+            assertNull(result.exception)
+        }
     }
 
     @Test
