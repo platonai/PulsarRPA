@@ -45,6 +45,14 @@ ai.platon.pulsar.browser.driver.chrome.dom.ChromeDomServiceIsScrollableTest#isSc
 
 ai.platon.pulsar.browser.driver.chrome.dom.ChromeDomServiceIsScrollableTest#isScrollable special - body html and toggle overflow
 
+## PageStateTracker
+
+1. 能否避免js？
+2. 能否避免全局变量？可能会被检测
+3. 还有哪些实现方法？
+4. 选择效率高的方法
+5. 判断策略
+
 ## Notes
 
 - if a tool call not handled by parser in ToolCallExecutor, fallback to ToolCallExecutor.eval()
