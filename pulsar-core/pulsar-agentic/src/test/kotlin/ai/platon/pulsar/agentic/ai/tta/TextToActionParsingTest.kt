@@ -38,7 +38,7 @@ class TextToActionParsingTest {
         assertEquals("#submit", ad.toolCall!!.arguments["selector"])
         assertFalse(ad.isComplete)
         assertNull(ad.summary)
-        assertTrue(ad.suggestions.isEmpty())
+        assertTrue(ad.nextSuggestions.isEmpty())
     }
 
     @Test
@@ -83,7 +83,7 @@ class TextToActionParsingTest {
         assertTrue(ad.cssFriendlyExpressions.isEmpty())
         assertTrue(ad.isComplete)
         assertEquals("Done searching", ad.summary)
-        assertEquals(listOf("Refine query", "Open first result"), ad.suggestions)
+        assertEquals(listOf("Refine query", "Open first result"), ad.nextSuggestions)
     }
 
     @Test

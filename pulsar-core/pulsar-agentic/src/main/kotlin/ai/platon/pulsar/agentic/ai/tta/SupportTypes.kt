@@ -38,7 +38,7 @@ data class ActionDescription constructor(
 
     val isComplete: Boolean = false,
     val summary: String? = null,
-    val suggestions: List<String> = emptyList(),
+    val nextSuggestions: List<String> = emptyList(),
 
     val errors: String? = null,
     val modelResponse: ModelResponse? = null

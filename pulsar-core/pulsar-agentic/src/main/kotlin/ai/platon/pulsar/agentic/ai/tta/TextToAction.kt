@@ -25,7 +25,6 @@ import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonElement
 import org.apache.commons.lang3.StringUtils
@@ -284,15 +283,15 @@ open class TextToAction(
 
         val mapper = pulsarObjectMapper()
         return when {
-            content.contains("isComplete") -> {
+            content.contains("\"isComplete\":") -> {
                 val complete: ObserveResponseComplete = mapper.readValue(content)
                 ActionDescription(
                     isComplete = true,
                     summary = complete.summary,
-                    suggestions = complete.nextSuggestions ?: emptyList()
+                    nextSuggestions = complete.nextSuggestions ?: emptyList()
                 )
             }
-            else -> {
+            content.contains("\"elements\":") -> {
                 val elements: ObserveResponseElements = mapper.readValue(content)
                 when (val ele = elements.elements?.firstOrNull()) {
                     null -> ActionDescription(modelResponse = response)
@@ -319,6 +318,7 @@ open class TextToAction(
                     }
                 }
             }
+            else -> ActionDescription(modelResponse = response)
         }
     }
 

@@ -8,6 +8,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.serialize.json.Pson
 import ai.platon.pulsar.skeleton.ai.AgentState
+import org.apache.commons.lang3.StringUtils
 import java.time.LocalDate
 import java.util.*
 import kotlin.math.min
@@ -86,7 +87,7 @@ $schema
 
 ## 输出严格使用以下两种 JSON 之一：
 
-1) 动作输出（仅含一个元素）：
+1) 动作输出（最多一个元素）：
 ${buildObserveResultSchema(true)}
 
 2) 任务完成输出：
@@ -109,7 +110,7 @@ ${AgentTool.TOOL_CALL_SPECIFICATION}
 - 不提供不能确定的参数
 - 要求 json 输出时，禁止包含任何额外文本
 - 注意：用户难以区分按钮和链接
-- 若操作与页面无关，返回空数组
+- 若操作与页面无关，返回空对象 `{}`
 - 只返回一个最相关的操作
 - 如需连续点击打开多个链接，使用 click(selector, "Ctrl") 在新标签页打开
 - 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。。不要模拟点击屏幕键盘上的按键
@@ -130,9 +131,14 @@ ${AgentTool.TOOL_CALL_SPECIFICATION}
         """.trimIndent()
 
         fun compactPrompt(prompt: String, maxWidth: Int = 200): String {
-            val brief = prompt
-                .replace(AGENT_GUIDE_SYSTEM_PROMPT, "{{AGENT_GUIDE_SYSTEM_PROMPT}}")
-                .replace(AgentTool.TOOL_CALL_SPECIFICATION, "{{TOOL_CALL_SPECIFICATION}}")
+            val a = "## 支持的工具列表"
+            val b = "## 无障碍树(Accessibility Tree)"
+            val c = "## 当前浏览器状态"
+            var substr = a + StringUtils.substringBetween(prompt, a, b)
+            var brief = prompt.replace(substr, "$a\n...")
+            substr = b + StringUtils.substringBetween(brief, b, c)
+            brief = brief.replace(substr, "$b\n...")
+
             return Strings.compactWhitespaces(brief, maxWidth)
         }
     }
