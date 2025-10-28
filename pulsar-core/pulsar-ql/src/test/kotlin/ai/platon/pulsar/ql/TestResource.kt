@@ -1,11 +1,13 @@
 package ai.platon.pulsar.ql
 
+import ai.platon.pulsar.test.TestResourceUtil
+
 object TestResource {
 
     val productIndexUrl = "https://e.dangdang.com/index_page.html"
     val productDetailUrl = "https://e.dangdang.com/products/1900089800.html"
-    val newsIndexUrl = "http://news.baidu.com/"
-    val newsDetailUrl = "https://shuhua.gscn.com.cn/system/2025/09/30/013392374.shtml"
+    val newsIndexUrl = TestResourceUtil.NEWS_INDEX_URL
+    val newsDetailUrl = TestResourceUtil.NEWS_DETAIL_URL
 
     var urlGroups = mutableMapOf<String, Array<String>>()
 
