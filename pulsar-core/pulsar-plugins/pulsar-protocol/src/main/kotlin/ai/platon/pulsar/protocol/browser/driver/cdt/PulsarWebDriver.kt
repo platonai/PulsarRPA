@@ -526,9 +526,11 @@ class PulsarWebDriver(
         }
     }
 
-    override suspend fun nanoDOMTree(): NanoDOMTree {
-        val snapshotOptions = SnapshotOptions()
-        return domService.getDOMState(snapshotOptions = snapshotOptions).getNanoTree()
+    override suspend fun nanoDOMTree(): NanoDOMTree? {
+        return rpc.invokeDeferred("nanoDOMTree") {
+            val snapshotOptions = SnapshotOptions()
+            domService.getDOMState(snapshotOptions = snapshotOptions).getNanoTree()
+        }
     }
 
     override suspend fun bringToFront() {

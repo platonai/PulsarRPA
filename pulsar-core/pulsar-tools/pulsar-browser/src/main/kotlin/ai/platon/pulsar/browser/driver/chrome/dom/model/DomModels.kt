@@ -315,12 +315,14 @@ data class CleanedDOMTreeNode constructor(
     val isVisible: Boolean?,      // null means false
     val isInteractable: Boolean?, // null means false
     val interactiveIndex: Int?,
-    /** The absolute position bounding box. */
-    val bounds: CompactRect?,
 
     val clientRects: CompactRect?,
     val scrollRects: CompactRect?,
+    /** The absolute position bounding box. */
+    val bounds: CompactRect?,
     val absoluteBounds: CompactRect? = null,
+    val viewportIndex: Int? = null,
+
     val paintOrder: Int? = null,
     val stackingContexts: Int? = null,
     val contentDocument: CleanedDOMTreeNode?
@@ -368,6 +370,7 @@ data class NanoDOMTreeNode(
     val clientRects: CompactRect? = null,
     val scrollRects: CompactRect? = null,
     val absoluteBounds: CompactRect? = null,
+    val viewportIndex: Int? = null,    // The position of this DOM node falls within the nth viewport.
     val children: List<NanoDOMTreeNode>? = null,
 ) {
     companion object {
@@ -377,11 +380,13 @@ data class NanoDOMTreeNode(
 
             // Recursively create child nano nodes, filter out empty placeholders
             val childNanoList = microTree.children
+                ?.asSequence()
                 ?.map { create(it, startY, endY) }
                 ?.filter { child ->
                     // keep nodes that have any meaningful data (locator or nodeName or non-empty children)
                     !(child.locator == null && child.nodeName == null && (child.children == null || child.children.isEmpty()))
-                }
+                }?.filter { (it.bounds == null) || (it.bounds.y?.toInt() in startY..endY) }
+                ?.toList()
 
             return if (childNanoList.isNullOrEmpty()) root else root.copy(children = childNanoList)
         }
@@ -403,6 +408,7 @@ data class NanoDOMTreeNode(
                 clientRects = o.clientRects?.round(),
                 scrollRects = o.scrollRects?.round(),
                 absoluteBounds = o.absoluteBounds?.round(),
+                viewportIndex = o.viewportIndex
             )
         }
     }
@@ -421,7 +427,6 @@ data class DOMState(
     val microTreeLazyJson: String by lazy { DOMSerializer.toJson(microTree) }
 
     @get:JsonIgnore
-    @Suppress("unused")
     val nanoTreeLazyJson: String by lazy {
         // convert micro tree to nano tree first, then serialize
         val nano = NanoDOMTreeNode.create(microTree)
@@ -435,6 +440,10 @@ data class DOMState(
         return NanoDOMTreeNode.create(microTree)
     }
 
+    fun getNanoTree(startY: Int, endY: Int): NanoDOMTree {
+        return NanoDOMTreeNode.create(microTree, startY, endY)
+    }
+
     fun getAbsoluteFBNLocator(locator: String?): FBNLocator? {
         if (locator == null) return null
 
@@ -443,7 +452,7 @@ data class DOMState(
             return fbnLocator
         }
 
-        require(StringUtils.isNumeric(fbnLocator.frameId))
+        require(org.apache.commons.lang3.StringUtils.isNumeric(fbnLocator.frameId))
         val index = fbnLocator.frameId.toIntOrNull() ?: return null
         val absoluteFrameId = frameIds.getOrNull(index) ?: return null
 

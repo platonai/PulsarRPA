@@ -408,7 +408,7 @@ interface WebDriver : Closeable {
      * - [ai.platon.cdt.kt.protocol.commands.DOM.getDocument]
      * - [ai.platon.cdt.kt.protocol.types.domsnapshot.DocumentSnapshot]
      * */
-    suspend fun nanoDOMTree(): NanoDOMTree
+    suspend fun nanoDOMTree(): NanoDOMTree?
 
     /**
      * Chat with the AI model about the specified element.

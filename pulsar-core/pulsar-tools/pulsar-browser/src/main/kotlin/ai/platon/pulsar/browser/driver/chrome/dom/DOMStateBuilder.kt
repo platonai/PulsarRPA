@@ -31,6 +31,10 @@ object DOMStateBuilder {
         val frameIds = frameIdSet.toList()
         // Build a new LocatorMap for optimized element lookup
         val locatorMap = LocatorMap()
+
+        // Detect top-level viewport height from the first HTML node's client rects
+        val topViewportHeight: Double? = findTopLevelViewportHeight(root)
+
         val microTree = buildMicroDOMTree(
             root,
             includeAttributes,
@@ -39,7 +43,9 @@ object DOMStateBuilder {
             frameIds,
             options,
             depth = 0,
-            includeOrder = attrsList.map { it.lowercase() })
+            includeOrder = attrsList.map { it.lowercase() },
+            topViewportHeight = topViewportHeight
+        )
 
         val interactiveNodes = mutableListOf<MicroDOMTreeNode>()
         collectInteractiveNodes(microTree, interactiveNodes)
@@ -66,6 +72,22 @@ object DOMStateBuilder {
         }
     }
 
+    // Find the top-level HTML node's client height to use as viewport height
+    private fun findTopLevelViewportHeight(root: TinyNode): Double? {
+        var height: Double? = null
+        fun dfs(n: TinyNode) {
+            if (height != null) return
+            val o = n.originalNode
+            if (o.nodeName.equals("HTML", ignoreCase = true)) {
+                height = o.snapshotNode?.clientRects?.height
+                if (height != null && height!! > 0) return
+            }
+            n.children.forEach { dfs(it) }
+        }
+        dfs(root)
+        return height
+    }
+
     /**
      * Options for enhanced LLM serialization.
      */
@@ -86,17 +108,18 @@ object DOMStateBuilder {
         frameIds: List<String>,
         options: CompactOptions,
         depth: Int = 0,
-        includeOrder: List<String> = emptyList()
+        includeOrder: List<String> = emptyList(),
+        topViewportHeight: Double?
     ): MicroDOMTreeNode {
         // Apply paint-order pruning if enabled
         if (options.enablePaintOrderPruning && shouldPruneByPaintOrder(node, options)) {
             // Return a pruned node with minimal information
-            return createPrunedNode(node, ancestors, locatorMap, frameIds)
+            return createPrunedNode(node, ancestors, locatorMap, frameIds, topViewportHeight)
         }
 
         // Clean original node with enhanced attribute casing alignment
         val cleanedOriginal =
-            cleanOriginalNodeEnhanced(node.originalNode, includeAttributes, options, includeOrder, frameIds)
+            cleanOriginalNodeEnhanced(node.originalNode, includeAttributes, options, includeOrder, frameIds, topViewportHeight)
 
         val showScrollInfo = ScrollUtils.shouldShowScrollInfo(node.originalNode, ancestors)
         val scrollInfoText = if (showScrollInfo) {
@@ -130,7 +153,8 @@ object DOMStateBuilder {
                 frameIds,
                 options,
                 depth + 1,
-                includeOrder
+                includeOrder,
+                topViewportHeight
             )
         }
 
@@ -215,7 +239,10 @@ object DOMStateBuilder {
         ancestors: List<DOMTreeNodeEx>,
         locatorMap: LocatorMap,
         frameIds: List<String>,
+        topViewportHeight: Double?
     ): MicroDOMTreeNode {
+        val viewportIndex = computeViewportIndex(node.originalNode, topViewportHeight)
+
         val prunedOriginal = CleanedDOMTreeNode(
             locator = createNodeLocator(node.originalNode, frameIds).absoluteSelector,
             nodeId = node.originalNode.nodeId,
@@ -235,6 +262,10 @@ object DOMStateBuilder {
             bounds = null, // No bounds for pruned nodes
             clientRects = null,
             scrollRects = null,
+            absoluteBounds = null,
+            viewportIndex = viewportIndex,
+            paintOrder = null,
+            stackingContexts = null,
             contentDocument = null
         )
 
@@ -254,6 +285,21 @@ object DOMStateBuilder {
         )
     }
 
+    // Compute viewport index (1-based) using absolute Y and top-level viewport height
+    private fun computeViewportIndex(node: DOMTreeNodeEx, topViewportHeight: Double?): Int? {
+        val vh = topViewportHeight ?: return null
+        if (!vh.isFinite() || vh <= 0.0) return null
+        // Prefer absolute bounds from snapshot; fallback to absolutePosition or bounds
+        val y = node.snapshotNode?.absoluteBounds?.y
+            ?: node.absolutePosition?.y
+            ?: node.snapshotNode?.bounds?.y
+            ?: return null
+        if (!y.isFinite()) return null
+        val base = if (y < 0) 0.0 else y
+        val idx = kotlin.math.floor(base / vh).toInt() + 1
+        return if (idx < 1) 1 else idx
+    }
+
     /**
      * Enhanced cleanOriginalNode with attribute casing alignment and improved filtering.
      */
@@ -263,6 +309,7 @@ object DOMStateBuilder {
         options: CompactOptions,
         includeOrder: List<String>,
         frameIds: List<String>,
+        topViewportHeight: Double?
     ): CleanedDOMTreeNode {
         // Filter attributes with enhanced casing alignment
         val filteredAttrs: Map<String, String> = if (options.enableAttributeCasingAlignment) {
@@ -339,6 +386,9 @@ object DOMStateBuilder {
         val paintOrder = snapshot?.paintOrder
         val stackingContexts = snapshot?.stackingContexts
 
+        // Compute viewport index using absolute bounds and top-level viewport height
+        val viewportIndex = computeViewportIndex(node, topViewportHeight)
+
         return CleanedDOMTreeNode(
             locator = createNodeLocator(node, frameIds).absoluteSelector,
             nodeId = node.nodeId,
@@ -359,6 +409,7 @@ object DOMStateBuilder {
             clientRects = clientRects?.compact(),
             scrollRects = scrollRects?.compact(),
             absoluteBounds = absoluteBounds?.compact(),
+            viewportIndex = viewportIndex,
             paintOrder = paintOrder,
             stackingContexts = stackingContexts,
             // contentDocument is cleaned recursively if present
@@ -368,7 +419,8 @@ object DOMStateBuilder {
                     includeAttributes,
                     options,
                     includeOrder,
-                    frameIds
+                    frameIds,
+                    topViewportHeight
                 )
             }
         )
