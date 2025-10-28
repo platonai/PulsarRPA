@@ -799,16 +799,16 @@ public final class Strings {
     * Replace all consecutive whitespace characters in the string — including regular spaces, tab characters, line breaks,
     * full-width spaces, and HTML non-breaking spaces — with a single regular space " ".
     * */
-    public static String compactWhitespaces(String log) {
-        if (log == null) return null;
-        return log.replaceAll("[\\s\\u00A0]+", " ").trim();
+    public static String compactWhitespaces(String s) {
+        if (s == null) return null;
+        return s.replaceAll("[\\s\\u00A0]+", " ").trim();
     }
 
     /**
      * Replace all consecutive whitespace characters in the string — including regular spaces, tab characters, line breaks,
      * full-width spaces, and HTML non-breaking spaces — with a single regular space " ".
      * */
-    public static String compactWhitespaces(String log, int maxWidth) {
+    public static String compactLog(String log, int maxWidth) {
         if (log == null) return null;
         return StringUtils.abbreviate(compactWhitespaces(log), maxWidth);
     }

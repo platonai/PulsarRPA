@@ -249,7 +249,7 @@ open class CachedBrowserChatModel(
 
         val modelResponse = ModelResponse(response.aiMessage().text().trim(), state, tokenUsage)
         if (logger.isInfoEnabled) {
-            val log = Strings.compactWhitespaces(modelResponse.content, 100)
+            val log = Strings.compactLog(modelResponse.content, 100)
             logger.info(
                 "◀ Chat - token: {} | [len: {}] {}",
                 modelResponse.tokenUsage.totalTokenCount,

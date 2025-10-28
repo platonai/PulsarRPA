@@ -8,6 +8,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ExperimentalApi
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
@@ -279,11 +280,11 @@ open class TextToAction(
 
     fun modelResponseToActionDescription(response: ModelResponse): ActionDescription {
         val content = response.content
-        printlnPro(content)
+        val contentStart = Strings.compactWhitespaces(content.take(10))
 
         val mapper = pulsarObjectMapper()
         return when {
-            content.contains("\"isComplete\":") -> {
+            contentStart.contains("\"taskComplete\"") -> {
                 val complete: ObserveResponseComplete = mapper.readValue(content)
                 ActionDescription(
                     isComplete = true,
@@ -291,7 +292,7 @@ open class TextToAction(
                     nextSuggestions = complete.nextSuggestions ?: emptyList()
                 )
             }
-            content.contains("\"elements\":") -> {
+            contentStart.contains("\"elements\"") -> {
                 val elements: ObserveResponseElements = mapper.readValue(content)
                 when (val ele = elements.elements?.firstOrNull()) {
                     null -> ActionDescription(modelResponse = response)

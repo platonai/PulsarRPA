@@ -139,7 +139,7 @@ ${AgentTool.TOOL_CALL_SPECIFICATION}
             substr = b + StringUtils.substringBetween(brief, b, c)
             brief = brief.replace(substr, "$b\n...")
 
-            return Strings.compactWhitespaces(brief, maxWidth)
+            return Strings.compactLog(brief, maxWidth)
         }
     }
 

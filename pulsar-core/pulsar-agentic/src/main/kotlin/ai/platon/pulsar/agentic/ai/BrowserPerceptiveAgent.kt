@@ -141,10 +141,7 @@ class BrowserPerceptiveAgent(
         // Add start history for better traceability (meta record only)
         addToRecordHistory(
             "resolve START session=${sessionId.take(8)} goal='${
-                Strings.compactWhitespaces(
-                    action.action,
-                    160
-                )
+                Strings.compactLog(action.action, 160)
             }' maxSteps=${config.maxSteps} maxRetries=${config.maxRetries}"
         )
 
@@ -159,7 +156,7 @@ class BrowserPerceptiveAgent(
             result
         } catch (_: TimeoutCancellationException) {
             val msg = "Resolve timed out after ${config.resolveTimeoutMs}ms: ${action.action}"
-            addToRecordHistory("resolve TIMEOUT: ${Strings.compactWhitespaces(action.action, 160)}")
+            addToRecordHistory("resolve TIMEOUT: ${Strings.compactLog(action.action, 160)}")
             ActResult(success = false, message = msg, action = action.action)
         }
     }
@@ -674,7 +671,7 @@ class BrowserPerceptiveAgent(
             append(descPrefix)
             if (!message.isNullOrBlank()) {
                 append(": ")
-                append(Strings.compactWhitespaces(message, 200))
+                append(Strings.compactLog(message, 200))
             }
         }
         val entry = AgentState(
@@ -697,7 +694,7 @@ class BrowserPerceptiveAgent(
     private fun addHistoryObserve(instruction: String, requestId: String, size: Int, success: Boolean) {
         addToRecordHistory(
             "observe[$requestId] ${if (success) "OK" else "FAIL"} ${
-                Strings.compactWhitespaces(
+                Strings.compactLog(
                     instruction,
                     200
                 )
@@ -786,7 +783,7 @@ class BrowserPerceptiveAgent(
             sid,
             context.stepNumber,
             context.targetUrl,
-            Strings.compactWhitespaces(overallGoal, 100),
+            Strings.compactLog(overallGoal, 100),
             attempt + 1,
             config.maxSteps,
             config.maxRetries
