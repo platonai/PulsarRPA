@@ -225,12 +225,70 @@ object DomDebug {
         return Pair(list[j], list[k])
     }
 
+    // ----- Bounds sampling helpers -----
+
+    private fun xyOf(r: DOMRect?): Pair<Double, Double>? = r?.let { it.x to it.y }
+    private fun xyOf(r: CompactRect?): Pair<Double, Double>? = r?.let { (it.x ?: 0.0) to (it.y ?: 0.0) }
+
+    private fun round1(v: Double): Double = kotlin.math.round(v * 10.0) / 10.0
+
+    private fun formatXYList(pairs: List<Pair<Double, Double>>, limit: Int = 20): String {
+        if (pairs.isEmpty()) return "[]"
+        val head = pairs.take(limit)
+        val body = head.joinToString(prefix = "[", postfix = "]") { p -> "(${round1(p.first)},${round1(p.second)})" }
+        val remain = pairs.size - head.size
+        return if (remain > 0) "$body +${remain} more" else body
+    }
+
+    private fun collectXY(root: DOMTreeNodeEx): List<Pair<Double, Double>> {
+        val list = mutableListOf<Pair<Double, Double>>()
+        fun dfs(n: DOMTreeNodeEx) {
+            xyOf(rectOf(n))?.let { list += it }
+            n.children.forEach { dfs(it) }
+            n.shadowRoots.forEach { dfs(it) }
+            n.contentDocument?.let { dfs(it) }
+        }
+        dfs(root)
+        return list
+    }
+
+    private fun collectXY(root: TinyNode): List<Pair<Double, Double>> {
+        val list = mutableListOf<Pair<Double, Double>>()
+        fun dfs(n: TinyNode) {
+            xyOf(rectOf(n.originalNode))?.let { list += it }
+            n.children.forEach { dfs(it) }
+        }
+        dfs(root)
+        return list
+    }
+
+    private fun collectXY(root: NanoDOMTree): List<Pair<Double, Double>> {
+        val list = mutableListOf<Pair<Double, Double>>()
+        fun dfs(n: NanoDOMTree?) {
+            if (n == null) return
+            xyOf(n.clientRects ?: n.absoluteBounds ?: n.bounds)?.let { list += it }
+            n.children?.forEach { dfs(it) }
+        }
+        dfs(root)
+        return list
+    }
+
+    private fun filterGt(pairs: List<Pair<Double, Double>>, threshold: Double): List<Pair<Double, Double>> =
+        pairs.filter { it.first > threshold && it.second > threshold }
+
+    private fun sortedGt50(pairs: List<Pair<Double, Double>>): List<Pair<Double, Double>> =
+        filterGt(pairs, 50.0).sortedWith(compareBy({ it.first }, { it.second }))
+
     // ----- Summaries -----
 
     fun summarize(trees: TargetTrees): String {
         val s = stats(trees.domTree)
         val b = boundsStats(trees.domTree)
         val (mid1, mid2) = midTwoWithBounds(trees.domTree)
+        // bounds sampling over the DOM tree
+        val xyAll = collectXY(trees.domTree)
+        val gt200 = filterGt(xyAll, 200.0)
+        val gt50Sorted = sortedGt50(xyAll)
         return buildString {
             appendLine("TargetTrees")
             appendLine("- devicePixelRatio=${trees.devicePixelRatio}")
@@ -244,6 +302,8 @@ object DomDebug {
             appendLine("- domTree.bounds.zeroNonZero=(zero=${b.zero}, nonZero=${b.positive})")
             if (mid1 != null) appendLine("- domTree.midBoundsNode1={ ${briefWithBounds(mid1)} }")
             if (mid2 != null && mid2 !== mid1) appendLine("- domTree.midBoundsNode2={ ${briefWithBounds(mid2)} }")
+            appendLine("- bounds.samples.gt200.count=${gt200.size}")
+            appendLine("- bounds.coords.gt50.sorted=${formatXYList(gt50Sorted)}")
         }
     }
 
@@ -259,6 +319,10 @@ object DomDebug {
         val b = if (includeTreeStats) boundsStats(node).toString() else null
         val bz = if (includeTreeStats) boundsStats(node) else null
         val midPair = if (includeTreeStats) midTwoWithBounds(node) else null
+        // sampling
+        val xyAll = collectXY(node)
+        val gt200 = filterGt(xyAll, 200.0)
+        val gt50Sorted = sortedGt50(xyAll)
         return buildString {
             appendLine("DOMTreeNodeEx")
             appendLine("- nodeId=${node.nodeId} backendId=${node.backendNodeId} type=${node.nodeType} name=${node.nodeName}")
@@ -273,18 +337,25 @@ object DomDebug {
             val (mid1, mid2) = midPair ?: Pair(null, null)
             if (mid1 != null) appendLine("- midBoundsNode1={ ${briefWithBounds(mid1)} }")
             if (mid2 != null && mid2 !== mid1) appendLine("- midBoundsNode2={ ${briefWithBounds(mid2)} }")
+            appendLine("- bounds.samples.gt200.count=${gt200.size}")
+            appendLine("- bounds.coords.gt50.sorted=${formatXYList(gt50Sorted)}")
         }
     }
 
     fun summarize(el: DOMInteractedElement): String {
         val hashShort = el.elementHash.take(12)
         val xPathShort = el.xPath?.takeLast(60)
+        val xy = xyOf(el.bounds)
+        val gt200 = if (xy != null && xy.first > 200.0 && xy.second > 200.0) 1 else 0
+        val gt50Sorted = if (xy != null && xy.first > 50.0 && xy.second > 50.0) listOf(xy) else emptyList()
         return buildString {
             appendLine("DOMInteractedElement")
             appendLine("- elementHash=${hashShort}")
             appendLine("- xPath=${xPathShort}")
             appendLine("- visible=${el.isVisible} interactable=${el.isInteractable}")
             appendLine("- bounds=${el.bounds}")
+            appendLine("- bounds.samples.gt200.count=${gt200}")
+            appendLine("- bounds.coords.gt50.sorted=${formatXYList(gt50Sorted)}")
         }
     }
 
@@ -294,6 +365,9 @@ object DomDebug {
         val original = root.originalNode
         val hashShort = original.elementHash?.take(12)
         val (mid1, mid2) = midTwoWithBounds(root)
+        val xyAll = collectXY(root)
+        val gt200 = filterGt(xyAll, 200.0)
+        val gt50Sorted = sortedGt50(xyAll)
         return buildString {
             appendLine("TinyNode")
             appendLine("- from nodeId=${original.nodeId} name=${original.nodeName} hash=${hashShort}")
@@ -303,6 +377,8 @@ object DomDebug {
             appendLine("- bounds.zeroNonZero=(zero=${b.zero}, nonZero=${b.positive})")
             if (mid1 != null) appendLine("- midBoundsNode1={ ${briefWithBounds(mid1)} }")
             if (mid2 != null && mid2 !== mid1) appendLine("- midBoundsNode2={ ${briefWithBounds(mid2)} }")
+            appendLine("- bounds.samples.gt200.count=${gt200.size}")
+            appendLine("- bounds.coords.gt50.sorted=${formatXYList(gt50Sorted)}")
         }
     }
 
@@ -320,6 +396,9 @@ object DomDebug {
             if (cls.isNotEmpty()) append(".").append(cls.joinToString("."))
         }
         val (mid1, mid2) = midTwoWithBounds(root)
+        val xyAll = collectXY(root)
+        val gt200 = filterGt(xyAll, 200.0)
+        val gt50Sorted = sortedGt50(xyAll)
         return buildString {
             appendLine("NanoDOMTree")
             appendLine("- root locator=${root.locator} label=${label}")
@@ -330,6 +409,8 @@ object DomDebug {
             appendLine("- bounds.zeroNonZero=(zero=${b.zero}, nonZero=${b.positive})")
             if (mid1 != null) appendLine("- midBoundsNode1={ ${briefWithBounds(mid1)} }")
             if (mid2 != null && mid2 !== mid1) appendLine("- midBoundsNode2={ ${briefWithBounds(mid2)} }")
+            appendLine("- bounds.samples.gt200.count=${gt200.size}")
+            appendLine("- bounds.coords.gt50.sorted=${formatXYList(gt50Sorted)}")
         }
     }
 
@@ -342,12 +423,14 @@ object DomDebug {
         var withBounds = 0
 
         val eligible = mutableListOf<Map.Entry<Int, SnapshotNodeEx>>()
+        val xyAll = mutableListOf<Pair<Double, Double>>()
 
         snapshotNode.entries.forEach { (k, s) ->
             val r = s.clientRects ?: s.absoluteBounds ?: s.bounds
             if (s.clientRects != null) withClientRects++
             if (s.absoluteBounds != null) withAbsolute++
             if (s.bounds != null) withBounds++
+            xyOf(r)?.let { xyAll += it }
             when {
                 r == null -> missing++
                 r.width > 0 && r.height > 0 -> {
@@ -374,6 +457,8 @@ object DomDebug {
         }
 
         val (mid1, mid2) = middleTwo(eligible)
+        val gt200 = filterGt(xyAll, 200.0)
+        val gt50Sorted = sortedGt50(xyAll)
         return buildString {
             appendLine("SnapshotNodeExMap")
             appendLine("- entries=${snapshotNode.size}")
@@ -382,6 +467,8 @@ object DomDebug {
             appendLine("- bounds.zeroNonZero=(zero=${zero}, nonZero=${positive})")
             if (mid1 != null) appendLine("- midBoundsEntry1={ ${brief(mid1)} }")
             if (mid2 != null && mid2.key != mid1?.key) appendLine("- midBoundsEntry2={ ${brief(mid2)} }")
+            appendLine("- bounds.samples.gt200.count=${gt200.size}")
+            appendLine("- bounds.coords.gt50.sorted=${formatXYList(gt50Sorted)}")
         }
     }
 
@@ -418,6 +505,10 @@ object DomDebug {
         val eligible = uniqueNodes.filter { hasNonZeroXY(rectOf(it)) }
         val (mid1, mid2) = middleTwo(eligible)
 
+        val xyAll = uniqueNodes.mapNotNull { xyOf(rectOf(it)) }
+        val gt200 = filterGt(xyAll, 200.0)
+        val gt50Sorted = sortedGt50(xyAll)
+
         return buildString {
             appendLine("DOMState")
             appendLine("- json.length=${json.length}")
@@ -427,6 +518,8 @@ object DomDebug {
             if (sample.isNotBlank()) appendLine("- sample=${sample}")
             if (mid1 != null) appendLine("- midBoundsNode1={ ${briefWithBounds(mid1)} }")
             if (mid2 != null && mid2 !== mid1) appendLine("- midBoundsNode2={ ${briefWithBounds(mid2)} }")
+            appendLine("- bounds.samples.gt200.count=${gt200.size}")
+            appendLine("- bounds.coords.gt50.sorted=${formatXYList(gt50Sorted)}")
         }
     }
 }

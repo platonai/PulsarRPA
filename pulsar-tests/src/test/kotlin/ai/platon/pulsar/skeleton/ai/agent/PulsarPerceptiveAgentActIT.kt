@@ -26,7 +26,7 @@ class PulsarPerceptiveAgentActIT : WebDriverTestBase() {
         printlnPro(result)
 
         assertNotNull(result)
-        assertTrue(agent.history.isNotEmpty())
+        assertTrue(agent.stateHistory.isNotEmpty())
     }
 
     @Test

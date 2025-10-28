@@ -108,22 +108,16 @@ class BrowserPerceptiveAgent(
     private val validationCache = ConcurrentHashMap<String, Boolean>()
 
     // Enhanced state management
-    // The history exists to give the AI agent a concise, sequential memory of what has been done.
-    // This helps the model select the next step and summarize outcomes.
-    // For this to work well, the history should reflect only the agent’s actual, single-step actions
-    // with clear success/failure signals and the observation context that impacted/was impacted by the action.
-    private val _history = mutableListOf<AgentState>()
-    private val _recordHistory = mutableListOf<String>()
+
+    private val _stateHistory = mutableListOf<AgentState>()
+    private val _processTrace = mutableListOf<String>()
     private val performanceMetrics = PerformanceMetrics()
     private val retryCounter = AtomicInteger(0)
     private val consecutiveFailureCounter = AtomicInteger(0)
     private val stepExecutionTimes = ConcurrentHashMap<Int, Long>()
 
-    // Jackson mapper aligned with project conventions (unused)
-    // private val jsonMapper by lazy { pulsarObjectMapper() }
-
     override val uuid = UUID.randomUUID()
-    override val history: List<AgentState> get() = _history
+    override val stateHistory: List<AgentState> get() = _stateHistory
 
     override suspend fun resolve(problem: String): ActResult {
         val opts = ActionOptions(action = problem)
@@ -665,7 +659,7 @@ class BrowserPerceptiveAgent(
      * history management: strictly record one AgentState per executed action with complete fields
      */
     private fun recordAction(step: Int?, method: String, success: Boolean, observe: ObserveElement?, message: String?) {
-        val computedStep = step?.takeIf { it > 0 } ?: ((history.lastOrNull()?.step ?: 0) + 1)
+        val computedStep = step?.takeIf { it > 0 } ?: ((stateHistory.lastOrNull()?.step ?: 0) + 1)
         val descPrefix = if (success) "OK" else "FAIL"
         val descMsg = buildString {
             append(descPrefix)
@@ -852,7 +846,7 @@ class BrowserPerceptiveAgent(
                 }
 
                 messages.add("user", promptBuilder.buildOverallGoalMessage(overallGoal), name = "overallGoal")
-                messages.addUser(promptBuilder.buildAgentStateHistoryMessage(history))
+                messages.addUser(promptBuilder.buildAgentStateHistoryMessage(stateHistory))
                 if (screenshotB64 != null) {
                     messages.addUser("[Current page screenshot provided as base64 image]")
                 }
@@ -944,7 +938,7 @@ class BrowserPerceptiveAgent(
     // Enhanced helper methods for improved functionality
 
     override fun toString(): String {
-        return history.lastOrNull()?.toString() ?: "(no history)"
+        return stateHistory.lastOrNull()?.toString() ?: "(no history)"
     }
 
     /**
@@ -1149,9 +1143,9 @@ class BrowserPerceptiveAgent(
 
     private fun performMemoryCleanup(context: ExecutionContext) {
         try {
-            if (history.size > config.maxHistorySize) {
-                val toRemove = history.size - config.maxHistorySize + 10
-                _history.subList(0, toRemove).clear()
+            if (stateHistory.size > config.maxHistorySize) {
+                val toRemove = stateHistory.size - config.maxHistorySize + 10
+                _stateHistory.subList(0, toRemove).clear()
             }
             if (validationCache.size > 1000) {
                 validationCache.clear()
@@ -1176,14 +1170,14 @@ class BrowserPerceptiveAgent(
     }
 
     private fun addToHistory(h: AgentState) {
-        _history.add(h)
-        if (history.size > config.maxHistorySize * 2) {
-            _history.subList(0, config.maxHistorySize).clear()
+        _stateHistory.add(h)
+        if (stateHistory.size > config.maxHistorySize * 2) {
+            _stateHistory.subList(0, config.maxHistorySize).clear()
         }
     }
 
     private fun addToRecordHistory(entry: String) {
-        _recordHistory.add(entry)
+        _processTrace.add(entry)
     }
 
     /**
@@ -1280,7 +1274,7 @@ class BrowserPerceptiveAgent(
             sb.appendLine("INSTRUCTION: $instruction")
             sb.appendLine("RESPONSE_STATE: ${finalResp.state}")
             sb.appendLine("EXECUTION_HISTORY:")
-            history.forEach { sb.appendLine(it) }
+            stateHistory.forEach { sb.appendLine(it) }
             sb.appendLine()
             sb.appendLine("FINAL_SUMMARY:")
             sb.appendLine(finalResp.content)
@@ -1295,7 +1289,7 @@ class BrowserPerceptiveAgent(
             Files.writeString(log, sb.toString())
             slogger.info(
                 "Transcript persisted successfully", context,
-                mapOf("lines" to history.size + 10, "path" to log.toString())
+                mapOf("lines" to stateHistory.size + 10, "path" to log.toString())
             )
         }.onFailure { e ->
             slogger.logError("Failed to persist transcript", e, context.sessionId)
@@ -1307,7 +1301,7 @@ class BrowserPerceptiveAgent(
         val user = buildString {
             appendLine("原始目标：$goal")
             appendLine("执行轨迹(按序)：")
-            history.forEach { appendLine(it) }
+            stateHistory.forEach { appendLine(it) }
             appendLine()
             appendLine("""请严格输出 JSON：{"taskComplete":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]} 无多余文字。""")
         }

@@ -2,7 +2,6 @@ package ai.platon.pulsar.examples.agent
 
 import ai.platon.pulsar.agentic.context.AgenticContexts
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import ai.platon.pulsar.test.server.DemoSiteStarter
@@ -15,7 +14,7 @@ class SessionAct {
     private fun step(label: String) { logger.info("[STEP ${++stepNo}] $label") }
     private fun result(label: String, value: Any?) {
         val text = if (value is PerceptiveAgent) {
-            value.history.lastOrNull()?.toString()?.replace("\n", " ")?.take(240)
+            value.stateHistory.lastOrNull()?.toString()?.replace("\n", " ")?.take(240)
         } else {
             value?.toString()?.replace("\n", " ")?.take(240)
         }
@@ -133,7 +132,7 @@ class SessionAct {
         agent = session.act(actOptions)
         result("action result", agent)
 
-        step("Fallback: captures the live page as a local copy and parse for titles")
+        step("Captures the live page as a local copy and parse for titles")
         page = session.capture(driver)
         document = session.parse(page)
         fields = session.extract(document, mapOf("titles" to ".athing .title a"))
@@ -149,9 +148,9 @@ class SessionAct {
 
         // Print final values so variables are referenced (avoid unused warnings in IDE/build)
         step("Summary outputs")
-        logger.info("Final extracted fields keys: ${fields?.keys}")
+        logger.info("Final extracted fields keys: ${fields.keys}")
         logger.info("Sample page content snippet: ${content?.take(120)}")
-        logger.info("Last action result: ${agent}")
+        logger.info("Last action result: $agent")
 
         context.close()
     }

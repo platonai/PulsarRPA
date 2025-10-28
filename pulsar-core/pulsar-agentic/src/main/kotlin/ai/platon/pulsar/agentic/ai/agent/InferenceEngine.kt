@@ -7,6 +7,7 @@ import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ModelResponse
@@ -262,11 +263,6 @@ class InferenceEngine(
         )
 
         val responseContent = resp.aiMessage().text().trim()
-        // Parse as generic JsonNode to support both object and array roots
-        val root: JsonNode = runCatching { mapper.readTree(responseContent) ?: JsonNodeFactory.instance.objectNode() }
-            .getOrElse { JsonNodeFactory.instance.objectNode() }
-
-        // val elements: List<ObserveElement> = tta.parseObserveElements(root, params.returnAction)
 
         val modeResponse = ModelResponse(content = responseContent, tokenUsage = tokenUsage)
         var actionDescription = tta.modelResponseToActionDescription(modeResponse)
@@ -303,7 +299,7 @@ class InferenceEngine(
 
     private fun safeJsonPreview(raw: String, limit: Int = 2000): String {
         // Bound file payload length for safety
-        return if (raw.length > limit) raw.take(limit) + "...<truncated>" else raw
+        return Strings.compactLog(raw, limit)
     }
 
     private fun logsDir(): Path = Path.of("logs")

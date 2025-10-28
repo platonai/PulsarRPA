@@ -1,18 +1,13 @@
 package ai.platon.pulsar.agentic.ai.tta
 
-import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.AgentMessageList
+import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.ExperimentalApi
-import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.brief
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
@@ -23,9 +18,6 @@ import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.JsonNode
-import com.fasterxml.jackson.databind.node.ArrayNode
-import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonElement
 import org.apache.commons.lang3.StringUtils
@@ -166,119 +158,16 @@ open class TextToAction(
         return pulsarObjectMapper().readerForArrayOf(ObserveElement::class.java).readValue(node)
     }
 
-    // ----------------------------------- Helpers -----------------------------------
-    /**
-     * Observe elements schema:
-     * ```json
-     *  { "elements": [ { "selector": string, "description": string, "method": string, "arguments": [{"name": string, "value": string}] } ] }
-     * ```
-     *
-     * This schema is build by [PromptBuilder.buildObserveResultSchemaContract] and is passed to LLM for a restricted response.
-     * */
-    fun parseObserveElementsLegacy(root: JsonNode, returnAction: Boolean): List<ObserveElement> {
-        // Determine the array of items to read
-        val arr: ArrayNode = when {
-            root.isObject && root.has("elements") && root.get("elements").isArray -> root.get("elements") as ArrayNode
-            root.isArray -> root as ArrayNode
-            root.isObject -> {
-                // Single element object fallback
-                val single = root as ObjectNode
-                val tmp = JsonNodeFactory.instance.arrayNode()
-                tmp.add(single)
-                tmp
-            }
-
-            else -> JsonNodeFactory.instance.arrayNode()
+    fun modelResponseToActionDescription(response: ModelResponse): ActionDescription {
+        try {
+            return modelResponseToActionDescription0(response)
+        } catch (e: Exception) {
+            logger.warn("Exception while parsing model response", e)
+            return ActionDescription(modelResponse = response, errors = e.brief())
         }
-
-        val result = mutableListOf<ObserveElement>()
-        for (i in 0 until arr.size()) {
-            val el: JsonNode = arr.get(i)
-            // Support both "locator" and a tolerant fallback "selector"
-            val locator = el.path("locator").asText(null)
-            val description = el.path("description").asText("")
-
-            // Parse domain + method, allowing combined form like "browser.switchTab"
-            val domainField = el.path("domain").asText(null)
-            val methodField = el.path("method").asText(null)
-            var domain: String? = domainField
-            var methodName: String? = methodField
-            if (!methodField.isNullOrBlank() && methodField.contains('.')) {
-                val parts = methodField.split('.', limit = 2)
-                if (parts.size == 2) {
-                    if (domain.isNullOrBlank()) domain = parts[0]
-                    methodName = parts[1]
-                }
-            }
-
-            // Parse arguments according to schema: array of { name, value } or tolerant object map
-            val argsNode = el.get("tool")?.get("arguments")
-            val arguments: Map<String, String?>? = when {
-                argsNode == null || argsNode.isNull -> null
-                argsNode.isArray -> {
-                    val m = linkedMapOf<String, String>()
-                    for (j in 0 until argsNode.size()) {
-                        val item = argsNode.get(j)
-                        val name = item.path("name").asText(null)
-                        // Accept both "value" and fallback to text of node if needed
-                        val value = item.path("value").asText(null)
-                        if (!name.isNullOrBlank()) {
-                            m[name] = value ?: ""
-                        }
-                    }
-                    if (m.isEmpty()) null else m
-                }
-
-                argsNode.isObject -> {
-                    // Be tolerant: support either a single {name,value} object or a map-like object
-                    if (argsNode.has("name") || argsNode.has("value")) {
-                        val name = argsNode.path("name").asText(null)
-                        val value = argsNode.path("value").asText(null)
-                        if (!name.isNullOrBlank()) mapOf(name to (value ?: "")) else null
-                    } else {
-                        val m = linkedMapOf<String, String>()
-                        val fields = argsNode.fields()
-                        while (fields.hasNext()) {
-                            val entry = fields.next()
-                            m[entry.key] = entry.value.asText("")
-                        }
-                        if (m.isEmpty()) null else m
-                    }
-                }
-
-                else -> null
-            }
-
-            // Additional fields per ACTION_SCHEMA
-            val currentPageContentSummary = el.path("currentPageContentSummary").asText(null)
-            val actualLastActionImpact = el.path("actualLastActionImpact").asText(null)
-            val expectedNextActionImpact = el.path("expectedNextActionImpact").asText(null)
-
-            var toolCall: ToolCall? = null
-            if (domain != null && methodName != null) {
-                toolCall = ToolCall(
-                    domain = domain,
-                    method = methodName,
-                    description = description,
-                )
-                arguments?.forEach { (key, value) -> toolCall.arguments[key] = value?.toString() }
-            }
-
-            val item = ObserveElement(
-                locator = locator,
-                toolCall = toolCall,
-                currentPageContentSummary = currentPageContentSummary,
-                actualLastActionImpact = actualLastActionImpact,
-                expectedNextActionImpact = expectedNextActionImpact,
-            )
-
-            result.add(item)
-        }
-
-        return result
     }
 
-    fun modelResponseToActionDescription(response: ModelResponse): ActionDescription {
+    private fun modelResponseToActionDescription0(response: ModelResponse): ActionDescription {
         val content = response.content
         val contentStart = Strings.compactWhitespaces(content.take(10))
 

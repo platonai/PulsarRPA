@@ -3,6 +3,7 @@ package ai.platon.pulsar.skeleton.ai
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.external.ModelResponse
 import com.fasterxml.jackson.databind.JsonNode
+import java.time.Instant
 import java.util.*
 
 data class ActionOptions(
@@ -104,23 +105,31 @@ data class AgentState(
     val currentPageContentSummary: String? = null,
     val actualLastActionImpact: String? = null,
     val expectedNextActionImpact: String? = null,
+    val timestamp: Instant = Instant.now(),
 ) {
     override fun toString(): String {
-        return when {
-            description == null -> action
-            else -> return "$action - $description"
-        }
+        val summary = listOfNotNull(description, currentPageContentSummary, currentPageContentSummary)
+            .joinToString("\n")
+        return "$timestamp $action - $summary"
     }
 }
 
 interface PerceptiveAgent {
     val uuid: UUID
-    val history: List<AgentState>
+
+    /**
+     * The agent state history exists to give the AI agent a concise, sequential memory of what has been done.
+     * This helps the model select the next step and summarize outcomes.
+     * For this to work well, the history should reflect only the agent’s actual, single-step actions
+     * with clear success/failure signals and the observation context that impacted/was impacted by the action.
+     * */
+    val stateHistory: List<AgentState>
 
     /**
      * Run `observe -> act -> observe -> act -> ...` loop to resolve the problem.
      * */
     suspend fun resolve(problem: String): ActResult
+
     /**
      * Run `observe -> act -> observe -> act -> ...` loop to resolve the problem.
      * */
