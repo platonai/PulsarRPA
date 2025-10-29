@@ -448,6 +448,8 @@ abstract class AbstractWebDriver(
     override suspend fun selectFirstPropertyValueOrNull(selector: String, propName: String): String? {
         val safeSelector = Strings.escapeForJsString(selector)
         return evaluateValue("__pulsar_utils__.selectFirstPropertyValue('$safeSelector', '$propName')")?.toString()
+//        val safePropName = Strings.escapeForJsString(propName)
+        // return evaluateValue(selector, "function() { return this['$safePropName']; }")?.toString()
     }
 
     @Throws(WebDriverException::class)

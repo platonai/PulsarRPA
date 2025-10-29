@@ -373,8 +373,8 @@ class PageHandler(
 
     @Throws(ChromeDriverException::class)
     suspend fun evaluateValueDetail(selector: String, functionDeclaration: String): CallFunctionOn? {
-        val node = resolveSelector(selector)
-        return runtimeAPI?.callFunctionOn(functionDeclaration, objectId = node?.objectId)
+        val node = resolveSelector(selector) ?: return null
+        return runtimeAPI?.callFunctionOn(functionDeclaration, objectId = node.objectId, returnByValue = true)
     }
 
     @Throws(ChromeDriverException::class)
@@ -421,16 +421,16 @@ class PageHandler(
 
         node ?: return null
 
-        if (node.nodeId == 0 || node.backendNodeId == 0) {
+        if (node.nodeId == 0 && node.backendNodeId == 0) {
             logger.info("Both nodeId and backendNodeId are not found (value: 0)")
             return null
         }
 
-        return NodeRef(node.nodeId, node.backendNodeId)
+        return resolveNode(null, node.backendNodeId)
     }
 
     @Throws(ChromeDriverException::class)
-    private suspend fun resolveByBackendNodeId(backendNodeId: Int?): NodeRef? = resolve(null, backendNodeId)
+    private suspend fun resolveByBackendNodeId(backendNodeId: Int?): NodeRef? = resolveNode(null, backendNodeId)
 
     /**
      * Resolves a backend node ID to a regular node ID.
@@ -439,7 +439,7 @@ class PageHandler(
      * @return nodeId or null if resolution fails
      */
     @Throws(ChromeDriverException::class)
-    private suspend fun resolve(nodeId: Int?, backendNodeId: Int?): NodeRef? {
+    private suspend fun resolveNode(nodeId: Int?, backendNodeId: Int?): NodeRef? {
         return try {
             // Use DOM.resolveNode to convert backendNodeId to a runtime object
             val remoteObject = domAPI?.resolveNode(nodeId, backendNodeId, null, null)

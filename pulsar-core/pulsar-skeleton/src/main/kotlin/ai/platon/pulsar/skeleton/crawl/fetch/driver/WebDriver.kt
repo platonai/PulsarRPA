@@ -3,6 +3,7 @@ package ai.platon.pulsar.skeleton.crawl.fetch.driver
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.NetworkResourceResponse
 import ai.platon.pulsar.browser.driver.chrome.dom.model.NanoDOMTree
+import ai.platon.pulsar.common.ExperimentalApi
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
@@ -1403,6 +1404,7 @@ interface WebDriver : Closeable {
     suspend fun evaluateValueDetail(expression: String): JsEvaluation?
 
     @Throws(WebDriverException::class)
+    @ExperimentalApi
     suspend fun evaluateValue(selector: String, functionDeclaration: String): Any?
 
     /**
