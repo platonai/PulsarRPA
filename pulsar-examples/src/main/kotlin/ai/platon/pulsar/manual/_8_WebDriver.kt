@@ -47,7 +47,7 @@ internal class WebDriverDemo(private val session: AgenticSession = AgenticContex
 
             println("select first text by $selector ...")
             var text = driver.selectFirstTextOrNull(selector) ?: "no-text"
-            text = text.trim().take(5)
+            text = text.replace("\\s+", " ").trim().take(5)
 
             println("type `$text` in $searchBoxSelector ...")
             driver.type(searchBoxSelector, text)

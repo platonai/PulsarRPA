@@ -41,7 +41,7 @@ class ActionValidator(
                 )
 
                 "waitForNavigation" -> validateWaitForNavigation(toolCall.arguments)
-                "goBack", "goForward", "delay", "scrollToTop", "scrollToBottom", "scrollToViewport" -> true // These don't need validation
+                "goBack", "goForward", "delay", "scrollToTop", "scrollToBottom", "scrollToMiddle", "scrollToViewport" -> true // These don't need validation
                 // High Priority #5: Deny unknown actions by default
                 else -> {
                     if (config.denyUnknownActions) {
