@@ -7,6 +7,7 @@ import ai.platon.cdt.kt.protocol.types.dom.Rect
 import ai.platon.cdt.kt.protocol.types.page.Navigate
 import ai.platon.cdt.kt.protocol.types.page.ReferrerPolicy
 import ai.platon.cdt.kt.protocol.types.page.TransitionType
+import ai.platon.cdt.kt.protocol.types.runtime.CallFunctionOn
 import ai.platon.cdt.kt.protocol.types.runtime.Evaluate
 import ai.platon.pulsar.browser.common.ScriptConfuser
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
@@ -368,6 +369,24 @@ class PageHandler(
         }
 
         return evaluate?.result?.value
+    }
+
+    @Throws(ChromeDriverException::class)
+    suspend fun evaluateValueDetail(selector: String, functionDeclaration: String): CallFunctionOn? {
+        val node = resolveSelector(selector)
+        return runtimeAPI?.callFunctionOn(functionDeclaration, objectId = node?.objectId)
+    }
+
+    @Throws(ChromeDriverException::class)
+    suspend fun evaluateValue(selector: String, functionDeclaration: String): Any? {
+        val reslut = evaluateValueDetail(selector, functionDeclaration)
+
+        val exception = reslut?.exceptionDetails?.exception
+        if (exception != null) {
+            logger.info(exception.description + "\n>>>$functionDeclaration<<<")
+        }
+
+        return reslut?.result?.value
     }
 
     @Throws(ChromeDriverException::class)

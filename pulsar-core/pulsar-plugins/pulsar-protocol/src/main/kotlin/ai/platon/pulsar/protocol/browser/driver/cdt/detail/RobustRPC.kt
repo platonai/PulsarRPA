@@ -16,7 +16,7 @@ import java.text.MessageFormat
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
 
-internal class RobustRPC(
+class RobustRPC(
     private val driver: PulsarWebDriver
 ) {
     companion object {

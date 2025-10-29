@@ -498,19 +498,10 @@ class Keyboard(private val devTools: ChromeDevTools) {
 
     suspend fun type(text: String, delayMillis: Long) {
         text.forEach { char ->
-            when (char) {
-                '\n', '\r' -> {
-                    // Map newline/return to an Enter key press to avoid unknown control char handling
-                    press("Enter", delayMillis)
-                }
-                '\t' -> {
-                    // Map tab to a Tab key press
-                    press("Tab", delayMillis)
-                }
-                else -> {
-                    // Use insertText for regular characters to leverage IME and proper input behavior
-                    input.insertText("$char")
-                }
+            if (Character.isISOControl(char)) {
+                press("$char", delayMillis)
+            } else {
+                input.insertText("$char")
             }
 
             if (delayMillis > 0) {

@@ -47,9 +47,8 @@ class SessionAct {
         var agent = session.act(actOptions)
         result("action result", agent)
 
-        var text = driver.selectFirstAttributeOrNull("#searchBox", "value")
-        println("Text in search box: $text")
-        println("HTML search box: " + driver.outerHTML("#searchBox"))
+        var text = driver.selectFirstPropertyValueOrNull("#searchBox", "value")
+        println("Input value of search box: $text")
 
         AgenticContexts.close()
     }

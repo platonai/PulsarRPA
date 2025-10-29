@@ -8,7 +8,6 @@ import ai.platon.cdt.kt.protocol.types.fetch.RequestPattern
 import ai.platon.cdt.kt.protocol.types.network.ErrorReason
 import ai.platon.cdt.kt.protocol.types.network.LoadNetworkResourceOptions
 import ai.platon.cdt.kt.protocol.types.network.ResourceType
-import ai.platon.cdt.kt.protocol.types.runtime.Evaluate
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.dom.ChromeCdpDomService
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
@@ -23,10 +22,7 @@ import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.common.urls.URLUtils
-import ai.platon.pulsar.protocol.browser.driver.cdt.detail.ChromeNavigateEntry
-import ai.platon.pulsar.protocol.browser.driver.cdt.detail.NetworkEvents
-import ai.platon.pulsar.protocol.browser.driver.cdt.detail.NetworkManager
-import ai.platon.pulsar.protocol.browser.driver.cdt.detail.RobustRPC
+import ai.platon.pulsar.protocol.browser.driver.cdt.detail.*
 import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
@@ -76,6 +72,8 @@ class PulsarWebDriver(
     private val networkManager by lazy { NetworkManager(this, rpc) }
     private val messageWriter = MiscMessageWriter()
 
+    private val driverHelper get() = WebDriverHelper(this, rpc, page, fetchAPI, messageWriter)
+
     private val closed = AtomicBoolean()
 
     private val isGone get() = closed.get() || isQuit || !AppContext.isActive || !devTools.isOpen
@@ -111,17 +109,17 @@ class PulsarWebDriver(
 
         browser.emit(BrowserEvents.willNavigate, entry)
 
-        invokeOnPage("enableAPIAgents") {
+        driverHelper.invokeOnPage("enableAPIAgents") {
             enableAPIAgents()
         }
 
-        invokeOnPage("navigateTo") {
+        driverHelper.invokeOnPage("navigateTo") {
             navigateInvaded(entry)
         }
     }
 
     override suspend fun goBack() {
-        invokeOnPage("goBack") {
+        driverHelper.invokeOnPage("goBack") {
             val history = pageAPI?.getNavigationHistory() ?: return@invokeOnPage
             val currentIndex = history.currentIndex
             val entries = history.entries
@@ -134,7 +132,7 @@ class PulsarWebDriver(
     }
 
     override suspend fun goForward() {
-        invokeOnPage("goForward") {
+        driverHelper.invokeOnPage("goForward") {
             val history = pageAPI?.getNavigationHistory() ?: return@invokeOnPage
             val currentIndex = history.currentIndex
             val entries = history.entries
@@ -148,7 +146,7 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun getCookies(): List<Map<String, String>> {
-        return invokeOnPage("getCookies") { getCookies0() } ?: listOf()
+        return driverHelper.invokeOnPage("getCookies") { getCookies0() } ?: listOf()
     }
 
     @Deprecated(
@@ -156,51 +154,65 @@ class PulsarWebDriver(
         ReplaceWith("driver.deleteCookies(name, url, domain, path)")
     )
     override suspend fun deleteCookies(name: String) {
-        invokeOnPage("deleteCookies") { cdpDeleteCookies(name) }
+        driverHelper.invokeOnPage("deleteCookies") { cdpDeleteCookies(name) }
     }
 
     override suspend fun deleteCookies(name: String, url: String?, domain: String?, path: String?) {
-        invokeOnPage("deleteCookies") { cdpDeleteCookies(name, url, domain, path) }
+        driverHelper.invokeOnPage("deleteCookies") { cdpDeleteCookies(name, url, domain, path) }
     }
 
     override suspend fun clearBrowserCookies() {
-        invokeOnPage("clearBrowserCookies") { networkAPI?.clearBrowserCookies() }
+        driverHelper.invokeOnPage("clearBrowserCookies") { networkAPI?.clearBrowserCookies() }
     }
 
     // Use the JavaScript version in super class
     override suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String? {
         val name = "selectFirstAttributeOrNull"
-        return invokeOnElement(selector, name) { page.getAttribute(it, attrName) }
+        return driverHelper.invokeOnElement(selector, name) {
+            page.getAttribute(it, attrName)
+        }
     }
 
     // Unittest failed
 //    override suspend fun selectAttributeAll(selector: String, attrName: String, start: Int, limit: Int): List<String> {
 //        val name = "selectAttributeAll"
-//        return invokeOnPage(name) { page.getAttributeAll(selector, attrName, start, limit) } ?: listOf()
+//        return driverHelper.invokeOnPage(name) { page.getAttributeAll(selector, attrName, start, limit) } ?: listOf()
 //    }
 
     @Throws(WebDriverException::class)
     override suspend fun evaluate(expression: String): Any? {
-        return invokeOnPage("evaluate") { page.evaluate(expression) }
+        return driverHelper.invokeOnPage("evaluate") { page.evaluate(expression) }
     }
 
     @Throws(WebDriverException::class)
     override suspend fun evaluateDetail(expression: String): JsEvaluation? {
-        return invokeOnPage("evaluateDetail") { createJsEvaluate(page.evaluateDetail(expression)) }
+        return driverHelper.invokeOnPage("evaluateDetail") { driverHelper.createJsEvaluate(page.evaluateDetail(expression)) }
     }
 
     @Throws(WebDriverException::class)
     override suspend fun evaluateValue(expression: String): Any? {
-        return invokeOnPage("evaluateValue") { page.evaluateValue(expression) }
+        return driverHelper.invokeOnPage("evaluateValue") { page.evaluateValue(expression) }
     }
 
     @Throws(WebDriverException::class)
     override suspend fun evaluateValueDetail(expression: String): JsEvaluation? {
-        return invokeOnPage("evaluateValueDetail") { createJsEvaluate(page.evaluateValueDetail(expression)) }
+        return driverHelper.invokeOnPage("evaluateValueDetail") { driverHelper.createJsEvaluate(page.evaluateValueDetail(expression)) }
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun evaluateValue(selector: String, functionDeclaration: String): Any? {
+        return driverHelper.invokeOnPage("callFunctionOn") {
+            driverHelper.createJsEvaluate(
+                page.evaluateValueDetail(
+                    selector,
+                    functionDeclaration
+                )
+            )
+        }
     }
 
     override suspend fun currentUrl(): String {
-        val mainFrameUrl = runCatching { invokeOnPage("currentUrl") { mainFrameAPI?.url } }
+        val mainFrameUrl = runCatching { driverHelper.invokeOnPage("currentUrl") { mainFrameAPI?.url } }
             .onFailure {
                 logger.warn("Failed to retrieve the mainFrameUrl", it)
             }.getOrNull()
@@ -287,7 +299,7 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun moveMouseTo(x: Double, y: Double) {
-        invokeOnPage("moveMouseTo") { mouse?.moveTo(x, y) }
+        driverHelper.invokeOnPage("moveMouseTo") { mouse?.moveTo(x, y) }
     }
 
     @Throws(WebDriverException::class)
@@ -332,7 +344,7 @@ class PulsarWebDriver(
      */
     @Throws(WebDriverException::class)
     override suspend fun click(selector: String, count: Int) {
-        invokeOnElement(selector, "click", scrollIntoView = true) { node ->
+        driverHelper.invokeOnElement(selector, "click", scrollIntoView = true) { node ->
             val delayMillis = randomDelayMillis("click")
             emulator.click(node, count, position = "center", modifier = null, delayMillis = delayMillis)
         }
@@ -340,7 +352,7 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun click(selector: String, modifier: String) {
-        invokeOnElement(selector, "click", scrollIntoView = true) { node ->
+        driverHelper.invokeOnElement(selector, "click", scrollIntoView = true) { node ->
             val delayMillis = randomDelayMillis("click")
             emulator.click(node, 1, position = "center", modifier = modifier, delayMillis = delayMillis)
         }
@@ -355,7 +367,7 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun type(selector: String, text: String) {
-        invokeOnElement(selector, "type") {
+        driverHelper.invokeOnElement(selector, "type") {
             val node = page.focusOnSelector(selector) ?: return@invokeOnElement
             emulator.click(node, 1)
             keyboard?.type(text, randomDelayMillis("type"))
@@ -365,7 +377,7 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun fill(selector: String, text: String) {
-        invokeOnElement(selector, "fill", focus = true) { node ->
+        driverHelper.invokeOnElement(selector, "fill", focus = true) { node ->
             // val value = evaluateDetail("document.querySelector('$selector').value")?.value?.toString() ?: ""
             val value = page.getAttribute(node, "value")
             if (value != null) {
@@ -388,7 +400,7 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun press(selector: String, key: String) {
-        invokeOnElement(selector, "press", focus = true) { node ->
+        driverHelper.invokeOnElement(selector, "press", focus = true) { node ->
             keyboard?.press(key, randomDelayMillis("press"))
         }
     }
@@ -430,7 +442,7 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun outerHTML(selector: String): String? {
-        return invokeOnElement(selector, "outerHTML") { node ->
+        return driverHelper.invokeOnElement(selector, "outerHTML") { node ->
             when {
                 node.isNull() -> null
                 else -> domAPI?.getOuterHTML(node.nodeId, node.backendNodeId, node.objectId)
@@ -513,7 +525,7 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun pageSource(): String? {
-        return invokeOnPage("pageSource") {
+        return driverHelper.invokeOnPage("pageSource") {
             // pageAPI?.getResourceContent(mainFrameAPI?.id, currentUrl())
             val document = domAPI?.getDocument() ?: return@invokeOnPage null
             domAPI?.getOuterHTML(document.nodeId, document.backendNodeId)
@@ -569,7 +581,7 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun pause() {
-        invokeOnPage("pause") { pageAPI?.stopLoading() }
+        driverHelper.invokeOnPage("pause") { pageAPI?.stopLoading() }
     }
 
     @Throws(WebDriverException::class)
@@ -857,83 +869,9 @@ class PulsarWebDriver(
         return mapper.readValue(mapper.writeValueAsString(cookie))
     }
 
-    private suspend fun <T> invokeOnPage(name: String, message: String? = null, action: suspend () -> T): T? {
-        try {
-            return rpc.invokeDeferred(name) {
-                action()
-            }
-        } catch (e: ChromeDriverException) {
-            rpc.handleChromeException(e, name, message)
-        }
-
-        return null
-    }
-
-    private suspend fun <T> invokeOnElement(
-        selector: String,
-        name: String,
-        focus: Boolean = false,
-        scrollIntoView: Boolean = false,
-        action: suspend (NodeRef) -> T
-    ): T? {
-        try {
-            return rpc.invokeDeferred(name) {
-                val node = if (focus) {
-                    page.focusOnSelector(selector)
-                } else if (scrollIntoView) {
-                    page.scrollIntoViewIfNeeded(selector)
-                } else {
-                    page.resolveSelector(selector)
-                }
-
-                if (node != null) {
-                    action(node)
-                } else {
-                    null
-                }
-            }
-        } catch (e: ChromeDriverException) {
-            rpc.handleChromeException(e, name, "selector: [$selector], focus: $focus, scrollIntoView: $scrollIntoView")
-        }
-
-        return null
-    }
-
-    private suspend fun predicateOnElement(
-        selector: String,
-        name: String,
-        focus: Boolean = false,
-        scrollIntoView: Boolean = false,
-        predicate: suspend (NodeRef) -> Boolean
-    ): Boolean = invokeOnElement(selector, name, focus, scrollIntoView, predicate) == true
-
     private suspend fun cdpDeleteCookies(
         name: String, url: String? = null, domain: String? = null, path: String? = null
     ) {
         networkAPI?.deleteCookies(name, url, domain, path)
-    }
-
-    private fun createJsEvaluate(evaluate: Evaluate?): JsEvaluation? {
-        evaluate ?: return null
-
-        val result = evaluate.result
-        val exception = evaluate.exceptionDetails
-
-        return if (exception != null) {
-            val jsException = JsException(
-                text = exception.text,
-                lineNumber = exception.lineNumber,
-                columnNumber = exception.columnNumber,
-                url = exception.url,
-            )
-            JsEvaluation(exception = jsException)
-        } else {
-            JsEvaluation(
-                value = result.value,
-                unserializableValue = result.unserializableValue,
-                className = result.className,
-                description = result.description
-            )
-        }
     }
 }

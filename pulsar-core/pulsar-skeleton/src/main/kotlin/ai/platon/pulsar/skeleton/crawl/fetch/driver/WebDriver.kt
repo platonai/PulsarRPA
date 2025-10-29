@@ -1385,26 +1385,25 @@ interface WebDriver : Closeable {
     suspend fun <T> evaluate(expression: String, defaultValue: T): T
 
     /** Detailed evaluation metadata (beta). */
-    @Beta
     @Throws(WebDriverException::class)
     suspend fun evaluateDetail(expression: String): JsEvaluation?
 
     /**
      * Executes JavaScript returning JSON if availiable value if possible (objects serialized), else primitive/string/null.
      */
-    @Beta
     @Throws(WebDriverException::class)
     suspend fun evaluateValue(expression: String): Any?
 
     /** Executes JS returning JSONifiable value or [defaultValue] if null/incompatible. */
-    @Beta
     @Throws(WebDriverException::class)
     suspend fun <T> evaluateValue(expression: String, defaultValue: T): T
 
     /** Detailed value evaluation metadata (beta). */
-    @Beta
     @Throws(WebDriverException::class)
     suspend fun evaluateValueDetail(expression: String): JsEvaluation?
+
+    @Throws(WebDriverException::class)
+    suspend fun evaluateValue(selector: String, functionDeclaration: String): Any?
 
     /**
      * Capture a screenshot of the current viewport (or primary browsing context) after ensuring any pending layout.

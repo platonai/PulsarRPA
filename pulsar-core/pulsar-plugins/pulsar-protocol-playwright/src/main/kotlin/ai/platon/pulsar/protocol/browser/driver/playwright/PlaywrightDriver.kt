@@ -778,6 +778,11 @@ class PlaywrightDriver(
         }
     }
 
+    @Throws(WebDriverException::class)
+    override suspend fun evaluateValue(selector: String, functionDeclaration: String): Any? {
+        return page.locator(selector).evaluate(functionDeclaration)
+    }
+
     /**
      * Captures a screenshot of the current page.
      * @return The screenshot as a base64 encoded string
