@@ -727,11 +727,12 @@ open class InteractiveBrowserEmulator(
         val urls = mutableMapOf(AppConstants.PULSAR_DOCUMENT_NORMALIZED_URI to page.url)
         urls.forEach { (rel, href) ->
             val js = """
-                ;;
-                const link = document.createElement('link');
-                link.rel = '$rel';
-                link.href = '$href';
-                document.head.appendChild(link);
+                (() => {
+                    const link = document.createElement('link');
+                    link.rel = '$rel';
+                    link.href = '$href';
+                    document.head.appendChild(link);
+                })()
             """.trimIndent().replace("\n", ";")
 
             val result = driver.evaluateDetail(js)

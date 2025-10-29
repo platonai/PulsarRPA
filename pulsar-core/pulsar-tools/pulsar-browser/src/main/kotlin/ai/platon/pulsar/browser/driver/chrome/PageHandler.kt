@@ -15,6 +15,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.js.JsUtils
 
 /**
  * NodeId does not explicitly prohibit 0, but as seen in the internal implementation (Chromium source code):
@@ -293,10 +294,15 @@ class PageHandler(
     @Throws(ChromeDriverException::class)
     suspend fun evaluateDetail(expression: String): Evaluate? {
 //        val iife = JsUtils.toIIFE(confuser.confuse(expression))
-//        return runtime?.evaluate(iife)
-        val evaluate = runtimeAPI?.evaluate(confuser.confuse(expression))
 
-        return evaluate
+        val confusedExpr = confuser.confuse(expression)
+
+        return try {
+            runtimeAPI?.evaluate(confusedExpr)
+        } catch (e: Exception) {
+            logger.warn("Failed to evaluate $expression", e)
+            null
+        }
     }
 
     /**
@@ -306,12 +312,12 @@ class PageHandler(
      * @return Remote object value in case of primitive values or JSON values (if it was requested).
      * */
     @Throws(ChromeDriverException::class)
-    suspend fun evaluate(expression: String): Any? {
-        val evaluate = evaluateDetail(expression)
+    suspend fun evaluate(script: String): Any? {
+        val evaluate = evaluateDetail(script)
 
         val exception = evaluate?.exceptionDetails?.exception
         if (exception != null) {
-            logger.warn(exception.description + "\n>>>$expression<<<")
+            logger.warn(exception.description + "\n>>>$script<<<")
         }
 
         val result = evaluate?.result
@@ -319,14 +325,31 @@ class PageHandler(
     }
 
     @Throws(ChromeDriverException::class)
-    suspend fun evaluateValueDetail(expression: String): Evaluate? {
+    suspend fun evaluateValueDetail(script: String): Evaluate? {
+        val expression: String
+        val lines = script.split('\n').map { it.trim() }.filter { it.isNotBlank() }
+        // Check if this script is a IIFE
+        if (lines.size > 1) {
+            val firstLine = lines[0]
+            if (!firstLine.startsWith("(")) {
+                expression = JsUtils.toIIFE(confuser.confuse(script))
+            } else {
+                expression = script
+            }
+        } else {
+            expression = script
+        }
 //        val iife = JsUtils.toIIFE(confuser.confuse(expression))
-//        return evaluate(iife, returnByValue = true)
-        val expression2 = confuser.confuse(expression)
-        // return cdpEvaluate(expression2, returnByValue = true)
 
-        // returnByValue: Whether the result is expected to be a JSON object that should be sent by value.
-        return runtimeAPI?.evaluate(expression2, returnByValue = true)
+        val confusedExpr = confuser.confuse(expression)
+
+        return try {
+            // returnByValue: Whether the result is expected to be a JSON object that should be sent by value.
+            runtimeAPI?.evaluate(confusedExpr, returnByValue = true)
+        } catch (e: Exception) {
+            logger.warn("Failed to evaluate $expression", e)
+            null
+        }
     }
 
     /**
@@ -336,12 +359,12 @@ class PageHandler(
      * @return Remote object value in case of primitive values or JSON values (if it was requested).
      * */
     @Throws(ChromeDriverException::class)
-    suspend fun evaluateValue(expression: String): Any? {
-        val evaluate = evaluateValueDetail(expression)
+    suspend fun evaluateValue(script: String): Any? {
+        val evaluate = evaluateValueDetail(script)
 
         val exception = evaluate?.exceptionDetails?.exception
         if (exception != null) {
-            logger.info(exception.description + "\n>>>$expression<<<")
+            logger.info(exception.description + "\n>>>$script<<<")
         }
 
         return evaluate?.result?.value
@@ -403,7 +426,7 @@ class PageHandler(
             val remoteObject = domAPI?.resolveNode(nodeId, backendNodeId, null, null)
 
             if (remoteObject?.objectId == null) {
-                logger.warn("Failed to resolve backend node ID: {}", backendNodeId)
+                logger.warn("Failed to resolve node: {}, {}", nodeId, backendNodeId)
                 return null
             }
 
