@@ -131,7 +131,7 @@ object PulsarContexts {
     }
 
     /**
-     * Close the all the created context.
+     * Close the all the created context and shutdown Browser4.
      */
     @Synchronized
     @JvmStatic
@@ -140,4 +140,11 @@ object PulsarContexts {
         contexts.clear()
         activeContext = null
     }
+
+    /**
+     * Close the all the created context and shutdown Browser4.
+     */
+    @Synchronized
+    @JvmStatic
+    fun close() = shutdown()
 }

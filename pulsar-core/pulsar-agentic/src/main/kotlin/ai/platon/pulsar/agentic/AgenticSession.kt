@@ -85,9 +85,10 @@ open class BasicAgenticSession(
     id: Long = generateNextInProcessId()
 ) : AbstractAgenticSession(context, sessionConfig, id) {
 
+    private val executor by lazy { InternalAgentExecutor(this) }
+
     override suspend fun resolve(problem: String): PerceptiveAgent {
-        val executor = InternalAgentExecutor(this)
-        InternalAgentExecutor(this).resolve(problem)
+        executor.resolve(problem)
         return executor.agent
     }
 
@@ -96,24 +97,16 @@ open class BasicAgenticSession(
     }
 
     override suspend fun act(action: ActionOptions): PerceptiveAgent {
-        val executor = InternalAgentExecutor(this)
         executor.act(action)
         return executor.agent
     }
 
-    override suspend fun performAct(action: ActionDescription): InstructionResult {
-        val executor = InternalAgentExecutor(this)
-        return executor.performAct(action)
-    }
+    override suspend fun performAct(action: ActionDescription) = executor.performAct(action)
 
-    override suspend fun execute(action: ActionDescription): InstructionResult {
-        return InternalAgentExecutor(this).execute(action)
-    }
+    override suspend fun execute(action: ActionDescription) = executor.execute(action)
 
     @Deprecated("Use act instead", replaceWith = ReplaceWith("act(action)"))
-    override suspend fun instruct(prompt: String): InstructionResult {
-        return InternalAgentExecutor(this).instruct(prompt)
-    }
+    override suspend fun instruct(prompt: String) = executor.instruct(prompt)
 }
 
 open class AbstractAgenticQLSession(
@@ -122,9 +115,10 @@ open class AbstractAgenticQLSession(
     config: SessionConfig
 ) : AbstractH2SQLSession(context, sessionDelegate, config), AgenticSession {
 
+    private val executor by lazy { InternalAgentExecutor(this) }
+
     override suspend fun resolve(problem: String): PerceptiveAgent {
-        val executor = InternalAgentExecutor(this)
-        InternalAgentExecutor(this).resolve(problem)
+        executor.resolve(problem)
         return executor.agent
     }
 
@@ -133,24 +127,16 @@ open class AbstractAgenticQLSession(
     }
 
     override suspend fun act(action: ActionOptions): PerceptiveAgent {
-        val executor = InternalAgentExecutor(this)
         executor.act(action)
         return executor.agent
     }
 
-    override suspend fun performAct(action: ActionDescription): InstructionResult {
-        val executor = InternalAgentExecutor(this)
-        return executor.performAct(action)
-    }
+    override suspend fun performAct(action: ActionDescription) = executor.performAct(action)
 
-    override suspend fun execute(action: ActionDescription): InstructionResult {
-        return InternalAgentExecutor(this).execute(action)
-    }
+    override suspend fun execute(action: ActionDescription) = executor.execute(action)
 
     @Deprecated("Use act instead", replaceWith = ReplaceWith("act(action)"))
-    override suspend fun instruct(prompt: String): InstructionResult {
-        return InternalAgentExecutor(this).instruct(prompt)
-    }
+    override suspend fun instruct(prompt: String) = executor.instruct(prompt)
 }
 
 open class AgenticQLSession(

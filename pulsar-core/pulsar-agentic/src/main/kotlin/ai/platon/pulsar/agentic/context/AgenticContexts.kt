@@ -66,4 +66,6 @@ object AgenticContexts {
 
     @Synchronized
     fun shutdown() = PulsarContexts.shutdown()
+
+    fun close() = shutdown()
 }
