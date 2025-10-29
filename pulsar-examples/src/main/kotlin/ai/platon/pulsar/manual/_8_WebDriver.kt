@@ -45,16 +45,11 @@ internal class WebDriverDemo(private val session: AgenticSession = AgenticContex
             println("click $selector ...")
             driver.click(selector)
 
-            println("Using plain language, tell the browser to click $selector ...")
-            // Only works when LLM is configured
-            session.bindDriver(driver)
-            session.act("scroll to middle")
-
             println("select first text by $selector ...")
             var text = driver.selectFirstTextOrNull(selector) ?: "no-text"
-            text = text.substring(1, 4)
+            text = text.trim().take(5)
 
-            println("type $text in $searchBoxSelector ...")
+            println("type `$text` in $searchBoxSelector ...")
             driver.type(searchBoxSelector, text)
         }
     }
@@ -103,6 +98,11 @@ internal class WebDriverDemo(private val session: AgenticSession = AgenticContex
         driver.click(searchBoxSubmit)
         val url = driver.currentUrl()
         println("page navigated to $url")
+
+        println("Using plain language, tell the browser to click $selector ...")
+        // Only works when LLM is configured
+        session.bindDriver(driver)
+        session.act("scroll to middle")
     }
 }
 
@@ -110,12 +110,10 @@ internal class WebDriverDemo(private val session: AgenticSession = AgenticContex
  * Demonstrates how to use a web driver to interact with the page.
  * */
 fun main() {
-    // Set the system to work with single page applications (SPA)
-    PulsarSettings.withDefaultBrowser().withSPA()
-
     val url = TestResourceUtil.PRODUCT_DETAIL_URL
     val args = "-refresh -parse"
-    val session = AgenticContexts.createSession()
+    // Set the system to work with single page applications (SPA)
+    val session = AgenticContexts.createSession(spa = true)
     val crawler = WebDriverDemo(session)
     session.load(url, crawler.options(args))
 }

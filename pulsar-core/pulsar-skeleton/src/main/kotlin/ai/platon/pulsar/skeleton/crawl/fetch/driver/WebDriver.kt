@@ -1390,7 +1390,7 @@ interface WebDriver : Closeable {
     suspend fun evaluateDetail(expression: String): JsEvaluation?
 
     /**
-     * Executes JavaScript returning JSONifiable value if possible (objects serialized), else primitive/string/null.
+     * Executes JavaScript returning JSON if availiable value if possible (objects serialized), else primitive/string/null.
      */
     @Beta
     @Throws(WebDriverException::class)

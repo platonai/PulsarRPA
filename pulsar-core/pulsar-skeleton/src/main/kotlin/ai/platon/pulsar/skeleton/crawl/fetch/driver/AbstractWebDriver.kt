@@ -388,18 +388,18 @@ abstract class AbstractWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun outerHTML(selector: String): String? {
         val safeSelector = Strings.escapeForJsString(selector)
-        return evaluate("__pulsar_utils__.outerHTML('$safeSelector')")?.toString()
+        return evaluateValue("__pulsar_utils__.outerHTML('$safeSelector')")?.toString()
     }
 
     override suspend fun textContent(): String? {
-        return evaluate("document.body.textContent")?.toString()
+        return evaluateValue("document.body.textContent")?.toString()
     }
 
     @Throws(WebDriverException::class)
     override suspend fun selectFirstTextOrNull(selector: String): String? {
         val safeSelector = Strings.escapeForJsString(selector)
         val expression = String.format("__pulsar_utils__.selectFirstText('%s')", safeSelector)
-        return evaluate(expression)?.toString()
+        return evaluateValue(expression)?.toString()
     }
 
     @Throws(WebDriverException::class)
@@ -412,7 +412,7 @@ abstract class AbstractWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String? {
         val safeSelector = Strings.escapeForJsString(selector)
-        return evaluate("__pulsar_utils__.selectFirstAttribute('$safeSelector', '$attrName')")?.toString()
+        return evaluateValue("__pulsar_utils__.selectFirstAttribute('$safeSelector', '$attrName')")?.toString()
     }
 
     override suspend fun selectAttributes(selector: String): Map<String, String> {

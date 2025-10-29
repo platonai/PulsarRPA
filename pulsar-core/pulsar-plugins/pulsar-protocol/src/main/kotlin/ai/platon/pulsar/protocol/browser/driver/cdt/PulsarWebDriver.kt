@@ -429,12 +429,6 @@ class PulsarWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun outerHTML(): String? {
-        // ":root" selector is required, see https://github.com/platonai/browser4/issues/107
-        return outerHTML(":root")
-    }
-
-    @Throws(WebDriverException::class)
     override suspend fun outerHTML(selector: String): String? {
         return invokeOnElement(selector, "outerHTML") { node ->
             when {

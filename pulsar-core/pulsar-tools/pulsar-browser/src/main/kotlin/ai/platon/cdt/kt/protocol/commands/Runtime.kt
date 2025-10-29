@@ -187,10 +187,6 @@ interface Runtime {
     @ParamName("uniqueContextId") @Optional @Experimental uniqueContextId: String? = null,
   ): Evaluate
 
-  suspend fun evaluate(@ParamName("expression") expression: String): Evaluate {
-    return evaluate(expression, null, null, null, null, null, null, null, null, null, null, null, null, null, null)
-  }
-
   /**
    * Returns the isolate id.
    */
