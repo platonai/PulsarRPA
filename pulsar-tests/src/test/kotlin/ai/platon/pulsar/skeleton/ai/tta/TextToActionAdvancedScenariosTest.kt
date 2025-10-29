@@ -1,8 +1,8 @@
 package ai.platon.pulsar.skeleton.ai.tta
 
+import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.util.server.EnableMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
@@ -16,7 +16,10 @@ import org.springframework.boot.test.context.SpringBootTest
  */
 @Tag("ExternalServiceTest")
 @Tag("TimeConsumingTest")
-@SpringBootTest(classes = [EnableMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(
+    classes = [EnableMockServerApplication::class],
+    webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
+)
 class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
     @BeforeEach
@@ -42,7 +45,10 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.cssFriendlyExpressions.size <= 1, "Should generate at most one action for complex: $command")
+            assertTrue(
+                actionDescription.cssFriendlyExpressions.size <= 1,
+                "Should generate at most one action for complex: $command"
+            )
 
             printlnPro("Complex workflow command: $command")
             printlnPro("Generated action: ${actionDescription.cssFriendlyExpressions}")
@@ -50,8 +56,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
             // Should handle complex instructions in some way
 
-                val expression = actionDescription.cssFriendlyExpressions.first()
-                assertTrue(expression.isNotBlank(), "Should generate non-empty action")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            assertTrue(expression.isNotBlank(), "Should generate non-empty action")
         }
     }
 
@@ -71,15 +77,18 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.cssFriendlyExpressions.size <= 1, "Should generate at most one action for conditional: $command")
+            assertTrue(
+                actionDescription.cssFriendlyExpressions.size <= 1,
+                "Should generate at most one action for conditional: $command"
+            )
 
             printlnPro("Conditional command: $command")
             printlnPro("Generated action: ${actionDescription.cssFriendlyExpressions}")
 
             // Should handle conditional logic
 
-                val expression = actionDescription.cssFriendlyExpressions.first()
-                assertTrue(expression.isNotBlank(), "Should generate non-empty action")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            assertTrue(expression.isNotBlank(), "Should generate non-empty action")
         }
     }
 
@@ -102,13 +111,17 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+            assertEquals(
+                1,
+                actionDescription.cssFriendlyExpressions.size,
+                "Should generate exactly one action for valid command: $command"
+            )
 
             printlnPro("Context-aware command: $command (expected: $expectedContext)")
             printlnPro("Generated action: ${actionDescription.cssFriendlyExpressions}")
 
-                val expression = actionDescription.cssFriendlyExpressions.first()
-                assertTrue(expression.isNotBlank(), "Should generate non-empty action")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            assertTrue(expression.isNotBlank(), "Should generate non-empty action")
         }
     }
 
@@ -129,13 +142,17 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertEquals(1, actionDescription.cssFriendlyExpressions.size, "Should generate exactly one action for valid command: $command")
+            assertEquals(
+                1,
+                actionDescription.cssFriendlyExpressions.size,
+                "Should generate exactly one action for valid command: $command"
+            )
 
             printlnPro("Spatial command: $command (expected: $expectedPosition)")
             printlnPro("Generated action: ${actionDescription.cssFriendlyExpressions}")
 
-                val expression = actionDescription.cssFriendlyExpressions.first()
-                assertTrue(expression.isNotBlank(), "Should generate non-empty action")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            assertTrue(expression.isNotBlank(), "Should generate non-empty action")
         }
     }
 
@@ -161,7 +178,10 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.cssFriendlyExpressions.size <= 1, "Should handle malformed command: '$command'")
+            assertTrue(
+                actionDescription.cssFriendlyExpressions.size <= 1,
+                "Should handle malformed command: '$command'"
+            )
 
             printlnPro("Malformed command: '$command'")
             printlnPro("Generated action: ${actionDescription.cssFriendlyExpressions}")
@@ -188,15 +208,18 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
             val actionDescription = textToAction.generate(command, driver)
 
             assertNotNull(actionDescription)
-            assertTrue(actionDescription.cssFriendlyExpressions.size <= 1, "Should handle contradictory command: $command")
+            assertTrue(
+                actionDescription.cssFriendlyExpressions.size <= 1,
+                "Should handle contradictory command: $command"
+            )
 
             printlnPro("Contradictory command: $command")
             printlnPro("Generated action: ${actionDescription.cssFriendlyExpressions}")
 
             // Should handle contradictions in some way
 
-                val expression = actionDescription.cssFriendlyExpressions.first()
-                assertTrue(expression.isNotBlank(), "Should generate non-empty action")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            assertTrue(expression.isNotBlank(), "Should generate non-empty action")
         }
     }
 
@@ -230,33 +253,37 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
     }
 
     @Test
-    fun `When given commands with special Unicode characters then handle appropriately`() = runEnhancedWebDriverTest { driver ->
-        driver.navigateTo(ttaUrl1)
-        driver.waitForSelector("body")
+    fun `When given commands with special Unicode characters then handle appropriately`() =
+        runEnhancedWebDriverTest { driver ->
+            driver.navigateTo(ttaUrl1)
+            driver.waitForSelector("body")
 
-        val unicodeCommands = listOf(
-            "输入表情符号🙂😊😎",
-            "输入数学符号∑∏∫∆",
-            "输入货币符号$€£¥",
-            "输入箭头符号←→↑↓",
-            "type emoji 😀 in name field"
-        )
+            val unicodeCommands = listOf(
+                "输入表情符号🙂😊😎",
+                "输入数学符号∑∏∫∆",
+                "输入货币符号$€£¥",
+                "输入箭头符号←→↑↓",
+                "type emoji 😀 in name field"
+            )
 
-        unicodeCommands.forEach { command ->
-            val actionDescription = textToAction.generate(command, driver)
+            unicodeCommands.forEach { command ->
+                val actionDescription = textToAction.generate(command, driver)
 
-            assertNotNull(actionDescription)
-            assertTrue(actionDescription.cssFriendlyExpressions.size <= 1, "Should handle Unicode command: $command")
+                assertNotNull(actionDescription)
+                assertTrue(
+                    actionDescription.cssFriendlyExpressions.size <= 1,
+                    "Should handle Unicode command: $command"
+                )
 
-            printlnPro("Unicode command: $command")
-            printlnPro("Generated action: ${actionDescription.cssFriendlyExpressions}")
+                printlnPro("Unicode command: $command")
+                printlnPro("Generated action: ${actionDescription.cssFriendlyExpressions}")
 
-            // Should handle Unicode characters
+                // Should handle Unicode characters
 
                 val expression = actionDescription.cssFriendlyExpressions.first()
                 assertTrue(expression.isNotBlank(), "Should generate non-empty action")
+            }
         }
-    }
 
     @Test
     fun `When given commands in different languages then handle appropriately`() = runEnhancedWebDriverTest { driver ->
@@ -280,8 +307,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
             printlnPro("$language command: $command")
             printlnPro("Generated action: ${actionDescription.cssFriendlyExpressions}")
-                val expression = actionDescription.cssFriendlyExpressions.first()
-                assertTrue(expression.isNotBlank(), "Should generate non-empty action")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            assertTrue(expression.isNotBlank(), "Should generate non-empty action")
         }
     }
 
@@ -310,35 +337,38 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         // Results should be consistent
         val firstResult = results.first()
         results.forEach { result ->
-            assertEquals(firstResult.cssFriendlyExpressions.size, result.cssFriendlyExpressions.size,
-                        "Should be consistent in number of actions")
+            assertEquals(
+                firstResult.cssFriendlyExpressions.size, result.cssFriendlyExpressions.size,
+                "Should be consistent in number of actions"
+            )
         }
     }
 
     @Test
-    fun `When given commands with timing requirements then handle appropriately`() = runEnhancedWebDriverTest { driver ->
-        driver.navigateTo("$ttaBaseURL/interactive-2.html")
-        driver.waitForSelector("body")
+    fun `When given commands with timing requirements then handle appropriately`() =
+        runEnhancedWebDriverTest { driver ->
+            driver.navigateTo("$ttaBaseURL/interactive-2.html")
+            driver.waitForSelector("body")
 
-        val timingCommands = listOf(
-            "等待2秒后输入姓名张三",
-            "选择语言后等待1秒再显示摘要",
-            "先等待页面完全加载再勾选订阅",
-            "wait 3 seconds then fill name with John"
-        )
+            val timingCommands = listOf(
+                "等待2秒后输入姓名张三",
+                "选择语言后等待1秒再显示摘要",
+                "先等待页面完全加载再勾选订阅",
+                "wait 3 seconds then fill name with John"
+            )
 
-        timingCommands.forEach { command ->
-            val actionDescription = textToAction.generate(command, driver)
+            timingCommands.forEach { command ->
+                val actionDescription = textToAction.generate(command, driver)
 
-            assertNotNull(actionDescription)
-            assertTrue(actionDescription.cssFriendlyExpressions.size <= 1, "Should handle timing command: $command")
+                assertNotNull(actionDescription)
+                assertTrue(actionDescription.cssFriendlyExpressions.size <= 1, "Should handle timing command: $command")
 
-            printlnPro("Timing command: $command")
-            printlnPro("Generated action: ${actionDescription.cssFriendlyExpressions}")
+                printlnPro("Timing command: $command")
+                printlnPro("Generated action: ${actionDescription.cssFriendlyExpressions}")
                 val expression = actionDescription.cssFriendlyExpressions.first()
                 assertTrue(expression.isNotBlank(), "Should generate non-empty action")
+            }
         }
-    }
 
     // ======== VALIDATION AND ASSERTION TESTS ========
 
@@ -362,8 +392,8 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
             printlnPro("Validation command: $command (type: $expectedType)")
             printlnPro("Generated action: ${actionDescription.cssFriendlyExpressions}")
-                val expression = actionDescription.cssFriendlyExpressions.first()
-                assertTrue(expression.isNotBlank(), "Should generate non-empty action")
+            val expression = actionDescription.cssFriendlyExpressions.first()
+            assertTrue(expression.isNotBlank(), "Should generate non-empty action")
         }
     }
 
@@ -393,16 +423,20 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
 
         // If there are function calls, validate their format
         actionDescription.cssFriendlyExpressions.forEach { functionCall ->
-            assertTrue(functionCall.startsWith("driver.") || functionCall.contains("driver."),
-                      "Function call should reference driver: $functionCall")
-            assertTrue(functionCall.contains("(") && functionCall.contains(")"),
-                      "Function call should have proper syntax: $functionCall")
+            assertTrue(
+                functionCall.startsWith("driver.") || functionCall.contains("driver."),
+                "Function call should reference driver: $functionCall"
+            )
+            assertTrue(
+                functionCall.contains("(") && functionCall.contains(")"),
+                "Function call should have proper syntax: $functionCall"
+            )
         }
 
         // Validate model response
         assertTrue(
             actionDescription.modelResponse!!.content.isNotBlank() ||
-            actionDescription.modelResponse == ModelResponse.LLM_NOT_AVAILABLE,
+                    actionDescription.modelResponse == ModelResponse.LLM_NOT_AVAILABLE,
             "Model response should have content or be LLM_NOT_AVAILABLE"
         )
     }

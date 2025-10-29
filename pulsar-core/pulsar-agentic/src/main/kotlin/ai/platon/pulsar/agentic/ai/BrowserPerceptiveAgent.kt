@@ -9,11 +9,11 @@ import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.ActionExecuteResult
 import ai.platon.pulsar.agentic.ai.tta.InstructionResult
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
-import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
+import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
@@ -30,12 +30,14 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
+import org.slf4j.helpers.MessageFormatter
 import java.io.IOException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.URI
 import java.net.UnknownHostException
 import java.nio.file.Files
+import java.text.MessageFormat
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -169,7 +171,8 @@ class BrowserPerceptiveAgent(
     override suspend fun act(action: ActionOptions): ActResult {
         return try {
             withTimeout(config.actTimeoutMs) {
-                doObserveAct(action)
+                val messages = AgentMessageList()
+                doObserveAct(action, messages)
             }
         } catch (_: TimeoutCancellationException) {
             val msg = "Action timed out after ${config.actTimeoutMs}ms: ${action.action}"
@@ -245,54 +248,26 @@ class BrowserPerceptiveAgent(
             }
         }
 
-        val toolCall = ToolCall(
-            domain = domain,
-            method = lowerMethod,
-            arguments = toolArgs,
-            description = observe.description
-        )
+        val observeElement = observe.observeElements?.firstOrNull() ?: return ActResult(false, "No observation", action = method)
+        val toolCall = observeElement.toolCall ?: return ActResult(false, "No tool call", action = method)
 
         return try {
-            val observeElement = ObserveElement(
-                locator = observe.locator,
-                currentPageContentSummary = observe.currentPageContentSummary,
-                actualLastActionImpact = observe.actualLastActionImpact,
-                expectedNextActionImpact = observe.expectedNextActionImpact,
-                toolCall = toolCall,
-                node = null,
-                backendNodeId = observe.backendNodeId,
-                xpath = null,
-                cssSelector = null,
-                expressions = observe.observeElements?.flatMap { it.expressions } ?: emptyList(),
-                cssFriendlyExpressions = observe.observeElements?.flatMap { it.cssFriendlyExpressions } ?: emptyList(),
-                modelResponse = null
-            )
             val action = ActionDescription(observeElement = observeElement)
 
             val result = doToolCallExecute(toolCall, action)
 
-            val msg = "Action [$lowerMethod] executed on selector: ${observe.locator}".trim()
+            logger.info("Action executed | {} | {}/{} | {}",
+                lowerMethod, observe.locator, observeElement.cssSelector, observeElement.cssFriendlyExpressions)
+
+            val msg = MessageFormatter.arrayFormat("Action executed | {} | {}/{} | {}",
+                arrayOf(lowerMethod, observe.locator, observeElement.cssSelector, observeElement.cssFriendlyExpressions))
             // Record exactly once for this executed action
-            recordAction(step = null, method = lowerMethod, success = true, observe = observeElement, message = msg)
-            ActResult(success = true, message = msg, action = toolCall.method)
+            recordAction(step = null, method = lowerMethod, success = true, observe = observeElement, message = msg.message)
+            ActResult(success = true, message = msg.message, action = toolCall.method)
         } catch (e: Exception) {
             logger.error("observe.act execution failed sid={} msg={}", uuid.toString().take(8), e.message, e)
             val msg = e.message ?: "Execution failed"
             // Record failed action attempt once
-            val observeElement = ObserveElement(
-                locator = observe.locator,
-                currentPageContentSummary = observe.currentPageContentSummary,
-                actualLastActionImpact = observe.actualLastActionImpact,
-                expectedNextActionImpact = observe.expectedNextActionImpact,
-                toolCall = toolCall,
-                node = null,
-                backendNodeId = observe.backendNodeId,
-                xpath = null,
-                cssSelector = null,
-                expressions = observe.observeElements?.flatMap { it.expressions } ?: emptyList(),
-                cssFriendlyExpressions = observe.observeElements?.flatMap { it.cssFriendlyExpressions } ?: emptyList(),
-                modelResponse = null
-            )
             recordAction(step = null, method = lowerMethod, success = false, observe = observeElement, message = msg)
             ActResult(success = false, message = msg, action = toolCall.method)
         }
@@ -343,7 +318,9 @@ class BrowserPerceptiveAgent(
     }
 
     override suspend fun observe(options: ObserveOptions): List<ObserveResult> {
-        val action = doObserveAndReturnActionDescription(options)
+        val messages = AgentMessageList()
+
+        val action = doObserveAndReturnActionDescription(options, messages)
 
         val observeElements = listOfNotNull(action.observeElement)
         val results = observeElements.map { ele ->
@@ -468,15 +445,12 @@ class BrowserPerceptiveAgent(
         }
     }
 
-    private suspend fun doObserveAndReturnActionDescription(options: ObserveOptions): ActionDescription {
-        // Returns:
-        // `options.instruction`
-        // OR: "Find elements that can be used for any future actions in the page."
+    private suspend fun doObserveAndReturnActionDescription(options: ObserveOptions, messages: AgentMessageList): ActionDescription {
         val instruction = promptBuilder.initObserveUserInstruction(options.instruction)
+        messages.addUser(instruction, name = "instruction")
 
         val browserUseState = getBrowserUseState()
         val params = ObserveParams(
-            instruction = instruction,
             browserUseState = browserUseState,
             requestId = UUID.randomUUID().toString(),
             returnAction = options.returnAction ?: false,
@@ -484,20 +458,20 @@ class BrowserPerceptiveAgent(
             fromAct = false
         )
 
-        return doObserveAndReturnActionDescription(params)
+        return doObserveAndReturnActionDescription(params, messages)
     }
 
-    private suspend fun doObserveAct(action: ActionOptions): ActResult {
+    private suspend fun doObserveAct(action: ActionOptions, messages: AgentMessageList): ActResult {
         // 1) Build instruction for action-oriented observe
         val toolCalls = AgentTool.SUPPORTED_TOOL_CALLS
-        val instruction = promptBuilder.buildObserveActToolUsePrompt(action.action, toolCalls, action.variables)
-        require(instruction.contains("click")) {
-            "Instruction must contains tool list for action: $action"
-        }
+
+        promptBuilder.buildObserveActToolSpecsPrompt(messages, toolCalls, action.variables)
+
+        val instruction = promptBuilder.buildObserveActToolUsePrompt(action.action)
+        messages.addUser(instruction, "instruction")
 
         val browserUseState = getBrowserUseState()
         val params = ObserveParams(
-            instruction = instruction,
             browserUseState = browserUseState,
             requestId = UUID.randomUUID().toString(),
             returnAction = true,
@@ -506,7 +480,7 @@ class BrowserPerceptiveAgent(
         )
 
         // 3) Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
-        val results = doObserve(params)
+        val results = doObserve(params, messages)
 
         if (results.isEmpty()) {
             val msg = "doObserveAct: No actionable element found"
@@ -565,8 +539,9 @@ class BrowserPerceptiveAgent(
         return ActResult(false, msg, action = action.action)
     }
 
-    private suspend fun doObserve(params: ObserveParams): List<ObserveResult> {
-        val actionDescription = doObserveAndReturnActionDescription(params)
+    private suspend fun doObserve(params: ObserveParams, messages: AgentMessageList): List<ObserveResult> {
+        requireNotNull(messages.instruction) { "User instruction is required | $messages" }
+        val actionDescription = doObserveAndReturnActionDescription(params, messages)
 
         val observeElements = listOfNotNull(actionDescription.observeElement)
         return observeElements.map { ele ->
@@ -585,20 +560,21 @@ class BrowserPerceptiveAgent(
         }
     }
 
-    private suspend fun doObserveAndReturnActionDescription(params: ObserveParams): ActionDescription {
+    private suspend fun doObserveAndReturnActionDescription(params: ObserveParams, messages: AgentMessageList): ActionDescription {
+        val instruction = requireNotNull(messages.instruction) { "User instruction is required | $messages" }
         val requestId: String = params.requestId
-        logObserveStart(params.instruction, requestId)
+        logObserveStart(instruction.content, requestId)
         return try {
             val actionDescription = withTimeout(config.llmInferenceTimeoutMs) {
-                inference.observe(params)
+                inference.observe(params, messages)
             }
 
             val results = listOfNotNull(actionDescription.observeElement)
-            addHistoryObserve(params.instruction, requestId, results.size, results.isNotEmpty())
+            addHistoryObserve(instruction.content, requestId, results.size, results.isNotEmpty())
             return actionDescription
         } catch (e: Exception) {
             logger.error("observeAct.observe.error requestId={} msg={}", requestId.take(8), e.message, e)
-            addHistoryObserve(params.instruction, requestId, 0, false)
+            addHistoryObserve(instruction.content, requestId, 0, false)
             ActionDescription(errors = e.stringify())
         }
     }
@@ -688,10 +664,7 @@ class BrowserPerceptiveAgent(
     private fun addHistoryObserve(instruction: String, requestId: String, size: Int, success: Boolean) {
         trace(
             "observe[$requestId] ${if (success) "OK" else "FAIL"} ${
-                Strings.compactLog(
-                    instruction,
-                    200
-                )
+                PromptBuilder.compactPrompt(instruction, 200)
             } -> $size elements"
         )
     }
@@ -845,7 +818,7 @@ class BrowserPerceptiveAgent(
                     null
                 }
 
-                messages.add("user", promptBuilder.buildOverallGoalMessage(overallGoal), name = "overallGoal")
+                messages.addLast("user", promptBuilder.buildOverallGoalMessage(overallGoal), name = "overallGoal")
                 messages.addUser(promptBuilder.buildAgentStateHistoryMessage(stateHistory))
                 if (screenshotB64 != null) {
                     messages.addUser("[Current page screenshot provided as base64 image]")
@@ -1174,6 +1147,7 @@ class BrowserPerceptiveAgent(
         if (stateHistory.size > config.maxHistorySize * 2) {
             _stateHistory.subList(0, config.maxHistorySize).clear()
         }
+        _processTrace.add(h.toString())
     }
 
     private fun trace(entry: String) {

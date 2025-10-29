@@ -3,7 +3,7 @@ package ai.platon.pulsar.examples.agent
 import ai.platon.pulsar.agentic.context.AgenticContexts
 
 class ProblemResolver {
-    val session = AgenticContexts.getOrCreateSession(spa = true)
+    val session = AgenticContexts.getOrCreateSession()
 
     suspend fun run() {
         val driver = session.createBoundDriver()

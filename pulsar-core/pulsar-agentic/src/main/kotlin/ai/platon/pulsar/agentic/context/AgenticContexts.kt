@@ -37,7 +37,7 @@ object AgenticContexts {
 
     @Synchronized
     fun createSession(
-        spa: Boolean? = null,
+        spa: Boolean? = true,
         headless: Boolean = false,
         maxBrowsers: Int? = null,
         maxOpenTabs: Int? = null,
@@ -50,7 +50,7 @@ object AgenticContexts {
 
     @Synchronized
     fun getOrCreateSession(
-        spa: Boolean? = null,
+        spa: Boolean? = true,
         headless: Boolean = false,
         maxBrowsers: Int? = null,
         maxOpenTabs: Int? = null,

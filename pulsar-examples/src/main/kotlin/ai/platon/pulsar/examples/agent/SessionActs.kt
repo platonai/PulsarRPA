@@ -23,7 +23,7 @@ class SessionActs {
         logger.info("[RESULT ${stepNo}] $label => $text")
     }
 
-    private val session = AgenticContexts.getOrCreateSession(spa = true)
+    private val session = AgenticContexts.getOrCreateSession()
 
     suspend fun run() {
         // Use local mock site instead of external site so actions are deterministic.

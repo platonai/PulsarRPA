@@ -1,6 +1,7 @@
 package ai.platon.pulsar.agentic.ai.agent
 
 import ai.platon.pulsar.agentic.AgenticSession
+import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.SimpleMessage
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
@@ -58,7 +59,6 @@ data class ExtractParams(
 )
 
 data class ObserveParams constructor(
-    val instruction: String,
     val overallGoal: String? = null,
     val browserUseState: BrowserUseState,
     val requestId: String = UUID.randomUUID().toString(),
@@ -231,13 +231,14 @@ class InferenceEngine(
         return result
     }
 
-    suspend fun observe(params: ObserveParams): ActionDescription {
+    suspend fun observe(params: ObserveParams, messages: AgentMessageList): ActionDescription {
+        val instruction = requireNotNull(messages.instruction) { "User instruction is required | $messages" }
         if (params.returnAction) {
-            require(params.instruction.contains("click")) {
-                "If `returnAction` is true, the tool specifications has to be included in `params.instruction`" }
+            require(messages.exists("toolSpecs")) {
+                "If `returnAction` is true, the tool specifications has to be included | $messages" }
         }
 
-        val messages = promptBuilder.buildObservePrompt(params)
+        promptBuilder.buildObservePrompt(messages, params)
 
         val prefix = if (params.fromAct) "act" else "observe"
         var callFile = ""

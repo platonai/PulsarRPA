@@ -336,7 +336,7 @@ $overallGoal
     }
 
     fun buildExtractUserPrompt(instruction: String, domContent: String, browserStateJson: String?): SimpleMessage {
-        val instructionLabel = if (isZH) "指令: " else "Instruction: "
+        val instructionLabel = if (isZH) "指令: \n" else "Instruction: \n"
         val browserStateLabel = if (isZH) "当前浏览器状态" else "Current Browser State"
         val domLabel = if (isZH) "DOM: " else "DOM: "
 
@@ -419,15 +419,12 @@ chunksTotal: $chunksTotal
         return SimpleMessage(role = "user", content = content)
     }
 
-    fun buildObservePrompt(params: ObserveParams): AgentMessageList {
+    fun buildObservePrompt(messages: AgentMessageList, params: ObserveParams) {
         // observe guide
-        val messages = AgentMessageList()
         val systemMsg = buildObserveGuideSystemPrompt(params.userProvidedInstructions)
-        messages.add(systemMsg)
-        // instruction + DOM + browser state + schema
+        messages.addFirst(systemMsg)
+        // DOM + browser state + schema
         buildObserveUserMessage(messages, params)
-
-        return messages
     }
 
     fun buildObserveGuideSystemPrompt(userProvidedInstructions: String? = null): SimpleMessage {
@@ -498,18 +495,8 @@ Be comprehensive: if there are multiple elements that may be relevant for future
     }
 
     fun buildObserveUserMessage(messages: AgentMessageList, params: ObserveParams) {
-        val instruction = params.instruction
         val browserStateJson = params.browserUseState.browserState.lazyJson
         val nanoTreeJson = params.browserUseState.domState.nanoTreeLazyJson
-
-        val instruction0 = instruction
-            .replace("指令: ", "")
-            .replace("instruction: ", "")
-        if (isZH) {
-            messages.addUser("指令: $instruction0")
-        } else {
-            messages.addUser("instruction: $instruction0")
-        }
 
         val schemaContract = buildObserveResultSchemaContract(params)
         fun contentCN() = """
@@ -547,17 +534,12 @@ $schemaContract
             else -> contentEN()
         }
 
-        messages.add("user", content)
+        messages.addLast("user", content)
     }
 
-    fun buildObserveActToolUsePrompt(
-        action: String, toolCalls: List<String>, variables: Map<String, String>? = null
-    ): String {
-        val toolSpecs = buildObserveActToolSpecsPrompt(action, toolCalls, variables)
-
+    fun buildObserveActToolUsePrompt(action: String): String {
         val instruction =
-            """$toolSpecs
-
+            """
 ## 用户指令
 根据以下动作查找最相关的页面元素：$action。为该元素提供一个工具来执行该动作。分析执行后的影响和预期结果。
 
@@ -569,8 +551,8 @@ $schemaContract
     }
 
     fun buildObserveActToolSpecsPrompt(
-        action: String, toolCalls: List<String>, variables: Map<String, String>? = null
-    ): String {
+        messages: AgentMessageList, toolCalls: List<String>, variables: Map<String, String>? = null
+    ) {
         // Base instruction
         val toolSpecs = if (isZH) {
             """
@@ -598,9 +580,6 @@ ${toolCalls.joinToString("\n")}
 """.trimIndent()
         } else {
             """
-Find the most relevant element to perform an action on given the following action: $action.
-Provide a tool to perform the action for this element. Analyze the impact and expected outcomes after execution.
-
 ## Supported Tool List
 
 ```kotlin
@@ -624,6 +603,6 @@ ${toolCalls.joinToString("\n")}
 """.trimIndent()
         }
 
-        return toolSpecs
+        messages.addSystem(toolSpecs, "toolSpecs")
     }
 }

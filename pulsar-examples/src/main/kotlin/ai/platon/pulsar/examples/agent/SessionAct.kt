@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import ai.platon.pulsar.test.server.DemoSiteStarter
-import kotlinx.coroutines.runBlocking
 
 class SessionAct {
     private val logger = getLogger(this)
@@ -16,15 +15,15 @@ class SessionAct {
     private fun step(label: String) { logger.info("[STEP ${++stepNo}] $label") }
     private fun result(label: String, value: Any?) {
         val text = if (value is PerceptiveAgent) {
-            Strings.compactLog(value.processTrace.lastOrNull())
+            value.processTrace.joinToString("\n") { Strings.compactLog(it, 200) }
         } else {
-            Strings.compactLog(value?.toString())
+            Strings.compactLog(value?.toString(), 2000)
         }
 
         logger.info("[RESULT ${stepNo}] $label => $text")
     }
 
-    private val session = AgenticContexts.getOrCreateSession(spa = true)
+    private val session = AgenticContexts.getOrCreateSession()
 
     suspend fun run() {
         // Use local mock site instead of external site so actions are deterministic.
@@ -47,6 +46,10 @@ class SessionAct {
         var actOptions = ActionOptions("search for 'browser'")
         var agent = session.act(actOptions)
         result("action result", agent)
+
+        var text = driver.selectFirstAttributeOrNull("#searchBox", "value")
+        println("Text in search box: $text")
+        println("HTML search box: " + driver.outerHTML("#searchBox"))
 
         AgenticContexts.close()
     }

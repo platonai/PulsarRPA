@@ -59,3 +59,5 @@ ai.platon.pulsar.browser.driver.chrome.dom.ChromeDomServiceIsScrollableTest#isSc
 - NanoDOMTreeNode 确保每一个可见元素的文档坐标均存在
 - highlight 非常重要
 - click() 增加 Key 参数，譬如 Ctrl + click
+- 增加对 AbstractWebDriver 中所有 js 方法的测试，在PulsarWebDriverMockSiteTests中测试
+-

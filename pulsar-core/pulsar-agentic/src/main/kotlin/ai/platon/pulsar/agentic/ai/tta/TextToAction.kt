@@ -17,7 +17,6 @@ import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonElement
 import org.apache.commons.lang3.StringUtils
@@ -104,7 +103,7 @@ open class TextToAction(
         instruction: String, browserUseState: BrowserUseState, screenshotB64: String? = null, toolCallLimit: Int = 100,
     ): ModelResponse {
         val messages = AgentMessageList()
-        messages.add("user", instruction)
+        messages.addLast("user", instruction)
         return generateResponse(messages, browserUseState, screenshotB64, toolCallLimit)
     }
 
