@@ -88,7 +88,7 @@ class FBNLocator(
 
         fun parse(str: String): FBNLocator? {
             val trimmed = str.trim()
-            val frameId = StringUtils.substringBetween(trimmed, ":", SEPARATOR).toIntOrNull() ?: 0
+            val frameId = StringUtils.substringBetween(trimmed, ":", SEPARATOR)?.toIntOrNull() ?: 0
             val backendNodeId = trimmed.substringAfterLast(SEPARATOR).toIntOrNull() ?: return null
             return FBNLocator(frameId, backendNodeId)
         }
