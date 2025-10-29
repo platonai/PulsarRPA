@@ -378,7 +378,7 @@ class PulsarWebDriver(
             }
 
             emulator.click(node, 1)
-            // keyboard?.type(text, randomDelayMillis("fill"))
+
             // For fill, there is no delay between key presses
             keyboard?.type(text, 0)
 

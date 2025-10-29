@@ -37,7 +37,6 @@ import java.net.SocketTimeoutException
 import java.net.URI
 import java.net.UnknownHostException
 import java.nio.file.Files
-import java.text.MessageFormat
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -182,74 +181,14 @@ class BrowserPerceptiveAgent(
     }
 
     override suspend fun act(observe: ObserveResult): ActResult {
-        val method = observe.method?.trim()?.takeIf { it.isNotEmpty() }
-        val locator = observe.locator?.let { Locator.parse(it) }
-        val argsMap: Map<String, Any?> = observe.arguments ?: emptyMap()
+        val observeElement = observe.observeElements?.firstOrNull() ?:
+            return ActResult(false, "No observation", action = observe.method)
+        val toolCall0 = observeElement.toolCall ?:
+            return ActResult(false, "No tool call", action = observe.method)
 
-        if (method == null || locator == null) {
-            val msg = "No valuable observations were made | " + Pson.toJson(observe)
-            // Not an executed action
-            trace(msg)
-            return ActResult(success = false, message = msg, action = "")
-        }
-
-        val toolArgs = mutableMapOf<String, String?>()
-        argsMap.forEach { (k, v) -> toolArgs[k] = v?.toString() }
-
-        val selectorActions = AgentTool.SELECTOR_ACTIONS
-        val domain = observe.domain ?: "unknown"
-        val lowerMethod = method
-        val backendNodeId = observe.backendNodeId
-        val selector =
-            observe.backendNodeId?.let { "backend:$backendNodeId" } ?: observe.locator?.takeIf { it.isNotBlank() }
-        if (lowerMethod in selectorActions) {
-            toolArgs["selector"] = selector
-            if (selector == null) {
-                val msg = "No selector observation were made $locator | $observe"
-                trace(msg)
-                return ActResult(success = false, message = msg, action = method)
-            }
-        }
-
-        val driver = requireNotNull(activeDriver)
-        if (lowerMethod == "waitForNavigation") {
-            if (toolArgs["oldUrl"]?.toString().isNullOrBlank()) {
-                toolArgs["oldUrl"] = driver.currentUrl()
-            }
-            if (toolArgs["timeoutMillis"] == null) {
-                toolArgs["timeoutMillis"] = 5000L.toString()
-            }
-        }
-
-        if (lowerMethod == "navigateTo") {
-            val url = toolArgs["url"]?.toString()
-            if (url == null) {
-                val msg = "No url observation were made | " + Pson.toJson(observe)
-                trace(msg)
-                return ActResult(false, msg, action = method)
-            }
-
-            if (!isSafeUrl(url)) {
-                val msg = "Blocked unsafe URL: $url"
-                trace(msg)
-                return ActResult(false, msg, action = method)
-            }
-        }
-
-        if (config.enablePreActionValidation) {
-            val ok = actionValidator.validateToolCall(ToolCall(domain, lowerMethod, toolArgs))
-            if (!ok) {
-                val msg = "Tool call validation failed for $lowerMethod with selector ${selector?.take(120)}"
-                val sid = uuid.toString().take(8)
-                val curUrl = runCatching { driver.currentUrl() }.getOrDefault("")
-                logger.info("observe_act.validate.fail sid={} url={} msg={} ", sid, curUrl, msg)
-                trace(msg)
-                return ActResult(false, msg, action = method)
-            }
-        }
-
-        val observeElement = observe.observeElements?.firstOrNull() ?: return ActResult(false, "No observation", action = method)
-        val toolCall = observeElement.toolCall ?: return ActResult(false, "No tool call", action = method)
+        val patch = patchToolCall(toolCall0, observe)
+        val toolCall = patch.toolCall ?: return ActResult(patch.success, patch.message, action = patch.action)
+        val method = toolCall.method
 
         return try {
             val action = ActionDescription(observeElement = observeElement)
@@ -257,20 +196,97 @@ class BrowserPerceptiveAgent(
             val result = doToolCallExecute(toolCall, action)
 
             logger.info("Action executed | {} | {}/{} | {}",
-                lowerMethod, observe.locator, observeElement.cssSelector, observeElement.cssFriendlyExpressions)
+                method, observe.locator, observeElement.cssSelector, observeElement.cssFriendlyExpressions)
 
             val msg = MessageFormatter.arrayFormat("Action executed | {} | {}/{} | {}",
-                arrayOf(lowerMethod, observe.locator, observeElement.cssSelector, observeElement.cssFriendlyExpressions))
+                arrayOf(method, observe.locator, observeElement.cssSelector, observeElement.cssFriendlyExpressions))
             // Record exactly once for this executed action
-            recordAction(step = null, method = lowerMethod, success = true, observe = observeElement, message = msg.message)
+            recordAction(step = null, method = method, success = true, observe = observeElement, message = msg.message)
             ActResult(success = true, message = msg.message, action = toolCall.method)
         } catch (e: Exception) {
             logger.error("observe.act execution failed sid={} msg={}", uuid.toString().take(8), e.message, e)
             val msg = e.message ?: "Execution failed"
             // Record failed action attempt once
-            recordAction(step = null, method = lowerMethod, success = false, observe = observeElement, message = msg)
+            recordAction(step = null, method = method, success = false, observe = observeElement, message = msg)
             ActResult(success = false, message = msg, action = toolCall.method)
         }
+    }
+
+    data class ToolCallPatch(
+        val success: Boolean,
+        val message: String,
+        val action: String,
+        val toolCall: ToolCall? = null
+    )
+
+    private suspend fun patchToolCall(toolCall: ToolCall, observe: ObserveResult): ToolCallPatch {
+        val observeElement = observe.observeElements?.firstOrNull()
+            ?: return ToolCallPatch(false, "No observe element", action = "")
+        val domain = toolCall.domain
+        val method = toolCall.method.trim().takeIf { it.isNotEmpty() }
+        val locator = observe.locator?.let { Locator.parse(it) }
+
+        if (method == null || locator == null) {
+            val msg = "No valuable observations were made"
+            // Not an executed action
+            trace(msg)
+            return ToolCallPatch(success = false, message = msg, action = "")
+        }
+
+        toolCall.arguments.forEach {  }
+
+        val selectorActions = AgentTool.SELECTOR_ACTIONS
+        val lowerMethod = method
+        val backendNodeId = observe.backendNodeId
+        val selector =
+            observe.backendNodeId?.let { "backend:$backendNodeId" } ?: observe.locator?.takeIf { it.isNotBlank() }
+        if (lowerMethod in selectorActions) {
+            toolCall.arguments["selector"] = selector
+            if (selector == null) {
+                val msg = "No selector observation were made $locator | $observe"
+                trace(msg)
+                return ToolCallPatch(success = false, message = msg, action = method)
+            }
+        }
+
+        val driver = requireNotNull(activeDriver)
+        if (lowerMethod == "waitForNavigation") {
+            if (toolCall.arguments["oldUrl"].isNullOrBlank()) {
+                toolCall.arguments["oldUrl"] = driver.currentUrl()
+            }
+            if (toolCall.arguments["timeoutMillis"] == null) {
+                toolCall.arguments["timeoutMillis"] = 5000L.toString()
+            }
+        }
+
+        if (lowerMethod == "navigateTo") {
+            val url = toolCall.arguments["url"]
+            if (url == null) {
+                val msg = "No url observation were made | " + Pson.toJson(observe)
+                trace(msg)
+                return ToolCallPatch(false, msg, action = method)
+            }
+
+            if (!isSafeUrl(url)) {
+                val msg = "Blocked unsafe URL: $url"
+                trace(msg)
+                return ToolCallPatch(false, msg, action = method)
+            }
+        }
+
+        if (config.enablePreActionValidation) {
+            val ok = actionValidator.validateToolCall(observeElement.toolCall)
+            if (!ok) {
+                val msg = "Tool call validation failed for $lowerMethod with selector ${selector?.take(120)}"
+                val sid = uuid.toString().take(8)
+                val curUrl = runCatching { driver.currentUrl() }.getOrDefault("")
+                logger.info("observe_act.validate.fail sid={} url={} msg={} ", sid, curUrl, msg)
+                trace(msg)
+                return ToolCallPatch(false, msg, action = method)
+            }
+        }
+
+        return ToolCallPatch(true, "", method, toolCall = toolCall)
     }
 
     override suspend fun extract(instruction: String): ExtractResult {

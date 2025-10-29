@@ -18,7 +18,7 @@ data class ActionOptions(
 data class ActResult(
     val success: Boolean,
     val message: String,
-    val action: String
+    val action: String? = null,
 )
 
 data class ExtractOptions(
@@ -50,7 +50,7 @@ data class ObserveOptions(
     val frameId: String? = null
 )
 
-data class ToolCall(
+data class ToolCall constructor(
     val domain: String,
     val method: String,
     val arguments: MutableMap<String, String?> = mutableMapOf(),

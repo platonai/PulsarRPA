@@ -31,7 +31,11 @@ class ActionValidator(
      * Validates tool calls before execution
      * High Priority #5: Deny unknown actions by default for security
      */
-    fun validateToolCall(toolCall: ToolCall): Boolean {
+    fun validateToolCall(toolCall: ToolCall?): Boolean {
+        if (toolCall == null) {
+            return false
+        }
+
         val cacheKey = "${toolCall.method}:${toolCall.arguments}"
         return validationCache.getOrPut(cacheKey) {
             when (toolCall.method) {

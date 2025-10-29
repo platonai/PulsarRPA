@@ -170,30 +170,29 @@ open class TextToAction(
             }
             contentStart.contains("\"elements\"") -> {
                 val elements: ObserveResponseElements = mapper.readValue(content)
-                when (val ele = elements.elements?.firstOrNull()) {
-                    null -> ActionDescription(modelResponse = response)
-                    else -> {
-                        val observeElement = ObserveElement(
-                            locator = ele.locator,
+                val ele = elements.elements?.firstOrNull() ?: return ActionDescription(modelResponse = response)
+                val arguments = ele.arguments
+                    ?.mapNotNull { arg -> arg?.get("name") to arg?.get("value") }
+                    ?.filter { it.first != null && it.second != null }
+                    ?.associate { it.first!! to it.second!! }
 
-                            currentPageContentSummary = ele.currentPageContentSummary,
-                            actualLastActionImpact = ele.actualLastActionImpact,
-                            expectedNextActionImpact = ele.expectedNextActionImpact,
+                val observeElement = ObserveElement(
+                    locator = ele.locator,
 
-                            toolCall = ToolCall(
-                                domain = ele.domain ?: "",
-                                method = ele.method ?: "",
-                                arguments = ele.arguments?.flatMap { it?.entries ?: emptyList() }
-                                    ?.associate { it.toPair() }?.toMutableMap()
-                                    ?: mutableMapOf(),
-                            ),
+                    currentPageContentSummary = ele.currentPageContentSummary,
+                    actualLastActionImpact = ele.actualLastActionImpact,
+                    expectedNextActionImpact = ele.expectedNextActionImpact,
 
-                            modelResponse = response,
-                        )
+                    toolCall = ToolCall(
+                        domain = ele.domain ?: "",
+                        method = ele.method ?: "",
+                        arguments = arguments?.toMutableMap() ?: mutableMapOf(),
+                    ),
 
-                        ActionDescription(observeElement = observeElement, modelResponse = response)
-                    }
-                }
+                    modelResponse = response,
+                )
+
+                ActionDescription(observeElement = observeElement, modelResponse = response)
             }
             else -> ActionDescription(modelResponse = response)
         }
@@ -209,7 +208,8 @@ open class TextToAction(
         val node = if (fbnLocator != null) browserUseState.domState.locatorMap[fbnLocator] else null
         val fbnSelector = fbnLocator?.absoluteSelector
 
-        if (arguments != null && arguments.contains("selector")) {
+        // always provide a selector, ToolCallExecutor.toolCallToExpression() will handle the real arguments
+        if (arguments != null) {
             arguments["selector"] = fbnSelector
         }
 

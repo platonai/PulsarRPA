@@ -113,7 +113,7 @@ class ToolCallExecutor {
         // Extract function name and arguments from the command string
         val (objectName, functionName, args) = parseKotlinFunctionExpression(command) ?: return null
 
-        return doExecute(objectName, functionName, args ?: mutableMapOf(), driver)
+        return doExecute(objectName, functionName, args, driver)
     }
 
     /**
@@ -966,62 +966,62 @@ class ToolCallExecutor {
             .replace("\"", "\\\"")
 
         fun toolCallToExpression(tc: ToolCall): String? {
-            val arguments = tc.arguments ?: mapOf()
+            val arguments = tc.arguments
             return when (tc.method) {
                 // Navigation
-                "navigateTo" -> arguments["url"]?.toString()?.let { "driver.navigateTo(\"${it.esc()}\")" }
+                "navigateTo" -> arguments["url"]?.let { "driver.navigateTo(\"${it.esc()}\")" }
                 // Backward compatibility for older prompts
-                "goto" -> arguments["url"]?.toString()?.let { "driver.navigateTo(\"${it.esc()}\")" }
+                "goto" -> arguments["url"]?.let { "driver.navigateTo(\"${it.esc()}\")" }
                 // Wait
-                "waitForSelector" -> arguments["selector"]?.toString()?.let { sel ->
+                "waitForSelector" -> arguments["selector"]?.let { sel ->
                     "driver.waitForSelector(\"${sel.esc()}\", ${(arguments["timeoutMillis"] ?: 5000)})"
                 }
                 // Status checking (first batch of new tools)
-                "exists" -> arguments["selector"]?.toString()?.let { "driver.exists(\"${it.esc()}\")" }
-                "isVisible" -> arguments["selector"]?.toString()?.let { "driver.isVisible(\"${it.esc()}\")" }
-                "focus" -> arguments["selector"]?.toString()?.let { "driver.focus(\"${it.esc()}\")" }
+                "exists" -> arguments["selector"]?.let { "driver.exists(\"${it.esc()}\")" }
+                "isVisible" -> arguments["selector"]?.let { "driver.isVisible(\"${it.esc()}\")" }
+                "focus" -> arguments["selector"]?.let { "driver.focus(\"${it.esc()}\")" }
                 // Basic interactions
-                "click" -> arguments["selector"]?.toString()?.let { "driver.click(\"${it.esc()}\")" }
-                "fill" -> arguments["selector"]?.toString()?.let { s ->
-                    val text = arguments["text"]?.toString()?.esc() ?: ""
+                "click" -> arguments["selector"]?.let { "driver.click(\"${it.esc()}\")" }
+                "fill" -> arguments["selector"]?.let { s ->
+                    val text = arguments["text"]?.esc() ?: ""
                     "driver.fill(\"${s.esc()}\", \"$text\")"
                 }
 
-                "press" -> arguments["selector"]?.toString()?.let { s ->
-                    arguments["key"]?.toString()?.let { k -> "driver.press(\"${s.esc()}\", \"${k.esc()}\")" }
+                "press" -> arguments["selector"]?.let { s ->
+                    arguments["key"]?.let { k -> "driver.press(\"${s.esc()}\", \"${k.esc()}\")" }
                 }
 
-                "check" -> arguments["selector"]?.toString()?.let { "driver.check(\"${it.esc()}\")" }
-                "uncheck" -> arguments["selector"]?.toString()?.let { "driver.uncheck(\"${it.esc()}\")" }
+                "check" -> arguments["selector"]?.let { "driver.check(\"${it.esc()}\")" }
+                "uncheck" -> arguments["selector"]?.let { "driver.uncheck(\"${it.esc()}\")" }
                 // Scrolling
                 "scrollDown" -> "driver.scrollDown(${arguments["count"] ?: 1})"
                 "scrollUp" -> "driver.scrollUp(${arguments["count"] ?: 1})"
-                "scrollTo" -> arguments["selector"]?.toString()?.let { "driver.scrollTo(\"${it.esc()}\")" }
+                "scrollTo" -> arguments["selector"]?.let { "driver.scrollTo(\"${it.esc()}\")" }
                 "scrollToTop" -> "driver.scrollToTop()"
                 "scrollToBottom" -> "driver.scrollToBottom()"
                 "scrollToMiddle" -> "driver.scrollToMiddle(${arguments["ratio"] ?: 0.5})"
                 "scrollToScreen" -> arguments["screenNumber"]?.let { n -> "driver.scrollToScreen(${n})" }
                 // Advanced clicks
-                "clickTextMatches" -> arguments["selector"]?.toString()?.let { s ->
-                    val pattern = arguments["pattern"]?.toString()?.esc() ?: return@let null
+                "clickTextMatches" -> arguments["selector"]?.let { s ->
+                    val pattern = arguments["pattern"]?.esc() ?: return@let null
                     val count = arguments["count"] ?: 1
                     "driver.clickTextMatches(\"${s.esc()}\", \"$pattern\", $count)"
                 }
 
-                "clickMatches" -> arguments["selector"]?.toString()?.let { s ->
-                    val attr = arguments["attrName"]?.toString()?.esc() ?: return@let null
-                    val pattern = arguments["pattern"]?.toString()?.esc() ?: return@let null
+                "clickMatches" -> arguments["selector"]?.let { s ->
+                    val attr = arguments["attrName"]?.esc() ?: return@let null
+                    val pattern = arguments["pattern"]?.esc() ?: return@let null
                     val count = arguments["count"] ?: 1
                     "driver.clickMatches(\"${s.esc()}\", \"$attr\", \"$pattern\", $count)"
                 }
 
                 "clickNthAnchor" -> arguments["n"]?.let { n ->
-                    val root = arguments["rootSelector"]?.toString() ?: "body"
+                    val root = arguments["rootSelector"] ?: "body"
                     "driver.clickNthAnchor(${n}, \"${root.esc()}\")"
                 }
                 // Enhanced navigation
                 "waitForNavigation" -> {
-                    val oldUrl = arguments["oldUrl"]?.toString() ?: ""
+                    val oldUrl = arguments["oldUrl"] ?: ""
                     val timeout = arguments["timeoutMillis"] ?: 5000L
                     "driver.waitForNavigation(\"${oldUrl.esc()}\", ${timeout})"
                 }
@@ -1030,13 +1030,13 @@ class ToolCallExecutor {
                 "goForward" -> "driver.goForward()"
                 // Screenshots
                 "captureScreenshot" -> {
-                    val sel = arguments["selector"]?.toString()
+                    val sel = arguments["selector"]
                     if (sel.isNullOrBlank()) "driver.captureScreenshot()" else "driver.captureScreenshot(\"${sel.esc()}\")"
                 }
                 // Timing
                 "delay" -> "driver.delay(${arguments["millis"] ?: 1000})"
                 // Browser-level operations
-                "switchTab" -> arguments["tabId"]?.toString()?.let { "browser.switchTab(\"${it.esc()}\")" }
+                "switchTab" -> arguments["tabId"]?.let { "browser.switchTab(\"${it.esc()}\")" }
                 else -> null
             }
         }

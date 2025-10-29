@@ -183,6 +183,7 @@ class Mouse(private val devTools: ChromeDevTools) {
     suspend fun click(x: Double, y: Double, clickCount: Int = 1, modifiers: Int? = null, delayMillis: Long = 500) {
         moveTo(x, y)
 
+
         // Proper multi-click semantics: for each click i, use clickCount=i on press/release
         for (cc in 1..max(1, clickCount)) {
             down(x, y, cc, modifiers)
