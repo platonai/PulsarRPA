@@ -20,7 +20,10 @@ import java.util.concurrent.ConcurrentHashMap
  * @author Vincent Zhang, ivincent.zhang@gmail.com, platon.ai
  */
 class ActionValidator(
-    private val config: AgentConfig
+    val maxSelectorLength: Int = 100,
+    val allowedPorts: Set<Int> = setOf(80, 443, 8080, 8443, 3000, 5000, 8000, 9000),
+    val denyUnknownActions: Boolean = false,
+    val allowLocalhost: Boolean = true,
 ) {
     private val logger = getLogger(this)
 
@@ -48,7 +51,7 @@ class ActionValidator(
                 "goBack", "goForward", "delay", "scrollToTop", "scrollToBottom", "scrollToMiddle", "scrollToViewport" -> true // These don't need validation
                 // High Priority #5: Deny unknown actions by default
                 else -> {
-                    if (config.denyUnknownActions) {
+                    if (denyUnknownActions) {
                         logger.warn("Unknown action blocked: ${toolCall.method}")
                         false
                     } else {
@@ -80,7 +83,7 @@ class ActionValidator(
         val selector = args["selector"]?.toString() ?: return false
 
         // Basic validation
-        if (selector.isBlank() || selector.length > config.maxSelectorLength) {
+        if (selector.isBlank() || selector.length > maxSelectorLength) {
             return false
         }
 
@@ -142,7 +145,7 @@ class ActionValidator(
             val host = uri.host?.lowercase() ?: return false
 
             // Configurable localhost blocking
-            if (!config.allowLocalhost) {
+            if (!allowLocalhost) {
                 val dangerousPatterns = listOf("localhost", "127.0.0.1", "0.0.0.0", "::1")
                 if (dangerousPatterns.any { host.contains(it) }) {
                     logger.warn("Blocked localhost URL (config): $host")
@@ -152,7 +155,7 @@ class ActionValidator(
 
             // Validate port with configurable whitelist
             val port = uri.port
-            if (port != -1 && port !in config.allowedPorts) {
+            if (port != -1 && port !in allowedPorts) {
                 logger.warn("Blocked URL with non-whitelisted port $port: $host")
                 return false
             }

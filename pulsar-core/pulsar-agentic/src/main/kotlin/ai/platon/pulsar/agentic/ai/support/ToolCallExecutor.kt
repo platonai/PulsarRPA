@@ -1,5 +1,6 @@
 package ai.platon.pulsar.agentic.ai.support
 
+import ai.platon.pulsar.agentic.ai.agent.detail.ActionValidator
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
@@ -966,6 +967,8 @@ class ToolCallExecutor {
             .replace("\"", "\\\"")
 
         fun toolCallToExpression(tc: ToolCall): String? {
+            ActionValidator().validateToolCall(tc)
+
             val arguments = tc.arguments
             return when (tc.method) {
                 // Navigation

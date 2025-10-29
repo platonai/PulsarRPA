@@ -103,7 +103,7 @@ class BrowserPerceptiveAgent(
 
     // Helper classes for better code organization
     private val pageStateTracker = PageStateTracker(session, config)
-    private val actionValidator = ActionValidator(config)
+    private val actionValidator = ActionValidator()
 
     // Action validation cache
     private val validationCache = ConcurrentHashMap<String, Boolean>()
