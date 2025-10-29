@@ -3,17 +3,15 @@ package ai.platon.pulsar.common
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.CsvSource
 import org.junit.jupiter.params.provider.ValueSource
 import java.io.IOException
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 class StringsKtTest {
 
     @Test
     fun `test readableClassName with KClass object`() {
-        val kclass = StringsKtTest::class
+        val kclass = KStringsTest::class
         val result = readableClassName(kclass)
         assertEquals("a.p.p.c.StringsKtTest", result)
     }
@@ -34,7 +32,7 @@ class StringsKtTest {
 
     @Test
     fun `test prependReadableClassName with custom separator`() {
-        val obj = StringsKtTest()
+        val obj = KStringsTest()
         val name = "testName"
         val separator = "-"
         val result = prependReadableClassName(obj, name, separator)
@@ -43,7 +41,7 @@ class StringsKtTest {
 
     @Test
     fun `test prependReadableClassName with whitespace ident`() {
-        val obj = StringsKtTest()
+        val obj = KStringsTest()
         val ident = "   "
         val name = "testName"
         val result = prependReadableClassName(obj, ident, name, ".")
@@ -145,7 +143,7 @@ class StringsKtTest {
     @ParameterizedTest
     @ValueSource(strings = [".", "-", "_", "/", "|", "::"])
     fun `test prependReadableClassName with various separators`(separator: String) {
-        val obj = StringsKtTest()
+        val obj = KStringsTest()
         val name = "testName"
         val result = prependReadableClassName(obj, name, separator)
         assertTrue(result.contains("StringsKtTest")) { result }

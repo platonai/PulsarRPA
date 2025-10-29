@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 
+import javax.annotation.Nonnull;
 import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
 import java.util.*;
@@ -134,14 +135,30 @@ public final class Strings {
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
             switch (c) {
-                case '\\': sb.append("\\\\"); break;
-                case '\'': sb.append("\\'"); break;
-                case '"':  sb.append("\\\""); break;
-                case '\n': sb.append("\\n"); break;
-                case '\r': sb.append("\\r"); break;
-                case '\t': sb.append("\\t"); break;
-                case '\b': sb.append("\\b"); break;
-                case '\f': sb.append("\\f"); break;
+                case '\\':
+                    sb.append("\\\\");
+                    break;
+                case '\'':
+                    sb.append("\\'");
+                    break;
+                case '"':
+                    sb.append("\\\"");
+                    break;
+                case '\n':
+                    sb.append("\\n");
+                    break;
+                case '\r':
+                    sb.append("\\r");
+                    break;
+                case '\t':
+                    sb.append("\\t");
+                    break;
+                case '\b':
+                    sb.append("\\b");
+                    break;
+                case '\f':
+                    sb.append("\\f");
+                    break;
                 default:
                     // 对非可打印字符（如 Unicode 控制符）进行转义
                     if (c < 0x20 || c > 0x7e) {
@@ -845,9 +862,15 @@ public final class Strings {
      * full-width spaces, and HTML non-breaking spaces — with a single regular space " ".
      *
      */
+    @Nonnull
     public static String compactLog(String log, int maxWidth) {
-        if (log == null) return null;
+        if (log == null) return "";
         return StringUtils.abbreviate(compactWhitespaces(log), maxWidth);
+    }
+
+    @Nonnull
+    public static String compactLog(String log) {
+        return compactLog(log, 200);
     }
 
     /**

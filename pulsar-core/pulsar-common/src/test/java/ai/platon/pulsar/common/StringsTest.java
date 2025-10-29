@@ -316,7 +316,7 @@ public class StringsTest {
     @Test
     @DisplayName("Test humanize with Class")
     void testHumanize_Class() {
-        assertEquals("strings test.suffix", Strings.humanize(StringsKtTest.class, "suffix", "."));
+        assertEquals("strings test.suffix", Strings.humanize(KStringsTest.class, "suffix", "."));
         assertNotNull(Strings.humanize(String.class, "test", "-"));
     }
 

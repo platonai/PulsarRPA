@@ -98,7 +98,7 @@ ${buildObserveResultSchema(true)}
 - 仅操作可见的交互元素
 - 遇到验证码或安全提示时停止执行
 
-## 工具规范：
+## 支持的工具列表：
 
 ```kotlin
 ${AgentTool.TOOL_CALL_SPECIFICATION}
@@ -130,16 +130,35 @@ ${AgentTool.TOOL_CALL_SPECIFICATION}
 
         """.trimIndent()
 
-        fun compactPrompt(prompt: String, maxWidth: Int = 200): String {
-            val a = "## 支持的工具列表"
-            val b = "## 无障碍树(Accessibility Tree)"
-            val c = "## 当前浏览器状态"
-            var substr = a + StringUtils.substringBetween(prompt, a, b)
-            var brief = prompt.replace(substr, "$a\n...")
-            substr = b + StringUtils.substringBetween(brief, b, c)
-            brief = brief.replace(substr, "$b\n...")
+        fun replaceContentInSections(input: String, boundaries: List<Pair<String, String>>, replacement: String): String {
+            var compacted = input
+            boundaries.map { (a, b) ->
+                val substr = StringUtils.substringBetween(compacted, a, b)
+                if (substr != null) {
+                    compacted = compacted.replace(substr, replacement)
+                }
+            }
 
-            return Strings.compactLog(brief, maxWidth)
+            return compacted
+        }
+
+        fun compactPrompt(prompt: String, maxWidth: Int = 200): String {
+            val boundaries = """
+你正在通过根据用户希望观察的页面内容来查找元素
+否则返回空数组。
+
+## 支持的工具列表
+##
+
+## 无障碍树(Accessibility Tree)
+##
+            """.trimIndent()
+
+            val boundaryPairs = boundaries.split("\n").filter { it.isNotBlank() }.chunked(2).map { it[0] to it[1] }
+
+            val compacted = replaceContentInSections(prompt, boundaryPairs, "...")
+
+            return Strings.compactLog(compacted, maxWidth)
         }
     }
 
@@ -481,10 +500,13 @@ Be comprehensive: if there are multiple elements that may be relevant for future
         val browserStateJson = params.browserUseState.browserState.lazyJson
         val nanoTreeJson = params.browserUseState.domState.nanoTreeLazyJson
 
+        val instruction0 = instruction
+            .replace("指令: ", "")
+            .replace("instruction: ", "")
         if (isZH) {
-            messages.addUser("指令: $instruction")
+            messages.addUser("指令: $instruction0")
         } else {
-            messages.addUser("instruction: $instruction")
+            messages.addUser("instruction: $instruction0")
         }
 
         val schemaContract = buildObserveResultSchemaContract(params)
@@ -519,11 +541,23 @@ $schemaContract
     fun buildObserveActToolUsePrompt(
         action: String, toolCalls: List<String>, variables: Map<String, String>? = null
     ): String {
-        // Base instruction
-        val instruction = if (isZH) {
-            """
-根据以下动作查找最相关的页面元素：$action。为该元素提供一个工具来执行该动作。分析执行后的影响和预期结果。
+        val toolSpecs = buildObserveActToolSpecsPrompt(action, toolCalls, variables)
 
+        val instruction =
+            """$toolSpecs
+
+## 用户指令
+根据以下动作查找最相关的页面元素：$action。为该元素提供一个工具来执行该动作。分析执行后的影响和预期结果。"""
+
+        return instruction
+    }
+
+    fun buildObserveActToolSpecsPrompt(
+        action: String, toolCalls: List<String>, variables: Map<String, String>? = null
+    ): String {
+        // Base instruction
+        val toolSpecs = if (isZH) {
+            """
 ## 支持的工具列表
 
 ```kotlin
@@ -568,6 +602,6 @@ ${toolCalls.joinToString("\n")}
 """.trimIndent()
         }
 
-        return instruction
+        return toolSpecs
     }
 }
