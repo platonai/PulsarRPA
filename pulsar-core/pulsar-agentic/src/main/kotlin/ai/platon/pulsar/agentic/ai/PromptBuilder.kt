@@ -5,10 +5,10 @@ import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.support.AgentTool
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
+import ai.platon.pulsar.common.KStrings
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.serialize.json.Pson
 import ai.platon.pulsar.skeleton.ai.AgentState
-import org.apache.commons.lang3.StringUtils
 import java.time.LocalDate
 import java.util.*
 import kotlin.math.min
@@ -85,6 +85,8 @@ $schema
 5) 始终验证目标元素存在且可见后再执行操作；
 6) 遇到错误时尝试替代方案或优雅终止；
 
+---
+
 ## 输出严格使用以下两种 JSON 之一：
 
 1) 动作输出（最多一个元素）：
@@ -97,6 +99,8 @@ ${buildObserveResultSchema(true)}
 ## 安全要求：
 - 仅操作可见的交互元素
 - 遇到验证码或安全提示时停止执行
+
+---
 
 ## 支持的工具列表：
 
@@ -117,6 +121,8 @@ ${AgentTool.TOOL_CALL_SPECIFICATION}
 - 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
 - 如果需要操作前一页面，但已跳转，使用 `goBack`
 
+---
+
 ## 无障碍树（Accessibility Tree）说明：
 
 无障碍树包含页面 DOM 关键节点的主要信息，包括节点文本内容，可见性，可交互性，坐标和尺寸等。
@@ -128,19 +134,9 @@ ${AgentTool.TOOL_CALL_SPECIFICATION}
 
 请基于当前页面截图、无障碍树与历史动作，规划下一步（严格单步原子动作）。
 
+---
+
         """.trimIndent()
-
-        fun replaceContentInSections(input: String, boundaries: List<Pair<String, String>>, replacement: String): String {
-            var compacted = input
-            boundaries.map { (a, b) ->
-                val substr = StringUtils.substringBetween(compacted, a, b)
-                if (substr != null) {
-                    compacted = compacted.replace(substr, replacement)
-                }
-            }
-
-            return compacted
-        }
 
         fun compactPrompt(prompt: String, maxWidth: Int = 200): String {
             val boundaries = """
@@ -148,15 +144,15 @@ ${AgentTool.TOOL_CALL_SPECIFICATION}
 否则返回空数组。
 
 ## 支持的工具列表
-##
+---
 
-## 无障碍树(Accessibility Tree)
-##
+## 无障碍树
+---
             """.trimIndent()
 
             val boundaryPairs = boundaries.split("\n").filter { it.isNotBlank() }.chunked(2).map { it[0] to it[1] }
 
-            val compacted = replaceContentInSections(prompt, boundaryPairs, "...")
+            val compacted = KStrings.replaceContentInSections(prompt, boundaryPairs, "\n...\n\n")
 
             return Strings.compactLog(compacted, maxWidth)
         }
@@ -451,6 +447,9 @@ chunksTotal: $chunksTotal
 - 所有节点可见，除非 `invisible` == true 显式指定。
 - 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
 - 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
+
+---
+
 """
 
         fun observeSystemPromptEN() = """
@@ -470,6 +469,9 @@ Return an array of elements that match the instruction if they exist, otherwise 
 - 所有节点可见，除非 `invisible` == true 显式指定。
 - 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
 - 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
+
+---
+
 """
 
         val observeSystemPrompt = if (isZH) observeSystemPromptCN() else observeSystemPromptEN()
@@ -514,20 +516,30 @@ Be comprehensive: if there are multiple elements that may be relevant for future
 ## 无障碍树(Accessibility Tree):
 $nanoTreeJson
 
+---
+
 ## 当前浏览器状态
 $browserStateJson
 
 $schemaContract
+
+---
+
 """
 
         fun contentEN() = """
 ## Accessibility Tree:
 $nanoTreeJson
 
+---
+
 ## Current Browser State
 $browserStateJson
 
 $schemaContract
+
+---
+
 """
 
         val content = when {
@@ -547,7 +559,11 @@ $schemaContract
             """$toolSpecs
 
 ## 用户指令
-根据以下动作查找最相关的页面元素：$action。为该元素提供一个工具来执行该动作。分析执行后的影响和预期结果。"""
+根据以下动作查找最相关的页面元素：$action。为该元素提供一个工具来执行该动作。分析执行后的影响和预期结果。
+
+---
+
+"""
 
         return instruction
     }
@@ -576,6 +592,9 @@ ${toolCalls.joinToString("\n")}
 - 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。不要模拟点击屏幕键盘上的按键
 - 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
 - 如果需要操作前一页面，但已跳转，使用 `goBack`
+
+---
+
 """.trimIndent()
         } else {
             """
@@ -599,6 +618,9 @@ ${toolCalls.joinToString("\n")}
 • For key actions (e.g., "press Enter"), use the press method (parameters: "A"/"Enter"/"Space"). Capitalize special keys. Do not simulate clicks on an on-screen keyboard.
 • Capitalize only special keys (e.g., Enter, Tab, Escape).
 • To interact with the previous page after navigation, use goBack.
+
+---
+
 """.trimIndent()
         }
 

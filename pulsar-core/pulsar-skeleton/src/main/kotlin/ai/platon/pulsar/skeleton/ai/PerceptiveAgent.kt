@@ -124,7 +124,10 @@ interface PerceptiveAgent {
      * with clear success/failure signals and the observation context that impacted/was impacted by the action.
      * */
     val stateHistory: List<AgentState>
-
+    /**
+     * The process trace.
+     * */
+    val processTrace: List<String>
     /**
      * Run `observe -> act -> observe -> act -> ...` loop to resolve the problem.
      * */

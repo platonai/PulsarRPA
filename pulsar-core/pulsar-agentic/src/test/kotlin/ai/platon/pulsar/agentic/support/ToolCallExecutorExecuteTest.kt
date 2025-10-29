@@ -208,7 +208,7 @@ class ToolCallExecutorExecuteTest {
         coEvery { driver.scrollToTop() } just Runs
         coEvery { driver.scrollToBottom() } just Runs
         coEvery { driver.scrollToMiddle(any()) } just Runs
-        coEvery { driver.scrollToScreen(any()) } just Runs
+        coEvery { driver.scrollToViewport(any()) } just Runs
         coEvery { driver.goBack() } just Runs
         coEvery { driver.goForward() } just Runs
 
@@ -255,13 +255,13 @@ class ToolCallExecutorExecuteTest {
                 "selector" to "a",
                 "attrName" to "href",
                 "pattern" to "foo",
-                "count" to 2
+                "count" to "2"
             )
         )
         executor.execute(tc2, driver)
         coVerify { driver.clickMatches("a", "href", "foo", 2) }
         // waitForNavigation
-        val tc3 = ToolCall("driver", "waitForNavigation", mutableMapOf("oldUrl" to "u", "timeoutMillis" to 10))
+        val tc3 = ToolCall("driver", "waitForNavigation", mutableMapOf("oldUrl" to "u", "timeoutMillis" to "10"))
         coEvery { driver.waitForNavigation("u", 10) } returns 5L
         val r = executor.execute(tc3, driver)
         assertEquals(5L, r)

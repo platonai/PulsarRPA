@@ -49,6 +49,8 @@ class ChromeDomServiceE2ETest : WebDriverTestBase() {
         return n
     }
 
+
+
     @Test
     fun `Given interactive page When collecting all trees Then get DOM AX and Snapshot with timings`() = runEnhancedWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)

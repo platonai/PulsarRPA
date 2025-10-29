@@ -146,18 +146,6 @@ open class TextToAction(
         return reviseActionDescription(modelResponseToActionDescription(response), browserUseState)
     }
 
-    fun parseObserveElements1(root: JsonNode, returnAction: Boolean): List<ObserveElement> {
-        if (root.isEmpty) {
-            return emptyList()
-        }
-
-        var node = root
-        if (node.has("elements")) {
-            node = node.get("elements")
-        }
-        return pulsarObjectMapper().readerForArrayOf(ObserveElement::class.java).readValue(node)
-    }
-
     fun modelResponseToActionDescription(response: ModelResponse): ActionDescription {
         try {
             return modelResponseToActionDescription0(response)
@@ -169,7 +157,7 @@ open class TextToAction(
 
     private fun modelResponseToActionDescription0(response: ModelResponse): ActionDescription {
         val content = response.content
-        val contentStart = Strings.compactWhitespaces(content.take(10))
+        val contentStart = Strings.compactWhitespaces(content.take(30))
 
         val mapper = pulsarObjectMapper()
         return when {

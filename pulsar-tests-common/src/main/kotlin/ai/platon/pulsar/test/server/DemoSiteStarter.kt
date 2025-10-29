@@ -75,8 +75,10 @@ class DemoSiteStarter: AutoCloseable {
         ok = wait(url, Options(verbose = false))
 
         check(ok) { "Failed to start mock site" }
+
+        Runtime.getRuntime().addShutdownHook(Thread { this.close() })
     }
-    
+
     /**
      * Wait for the site referred to by a full page URL (any path under host). Only host/port are probed.
      * @param pageUrl Any URL within the target host (ex: http://localhost:8182/generated/tta/instructions/instructions-demo.html)

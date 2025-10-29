@@ -385,7 +385,8 @@ data class NanoDOMTreeNode(
                 ?.filter { child ->
                     // keep nodes that have any meaningful data (locator or nodeName or non-empty children)
                     !(child.locator == null && child.nodeName == null && (child.children == null || child.children.isEmpty()))
-                }?.filter { (it.bounds == null) || (it.bounds.y?.toInt() in startY..endY) }
+                }
+//                ?.filter { (it.bounds == null) || (it.bounds.y?.toInt() in startY..endY) }
                 ?.toList()
 
             return if (childNanoList.isNullOrEmpty()) root else root.copy(children = childNanoList)
