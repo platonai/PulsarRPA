@@ -1,13 +1,11 @@
 package ai.platon.pulsar.browser.driver.chrome.dom.model
 
-import ai.platon.pulsar.browser.driver.chrome.dom.util.CSSSelectorUtils
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.FBNLocator
 import ai.platon.pulsar.browser.driver.chrome.dom.LocatorMap
+import ai.platon.pulsar.browser.driver.chrome.dom.util.CSSSelectorUtils
 import ai.platon.pulsar.common.math.roundTo
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonProperty
-import org.apache.commons.lang3.StringUtils
 import java.awt.Dimension
 import java.math.RoundingMode
 import java.util.*
@@ -81,7 +79,11 @@ data class CompactRect(
     /**
      * Round every field to the nearest integer
      * */
-    fun roundTo(decimals: Int = 1, mode: RoundingMode = RoundingMode.HALF_UP): CompactRect {
+    fun roundTo(decimals: Int = 1, mode: RoundingMode = RoundingMode.HALF_UP): CompactRect? {
+        if (x == null && y == null && width == null && height == null) {
+            return null
+        }
+
         return CompactRect(
             x?.roundTo(decimals),
             y?.roundTo(decimals),
@@ -102,7 +104,11 @@ data class DOMRect(
     val width: Double,
     val height: Double
 ) {
-    fun compact(): CompactRect {
+    fun compact(): CompactRect? {
+        if (x == 0.0 && y == 0.0 && width == 0.0 && height == 0.0) {
+            return null
+        }
+
         return CompactRect(
             x.takeIf { it != 0.0 }, y.takeIf { it != 0.0 },
             width.takeIf { it != 0.0 }, height.takeIf { it != 0.0 })
@@ -321,6 +327,7 @@ data class CleanedDOMTreeNode constructor(
     /** The absolute position bounding box. */
     val bounds: CompactRect?,
     val absoluteBounds: CompactRect? = null,
+    /** A 1-based viewport index */
     val viewportIndex: Int? = null,
 
     val paintOrder: Int? = null,
@@ -345,7 +352,48 @@ data class MicroDOMTreeNode(
     val children: List<MicroDOMTreeNode>? = null,
     val shouldShowScrollInfo: Boolean? = null,
     val scrollInfoText: String? = null
-)
+) {
+    private val nanoTreeCache = mutableMapOf<String, NanoDOMTree>()
+
+    private val seenChunks = mutableListOf<Pair<Double, Double>>()
+
+    fun hasSeen(startY: Double, endY: Double): Boolean {
+        // check if the point has been seen
+        val (s, e) = if (startY <= endY) startY to endY else endY to startY
+        val eps = 1e-6
+        if (s.isNaN() || e.isNaN()) return false
+        return seenChunks.any { (ms, me) -> s >= ms - eps && e <= me + eps }
+    }
+
+    /**
+     * The 1-based next chunk to see, each chunk is a viewport height.
+     * */
+    fun nextChunkToSee(viewportHeight: Double): Int {
+        if (seenChunks.isEmpty()) return 1
+
+        return IntRange(1, 20).firstOrNull { i -> hasSeen(i * 1.0, i * 1.0 * viewportHeight) } ?: 1
+    }
+
+    fun toNanoTree(): NanoDOMTree = toNanoTreeInRange(0.0, 1000000.0)
+
+    /**
+     * Rendering data corresponding to a specific viewport slice of the page.
+     *
+     * @param viewportIndex 1-based viewport index to collect nodes for (must be >= 1).
+     * @param viewportHeight The viewport height in CSS pixels (must be > 0).
+     * @param scale How much extra height to include above and below the viewport. 1.0 = exact viewport, 1.2 = 20% margin.
+     */
+    fun toNanoTreeInViewport(viewportHeight: Int, viewportIndex: Int = 1, scale: Double = 1.0): NanoDOMTree {
+        val helper = MicroDOMTreeNodeHelper(this, seenChunks)
+        return helper.toNanoTreeInViewport0(this, viewportHeight, viewportIndex, scale)
+    }
+
+    fun toNanoTreeInRange(startY: Double = 0.0, endY: Double = 100000.0): NanoDOMTree {
+        val key = "$startY$endY"
+        val helper = MicroDOMTreeNodeHelper(this, seenChunks)
+        return nanoTreeCache.computeIfAbsent(key) { helper.toNanoTreeInRange0(this, startY, endY) }
+    }
+}
 
 typealias MicroDOMTree = MicroDOMTreeNode
 
@@ -366,53 +414,20 @@ data class NanoDOMTreeNode(
     val scrollable: Boolean? = null,   // null means false
     val interactive: Boolean? = null,  // null means false
     val invisible: Boolean? = null,    // null means false
-    val bounds: CompactRect? = null,
-    val clientRects: CompactRect? = null,
     val scrollRects: CompactRect? = null,
-    val absoluteBounds: CompactRect? = null,
-    val viewportIndex: Int? = null,    // The position of this DOM node falls within the nth viewport.
     val children: List<NanoDOMTreeNode>? = null,
+
+    @JsonIgnore
+    val viewportIndex: Int? = null,    // The position of this DOM node falls within the nth viewport, 1-based
+    @JsonIgnore
+    val clientRects: CompactRect? = null,
+    @JsonIgnore
+    val bounds: CompactRect? = null,
+    @JsonIgnore
+    val absoluteBounds: CompactRect? = null
 ) {
-    companion object {
-        fun create(microTree: MicroDOMTreeNode, startY: Int = 0, endY: Int = 100000): NanoDOMTree {
-            // Create the current node from the micro node
-            val root = newNode(microTree) ?: return NanoDOMTree()
-
-            // Recursively create child nano nodes, filter out empty placeholders
-            val childNanoList = microTree.children
-                ?.asSequence()
-                ?.map { create(it, startY, endY) }
-                ?.filter { child ->
-                    // keep nodes that have any meaningful data (locator or nodeName or non-empty children)
-                    !(child.locator == null && child.nodeName == null && (child.children == null || child.children.isEmpty()))
-                }
-//                ?.filter { (it.bounds == null) || (it.bounds.y?.toInt() in startY..endY) }
-                ?.toList()
-
-            return if (childNanoList.isNullOrEmpty()) root else root.copy(children = childNanoList)
-        }
-
-        private fun newNode(n: MicroDOMTreeNode?): NanoDOMTree? {
-            val o = n?.originalNode ?: return null
-
-            // remove locator's prefix to reduce serialized size
-            return NanoDOMTree(
-                o.locator.substringAfterLast(":"),
-                o.nodeName,
-                o.nodeValue,
-                o.attributes,
-                scrollable = o.isScrollable,
-                interactive = o.isInteractable,
-                // All nodes are visible unless `invisible` == true explicitly.
-                invisible = if (o.isVisible == true) null else true,
-                bounds = o.bounds?.round(),
-                clientRects = o.clientRects?.round(),
-                scrollRects = o.scrollRects?.round(),
-                absoluteBounds = o.absoluteBounds?.round(),
-                viewportIndex = o.viewportIndex
-            )
-        }
-    }
+    @get:JsonIgnore
+    val lazyJson: String by lazy { DOMSerializer.toJson(this) }
 }
 
 typealias NanoDOMTree = NanoDOMTreeNode
@@ -422,28 +437,13 @@ data class DOMState(
     val interactiveNodes: List<MicroDOMTreeNode>,
     val frameIds: List<String>,
     val selectorMap: Map<String, DOMTreeNodeEx>,
-    val locatorMap: LocatorMap
+    val locatorMap: LocatorMap,
 ) {
     @get:JsonIgnore
-    val microTreeLazyJson: String by lazy { DOMSerializer.toJson(microTree) }
-
-    @get:JsonIgnore
-    val nanoTreeLazyJson: String by lazy {
-        // convert micro tree to nano tree first, then serialize
-        val nano = NanoDOMTreeNode.create(microTree)
-        DOMSerializer.toJson(nano)
-    }
+    val nanoTreeLazyJson: String get() = microTree.toNanoTreeInRange().lazyJson
 
     @get:JsonIgnore
     val interactiveNodesLazyJson: String by lazy { DOMSerializer.toJson(interactiveNodes) }
-
-    fun getNanoTree(): NanoDOMTree {
-        return NanoDOMTreeNode.create(microTree)
-    }
-
-    fun getNanoTree(startY: Int, endY: Int): NanoDOMTree {
-        return NanoDOMTreeNode.create(microTree, startY, endY)
-    }
 
     fun getAbsoluteFBNLocator(locator: String?): FBNLocator? {
         if (locator == null) return null
@@ -505,7 +505,6 @@ data class ScrollState(
     val totalHeight: Double,
     val scrollYRatio: Double,
 ) {
-    val chunksSeen get() = (viewport.height * scrollYRatio + 1).roundToInt()
     val chunksTotal get() = ceil(totalHeight / viewport.height).roundToInt()
 }
 
@@ -536,4 +535,9 @@ data class BrowserState(
 data class BrowserUseState(
     val browserState: BrowserState,
     val domState: DOMState
-)
+) {
+    /**
+     * The 1-based next chunk to see, each chunk is a viewport height.
+     * */
+    fun nextChunkToSee() = domState.microTree.nextChunkToSee(browserState.scrollState.totalHeight)
+}

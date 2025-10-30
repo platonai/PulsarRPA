@@ -56,9 +56,9 @@ class ChromeDomServiceFullCoverageTest : WebDriverTestBase() {
             assertTrue(domState.nanoTreeLazyJson.length > 100)
             assertTrue(domState.selectorMap.isNotEmpty())
 
-            val nanoTree = domState.getNanoTree()
+            val nanoTree = domState.microTree.toNanoTree()
             printlnPro(DomDebug.summarize(nanoTree))
-            Files.writeString(Paths.get("logs").resolve("nano.tree.json"), domState.nanoTreeLazyJson)
+            Files.writeString(Paths.get("logs").resolve("nano.tree.json"), domState.microTree.toNanoTreeInRange().lazyJson)
 
             // Selector map should include at least node: and possibly xpath: keys for some nodes
             val anySelectorKey = domState.selectorMap.keys.any { it.startsWith("node:") || it.startsWith("xpath:") }

@@ -147,9 +147,11 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
             }
         }
 
-        logger.info("Bounds summary: {}", DomDebug.summarize(byBackend))
+        if (logger.isDebugEnabled) {
+            logger.debug("Bounds summary: {}", DomDebug.summarize(byBackend))
+        }
 
-        tracer?.debug(
+        tracer?.trace(
             "DOMSnapshot captured | entries={} rowsApprox={} styles={} paintOrder={}",
             byBackend.size,
             totalRows,

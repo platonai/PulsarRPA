@@ -6,16 +6,13 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.MicroDOMTreeNode
 import ai.platon.pulsar.browser.driver.chrome.dom.model.NanoDOMTree
 import ai.platon.pulsar.common.serialize.json.doubleBindModule
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.core.JsonParser
-import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 
 object DOMSerializer {
     val MAPPER: ObjectMapper = jacksonObjectMapper().apply {
-        configure(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS, false)
         setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
         registerModule(doubleBindModule())
     }
 

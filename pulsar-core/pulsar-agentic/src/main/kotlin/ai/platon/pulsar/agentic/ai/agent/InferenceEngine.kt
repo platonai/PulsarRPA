@@ -13,6 +13,7 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.TokenUsage
+import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import com.fasterxml.jackson.databind.JsonNode
@@ -37,21 +38,12 @@ data class LLMUsage(
     val completionTokens: Int = 0,
 )
 
-data class Metadata(val progress: String = "", val completed: Boolean = false)
-
-data class InternalObserveResult(
-    val elements: List<ObserveElement>,
-    val promptTokens: Int,
-    val completionTokens: Int,
-    val inferenceTimeMs: Long,
-)
-
 data class ExtractParams(
     val instruction: String,
+    val agentState: AgentState,
     val browserUseState: BrowserUseState,
     /** JSON Schema string describing the desired extraction output */
     val schema: String,
-    val chunksSeen: Int = 1,
     val chunksTotal: Int = 1,
     val requestId: String = UUID.randomUUID().toString(),
     val userProvidedInstructions: String? = null,
@@ -60,6 +52,7 @@ data class ExtractParams(
 
 data class ObserveParams constructor(
     val overallGoal: String? = null,
+    val agentState: AgentState,
     val browserUseState: BrowserUseState,
     val requestId: String = UUID.randomUUID().toString(),
     val userProvidedInstructions: String? = null,
@@ -152,13 +145,18 @@ class InferenceEngine(
             )
         }
 
+        /**
+         * The 1-based next chunk to see, each chunk is a viewport height.
+         * */
+        val nextChunkToSee = params.agentState.browserUseState?.nextChunkToSee() ?: 1
+
         // 2) Metadata call -------------------------------------------------------------------
         val metadataSystem = promptBuilder.buildMetadataSystemPrompt()
         // For metadata, pass the extracted object directly
         val metadataUser = promptBuilder.buildMetadataPrompt(
             params.instruction,
             extractedNode,
-            params.chunksSeen,
+            nextChunkToSee,
             params.chunksTotal
         )
 
@@ -232,7 +230,7 @@ class InferenceEngine(
     }
 
     suspend fun observe(params: ObserveParams, messages: AgentMessageList): ActionDescription {
-        val instruction = requireNotNull(messages.instruction) { "User instruction is required | $messages" }
+        requireNotNull(messages.instruction) { "User instruction is required | $messages" }
         if (params.returnAction) {
             require(messages.exists("toolSpecs")) {
                 "If `returnAction` is true, the tool specifications has to be included | $messages" }

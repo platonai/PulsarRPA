@@ -263,6 +263,7 @@ object DOMStateBuilder {
             clientRects = null,
             scrollRects = null,
             absoluteBounds = null,
+            /** A 1-based viewport index */
             viewportIndex = viewportIndex,
             paintOrder = null,
             stackingContexts = null,
@@ -286,7 +287,7 @@ object DOMStateBuilder {
     }
 
     // Compute viewport index (1-based) using absolute Y and top-level viewport height
-    private fun computeViewportIndex(node: DOMTreeNodeEx, topViewportHeight: Double?): Int? {
+    fun computeViewportIndex(node: DOMTreeNodeEx, topViewportHeight: Double?): Int? {
         val vh = topViewportHeight ?: return null
         if (!vh.isFinite() || vh <= 0.0) return null
         // Prefer absolute bounds from snapshot; fallback to absolutePosition or bounds
@@ -405,10 +406,11 @@ object DOMStateBuilder {
             xpath = node.xpath,
             elementHash = node.elementHash,
             interactiveIndex = node.interactiveIndex,
-            bounds = bounds?.compact(),
             clientRects = clientRects?.compact(),
             scrollRects = scrollRects?.compact(),
+            bounds = bounds?.compact(),
             absoluteBounds = absoluteBounds?.compact(),
+            /** A 1-based viewport index */
             viewportIndex = viewportIndex,
             paintOrder = paintOrder,
             stackingContexts = stackingContexts,
@@ -521,6 +523,8 @@ object DOMStateBuilder {
             elementHash = node.elementHash,
             interactiveIndex = node.interactiveIndex,
             bounds = bounds?.compact(),
+//            absoluteBounds = absoluteBounds,
+//            viewportIndex = viewportIndex,
             clientRects = clientRects?.compact(),
             scrollRects = scrollRects?.compact(),
             // contentDocument is cleaned recursively if present

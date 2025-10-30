@@ -14,6 +14,7 @@ import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
+import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -50,18 +51,20 @@ open class TextToAction(
     ): ActionDescription {
         require(driver is PulsarWebDriver) { "PulsarWebDriver is required to use agents" }
         val browserUseState = driver.domService.getBrowserUseState(snapshotOptions = SnapshotOptions())
+        val agentState = AgentState(1, "tta.generate", browserUseState = browserUseState)
 
-        return generate(instruction, browserUseState, screenshotB64)
+        return generate(instruction, agentState, browserUseState, screenshotB64)
     }
 
     @ExperimentalApi
     open suspend fun generate(
         messages: AgentMessageList,
+        agentState: AgentState,
         browserUseState: BrowserUseState,
         screenshotB64: String? = null
     ): ActionDescription {
         try {
-            val response = generateResponse(messages, browserUseState, screenshotB64, 1)
+            val response = generateResponse(messages, agentState, browserUseState, screenshotB64, 1)
 
             val action = modelResponseToActionDescription(response)
 
@@ -84,11 +87,12 @@ open class TextToAction(
     @ExperimentalApi
     open suspend fun generate(
         instruction: String,
+        agentState: AgentState,
         browserUseState: BrowserUseState,
         screenshotB64: String? = null
     ): ActionDescription {
         try {
-            return generateWithToolCallSpecs(instruction, browserUseState, screenshotB64, 1)
+            return generateWithToolCallSpecs(instruction, agentState, browserUseState, screenshotB64, 1)
         } catch (e: Exception) {
             e.printStackTrace()
             val errorResponse = ModelResponse(
@@ -100,16 +104,21 @@ open class TextToAction(
 
     @ExperimentalApi
     open suspend fun generateResponse(
-        instruction: String, browserUseState: BrowserUseState, screenshotB64: String? = null, toolCallLimit: Int = 100,
+        instruction: String,
+        agentState: AgentState,
+        browserUseState: BrowserUseState,
+        screenshotB64: String? = null,
+        toolCallLimit: Int = 100,
     ): ModelResponse {
         val messages = AgentMessageList()
         messages.addLast("user", instruction)
-        return generateResponse(messages, browserUseState, screenshotB64, toolCallLimit)
+        return generateResponse(messages, agentState, browserUseState, screenshotB64, toolCallLimit)
     }
 
     @ExperimentalApi
     open suspend fun generateResponse(
         messages: AgentMessageList,
+        agentState: AgentState,
         browserUseState: BrowserUseState,
         screenshotB64: String? = null,
         toolCallLimit: Int = 100,
@@ -118,6 +127,7 @@ open class TextToAction(
         overallGoal = StringUtils.substringBetween(overallGoal, "<overallGoal>", "</overallGoal>")
         val params = ObserveParams(
             overallGoal ?: "",
+            agentState = agentState,
             browserUseState = browserUseState,
             returnAction = true,
             logInferenceToFile = true
@@ -138,9 +148,13 @@ open class TextToAction(
 
     @ExperimentalApi
     private suspend fun generateWithToolCallSpecs(
-        instruction: String, browserUseState: BrowserUseState, screenshotB64: String? = null, toolCallLimit: Int = 100,
+        instruction: String,
+        agentState: AgentState,
+        browserUseState: BrowserUseState,
+        screenshotB64: String? = null,
+        toolCallLimit: Int = 100,
     ): ActionDescription {
-        val response = generateResponse(instruction, browserUseState, screenshotB64, toolCallLimit)
+        val response = generateResponse(instruction, agentState, browserUseState, screenshotB64, toolCallLimit)
 
         return reviseActionDescription(modelResponseToActionDescription(response), browserUseState)
     }

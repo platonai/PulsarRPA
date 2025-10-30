@@ -43,7 +43,7 @@ class PageStateTracker(
         // Combine URL, DOM structure, and interactive elements for fingerprint
         val urlHash = runCatching { driver.currentUrl() }.getOrNull()?.hashCode() ?: 0
         // Prefer cached microTree JSON from DOMState to avoid repeated serialization cost
-        val domJson = browserUseState.domState.nanoTreeLazyJson
+        val domJson = browserUseState.domState.microTree.toNanoTreeInRange().lazyJson
         val domHash = domJson.hashCode()
         // Quantize scroll ratio to reduce noise from tiny jitters (bucket to percentage 0..100)
         val scrollBucket = (browserUseState.browserState.scrollState.scrollYRatio * 100).toInt()
@@ -128,23 +128,23 @@ class PageStateTracker(
             (() => {
               try {
                 const w = window;
-                if (!w.__pulsarDomObserver) {
-                  w.__pulsarDomStamp = 0;
-                  w.__pulsarDomLastTs = (performance && performance.now) ? performance.now() : Date.now();
+                if (!w.__pulsar_DomObserver) {
+                  w.__pulsar_DomStamp = 0;
+                  w.__pulsar_DomLastTs = (performance && performance.now) ? performance.now() : Date.now();
                   const obs = new MutationObserver(() => {
-                    w.__pulsarDomStamp++;
-                    w.__pulsarDomLastTs = (performance && performance.now) ? performance.now() : Date.now();
+                    w.__pulsar_DomStamp++;
+                    w.__pulsar_DomLastTs = (performance && performance.now) ? performance.now() : Date.now();
                   });
                   // Observe subtree text/content/node additions; attributes are OFF to reduce noise
                   const opts = { subtree: true, childList: true, characterData: true };
                   // Intentionally DO NOT observe attributes or set attributeFilter
                   // This avoids counting class/style/aria toggles as instability
                   obs.observe(document, opts);
-                  w.__pulsarDomObserver = obs;
+                  w.__pulsar_DomObserver = obs;
                 }
                 // Bind lifecycle/navigation-ish events once to bump the stamp on non-mutation transitions
-                if (!w.__pulsarDomEventsBound) {
-                  const bump = () => { try { w.__pulsarDomStamp++; } catch(_) {} };
+                if (!w.__pulsar_DomEventsBound) {
+                  const bump = () => { try { w.__pulsar_DomStamp++; } catch(_) {} };
                   document.addEventListener('readystatechange', bump, { once: false, passive: true });
                   document.addEventListener('DOMContentLoaded', bump, { once: true, passive: true });
                   window.addEventListener('load', bump, { once: false, passive: true });
@@ -152,14 +152,14 @@ class PageStateTracker(
                   window.addEventListener('hashchange', bump, { once: false, passive: true });
                   window.addEventListener('popstate', bump, { once: false, passive: true });
                   document.addEventListener('visibilitychange', bump, { once: false, passive: true });
-                  w.__pulsarDomEventsBound = true;
+                  w.__pulsar_DomEventsBound = true;
                 }
-                if (!w.__pulsarGetDomSignature) {
-                  w.__pulsarGetDomSignature = function () {
+                if (!w.__pulsar_GetDomSignature) {
+                  w.__pulsar_GetDomSignature = function () {
                     const rs = document.readyState;
                     const rsCode = rs === 'complete' ? 2 : (rs === 'interactive' ? 1 : 0);
                     // Pack into a 53-bit safe integer: (stamp << 2) | rsCode
-                    return (w.__pulsarDomStamp * 4) + rsCode;
+                    return (w.__pulsar_DomStamp * 4) + rsCode;
                   }
                 }
                 return 1;
@@ -200,7 +200,7 @@ class PageStateTracker(
                 // Call the cached function with minimal JS to reduce parser/bridge overhead
                 val signatureNum = (driver.evaluateValue(
                     """
-                    (() => { try { const f = window.__pulsarGetDomSignature; return typeof f === 'function' ? f() : -1; } catch(e) { return -1; } })()
+                    (() => { try { const f = window.__pulsar_GetDomSignature; return typeof f === 'function' ? f() : -1; } catch(e) { return -1; } })()
                     """.trimIndent()
                 ) as? Number)?.toLong()
 

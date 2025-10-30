@@ -90,6 +90,9 @@ fun pulsarObjectMapper(): ObjectMapper = jacksonObjectMapper()
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
     .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+    .setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
+    .setSerializationInclusion(JsonInclude.Include.NON_ABSENT)
+    .setSerializationInclusion(JsonInclude.Include.USE_DEFAULTS)
     .registerModule(JavaTimeModule())
 
 /**

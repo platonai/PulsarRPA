@@ -22,7 +22,7 @@ driver.uncheck(selector: String)
 driver.scrollTo(selector: String)
 driver.scrollToTop()
 driver.scrollToBottom()
-driver.scrollToMiddle(ratio: Double = 0.5
+driver.scrollToMiddle(ratio: Double = 0.5)
 driver.scrollToViewport(n: Double)                     // scroll to the [n]th viewport position, 0-based
 driver.goBack()
 driver.goForward()

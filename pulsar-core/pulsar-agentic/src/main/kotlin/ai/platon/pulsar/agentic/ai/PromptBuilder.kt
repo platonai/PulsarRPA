@@ -7,7 +7,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.common.KStrings
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.serialize.json.Pson
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.skeleton.ai.AgentState
 import java.time.LocalDate
 import java.util.*
@@ -32,8 +32,7 @@ class PromptBuilder() {
         val ACTION_SCHEMA = """
         |,
         |"domain": string, "method": string, "arguments": [{"name": string, "value": string}],
-        |"currentPageContentSummary": string,
-        |"actualLastActionImpact": string, "expectedNextActionImpact": string
+        |"currentPageContentSummary": string, "actualLastActionImpact": string, "expectedNextActionImpact": string,
         |
         |""".trimMargin()
 
@@ -74,6 +73,32 @@ $schema
             }
         }
 
+        val TOOL_CALL_NOTES = """
+- domain: 方法的调用方，如 driver, browser 等
+- 输出结果中，定位节点时 `selector` 字段始终填入 `locator` 的值
+- 确保 `locator` 与对应的无障碍树节点属性完全匹配，准确定位该节点
+- 不提供不能确定的参数
+- 要求 json 输出时，禁止包含任何额外文本
+- 注意：用户难以区分按钮和链接
+- 若操作与页面无关，返回空对象 `{}`
+- 只返回一个最相关的操作
+- 如需连续点击打开多个链接，使用 click(selector, "Ctrl") 在新标签页打开
+- 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。。不要模拟点击屏幕键盘上的按键
+- 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
+- 如果需要操作前一页面，但已跳转，使用 `goBack`
+    """.trimIndent()
+
+        val A11Y_TREE_NOTES = """
+## 无障碍树（Accessibility Tree）说明：
+
+无障碍树包含页面 DOM 关键节点的主要信息，包括节点文本内容，可见性，可交互性，坐标和尺寸等。
+
+- 节点唯一定位符 `locator` 由两个整数组成。
+- 所有节点可见，除非 `invisible` == true 显式指定。
+- 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
+- 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
+        """.trimIndent()
+
         val AGENT_GUIDE_SYSTEM_PROMPT = """
 你是一个网页通用代理，目标是基于用户目标一步一步完成任务。
 
@@ -108,31 +133,13 @@ ${buildObserveResultSchema(true)}
 ${AgentTool.TOOL_CALL_SPECIFICATION}
 ```
 
-- domain: 方法的调用方，如 driver, browser 等
-- 将 `locator` 视为 `selector`
-- 确保 `locator` 与对应的无障碍树节点属性完全匹配，准确定位该节点
-- 不提供不能确定的参数
-- 要求 json 输出时，禁止包含任何额外文本
-- 注意：用户难以区分按钮和链接
-- 若操作与页面无关，返回空对象 `{}`
-- 只返回一个最相关的操作
-- 如需连续点击打开多个链接，使用 click(selector, "Ctrl") 在新标签页打开
-- 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。。不要模拟点击屏幕键盘上的按键
-- 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
-- 如果需要操作前一页面，但已跳转，使用 `goBack`
+$TOOL_CALL_NOTES
 
 ---
 
 ## 无障碍树（Accessibility Tree）说明：
 
-无障碍树包含页面 DOM 关键节点的主要信息，包括节点文本内容，可见性，可交互性，坐标和尺寸等。
-
-- 节点唯一定位符 `locator` 由两个整数组成。
-- 所有节点可见，除非 `invisible` == true 显式指定。
-- 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
-- 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
-
-请基于当前页面截图、无障碍树与历史动作，规划下一步（严格单步原子动作）。
+$A11Y_TREE_NOTES
 
 ---
 
@@ -278,10 +285,13 @@ Print null or an empty string if no new information is found.
     }
 
     fun buildAgentStateHistoryMessage(history: List<AgentState>): String {
-        if (history.isEmpty()) return ""
+        if (history.isEmpty()) {
+            return ""
+        }
 
         val his = history.takeLast(min(8, history.size))
-            .joinToString("\n") { Pson.toJson(it) }
+            .map { it.copy(browserUseState = null, prevState = null) }
+            .joinToString("\n") { pulsarObjectMapper().writeValueAsString(it) }
 
         val msg = """
 此前动作摘要：
@@ -293,10 +303,15 @@ $his
 
     fun buildOverallGoalMessage(overallGoal: String): String {
         val msg = """
-总体目标：
+## 总体目标
 <overallGoal>
 $overallGoal
 </overallGoal>
+
+请基于当前页面截图、无障碍树与历史动作，规划下一步（严格单步原子动作）。
+
+---
+
                 """.trimIndent()
 
         return msg
@@ -315,7 +330,7 @@ $overallGoal
     }
 
     fun buildExtractDomContent(domState: DOMState, params: ExtractParams): String {
-        val json = domState.nanoTreeLazyJson
+        val json = domState.microTree.toNanoTreeInRange().lazyJson
 
         // Inject schema hint to strongly guide JSON output
         val hintCN = "你必须返回一个严格符合以下JSON Schema的有效JSON对象。不要包含任何额外说明。"
@@ -395,24 +410,39 @@ Each chunk corresponds to one viewport-sized section of the page (the first chun
     fun buildMetadataPrompt(
         instruction: String,
         extractionResponse: Any,
-        chunksSeen: Int,
+        nextChunkToSee: Int,
         chunksTotal: Int,
     ): SimpleMessage {
         val extractedJson = DOMSerializer.MAPPER.writeValueAsString(extractionResponse)
 
         val content = if (isZH) {
             """
+## 元数据
+
 指令: $instruction
 提取结果: $extractedJson
-已处理分片数: $chunksSeen
+待处理分片: $nextChunkToSee
 总分片数: $chunksTotal
+
+每个分片对应一个视口高度，第 i 个待处理分片指第 i 视口内所有 DOM nodes。
+
+---
+
 """.trim()
         } else {
             """
+## Metadata
+
 Instruction: $instruction
 Extracted content: $extractedJson
-chunksSeen: $chunksSeen
+nextChunkToSee: $nextChunkToSee
 chunksTotal: $chunksTotal
+
+Each chunk represents one viewport-height range.
+The i-th chunk to process contains all DOM nodes located within the i-th viewport.
+
+---
+
 """.trim()
         }
 
@@ -495,18 +525,39 @@ Be comprehensive: if there are multiple elements that may be relevant for future
     }
 
     fun buildObserveUserMessage(messages: AgentMessageList, params: ObserveParams) {
-        val browserStateJson = params.browserUseState.browserState.lazyJson
-        val nanoTreeJson = params.browserUseState.domState.nanoTreeLazyJson
+        val browserState = params.browserUseState.browserState
+        val scrollState = browserState.scrollState
+        val viewportHeight = scrollState.viewport.height
+        val domState = params.browserUseState.domState
+        // The 1-based next chunk to see, each chunk is a viewport height.
+        val processingChunk = params.agentState.browserUseState?.nextChunkToSee() ?: 1
+        val chunksTotal = params.browserUseState.browserState.scrollState.chunksTotal
+        val chunkToProcessNexTime = if (processingChunk >= chunksTotal) -1 else processingChunk.inc()
+        val viewportIndex = processingChunk
+
+        val nanoTree = domState.microTree.toNanoTreeInViewport(viewportHeight, viewportIndex, 1.5)
 
         val schemaContract = buildObserveResultSchemaContract(params)
         fun contentCN() = """
 ## 无障碍树(Accessibility Tree):
-$nanoTreeJson
+
+本次处理分片: $processingChunk
+待下次处理分片：${if (chunkToProcessNexTime > 0) chunkToProcessNexTime else "所有分片均处理完毕" }
+总分片数: $chunksTotal
+
+每个分片对应一个视口高度，第 i 分片指第 i 视口内所有 DOM nodes。
+
+```json
+${nanoTree.lazyJson}
+```
 
 ---
 
 ## 当前浏览器状态
-$browserStateJson
+
+```json
+${browserState.lazyJson}
+```
 
 $schemaContract
 
@@ -516,12 +567,22 @@ $schemaContract
 
         fun contentEN() = """
 ## Accessibility Tree:
-$nanoTreeJson
+
+Current processing chunk: $processingChunk
+Chunk to process next time：${if (chunkToProcessNexTime > 0) chunkToProcessNexTime else "All chunks are processed"}
+Total chunk: $chunksTotal
+
+- Each chunk corresponds to one viewport height.
+- The i-th chunk refers to all DOM nodes located within the i-th viewport.
+
+```json
+${nanoTree.lazyJson}
+```
 
 ---
 
 ## Current Browser State
-$browserStateJson
+${browserState.lazyJson}
 
 $schemaContract
 
@@ -562,18 +623,7 @@ $schemaContract
 ${toolCalls.joinToString("\n")}
 ```
 
-- domain: 方法的调用方，如 `driver`, `browser` 等
-- 将 `locator` 视为 `selector`
-- 确保 `locator` 与对应的无障碍树节点属性完全匹配，准确定位该节点
-- 不提供不能确定的参数
-- 要求 json 输出时，禁止包含任何额外文本
-- 注意：用户难以区分按钮和链接
-- 若操作与页面无关，返回空数组
-- 只返回一个最相关的操作
-- 如需连续点击打开多个链接，使用 click(selector, "Ctrl") 在新标签页打开
-- 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。不要模拟点击屏幕键盘上的按键
-- 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
-- 如果需要操作前一页面，但已跳转，使用 `goBack`
+$TOOL_CALL_NOTES
 
 ---
 

@@ -32,6 +32,7 @@ Notes for Windows (cmd.exe):
 - Performance basics: Avoid boxing in hot paths; lazy init expensive objects; avoid deep decorator chains
 - Do not mass‑reformat unrelated code; preserve license headers and existing style
 - Avoid adding dependencies; if unavoidable, justify in PR and align with parent BOM
+- Prefer single-line if under 120 chars in source files
 
 ---
 

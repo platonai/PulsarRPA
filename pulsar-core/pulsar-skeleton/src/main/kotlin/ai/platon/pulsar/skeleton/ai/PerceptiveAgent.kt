@@ -1,8 +1,11 @@
 package ai.platon.pulsar.skeleton.ai
 
+import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.external.ModelResponse
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.JsonNode
+
 import java.time.Instant
 import java.util.*
 
@@ -12,7 +15,8 @@ data class ActionOptions(
     val variables: Map<String, String>? = null,
     val domSettleTimeoutMs: Int? = null,
     val timeoutMs: Int? = null,
-    val iframes: Boolean? = null
+    val iframes: Boolean? = null,
+    val agentState: AgentState? = null,
 )
 
 data class ActResult(
@@ -29,7 +33,8 @@ data class ExtractOptions(
     val domSettleTimeoutMs: Long? = null,
     val selector: String? = null,
     val iframes: Boolean? = null,
-    val frameId: String? = null
+    val frameId: String? = null,
+    val agentState: AgentState? = null,
 )
 
 data class ExtractResult(
@@ -47,7 +52,8 @@ data class ObserveOptions(
 
     val drawOverlay: Boolean? = null,
     val iframes: Boolean? = null,
-    val frameId: String? = null
+    val frameId: String? = null,
+    val agentState: AgentState? = null,
 )
 
 data class ToolCall constructor(
@@ -82,6 +88,8 @@ data class ObserveElement constructor(
 }
 
 data class ObserveResult constructor(
+    val agentState: AgentState,
+
     val locator: String? = null,
 
     val domain: String? = null,
@@ -98,7 +106,7 @@ data class ObserveResult constructor(
     val observeElements: List<ObserveElement>? = null,
 )
 
-data class AgentState(
+data class AgentState constructor(
     val step: Int,
     val action: String,
     val description: String? = null,
@@ -106,6 +114,11 @@ data class AgentState(
     val actualLastActionImpact: String? = null,
     val expectedNextActionImpact: String? = null,
     val timestamp: Instant = Instant.now(),
+    // The last browser use state
+    @JsonIgnore
+    val browserUseState: BrowserUseState? = null,
+    @JsonIgnore
+    val prevState: AgentState? = null,
 ) {
     override fun toString(): String {
         val summary = listOfNotNull(description, currentPageContentSummary, currentPageContentSummary)
@@ -124,10 +137,12 @@ interface PerceptiveAgent {
      * with clear success/failure signals and the observation context that impacted/was impacted by the action.
      * */
     val stateHistory: List<AgentState>
+
     /**
      * The process trace.
      * */
     val processTrace: List<String>
+
     /**
      * Run `observe -> act -> observe -> act -> ...` loop to resolve the problem.
      * */

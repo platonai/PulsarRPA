@@ -38,6 +38,8 @@
     <logger name="ai.platon.pulsar" level="INFO"/>
     <logger name="ai.platon.pulsar.common" level="INFO"/>
 
+    <logger name="ai.platon.pulsar.agentic" level="DEBUG"/>
+
     <logger name="org.springframework.core" level="INFO"/>
     <logger name="org.springframework.core.env" level="INFO"/>
 

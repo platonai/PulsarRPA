@@ -17,6 +17,7 @@ import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.js.JsUtils
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 
 /**
  * NodeId does not explicitly prohibit 0, but as seen in the internal implementation (Chromium source code):
@@ -261,29 +262,30 @@ class PageHandler(
     suspend fun scrollIntoViewIfNeeded(selector: String, rect: Rect? = null): NodeRef? {
         val node = resolveSelector(selector) ?: return null
 
-        return scrollIntoViewIfNeeded(node, selector, rect)
+        try {
+            return scrollIntoViewIfNeeded(node, selector, rect)
+        } catch (e: ChromeRPCException) {
+            logger.warn("DOM.scrollIntoViewIfNeeded is not supported, fallback to Element.scrollIntoView | {} | {} | {}",
+                node, e.message, selector)
+            // Fallback to Element.scrollIntoView if DOM.scrollIntoViewIfNeeded is not supported
+            val safeSelector = pulsarObjectMapper().writeValueAsString(selector)
+            evaluate("__pulsar_utils__.scrollIntoView('$safeSelector')")
+        }
+
+        return null
     }
 
     @Throws(ChromeDriverException::class)
     suspend fun scrollIntoViewIfNeeded(nodeRef: NodeRef, selector: String? = null, rect: Rect? = null): NodeRef? {
-        try {
-            val node = domAPI?.describeNode(nodeRef.nodeId, nodeRef.backendNodeId, nodeRef.objectId, null, false)
-            if (node?.nodeType != ELEMENT_NODE) {
-                logger.info("Node is not of type HTMLElement | {}", selector ?: node)
-                return null
-            }
-
-            domAPI?.scrollIntoViewIfNeeded(node.nodeId, node.backendNodeId, nodeRef.objectId, rect)
-
-            return nodeRef
-        } catch (e: ChromeRPCException) {
-            logger.debug("DOM.scrollIntoViewIfNeeded is not supported, fallback to Element.scrollIntoView | {} | {} | {}",
-                nodeRef, e.message, selector)
-            // Fallback to Element.scrollIntoView if DOM.scrollIntoViewIfNeeded is not supported
-            evaluate("__pulsar_utils__.scrollIntoView('$selector')")
+        val node = domAPI?.describeNode(nodeRef.nodeId, nodeRef.backendNodeId, nodeRef.objectId, null, false)
+        if (node?.nodeType != ELEMENT_NODE) {
+            logger.info("Node is not of type HTMLElement | {}", selector ?: node)
+            return null
         }
 
-        return null
+        domAPI?.scrollIntoViewIfNeeded(node.nodeId, node.backendNodeId, nodeRef.objectId, rect)
+
+        return nodeRef
     }
 
     /**
