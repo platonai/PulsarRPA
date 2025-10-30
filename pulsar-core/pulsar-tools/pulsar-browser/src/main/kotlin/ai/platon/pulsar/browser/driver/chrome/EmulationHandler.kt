@@ -115,14 +115,21 @@ class ClickableDOM(
     }
 
     suspend fun boundingBox(): RectD? {
-        val box = dom.runCatching { getBoxModel(node.nodeId, node.backendNodeId, node.objectId) }.getOrNull() ?: return null
+        val box = dom.getBoxModel(node.nodeId, node.backendNodeId, node.objectId)
 
         val quad = box.border.takeIf { it.isNotEmpty() } ?: return null
 
-        val x = arrayOf(quad[0], quad[2], quad[4], quad[6]).minOrNull()!!
-        val y = arrayOf(quad[1], quad[3], quad[5], quad[7]).minOrNull()!!
-        val width = arrayOf(quad[0], quad[2], quad[4], quad[6]).maxOrNull()!! - x
-        val height = arrayOf(quad[1], quad[3], quad[5], quad[7]).maxOrNull()!! - y
+        val x = arrayOf(quad[0], quad[2], quad[4], quad[6]).minOrNull()
+        val y = arrayOf(quad[1], quad[3], quad[5], quad[7]).minOrNull()
+        val x2 = arrayOf(quad[0], quad[2], quad[4], quad[6]).maxOrNull()
+        val y2 = arrayOf(quad[1], quad[3], quad[5], quad[7]).maxOrNull()
+
+        if (x == null || y == null || x2 == null || y2 == null) {
+            return null
+        }
+
+        val width = x2 - x
+        val height = y2 - y
 
         return RectD(x, y, width, height)
     }
@@ -529,13 +536,17 @@ class Keyboard(private val devTools: ChromeDevTools) {
         val tokens = splitKeyString(keyString).ifEmpty { return@press }
 
         val key = tokens.last()
+
         for (i in 0 until tokens.size - 1) {
             down(tokens[i])
         }
 
-        down(key)
-        delay(delayMillis)
-        up(key)
+        try {
+            down(key)
+            delay(delayMillis)
+        } finally {
+            up(key)
+        }
 
         for (i in tokens.size - 2 downTo 0) {
             up(tokens[i])
@@ -715,11 +726,14 @@ class EmulationHandler(
 
         val clickableDOM = ClickableDOM(p, d, node, offset)
         val point = clickableDOM.clickablePoint().value ?: return
-        val box = clickableDOM.boundingBox()
-        val width = box?.width ?: 0.0
+        val box = runCatching { clickableDOM.boundingBox() }
+            .onFailure { getLogger(this).warn("clickable bounding box failed", it) }
+            .getOrNull() ?: return
+
+        val width = box.width
         // if it's an input element, we should click on the right side of the element to activate the input box,
         // so the cursor is at the tail of the text
-        if (box != null && width > 0.0) {
+        if (width > 0.0) {
             var offsetX = when (position) {
                 "left" -> 0.0 + deltaX
                 "right" -> width - deltaX
@@ -731,24 +745,26 @@ class EmulationHandler(
         }
 
         var modifiers = 0
+        var normModifier: KeyboardModifier? = null
+        var virtualKey: VirtualKey? = null
         if (modifier != null) {
-            val normModifier = KeyboardModifier.entries.map { it.name.uppercase() }.find { it == modifier.uppercase() }
+            normModifier = KeyboardModifier.entries.find { it.name.equals(modifier, ignoreCase = true) }
             if (normModifier != null) {
-                val virtualKey = keyboard?.createVirtualKeyForSingleKeyString(normModifier)
-                if (virtualKey?.isModifier == true) {
-                    // Use CDP-compliant modifier bitmask for mouse events
-                    modifiers = modifierMaskForKeyString(normModifier)
+                virtualKey = keyboard?.createVirtualKeyForSingleKeyString(normModifier.name)
+                if (virtualKey != null) {
+                    if (virtualKey.isModifier) {
+                        // Use CDP-compliant modifier bitmask for mouse events
+                        modifiers = modifierMaskForKeyString(normModifier.name)
+                    }
+                    keyboard?.down(virtualKey)
                 }
-                keyboard?.down(normModifier)
             }
         }
 
-        mouse?.click(point.x, point.y, count,
-            modifiers = modifiers,
-            delayMillis = delayMillis)
+        mouse?.click(point.x, point.y, count, modifiers = modifiers, delayMillis = delayMillis)
 
-        if (modifier != null) {
-            keyboard?.up(modifier)
+        if (virtualKey != null) {
+            keyboard?.up(virtualKey)
         }
     }
 }

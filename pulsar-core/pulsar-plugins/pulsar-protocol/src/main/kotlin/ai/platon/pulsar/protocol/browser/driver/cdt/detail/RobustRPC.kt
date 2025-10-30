@@ -58,12 +58,14 @@ class RobustRPC(
         var result = kotlin.runCatching { invokeDeferred0(action, block) }
             .onFailure {
                 // no handler here
+                logger.warn("Exception while executing action: [$action]", it)
             }
         var i = maxRetry
         while (result.isFailure && i-- > 0 && driver.checkState()) {
             result = kotlin.runCatching { invokeDeferred0(action, block) }
                 .onFailure {
                     // no handler here
+                    logger.warn("Exception while executing action - $i: [$action]", it)
                 }
         }
 
