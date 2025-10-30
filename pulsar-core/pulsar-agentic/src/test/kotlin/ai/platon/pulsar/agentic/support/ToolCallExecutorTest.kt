@@ -56,7 +56,7 @@ class ToolCallExecutorTest {
                 "selector" to "a.link",
                 "attrName" to "data-title",
                 "pattern" to "He said \"hi\"",
-                "count" to 2
+                "count" to "2"
             )
         )
         val expr = ToolCallExecutor.toolCallToExpression(tc)
@@ -284,7 +284,7 @@ class ToolCallExecutorTest {
     @Test
     fun `toolCallToExpression waitForSelector with timeout`() {
         val expr = ToolCallExecutor.toolCallToExpression(
-            ToolCall("driver", "waitForSelector", mutableMapOf("selector" to "#a", "timeoutMillis" to 1234))
+            ToolCall("driver", "waitForSelector", mutableMapOf("selector" to "#a", "timeoutMillis" to "1234"))
         )
         assertEquals("driver.waitForSelector(\"#a\", 1234L)", expr)
     }
@@ -311,7 +311,7 @@ class ToolCallExecutorTest {
             ToolCall(
                 "driver",
                 "clickTextMatches",
-                mutableMapOf("selector" to "a", "pattern" to "He said \"hi\"", "count" to 2)
+                mutableMapOf("selector" to "a", "pattern" to "He said \"hi\"", "count" to "2")
             )
         )
         assertNotNull(expr)

@@ -7,8 +7,10 @@ import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.common.KStrings
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.skeleton.ai.AgentState
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.time.LocalDate
 import java.util.*
 import kotlin.math.min
@@ -289,13 +291,21 @@ Print null or an empty string if no new information is found.
             return ""
         }
 
+        val mapper: ObjectMapper = jacksonObjectMapper().apply {
+            setSerializationInclusion(JsonInclude.Include.NON_NULL)
+            setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
+        }
+
         val his = history.takeLast(min(8, history.size))
             .map { it.copy(browserUseState = null, prevState = null) }
-            .joinToString("\n") { pulsarObjectMapper().writeValueAsString(it) }
+            .joinToString("\n") { mapper.writeValueAsString(it) }
 
         val msg = """
-此前动作摘要：
+## 此前动作摘要
 $his
+
+---
+
 		""".trimIndent()
 
         return msg
@@ -542,7 +552,7 @@ Be comprehensive: if there are multiple elements that may be relevant for future
 ## 无障碍树(Accessibility Tree):
 
 本次处理分片: $processingChunk
-待下次处理分片：${if (chunkToProcessNexTime > 0) chunkToProcessNexTime else "所有分片均处理完毕" }
+待下次处理分片：${if (chunkToProcessNexTime > 0) chunkToProcessNexTime else "所有分片均处理完毕"}
 总分片数: $chunksTotal
 
 每个分片对应一个视口高度，第 i 分片指第 i 视口内所有 DOM nodes。
