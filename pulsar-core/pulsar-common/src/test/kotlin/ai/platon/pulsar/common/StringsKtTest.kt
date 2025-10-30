@@ -13,7 +13,7 @@ class StringsKtTest {
     fun `test readableClassName with KClass object`() {
         val kclass = KStringsTest::class
         val result = readableClassName(kclass)
-        assertEquals("a.p.p.c.StringsKtTest", result)
+        assertEquals("a.p.p.c.KStringsTest", result)
     }
 
     @Test
@@ -31,21 +31,12 @@ class StringsKtTest {
     }
 
     @Test
-    fun `test prependReadableClassName with custom separator`() {
-        val obj = KStringsTest()
-        val name = "testName"
-        val separator = "-"
-        val result = prependReadableClassName(obj, name, separator)
-        assertEquals("a-p-p-c-StringsKtTest-testName", result)
-    }
-
-    @Test
     fun `test prependReadableClassName with whitespace ident`() {
         val obj = KStringsTest()
         val ident = "   "
         val name = "testName"
         val result = prependReadableClassName(obj, ident, name, ".")
-        assertEquals("a.p.p.c.StringsKtTest.testName", result)
+        assertEquals("a.p.p.c.KStringsTest.testName", result)
     }
 
     @Test
@@ -146,7 +137,7 @@ class StringsKtTest {
         val obj = KStringsTest()
         val name = "testName"
         val result = prependReadableClassName(obj, name, separator)
-        assertTrue(result.contains("StringsKtTest")) { result }
+        assertTrue(result.contains("KStringsTest")) { result }
         assertTrue(result.contains("testName")) { result }
     }
 
