@@ -12,7 +12,7 @@ import kotlin.test.assertTrue
 
 object TestHelper {
 
-    fun checkConfiguration(session: PulsarSession) {
+    fun checkLLMConfiguration(session: PulsarSession) {
         val conf = session.sessionConfig
         val isModelConfigured = ChatModelFactory.isModelConfigured(conf)
 

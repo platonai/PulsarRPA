@@ -842,7 +842,7 @@ interface WebDriver : Closeable {
     suspend fun click(selector: String, count: Int = 1)
 
     /**
-     * focus on an element with [selector] and click it with modifier pressed
+     * focus on an element with [selector] and click it with [modifier] pressed
      * */
     @Throws(WebDriverException::class)
     suspend fun click(selector: String, modifier: String)

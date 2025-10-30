@@ -1,18 +1,13 @@
 package ai.platon.pulsar.app.api.controller
 
 import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.rest.api.entities.*
-import ai.platon.pulsar.common.printlnPro
-import ai.platon.pulsar.test.BasicTestHelper
+import ai.platon.pulsar.test.TestResourceUtil.Companion.PRODUCT_DETAIL_URL
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Assumptions
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.MethodOrderer
-import org.junit.jupiter.api.Order
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestMethodOrder
+import org.junit.jupiter.api.*
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.*
 import java.nio.file.Files
@@ -44,7 +39,7 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
     @Order(10)
     @Test
     fun `navigate to product page`() {
-        val request = NavigateRequest(BasicTestHelper.PRODUCT_DETAIL_URL)
+        val request = NavigateRequest(PRODUCT_DETAIL_URL)
         val response = restTemplate.postForObject(
             "$baseUri/api/spa/navigate", request, String::class.java
         )

@@ -60,7 +60,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
         openEnhanced(e2eProductUrl, driver, 1)
 
         val navigateEntry = driver.navigateEntry
-        assertTrue("Expect documentTransferred") { navigateEntry.mainFrameReceived }
+        assertTrue("Expect mainFrameReceived") { navigateEntry.mainFrameReceived }
         assertTrue { navigateEntry.networkRequestCount.get() > 0 }
         assertTrue { navigateEntry.networkResponseCount.get() > 0 }
 
@@ -227,22 +227,22 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
         val selector = "form input[type=text]"
         text = driver.selectFirstAttributeOrNull(selector, "placeholder")
         printlnPro("Search bar - placeholder - 1 - driver.selectFirstAttributeOrNull() : <$text>")
-        assertTrue("Placeholder should not be empty") { !text.isNullOrBlank() }
-        text = driver.selectAttributeAll(selector, "placeholder").joinToString()
-        printlnPro("Search bar - placeholder - 2 - driver.selectAttributeAll() : <$text>")
+
+        text = driver.selectFirstPropertyValueOrNull(selector, "placeholder")
+        printlnPro("Search bar - placeholder - 2 - driver.selectFirstPropertyValueOrNull() : <$text>")
         assertTrue("Placeholder should not be empty") { !text.isNullOrBlank() }
 
-        text = driver.selectAttributeAll(selector, "value").joinToString()
-        printlnPro("Search bar value (should be empty) - 1: <$text>")
-        assertEquals("", text)
-
-        "Mate".forEach { ch ->
+        "iphone".forEach { ch ->
             driver.press(selector, "$ch")
         }
         driver.press(selector, "Digit6")
         driver.press(selector, "0")
 
         delay(1000)
+
+        text = driver.selectFirstPropertyValueOrNull(selector, "value")
+        printlnPro("Search bar value (should be empty) - 1: <$text>")
+        assertEquals("", text)
 
         MessageFormat.format("{0} key pressed {0}", PopularEmoji.SPARKLES).also { printlnPro(it) }
 

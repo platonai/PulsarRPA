@@ -45,6 +45,22 @@ ai.platon.pulsar.browser.driver.chrome.dom.ChromeDomServiceIsScrollableTest#isSc
 
 ai.platon.pulsar.browser.driver.chrome.dom.ChromeDomServiceIsScrollableTest#isScrollable special - body html and toggle overflow
 
+## Tool Call Upgrading Automatically
+
+1. update MiniWebDriver.kt from WebDriver.kt
+2. update ToolCallExecutor
+3. update ActionValidator
+
+## Testable Tool Calls
+
+Ensure all expressions in tool call specification can be correctly executed.
+
+1. test against interactive-dynamic.html
+2. generate kotlin expressions for each tool call
+3. call `ToolCallExecutor.execute()` to execute each kotlin expression
+4. check the web page to ensure the tool call is called as expected
+5.
+
 ## PageStateTracker
 
 1. 能否避免js？
@@ -60,4 +76,4 @@ ai.platon.pulsar.browser.driver.chrome.dom.ChromeDomServiceIsScrollableTest#isSc
 - highlight 非常重要
 - click() 增加 Key 参数，譬如 Ctrl + click
 - 增加对 AbstractWebDriver 中所有 js 方法的测试，在PulsarWebDriverMockSiteTests中测试
--
+

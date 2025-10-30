@@ -79,8 +79,7 @@ data class AgentConfig(
     val resolveTimeoutMs: Long = 600_000
 )
 
-class BrowserPerceptiveAgent(
-    val driver: WebDriver,
+class BrowserPerceptiveAgent constructor(
     val session: AgenticSession,
     val maxSteps: Int = 100,
     val config: AgentConfig = AgentConfig(maxSteps = maxSteps)
@@ -89,7 +88,7 @@ class BrowserPerceptiveAgent(
     private val slogger = StructuredAgentLogger(ownerLogger, config)
     private val logger = ownerLogger
 
-    private val activeDriver get() = session.boundDriver ?: driver
+    private val activeDriver get() = requireNotNull(session.boundDriver)
     private val baseDir = AppPaths.get("agent")
     private val conf get() = (activeDriver as AbstractWebDriver).settings.config
 
@@ -120,6 +119,13 @@ class BrowserPerceptiveAgent(
     override val uuid = UUID.randomUUID()
     override val stateHistory: List<AgentState> get() = _stateHistory
     override val processTrace: List<String> get() = _processTrace
+
+    constructor(
+        driver: WebDriver, session: AgenticSession, maxSteps: Int = 100,
+        config: AgentConfig = AgentConfig(maxSteps = maxSteps)
+    ): this(session, maxSteps = maxSteps, config = config) {
+        session.bindDriver(driver)
+    }
 
     override suspend fun resolve(problem: String): ActResult {
         val opts = ActionOptions(action = problem)
