@@ -193,6 +193,7 @@ open class TextToAction(
                 val observeElement = ObserveElement(
                     locator = ele.locator,
 
+                    screenshotContentSummary = ele.screenshotContentSummary,
                     currentPageContentSummary = ele.currentPageContentSummary,
                     actualLastActionImpact = ele.actualLastActionImpact,
                     expectedNextActionImpact = ele.expectedNextActionImpact,

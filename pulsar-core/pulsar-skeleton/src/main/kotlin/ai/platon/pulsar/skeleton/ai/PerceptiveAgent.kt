@@ -66,6 +66,7 @@ data class ToolCall constructor(
 data class ObserveElement constructor(
     val locator: String? = null,
 
+    val screenshotContentSummary: String? = null,
     val currentPageContentSummary: String? = null,
     val actualLastActionImpact: String? = null,
     val expectedNextActionImpact: String? = null,
@@ -97,6 +98,7 @@ data class ObserveResult constructor(
     val arguments: Map<String, Any?>? = null,
     val description: String? = null,
 
+    val screenshotContentSummary: String? = null,
     val currentPageContentSummary: String? = null,
     val actualLastActionImpact: String? = null,
     val expectedNextActionImpact: String? = null,
@@ -110,6 +112,7 @@ data class AgentState constructor(
     val step: Int,
     val action: String,
     val description: String? = null,
+    val screenshotContentSummary: String? = null,
     val currentPageContentSummary: String? = null,
     val actualLastActionImpact: String? = null,
     val expectedNextActionImpact: String? = null,
@@ -121,7 +124,10 @@ data class AgentState constructor(
     val prevState: AgentState? = null,
 ) {
     override fun toString(): String {
-        val summary = listOfNotNull(description, currentPageContentSummary, currentPageContentSummary)
+        val summary = listOfNotNull(description,
+            currentPageContentSummary, screenshotContentSummary,
+            actualLastActionImpact,
+            expectedNextActionImpact)
             .joinToString("\n")
         return "$timestamp $action - $summary"
     }

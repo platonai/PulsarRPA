@@ -345,6 +345,7 @@ class BrowserPerceptiveAgent(
                 method = ele.method?.ifBlank { null },
                 arguments = ele.arguments?.takeIf { it.isNotEmpty() },
                 description = ele.description ?: "(No comment ...)",
+                screenshotContentSummary = ele.screenshotContentSummary,
                 currentPageContentSummary = ele.currentPageContentSummary,
                 actualLastActionImpact = ele.actualLastActionImpact,
                 expectedNextActionImpact = ele.expectedNextActionImpact,
@@ -569,6 +570,7 @@ class BrowserPerceptiveAgent(
                 method = ele.method?.ifBlank { null },
                 arguments = ele.arguments?.takeIf { it.isNotEmpty() },
                 description = ele.description ?: "(No comment ...)",
+                screenshotContentSummary = ele.screenshotContentSummary,
                 currentPageContentSummary = ele.currentPageContentSummary,
                 actualLastActionImpact = ele.actualLastActionImpact,
                 expectedNextActionImpact = ele.expectedNextActionImpact,
@@ -660,6 +662,7 @@ class BrowserPerceptiveAgent(
             step = computedStep,
             action = method,
             description = descMsg,
+            screenshotContentSummary = observe?.screenshotContentSummary,
             currentPageContentSummary = observe?.currentPageContentSummary,
             actualLastActionImpact = observe?.actualLastActionImpact,
             expectedNextActionImpact = observe?.expectedNextActionImpact,
@@ -796,7 +799,7 @@ class BrowserPerceptiveAgent(
 
                 logger.info("step.exec sid={} step={}/{} noOps={}", sid, step, config.maxSteps, consecutiveNoOps)
                 if (logger.isDebugEnabled) {
-                    logger.info("dom={}", DomDebug.summarize(browserUseState.domState))
+                    logger.debug("dom={}", DomDebug.summarize(browserUseState.domState))
                 }
 
                 // Memory cleanup at intervals

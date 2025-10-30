@@ -10,6 +10,7 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.skeleton.ai.AgentState
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.time.LocalDate
 import java.util.*
@@ -34,7 +35,8 @@ class PromptBuilder() {
         val ACTION_SCHEMA = """
         |,
         |"domain": string, "method": string, "arguments": [{"name": string, "value": string}],
-        |"currentPageContentSummary": string, "actualLastActionImpact": string, "expectedNextActionImpact": string,
+        |"screenshotContentSummary": string, "currentPageContentSummary": string,
+        |"actualLastActionImpact": string, "expectedNextActionImpact": string,
         |
         |""".trimMargin()
 
@@ -75,7 +77,7 @@ $schema
             }
         }
 
-        val TOOL_CALL_NOTES = """
+        val TOOL_CALL_NOTE_CONTENT = """
 - domain: 方法的调用方，如 driver, browser 等
 - 输出结果中，定位节点时 `selector` 字段始终填入 `locator` 的值
 - 确保 `locator` 与对应的无障碍树节点属性完全匹配，准确定位该节点
@@ -90,8 +92,7 @@ $schema
 - 如果需要操作前一页面，但已跳转，使用 `goBack`
     """.trimIndent()
 
-        val A11Y_TREE_NOTES = """
-## 无障碍树（Accessibility Tree）说明：
+        val A11Y_TREE_NOTE_CONTENT = """
 
 无障碍树包含页面 DOM 关键节点的主要信息，包括节点文本内容，可见性，可交互性，坐标和尺寸等。
 
@@ -135,13 +136,13 @@ ${buildObserveResultSchema(true)}
 ${AgentTool.TOOL_CALL_SPECIFICATION}
 ```
 
-$TOOL_CALL_NOTES
+$TOOL_CALL_NOTE_CONTENT
 
 ---
 
 ## 无障碍树（Accessibility Tree）说明：
 
-$A11Y_TREE_NOTES
+$A11Y_TREE_NOTE_CONTENT
 
 ---
 
@@ -294,6 +295,7 @@ Print null or an empty string if no new information is found.
         val mapper: ObjectMapper = jacksonObjectMapper().apply {
             setSerializationInclusion(JsonInclude.Include.NON_NULL)
             setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
+            registerModule(JavaTimeModule())
         }
 
         val his = history.takeLast(min(8, history.size))
@@ -551,11 +553,15 @@ Be comprehensive: if there are multiple elements that may be relevant for future
         fun contentCN() = """
 ## 无障碍树(Accessibility Tree):
 
-本次处理分片: $processingChunk
-待下次处理分片：${if (chunkToProcessNexTime > 0) chunkToProcessNexTime else "所有分片均处理完毕"}
+本次处理分片序号: $processingChunk
+待下次处理分片序号：$chunkToProcessNexTime
 总分片数: $chunksTotal
 
-每个分片对应一个视口高度，第 i 分片指第 i 视口内所有 DOM nodes。
+- 每个分片对应一个视口高度
+- 第 i 分片指第 i 视口内所有 DOM nodes
+- 提供的无障碍树仅包含第 i 个视口内的 DOM 节点，视口外节点仅少量纳入
+- 调用 `scrollToViewport(n)` 可获取第 n 个视口内的 DOM 节点（1-based）
+- 第 -1 分片意味无分片，不需继续处理
 
 ```json
 ${nanoTree.lazyJson}
@@ -576,14 +582,18 @@ $schemaContract
 """
 
         fun contentEN() = """
+
 ## Accessibility Tree:
 
-Current processing chunk: $processingChunk
-Chunk to process next time：${if (chunkToProcessNexTime > 0) chunkToProcessNexTime else "All chunks are processed"}
+Current processing chunk number: $processingChunk
+The number of chunk to process next time：$chunkToProcessNexTime
 Total chunk: $chunksTotal
 
-- Each chunk corresponds to one viewport height.
-- The i-th chunk refers to all DOM nodes located within the i-th viewport.
+- Each chunk corresponds to one viewport height
+- The i-th chunk refers to all DOM nodes located within the i-th viewport
+- The provided accessibility tree includes only the DOM nodes within the i-th viewport, with minor inclusion of nodes outside the viewport.
+- Use `scrollToViewport(n)` to retrieve DOM nodes within the n-th viewport (1-based)
+- Chunk -1 means no more chunk, no need to precess next time
 
 ```json
 ${nanoTree.lazyJson}
@@ -633,7 +643,7 @@ $schemaContract
 ${toolCalls.joinToString("\n")}
 ```
 
-$TOOL_CALL_NOTES
+$TOOL_CALL_NOTE_CONTENT
 
 ---
 

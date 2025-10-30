@@ -28,6 +28,7 @@ data class ObserveResponseElement(
 
     val arguments: List<Map<String, String>?>? = null,
 
+    val screenshotContentSummary: String? = null,
     val currentPageContentSummary: String? = null,
     val actualLastActionImpact: String? = null,
     val expectedNextActionImpact: String? = null,
