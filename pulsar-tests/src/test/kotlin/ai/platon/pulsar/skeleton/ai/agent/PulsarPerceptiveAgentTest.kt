@@ -3,13 +3,13 @@ package ai.platon.pulsar.skeleton.ai.agent
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.agentic.ai.AgentConfig
 import ai.platon.pulsar.agentic.ai.BrowserPerceptiveAgent
-import ai.platon.pulsar.agentic.ai.tta.TTATestHelper
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.skeleton.ai.ActionOptions
-import ai.platon.pulsar.skeleton.ai.ExtractOptions
 import ai.platon.pulsar.skeleton.ai.AgentState
+import ai.platon.pulsar.skeleton.ai.ExtractOptions
 import ai.platon.pulsar.skeleton.ai.ObserveOptions
+import ai.platon.pulsar.util.TestHelper
 import ai.platon.pulsar.util.server.EnableMockServerApplication
 import com.fasterxml.jackson.databind.ObjectMapper
 import kotlinx.coroutines.runBlocking
@@ -33,7 +33,10 @@ import kotlin.test.assertContains
  * - State management and history tracking
  */
 @Tag("IntegrationTest")
-@SpringBootTest(classes = [EnableMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(
+    classes = [EnableMockServerApplication::class],
+    webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
+)
 class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
     private val mapper = ObjectMapper()
@@ -44,7 +47,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
     @BeforeEach
     fun checkLLM() {
-        TTATestHelper.checkLLMConfiguration(session)
+        TestHelper.checkLLMConfiguration(session)
     }
 
     @Nested
@@ -130,8 +133,10 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
                 // Verify schema fields are present
                 val jsonNode = result.data
-                assertTrue(jsonNode.has("title") || jsonNode.has("buttonCount"),
-                    "Result should contain at least one schema field")
+                assertTrue(
+                    jsonNode.has("title") || jsonNode.has("buttonCount"),
+                    "Result should contain at least one schema field"
+                )
             }
         }
 
@@ -388,8 +393,10 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 val r2 = agent.observe("List elements")
                 printlnPro(r2)
 
-                assertTrue(agent.stateHistory.size >= initialHistorySize + 2,
-                    "History should grow with operations")
+                assertTrue(
+                    agent.stateHistory.size >= initialHistorySize + 2,
+                    "History should grow with operations"
+                )
             }
         }
 

@@ -2,9 +2,9 @@ package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.agentic.ai.BrowserPerceptiveAgent
-import ai.platon.pulsar.agentic.ai.tta.TTATestHelper
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.ChatModelFactory
+import ai.platon.pulsar.util.TestHelper
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeEach
@@ -40,48 +40,50 @@ class PulsarPerceptiveAgentExtractObserveE2ETest : WebDriverTestBase() {
 
     @BeforeEach
     fun checkLLM() {
-        TTATestHelper.checkLLMConfiguration(session)
+        TestHelper.checkLLMConfiguration(session)
     }
 
     @Test
-    fun `Given interactive page When observe Then actionable elements returned`() = runEnhancedWebDriverTest(testURL) { driver ->
-        assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping E2E")
+    fun `Given interactive page When observe Then actionable elements returned`() =
+        runEnhancedWebDriverTest(testURL) { driver ->
+            assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping E2E")
 
-        val agent = BrowserPerceptiveAgent(driver, session)
-        val observed = agent.observe("Understand the page and list actionable elements")
+            val agent = BrowserPerceptiveAgent(driver, session)
+            val observed = agent.observe("Understand the page and list actionable elements")
 
-        assertTrue(observed.isNotEmpty())
-        assertTrue(observed.all { it.description!!.isNotBlank() })
+            assertTrue(observed.isNotEmpty())
+            assertTrue(observed.all { it.description!!.isNotBlank() })
 
-        writeMetrics(
-            Metrics(
-                url = testURL,
-                timestamp = Instant.now().toString(),
-                case = "PulsarPerceptiveAgentObserveE2E",
-                observedCount = observed.size
+            writeMetrics(
+                Metrics(
+                    url = testURL,
+                    timestamp = Instant.now().toString(),
+                    case = "PulsarPerceptiveAgentObserveE2E",
+                    observedCount = observed.size
+                )
             )
-        )
-    }
+        }
 
     @Test
-    fun `Given interactive page When extract Then structured data returned`() = runEnhancedWebDriverTest(testURL) { driver ->
-        assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping E2E")
+    fun `Given interactive page When extract Then structured data returned`() =
+        runEnhancedWebDriverTest(testURL) { driver ->
+            assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping E2E")
 
-        val agent = BrowserPerceptiveAgent(driver, session)
-        val result = agent.extract("Extract key structured data from the page")
+            val agent = BrowserPerceptiveAgent(driver, session)
+            val result = agent.extract("Extract key structured data from the page")
 
-        assertTrue(result.success)
-        val jsonText = result.data.toString()
-        assertTrue(jsonText.isNotBlank())
+            assertTrue(result.success)
+            val jsonText = result.data.toString()
+            assertTrue(jsonText.isNotBlank())
 
-        writeMetrics(
-            Metrics(
-                url = testURL,
-                timestamp = Instant.now().toString(),
-                case = "PulsarPerceptiveAgentExtractE2E",
-                extractSuccess = result.success,
-                extractJsonSize = jsonText.length
+            writeMetrics(
+                Metrics(
+                    url = testURL,
+                    timestamp = Instant.now().toString(),
+                    case = "PulsarPerceptiveAgentExtractE2E",
+                    extractSuccess = result.success,
+                    extractJsonSize = jsonText.length
+                )
             )
-        )
-    }
+        }
 }

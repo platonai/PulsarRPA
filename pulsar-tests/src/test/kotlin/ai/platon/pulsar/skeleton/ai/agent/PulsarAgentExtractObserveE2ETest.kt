@@ -2,9 +2,9 @@ package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.agentic.ai.BrowserPerceptiveAgent
-import ai.platon.pulsar.agentic.ai.tta.TTATestHelper
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
+import ai.platon.pulsar.util.TestHelper
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
@@ -38,7 +38,7 @@ class PulsarAgentExtractObserveE2ETest : WebDriverTestBase() {
 
     @BeforeEach
     fun checkLLM() {
-        TTATestHelper.checkLLMConfiguration(session)
+        TestHelper.checkLLMConfiguration(session)
     }
 
     @Test
