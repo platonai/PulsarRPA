@@ -321,28 +321,35 @@ __pulsar_utils__.scrollToMiddle = function(ratio = 0.5) {
 };
 
 /**
- * @param {Number} screenNumber The ratio of the page's height to scroll to, default is 0.5
+ * @param {Number} screenNumber The ratio of the page's height to scroll to, default is 1.0
  * */
-__pulsar_utils__.scrollToScreen = function(screenNumber = 0.5) {
-    if (!document || !document.documentElement || !document.body) {
-        return
-    }
+__pulsar_utils__.scrollToScreen = function(screenNumber = 1.0) {
+    return __pulsar_utils__.scrollToViewport(screenNumber)
+}
 
-    if (screenNumber < 0) {
-        screenNumber = 0.0
-    }
+/**
+ * Scroll the page to the start of the n-th viewport (1-based index).
+ * n = 1  → scroll to top (0)
+ * n = 2  → scroll to one viewport height
+ * @param {number} n The viewport index to scroll to (1-based)
+ */
+__pulsar_utils__.scrollToViewport = function (n = 1) {
+    if (!document?.documentElement || !document?.body) return;
 
-    let x = 0;
-    let y = Math.max(
-        document.documentElement.scrollHeight,
-        document.documentElement.clientHeight,
-        document.body.scrollHeight
+    const config = this.getConfig?.() || {};
+    const viewportHeight = config.viewPortHeight || window.innerHeight;
+
+    const totalHeight = Math.min(
+        Math.max(
+            document.documentElement.scrollHeight,
+            document.body.scrollHeight
+        ),
+        15000
     );
 
-    let config = this.getConfig();
-    y = Math.min(y, 15000) / config.viewPortHeight * screenNumber
-
-    window.scrollTo(x, y)
+    // 1-based: first viewport = 0px
+    const y = Math.min(totalHeight, (n - 1) * viewportHeight);
+    window.scrollTo(0, y);
 };
 
 __pulsar_utils__.scrollToBottom = function() {
