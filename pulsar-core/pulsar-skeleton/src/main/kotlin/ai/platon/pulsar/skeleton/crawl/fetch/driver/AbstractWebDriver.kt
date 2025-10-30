@@ -372,7 +372,7 @@ abstract class AbstractWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun scrollToViewport(n: Double) {
-        evaluate("__pulsar_utils__.scrollToScreen($n)")
+        evaluate("__pulsar_utils__.scrollToViewport($n)")
     }
 
     @Throws(WebDriverException::class)

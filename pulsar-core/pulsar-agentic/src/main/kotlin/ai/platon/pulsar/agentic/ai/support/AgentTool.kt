@@ -23,7 +23,7 @@ driver.scrollTo(selector: String)
 driver.scrollToTop()
 driver.scrollToBottom()
 driver.scrollToMiddle(ratio: Double = 0.5)
-driver.scrollToViewport(n: Double)                     // scroll to the [n]th viewport position, 0-based
+driver.scrollToViewport(n: Double)                     // scroll to the [n]th viewport position, 1-based
 driver.goBack()
 driver.goForward()
 driver.selectFirstTextOrNull(selector: String): String? // Returns the node's text content, the node is located by [selector]. If the node does not exist, returns null.

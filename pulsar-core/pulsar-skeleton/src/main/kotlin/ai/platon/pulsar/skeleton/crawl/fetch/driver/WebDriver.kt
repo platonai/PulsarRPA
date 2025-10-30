@@ -1004,14 +1004,14 @@ interface WebDriver : Closeable {
      * Scroll to the 2.5th viewport position.
      *
      * ```kotlin
-     * driver.scrollToViewport(0.0)
-     * driver.scrollToViewport(0.5)
+     * driver.scrollToViewport(1.0)
      * driver.scrollToViewport(1.5)
+     * driver.scrollToViewport(2.5)
      * driver.scrollToViewport(3.0)
      * ```
      *
-     * @param n The viewport number of the page to scroll to (0-based).
-     * 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.
+     * @param n The viewport number of the page to scroll to (1-based).
+     * 1.00 means at the top of the first screen, 2.50 means halfway through the second screen.
      */
     @Throws(WebDriverException::class)
     suspend fun scrollToViewport(n: Double)
