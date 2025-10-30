@@ -88,7 +88,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Test
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given valid page When extract called Then should return structured data`() {
-            assumeLLMConfigured()
+
 
             runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = BrowserPerceptiveAgent(driver, session)
@@ -109,8 +109,6 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Test
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given custom schema When extract called Then should follow schema structure`() {
-            assumeLLMConfigured()
-
             runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = BrowserPerceptiveAgent(driver, session)
 
@@ -143,7 +141,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Test
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given empty instruction When extract called Then should use default instruction`() {
-            assumeLLMConfigured()
+
 
             runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = BrowserPerceptiveAgent(driver, session)
@@ -182,7 +180,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Test
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given interactive page When observe called Then should return actionable elements`() {
-            assumeLLMConfigured()
+
 
             runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = BrowserPerceptiveAgent(driver, session)
@@ -209,7 +207,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Test
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given observe options When observe called Then should respect options`() {
-            assumeLLMConfigured()
+
 
             runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = BrowserPerceptiveAgent(driver, session)
@@ -234,7 +232,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Test
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given observe with returnAction true When observe called Then should include actions`() {
-            assumeLLMConfigured()
+
 
             runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = BrowserPerceptiveAgent(driver, session)
@@ -255,7 +253,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Test
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given empty instruction When observe called Then should use default instruction`() {
-            assumeLLMConfigured()
+
 
             runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = BrowserPerceptiveAgent(driver, session)
@@ -275,8 +273,6 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Test
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given simple action When act called Then should execute and return result`() {
-            assumeLLMConfigured()
-
             runWebDriverTest(actMockSiteHomeURL) { driver ->
                 val agent = BrowserPerceptiveAgent(driver, session)
 
@@ -292,7 +288,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Test
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given ActionOptions When act called Then should use options`() {
-            assumeLLMConfigured()
+
 
             runWebDriverTest(actMockSiteHomeURL) { driver ->
                 val agent = BrowserPerceptiveAgent(driver, session)
@@ -351,7 +347,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Test
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given multiple consecutive failures When act called Then should respect retry limits`() {
-            assumeLLMConfigured()
+
 
             runEnhancedWebDriverTest { driver ->
                 val config = AgentConfig(
@@ -381,7 +377,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
         @Test
         fun `Given multiple operations When executed Then history should accumulate`() {
-            assumeLLMConfigured()
+
 
             runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = BrowserPerceptiveAgent(driver, session)
@@ -484,7 +480,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Tag("TimeConsumingTest")
         @Timeout(value = 120_000L, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given multiple operations When executed in sequence Then should complete within time limit`() {
-            assumeLLMConfigured()
+
 
             runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = BrowserPerceptiveAgent(driver, session)
@@ -519,12 +515,5 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 // The agent should manage its memory during execution
             }
         }
-    }
-
-    /**
-     * Helper method to check if LLM is configured
-     */
-    private fun assumeLLMConfigured() {
-        Assumptions.assumeTrue(ChatModelFactory.isModelConfigured(conf), "LLM not configured - skipping test")
     }
 }

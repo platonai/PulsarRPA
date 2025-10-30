@@ -1126,56 +1126,7 @@ class BrowserPerceptiveAgent constructor(
      * Enhanced URL validation with comprehensive safety checks
      * Medium Priority #12: Made configurable for localhost and ports
      */
-    private fun isSafeUrl(url: String): Boolean {
-        if (url.isBlank()) return false
-
-        if (!URLUtils.isStandard(url)) {
-            return false
-        }
-
-        return runCatching {
-            val uri = URI(url)
-            val scheme = uri.scheme?.lowercase()
-
-            // Only allow http and https schemes
-            if (scheme !in setOf("http", "https")) {
-                logger.info(
-                    "url.block.scheme sid={} scheme={} url={}", uuid.toString().take(8), scheme ?: "null", url.take(50)
-                )
-                return false
-            }
-
-            // Additional safety checks
-            val host = uri.host?.lowercase() ?: return false
-
-            // Medium Priority #12: Configurable localhost blocking
-            if (!config.allowLocalhost) {
-                val dangerousPatterns = listOf("localhost", "127.0.0.1", "0.0.0.0", "::1")
-                if (dangerousPatterns.any { host.contains(it) }) {
-                    logger.info(
-                        "url.block.localhost sid={} host={} reason=localhost_blocked", uuid.toString().take(8), host
-                    )
-                    return false
-                }
-            }
-
-            // Medium Priority #12: Validate port with configurable whitelist
-            val port = uri.port
-            if (port != -1 && !config.allowedPorts.contains(port)) {
-                logger.info(
-                    "url.block.port sid={} port={} host={} allowedPorts={}",
-                    uuid.toString().take(8),
-                    port,
-                    host,
-                    config.allowedPorts
-                )
-                return false
-            }
-
-            // Cap length of selector in actions (if we pass it) — handled elsewhere
-            true
-        }.getOrDefault(false)
-    }
+    private fun isSafeUrl(url: String): Boolean = ActionValidator().isSafeUrl(url)
 
     /**
      * Enhanced screenshot capture with comprehensive error handling
