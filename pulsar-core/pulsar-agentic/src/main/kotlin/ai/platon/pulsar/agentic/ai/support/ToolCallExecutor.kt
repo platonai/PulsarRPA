@@ -163,10 +163,18 @@ class ToolCallExecutor {
             }
 
             "click" -> {
-                // Click on an element with optional repeat count
+                // Click on an element with optional repeat count or modifier
                 when (args.size) {
                     1 -> driver.click(arg0!!)
-                    2 -> driver.click(arg0!!, arg1!!.toIntOrNull() ?: 1)
+                    2 -> {
+                        val countOrModifier = arg1!!
+                        val count = countOrModifier.toIntOrNull()
+                        if (count != null) {
+                            driver.click(arg0!!, count)
+                        } else {
+                            driver.click(arg0!!, countOrModifier)
+                        }
+                    }
                     else -> if (args.isNotEmpty()) driver.click(arg0!!) else null
                 }
             }
@@ -174,6 +182,11 @@ class ToolCallExecutor {
             "type" -> {
                 // Type text into an element
                 if (args.size >= 2) driver.type(arg0!!, arg1!!) else null
+            }
+
+            "textContent" -> {
+                // Get the document's text content
+                driver.textContent()
             }
 
             "waitForNavigation" -> {
@@ -750,216 +763,7 @@ class ToolCallExecutor {
          * - Nested parentheses inside arguments
          * - Optional whitespace and trailing commas
          */
-        fun parseKotlinFunctionExpression(input: String): ToolCall? {
-            val s = input.trim().removeSuffix(";")
-            if (s.isEmpty()) return null
-
-            // Scan once to find the top-level '(' and its matching ')', respecting quotes/escapes
-            var inSingle = false
-            var inDouble = false
-            var escape = false
-            var depth = 0
-            var openIdx = -1
-            var closeIdx = -1
-
-            var i = 0
-            while (i < s.length) {
-                val c = s[i]
-                if (escape) {
-                    escape = false
-                    i++
-                    continue
-                }
-                when {
-                    inSingle -> {
-                        if (c == '\\') {
-                            escape = true
-                        } else if (c == '\'') {
-                            inSingle = false
-                        }
-                    }
-                    inDouble -> {
-                        if (c == '\\') {
-                            escape = true
-                        } else if (c == '"') {
-                            inDouble = false
-                        }
-                    }
-                    else -> {
-                        when (c) {
-                            '\'' -> inSingle = true
-                            '"' -> inDouble = true
-                            '(' -> {
-                                if (openIdx == -1) {
-                                    openIdx = i
-                                    depth = 1
-                                } else {
-                                    depth++
-                                }
-                            }
-                            ')' -> {
-                                if (openIdx != -1) {
-                                    depth--
-                                    if (depth == 0) {
-                                        closeIdx = i
-                                        i = s.length // break
-                                        continue
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                i++
-            }
-
-            if (openIdx == -1 || closeIdx == -1 || closeIdx <= openIdx) return null
-
-            val header = s.take(openIdx).trim()
-            val argsRegion = s.substring(openIdx + 1, closeIdx)
-
-            val dot = header.lastIndexOf('.')
-            if (dot <= 0 || dot >= header.length - 1) return null
-            val objectName = header.take(dot).trim()
-            val functionName = header.substring(dot + 1).trim()
-            if (objectName.isEmpty() || functionName.isEmpty()) return null
-
-            val argsList = splitTopLevelArgs(argsRegion)
-            val normalized = argsList.mapNotNull { tok ->
-                val t = tok.trim()
-                if (t.isEmpty()) null else unquoteAndUnescape(t)
-            }
-            val args: MutableMap<String, String?> = normalized.withIndex()
-                .associateTo(mutableMapOf()) { it.index.toString() to it.value }
-
-            return ToolCall(objectName, functionName, args)
-        }
-
-        // Split arguments by commas at top level, honoring quotes, escapes, and nested parentheses.
-        private fun splitTopLevelArgs(s: String): List<String> {
-            val out = mutableListOf<String>()
-            if (s.isBlank()) return out
-            var inSingle = false
-            var inDouble = false
-            var escape = false
-            var depth = 0
-            val buf = StringBuilder()
-            var i = 0
-            while (i < s.length) {
-                val c = s[i]
-                if (escape) {
-                    buf.append(c)
-                    escape = false
-                    i++
-                    continue
-                }
-                when {
-                    inSingle -> {
-                        when (c) {
-                            '\\' -> {
-                                escape = true
-                                buf.append(c)
-                            }
-                            '\'' -> {
-                                inSingle = false
-                                buf.append(c)
-                            }
-                            else -> buf.append(c)
-                        }
-                    }
-                    inDouble -> {
-                        when (c) {
-                            '\\' -> {
-                                escape = true
-                                buf.append(c)
-                            }
-                            '"' -> {
-                                inDouble = false
-                                buf.append(c)
-                            }
-                            else -> buf.append(c)
-                        }
-                    }
-                    else -> {
-                        when (c) {
-                            '\'' -> {
-                                inSingle = true
-                                buf.append(c)
-                            }
-                            '"' -> {
-                                inDouble = true
-                                buf.append(c)
-                            }
-                            '(' -> {
-                                depth++
-                                buf.append(c)
-                            }
-                            ')' -> {
-                                if (depth > 0) depth--
-                                buf.append(c)
-                            }
-                            ',' -> {
-                                if (depth == 0) {
-                                    out.add(buf.toString())
-                                    buf.setLength(0)
-                                } else {
-                                    buf.append(c)
-                                }
-                            }
-                            else -> buf.append(c)
-                        }
-                    }
-                }
-                i++
-            }
-            // Last token (may be empty on trailing comma)
-            if (buf.isNotEmpty()) {
-                out.add(buf.toString())
-            }
-            return out
-        }
-
-        // Remove one level of matching quotes and unescape backslash sequences inside.
-        private fun unquoteAndUnescape(token: String): String {
-            if (token.length >= 2) {
-                val first = token.first()
-                val last = token.last()
-                if ((first == '"' && last == '"') || (first == '\'' && last == '\'')) {
-                    return unescape(token.substring(1, token.length - 1))
-                }
-            }
-            return token.trim()
-        }
-
-        // Unescape known sequences; preserve unknown ones (e.g. \p -> \p)
-        private fun unescape(s: String): String {
-            val sb = StringBuilder(s.length)
-            var i = 0
-            while (i < s.length) {
-                val c = s[i]
-                if (c == '\\' && i + 1 < s.length) {
-                    when (val n = s[i + 1]) {
-                        '\\' -> { sb.append('\\'); i += 2 }
-                        '"' -> { sb.append('"'); i += 2 }
-                        '\'' -> { sb.append('\''); i += 2 }
-                        'n' -> { sb.append('\n'); i += 2 }
-                        'r' -> { sb.append('\r'); i += 2 }
-                        't' -> { sb.append('\t'); i += 2 }
-                        'b' -> { sb.append('\b'); i += 2 }
-                        'f' -> { sb.append('\u000C'); i += 2 }
-                        else -> {
-                            // Unknown escape: keep the backslash and the char
-                            sb.append('\\').append(n)
-                            i += 2
-                        }
-                    }
-                } else {
-                    sb.append(c)
-                    i++
-                }
-            }
-            return sb.toString()
-        }
+        fun parseKotlinFunctionExpression(input: String) = SimpleKotlinParser().parseFunctionExpression(input)
 
         // Basic string escaper to safely embed values inside Kotlin string literals
         private fun String.esc(): String = this
@@ -972,9 +776,12 @@ class ToolCallExecutor {
             val arguments = tc.arguments
             return when (tc.method) {
                 // Navigation
+                "open" -> arguments["url"]?.let { "driver.open(\"${it.esc()}\")" }
                 "navigateTo" -> arguments["url"]?.let { "driver.navigateTo(\"${it.esc()}\")" }
                 // Backward compatibility for older prompts
                 "goto" -> arguments["url"]?.let { "driver.navigateTo(\"${it.esc()}\")" }
+                "goBack" -> "driver.goBack()"
+                "goForward" -> "driver.goForward()"
                 // Wait
                 "waitForSelector" -> arguments["selector"]?.let { sel ->
                     "driver.waitForSelector(\"${sel.esc()}\", ${(arguments["timeoutMillis"] ?: 5000)})"
@@ -1028,9 +835,6 @@ class ToolCallExecutor {
                     val timeout = arguments["timeoutMillis"] ?: 5000L
                     "driver.waitForNavigation(\"${oldUrl.esc()}\", ${timeout})"
                 }
-
-                "goBack" -> "driver.goBack()"
-                "goForward" -> "driver.goForward()"
                 // Screenshots
                 "captureScreenshot" -> {
                     val sel = arguments["selector"]
@@ -1038,6 +842,49 @@ class ToolCallExecutor {
                 }
                 // Timing
                 "delay" -> "driver.delay(${arguments["millis"] ?: 1000})"
+                // URL and document info
+                "currentUrl" -> "driver.currentUrl()"
+                "url" -> "driver.url()"
+                "documentURI" -> "driver.documentURI()"
+                "baseURI" -> "driver.baseURI()"
+                "referrer" -> "driver.referrer()"
+                "pageSource" -> "driver.pageSource()"
+                "getCookies" -> "driver.getCookies()"
+                // Additional status checking
+                "isHidden" -> arguments["selector"]?.let { "driver.isHidden(\"${it.esc()}\")" }
+                "visible" -> arguments["selector"]?.let { "driver.visible(\"${it.esc()}\")" }
+                "isChecked" -> arguments["selector"]?.let { "driver.isChecked(\"${it.esc()}\")" }
+                "bringToFront" -> "driver.bringToFront()"
+                // Additional interactions
+                "type" -> arguments["selector"]?.let { s ->
+                    arguments["text"]?.let { t -> "driver.type(\"${s.esc()}\", \"${t.esc()}\")" }
+                }
+                "scrollToViewport" -> arguments["n"]?.let { "driver.scrollToViewport(${it})" }
+                "mouseWheelDown" -> "driver.mouseWheelDown(${arguments["count"] ?: 1}, ${arguments["deltaX"] ?: 0.0}, ${arguments["deltaY"] ?: 150.0}, ${arguments["delayMillis"] ?: 0})"
+                "mouseWheelUp" -> "driver.mouseWheelUp(${arguments["count"] ?: 1}, ${arguments["deltaX"] ?: 0.0}, ${arguments["deltaY"] ?: -150.0}, ${arguments["delayMillis"] ?: 0})"
+                "moveMouseTo" -> arguments["x"]?.let { x ->
+                    arguments["y"]?.let { y -> "driver.moveMouseTo(${x}, ${y})" }
+                } ?: arguments["selector"]?.let { s ->
+                    "driver.moveMouseTo(\"${s.esc()}\", ${arguments["deltaX"] ?: 0}, ${arguments["deltaY"] ?: 0})"
+                }
+                "dragAndDrop" -> arguments["selector"]?.let { s ->
+                    "driver.dragAndDrop(\"${s.esc()}\", ${arguments["deltaX"] ?: 0}, ${arguments["deltaY"] ?: 0})"
+                }
+                // HTML and text extraction
+                "outerHTML" -> arguments["selector"]?.let { "driver.outerHTML(\"${it.esc()}\")" } ?: "driver.outerHTML()"
+                "textContent" -> "driver.textContent()"
+                "selectFirstTextOrNull" -> arguments["selector"]?.let { "driver.selectFirstTextOrNull(\"${it.esc()}\")" }
+                "selectTextAll" -> arguments["selector"]?.let { "driver.selectTextAll(\"${it.esc()}\")" }
+                "selectFirstAttributeOrNull" -> arguments["selector"]?.let { s ->
+                    arguments["attrName"]?.let { a -> "driver.selectFirstAttributeOrNull(\"${s.esc()}\", \"${a.esc()}\")" }
+                }
+                "selectAttributes" -> arguments["selector"]?.let { "driver.selectAttributes(\"${it.esc()}\")" }
+                "selectAttributeAll" -> arguments["selector"]?.let { s ->
+                    arguments["attrName"]?.let { a -> "driver.selectAttributeAll(\"${s.esc()}\", \"${a.esc()}\", ${arguments["start"] ?: 0}, ${arguments["limit"] ?: 10000})" }
+                }
+                "selectImages" -> arguments["selector"]?.let { "driver.selectImages(\"${it.esc()}\", ${arguments["offset"] ?: 1}, ${arguments["limit"] ?: Int.MAX_VALUE})" }
+                // JavaScript evaluation
+                "evaluate" -> arguments["expression"]?.let { "driver.evaluate(\"${it.esc()}\")" }
                 // Browser-level operations
                 "switchTab" -> arguments["tabId"]?.let { "browser.switchTab(\"${it.esc()}\")" }
                 else -> null

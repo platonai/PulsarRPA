@@ -1,10 +1,8 @@
 package ai.platon.pulsar.agentic.ai.agent.detail
 
-import ai.platon.pulsar.agentic.ai.AgentConfig
-import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.browser.driver.chrome.dom.FBNLocator
-import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.skeleton.ai.ToolCall
 import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 
@@ -42,14 +40,17 @@ class ActionValidator(
         val cacheKey = "${toolCall.method}:${toolCall.arguments}"
         return validationCache.getOrPut(cacheKey) {
             when (toolCall.method) {
-                "navigateTo" -> validateNavigateTo(toolCall.arguments)
-                "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "focus", "scrollTo" -> validateElementAction(
-                    toolCall.arguments
-                )
+                "open", "navigateTo" -> validateNavigateTo(toolCall.arguments)
+                "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "focus", "scrollTo",
+                "type", "isHidden", "visible", "isChecked", "bringToFront",
+                "selectFirstTextOrNull", "selectTextAll", "selectFirstAttributeOrNull", "selectAttributes", "selectAttributeAll", "selectImages",
+                "evaluate", "clickablePoint", "boundingBox" -> validateElementAction(toolCall.arguments)
 
                 "waitForNavigation" -> validateWaitForNavigation(toolCall.arguments)
-                "goBack", "goForward", "delay", "scrollToTop", "scrollToBottom", "scrollToMiddle", "scrollToViewport" -> true // These don't need validation
-                // High Priority #5: Deny unknown actions by default
+                "captureScreenshot", "outerHTML" -> validateOptionalElementAction(toolCall.arguments)
+                "goBack", "goForward", "delay", "scrollToTop", "scrollToBottom", "scrollToMiddle", "scrollToViewport",
+                "currentUrl", "url", "documentURI", "baseURI", "referrer", "pageSource", "getCookies",
+                "textContent", "mouseWheelDown", "mouseWheelUp", "moveMouseTo", "dragAndDrop", "switchTab" -> true // These don't need validation
                 else -> {
                     if (denyUnknownActions) {
                         logger.warn("Unknown action blocked: ${toolCall.method}")
@@ -92,8 +93,6 @@ class ActionValidator(
             return true
         }
 
-        val locator = Locator.parse(selector) ?: return false
-
         // Medium Priority #11: Check for common selector syntax patterns
         val hasValidPrefix = selector.startsWith("xpath:") ||
                 selector.startsWith("css:") ||
@@ -105,6 +104,21 @@ class ActionValidator(
                 selector.matches(Regex("^[a-zA-Z][a-zA-Z0-9]*$")) // tag name
 
         return hasValidPrefix
+    }
+
+    /**
+     * Validates element interaction actions with optional selector
+     */
+    private fun validateOptionalElementAction(args: Map<String, Any?>?): Boolean {
+        args ?: return true
+
+        val selector = args["selector"]?.toString()
+        if (selector.isNullOrBlank()) {
+            return true // No selector, so no validation needed
+        }
+
+        // If selector exists, validate it
+        return validateElementAction(args)
     }
 
     /**
