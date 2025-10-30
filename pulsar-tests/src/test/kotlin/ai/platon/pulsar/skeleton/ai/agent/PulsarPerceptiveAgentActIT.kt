@@ -2,7 +2,7 @@ package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.agentic.ai.BrowserPerceptiveAgent
-import ai.platon.pulsar.agentic.ai.tta.TestHelper
+import ai.platon.pulsar.agentic.ai.tta.TTATestHelper
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import org.junit.jupiter.api.Assertions.*
@@ -19,7 +19,7 @@ class PulsarPerceptiveAgentActIT : WebDriverTestBase() {
 
     @BeforeEach
     fun checkLLM() {
-        TestHelper.checkLLMConfiguration(session)
+        TTATestHelper.checkLLMConfiguration(session)
     }
 
     @Test

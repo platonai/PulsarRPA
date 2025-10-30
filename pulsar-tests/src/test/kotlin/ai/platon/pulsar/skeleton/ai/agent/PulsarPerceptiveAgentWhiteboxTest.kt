@@ -3,7 +3,7 @@ package ai.platon.pulsar.skeleton.ai.agent
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.agentic.ai.AgentConfig
 import ai.platon.pulsar.agentic.ai.BrowserPerceptiveAgent
-import ai.platon.pulsar.agentic.ai.tta.TestHelper
+import ai.platon.pulsar.agentic.ai.tta.TTATestHelper
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -17,7 +17,7 @@ class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
 
     @BeforeEach
     fun checkLLM() {
-        TestHelper.checkLLMConfiguration(session)
+        TTATestHelper.checkLLMConfiguration(session)
     }
 
     private fun getMethod(instance: Any, name: String, vararg params: Class<*>): Method {

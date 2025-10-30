@@ -10,7 +10,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
 import kotlin.test.assertTrue
 
-object TestHelper {
+object TTATestHelper {
 
     fun checkLLMConfiguration(session: PulsarSession) {
         val conf = session.sessionConfig

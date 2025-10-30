@@ -3,7 +3,7 @@ package ai.platon.pulsar.skeleton.ai.agent
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.agentic.ai.AgentConfig
 import ai.platon.pulsar.agentic.ai.BrowserPerceptiveAgent
-import ai.platon.pulsar.agentic.ai.tta.TestHelper
+import ai.platon.pulsar.agentic.ai.tta.TTATestHelper
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.skeleton.ai.ActionOptions
@@ -44,7 +44,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
     @BeforeEach
     fun checkLLM() {
-        TestHelper.checkLLMConfiguration(session)
+        TTATestHelper.checkLLMConfiguration(session)
     }
 
     @Nested

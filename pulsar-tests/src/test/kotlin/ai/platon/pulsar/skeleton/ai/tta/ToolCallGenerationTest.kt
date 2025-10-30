@@ -16,7 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest
  * with the Mock Server test pages.
  */
 @SpringBootTest(classes = [EnableMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
-class NewToolsIntegrationTest : TextToActionTestBase() {
+class ToolCallGenerationTest : TextToActionTestBase() {
 
     @BeforeEach
     fun setUp() {
