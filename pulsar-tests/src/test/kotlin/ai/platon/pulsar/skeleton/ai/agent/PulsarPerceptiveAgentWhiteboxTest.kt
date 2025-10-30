@@ -3,7 +3,9 @@ package ai.platon.pulsar.skeleton.ai.agent
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.agentic.ai.AgentConfig
 import ai.platon.pulsar.agentic.ai.BrowserPerceptiveAgent
+import ai.platon.pulsar.agentic.ai.tta.TestHelper
 import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import java.lang.reflect.Method
 
@@ -12,6 +14,11 @@ import java.lang.reflect.Method
  * These tests avoid LLM calls by only exercising branches that don't initialize TTA/chat model.
  */
 class PulsarPerceptiveAgentWhiteboxTest : WebDriverTestBase() {
+
+    @BeforeEach
+    fun checkLLM() {
+        TestHelper.checkLLMConfiguration(session)
+    }
 
     private fun getMethod(instance: Any, name: String, vararg params: Class<*>): Method {
         val m = instance::class.java.getDeclaredMethod(name, *params)

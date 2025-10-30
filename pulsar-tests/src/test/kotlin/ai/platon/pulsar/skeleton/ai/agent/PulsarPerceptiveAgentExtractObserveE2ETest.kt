@@ -2,10 +2,12 @@ package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.agentic.ai.BrowserPerceptiveAgent
+import ai.platon.pulsar.agentic.ai.tta.TestHelper
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.ChatModelFactory
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -34,6 +36,11 @@ class PulsarPerceptiveAgentExtractObserveE2ETest : WebDriverTestBase() {
         val out = File(dir, "domservice-e2e.json")
         val mapper = prettyPulsarObjectMapper()
         out.appendText(mapper.writeValueAsString(metrics) + System.lineSeparator())
+    }
+
+    @BeforeEach
+    fun checkLLM() {
+        TestHelper.checkLLMConfiguration(session)
     }
 
     @Test
