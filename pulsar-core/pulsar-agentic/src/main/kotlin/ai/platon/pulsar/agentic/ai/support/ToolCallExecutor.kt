@@ -638,12 +638,12 @@ class ToolCallExecutor {
                 if (args.isNotEmpty()) driver.scrollTo(arg0!!) else null
             }
 
-            "scrollToScreen" -> {
+            "scrollToViewport" -> {
                 // Scroll to a specific screen position by number
                 if (args.isNotEmpty()) {
-                    driver.scrollToScreen(arg0!!.toDoubleOrNull() ?: 0.5)
+                    driver.scrollToViewport(arg0!!.toDoubleOrNull() ?: 1.0)
                 } else {
-                    driver.scrollToScreen(0.5)
+                    driver.scrollToViewport(1.0)
                 }
             }
 

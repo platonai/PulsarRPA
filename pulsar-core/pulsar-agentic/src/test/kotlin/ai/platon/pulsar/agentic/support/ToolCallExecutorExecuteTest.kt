@@ -217,8 +217,8 @@ class ToolCallExecutorExecuteTest {
         executor.execute("driver.scrollToTop()", driver)
         executor.execute("driver.scrollToBottom()", driver)
         executor.execute("driver.scrollToMiddle(0.7)", driver)
-        executor.execute("driver.scrollToScreen()", driver)
-        executor.execute("driver.scrollToScreen(1.25)", driver)
+        executor.execute("driver.scrollToViewport(1.5)", driver)
+        executor.execute("driver.scrollToViewport(2.25)", driver)
         executor.execute("driver.goBack()", driver)
         executor.execute("driver.goForward()", driver)
 
@@ -227,8 +227,8 @@ class ToolCallExecutorExecuteTest {
         coVerify { driver.scrollToTop() }
         coVerify { driver.scrollToBottom() }
         coVerify { driver.scrollToMiddle(0.7) }
-        coVerify { driver.scrollToViewport(0.5) }
-        coVerify { driver.scrollToViewport(1.25) }
+        coVerify { driver.scrollToViewport(1.5) }
+        coVerify { driver.scrollToViewport(2.25) }
         coVerify { driver.goBack() }
         coVerify { driver.goForward() }
     }
