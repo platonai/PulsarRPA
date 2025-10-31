@@ -33,6 +33,7 @@ import kotlin.test.assertContains
  * - Performance metrics and logging
  * - State management and history tracking
  */
+@Order(1100)
 @Tag("IntegrationTest")
 @Tag("TimeConsumingTest")
 @SpringBootTest(

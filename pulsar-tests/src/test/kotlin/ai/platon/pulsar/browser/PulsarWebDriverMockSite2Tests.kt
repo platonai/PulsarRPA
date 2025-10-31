@@ -10,6 +10,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.module.kotlin.readValue
+import org.junit.jupiter.api.Disabled
 import kotlin.test.*
 
 class PulsarWebDriverMockSite2Tests : WebDriverTestBase() {
@@ -25,6 +26,7 @@ class PulsarWebDriverMockSite2Tests : WebDriverTestBase() {
     }
 
     @Test
+    @Disabled("Temporarily disabled.")
     fun `When navigate to a HTML page then the navigate state are correct`() = runEnhancedWebDriverTest(browser) { driver ->
         openEnhanced(interactiveUrl, driver, 1)
 

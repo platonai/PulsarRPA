@@ -9,11 +9,13 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.Instant
 
+@Order(1100)
 @Tag("E2ETest")
 @Tag("TimeConsumingTest")
 @Disabled("Takes very long time, run it manually. The test cases are suitable for multiple actions, but the actually one action is forced")

@@ -7,6 +7,7 @@ import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.util.TestHelper
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
@@ -14,6 +15,8 @@ import org.junit.jupiter.api.Test
  * Integration tests for act() using the mock site pages under generated/tta/act.
  * Skips if no LLM configured.
  */
+@Order(1100)
+@Tag("IntegrationTest")
 @Tag("IntegrationTest")
 class PulsarPerceptiveAgentActIT : WebDriverTestBase() {
 

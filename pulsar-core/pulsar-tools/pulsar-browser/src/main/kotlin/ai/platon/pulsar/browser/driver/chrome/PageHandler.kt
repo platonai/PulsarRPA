@@ -127,6 +127,24 @@ class PageHandler(
         return resolveSelector(selector)
     }
 
+    @Throws(ChromeDriverException::class)
+    suspend fun resolveSelector(selector: String): NodeRef? {
+        return try {
+            resolveSelector0(selector)
+        } catch (e: CDPReturnError) {
+            // code: -3200 message: "Could not find node with given id"
+            // This exception is expected, will change this log to debug
+            if (e.errorCode != -3200L) {
+                // -3200L is expected, no log needed
+                logger.warn("Exception resolveSelector | {} {} | {}", e.errorCode, e.errorMessage, e.brief())
+            }
+            null
+        } catch (e: Exception) {
+            logger.warn("[Unexpected] exception ", e)
+            null
+        }
+    }
+
     /**
      * Resolves a selector to a `NodeRef` object, which contains information about the DOM node.
      * This method supports two types of selectors:
@@ -143,7 +161,7 @@ class PageHandler(
      * @throws ChromeDriverException If an error occurs during the resolution process.
      */
     @Throws(ChromeDriverException::class)
-    suspend fun resolveSelector(selector: String): NodeRef? {
+    private suspend fun resolveSelector0(selector: String): NodeRef? {
         // Parse the selector into a Locator object. If parsing fails, return null.
         val locator = Locator.parse(selector) ?: return null
 

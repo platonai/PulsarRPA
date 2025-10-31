@@ -5,6 +5,7 @@ import ai.platon.pulsar.util.server.EnableMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
@@ -13,6 +14,7 @@ import org.springframework.boot.test.context.SpringBootTest
  * Element-specific interaction tests for TextToAction.generateWebDriverAction() method
  * Focus on different HTML element types and interaction patterns
  */
+@Order(1000)
 @Tag("ExternalServiceTest")
 @Tag("TimeConsumingTest")
 @Disabled("Takes very long time, run it manually. The test cases are suitable for multiple actions, but the actually one action is forced")

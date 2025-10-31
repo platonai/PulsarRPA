@@ -8,6 +8,7 @@ import ai.platon.pulsar.util.TestHelper
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.io.File
@@ -16,7 +17,9 @@ import java.time.Instant
 /**
  * E2E tests for observe/extract with metrics logged to logs/chat-model/domservice-e2e.json
  */
+@Order(1100)
 @Tag("E2ETest")
+@Tag("TimeConsumingTest")
 class PulsarPerceptiveAgentExtractObserveE2ETest : WebDriverTestBase() {
     private val testURL get() = interactiveDynamicURL
 
