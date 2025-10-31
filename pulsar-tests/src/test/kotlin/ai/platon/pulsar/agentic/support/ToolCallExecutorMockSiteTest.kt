@@ -7,12 +7,7 @@ import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertIs
-import kotlin.test.assertNotNull
-import kotlin.test.assertTrue
+import kotlin.test.*
 
 /**
  * Test suite for ToolCallExecutor with real page interactions.
