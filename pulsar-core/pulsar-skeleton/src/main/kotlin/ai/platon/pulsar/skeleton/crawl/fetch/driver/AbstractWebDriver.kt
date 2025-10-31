@@ -337,12 +337,12 @@ abstract class AbstractWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun isVisible(selector: String): Boolean {
         val safeSelector = Strings.escapeForJsString(selector)
-        return evaluateValue("__pulsar_utils__.isVisible('$safeSelector')") == "true"
+        return evaluateValue("__pulsar_utils__.isVisible('$safeSelector')") == true
     }
 
     override suspend fun isChecked(selector: String): Boolean {
         val safeSelector = Strings.escapeForJsString(selector)
-        return evaluateValue("__pulsar_utils__.isChecked('$safeSelector')") == "true"
+        return evaluateValue("__pulsar_utils__.isChecked('$safeSelector')") == true
     }
 
     @Throws(WebDriverException::class)

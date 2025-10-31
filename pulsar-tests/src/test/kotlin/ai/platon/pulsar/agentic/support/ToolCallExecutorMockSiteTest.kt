@@ -164,6 +164,9 @@ class ToolCallExecutorMockSiteTest : WebDriverTestBase() {
         executor.execute("driver.uncheck(\"$selector\")", driver)
         executor.execute("driver.check(\"$selector\")", driver)
 
+        var result = driver.evaluateDetail("__pulsar_utils__.isChecked(\"$selector\")")
+        assertEquals(true, result?.value == true, "Element should contain the checkbox")
+
         // Verify the checkbox is checked
         val isChecked = driver.isChecked(selector)
         assertEquals(true, isChecked, "Checkbox should be checked")
