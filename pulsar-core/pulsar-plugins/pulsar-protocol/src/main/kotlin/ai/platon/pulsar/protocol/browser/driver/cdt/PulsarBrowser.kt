@@ -131,9 +131,9 @@ class PulsarBrowser(
             val chromeTab = driver.chromeTab
             val chromeTabId = chromeTab.id
 
-            _recoveredDrivers.remove(chromeTabId)
-            _reusedDrivers.remove(chromeTabId)
-            _drivers.remove(chromeTabId)
+            mutableRecoveredDrivers.remove(chromeTabId)
+            mutableReusedDrivers.remove(chromeTabId)
+            mutableDrivers.remove(chromeTabId)
 
             runCatching { driver.doClose() }.onFailure { warnForClose(this, it) }
 
@@ -185,7 +185,7 @@ class PulsarBrowser(
     private fun newDriverIfAbsent(chromeTab: ChromeTab, recovered: Boolean): PulsarWebDriver {
         // a Chrome tab id is like 'AE740895CB3F63220C3A3C751EF1F6E4'
         val uniqueID = chromeTab.id
-        var driver = _drivers[uniqueID]
+        var driver = mutableDrivers[uniqueID]
         if (driver is PulsarWebDriver) {
             return driver
         }
@@ -199,10 +199,10 @@ class PulsarBrowser(
 
     private fun doNewDriver(chromeTab: ChromeTab, recovered: Boolean): PulsarWebDriver {
         if (!recovered && reuseRecoveredDriver) {
-            val driver = _recoveredDrivers.values.firstOrNull { it is PulsarWebDriver && !it.isReused }
+            val driver = mutableRecoveredDrivers.values.firstOrNull { it is PulsarWebDriver && !it.isReused }
             if (driver is PulsarWebDriver) {
                 driver.isReused = true
-                _reusedDrivers[driver.chromeTab.id] = driver
+                mutableReusedDrivers[driver.chromeTab.id] = driver
                 logger.info("Reuse recovered driver | {}", chromeTab.url)
                 return driver
             }
@@ -211,34 +211,36 @@ class PulsarBrowser(
         val uniqueID = chromeTab.id
         val devTools = createDevTools(chromeTab, toolsConfig)
         val driver = PulsarWebDriver(uniqueID, chromeTab, devTools, this)
-        _drivers[chromeTab.id] = driver
+        mutableDrivers[chromeTab.id] = driver
 
         if (recovered) {
             driver.isRecovered = true
-            _recoveredDrivers[chromeTab.id] = driver
+            mutableRecoveredDrivers[chromeTab.id] = driver
         }
 
         return driver
     }
 
     private fun addToDriverTree(driver: WebDriver) {
-        if (driver is PulsarWebDriver) {
-            val parentId = driver.chromeTab.parentId
-            if (parentId != null) {
-                val parent = drivers[parentId]
-                if (parent is PulsarWebDriver) {
-                    driver.opener = parent
-                    parent.outgoingPages.add(driver)
-
-                    logger.info(
-                        "Add driver to tree | parent: {}, child: {} | {}",
-                        parent.chromeTab.url,
-                        driver.chromeTab.url,
-                        driver.chromeTab.id
-                    )
-                }
-            }
+        if (driver !is PulsarWebDriver) {
+            return
         }
+
+        val parentId = driver.chromeTab.parentId ?: return
+        val parent = drivers[parentId]
+        if (parent !is PulsarWebDriver) {
+            return
+        }
+
+        driver.opener = parent
+        parent.outgoingPages.add(driver)
+
+        logger.info(
+            "Add driver to tree | parent: {}, child: {} | {}",
+            parent.chromeTab.url,
+            driver.chromeTab.url,
+            driver.chromeTab.id
+        )
     }
 
     /**
@@ -330,9 +332,9 @@ class PulsarBrowser(
     private fun closeDrivers() {
         val dyingDrivers = drivers.toList().ifEmpty { return@closeDrivers }
 
-        _recoveredDrivers.clear()
-        _reusedDrivers.clear()
-        _drivers.clear()
+        mutableRecoveredDrivers.clear()
+        mutableReusedDrivers.clear()
+        mutableDrivers.clear()
 
         logger.info("Closing browser with {} drivers/devtools ... | #{}", dyingDrivers.size, id.contextDir)
 

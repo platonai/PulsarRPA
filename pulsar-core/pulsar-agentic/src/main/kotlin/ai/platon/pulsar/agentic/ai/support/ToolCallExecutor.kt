@@ -3,6 +3,7 @@ package ai.platon.pulsar.agentic.ai.support
 import ai.platon.pulsar.agentic.ai.agent.detail.ActionValidator
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
@@ -91,6 +92,19 @@ class ToolCallExecutor {
         }
     }
 
+    suspend fun execute(expression: String, browser: Browser): Any? {
+        return try {
+            val r = execute0(expression, browser)
+            when (r) {
+                is Unit -> null
+                else -> r
+            }
+        } catch (e: Exception) {
+            logger.warn("Error executing expression: {} - {}", expression, e.brief())
+            null
+        }
+    }
+
     suspend fun execute(toolCall: ToolCall, driver: WebDriver): Any? {
         val expression = toolCallToExpression(toolCall) ?: return null
 
@@ -117,6 +131,41 @@ class ToolCallExecutor {
         return doExecute(objectName, functionName, args, driver)
     }
 
+    private suspend fun execute0(command: String, browser: Browser): Any? {
+        // Extract function name and arguments from the command string
+        val (objectName, functionName, args) = parseKotlinFunctionExpression(command) ?: return null
+
+        return doExecute(objectName, functionName, args, browser)
+    }
+
+    /**
+     * Extract function name and arguments from the command string
+     * */
+    @Suppress("UNUSED_PARAMETER")
+    private suspend fun doExecute(
+        objectName: String,
+        functionName: String,
+        args: Map<String, Any?>,
+        browser: Browser
+    ): Any? {
+        // Handle browser-level commands
+        if (objectName == "browser" && functionName == "switchTab") {
+            val tabId = args["0"]?.toString()?.toIntOrNull()
+                ?: return buildErrorResponse("tab_not_found", "Missing tabId parameter", browser)
+
+            val targetDriver = browser.drivers.values.filterIsInstance<PulsarWebDriver>().find { it.id == tabId }
+            if (targetDriver != null) {
+                targetDriver.bringToFront()
+                logger.info("Switched to tab {} (driver {}/{})", tabId, targetDriver.id, targetDriver.guid)
+                return targetDriver.id
+            } else {
+                return buildErrorResponse("tab_not_found", "Tab with id '$tabId' not found", browser)
+            }
+        }
+
+        return null
+    }
+
     /**
      * Extract function name and arguments from the command string
      * */
@@ -127,21 +176,6 @@ class ToolCallExecutor {
         args: Map<String, Any?>,
         driver: WebDriver
     ): Any? {
-        // Handle browser-level commands
-        if (objectName == "browser" && functionName == "switchTab") {
-            val tabId = args["0"]?.toString() ?: return buildErrorResponse("tab_not_found",
-                "Missing tabId parameter", driver.browser)
-
-            val targetDriver = driver.browser.drivers[tabId]
-            if (targetDriver != null) {
-                logger.info("Switched to tab {} (driver {})", tabId, targetDriver.id)
-                return targetDriver.id
-            } else {
-                return buildErrorResponse("tab_not_found",
-                    "Tab with id '$tabId' not found", driver.browser)
-            }
-        }
-
         // Execute the appropriate WebDriver method based on the function name
         val arg0 = args["0"]?.toString()
         val arg1 = args["1"]?.toString()

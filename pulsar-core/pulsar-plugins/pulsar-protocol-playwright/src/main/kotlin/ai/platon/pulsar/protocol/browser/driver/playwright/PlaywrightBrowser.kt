@@ -105,11 +105,11 @@ class PlaywrightBrowser(
     internal fun newDriverManaged(url: String): PlaywrightDriver {
         val driver = newDriverUnmanaged(url)
 
-        if (_drivers.isEmpty()) {
+        if (mutableDrivers.isEmpty()) {
             addScriptToEvaluateOnNewDocument()
         }
 
-        _drivers[driver.guid] = driver
+        mutableDrivers[driver.guid] = driver
         return driver
     }
 
