@@ -1,5 +1,6 @@
 package ai.platon.pulsar.integration.rest
 
+import ai.platon.pulsar.agentic.BasicAgenticSession
 import ai.platon.pulsar.boot.autoconfigure.PulsarContextConfiguration
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.sleepSeconds
@@ -44,7 +45,7 @@ class IntegrationTestBase {
 
     @BeforeTest
     fun setup() {
-        assertTrue("Session should be BasicPulsarSession, actual ${session.javaClass}") { session is BasicPulsarSession }
+        assertTrue("Session should be BasicAgenticSession, actual ${session.javaClass}") { session is BasicAgenticSession }
     }
 
     /**

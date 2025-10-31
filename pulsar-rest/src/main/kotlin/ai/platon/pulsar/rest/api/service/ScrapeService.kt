@@ -1,5 +1,6 @@
 package ai.platon.pulsar.rest.api.service
 
+import ai.platon.pulsar.agentic.BasicAgenticSession
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.rest.api.common.DegenerateXSQLScrapeHyperlink
@@ -74,7 +75,7 @@ class ScrapeService(
         val hyperlink = createScrapeHyperlink(request)
         responseCache[hyperlink.uuid] = hyperlink.response
         hyperlink.response.id = hyperlink.uuid
-        require(session is BasicPulsarSession)
+        require(session is BasicAgenticSession)
         session.submit(hyperlink)
         return hyperlink.uuid
     }

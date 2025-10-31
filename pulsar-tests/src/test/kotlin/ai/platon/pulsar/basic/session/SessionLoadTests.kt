@@ -1,5 +1,6 @@
 package ai.platon.pulsar.basic.session
 
+import ai.platon.pulsar.agentic.BasicAgenticSession
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import ai.platon.pulsar.ql.SQLSession
@@ -31,7 +32,7 @@ class SessionLoadTests: TestBase() {
     @Test
     fun ensureSessionCreatedBySQLContextIsNotSQLSession() {
         assertFalse { session is SQLSession }
-        assertTrue { session is BasicPulsarSession }
+        assertTrue { session is BasicAgenticSession }
     }
 
     /**
