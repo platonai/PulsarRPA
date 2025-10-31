@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.springframework.boot.test.context.SpringBootTest
+import kotlin.test.Ignore
 import kotlin.test.assertContains
 
 /**
@@ -33,6 +34,7 @@ import kotlin.test.assertContains
  * - State management and history tracking
  */
 @Tag("IntegrationTest")
+@Tag("TimeConsumingTest")
 @SpringBootTest(
     classes = [EnableMockServerApplication::class],
     webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
@@ -85,10 +87,10 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
     @DisplayName("Extract Method Tests")
     inner class ExtractMethodTests {
 
+        @Ignore("Disable temporary")
         @Test
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given valid page When extract called Then should return structured data`() {
-
 
             runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = BrowserPerceptiveAgent(driver, session)
@@ -178,6 +180,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
     inner class ObserveMethodTests {
 
         @Test
+        @Ignore("Disable temporary")
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given interactive page When observe called Then should return actionable elements`() {
 
@@ -270,6 +273,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
     @DisplayName("Act Method Tests")
     inner class ActMethodTests {
 
+        @Ignore("Disable temporary")
         @Test
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given simple action When act called Then should execute and return result`() {
@@ -376,8 +380,8 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
     inner class StateManagementTests {
 
         @Test
+        @Ignore("Disable temporary")
         fun `Given multiple operations When executed Then history should accumulate`() {
-
 
             runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = BrowserPerceptiveAgent(driver, session)

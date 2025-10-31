@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.util.server.EnableMockServerApplication
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
@@ -14,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest
  */
 @Tag("ExternalServiceTest")
 @Tag("TimeConsumingTest")
+@Disabled("Takes very long time, run it manually. The test cases are suitable for multiple actions, but the actually one action is forced")
 @SpringBootTest(
     classes = [EnableMockServerApplication::class],
     webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
@@ -81,7 +83,7 @@ class TextToActionElementSelectionTests : TextToActionTestBase() {
                 "Should generate exactly one action for valid command"
             )
             val expression = actionDescription.cssFriendlyExpressions.first()
-            printlnPro("Multiple inputs - Generated action: $expression")
+            printlnPro("Generated action: $expression")
             assertTrue(
                 expression.contains("fill") || expression.contains("driver.fill") ||
                         expression.contains("type") || expression.contains("driver.type"),

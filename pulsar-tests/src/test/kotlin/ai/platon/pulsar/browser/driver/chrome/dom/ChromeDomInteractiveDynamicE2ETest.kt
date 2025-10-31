@@ -12,7 +12,7 @@ class ChromeDomInteractiveDynamicE2ETest : WebDriverTestBase() {
     private val testURL get() = "$generatedAssetsBaseURL/interactive-dynamic.html"
 
     @Test
-    @Tag("E2E")
+    @Tag("E2ETest")
     fun `Given interactive-dynamic When performing simple interactions Then page behaviors and states are correct`() =
         runEnhancedWebDriverTest(testURL) { driver ->
             driver.waitForSelector("h1")
@@ -26,7 +26,7 @@ class ChromeDomInteractiveDynamicE2ETest : WebDriverTestBase() {
         }
 
     @Test
-    @Tag("E2E")
+    @Tag("E2ETest")
     fun `Given interactive-dynamic When performing full interactions Then page behaviors and states are correct`() =
         runEnhancedWebDriverTest(testURL) { driver ->
             // Basic smoke: title and hero content present

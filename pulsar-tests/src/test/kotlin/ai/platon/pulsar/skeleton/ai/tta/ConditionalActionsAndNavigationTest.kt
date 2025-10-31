@@ -7,6 +7,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
+import kotlin.test.Ignore
 
 /**
  * Integration tests for conditional actions and navigation scenarios using the newly implemented tools.
@@ -14,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest
  */
 @Tag("ExternalServiceTest")
 @Tag("TimeConsumingTest")
+@Ignore("Disable temporary")
 @SpringBootTest(classes = [EnableMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
 

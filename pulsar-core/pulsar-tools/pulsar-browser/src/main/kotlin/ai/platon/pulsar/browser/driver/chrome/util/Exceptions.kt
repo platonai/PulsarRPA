@@ -1,5 +1,7 @@
 package ai.platon.pulsar.browser.driver.chrome.util
 
+import ai.platon.pulsar.browser.driver.chrome.impl.ErrorObject
+
 open class ChromeDriverException(
     message: String,
     cause: Throwable? = null,
@@ -21,6 +23,18 @@ open class ChromeProtocolException(
     message: String,
     cause: Throwable? = null,
 ): ChromeDriverException(message, cause)
+
+/**
+ * The return message itself is an error message, for example:
+ *
+ * - code: -3200 message: "Could not find node with given id"
+ * */
+open class CDPReturnError(
+    val errorCode: Long = 0,
+    val errorData: String? = null,
+    val errorMessage: String? = null,
+    message: String
+): ChromeDriverException(message, null)
 
 /**
  * Thrown when the connection to Chrome fails.

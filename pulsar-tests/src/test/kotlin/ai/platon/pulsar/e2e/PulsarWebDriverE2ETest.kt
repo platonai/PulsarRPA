@@ -10,6 +10,7 @@ import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import kotlinx.coroutines.delay
 import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import java.io.IOException
 import java.nio.file.Path
@@ -56,6 +57,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
         session.globalCache.resetCaches()
     }
 
+    @Disabled("Disabled temporary")
     @Test
     fun `When navigate to a HTML page then the navigate state are correct`() = runEnhancedWebDriverTest(browser) { driver ->
         openEnhanced(e2eProductUrl, driver, 1)

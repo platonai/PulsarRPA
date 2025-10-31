@@ -150,11 +150,15 @@ abstract class ChromeDevToolsImpl(
         return when {
             // If the result indicates failure, handle the error and throw an exception.
             !rpcResult.isSuccess -> {
-                handleFailedFurther(rpcResult.result).let {
-                    // errors:
-                    // - "Could not find node with given id"
-                    logger.info("Protocol return error: {} request {}", it.second, message)
-                    throw ChromeRPCException(it.first.code, it.second)
+                handleFailedFurther(rpcResult.result).let { e ->
+                    //
+                    // Known errors:
+                    // * -3200L Could not find node with given id
+                    if (e.errorCode != -3200L) {
+                        // -3200L is expected and handled in higher layer, so no log needed
+                        logger.info("Protocol return error: {}/{} | request: {}", e.errorCode, e.errorMessage, message)
+                    }
+                    throw e
                 }
             }
             // If the expected return type is `Void`, return null.
@@ -202,12 +206,12 @@ abstract class ChromeDevToolsImpl(
     }
 
     @Throws(ChromeRPCException::class, IOException::class)
-    private fun handleFailedFurther(result: RpcResult): Pair<ErrorObject, String> {
+    private fun handleFailedFurther(result: RpcResult): CDPReturnError {
         return handleFailedFurther(result.result)
     }
 
     @Throws(ChromeRPCException::class, IOException::class)
-    private fun handleFailedFurther(error: JsonNode?): Pair<ErrorObject, String> {
+    private fun handleFailedFurther(error: JsonNode?): CDPReturnError {
         // Received an error
         val error = dispatcher.deserialize(ErrorObject::class.java, error)
         val sb = StringBuilder(error.message)
@@ -216,7 +220,7 @@ abstract class ChromeDevToolsImpl(
             sb.append(error.data)
         }
 
-        return error to sb.toString()
+        return CDPReturnError(error.code, error.data, error.message, sb.toString())
     }
 
     override fun addEventListener(

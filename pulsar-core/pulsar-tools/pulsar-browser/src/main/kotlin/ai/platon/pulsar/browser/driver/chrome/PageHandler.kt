@@ -11,6 +11,7 @@ import ai.platon.cdt.kt.protocol.types.runtime.CallFunctionOn
 import ai.platon.cdt.kt.protocol.types.runtime.Evaluate
 import ai.platon.pulsar.browser.common.ScriptConfuser
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
+import ai.platon.pulsar.browser.driver.chrome.util.CDPReturnError
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
@@ -96,6 +97,13 @@ class PageHandler(
         val nodeId = try {
             // Executes `querySelector` on a given node.
             domAPI?.querySelector(rootId, selector)
+        } catch (e: CDPReturnError) {
+            // code: -3200 message: "Could not find node with given id"
+            // This exception is expected, will change this log to debug
+            if (e.errorCode != -3200L) {
+                logger.warn("Exception from domAPI?.querySelector | {} {} | {}", e.errorCode, e.errorMessage, e.brief())
+            }
+            null
         } catch (e: Exception) {
             logger.warn("Exception executing `querySelector` on node $rootId.", e)
             null
@@ -397,12 +405,11 @@ class PageHandler(
 
         val nodeId = try {
             domAPI?.querySelector(rootId, selector)
-        } catch (e: ChromeRPCException) {
+        } catch (e: CDPReturnError) {
             // code: -3200 message: "Could not find node with given id"
             // This exception is expected, will change this log to debug
-            val message = e.message
-            if (message == null || !message.contains("Could not find node with given id")) {
-                logger.warn("Exception from domAPI?.querySelector | {}", e.brief())
+            if (e.errorCode != -3200L) {
+                logger.warn("Exception from domAPI?.querySelector | {} {} | {}", e.errorCode, e.errorMessage, e.brief())
             }
             null
         } catch (e: Exception) {
