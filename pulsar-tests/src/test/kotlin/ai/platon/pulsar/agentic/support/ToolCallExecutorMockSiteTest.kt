@@ -3,9 +3,14 @@ package ai.platon.pulsar.agentic.support
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.browser.FastWebDriverService
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.sleepSeconds
+import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import org.springframework.boot.actuate.autoconfigure.metrics.MetricsProperties
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
@@ -302,14 +307,28 @@ class ToolCallExecutorMockSiteTest : WebDriverTestBase() {
     }
 
     @Test
-    fun `test browser switchTab`() = runEnhancedWebDriverTest(browser) { _ ->
+    fun `test browser switchTab`() = runEnhancedWebDriverTest(ttaUrl1) { _ ->
         // Create a new driver (tab)
-        val newDriver = browser.newDriver()
+        val newDriver = browser.newDriver(ttaUrl2)
         val newDriverId = newDriver.id
 
-        // Switch to the new tab using the executor with eval
-        val result = executor.eval("browser.switchTab(\"$newDriverId\")", browser)
+        val drivers = browser.drivers.values.filterIsInstance<PulsarWebDriver>()
+        printlnPro("drivers: " + drivers.joinToString("\n") {
+            "" + it.id + " " + it.parentSid + " " + it.guid
+        })
 
-        assertEquals(newDriverId, result, "Should return the new driver ID after switching")
+        // Switch to the new tab using the executor with eval
+        val result = executor.execute("browser.switchTab(\"$newDriverId\")", browser, session)
+        assertIs<WebDriver>(result)
+
+        assertEquals(newDriverId, result.id, "Should return the new driver ID after switching")
+        val isVisible = newDriver.evaluateValue("document.visibilityState == \"visible\"")
+        assertEquals(true, isVisible, "A document that brings to front is visible")
+
+        browser.drivers.values.filterIsInstance<PulsarWebDriver>().filter { it != newDriver }.forEach { driver ->
+            val isVisible = driver.evaluateValue("document.visibilityState == \"visible\"")
+            assertEquals(false, isVisible,
+                "Documents that NOT brings to front are not visible")
+        }
     }
 }

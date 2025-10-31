@@ -1,9 +1,11 @@
 package ai.platon.pulsar.agentic.ai.support
 
+import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 
 class BrowserToolCallExecutor {
     private val logger = getLogger(this)
@@ -21,6 +23,24 @@ class BrowserToolCallExecutor {
         }
     }
 
+    suspend fun execute(expression: String, browser: Browser, session: AgenticSession): Any? {
+        if (expression.contains("switchTab")) {
+            val driver = execute(expression, browser)
+            if (driver is WebDriver) {
+                session.bindDriver(driver)
+
+                // document.visibilityState should be visible after bringToFront()
+                // val isVisible = driver.evaluateValue("document.visibilityState == \"visible\"")
+                // require(isVisible)
+                // require(driver == browser.frontDriver)
+            }
+
+            return driver
+        }
+
+        return null
+    }
+
     private suspend fun execute0(command: String, browser: Browser): Any? {
         // Extract function name and arguments from the command string
         val (objectName, functionName, args) = SimpleKotlinParser().parseFunctionExpression(command) ?: return null
@@ -33,24 +53,21 @@ class BrowserToolCallExecutor {
      * */
     @Suppress("UNUSED_PARAMETER")
     private suspend fun doExecute(
-        objectName: String,
-        functionName: String,
-        args: Map<String, Any?>,
-        browser: Browser
+        objectName: String, functionName: String, args: Map<String, Any?>, browser: Browser
     ): Any? {
+        require(objectName == "browser") { "Object must be a Browser" }
+        require(functionName.isNotBlank()) { "Function name must not be blank" }
+
         // Handle browser-level commands
-        if (objectName == "browser" && functionName == "switchTab") {
+        if (functionName == "switchTab") {
             val tabId = args["0"]?.toString()?.toIntOrNull()
                 ?: return buildErrorResponse("tab_not_found", "Missing tabId parameter", browser)
 
-            val targetDriver = browser.drivers.values.filterIsInstance<PulsarWebDriver>().find { it.id == tabId }
-            if (targetDriver != null) {
-                targetDriver.bringToFront()
-                logger.info("Switched to tab {} (driver {}/{})", tabId, targetDriver.id, targetDriver.guid)
-                return targetDriver.id
-            } else {
-                return buildErrorResponse("tab_not_found", "Tab with id '$tabId' not found", browser)
-            }
+            require(browser is AbstractBrowser)
+            val driver = browser.findDriverById(tabId) ?: return null
+            driver.bringToFront()
+            logger.info("Switched to tab {} (driver {}/{})", tabId, driver.id, driver.guid)
+            return driver
         }
 
         return null

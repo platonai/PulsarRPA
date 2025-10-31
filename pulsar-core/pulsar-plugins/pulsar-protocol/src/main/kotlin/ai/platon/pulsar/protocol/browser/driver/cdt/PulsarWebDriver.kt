@@ -541,6 +541,7 @@ class PulsarWebDriver(
     override suspend fun bringToFront() {
         rpc.invokeDeferredSilently("bringToFront") {
             pageAPI?.bringToFront()
+            browser.frontDriver = this
         }
     }
 

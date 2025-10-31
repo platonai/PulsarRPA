@@ -45,7 +45,10 @@ abstract class AbstractBrowser(
     var userAgentOverride = getRandomUserAgentOrNull()
 
     override val navigateHistory = NavigateHistory()
+
     override val drivers: Map<String, WebDriver> get() = mutableDrivers
+
+    override var frontDriver: WebDriver? = null
 
     /**
      * The associated data.
@@ -95,6 +98,18 @@ abstract class AbstractBrowser(
     override suspend fun findDrivers(urlRegex: Regex): List<WebDriver> {
         recoverUnmanagedPages()
         return drivers.values.filterIsInstance<AbstractWebDriver>().filter { currentUrl(it).matches(urlRegex) }
+    }
+
+    @Throws(WebDriverException::class)
+    fun findDriverById(id: Int): AbstractWebDriver? {
+        recoverUnmanagedPages()
+        return drivers.values.filterIsInstance<AbstractWebDriver>().firstOrNull { it.id == id }
+    }
+
+    @Throws(WebDriverException::class)
+    fun findDriverByGUID(guid: String): AbstractWebDriver? {
+        recoverUnmanagedPages()
+        return drivers[guid] as? AbstractWebDriver
     }
 
     protected suspend fun currentUrl(driver: WebDriver) = driver.currentUrl()

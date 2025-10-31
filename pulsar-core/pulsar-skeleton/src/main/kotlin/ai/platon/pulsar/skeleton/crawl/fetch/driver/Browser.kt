@@ -34,6 +34,10 @@ interface Browser: AutoCloseable {
      * */
     val drivers: Map<String, WebDriver>
     /**
+     * The front driver who has called bringToFront()
+     * */
+    val frontDriver: WebDriver?
+    /**
      * The associated data.
      * */
     val data: MutableMap<String, Any?>

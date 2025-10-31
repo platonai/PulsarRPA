@@ -1,5 +1,6 @@
 package ai.platon.pulsar.agentic.ai.support
 
+import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.ai.agent.detail.ActionValidator
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
@@ -82,6 +83,10 @@ open class ToolCallExecutor {
 
     suspend fun execute(expression: String, browser: Browser): Any? {
         return BrowserToolCallExecutor().execute(expression, browser)
+    }
+
+    suspend fun execute(expression: String, browser: Browser, session: AgenticSession): Any? {
+        return BrowserToolCallExecutor().execute(expression, browser, session)
     }
 
     suspend fun execute(toolCall: ToolCall, driver: WebDriver): Any? {
