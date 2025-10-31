@@ -1,5 +1,7 @@
 package ai.platon.pulsar.rest.api.controller
 
+import ai.platon.pulsar.agentic.AgenticSession
+import ai.platon.pulsar.agentic.BasicAgenticSession
 import ai.platon.pulsar.boot.autoconfigure.PulsarContextConfiguration
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.browser.BrowserProfileMode
@@ -36,7 +38,7 @@ class IntegrationTestBase {
     lateinit var restTemplate: TestRestTemplate
 
     @Autowired
-    lateinit var session: PulsarSession
+    lateinit var session: AgenticSession
 
     @Autowired
     lateinit var configuration: ImmutableConfig
@@ -47,7 +49,7 @@ class IntegrationTestBase {
 
     @BeforeTest
     fun setup() {
-        assertTrue("Session should be BasicPulsarSession, actual ${session.javaClass}") { session is BasicPulsarSession }
+        assertTrue("Session should be BasicAgenticSession, actual ${session.javaClass}") { session is BasicAgenticSession }
         BrowserSettings.withBrowserContextMode(BrowserProfileMode.TEMPORARY)
     }
 

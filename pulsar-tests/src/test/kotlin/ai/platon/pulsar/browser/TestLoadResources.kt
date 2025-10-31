@@ -22,8 +22,7 @@ class TestLoadResources: WebDriverTestBase() {
         ${"$assetsBaseURL/simple.json"}
         ${"$generatedAssetsBaseURL/interactive-1.html"}
         ${"$generatedAssetsBaseURL/interactive-2.html"}
-        https://www.baidu.com/s?wd=america
-    """.trimIndent().split("\n")
+    """.trimIndent().split("\n").map { it.trim() }
 
     @BeforeTest
     fun setup() {
