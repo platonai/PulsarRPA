@@ -46,7 +46,7 @@ class ActionValidator(
                 "selectFirstTextOrNull", "selectTextAll", "selectFirstAttributeOrNull", "selectAttributes", "selectAttributeAll", "selectImages",
                 "evaluate", "clickablePoint", "boundingBox" -> validateElementAction(toolCall.arguments)
 
-                "waitForNavigation" -> validateWaitForNavigation(toolCall.arguments)
+                "waitForNavigation", "waitForSelector" -> validateWaitForNavigation(toolCall.arguments)
                 "captureScreenshot", "outerHTML" -> validateOptionalElementAction(toolCall.arguments)
                 "goBack", "goForward", "delay", "scrollToTop", "scrollToBottom", "scrollToMiddle", "scrollToViewport",
                 "currentUrl", "url", "documentURI", "baseURI", "referrer", "pageSource", "getCookies",

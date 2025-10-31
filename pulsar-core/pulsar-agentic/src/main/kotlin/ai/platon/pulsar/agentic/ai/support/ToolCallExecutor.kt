@@ -90,6 +90,7 @@ open class ToolCallExecutor {
     }
 
     suspend fun execute(toolCall: ToolCall, driver: WebDriver): Any? {
+        require(toolCall.domain == "driver") { "Tool call domain should be `driver`" }
         val expression = toolCallToExpression(toolCall) ?: return null
 
         return try {
@@ -101,7 +102,15 @@ open class ToolCallExecutor {
     }
 
     suspend fun execute(toolCall: ToolCall, browser: Browser): Any? {
-        TODO("execute `toolCall` in browser domain")
+        require(toolCall.domain == "browser") { "Tool call domain should be `browser`" }
+        val expression = toolCallToExpression(toolCall) ?: return null
+
+        return try {
+            execute(expression, browser)
+        } catch (e: Exception) {
+            logger.warn("Error executing TOOL CALL: {} - {}", toolCall, e.brief())
+            null
+        }
     }
 
     suspend fun execute(toolCall: ToolCall, agent: PerceptiveAgent): Any? {

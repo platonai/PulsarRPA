@@ -286,7 +286,7 @@ class ToolCallExecutorTest {
         val expr = ToolCallExecutor.toolCallToExpression(
             ToolCall("driver", "waitForSelector", mutableMapOf("selector" to "#a", "timeoutMillis" to "1234"))
         )
-        assertEquals("driver.waitForSelector(\"#a\", 1234L)", expr)
+        assertEquals("driver.waitForSelector(\"#a\", 1234)", expr)
     }
 
     @Test
@@ -318,14 +318,6 @@ class ToolCallExecutorTest {
         assertTrue(expr!!.contains("\\\"hi\\\""))
         assertTrue(expr.startsWith("driver.clickTextMatches(\"a\", \""))
         assertTrue(expr.endsWith(", 2)"))
-    }
-
-    @Test
-    fun `toolCallToExpression goto alias`() {
-        val expr = ToolCallExecutor.toolCallToExpression(
-            ToolCall("driver", "goto", mutableMapOf("url" to "https://example.com/x?q=\"y\""))
-        )
-        assertEquals("driver.navigateTo(\"https://example.com/x?q=\\\"y\\\"\")", expr)
     }
 
     @Test

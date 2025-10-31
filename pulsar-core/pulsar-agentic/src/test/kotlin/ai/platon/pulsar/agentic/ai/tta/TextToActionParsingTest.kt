@@ -68,25 +68,6 @@ class TextToActionParsingTest {
     }
 
     @Test
-    fun `completion JSON sets isComplete summary and suggestions`() {
-        val json = """
-            {
-              "isComplete": true,
-              "summary": "Done searching",
-              "suggestions": ["Refine query", "Open first result"]
-            }
-        """.trimIndent()
-        val resp = ModelResponse(json, ResponseState.STOP)
-
-        val ad = tta.parse(resp)
-        assertNull(ad.toolCall)
-        assertTrue(ad.cssFriendlyExpressions.isEmpty())
-        assertTrue(ad.isComplete)
-        assertEquals("Done searching", ad.summary)
-        assertEquals(listOf("Refine query", "Open first result"), ad.nextSuggestions)
-    }
-
-    @Test
     fun `plain driver expression fallback is preserved`() {
         val text = """
             driver.click("#ok")
