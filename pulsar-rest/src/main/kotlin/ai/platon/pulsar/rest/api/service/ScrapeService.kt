@@ -1,5 +1,6 @@
 package ai.platon.pulsar.rest.api.service
 
+import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.BasicAgenticSession
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
@@ -28,7 +29,7 @@ import java.util.concurrent.TimeoutException
 
 @Service
 class ScrapeService(
-    val session: PulsarSession
+    val session: AgenticSession
 ) {
     private val logger = LoggerFactory.getLogger(ScrapeService::class.java)
 

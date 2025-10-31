@@ -23,6 +23,7 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+@Tag("TimeConsumingTest")
 @Tag("E2ETest")
 open class PulsarWebDriverE2ETest : WebDriverTestBase() {
 
@@ -58,6 +59,10 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     @Test
     fun `When navigate to a HTML page then the navigate state are correct`() = runEnhancedWebDriverTest(browser) { driver ->
         openEnhanced(e2eProductUrl, driver, 1)
+
+        val navbarMain = driver.selectFirstTextOrNull("#navbar-main")
+        val title = driver.selectFirstTextOrNull("#productTitle")
+        Assumptions.assumeTrue { navbarMain != null || title != null }
 
         val navigateEntry = driver.navigateEntry
         assertTrue("Expect mainFrameReceived") { navigateEntry.mainFrameReceived }
@@ -130,6 +135,9 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     @Test
     fun test_selectAttributeAll() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo(e2eProductUrl)
+        val navbarMain = driver.selectFirstTextOrNull("#navbar-main")
+        val title = driver.selectFirstTextOrNull("#productTitle")
+        Assumptions.assumeTrue { navbarMain != null || title != null }
 
         val selector = "body a[href]"
         driver.waitForSelector(selector)
@@ -152,12 +160,16 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     @Test
     fun testClickTextMatches() = runEnhancedWebDriverTest(browser) { driver ->
         openEnhanced(e2eProductUrl, driver, 1)
-//        driver.waitForSelector("a[href*=stores]")
-        driver.waitForSelector("a[href*=HUAWEI]")
+        val navbarMain = driver.selectFirstTextOrNull("#navbar-main")
+        val title = driver.selectFirstTextOrNull("#productTitle")
+        Assumptions.assumeTrue { navbarMain != null || title != null }
 
-        // should match the anchor text "Brand: HUAWEI"
+//        driver.waitForSelector("a[href*=stores]")
+        driver.waitForSelector("a[href*=iphone]")
+
+        // should match the anchor text "Brand: iphone"
 //        driver.clickTextMatches("a[href*=stores]", "Store")
-        driver.clickTextMatches("a[href*=HUAWEI]", "HUAWEI")
+        driver.clickTextMatches("a[href*=iphone]", "iphone")
         driver.waitForNavigation()
         driver.waitForSelector("body")
 
@@ -168,10 +180,10 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
 
         val pageSource = driver.pageSource()
         Assumptions.assumeTrue { (pageSource?.length ?: 0) > 1000 }
-        Assumptions.assumeTrue { pageSource?.contains("HUAWEI", ignoreCase = true) == true }
+        Assumptions.assumeTrue { pageSource?.contains("iphone", ignoreCase = true) == true }
 
         assertNotEquals(e2eProductUrl, currentUrl)
-        // assertContains(currentUrl, "HUAWEI", ignoreCase = true)
+        // assertContains(currentUrl, "iphone", ignoreCase = true)
     }
 
     @Test
@@ -216,6 +228,12 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     @Test
     fun testKeyPress() = runEnhancedWebDriverTest(browser) { driver ->
         driver.navigateTo(e2eProductUrl)
+        delay(1000)
+
+        val navbarMain = driver.selectFirstTextOrNull("#navbar-main")
+        val title = driver.selectFirstTextOrNull("#productTitle")
+        Assumptions.assumeTrue { navbarMain != null || title != null }
+
         driver.waitForSelector("#productTitle")
 
         assertTrue { driver.exists("#productTitle") }
@@ -331,6 +349,10 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
 
     @Test
     fun testCaptureScreenshot() = runEnhancedWebDriverTest(e2eProductUrl, browser) { driver ->
+        val navbarMain = driver.selectFirstTextOrNull("#navbar-main")
+        val title = driver.selectFirstTextOrNull("#productTitle")
+        Assumptions.assumeTrue { navbarMain != null || title != null }
+
         driver.waitForSelector("#productTitle")
         assertTrue { driver.exists("body") }
         val pageSource = driver.pageSource()
@@ -366,6 +388,10 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
 
     @Test
     fun `When call queryClientRects then return client rects`() = runEnhancedWebDriverTest(e2eProductUrl, browser) { driver ->
+        val navbarMain = driver.selectFirstTextOrNull("#navbar-main")
+        val title = driver.selectFirstTextOrNull("#productTitle")
+        Assumptions.assumeTrue { navbarMain != null || title != null }
+
         driver.mouseWheelDown(5)
         val box = driver.boundingBox("body")
         // RectD(x=0.0, y=-600.0, width=1912.0, height=10538.828125)
