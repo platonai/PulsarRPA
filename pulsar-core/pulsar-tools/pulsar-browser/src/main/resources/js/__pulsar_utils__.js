@@ -499,33 +499,46 @@ __pulsar_utils__.isChecked = function(selector) {
     if (ele == null) {
         return false
     }
-    return this.isElementChecked(ele)
+    return this.isElementChecked(ele, false)
 }
 
 /**
- * Test if a element is checked.
+ * 检查一个元素是否处于“选中”状态。
+ * 支持：
+ *  - 原生 <input type="checkbox|radio">
+ *  - 自定义控件 (role="checkbox|radio" + aria-checked)
  *
- * @param  {Element} element
- * @return boolean
+ * @param {Element} element 要检查的 DOM 元素
+ * @param {boolean} [strict=true] 是否严格模式（默认为 true）
+ * @returns {boolean|string} true / false / "mixed"
  */
-__pulsar_utils__.isElementChecked = function(element) {
-    if (['checkbox', 'radio'].includes(element.getAttribute('role') || '')) {
-        return element.getAttribute('aria-checked') === 'true';
+__pulsar_utils__.isElementChecked = function(element, strict = true) {
+    if (!element) {
+        if (strict) throw this.createStacklessError('Element is null or undefined');
+        return false;
     }
 
-    if (element.nodeName !== 'INPUT') {
+    // 1️⃣ 处理 ARIA 自定义控件
+    const role = element.getAttribute('role');
+    if (role && ['checkbox', 'radio'].includes(role.toLowerCase())) {
+        const state = element.getAttribute('aria-checked');
+        if (state === 'mixed') return 'mixed';
+        return state === 'true';
+    }
+
+    // 2️⃣ 处理原生控件
+    if (element instanceof HTMLInputElement &&
+        ['checkbox', 'radio'].includes(element.type.toLowerCase())) {
+        return element.checked;
+    }
+
+    // 3️⃣ 其他情况
+    if (strict) {
         throw this.createStacklessError('Not a checkbox or radio button');
+    } else {
+        return false;
     }
-    if (element instanceof HTMLInputElement) {
-        if (!['radio', 'checkbox'].includes(element.type.toLowerCase())) {
-            throw this.createStacklessError('Not a checkbox or radio button');
-        }
-
-        return element.checked
-    }
-
-    return false
-}
+};
 
 /**
  * Scroll into view.
