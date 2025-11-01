@@ -423,12 +423,13 @@ class BrowserPerceptiveAgent constructor(
         val callResult = when (toolCall.domain) {
             "driver" -> toolCallExecutor.execute(toolCall, driver)
             "browser" -> toolCallExecutor.execute(toolCall, driver.browser)
-            else -> throw IllegalArgumentException("Unsupported domain: ${toolCall.domain}")
+            else -> throw IllegalArgumentException("Unsupported domain: ${toolCall.domain} | $toolCall")
         }
 
-        // Handle browser.switchTab - bind the new driver to the session
-        if (toolCall.method == "switchTab") {
-            handleSwitchTab(callResult)
+        val method = toolCall.method
+        when (method) {
+            "switchTab" -> onDidSwitchTab(callResult)
+            "navigateTo" -> onDidNavigateTo(driver, toolCall, callResult)
         }
 
         return InstructionResult(action.expressions, listOf(callResult), action = action)
@@ -437,7 +438,7 @@ class BrowserPerceptiveAgent constructor(
     /**
      * Handle switching to a new tab by binding the target driver to the session.
      */
-    private suspend fun handleSwitchTab(result: Any?) {
+    private fun onDidSwitchTab(result: Any?) {
         val frontDriver = session.boundBrowser?.frontDriver
         val boundDriver = session.boundDriver
         if (frontDriver == null) {
@@ -451,6 +452,12 @@ class BrowserPerceptiveAgent constructor(
         }
 
         session.bindDriver(frontDriver)
+    }
+
+    private suspend fun onDidNavigateTo(driver: WebDriver, toolCall: ToolCall, toolCallResult: Any?) {
+        driver.waitForNavigation()
+        driver.waitForSelector("body")
+        delay(3000)
     }
 
     private suspend fun doObserveAndReturnActionDescription(
@@ -861,7 +868,7 @@ class BrowserPerceptiveAgent constructor(
                 consecutiveNoOps = 0
 
                 // Execute the tool call with enhanced error handling
-                val result = doExecuteToolCall(stepAction, step, stepContext)
+                val result = executeToolCall(stepAction, step, stepContext)
                 if (result != null) {
                     val observe = result.action.observeElement
                     // Record exactly once for the executed action in this step
@@ -988,14 +995,15 @@ class BrowserPerceptiveAgent constructor(
         return runCatching { driver.currentUrl() }.getOrNull().orEmpty()
     }
 
-    private suspend fun doExecuteToolCall(
+    private suspend fun executeToolCall(
         action: ActionDescription, step: Int, context: ExecutionContext
     ): ActionExecuteResult? {
         val toolCall = action.toolCall ?: return null
 
         if (config.enablePreActionValidation && !actionValidator.validateToolCall(toolCall)) {
-            logger.info("tool.validate.fail sid={} step={} tool={} args={}",
-                context.sessionId.take(8), context.stepNumber, toolCall.method, toolCall.arguments)
+            logger.info("tool.validate.fail sid={} step={} locator={} | {}({}) | {}",
+                context.sessionId.take(8), context.stepNumber, action.locator, toolCall.method, toolCall.arguments,
+                action.cssFriendlyExpressions.joinToString())
             // Validation failure is meta info
             trace("#$step validation-failed ${toolCall.method}")
             return null
@@ -1009,11 +1017,14 @@ class BrowserPerceptiveAgent constructor(
             consecutiveFailureCounter.set(0) // Reset on success
 
             val summary = "${toolCall.method} executed successfully"
+            trace(summary)
             ActionExecuteResult(action, instructionResult, success = true, summary)
         } catch (e: Exception) {
             val failures = consecutiveFailureCounter.incrementAndGet()
             logger.error("tool.exec.fail sid={} step={} failures={} msg={}",
                 context.sessionId.take(8), context.stepNumber, failures, e.message, e)
+
+            trace("#$step unexpected failure ${toolCall.method}")
 
             if (failures >= 3) {
                 throw PerceptiveAgentError.PermanentError("Too many consecutive failures at step $step", e)
