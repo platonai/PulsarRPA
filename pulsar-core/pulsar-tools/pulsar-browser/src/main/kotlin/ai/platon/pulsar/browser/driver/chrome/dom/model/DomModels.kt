@@ -6,6 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.LocatorMap
 import ai.platon.pulsar.browser.driver.chrome.dom.util.CSSSelectorUtils
 import ai.platon.pulsar.common.math.roundTo
 import com.fasterxml.jackson.annotation.JsonIgnore
+import org.apache.commons.lang3.StringUtils
 import java.awt.Dimension
 import java.math.RoundingMode
 import java.util.*
@@ -435,15 +436,17 @@ data class MicroDOMTreeNode(
      * The 1-based next chunk to see, each chunk is a viewport height.
      * */
     fun nextChunkToSee(viewportHeight: Double): Int {
-        if (seenChunks.isEmpty()) return 1
+        if (seenChunks.isEmpty()) {
+            return 1
+        }
 
         return IntRange(1, 20).firstOrNull { i -> hasSeen(i * 1.0, i * 1.0 * viewportHeight) } ?: 1
     }
 
     fun slimHTML(): String? = MicroDOMTreeNodeHelper.slimHTML(this)
 
-    fun toInteractiveDOMTreeNodeList(): InteractiveDOMTreeNodeList =
-        MicroDOMTreeNodeHelper(this, seenChunks).toInteractiveDOMTreeNodeList()
+    fun toInteractiveDOMTreeNodeList(currentViewportIndex: Int, maxViewportIndex: Int): InteractiveDOMTreeNodeList =
+        MicroDOMTreeNodeHelper(this, seenChunks, currentViewportIndex, maxViewportIndex).toInteractiveDOMTreeNodeList()
 
     fun toNanoTree(): NanoDOMTree = toNanoTreeInRange(0.0, 1000000.0)
 
@@ -455,13 +458,13 @@ data class MicroDOMTreeNode(
      * @param scale How much extra height to include above and below the viewport. 1.0 = exact viewport, 1.2 = 20% margin.
      */
     fun toNanoTreeInViewport(viewportHeight: Int, viewportIndex: Int = 1, scale: Double = 1.0): NanoDOMTree {
-        val helper = MicroDOMTreeNodeHelper(this, seenChunks)
+        val helper = MicroToNanoTreeHelper(seenChunks)
         return helper.toNanoTreeInViewport0(this, viewportHeight, viewportIndex, scale)
     }
 
     fun toNanoTreeInRange(startY: Double = 0.0, endY: Double = 100000.0): NanoDOMTree {
         val key = "$startY$endY"
-        val helper = MicroDOMTreeNodeHelper(this, seenChunks)
+        val helper = MicroToNanoTreeHelper(seenChunks)
         return nanoTreeCache.computeIfAbsent(key) { helper.toNanoTreeInRange0(this, startY, endY) }
     }
 }
@@ -525,7 +528,7 @@ data class DOMState(
             return fbnLocator
         }
 
-        require(org.apache.commons.lang3.StringUtils.isNumeric(fbnLocator.frameId))
+        require(StringUtils.isNumeric(fbnLocator.frameId))
         val index = fbnLocator.frameId.toIntOrNull() ?: return null
         val absoluteFrameId = frameIds.getOrNull(index) ?: return null
 
