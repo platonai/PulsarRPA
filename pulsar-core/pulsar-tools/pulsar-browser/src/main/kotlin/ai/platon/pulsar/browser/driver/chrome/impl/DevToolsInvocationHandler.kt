@@ -83,6 +83,8 @@ class DevToolsInvocationHandler(impl: Any) : SuspendAwareHandler(impl) {
             ?.value?.map { it.java }?.toTypedArray() ?: resolvedTypeParams
 
         val methodInvocation = createMethodInvocation(method, args)
+
+        // TODO: avoid runBlocking, wrapper the function to use super.invoke()
         return runBlocking {
             // Invokes a remote method and returns the result.
             devTools.invoke(resolvedReturnType, returnProperty, returnTypeClasses, methodInvocation)

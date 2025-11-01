@@ -201,6 +201,7 @@ object ProxyClasses {
                 // Typical methods:
                 //   - public abstract void ai.platon.pulsar.cdt.protocol.commands.Page.enable()
                 //   - public abstract com...page.Navigate com...Page.navigate(java.lang.String)
+                // TODO: blocking here
                 invocationHandler.invoke(o, method, objects)
             }
 
