@@ -5,6 +5,7 @@ import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.support.AgentTool
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
+import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
 import ai.platon.pulsar.common.KStrings
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.skeleton.ai.AgentState
@@ -66,6 +67,8 @@ class PromptBuilder() {
 你必须返回一个与以下模式匹配的有效 JSON 对象：
 $schema
 
+---
+
 """.trimIndent()
             } else {
                 """
@@ -73,11 +76,15 @@ $schema
 You MUST respond with a valid JSON object matching this schema:
 $schema
 
+---
+
 """.trimIndent()
             }
         }
 
-        val TOOL_CALL_NOTE_CONTENT = """
+        val TOOL_CALL_RULE_CONTENT = """
+严格遵循以下规则使用浏览器和浏览网页：
+
 - domain: 方法的调用方，如 driver, browser 等
 - 输出结果中，定位节点时 `selector` 字段始终填入 `locator` 的值
 - 确保 `locator` 与对应的无障碍树节点属性完全匹配，准确定位该节点
@@ -86,12 +93,24 @@ $schema
 - 注意：用户难以区分按钮和链接
 - 若操作与页面无关，返回空对象 `{}`
 - 只返回一个最相关的操作
-- 如需搜索，使用 `click(selector, "Ctrl")` 在**新标签页**打开
-- 使用 `switchTab` 切换到新打开的页面，从`当前浏览器状态`中获取所有打开标签页的信息
+- 阅读`当前浏览器状态`章节，获取所有打开标签页的信息
+- 如需检索信息，新建标签页而非复用当前页
+- 使用 `click(selector, "Ctrl")` 新建标签页，在**新标签页**打开链接
+- 若页面因输入文本等操作发生变化，需判断是否要交互新出现的元素（例如从列表中选择正确选项）。
+- 如果目标页面在后台打开，使用 `switchTab` 切换到目标页面
 - 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。。不要模拟点击屏幕键盘上的按键
 - 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
 - 如果需要操作前一页面，但已跳转，使用 `goBack`
 - 如非必要，避免重复点击同一链接，如必须这样做，提供理由
+- 若出现验证码，尽可能尝试解决；若无法解决，则启用备用策略（例如换其他站点、回退上一步）
+- 若预期元素缺失，尝试刷新页面、滚动或返回上一页
+- 若填写输入框后操作序列中断，通常是因为页面发生了变化（例如输入框下方弹出了建议选项）
+- 若上一步操作序列因页面变化而中断，需补全未执行的剩余操作。例如，若你尝试输入文本并点击搜索按钮，但点击未执行（因页面变化），应在下一步重试点击操作。
+- 若<overallGoal>中包含具体页面信息（如商品类型、评分、价格、地点等），尝试使用筛选功能以提高效率。
+- 始终考虑最终目标：<overallGoal>包含的内容。若用户指定了明确步骤，这些步骤始终具有最高优先级。
+- 若向字段输入内容，可能需要按回车、点击搜索按钮或从下拉菜单选择以完成操作。
+- 如无必要，不要登录页面。没有凭证时，绝对不要尝试登录。
+
     """.trimIndent()
 
         val A11Y_TREE_NOTE_CONTENT = """
@@ -138,7 +157,7 @@ ${buildObserveResultSchema(true)}
 ${AgentTool.TOOL_CALL_SPECIFICATION}
 ```
 
-$TOOL_CALL_NOTE_CONTENT
+$TOOL_CALL_RULE_CONTENT
 
 ---
 
@@ -539,7 +558,24 @@ Be comprehensive: if there are multiple elements that may be relevant for future
     }
 
     fun buildObserveUserMessage(messages: AgentMessageList, params: ObserveParams) {
+        val prevBrowserState = params.agentState.prevState?.browserUseState?.browserState
         val browserState = params.browserUseState.browserState
+
+        val prevTabs = prevBrowserState?.tabs ?: emptyList()
+        val currentTabs = browserState.tabs
+        val newTabs: List<TabState> = if (prevTabs.size != currentTabs.size) {
+            currentTabs - prevTabs.toSet()
+        } else emptyList()
+        val newTabsJson = if (newTabs.isEmpty()) DOMSerializer.toJson(newTabs) else null
+        val newTabsMessage = if (newTabs.isEmpty()) "" else {
+            """
+上一步新打开的标签页：
+
+$newTabsJson
+
+            """.trimIndent()
+        }
+
         val scrollState = browserState.scrollState
         val viewportHeight = scrollState.viewport.height
         val domState = params.browserUseState.domState
@@ -553,6 +589,7 @@ Be comprehensive: if there are multiple elements that may be relevant for future
         val nanoTree = domState.microTree.toNanoTree()
 
         val schemaContract = buildObserveResultSchemaContract(params)
+
         fun contentCN() = """
 ## 无障碍树(Accessibility Tree):
 
@@ -567,10 +604,8 @@ ${nanoTree.lazyJson}
 ```json
 ${browserState.lazyJson}
 ```
-
+$newTabsMessage
 $schemaContract
-
----
 
 """
 
@@ -626,7 +661,7 @@ $schemaContract
 ${toolCalls.joinToString("\n")}
 ```
 
-$TOOL_CALL_NOTE_CONTENT
+$TOOL_CALL_RULE_CONTENT
 
 ---
 

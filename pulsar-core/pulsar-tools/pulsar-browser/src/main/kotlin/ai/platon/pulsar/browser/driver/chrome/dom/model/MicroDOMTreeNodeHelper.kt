@@ -1,11 +1,125 @@
 package ai.platon.pulsar.browser.driver.chrome.dom.model
 
 import java.util.ArrayList
+import kotlin.collections.component1
+import kotlin.collections.component2
 
 class MicroDOMTreeNodeHelper(
     private val node: MicroDOMTreeNode,
     private val seenChunks: MutableList<Pair<Double, Double>>
 ) {
+    fun slimHTML(): String? {
+        val o = node.originalNode ?: return null
+        val attrs = o.attributes?.map { (k, v) -> "$k=$v" }
+            ?.joinToString(" ", " ")
+            ?: ""
+        return """<$o.nodeName$attrs>$o.nodeValue</$o.nodeName>"""
+    }
+
+    fun toInteractiveDOMTreeNodeList(): InteractiveDOMTreeNodeList {
+        val collected = mutableListOf<InteractiveDOMTreeNode>()
+
+        // Keep mapping from interactive index -> backing DOM node id
+        val interactiveNodeIdByIndex = mutableMapOf<Int, Int>()
+        // Collect non-interactive node texts with their nodeIds
+        val nonInteractiveTexts = mutableListOf<Pair<Int, String>>()
+
+        fun nonInteractiveText(o: CleanedDOMTreeNode): String? {
+            val sb = StringBuilder()
+            fun appendToken(v: Any?) {
+                val t = v?.toString()?.trim()
+                if (!t.isNullOrEmpty()) {
+                    if (sb.isNotEmpty()) sb.append(' ')
+                    sb.append(t)
+                }
+            }
+            // Prefer nodeValue
+            appendToken(o.nodeValue)
+            // Include meaningful attributes if any
+            val attrs = o.attributes
+            if (!attrs.isNullOrEmpty()) {
+                DefaultIncludeAttributes.ATTRIBUTES.forEach { key ->
+                    attrs[key]?.let { appendToken(it) }
+                }
+            }
+            val s = sb.toString().replace(Regex("\\s+"), " ").trim()
+            return s.ifEmpty { null }
+        }
+
+        fun visit(n: MicroDOMTreeNode) {
+            val o = n.originalNode
+            val idx = n.interactiveIndex
+            if (o != null && idx != null) {
+                collected += InteractiveDOMTreeNode(
+                    interactiveIndex = idx,
+                    // remove prefix to reduce serialized size, align with Nano tree
+                    locator = o.locator.substringAfterLast(":"),
+                    slimHTML = slimHTML(),
+                    textUntilNextNode = null,
+                    scrollable = o.isScrollable?.takeIf { it },
+                    // All nodes are visible unless `invisible` == true explicitly
+                    invisible = if (o.isVisible == true) null else true,
+                    bounds = o.bounds?.round(),
+                    clientRects = o.clientRects?.round(),
+                    scrollRects = o.scrollRects?.round(),
+                    absoluteBounds = o.absoluteBounds?.round(),
+                    prevInteractiveIndex = null,
+                    nextInteractiveIndex = null,
+                )
+                interactiveNodeIdByIndex[idx] = o.nodeId
+            } else if (o != null && idx == null) {
+                nonInteractiveText(o)?.let { nonInteractiveTexts += o.nodeId to it }
+            }
+            n.children?.forEach { visit(it) }
+        }
+
+        visit(node)
+
+        // Build a map from interactiveIndex -> concatenated text of non-interactive nodes
+        val textBetweenByInteractiveIndex = mutableMapOf<Int, String?>()
+        val sortedInteractiveIdx = interactiveNodeIdByIndex.keys.sorted()
+        if (sortedInteractiveIdx.isNotEmpty()) {
+            // Sort non-interactive entries by nodeId once for efficient slicing
+            val nonInteractiveSorted = nonInteractiveTexts.sortedBy { it.first }
+            for (i in 0 until sortedInteractiveIdx.size) {
+                val currentIdx = sortedInteractiveIdx[i]
+                val currentNodeId = interactiveNodeIdByIndex[currentIdx] ?: continue
+                val nextIdx = sortedInteractiveIdx.getOrNull(i + 1)
+                if (nextIdx == null) {
+                    // No next interactive node -> leave null
+                    textBetweenByInteractiveIndex[currentIdx] = null
+                    continue
+                }
+                val nextNodeId = interactiveNodeIdByIndex[nextIdx] ?: continue
+                val low = minOf(currentNodeId, nextNodeId)
+                val high = maxOf(currentNodeId, nextNodeId)
+                val texts = nonInteractiveSorted
+                    .asSequence()
+                    .filter { (nodeId, _) -> nodeId > low && nodeId < high }
+                    .map { it.second }
+                    .filter { it.isNotBlank() }
+                    .toList()
+                val joined = texts.joinToString(" ").replace(Regex("\\s+"), " ").trim()
+                textBetweenByInteractiveIndex[currentIdx] = joined.ifEmpty { null }
+            }
+        }
+
+        // Sort by interactive index, then by locator for stability and fill prev/next/textUntilNextNode
+        val sorted = collected.sortedWith(compareBy({ it.interactiveIndex }, { it.locator ?: "" }))
+        val nodes = sorted.mapIndexed { i, it ->
+            val prev = if (i > 0) sorted[i - 1].interactiveIndex else null
+            val next = if (i < sorted.lastIndex) sorted[i + 1].interactiveIndex else null
+            val betweenText = textBetweenByInteractiveIndex[it.interactiveIndex]
+            it.copy(
+                prevInteractiveIndex = prev,
+                nextInteractiveIndex = next,
+                textUntilNextNode = betweenText
+            )
+        }
+
+        return InteractiveDOMTreeNodeList(nodes)
+    }
+
     fun toNanoTreeInViewport0(
         microTree: MicroDOMTreeNode,
         viewportHeight: Int,

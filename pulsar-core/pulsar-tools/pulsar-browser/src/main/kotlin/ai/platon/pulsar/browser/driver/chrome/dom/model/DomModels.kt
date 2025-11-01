@@ -9,6 +9,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import java.awt.Dimension
 import java.math.RoundingMode
 import java.util.*
+import kotlin.collections.component1
+import kotlin.collections.component2
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -336,6 +338,30 @@ data class CleanedDOMTreeNode constructor(
     // Note: children_nodes and shadow_roots are intentionally omitted
 )
 
+data class InteractiveDOMTreeNode(
+    /**
+     * Locator format: `frameIndex,backendNodeId`
+     * */
+    val interactiveIndex: Int = 0,
+    val locator: String? = null,
+    val slimHTML: String? = null,
+    val textUntilNextNode: String? = null,
+    val scrollable: Boolean? = null,   // null means false
+    val invisible: Boolean? = null,    // null means false
+    val bounds: CompactRect? = null,
+    val clientRects: CompactRect? = null,
+    val scrollRects: CompactRect? = null,
+    val absoluteBounds: CompactRect? = null,
+    val prevInteractiveIndex: Int? = null,
+    val nextInteractiveIndex: Int? = null,
+)
+
+class InteractiveDOMTreeNodeList(
+    val nodes: List<InteractiveDOMTreeNode> = emptyList(),
+) {
+    val lazyJson by lazy { DOMSerializer.toJson(this) }
+}
+
 /**
  * Serializable DOMTreeNode structure.
  * Enhanced with compound component marking and paint order information.
@@ -373,6 +399,11 @@ data class MicroDOMTreeNode(
 
         return IntRange(1, 20).firstOrNull { i -> hasSeen(i * 1.0, i * 1.0 * viewportHeight) } ?: 1
     }
+
+    fun slimHTML(): String? = MicroDOMTreeNodeHelper(this, seenChunks).slimHTML()
+
+    fun toInteractiveDOMTreeNodeList(): InteractiveDOMTreeNodeList =
+        MicroDOMTreeNodeHelper(this, seenChunks).toInteractiveDOMTreeNodeList()
 
     fun toNanoTree(): NanoDOMTree = toNanoTreeInRange(0.0, 1000000.0)
 
@@ -419,6 +450,8 @@ data class NanoDOMTreeNode(
 
     @JsonIgnore
     val viewportIndex: Int? = null,    // The position of this DOM node falls within the nth viewport, 1-based
+    @JsonIgnore
+    val interactiveIndex: Int? = null,
     @JsonIgnore
     val clientRects: CompactRect? = null,
     @JsonIgnore
