@@ -57,7 +57,7 @@ class RobustRPC(
         }
 
         var result = kotlin.runCatching { invokeDeferred0(action, block) }
-            .onFailure { logger.info("Failed to execute action: [$action], retrying", it.brief()) }
+            .onFailure { logger.info("Failed to execute action: [$action], retrying 1 time ...", it.brief()) }
 
         var i = 1
         while (result.isFailure && i++ < maxRetry && driver.checkState()) {

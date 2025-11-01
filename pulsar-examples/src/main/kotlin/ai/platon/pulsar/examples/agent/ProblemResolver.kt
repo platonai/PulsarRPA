@@ -12,7 +12,7 @@ class ProblemResolver {
 search for browser and read top 5 articles and give me a summary
 open the 4-th articles in new tab
 read top 3 articles and give me a summary
-        """.split("\n").map { it.trim() }
+        """.split("\n").map { it.trim() }.filter { it.length > 10 }
 
         val problem = problems[0]
         val agent = session.resolve(problem)

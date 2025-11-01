@@ -121,6 +121,7 @@ $schema
 [locator]{viewport}(x,y,width,height)<slimNode>textContent</slimNode>Text-Before-This-Interactive-Element-And-After-Previous-Interactive-Element
 
 - `locator` 为节点唯一定位符，同无障碍树保持一致，由两个整数构成。
+- 输出结果中，定位节点时 `selector` 字段始终填入 `locator` 的值。
 - `viewport` 为节点所在视口序号，1-based。
 - `x,y,width,height` 为节点坐标和尺寸
 

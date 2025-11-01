@@ -16,7 +16,7 @@ class MicroDOMTreeNodeHelper(
             fun normalizeAttrValue(attrValue: Any?): String? {
                 if (attrValue == null) return null
                 val compacted = Strings.compactWhitespaces(attrValue.toString().trim())
-                return Strings.singleQuoteIfContainsWhitespace(compacted)
+                return Strings.singleQuoteIfNonAlphanumeric(compacted)
             }
 
             val attrs = o.attributes

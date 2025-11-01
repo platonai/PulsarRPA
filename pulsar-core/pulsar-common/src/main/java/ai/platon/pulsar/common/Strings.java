@@ -853,6 +853,20 @@ public final class Strings {
         else return s;
     }
 
+    public static String singleQuoteIfNonAlphanumeric(String s) {
+        if (s == null || s.isEmpty()) return "";
+
+        if (StringUtils.isAlphanumeric(s)) return s;
+
+        return "'" + s + "'";
+    }
+
+    public static String doubleQuoteIfNonAlphanumeric(String s) {
+        if (s == null || s.isEmpty()) return "";
+        if (StringUtils.isAlphanumeric(s)) return s;
+        return "\"" + s + "\"";
+    }
+
     /**
      * Replace all consecutive whitespace characters in the string — including regular spaces, tab characters, line breaks,
      * full-width spaces, and HTML non-breaking spaces — with a single regular space " ".
