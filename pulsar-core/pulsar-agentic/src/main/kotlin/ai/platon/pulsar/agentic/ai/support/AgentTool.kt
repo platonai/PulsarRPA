@@ -8,7 +8,7 @@ object AgentTool {
     const val TOOL_CALL_SPECIFICATION = """
 // domain/object: driver
 driver.navigateTo(url: String)
-driver.waitForSelector(selector: String, timeoutMillis: Long = 5000)
+driver.waitForSelector(selector: String, timeoutMillis: Long = 3000)
 driver.exists(selector: String): Boolean
 driver.isVisible(selector: String): Boolean
 driver.focus(selector: String)
@@ -28,6 +28,7 @@ driver.goBack()
 driver.goForward()
 driver.selectFirstTextOrNull(selector: String): String? // Returns the node's text content, the node is located by [selector]. If the node does not exist, returns null.
 driver.selectTextAll(selector: String): List<String>    // Returns a list of text contents of all the elements matching the specified selector within the page.
+driver.delay(millis: Long)
 
 // domain/object: browser
 browser.switchTab(tabId: String): Int

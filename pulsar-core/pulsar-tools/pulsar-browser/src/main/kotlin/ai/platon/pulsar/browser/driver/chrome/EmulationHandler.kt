@@ -499,6 +499,8 @@ class Mouse(private val devTools: ChromeDevTools) {
  * Keyboard provides an api for managing a virtual keyboard.
  * */
 class Keyboard(private val devTools: ChromeDevTools) {
+    private val logger = getLogger(this)
+
     private val input get() = devTools.input
     private val pressedModifiers = mutableSetOf<String>()
     private val pressedKeys = mutableSetOf<String>()
@@ -703,6 +705,8 @@ class EmulationHandler(
     private val keyboard: Keyboard?,
     private val mouse: Mouse?
 ) {
+    private val logger = getLogger(this)
+
     private fun modifierMaskForKeyString(key: String): Int {
         return when (key.trim().lowercase()) {
             "alt" -> 1
@@ -759,6 +763,7 @@ class EmulationHandler(
                     if (virtualKey.isModifier) {
                         // Use CDP-compliant modifier bitmask for mouse events
                         cdpModifiers = modifierMaskForKeyString(normModifier.name)
+                        logger.info("Clicking with virtual key: {}, modifiers: {}", virtualKey, cdpModifiers)
                     }
                     keyboard?.down(virtualKey)
                 }

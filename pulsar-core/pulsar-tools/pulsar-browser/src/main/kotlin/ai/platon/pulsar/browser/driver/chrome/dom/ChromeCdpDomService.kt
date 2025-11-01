@@ -391,9 +391,8 @@ class ChromeCdpDomService(
         suspend fun evalDouble(expr: String): Double? {
             return try {
                 val evaluation = devTools.runtime.evaluate(expr)
-                val result = evaluation?.result
-                result?.value?.toString()?.toDoubleOrNull()
-                    ?: result?.unserializableValue?.toDoubleOrNull()
+                val result = evaluation.result
+                result.value?.toString()?.toDoubleOrNull() ?: result.unserializableValue?.toDoubleOrNull()
             } catch (e: Exception) {
                 tracer?.trace("Evaluation error | expr={} | err={}", expr, e.toString())
                 null

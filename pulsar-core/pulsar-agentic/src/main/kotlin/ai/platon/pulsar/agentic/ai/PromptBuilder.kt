@@ -93,11 +93,11 @@ $schema
 - 注意：用户难以区分按钮和链接
 - 若操作与页面无关，返回空对象 `{}`
 - 只返回一个最相关的操作
-- 阅读`当前浏览器状态`章节，获取所有打开标签页的信息
+- 从`## 当前浏览器状态`段落获得所有打开标签页的信息
 - 如需检索信息，新建标签页而非复用当前页
 - 使用 `click(selector, "Ctrl")` 新建标签页，在**新标签页**打开链接
+- 如果目标页面在**新标签页**打开，使用 `browser.switchTab(tabId: String)` 切换到目标页面，从`## 当前浏览器状态`段落获得 `tabId`
 - 若页面因输入文本等操作发生变化，需判断是否要交互新出现的元素（例如从列表中选择正确选项）。
-- 如果目标页面在后台打开，使用 `switchTab` 切换到目标页面
 - 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。。不要模拟点击屏幕键盘上的按键
 - 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
 - 如果需要操作前一页面，但已跳转，使用 `goBack`
@@ -115,14 +115,16 @@ $schema
 
         val INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT = """
 
-可交互元素列表(interactive elements)包含页面 DOM 全部可交互元素的主要信息，包括元素简化 HTML 表示，文本内容，前后文本，所在视口，坐标和大小等。
+可交互元素列表(interactive elements)包含页面 DOM 可交互元素的主要信息，包括元素简化 HTML 表示，文本内容，前后文本，所在视口，坐标和大小等。
 
 列表格式：
 [locator]{viewport}(x,y,width,height)<slimNode>textContent</slimNode>Text-Before-This-Interactive-Element-And-After-Previous-Interactive-Element
 
-- `locator` 为节点唯一定位符，同无障碍树保持一致，由两个整数构成。
+- 默认列出当前焦点视口，第1，2视口和最后一视口元素。
+- 如需查看其他视口信息，使用 `scrollToViewport` 工具滚动到该视口。
+- `locator` 为节点唯一定位符，同无障碍树保持一致，由两个整数构成，不含括号。
 - 输出结果中，定位节点时 `selector` 字段始终填入 `locator` 的值。
-- `viewport` 为节点所在视口序号，1-based。
+- `viewport` 为节点所在视口序号，1-based，不含括号。
 - `x,y,width,height` 为节点坐标和尺寸
 
         """.trimIndent()
@@ -592,7 +594,7 @@ Be comprehensive: if there are multiple elements that may be relevant for future
         val newTabs: List<TabState> = if (prevTabs.size != currentTabs.size) {
             currentTabs - prevTabs.toSet()
         } else emptyList()
-        val newTabsJson = if (newTabs.isEmpty()) DOMSerializer.toJson(newTabs) else null
+        val newTabsJson = if (newTabs.isNotEmpty()) DOMSerializer.toJson(newTabs) else null
         val newTabsMessage = if (newTabs.isEmpty()) "" else {
             """
 上一步新打开的标签页：
@@ -606,13 +608,14 @@ $newTabsJson
         val viewportHeight = scrollState.viewport.height
         val domState = params.browserUseState.domState
 
-        val interactiveElements = domState.microTree.toInteractiveDOMTreeNodeList()
-
-        // The 1-based next chunk to see, each chunk is a viewport height.
+        // The 1-based viewport to see.
         val processingViewport = params.agentState.browserUseState?.nextViewportToSee() ?: 1
         val viewportsTotal = params.browserUseState.browserState.scrollState.viewportsTotal
         val viewportToProcessNexTime = if (processingViewport >= viewportsTotal) -1 else processingViewport.inc()
         val viewportIndex = processingViewport
+
+        val interactiveElements = domState.microTree.toInteractiveDOMTreeNodeList(
+            currentViewportIndex = processingViewport, maxViewportIndex = viewportsTotal)
 
         val nanoTree = domState.microTree.toNanoTreeInViewport(viewportHeight, viewportIndex, 1.5)
         // val nanoTree = domState.microTree.toNanoTree()
@@ -637,9 +640,13 @@ $newTabsJson
 
 [locator]{viewport}(x,y,width,height)<slimNode>textContent</slimNode>Text-Before-This-Interactive-Element-And-After-Previous-Interactive-Element
 
+聚焦第${processingViewport}视口可交互元素。
+
 ${interactiveElements.lazyString}
 
 ## 无障碍树(Accessibility Tree)
+
+聚焦第${processingViewport}视口节点。
 
 ```json
 ${nanoTree.lazyJson}

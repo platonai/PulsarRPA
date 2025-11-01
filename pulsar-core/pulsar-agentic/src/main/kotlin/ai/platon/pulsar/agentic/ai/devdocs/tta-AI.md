@@ -73,7 +73,7 @@ Allowed calls → driver methods mapping:
 - scrollDown(count: Int = 1) → `driver.scrollDown(count)`
 - scrollUp(count: Int = 1) → `driver.scrollUp(count)`
 - scrollToMiddle(ratio: Double = 0.5) → `driver.scrollToMiddle(ratio)`
-- waitForNavigation(oldUrl: String = current, timeoutMillis: Long = 5000) → `driver.waitForNavigation(oldUrl, timeoutMillis)`
+- waitForNavigation(oldUrl: String = current, timeoutMillis: Long = 3000) → `driver.waitForNavigation(oldUrl, timeoutMillis)`
 
 Note: The agent must produce exactly one driver step per generation. For multi-step user asks, choose the highest-value primary step first (see tie-break rules below).
 

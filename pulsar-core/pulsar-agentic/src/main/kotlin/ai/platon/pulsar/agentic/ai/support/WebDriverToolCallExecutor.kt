@@ -2,6 +2,7 @@ package ai.platon.pulsar.agentic.ai.support
 
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import java.time.Duration
@@ -12,6 +13,7 @@ class WebDriverToolCallExecutor {
     suspend fun execute(expression: String, driver: WebDriver): Any? {
         return try {
             val r = execute0(expression, driver)
+
             when (r) {
                 is Unit -> null
                 else -> r
@@ -34,8 +36,7 @@ class WebDriverToolCallExecutor {
      * */
     @Suppress("UNUSED_PARAMETER")
     private suspend fun doExecute(
-        objectName: String, functionName: String, args: Map<String, Any?>, driver: WebDriver
-): Any? {
+        objectName: String, functionName: String, args: Map<String, Any?>, driver: WebDriver): Any? {
         // Execute the appropriate WebDriver method based on the function name
         val arg0 = args["0"]?.toString()
         val arg1 = args["1"]?.toString()

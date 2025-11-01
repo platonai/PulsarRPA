@@ -191,7 +191,7 @@ open class TextToAction(
                     ?.associate { it.first!! to it.second!! }
 
                 val observeElement = ObserveElement(
-                    locator = ele.locator,
+                    locator = ele.locator?.removeSurrounding("[", "]"),
 
                     screenshotContentSummary = ele.screenshotContentSummary,
                     currentPageContentSummary = ele.currentPageContentSummary,
@@ -218,15 +218,19 @@ open class TextToAction(
         val toolCall = observeElement.toolCall ?: return action
 
         val locator = observeElement.locator
-        val arguments = observeElement.toolCall?.arguments
+        val arguments = toolCall.arguments
         val fbnLocator = browserUseState.domState.getAbsoluteFBNLocator(locator)
-        val node = if (fbnLocator != null) browserUseState.domState.locatorMap[fbnLocator] else null
+        if (fbnLocator == null) {
+            logger.warn("FBN locator not found | {}", locator)
+        }
+
+        val node = if (fbnLocator != null) {
+            browserUseState.domState.locatorMap[fbnLocator]
+        } else null
+
         val fbnSelector = fbnLocator?.absoluteSelector
 
-        // always provide a selector, ToolCallExecutor.toolCallToExpression() will handle the real arguments
-        if (arguments != null) {
-            arguments["selector"] = fbnSelector
-        }
+        arguments["selector"] = fbnSelector
 
         // CSS friendly expression
         val cssSelector = node?.cssSelector()

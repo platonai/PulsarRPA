@@ -91,7 +91,8 @@ open class ToolCallExecutor {
 
     suspend fun execute(toolCall: ToolCall, driver: WebDriver): Any? {
         require(toolCall.domain == "driver") { "Tool call domain should be `driver`" }
-        val expression = toolCallToExpression(toolCall) ?: return null
+        val expression = toolCallToExpression(toolCall) ?:
+            throw IllegalArgumentException("Failed to convert to expression: $toolCall")
 
         return try {
             execute(expression, driver)
