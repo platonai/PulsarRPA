@@ -4,6 +4,7 @@ import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractBrowser
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 
@@ -60,11 +61,20 @@ class BrowserToolCallExecutor {
 
         // Handle browser-level commands
         if (functionName == "switchTab") {
-            val tabId = args["0"]?.toString()?.toIntOrNull()
-                ?: return buildErrorResponse("tab_not_found", "Missing tabId parameter", browser)
+            val tabId = args["0"]?.toString() ?:
+                return buildErrorResponse("tab_not_found", "Missing tabId parameter", browser)
 
             require(browser is AbstractBrowser)
-            val driver = browser.findDriverById(tabId) ?: return null
+            val driver = if (tabId.toIntOrNull() != null) {
+                browser.findDriverById(tabId.toInt())
+            } else {
+                browser.drivers[tabId]
+            }
+
+            if (driver == null || driver !is AbstractWebDriver) {
+                return null
+            }
+
             driver.bringToFront()
             logger.info("Switched to tab {} (driver {}/{})", tabId, driver.id, driver.guid)
             return driver

@@ -8,8 +8,8 @@ class ProblemResolver {
     suspend fun run() {
         val driver = session.createBoundDriver()
         driver.navigateTo("https://news.ycombinator.com/news")
-        // val agent = session.resolve("find articles about browser and give me a summary")
-        val agent = session.resolve("read top 3 articles and give me a summary")
+        val agent = session.resolve("open the 4-th articles in new tab")
+        // val agent = session.resolve("read top 3 articles and give me a summary")
 
         readln()
     }

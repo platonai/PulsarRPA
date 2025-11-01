@@ -519,7 +519,7 @@ data class TabState(
     val active: Boolean = false // Whether this is the active tab
 )
 
-data class BrowserState(
+data class BrowserState constructor(
     val url: String,
     val goBackUrl: String? = null,
     val goForwardUrl: String? = null,

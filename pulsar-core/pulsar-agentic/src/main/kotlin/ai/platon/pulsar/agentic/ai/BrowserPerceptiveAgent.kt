@@ -20,7 +20,6 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.Pson
 import ai.platon.pulsar.common.stringify
-import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.*
@@ -34,7 +33,6 @@ import org.slf4j.helpers.MessageFormatter
 import java.io.IOException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
-import java.net.URI
 import java.net.UnknownHostException
 import java.nio.file.Files
 import java.time.Duration
@@ -390,6 +388,8 @@ class BrowserPerceptiveAgent constructor(
         val currentDriver = session.boundDriver ?: return baseState
         val browser = currentDriver.browser
 
+        // fetch all drivers
+        browser.listDrivers()
         val tabs = browser.drivers.map { (tabId, driver) ->
             val url = try {
                 driver.currentUrl()
@@ -421,6 +421,12 @@ class BrowserPerceptiveAgent constructor(
         val driver = activeDriver
         val result = toolCallExecutor.execute(toolCall, driver)
 
+        val callResult = when (toolCall.domain) {
+            "driver" -> toolCallExecutor.execute(toolCall, driver)
+            "browser" -> toolCallExecutor.execute(toolCall, driver.browser)
+            else -> throw IllegalArgumentException("Unsupported domain: ${toolCall.domain}")
+        }
+
         // Handle browser.switchTab - bind the new driver to the session
         if (toolCall.method == "switchTab") {
             handleSwitchTab(result)
@@ -432,33 +438,20 @@ class BrowserPerceptiveAgent constructor(
     /**
      * Handle switching to a new tab by binding the target driver to the session.
      */
-    private fun handleSwitchTab(result: Any?) {
-        when (result) {
-            is Int -> {
-                // result is the driverId
-                val browser = requireNotNull(session.boundDriver?.browser) {
-                    "No browser bound to session"
-                }
-                val targetDriver = browser.drivers.values.find { it.id == result }
-                if (targetDriver != null) {
-                    session.bindDriver(targetDriver)
-                    logger.info("Session bound to new driver {} after switchTab", result)
-                } else {
-                    logger.warn("switchTab returned driverId {} but driver not found in browser", result)
-                }
-            }
-
-            is Map<*, *> -> {
-                // Error response from switchTab
-                val error = result["error"] as? String
-                val message = result["message"] as? String
-                logger.warn("switchTab failed: {} - {}", error, message)
-            }
-
-            else -> {
-                logger.warn("Unexpected switchTab result type: {}", result?.javaClass?.simpleName)
-            }
+    private suspend fun handleSwitchTab(result: Any?) {
+        val frontDriver = session.boundBrowser?.frontDriver
+        val boundDriver = session.boundDriver
+        if (frontDriver == null) {
+            logger.warn("No driver is in front after switchTab")
+            return
         }
+
+        if (frontDriver == boundDriver) {
+            logger.warn("The bound driver does not change after switchTab")
+            return
+        }
+
+        session.bindDriver(frontDriver)
     }
 
     private suspend fun doObserveAndReturnActionDescription(
@@ -994,26 +987,16 @@ class BrowserPerceptiveAgent constructor(
         val toolCall = action.toolCall ?: return null
 
         if (config.enablePreActionValidation && !actionValidator.validateToolCall(toolCall)) {
-            logger.info(
-                "tool.validate.fail sid={} step={} tool={} args={}",
-                context.sessionId.take(8),
-                context.stepNumber,
-                toolCall.method,
-                toolCall.arguments
-            )
+            logger.info("tool.validate.fail sid={} step={} tool={} args={}",
+                context.sessionId.take(8), context.stepNumber, toolCall.method, toolCall.arguments)
             // Validation failure is meta info
             trace("#$step validation-failed ${toolCall.method}")
             return null
         }
 
         return try {
-            logger.info(
-                "tool.exec sid={} step={} tool={} args={}",
-                context.sessionId.take(8),
-                context.stepNumber,
-                toolCall.method,
-                toolCall.arguments
-            )
+            logger.info("tool.exec sid={} step={} tool={} args={}",
+                context.sessionId.take(8), context.stepNumber, toolCall.method, toolCall.arguments)
 
             val instructionResult = doToolCallExecute(toolCall, action)
             consecutiveFailureCounter.set(0) // Reset on success
@@ -1039,9 +1022,8 @@ class BrowserPerceptiveAgent constructor(
         logger.info("noop sid={} step={} consecutive={}", context.sessionId.take(8), step, consecutiveNoOps)
 
         if (consecutiveNoOps >= config.consecutiveNoOpLimit) {
-            logger.info(
-                "noop.stop sid={} step={} limit={}", context.sessionId.take(8), step, config.consecutiveNoOpLimit
-            )
+            logger.info("noop.stop sid={} step={} limit={}",
+                context.sessionId.take(8), step, config.consecutiveNoOpLimit)
             return true
         }
 
@@ -1059,9 +1041,7 @@ class BrowserPerceptiveAgent constructor(
     private fun shouldTerminate(action: ActionDescription): Boolean = action.isComplete
 
     private fun handleTaskCompletion(action: ActionDescription, step: Int, context: ExecutionContext) {
-        logger.info(
-            "task.complete sid={} step={} complete={}", context.sessionId.take(8), step, action.isComplete
-        )
+        logger.info("task.complete sid={} step={} complete={}", context.sessionId.take(8), step, action.isComplete)
         trace("#$step complete: taskComplete=${action.isComplete}")
     }
 
@@ -1188,18 +1168,6 @@ class BrowserPerceptiveAgent constructor(
         }
     }
 
-    private fun buildSummaryPrompt(goal: String): Pair<String, String> {
-        val system = "你是总结助理，请基于执行轨迹对原始目标进行总结，输出 JSON。"
-        val user = buildString {
-            appendLine("原始目标：$goal")
-            appendLine("执行轨迹(按序)：")
-            stateHistory.forEach { appendLine(it) }
-            appendLine()
-            appendLine("""请严格输出 JSON：{"taskComplete":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]} 无多余文字。""")
-        }
-        return system to user
-    }
-
     /**
      * Enhanced summary generation with error handling
      */
@@ -1208,7 +1176,7 @@ class BrowserPerceptiveAgent constructor(
         val context = ExecutionContext(uuid.toString(), 0, "summarize", currentUrl)
 
         return try {
-            val (system, user) = buildSummaryPrompt(goal)
+            val (system, user) = promptBuilder.buildSummaryPrompt(goal, stateHistory)
             slogger.info("Generating final summary", context)
 
             val response = tta.chatModel.callUmSm(user, system)

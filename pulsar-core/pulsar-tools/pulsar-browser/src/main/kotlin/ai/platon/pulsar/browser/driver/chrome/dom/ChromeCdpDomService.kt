@@ -376,10 +376,12 @@ class ChromeCdpDomService(
         val url: String = runCatching { devTools.dom.getDocument().documentURL }.getOrNull() ?: ""
 
         // Navigation history for back/forward URLs (resilient)
+
         val (goBackUrl, goForwardUrl) = runCatching {
             val history = devTools.page.getNavigationHistory()
             val currentIndex = history.currentIndex
             val entries = history.entries
+
             val back = entries.getOrNull(currentIndex - 1)?.url
             val forward = entries.getOrNull(currentIndex + 1)?.url
             back to forward

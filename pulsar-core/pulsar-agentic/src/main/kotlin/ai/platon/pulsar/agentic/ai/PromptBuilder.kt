@@ -86,10 +86,12 @@ $schema
 - 注意：用户难以区分按钮和链接
 - 若操作与页面无关，返回空对象 `{}`
 - 只返回一个最相关的操作
-- 如需连续点击打开多个链接，使用 click(selector, "Ctrl") 在新标签页打开
+- 如需搜索，使用 `click(selector, "Ctrl")` 在**新标签页**打开
+- 使用 `switchTab` 切换到新打开的页面，从`当前浏览器状态`中获取所有打开标签页的信息
 - 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。。不要模拟点击屏幕键盘上的按键
 - 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
 - 如果需要操作前一页面，但已跳转，使用 `goBack`
+- 如非必要，避免重复点击同一链接，如必须这样做，提供理由
     """.trimIndent()
 
         val A11Y_TREE_NOTE_CONTENT = """
@@ -542,26 +544,17 @@ Be comprehensive: if there are multiple elements that may be relevant for future
         val viewportHeight = scrollState.viewport.height
         val domState = params.browserUseState.domState
         // The 1-based next chunk to see, each chunk is a viewport height.
-        val processingChunk = params.agentState.browserUseState?.nextChunkToSee() ?: 1
-        val chunksTotal = params.browserUseState.browserState.scrollState.chunksTotal
-        val chunkToProcessNexTime = if (processingChunk >= chunksTotal) -1 else processingChunk.inc()
-        val viewportIndex = processingChunk
+//        val processingChunk = params.agentState.browserUseState?.nextChunkToSee() ?: 1
+//        val chunksTotal = params.browserUseState.browserState.scrollState.chunksTotal
+//        val chunkToProcessNexTime = if (processingChunk >= chunksTotal) -1 else processingChunk.inc()
+//        val viewportIndex = processingChunk
 
-        val nanoTree = domState.microTree.toNanoTreeInViewport(viewportHeight, viewportIndex, 1.5)
+        // val nanoTree = domState.microTree.toNanoTreeInViewport(viewportHeight, viewportIndex, 1.5)
+        val nanoTree = domState.microTree.toNanoTree()
 
         val schemaContract = buildObserveResultSchemaContract(params)
         fun contentCN() = """
 ## 无障碍树(Accessibility Tree):
-
-本次处理分片序号: $processingChunk
-待下次处理分片序号：$chunkToProcessNexTime
-总分片数: $chunksTotal
-
-- 每个分片对应一个视口高度
-- 第 i 分片指第 i 视口内所有 DOM nodes
-- 提供的无障碍树仅包含第 i 个视口内的 DOM 节点，视口外节点仅少量纳入
-- 调用 `scrollToViewport(n)` 可获取第 n 个视口内的 DOM 节点（1-based）
-- 第 -1 分片意味无分片，不需继续处理
 
 ```json
 ${nanoTree.lazyJson}
@@ -584,16 +577,6 @@ $schemaContract
         fun contentEN() = """
 
 ## Accessibility Tree:
-
-Current processing chunk number: $processingChunk
-The number of chunk to process next time：$chunkToProcessNexTime
-Total chunk: $chunksTotal
-
-- Each chunk corresponds to one viewport height
-- The i-th chunk refers to all DOM nodes located within the i-th viewport
-- The provided accessibility tree includes only the DOM nodes within the i-th viewport, with minor inclusion of nodes outside the viewport.
-- Use `scrollToViewport(n)` to retrieve DOM nodes within the n-th viewport (1-based)
-- Chunk -1 means no more chunk, no need to precess next time
 
 ```json
 ${nanoTree.lazyJson}
@@ -674,5 +657,17 @@ ${toolCalls.joinToString("\n")}
         }
 
         messages.addSystem(toolSpecs, "toolSpecs")
+    }
+
+    fun buildSummaryPrompt(goal: String, stateHistory: List<AgentState>): Pair<String, String> {
+        val system = "你是总结助理，请基于执行轨迹对原始目标进行总结，输出 JSON。"
+        val user = buildString {
+            appendLine("原始目标：$goal")
+            appendLine("执行轨迹(按序)：")
+            stateHistory.forEach { appendLine(it) }
+            appendLine()
+            appendLine("""请严格输出 JSON：{"taskComplete":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]} 无多余文字。""")
+        }
+        return system to user
     }
 }
