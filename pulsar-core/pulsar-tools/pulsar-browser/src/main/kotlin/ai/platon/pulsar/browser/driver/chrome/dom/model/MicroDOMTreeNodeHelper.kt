@@ -24,7 +24,7 @@ class MicroDOMTreeNodeHelper(
     }
 
     fun toNanoTreeInRange0(microTree: MicroDOMTree, startY: Double = 0.0, endY: Double = 100000.0): NanoDOMTree {
-        val tree = toNanoTreeInRange1(microTree, startY, endY)
+        val tree = toNanoTreeInRangeRecursive(microTree, startY, endY)
 
         val merged = mergeChunks()
         seenChunks.clear()
@@ -33,7 +33,7 @@ class MicroDOMTreeNodeHelper(
         return tree
     }
 
-    fun toNanoTreeInRange1(microNode: MicroDOMTreeNode, startY: Double = 0.0, endY: Double = 100000.0): NanoDOMTree {
+    fun toNanoTreeInRangeRecursive(microNode: MicroDOMTreeNode, startY: Double = 0.0, endY: Double = 100000.0): NanoDOMTree {
         // Create the current node from the micro node
         val root = newNode(microNode) ?: return NanoDOMTree()
 
@@ -44,7 +44,7 @@ class MicroDOMTreeNodeHelper(
             ?.asSequence()
             ?.filter { child -> !(child.children == null || child.children.isEmpty()) } /* non-empty children */
             ?.filter { inYRange(it, startY, endY) }
-            ?.map { toNanoTreeInRange0(it, startY, endY) }
+            ?.map { toNanoTreeInRangeRecursive(it, startY, endY) }
             ?.toList()
 
         return if (childNanoList.isNullOrEmpty()) root else root.copy(children = childNanoList)

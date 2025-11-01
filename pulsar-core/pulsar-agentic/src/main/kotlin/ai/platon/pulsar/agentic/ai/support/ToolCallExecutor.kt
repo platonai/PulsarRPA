@@ -154,7 +154,14 @@ open class ToolCallExecutor {
                 "isVisible" -> arguments["selector"]?.let { "driver.isVisible(\"${it.esc()}\")" }
                 "focus" -> arguments["selector"]?.let { "driver.focus(\"${it.esc()}\")" }
                 // Basic interactions
-                "click" -> arguments["selector"]?.let { "driver.click(\"${it.esc()}\")" }
+                "click" -> arguments["selector"]?.esc()?.let {
+                    val modifier = arguments["modifier"]?.esc()
+                    val count = arguments["count"]?.toIntOrNull() ?: 1
+                    when {
+                        modifier != null -> "driver.click(\"$it\", \"$modifier\")"
+                        else -> "driver.click(\"$it\", $count)"
+                    }
+                }
                 "fill" -> arguments["selector"]?.let { s ->
                     val text = arguments["text"]?.esc() ?: ""
                     "driver.fill(\"${s.esc()}\", \"$text\")"

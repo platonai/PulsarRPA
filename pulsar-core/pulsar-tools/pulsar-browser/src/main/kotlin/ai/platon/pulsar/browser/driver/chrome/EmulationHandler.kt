@@ -618,6 +618,10 @@ class Keyboard(private val devTools: ChromeDevTools) {
         return keys
     }
 
+    fun createVirtualKeyForSingleKeyString(modifier: KeyboardModifier): VirtualKey {
+        return createVirtualKeyForSingleKeyString(modifier.name)
+    }
+
     fun createVirtualKeyForSingleKeyString(singleKey: String): VirtualKey {
         var virtualKey =
             VirtualKeyboard.KEYBOARD_LAYOUT[singleKey] ?: throw IllegalArgumentException("Unknown key: >$singleKey<")
@@ -744,24 +748,24 @@ class EmulationHandler(
             point.x = box.x + offsetX
         }
 
-        var modifiers = 0
+        var cdpModifiers = 0
         var normModifier: KeyboardModifier? = null
         var virtualKey: VirtualKey? = null
         if (modifier != null) {
-            normModifier = KeyboardModifier.entries.find { it.name.equals(modifier, ignoreCase = true) }
+            normModifier = KeyboardModifier.valueOfOrNull(modifier)
             if (normModifier != null) {
-                virtualKey = keyboard?.createVirtualKeyForSingleKeyString(normModifier.name)
+                virtualKey = keyboard?.createVirtualKeyForSingleKeyString(normModifier)
                 if (virtualKey != null) {
                     if (virtualKey.isModifier) {
                         // Use CDP-compliant modifier bitmask for mouse events
-                        modifiers = modifierMaskForKeyString(normModifier.name)
+                        cdpModifiers = modifierMaskForKeyString(normModifier.name)
                     }
                     keyboard?.down(virtualKey)
                 }
             }
         }
 
-        mouse?.click(point.x, point.y, count, modifiers = modifiers, delayMillis = delayMillis)
+        mouse?.click(point.x, point.y, count, modifiers = cdpModifiers, delayMillis = delayMillis)
 
         if (virtualKey != null) {
             keyboard?.up(virtualKey)

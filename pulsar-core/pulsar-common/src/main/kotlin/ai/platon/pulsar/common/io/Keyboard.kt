@@ -141,7 +141,20 @@ data class VirtualKey(
 typealias KeyboardLayout = Map<String, KeyDefinition>
 
 enum class KeyboardModifier {
-    Alt, Control, Meta, Shift
+    Alt, Control, Meta, Shift;
+
+    companion object {
+        fun valueOfOrNull(s: String?): KeyboardModifier? {
+            val ls = s?.lowercase() ?: return null
+            return when(ls) {
+                "alt" -> return Alt
+                "control", "ctrl" -> return Control
+                "meta" -> return Meta
+                "shift" -> return Shift
+                else -> null
+            }
+        }
+    }
 }
 
 val USKeypadLocation = 3
@@ -164,7 +177,7 @@ val USKeyboardLayout: KeyboardLayout = mapOf(
     "F10" to KeyDefinition("F10", 121),
     "F11" to KeyDefinition("F11", 122),
     "F12" to KeyDefinition("F12", 123),
-    
+
     // Numbers row
     "Backquote" to KeyDefinition("`", 192, shiftKey = "~"),
     "Digit1" to KeyDefinition("1", 49, shiftKey = "!"),
@@ -181,7 +194,7 @@ val USKeyboardLayout: KeyboardLayout = mapOf(
     "Equal" to KeyDefinition("=", 187, shiftKey = "+"),
     "Backslash" to KeyDefinition("\\", 220, shiftKey = "|"),
     "Backspace" to KeyDefinition("Backspace", 8),
-    
+
     // First row
     "Tab" to KeyDefinition("Tab", 9),
     "KeyQ" to KeyDefinition("q", 81, shiftKey = "Q"),
@@ -196,7 +209,7 @@ val USKeyboardLayout: KeyboardLayout = mapOf(
     "KeyP" to KeyDefinition("p", 80, shiftKey = "P"),
     "BracketLeft" to KeyDefinition("[", 219, shiftKey = "{"),
     "BracketRight" to KeyDefinition("]", 221, shiftKey = "}"),
-    
+
     // Second row
     "CapsLock" to KeyDefinition("CapsLock", 20),
     "KeyA" to KeyDefinition("a", 65, shiftKey = "A"),
@@ -211,7 +224,7 @@ val USKeyboardLayout: KeyboardLayout = mapOf(
     "Semicolon" to KeyDefinition(";", 186, shiftKey = ":"),
     "Quote" to KeyDefinition("'", 222, shiftKey = "\""),
     "Enter" to KeyDefinition("Enter", 13, text = "\r"),
-    
+
     // Third row
     "ShiftLeft" to KeyDefinition("Shift", 160, keyCodeWithoutLocation = 16, location = 1),
     "KeyZ" to KeyDefinition("z", 90, shiftKey = "Z"),
@@ -225,7 +238,7 @@ val USKeyboardLayout: KeyboardLayout = mapOf(
     "Period" to KeyDefinition(".", 190, shiftKey = ">"),
     "Slash" to KeyDefinition("/", 191, shiftKey = "?"),
     "ShiftRight" to KeyDefinition("Shift", 161, keyCodeWithoutLocation = 16, location = 2),
-    
+
     // Last row
     "ControlLeft" to KeyDefinition("Control", 162, keyCodeWithoutLocation = 17, location = 1),
     "MetaLeft" to KeyDefinition("Meta", 91, location = 1),
@@ -236,25 +249,25 @@ val USKeyboardLayout: KeyboardLayout = mapOf(
     "MetaRight" to KeyDefinition("Meta", 92, location = 2),
     "ContextMenu" to KeyDefinition("ContextMenu", 93),
     "ControlRight" to KeyDefinition("Control", 163, keyCodeWithoutLocation = 17, location = 2),
-    
+
     // Center block
     "PrintScreen" to KeyDefinition("PrintScreen", 44),
     "ScrollLock" to KeyDefinition("ScrollLock", 145),
     "Pause" to KeyDefinition("Pause", 19),
-    
+
     "PageUp" to KeyDefinition("PageUp", 33),
     "PageDown" to KeyDefinition("PageDown", 34),
     "Insert" to KeyDefinition("Insert", 45),
     "Delete" to KeyDefinition("Delete", 46),
     "Home" to KeyDefinition("Home", 36),
     "End" to KeyDefinition("End", 35),
-    
+
     // Arrow keys
     "ArrowLeft" to KeyDefinition("ArrowLeft", 37),
     "ArrowUp" to KeyDefinition("ArrowUp", 38),
     "ArrowRight" to KeyDefinition("ArrowRight", 39),
     "ArrowDown" to KeyDefinition("ArrowDown", 40),
-    
+
     // Numpad
     "NumLock" to KeyDefinition("NumLock", 144),
     "NumpadDivide" to KeyDefinition("/", 111, location = 3),
@@ -276,7 +289,7 @@ val USKeyboardLayout: KeyboardLayout = mapOf(
 )
 
 object VirtualKeyboard {
-    
+
     val CODE_ALIASES = mapOf(
         "ShiftLeft" to listOf("Shift"),
         "ControlLeft" to listOf("Control"),
@@ -284,11 +297,11 @@ object VirtualKeyboard {
         "MetaLeft" to listOf("Meta"),
         "Enter" to listOf("\n", "\r")
     )
-    
+
     val KEYBOARD_MODIFIERS = KeyboardModifier.entries.map { it.name }
-    
+
     val KEYPAD_LOCATION = USKeypadLocation
-    
+
     /**
      * Maps from key codes or key texts to key descriptions.
      *
