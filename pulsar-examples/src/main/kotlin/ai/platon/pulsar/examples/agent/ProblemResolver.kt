@@ -8,10 +8,16 @@ class ProblemResolver {
     suspend fun run() {
         val driver = session.createBoundDriver()
         driver.navigateTo("https://news.ycombinator.com/news")
-        val agent = session.resolve("open the 4-th articles in new tab")
-        // val agent = session.resolve("read top 3 articles and give me a summary")
+        val problems = """
+search for browser and read top 5 articles and give me a summary
+open the 4-th articles in new tab
+read top 3 articles and give me a summary
+        """.split("\n").map { it.trim() }
 
-        readln()
+        val problem = problems[0]
+        val agent = session.resolve(problem)
+
+        agent.processTrace.forEach { println(it) }
     }
 }
 

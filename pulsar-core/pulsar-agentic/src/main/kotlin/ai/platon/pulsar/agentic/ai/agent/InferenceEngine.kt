@@ -14,7 +14,6 @@ import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.TokenUsage
 import ai.platon.pulsar.skeleton.ai.AgentState
-import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -148,7 +147,7 @@ class InferenceEngine(
         /**
          * The 1-based next chunk to see, each chunk is a viewport height.
          * */
-        val nextChunkToSee = params.agentState.browserUseState?.nextChunkToSee() ?: 1
+        val nextChunkToSee = params.agentState.browserUseState?.nextViewportToSee() ?: 1
 
         // 2) Metadata call -------------------------------------------------------------------
         val metadataSystem = promptBuilder.buildMetadataSystemPrompt()

@@ -113,14 +113,30 @@ $schema
 
     """.trimIndent()
 
+        val INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT = """
+
+可交互元素列表(interactive elements)包含页面 DOM 全部可交互元素的主要信息，包括元素简化 HTML 表示，文本内容，前后文本，所在视口，坐标和大小等。
+
+列表格式：
+[locator]{viewport}(x,y,width,height)<slimNode>textContent</slimNode>Text-Before-This-Interactive-Element-And-After-Previous-Interactive-Element
+
+- `locator` 为节点唯一定位符，同无障碍树保持一致，由两个整数构成。
+- `viewport` 为节点所在视口序号，1-based。
+- `x,y,width,height` 为节点坐标和尺寸
+
+        """.trimIndent()
+
         val A11Y_TREE_NOTE_CONTENT = """
 
 无障碍树包含页面 DOM 关键节点的主要信息，包括节点文本内容，可见性，可交互性，坐标和尺寸等。
 
+- 除非特别指定，无障碍树仅包含网页当前视口内的节点信息，并包含少量视口外节点，以保证信息充分。
+- 如需其他视口内详细信息，使用 `scrollToViewport` 工具。
 - 节点唯一定位符 `locator` 由两个整数组成。
 - 所有节点可见，除非 `invisible` == true 显式指定。
 - 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
 - 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
+
         """.trimIndent()
 
         val AGENT_GUIDE_SYSTEM_PROMPT = """
@@ -158,6 +174,12 @@ ${AgentTool.TOOL_CALL_SPECIFICATION}
 ```
 
 $TOOL_CALL_RULE_CONTENT
+
+---
+
+## 可交互元素列表（Interactive Elements）说明：
+
+$INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT
 
 ---
 
@@ -341,7 +363,7 @@ $his
 $overallGoal
 </overallGoal>
 
-请基于当前页面截图、无障碍树与历史动作，规划下一步（严格单步原子动作）。
+请基于当前页面截图、可交互元素列表、无障碍树与历史动作，规划下一步（严格单步原子动作）。
 
 ---
 
@@ -495,40 +517,43 @@ The i-th chunk to process contains all DOM nodes located within the i-th viewpor
 你正在通过根据用户希望观察的页面内容来查找元素，帮助用户实现浏览器操作自动化。
 你将获得：
 - 一条关于待观察元素的指令
+- 一个包含网页所有可交互元素信息的列表
 - 一个展示页面语义结构的分层无障碍树（accessibility tree）。该树是DOM（文档对象模型）与无障碍树的混合体。
 
 如果存在符合指令的元素，则返回这些元素的数组；否则返回空数组。
 
+## 可交互元素列表（Interactive Elements）说明：
+
+$INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT
+
+---
+
 ## 无障碍树（Accessibility Tree）说明：
 
-无障碍树包含页面 DOM 关键节点的主要信息，包括节点文本内容，可见性，可交互性，坐标和尺寸等。
-
-- 节点唯一定位符 `locator` 由两个整数组成。
-- 所有节点可见，除非 `invisible` == true 显式指定。
-- 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
-- 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
+$A11Y_TREE_NOTE_CONTENT
 
 ---
 
 """
 
         fun observeSystemPromptEN() = """
-You are helping the user automate the browser by finding elements based on what the user wants to observe in the page.
+你正在通过根据用户希望观察的页面内容来查找元素，帮助用户实现浏览器操作自动化。
+你将获得：
+- 一条关于待观察元素的指令
+- 一个包含网页所有可交互元素信息的列表
+- 一个展示页面语义结构的分层无障碍树（accessibility tree）。该树是DOM（文档对象模型）与无障碍树的混合体。
 
-You will be given:
-- an instruction of elements to observe
-- a hierarchical accessibility tree showing the semantic structure of the page. The tree is a hybrid of the DOM and the accessibility tree.
+如果存在符合指令的元素，则返回这些元素的数组；否则返回空数组。
 
-Return an array of elements that match the instruction if they exist, otherwise return an empty array.
+## 可交互元素列表（Interactive Elements）说明：
+
+$INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT
+
+---
 
 ## 无障碍树（Accessibility Tree）说明：
 
-无障碍树包含页面 DOM 关键节点的主要信息，包括节点文本内容，可见性，可交互性，坐标和尺寸等。
-
-- 节点唯一定位符 `locator` 由两个整数组成。
-- 所有节点可见，除非 `invisible` == true 显式指定。
-- 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
-- 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
+$A11Y_TREE_NOTE_CONTENT
 
 ---
 
@@ -579,19 +604,41 @@ $newTabsJson
         val scrollState = browserState.scrollState
         val viewportHeight = scrollState.viewport.height
         val domState = params.browserUseState.domState
-        // The 1-based next chunk to see, each chunk is a viewport height.
-//        val processingChunk = params.agentState.browserUseState?.nextChunkToSee() ?: 1
-//        val chunksTotal = params.browserUseState.browserState.scrollState.chunksTotal
-//        val chunkToProcessNexTime = if (processingChunk >= chunksTotal) -1 else processingChunk.inc()
-//        val viewportIndex = processingChunk
 
-        // val nanoTree = domState.microTree.toNanoTreeInViewport(viewportHeight, viewportIndex, 1.5)
-        val nanoTree = domState.microTree.toNanoTree()
+        val interactiveElements = domState.microTree.toInteractiveDOMTreeNodeList()
+
+        // The 1-based next chunk to see, each chunk is a viewport height.
+        val processingViewport = params.agentState.browserUseState?.nextViewportToSee() ?: 1
+        val viewportsTotal = params.browserUseState.browserState.scrollState.viewportsTotal
+        val viewportToProcessNexTime = if (processingViewport >= viewportsTotal) -1 else processingViewport.inc()
+        val viewportIndex = processingViewport
+
+        val nanoTree = domState.microTree.toNanoTreeInViewport(viewportHeight, viewportIndex, 1.5)
+        // val nanoTree = domState.microTree.toNanoTree()
 
         val schemaContract = buildObserveResultSchemaContract(params)
 
         fun contentCN() = """
-## 无障碍树(Accessibility Tree):
+## 视口信息(Viewport)
+
+本次焦点视口序号: $processingViewport
+拟下次查看视口序号：$viewportToProcessNexTime
+总视口数: $viewportsTotal
+
+- 默认每次查看一个视口高度(viewport height)内的所有 DOM 节点
+- 默认提供的无障碍树仅包含第`i`个视口内的 DOM 节点，并包含少量视口外节点，以保证信息完整
+- 调用 `scrollToViewport(n)` 获取第`n`个视口内的 DOM 节点（1-based），支持小数，如第 1 视口内，第 2.5 视口内
+- 第 `-1` 视口意味不需查看任何视口
+
+## 可交互元素列表(Interactive Elements)
+
+格式概要：
+
+[locator]{viewport}(x,y,width,height)<slimNode>textContent</slimNode>Text-Before-This-Interactive-Element-And-After-Previous-Interactive-Element
+
+${interactiveElements.lazyString}
+
+## 无障碍树(Accessibility Tree)
 
 ```json
 ${nanoTree.lazyJson}
@@ -609,24 +656,8 @@ $schemaContract
 
 """
 
-        fun contentEN() = """
-
-## Accessibility Tree:
-
-```json
-${nanoTree.lazyJson}
-```
-
----
-
-## Current Browser State
-${browserState.lazyJson}
-
-$schemaContract
-
----
-
-"""
+        // TODO: we need a translation
+        fun contentEN() = contentCN()
 
         val content = when {
             isZH -> contentCN()

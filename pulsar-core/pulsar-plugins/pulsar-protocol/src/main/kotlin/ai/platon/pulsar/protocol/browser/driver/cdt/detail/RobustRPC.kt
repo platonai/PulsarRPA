@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
@@ -56,17 +57,12 @@ class RobustRPC(
         }
 
         var result = kotlin.runCatching { invokeDeferred0(action, block) }
-            .onFailure {
-                // no handler here
-                logger.warn("Exception while executing action: [$action]", it)
-            }
-        var i = maxRetry
-        while (result.isFailure && i-- > 0 && driver.checkState()) {
+            .onFailure { logger.info("Failed to execute action: [$action], retrying", it.brief()) }
+
+        var i = 1
+        while (result.isFailure && i++ < maxRetry && driver.checkState()) {
             result = kotlin.runCatching { invokeDeferred0(action, block) }
-                .onFailure {
-                    // no handler here
-                    logger.warn("Exception while executing action - $i: [$action]", it)
-                }
+                .onFailure { logger.warn("Failed to execute action: [$action], retried $i/$maxRetry times", it) }
         }
 
         return result.getOrElse { throw it }

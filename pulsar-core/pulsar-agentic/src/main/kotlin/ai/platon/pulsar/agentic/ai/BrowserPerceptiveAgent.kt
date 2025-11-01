@@ -312,7 +312,7 @@ class BrowserPerceptiveAgent constructor(
                 agentState = agentState,
                 browserUseState = browserUseState,
                 schema = schemaJson,
-                chunksTotal = scrollState.chunksTotal,
+                chunksTotal = scrollState.viewportsTotal,
                 requestId = requestId,
                 logInferenceToFile = config.enableStructuredLogging,
             )
@@ -419,7 +419,6 @@ class BrowserPerceptiveAgent constructor(
 
     private suspend fun doToolCallExecute(toolCall: ToolCall, action: ActionDescription): InstructionResult {
         val driver = activeDriver
-        val result = toolCallExecutor.execute(toolCall, driver)
 
         val callResult = when (toolCall.domain) {
             "driver" -> toolCallExecutor.execute(toolCall, driver)
@@ -429,10 +428,10 @@ class BrowserPerceptiveAgent constructor(
 
         // Handle browser.switchTab - bind the new driver to the session
         if (toolCall.method == "switchTab") {
-            handleSwitchTab(result)
+            handleSwitchTab(callResult)
         }
 
-        return InstructionResult(action.expressions, listOf(result), action = action)
+        return InstructionResult(action.expressions, listOf(callResult), action = action)
     }
 
     /**
@@ -817,7 +816,15 @@ class BrowserPerceptiveAgent constructor(
                 messages.addUser(promptBuilder.buildAgentStateHistoryMessage(stateHistory))
 
                 if (screenshotB64 != null) {
-                    messages.addUser("[Current page screenshot provided as base64 image]")
+                    val visionInfo = """
+## 视觉信息
+
+[Current page screenshot provided as base64 image]
+
+---
+
+                    """.trimIndent()
+                    messages.addUser(visionInfo)
                 }
 
                 val stepAction = try {

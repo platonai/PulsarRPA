@@ -1,19 +1,36 @@
 package ai.platon.pulsar.browser.driver.chrome.dom.model
 
+import ai.platon.pulsar.common.Strings
+import org.apache.commons.lang3.StringUtils
 import java.util.ArrayList
-import kotlin.collections.component1
-import kotlin.collections.component2
 
 class MicroDOMTreeNodeHelper(
-    private val node: MicroDOMTreeNode,
-    private val seenChunks: MutableList<Pair<Double, Double>>
+    private val root: MicroDOMTreeNode,
+    private val seenChunks: MutableList<Pair<Double, Double>>,
+    private val maxNonInteractiveTextLength: Int = 200,
 ) {
-    fun slimHTML(): String? {
-        val o = node.originalNode ?: return null
-        val attrs = o.attributes?.map { (k, v) -> "$k=$v" }
-            ?.joinToString(" ", " ")
-            ?: ""
-        return """<$o.nodeName$attrs>$o.nodeValue</$o.nodeName>"""
+    companion object {
+        fun slimHTML(n: MicroDOMTreeNode): String? {
+            val o = n.originalNode ?: return null
+
+            fun normalizeAttrValue(attrValue: Any?): String? {
+                if (attrValue == null) return null
+                val compacted = Strings.compactWhitespaces(attrValue.toString().trim())
+                return Strings.singleQuoteIfContainsWhitespace(compacted)
+            }
+
+            val attrs = o.attributes
+                ?.mapNotNull { (it.key to normalizeAttrValue(it.value)) }
+                ?.joinToString(" ", " ") { (k, v) -> "$k=$v" }
+                ?: ""
+            val nodeName = o.nodeName
+            val nodeValue = Strings.compactWhitespaces(o.nodeValue)
+            return if (nodeValue == null) {
+                "<${nodeName}$attrs />"
+            } else {
+                """<${nodeName}$attrs>$nodeValue</${nodeName}>"""
+            }
+        }
     }
 
     fun toInteractiveDOMTreeNodeList(): InteractiveDOMTreeNodeList {
@@ -42,7 +59,7 @@ class MicroDOMTreeNodeHelper(
                     attrs[key]?.let { appendToken(it) }
                 }
             }
-            val s = sb.toString().replace(Regex("\\s+"), " ").trim()
+            val s = Strings.compactWhitespaces(sb.toString())
             return s.ifEmpty { null }
         }
 
@@ -54,8 +71,9 @@ class MicroDOMTreeNodeHelper(
                     interactiveIndex = idx,
                     // remove prefix to reduce serialized size, align with Nano tree
                     locator = o.locator.substringAfterLast(":"),
-                    slimHTML = slimHTML(),
-                    textUntilNextNode = null,
+                    slimHTML = slimHTML(n),
+                    textBefore = null,
+                    viewportIndex = o.viewportIndex,
                     scrollable = o.isScrollable?.takeIf { it },
                     // All nodes are visible unless `invisible` == true explicitly
                     invisible = if (o.isVisible == true) null else true,
@@ -67,16 +85,16 @@ class MicroDOMTreeNodeHelper(
                     nextInteractiveIndex = null,
                 )
                 interactiveNodeIdByIndex[idx] = o.nodeId
-            } else if (o != null && idx == null) {
+            } else if (o != null) {
                 nonInteractiveText(o)?.let { nonInteractiveTexts += o.nodeId to it }
             }
             n.children?.forEach { visit(it) }
         }
 
-        visit(node)
+        visit(root)
 
         // Build a map from interactiveIndex -> concatenated text of non-interactive nodes
-        val textBetweenByInteractiveIndex = mutableMapOf<Int, String?>()
+        val textBeforeByInteractiveIndex = mutableMapOf<Int, String?>()
         val sortedInteractiveIdx = interactiveNodeIdByIndex.keys.sorted()
         if (sortedInteractiveIdx.isNotEmpty()) {
             // Sort non-interactive entries by nodeId once for efficient slicing
@@ -87,7 +105,7 @@ class MicroDOMTreeNodeHelper(
                 val nextIdx = sortedInteractiveIdx.getOrNull(i + 1)
                 if (nextIdx == null) {
                     // No next interactive node -> leave null
-                    textBetweenByInteractiveIndex[currentIdx] = null
+                    textBeforeByInteractiveIndex[currentIdx] = null
                     continue
                 }
                 val nextNodeId = interactiveNodeIdByIndex[nextIdx] ?: continue
@@ -95,12 +113,12 @@ class MicroDOMTreeNodeHelper(
                 val high = maxOf(currentNodeId, nextNodeId)
                 val texts = nonInteractiveSorted
                     .asSequence()
-                    .filter { (nodeId, _) -> nodeId > low && nodeId < high }
+                    .filter { (nodeId, _) -> nodeId in (low + 1)..<high }
                     .map { it.second }
                     .filter { it.isNotBlank() }
                     .toList()
-                val joined = texts.joinToString(" ").replace(Regex("\\s+"), " ").trim()
-                textBetweenByInteractiveIndex[currentIdx] = joined.ifEmpty { null }
+                val joined = Strings.compactWhitespaces(texts.joinToString(" "))
+                textBeforeByInteractiveIndex[currentIdx] = joined.ifEmpty { null }
             }
         }
 
@@ -109,11 +127,13 @@ class MicroDOMTreeNodeHelper(
         val nodes = sorted.mapIndexed { i, it ->
             val prev = if (i > 0) sorted[i - 1].interactiveIndex else null
             val next = if (i < sorted.lastIndex) sorted[i + 1].interactiveIndex else null
-            val betweenText = textBetweenByInteractiveIndex[it.interactiveIndex]
+            var textBefore = textBeforeByInteractiveIndex.getOrDefault(it.interactiveIndex - 1, null)
+            textBefore = textBefore?.takeIf { it.isNotBlank() }
+                ?.let { StringUtils.abbreviateMiddle(textBefore, "...", maxNonInteractiveTextLength) }
             it.copy(
                 prevInteractiveIndex = prev,
                 nextInteractiveIndex = next,
-                textUntilNextNode = betweenText
+                textBefore = textBefore
             )
         }
 
@@ -181,7 +201,8 @@ class MicroDOMTreeNodeHelper(
             scrollRects = o.scrollRects?.round(),
             bounds = o.bounds?.round(),
             absoluteBounds = o.absoluteBounds?.round(),
-            viewportIndex = o.viewportIndex
+            viewportIndex = o.viewportIndex,
+            microTreeNode = n,
         )
     }
 

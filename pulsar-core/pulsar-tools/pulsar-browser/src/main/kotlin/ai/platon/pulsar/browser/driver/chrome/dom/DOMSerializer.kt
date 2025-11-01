@@ -23,10 +23,6 @@ object DOMSerializer {
         return MAPPER.writeValueAsString(root)
     }
 
-    fun toJson(nodes: List<MicroDOMTreeNode>): String {
-        return MAPPER.writeValueAsString(nodes)
-    }
-
     fun toJson(browserState: BrowserState): String {
         return MAPPER.writeValueAsString(browserState)
     }

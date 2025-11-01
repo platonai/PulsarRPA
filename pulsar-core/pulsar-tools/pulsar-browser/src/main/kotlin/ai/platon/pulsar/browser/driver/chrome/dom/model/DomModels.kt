@@ -9,8 +9,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import java.awt.Dimension
 import java.math.RoundingMode
 import java.util.*
-import kotlin.collections.component1
-import kotlin.collections.component2
 import kotlin.math.ceil
 import kotlin.math.roundToInt
 
@@ -342,24 +340,66 @@ data class InteractiveDOMTreeNode(
     /**
      * Locator format: `frameIndex,backendNodeId`
      * */
-    val interactiveIndex: Int = 0,
     val locator: String? = null,
     val slimHTML: String? = null,
-    val textUntilNextNode: String? = null,
+    val textBefore: String? = null,
     val scrollable: Boolean? = null,   // null means false
     val invisible: Boolean? = null,    // null means false
-    val bounds: CompactRect? = null,
+    val viewportIndex: Int? = null,
     val clientRects: CompactRect? = null,
+    @JsonIgnore
+    val bounds: CompactRect? = null,
+    @JsonIgnore
     val scrollRects: CompactRect? = null,
+    @JsonIgnore
     val absoluteBounds: CompactRect? = null,
+    @JsonIgnore
+    val interactiveIndex: Int = 0,
+    @JsonIgnore
     val prevInteractiveIndex: Int? = null,
+    @JsonIgnore
     val nextInteractiveIndex: Int? = null,
-)
+) {
+    /**
+     * String format:
+     * ```
+     * [locator]{viewport}(x,y,width,height)<slimNode>textContent</slimNode>Text-Before-This-Interactive-Element-And-After-Previous-Interactive-Element
+     * ```
+     * */
+    override fun toString(): String {
+        val b = bounds?.roundTo(0) ?: CompactRect()
+        val bs = listOf(b.x, b.y, b.width, b.height)
+            .map { it?.toInt() ?: 0 }
+            .joinToString(",") { it.toString() }
+
+        return buildString {
+            append("[")
+            append(locator)
+            append("]")
+            append("{")
+            append(viewportIndex ?: 1)
+            append("}")
+            append("(")
+            append(bs)
+            append(")")
+            append(slimHTML)
+            append(textBefore)
+        }
+    }
+}
 
 class InteractiveDOMTreeNodeList(
     val nodes: List<InteractiveDOMTreeNode> = emptyList(),
 ) {
+    @get:JsonIgnore
     val lazyJson by lazy { DOMSerializer.toJson(this) }
+
+    @get:JsonIgnore
+    val lazyString by lazy { toString() }
+
+    override fun toString(): String {
+        return nodes.joinToString("\n")
+    }
 }
 
 /**
@@ -400,7 +440,7 @@ data class MicroDOMTreeNode(
         return IntRange(1, 20).firstOrNull { i -> hasSeen(i * 1.0, i * 1.0 * viewportHeight) } ?: 1
     }
 
-    fun slimHTML(): String? = MicroDOMTreeNodeHelper(this, seenChunks).slimHTML()
+    fun slimHTML(): String? = MicroDOMTreeNodeHelper.slimHTML(this)
 
     fun toInteractiveDOMTreeNodeList(): InteractiveDOMTreeNodeList =
         MicroDOMTreeNodeHelper(this, seenChunks).toInteractiveDOMTreeNodeList()
@@ -457,7 +497,9 @@ data class NanoDOMTreeNode(
     @JsonIgnore
     val bounds: CompactRect? = null,
     @JsonIgnore
-    val absoluteBounds: CompactRect? = null
+    val absoluteBounds: CompactRect? = null,
+    @JsonIgnore
+    val microTreeNode: MicroDOMTree? = null,
 ) {
     @get:JsonIgnore
     val lazyJson: String by lazy { DOMSerializer.toJson(this) }
@@ -474,9 +516,6 @@ data class DOMState(
 ) {
     @get:JsonIgnore
     val nanoTreeLazyJson: String get() = microTree.toNanoTreeInRange().lazyJson
-
-    @get:JsonIgnore
-    val interactiveNodesLazyJson: String by lazy { DOMSerializer.toJson(interactiveNodes) }
 
     fun getAbsoluteFBNLocator(locator: String?): FBNLocator? {
         if (locator == null) return null
@@ -538,7 +577,7 @@ data class ScrollState(
     val totalHeight: Double,
     val scrollYRatio: Double,
 ) {
-    val chunksTotal get() = ceil(totalHeight / viewport.height).roundToInt()
+    val viewportsTotal get() = ceil(totalHeight / viewport.height).roundToInt()
 }
 
 /**
@@ -572,5 +611,5 @@ data class BrowserUseState(
     /**
      * The 1-based next chunk to see, each chunk is a viewport height.
      * */
-    fun nextChunkToSee() = domState.microTree.nextChunkToSee(browserState.scrollState.totalHeight)
+    fun nextViewportToSee() = domState.microTree.nextChunkToSee(browserState.scrollState.totalHeight)
 }
