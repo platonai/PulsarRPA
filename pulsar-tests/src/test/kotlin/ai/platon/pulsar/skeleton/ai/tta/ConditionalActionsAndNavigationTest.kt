@@ -18,7 +18,7 @@ import kotlin.test.Ignore
 @Order(1000)
 @Tag("ExternalServiceTest")
 @Tag("TimeConsumingTest")
-@Disabled("Takes very long time, run it manually. The test cases are suitable for multiple actions, but the actually one action is forced")
+@Ignore("Takes very long time, run it manually. The test cases are suitable for multiple actions, but actually one action is forced")
 @SpringBootTest(classes = [EnableMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class ConditionalActionsAndNavigationTest : TextToActionTestBase() {
 

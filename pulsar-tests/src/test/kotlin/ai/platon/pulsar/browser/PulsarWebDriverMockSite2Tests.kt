@@ -26,7 +26,7 @@ class PulsarWebDriverMockSite2Tests : WebDriverTestBase() {
     }
 
     @Test
-    @Disabled("Temporarily disabled.")
+    @Ignore("Disabled temporarily")
     fun `When navigate to a HTML page then the navigate state are correct`() = runEnhancedWebDriverTest(browser) { driver ->
         openEnhanced(interactiveUrl, driver, 1)
 

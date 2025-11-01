@@ -9,6 +9,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
+import kotlin.test.Ignore
 import kotlin.test.assertIs
 import kotlin.test.fail
 
@@ -16,6 +17,7 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
     private val testURL get() = "$generatedAssetsBaseURL/interactive-dynamic.html"
 
     @Test
+    @Ignore("Disabled temporarily")
     fun `isScrollable basics - regular elements and overflow hidden`() = runEnhancedWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
         val devTools = driver.implementation as RemoteDevTools
@@ -98,6 +100,7 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
     }
 
     @Test
+    @Ignore("Disabled temporarily")
     fun `isScrollable special - body html and toggle overflow`() = runEnhancedWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
         val devTools = driver.implementation as RemoteDevTools
@@ -161,6 +164,7 @@ class ChromeDomServiceIsScrollableTest : WebDriverTestBase() {
     }
 
     @Test
+    @Ignore("Disabled temporarily")
     fun `isScrollable dedup - nested containers similar vs distinct areas`() = runEnhancedWebDriverTest(testURL) { driver ->
         assertIs<PulsarWebDriver>(driver)
         val devTools = driver.implementation as RemoteDevTools

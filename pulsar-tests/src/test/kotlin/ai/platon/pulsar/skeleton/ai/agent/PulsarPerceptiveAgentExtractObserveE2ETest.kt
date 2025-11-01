@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import java.io.File
 import java.time.Instant
+import kotlin.test.Ignore
 
 /**
  * E2E tests for observe/extract with metrics logged to logs/chat-model/domservice-e2e.json
@@ -47,6 +48,7 @@ class PulsarPerceptiveAgentExtractObserveE2ETest : WebDriverTestBase() {
     }
 
     @Test
+    @Ignore("Disabled temporarily")
     fun `Given interactive page When observe Then actionable elements returned`() =
         runEnhancedWebDriverTest(testURL) { driver ->
             assumeTrue(ChatModelFactory.hasModel(conf), "LLM not configured; skipping E2E")

@@ -9,13 +9,19 @@ import ai.platon.pulsar.util.server.EnableMockServerApplication
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
+import kotlin.test.Ignore
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
+@Order(1100)
 @Tag("ExternalServiceTest")
+@Tag("TimeConsumingTest")
+@Ignore("Takes very long time, run it manually.")
 @SpringBootTest(classes = [EnableMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class SessionActMethodTest : TextToActionTestBase() {
 

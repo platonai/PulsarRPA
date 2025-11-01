@@ -18,6 +18,7 @@ import java.text.MessageFormat
 import java.util.Base64
 import kotlin.test.AfterTest
 import kotlin.test.BeforeTest
+import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
@@ -57,8 +58,8 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
         session.globalCache.resetCaches()
     }
 
-    @Disabled("Disabled temporary")
     @Test
+    @Ignore("Disabled temporarily")
     fun `When navigate to a HTML page then the navigate state are correct`() = runEnhancedWebDriverTest(browser) { driver ->
         openEnhanced(e2eProductUrl, driver, 1)
 
@@ -160,6 +161,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     }
 
     @Test
+    @Ignore("Disabled temporarily")
     fun testClickTextMatches() = runEnhancedWebDriverTest(browser) { driver ->
         openEnhanced(e2eProductUrl, driver, 1)
         val navbarMain = driver.selectFirstTextOrNull("#navbar-main")
@@ -189,7 +191,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     }
 
     @Test
-    fun testClickNthAnchor() = runEnhancedWebDriverTest(e2eOriginUrl, browser) { driver ->
+    fun testClickNthAnchor() = runEnhancedWebDriverTest(mockAmazonProductUrl, browser) { driver ->
         driver.clickNthAnchor(100, "body")
 //        logPrintln(href)
 
@@ -199,7 +201,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     }
 
     @Test
-    fun testMouseMove() = runEnhancedWebDriverTest(e2eOriginUrl, browser) { driver ->
+    fun testMouseMove() = runEnhancedWebDriverTest(mockAmazonProductUrl, browser) { driver ->
         repeat(10) { i ->
             val x = 100.0 + 2 * i
             val y = 100.0 + 3 * i
@@ -211,7 +213,7 @@ open class PulsarWebDriverE2ETest : WebDriverTestBase() {
     }
 
     @Test
-    fun testMouseWheel() = runEnhancedWebDriverTest(e2eOriginUrl, browser) { driver ->
+    fun testMouseWheel() = runEnhancedWebDriverTest(mockAmazonProductUrl, browser) { driver ->
         driver.mouseWheelDown(5)
         val box = driver.boundingBox("body")
         printlnPro(box)

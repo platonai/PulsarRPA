@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Order
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
+import kotlin.test.Ignore
 
 /**
  * Comprehensive tests for TextToAction.generateWebDriverAction() method
@@ -17,7 +18,7 @@ import org.springframework.boot.test.context.SpringBootTest
 @Order(1000)
 @Tag("ExternalServiceTest")
 @Tag("TimeConsumingTest")
-@Disabled("Takes very long time, run it manually. The test cases are suitable for multiple actions, but the actually one action is forced")
+@Ignore("Takes very long time, run it manually. The test cases are suitable for multiple actions, but actually one action is forced")
 @SpringBootTest(classes = [EnableMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
 class TextToActionComprehensiveTests : TextToActionTestBase() {
 
