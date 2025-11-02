@@ -142,7 +142,7 @@ class BrowserPerceptiveAgent constructor(
 
         // Add start history for better traceability (meta record only)
         val goal = Strings.compactLog(action.action, 160)
-        processTrace("resolve START session=${sessionId.take(8)} goal='$goal' " +
+        processTrace("🚀 resolve START session=${sessionId.take(8)} goal='$goal' " +
                 "maxSteps=${config.maxSteps} maxRetries=${config.maxRetries}")
 
         // Overall timeout to prevent indefinite hangs for a full resolve session
@@ -152,11 +152,11 @@ class BrowserPerceptiveAgent constructor(
             }
             val dur = Duration.between(startTime, Instant.now()).toMillis()
             // Not a single-step action, keep it out of AgentState history
-            processTrace("resolve DONE session=${sessionId.take(8)} success=${result.success} dur=${dur}ms")
+            processTrace("✅ resolve DONE session=${sessionId.take(8)} success=${result.success} dur=${dur}ms")
             result
         } catch (_: TimeoutCancellationException) {
-            val msg = "Resolve timed out after ${config.resolveTimeoutMs}ms: ${action.action}"
-            processTrace("resolve TIMEOUT: ${Strings.compactLog(action.action, 160)}")
+            val msg = "⏳ Resolve timed out after ${config.resolveTimeoutMs}ms: ${action.action}"
+            processTrace("⏳ resolve TIMEOUT: ${Strings.compactLog(action.action, 160)}")
             ActResult(success = false, message = msg, action = action.action)
         }
     }
@@ -178,8 +178,8 @@ class BrowserPerceptiveAgent constructor(
                 doObserveAct(action, messages)
             }
         } catch (_: TimeoutCancellationException) {
-            val msg = "Action timed out after ${config.actTimeoutMs}ms: ${action.action}"
-            processTrace("act TIMEOUT: ${action.action}")
+            val msg = "⏳ Action timed out after ${config.actTimeoutMs}ms: ${action.action}"
+            processTrace("⏳ act TIMEOUT: ${action.action}")
             ActResult(success = false, message = msg, action = action.action)
         }
     }
@@ -200,18 +200,18 @@ class BrowserPerceptiveAgent constructor(
 
             val result = doToolCallExecute(toolCall, action)
 
-            logger.info("Action executed | {} | {}/{} | {}",
+            logger.info("✅ Action executed | {} | {}/{} | {}",
                 method, observe.locator, oe.cssSelector, oe.cssFriendlyExpressions)
 
             val msg = MessageFormatter.arrayFormat(
-                "Action executed | {} | {}/{} | {}",
+                "✅ Action executed | {} | {}/{} | {}",
                 arrayOf(method, observe.locator, oe.cssSelector, oe.cssFriendlyExpressions)
             )
             // Record exactly once for this executed action
             updateAgentState(agentState, method = method, success = true, observe = oe, message = msg.message)
             ActResult(success = true, message = msg.message, action = toolCall.method)
         } catch (e: Exception) {
-            logger.error("observe.act execution failed sid={} msg={}", uuid.toString().take(8), e.message, e)
+            logger.error("❌ observe.act execution failed sid={} msg={}", uuid.toString().take(8), e.message, e)
             val msg = e.message ?: "Execution failed"
             // Record failed action attempt once
             updateAgentState(agentState, method = method, success = false, observe = oe, message = msg)
@@ -231,7 +231,7 @@ class BrowserPerceptiveAgent constructor(
         val locator = observe.locator?.let { Locator.parse(it) }
 
         if (method == null || locator == null) {
-            val msg = "No valuable observations were made"
+            val msg = "⚠️ No valuable observations were made"
             // Not an executed action
             processTrace(msg)
             return ToolCallPatch(success = false, message = msg, action = "")
@@ -245,7 +245,7 @@ class BrowserPerceptiveAgent constructor(
         if (lowerMethod in selectorActions) {
             toolCall.arguments["selector"] = selector
             if (selector == null) {
-                val msg = "No selector observation were made $locator | $observe"
+                val msg = "⚠️ No selector observation were made $locator | $observe"
                 processTrace(msg)
                 return ToolCallPatch(success = false, message = msg, action = method)
             }
@@ -264,13 +264,13 @@ class BrowserPerceptiveAgent constructor(
         if (lowerMethod == "navigateTo") {
             val url = toolCall.arguments["url"]
             if (url == null) {
-                val msg = "No url observation were made | " + Pson.toJson(observe)
+                val msg = "⚠️ No url observation were made | " + Pson.toJson(observe)
                 processTrace(msg)
                 return ToolCallPatch(false, msg, action = method)
             }
 
             if (!isSafeUrl(url)) {
-                val msg = "Blocked unsafe URL: $url"
+                val msg = "⛔ Blocked unsafe URL: $url"
                 processTrace(msg)
                 return ToolCallPatch(false, msg, action = method)
             }
@@ -279,10 +279,10 @@ class BrowserPerceptiveAgent constructor(
         if (config.enablePreActionValidation) {
             val ok = actionValidator.validateToolCall(observeElement.toolCall)
             if (!ok) {
-                val msg = "Tool call validation failed for $lowerMethod with selector ${selector?.take(120)}"
+                val msg = "🚫 Tool call validation failed for $lowerMethod with selector ${selector?.take(120)}"
                 val sid = uuid.toString().take(8)
                 val curUrl = driver.currentUrl()
-                logger.info("observe_act.validate.fail sid={} url={} msg={} ", sid, curUrl, msg)
+                logger.info("🚫 observe_act.validate.fail sid={} url={} msg={} ", sid, curUrl, msg)
                 processTrace(msg)
                 return ToolCallPatch(false, msg, action = method)
             }
@@ -321,7 +321,7 @@ class BrowserPerceptiveAgent constructor(
             addHistoryExtract(instruction, requestId, true)
             ExtractResult(success = true, message = "OK", data = resultNode)
         } catch (e: Exception) {
-            logger.error("extract.error requestId={} msg={}", requestId.take(8), e.message, e)
+            logger.error("❌ extract.error requestId={} msg={}", requestId.take(8), e.message, e)
             addHistoryExtract(instruction, requestId, false)
             ExtractResult(
                 success = false, message = e.message ?: "extract failed", data = JsonNodeFactory.instance.objectNode()
@@ -442,7 +442,7 @@ class BrowserPerceptiveAgent constructor(
         val callResult = when (toolCall.domain) {
             "driver" -> toolCallExecutor.execute(toolCall, driver)
             "browser" -> toolCallExecutor.execute(toolCall, driver.browser)
-            else -> throw IllegalArgumentException("Unsupported domain: ${toolCall.domain} | $toolCall")
+            else -> throw IllegalArgumentException("❓ Unsupported domain: ${toolCall.domain} | $toolCall")
         }
 
         val method = toolCall.method
@@ -461,12 +461,12 @@ class BrowserPerceptiveAgent constructor(
         val frontDriver = session.boundBrowser?.frontDriver
         val boundDriver = session.boundDriver
         if (frontDriver == null) {
-            logger.warn("No driver is in front after switchTab")
+            logger.warn("⚠️ No driver is in front after switchTab")
             return
         }
 
         if (frontDriver == boundDriver) {
-            logger.warn("The bound driver does not change after switchTab")
+            logger.warn("⚠️ The bound driver does not change after switchTab")
             return
         }
 
@@ -507,7 +507,7 @@ class BrowserPerceptiveAgent constructor(
         val results = doObserve(params, messages)
 
         if (results.isEmpty()) {
-            val msg = "doObserveAct: No actionable element found"
+            val msg = "⚠️ doObserveAct: No actionable element found"
             processTrace(msg)
             return ActResult(false, msg, action = action.action)
         }
@@ -529,7 +529,7 @@ class BrowserPerceptiveAgent constructor(
                 act(chosen)
             } catch (e: Exception) {
                 lastError = "Execution failed for candidate ${index + 1}: ${e.message}"
-                logger.warn("Failed to execute candidate {}: {}", index + 1, e.message)
+                logger.warn("⚠️ Failed to execute candidate {}: {}", index + 1, e.message)
                 continue
             }
 
@@ -545,20 +545,20 @@ class BrowserPerceptiveAgent constructor(
                 // High Priority #4: Fail explicitly on navigation timeout
                 val remainingTime = driver.waitForNavigation(oldUrl, timeoutMs)
                 if (remainingTime <= 0) {
-                    val navError = "Navigation timeout after ${timeoutMs}ms for action: ${action.action}"
+                    val navError = "⏳ Navigation timeout after ${timeoutMs}ms for action: ${action.action}"
                     logger.warn(navError)
-                    processTrace("act NAVIGATION_TIMEOUT: ${action.action}")
+                    processTrace("⏳ act NAVIGATION_TIMEOUT: ${action.action}")
                     return ActResult(success = false, message = navError, action = action.action)
                 }
             }
 
             // Success! Return with original action text (act(chosen) already recorded one history entry)
-            processTrace("act SUCCESS (candidate ${index + 1}/${resultsToTry.size}): ${action.action}")
+            processTrace("✅ act SUCCESS (candidate ${index + 1}/${resultsToTry.size}): ${action.action}")
             return execResult.copy(action = action.action)
         }
 
         // All candidates failed
-        val msg = "All ${resultsToTry.size} candidates failed. Last error: $lastError"
+        val msg = "❌ All ${resultsToTry.size} candidates failed. Last error: $lastError"
         processTrace(msg)
         return ActResult(false, msg, action = action.action)
     }
@@ -602,7 +602,7 @@ class BrowserPerceptiveAgent constructor(
             addHistoryObserve(instruction.content, requestId, results.size, results.isNotEmpty())
             return actionDescription
         } catch (e: Exception) {
-            logger.error("observeAct.observe.error requestId={} msg={}", requestId.take(8), e.message, e)
+            logger.error("❌ observeAct.observe.error requestId={} msg={}", requestId.take(8), e.message, e)
             addHistoryObserve(instruction.content, requestId, 0, false)
             ActionDescription(errors = e.stringify())
         }
@@ -638,7 +638,7 @@ class BrowserPerceptiveAgent constructor(
 
     private fun logExtractStart(instruction: String, requestId: String) {
         logger.info(
-            "extract.start requestId={} instruction='{}'",
+            "🔍 extract.start requestId={} instruction='{}'",
             requestId.take(8),
             PromptBuilder.compactPrompt(instruction, 200)
         )
@@ -646,7 +646,7 @@ class BrowserPerceptiveAgent constructor(
 
     private fun logObserveStart(instruction: String, requestId: String) {
         logger.info(
-            "observe.start requestId={} instruction='{}'",
+            "👀 observe.start requestId={} instruction='{}'",
             requestId.take(8),
             PromptBuilder.compactPrompt(instruction, 200)
         )
@@ -681,12 +681,12 @@ class BrowserPerceptiveAgent constructor(
     private fun addHistoryExtract(instruction: String, requestId: String, success: Boolean) {
         val compactPrompt = PromptBuilder.compactPrompt(instruction, 200)
         // Extraction is not a tool action; keep it in record history only
-        processTrace("extract[$requestId] ${if (success) "OK" else "FAIL"} $compactPrompt")
+        processTrace("🔍 extract[$requestId] ${if (success) "OK" else "FAIL"} $compactPrompt")
     }
 
     private fun addHistoryObserve(instruction: String, requestId: String, size: Int, success: Boolean) {
         processTrace(
-            "observe[$requestId] ${if (success) "OK" else "FAIL"} ${
+            "👀 observe[$requestId] ${if (success) "OK" else "FAIL"} ${
                 PromptBuilder.compactPrompt(instruction, 200)
             } -> $size elements"
         )
@@ -703,35 +703,35 @@ class BrowserPerceptiveAgent constructor(
 
         for (attempt in 0..config.maxRetries) {
             val attemptNo = attempt + 1
-            processTrace("resolve ATTEMPT ${attemptNo}/${config.maxRetries + 1}")
+            processTrace("🔁 resolve ATTEMPT ${attemptNo}/${config.maxRetries + 1}")
             try {
                 val res = doResolveProblem(action, sessionId, startTime, attempt)
-                processTrace("resolve ATTEMPT $attemptNo OK")
+                processTrace("✅ resolve ATTEMPT $attemptNo OK")
                 return res
             } catch (e: PerceptiveAgentError.TransientError) {
                 lastError = e
-                logger.error("resolve.transient attempt={} sid={} msg={}", attempt + 1, sessionId.take(8), e.message, e)
+                logger.error("🔄 resolve.transient attempt={} sid={} msg={}", attempt + 1, sessionId.take(8), e.message, e)
                 if (attempt < config.maxRetries) {
                     val backoffMs = calculateRetryDelay(attempt)
-                    processTrace("resolve RETRY $attemptNo cause=Transient delay=${backoffMs}ms msg=${e.message}")
+                    processTrace("🔁 resolve RETRY $attemptNo cause=Transient delay=${backoffMs}ms msg=${e.message}")
                     delay(backoffMs)
                 }
             } catch (e: PerceptiveAgentError.TimeoutError) {
                 lastError = e
-                logger.error("resolve.timeout attempt={} sid={} msg={}", attempt + 1, sessionId.take(8), e.message, e)
+                logger.error("⏳ resolve.timeout attempt={} sid={} msg={}", attempt + 1, sessionId.take(8), e.message, e)
                 if (attempt < config.maxRetries) {
                     val baseBackoffMs = config.baseRetryDelayMs
-                    processTrace("resolve RETRY $attemptNo cause=Timeout delay=${baseBackoffMs}ms msg=${e.message}")
+                    processTrace("🔁 resolve RETRY $attemptNo cause=Timeout delay=${baseBackoffMs}ms msg=${e.message}")
                     delay(baseBackoffMs)
                 }
             } catch (e: Exception) {
                 lastError = e
                 logger.error(
-                    "resolve.unexpected attempt={} sid={} msg={}", attempt + 1, sessionId.take(8), e.message, e
+                    "💥 resolve.unexpected attempt={} sid={} msg={}", attempt + 1, sessionId.take(8), e.message, e
                 )
                 if (shouldRetryError(e) && attempt < config.maxRetries) {
                     val backoffMs = calculateRetryDelay(attempt)
-                    processTrace("resolve RETRY $attemptNo cause=Unexpected delay=${backoffMs}ms msg=${e.message}")
+                    processTrace("🔁 resolve RETRY $attemptNo cause=Unexpected delay=${backoffMs}ms msg=${e.message}")
                     delay(backoffMs)
                 } else {
                     // Non-retryable error, exit loop
@@ -740,7 +740,7 @@ class BrowserPerceptiveAgent constructor(
             }
         }
 
-        processTrace("resolve FAIL after ${config.maxRetries + 1} attempts: ${lastError?.message}")
+        processTrace("❌ resolve FAIL after ${config.maxRetries + 1} attempts: ${lastError?.message}")
         return ActResult(
             success = false,
             message = "Failed after ${config.maxRetries + 1} attempts. Last error: ${lastError?.message}",
@@ -760,7 +760,7 @@ class BrowserPerceptiveAgent constructor(
 
         val sid = context.sessionId.take(8)
         logger.info(
-            "agent.start sid={} step={} url={} instr='{}' attempt={} maxSteps={} maxRetries={}",
+            "🚀 agent.start sid={} step={} url={} instr='{}' attempt={} maxSteps={} maxRetries={}",
             sid, context.stepNumber, context.targetUrl, Strings.compactLog(overallGoal, 100),
             attempt + 1, config.maxSteps, config.maxRetries)
 
@@ -799,13 +799,13 @@ class BrowserPerceptiveAgent constructor(
                 // Medium Priority #10: Detect if page state hasn't changed
                 val unchangedCount = pageStateTracker.checkStateChange(browserUseState)
                 if (unchangedCount >= 3) {
-                    logger.info("loop.warn sid={} step={} unchangedSteps={}", sid, step, unchangedCount)
+                    logger.info("⚠️ loop.warn sid={} step={} unchangedSteps={}", sid, step, unchangedCount)
                     consecutiveNoOps++
                 }
 
-                logger.info("step.exec sid={} step={}/{} noOps={}", sid, step, config.maxSteps, consecutiveNoOps)
+                logger.info("▶️ step.exec sid={} step={}/{} noOps={}", sid, step, config.maxSteps, consecutiveNoOps)
                 if (logger.isDebugEnabled) {
-                    logger.debug("dom={}", DomDebug.summarize(browserUseState.domState))
+                    logger.debug("🧩 dom={}", DomDebug.summarize(browserUseState.domState))
                 }
 
                 // Memory cleanup at intervals
@@ -839,7 +839,7 @@ class BrowserPerceptiveAgent constructor(
                     // Use overload supplying extracted elements to avoid re-extraction
                     tta.generate(messages, agentState, browserUseState, screenshotB64)
                 } catch (e: Exception) {
-                    logger.error("action.gen.fail sid={} msg={}", context.sessionId.take(8), e.message, e)
+                    logger.error("🤖❌ action.gen.fail sid={} msg={}", context.sessionId.take(8), e.message, e)
                     consecutiveFailureCounter.incrementAndGet()
                     null
                 }
@@ -876,7 +876,7 @@ class BrowserPerceptiveAgent constructor(
                     updateAgentState(agentState, method = observe?.toolCall?.method ?: "no-op", success = true,
                         observe = observe, message = result.summary)
                     updatePerformanceMetrics(step, stepStartTime, true)
-                    logger.info("step.done sid={} step={} summary={}", sid, step, result.summary)
+                    logger.info("🏁 step.done sid={} step={} summary={}", sid, step, result.summary)
                 } else {
                     // Treat validation failures or execution skips as no-ops; no AgentState record
                     consecutiveNoOps++
@@ -891,7 +891,7 @@ class BrowserPerceptiveAgent constructor(
 
             val executionTime = Duration.between(startTime, Instant.now())
             logger.info(
-                "agent.done sid={} steps={} dur={}", sid, step, executionTime.toString()
+                "✅ agent.done sid={} steps={} dur={}", sid, step, executionTime.toString()
             )
 
             val summary = generateFinalSummary(overallGoal, context)
@@ -899,7 +899,7 @@ class BrowserPerceptiveAgent constructor(
             return ActResult(success = ok, message = summary.content, action = overallGoal)
         } catch (e: Exception) {
             val executionTime = Duration.between(startTime, Instant.now())
-            logger.error("agent.fail sid={} steps={} dur={} err={}", sid, step, executionTime.toString(), e.message, e)
+            logger.error("💥 agent.fail sid={} steps={} dur={} err={}", sid, step, executionTime.toString(), e.message, e)
             throw classifyError(e, step)
         }
     }
@@ -916,37 +916,37 @@ class BrowserPerceptiveAgent constructor(
     private fun classifyError(e: Exception, step: Int): PerceptiveAgentError {
         return when (e) {
             is PerceptiveAgentError -> e
-            is TimeoutException -> PerceptiveAgentError.TimeoutError("Step $step timed out", e)
-            is SocketTimeoutException -> PerceptiveAgentError.TimeoutError("Network timeout at step $step", e)
-            is ConnectException -> PerceptiveAgentError.TransientError("Connection failed at step $step", e)
-            is ChatModelException -> PerceptiveAgentError.TimeoutError("Chat model timeout at step $step", e)
+            is TimeoutException -> PerceptiveAgentError.TimeoutError("⏳ Step $step timed out", e)
+            is SocketTimeoutException -> PerceptiveAgentError.TimeoutError("⏳ Network timeout at step $step", e)
+            is ConnectException -> PerceptiveAgentError.TransientError("🔄 Connection failed at step $step", e)
+            is ChatModelException -> PerceptiveAgentError.TimeoutError("⏳ Chat model timeout at step $step", e)
             is UnknownHostException -> PerceptiveAgentError.TransientError(
-                "DNS resolution failed at step $step", e
+                "🔄 DNS resolution failed at step $step", e
             )
 
             is IOException -> {
                 when {
                     e.message?.contains("connection") == true -> PerceptiveAgentError.TransientError(
-                        "Connection issue at step $step", e
+                        "🔄 Connection issue at step $step", e
                     )
 
                     e.message?.contains("timeout") == true -> PerceptiveAgentError.TimeoutError(
-                        "Network timeout at step $step", e
+                        "⏳ Network timeout at step $step", e
                     )
 
-                    else -> PerceptiveAgentError.TransientError("IO error at step $step: ${e.message}", e)
+                    else -> PerceptiveAgentError.TransientError("🔄 IO error at step $step: ${e.message}", e)
                 }
             }
 
             is IllegalArgumentException -> PerceptiveAgentError.ValidationError(
-                "Validation error at step $step: ${e.message}", e
+                "🚫 Validation error at step $step: ${e.message}", e
             )
 
             is IllegalStateException -> PerceptiveAgentError.PermanentError(
-                "Invalid state at step $step: ${e.message}", e
+                "🛑 Invalid state at step $step: ${e.message}", e
             )
 
-            else -> PerceptiveAgentError.TransientError("Unexpected error at step $step: ${e.message}", e)
+            else -> PerceptiveAgentError.TransientError("💥 Unexpected error at step $step: ${e.message}", e)
         }
     }
 
@@ -980,14 +980,14 @@ class BrowserPerceptiveAgent constructor(
         return try {
             val screenshot = safeScreenshot(context)
             if (screenshot != null) {
-                logger.info("screenshot.ok sid={} step={} size={} ",
+                logger.info("📸✅ screenshot.ok sid={} step={} size={} ",
                     context.sessionId.take(8), context.stepNumber, screenshot.length)
             } else {
-                logger.info("screenshot.null sid={} step={}", context.sessionId.take(8), context.stepNumber)
+                logger.info("📸⚪ screenshot.null sid={} step={}", context.sessionId.take(8), context.stepNumber)
             }
             screenshot
         } catch (e: Exception) {
-            logger.error("screenshot.fail sid={} msg={}", context.sessionId.take(8), e.message, e)
+            logger.error("📸❌ screenshot.fail sid={} msg={}", context.sessionId.take(8), e.message, e)
             null
         }
     }
@@ -1000,33 +1000,33 @@ class BrowserPerceptiveAgent constructor(
         val toolCall = action.toolCall ?: return null
 
         if (config.enablePreActionValidation && !actionValidator.validateToolCall(toolCall)) {
-            logger.info("tool.validate.fail sid={} step={} locator={} | {}({}) | {}",
+            logger.info("🛑 tool.validate.fail sid={} step={} locator={} | {}({}) | {}",
                 context.sessionId.take(8), context.stepNumber, action.locator, toolCall.method, toolCall.arguments,
                 action.cssFriendlyExpressions.joinToString())
             // Validation failure is meta info
-            processTrace("#$step validation-failed ${toolCall.method}")
+            processTrace("🛑 #$step validation-failed ${toolCall.method}")
             return null
         }
 
         return try {
-            logger.info("tool.exec sid={} step={} tool={} args={}",
+            logger.info("🛠️ tool.exec sid={} step={} tool={} args={}",
                 context.sessionId.take(8), context.stepNumber, toolCall.method, toolCall.arguments)
 
             val instructionResult = doToolCallExecute(toolCall, action)
             consecutiveFailureCounter.set(0) // Reset on success
 
-            val summary = "${toolCall.method} executed successfully"
+            val summary = "✅ ${toolCall.method} executed successfully"
             processTrace(summary)
             ActionExecuteResult(action, instructionResult, success = true, summary)
         } catch (e: Exception) {
             val failures = consecutiveFailureCounter.incrementAndGet()
-            logger.error("tool.exec.fail sid={} step={} failures={} msg={}",
+            logger.error("🛠️❌ tool.exec.fail sid={} step={} failures={} msg={}",
                 context.sessionId.take(8), context.stepNumber, failures, e.message, e)
 
-            processTrace("#$step unexpected failure ${toolCall.method}")
+            processTrace("💥 #$step unexpected failure ${toolCall.method}")
 
             if (failures >= 3) {
-                throw PerceptiveAgentError.PermanentError("Too many consecutive failures at step $step", e)
+                throw PerceptiveAgentError.PermanentError("🛑 Too many consecutive failures at step $step", e)
             }
 
             null
@@ -1035,11 +1035,11 @@ class BrowserPerceptiveAgent constructor(
 
     private suspend fun handleConsecutiveNoOps(consecutiveNoOps: Int, step: Int, context: ExecutionContext): Boolean {
         // No-op is meta info only
-        processTrace("#$step no-op (consecutive: $consecutiveNoOps)")
-        logger.info("noop sid={} step={} consecutive={}", context.sessionId.take(8), step, consecutiveNoOps)
+        processTrace("🕒 #$step no-op (consecutive: $consecutiveNoOps)")
+        logger.info("🕒 noop sid={} step={} consecutive={}", context.sessionId.take(8), step, consecutiveNoOps)
 
         if (consecutiveNoOps >= config.consecutiveNoOpLimit) {
-            logger.info("noop.stop sid={} step={} limit={}",
+            logger.info("⛔ noop.stop sid={} step={} limit={}",
                 context.sessionId.take(8), step, config.consecutiveNoOpLimit)
             return true
         }
@@ -1058,7 +1058,7 @@ class BrowserPerceptiveAgent constructor(
     private fun shouldTerminate(action: ActionDescription): Boolean = action.isComplete
 
     private fun handleTaskCompletion(action: ActionDescription, step: Int, context: ExecutionContext) {
-        logger.info("task.complete sid={} step={} complete={}", context.sessionId.take(8), step, action.isComplete)
+        logger.info("✅ task.complete sid={} step={} complete={}", context.sessionId.take(8), step, action.isComplete)
         processTrace("#$step complete: taskComplete=${action.isComplete}")
     }
 
@@ -1088,9 +1088,9 @@ class BrowserPerceptiveAgent constructor(
             if (validationCache.size > 1000) {
                 validationCache.clear()
             }
-            logger.info("mem.cleanup sid={} step={}", context.sessionId.take(8), context.stepNumber)
+            logger.info("🧹 mem.cleanup sid={} step={}", context.sessionId.take(8), context.stepNumber)
         } catch (e: Exception) {
-            logger.error("mem.cleanup.fail sid={} msg={}", context.sessionId.take(8), e.message, e)
+            logger.error("🧹❌ mem.cleanup.fail sid={} msg={}", context.sessionId.take(8), e.message, e)
         }
     }
 
@@ -1098,11 +1098,11 @@ class BrowserPerceptiveAgent constructor(
         return try {
             val summary = summarize(instruction)
             // Final summary is meta info
-            processTrace("FINAL ${summary.content.take(200)}")
+            processTrace("🧾 FINAL ${summary.content.take(200)}")
             persistTranscript(instruction, summary)
             summary
         } catch (e: Exception) {
-            logger.error("agent.summary.fail sid={} msg={}", context.sessionId.take(8), e.message, e)
+            logger.error("📝❌ agent.summary.fail sid={} msg={}", context.sessionId.take(8), e.message, e)
             ModelResponse("Failed to generate summary: ${e.message}", ResponseState.OTHER)
         }
     }
@@ -1118,7 +1118,7 @@ class BrowserPerceptiveAgent constructor(
     private fun processTrace(entries: Map<String, String>) {
         val time = LocalDateTime.now()
         val id = _processTrace.size
-        _processTrace.add("$id.\t$time - " + entries.entries.joinToString(" ") { (k, v) -> "$k:$v" })
+        _processTrace.add("🧠$id.\t$time - " + entries.entries.joinToString(" ") { (k, v) -> "$k:$v" })
     }
 
     private fun processTrace(entry: String) {
@@ -1138,17 +1138,17 @@ class BrowserPerceptiveAgent constructor(
      */
     private suspend fun safeScreenshot(context: ExecutionContext): String? {
         return runCatching {
-            slogger.info("Attempting to capture screenshot", context)
+            slogger.info("📸⏳ Attempting to capture screenshot", context)
             val driver = requireNotNull(activeDriver)
             val screenshot = driver.captureScreenshot()
             if (screenshot != null) {
-                slogger.info("Screenshot captured successfully", context, mapOf("size" to screenshot.length))
+                slogger.info("📸✅ Screenshot captured successfully", context, mapOf("size" to screenshot.length))
             } else {
-                slogger.info("Screenshot capture returned null", context)
+                slogger.info("📸⚪ Screenshot capture returned null", context)
             }
             screenshot
         }.onFailure { e ->
-            slogger.logError("Screenshot capture failed", e, context.sessionId)
+            slogger.logError("📸❌ Screenshot capture failed", e, context.sessionId)
         }.getOrNull()
     }
 
@@ -1162,7 +1162,7 @@ class BrowserPerceptiveAgent constructor(
         runCatching {
             val ts = Instant.now().toEpochMilli()
             val log = baseDir.resolve("session-${uuid}-${ts}.log")
-            slogger.info("Persisting execution transcript", context, mapOf("path" to log.toString()))
+            slogger.info("🧾💾 Persisting execution transcript", context, mapOf("path" to log.toString()))
 
             val sb = StringBuilder()
             sb.appendLine("SESSION_ID: ${uuid}")
@@ -1184,12 +1184,12 @@ class BrowserPerceptiveAgent constructor(
 
             Files.writeString(log, sb.toString())
             slogger.info(
-                "Transcript persisted successfully",
+                "🧾✅ Transcript persisted successfully",
                 context,
                 mapOf("lines" to stateHistory.size + 10, "path" to log.toString())
             )
         }.onFailure { e ->
-            slogger.logError("Failed to persist transcript", e, context.sessionId)
+            slogger.logError("🧾❌ Failed to persist transcript", e, context.sessionId)
         }
     }
 
@@ -1202,19 +1202,19 @@ class BrowserPerceptiveAgent constructor(
 
         return try {
             val (system, user) = promptBuilder.buildSummaryPrompt(goal, stateHistory)
-            slogger.info("Generating final summary", context)
+            slogger.info("📝⏳ Generating final summary", context)
 
             val response = tta.chatModel.callUmSm(user, system)
 
             slogger.info(
-                "Summary generated successfully", context, mapOf(
+                "📝✅ Summary generated successfully", context, mapOf(
                     "responseLength" to response.content.length, "responseState" to response.state
                 )
             )
 
             response
         } catch (e: Exception) {
-            slogger.logError("Summary generation failed", e, context.sessionId)
+            slogger.logError("📝❌ Summary generation failed", e, context.sessionId)
             ModelResponse(
                 "Failed to generate summary: ${e.message}", ResponseState.OTHER
             )
