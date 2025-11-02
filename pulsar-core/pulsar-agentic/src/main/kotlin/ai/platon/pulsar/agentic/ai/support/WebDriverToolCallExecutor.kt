@@ -5,11 +5,13 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import kotlinx.coroutines.TimeoutCancellationException
 import java.time.Duration
 
 class WebDriverToolCallExecutor {
     private val logger = getLogger(this)
 
+    @Throws(TimeoutCancellationException::class, Exception::class)
     suspend fun execute(expression: String, driver: WebDriver): Any? {
         return try {
             val r = execute0(expression, driver)
@@ -18,9 +20,12 @@ class WebDriverToolCallExecutor {
                 is Unit -> null
                 else -> r
             }
+        } catch (e: TimeoutCancellationException) {
+            logger.warn("Timeout to execute | $expression", e)
+            throw e
         } catch (e: Exception) {
-            logger.warn("Error executing expression: {} - {}", expression, e.brief())
-            null
+            logger.warn("[Unexpected] Error executing expression: {} - {}", expression, e.stackTraceToString())
+            throw e
         }
     }
 

@@ -9,9 +9,10 @@ class ProblemResolver {
         val driver = session.createBoundDriver()
         driver.navigateTo("https://news.ycombinator.com/news")
         val problems = """
-search for browser and read top 5 articles and give me a summary
-open the 4-th articles in new tab
-read top 3 articles and give me a summary
+打开百度查找厦门岛旅游景点，给出一个总结
+open https://news.ycombinator.com/news , search for browser and read top 5 articles and give me a summary
+open https://news.ycombinator.com/news , open the 4-th articles in new tab
+open https://news.ycombinator.com/news , read top 3 articles and give me a summary
         """.split("\n").map { it.trim() }.filter { it.length > 10 }
 
         val problem = problems[0]

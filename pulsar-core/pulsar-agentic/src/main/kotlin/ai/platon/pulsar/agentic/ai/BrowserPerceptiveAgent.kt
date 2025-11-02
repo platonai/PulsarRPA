@@ -269,7 +269,7 @@ class BrowserPerceptiveAgent constructor(
                 return ToolCallPatch(false, msg, action = method)
             }
 
-            if (!isSafeUrl(url)) {
+            if (!actionValidator.isSafeUrl(url)) {
                 val msg = "⛔ Blocked unsafe URL: $url"
                 processTrace(msg)
                 return ToolCallPatch(false, msg, action = method)
@@ -726,9 +726,7 @@ class BrowserPerceptiveAgent constructor(
                 }
             } catch (e: Exception) {
                 lastError = e
-                logger.error(
-                    "💥 resolve.unexpected attempt={} sid={} msg={}", attempt + 1, sessionId.take(8), e.message, e
-                )
+                logger.error("💥 resolve.unexpected attempt={} sid={} msg={}", attempt + 1, sessionId.take(8), e.message, e)
                 if (shouldRetryError(e) && attempt < config.maxRetries) {
                     val backoffMs = calculateRetryDelay(attempt)
                     processTrace("🔁 resolve RETRY $attemptNo cause=Unexpected delay=${backoffMs}ms msg=${e.message}")
@@ -1124,14 +1122,8 @@ class BrowserPerceptiveAgent constructor(
     private fun processTrace(entry: String) {
         val time = LocalDateTime.now()
         val id = _processTrace.size
-        _processTrace.add("""🧠$id.\t$time - $entry""")
+        _processTrace.add("""🧠$id.${'\t'}$time - $entry""")
     }
-
-    /**
-     * Enhanced URL validation with comprehensive safety checks
-     * Medium Priority #12: Made configurable for localhost and ports
-     */
-    private fun isSafeUrl(url: String): Boolean = ActionValidator().isSafeUrl(url)
 
     /**
      * Enhanced screenshot capture with comprehensive error handling
