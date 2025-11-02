@@ -698,6 +698,7 @@ __pulsar_utils__.outerHTML = function(selector) {
 
 /**
  * @deprecated Use selectFirstText instead
+ * @deprecated use CDP instead
  */
 __pulsar_utils__.firstText = function(selector) {
     let element = document.querySelector(selector)

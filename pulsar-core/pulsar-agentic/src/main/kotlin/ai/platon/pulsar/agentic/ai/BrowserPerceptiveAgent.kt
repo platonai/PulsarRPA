@@ -17,6 +17,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.emoji.emo
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.Pson
 import ai.platon.pulsar.common.stringify
@@ -88,7 +89,7 @@ class BrowserPerceptiveAgent constructor(
     private val slogger = StructuredAgentLogger(ownerLogger, config)
     private val logger = ownerLogger
 
-    private val activeDriver get() = requireNotNull(session.boundDriver)
+    private val activeDriver get() = session.boundDriver ?: session.createBoundDriver()
     private val baseDir = AppPaths.get("agent")
     private val conf get() = (activeDriver as AbstractWebDriver).settings.config
 
@@ -1118,14 +1119,14 @@ class BrowserPerceptiveAgent constructor(
 
     private fun processTrace(entries: Map<String, String>) {
         val time = LocalDateTime.now()
-        val id = _processTrace.size
-        _processTrace.add("🧠$id.\t$time - " + entries.entries.joinToString(" ") { (k, v) -> "$k:$v" })
+        val id = emo(_processTrace.size + 1)
+        _processTrace.add("""$id$time - """ + entries.entries.joinToString(" ") { (k, v) -> "$k:$v" })
     }
 
     private fun processTrace(entry: String) {
         val time = LocalDateTime.now()
-        val id = _processTrace.size
-        _processTrace.add("""🧠$id.${'\t'}$time - $entry""")
+        val id = emo(_processTrace.size + 1)
+        _processTrace.add("""$id$time - $entry""")
     }
 
     /**

@@ -119,7 +119,6 @@ open class ToolCallExecutor {
     }
 
     companion object {
-
         /**
          * Parses a function call from a text string into its components.
          * Uses a robust state machine to correctly handle:
@@ -142,8 +141,6 @@ open class ToolCallExecutor {
                 // Navigation
                 "open" -> arguments["url"]?.let { "driver.open(\"${it.esc()}\")" }
                 "navigateTo" -> arguments["url"]?.let { "driver.navigateTo(\"${it.esc()}\")" }
-                // Backward compatibility for older prompts
-                "goto" -> arguments["url"]?.let { "driver.navigateTo(\"${it.esc()}\")" }
                 "goBack" -> "driver.goBack()"
                 "goForward" -> "driver.goForward()"
                 // Wait

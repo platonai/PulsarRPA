@@ -7,6 +7,8 @@ import org.apache.commons.lang3.StringUtils
 class MicroToNanoTreeHelper(
     private val seenChunks: MutableList<Pair<Double, Double>>,
 ) {
+    private val logger = getLogger(this)
+
     fun toNanoTreeInViewport0(
         microTree: MicroDOMTreeNode,
         viewportHeight: Int,
@@ -27,11 +29,13 @@ class MicroToNanoTreeHelper(
     fun toNanoTreeInRange0(microTree: MicroDOMTree, startY: Double = 0.0, endY: Double = 100000.0): NanoDOMTree {
         val tree = toNanoTreeInRangeRecursive(microTree, startY, endY)
 
-        val merged = mergeChunks()
-        seenChunks.clear()
-        seenChunks.addAll(merged)
+        if (seenChunks.size > 1) {
+            val merged = mergeChunks()
+            seenChunks.clear()
+            seenChunks.addAll(merged)
+        }
 
-        getLogger(this).info("Created nano tree in range ($startY, $endY)], seen chunks: $seenChunks")
+        logger.info("Generated a nano-tree with nodes distributed along Y-axis ($startY, $endY], chunks has seen: $seenChunks")
 
         return tree
     }
@@ -88,7 +92,12 @@ class MicroToNanoTreeHelper(
 
     fun mergeChunks(): List<Pair<Double, Double>> {
         // merge chunks in seenChunks that intersects
-        if (seenChunks.isEmpty()) return emptyList()
+        if (seenChunks.isEmpty()) {
+            return emptyList()
+        }
+        if (seenChunks.size == 1) {
+            return seenChunks
+        }
 
         val eps = 50
         // Normalize and sort by start

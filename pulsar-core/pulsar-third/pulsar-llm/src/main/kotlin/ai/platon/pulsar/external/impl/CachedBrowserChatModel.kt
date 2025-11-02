@@ -14,6 +14,7 @@ import dev.langchain4j.model.chat.response.ChatResponse
 import dev.langchain4j.model.output.FinishReason
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
@@ -267,6 +268,10 @@ open class CachedBrowserChatModel(
         var lastException: Exception? = null
         while (i++ < maxRetry) {
             try {
+                if (i > 1) {
+                    // the underlying layer seems cached the last state, so delay to invalidate the cache
+                    delay(1000L * i)
+                }
                 return sendChatMessageInIOThread(*messages)
             } catch (e: IOException) {
                 lastException = e
@@ -274,7 +279,7 @@ open class CachedBrowserChatModel(
                 continue
             } catch (e: TimeoutCancellationException) {
                 lastException = e
-                logger.warn("Timeout and cancelled, trying $i-th time | {}", e.message)
+                logger.warn("Timeout and cancelled to sent chat message, trying $i-th time | {}", e.message)
                 continue
             } catch (e: RuntimeException) {
                 lastException = e

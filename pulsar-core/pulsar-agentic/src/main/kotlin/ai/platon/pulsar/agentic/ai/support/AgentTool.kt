@@ -26,8 +26,7 @@ driver.scrollToMiddle(ratio: Double = 0.5)
 driver.scrollToViewport(n: Double)                     // scroll to the [n]th viewport position, 1-based
 driver.goBack()
 driver.goForward()
-driver.selectFirstTextOrNull(selector: String): String? // Returns the node's text content, the node is located by [selector]. If the node does not exist, returns null.
-driver.selectTextAll(selector: String): List<String>    // Returns a list of text contents of all the elements matching the specified selector within the page.
+driver.textContent(selector: String): String?          // Returns the node's text content, the node is located by [selector]. If the node does not exist, returns null.
 driver.delay(millis: Long)
 
 // domain/object: browser
@@ -53,6 +52,11 @@ agent.extract(options: ExtractOptions): ExtractResult
 
     @Suppress("unused")
     val SUPPORTED_ACTIONS = SUPPORTED_TOOL_CALLS.map { it.substringBefore("(") }
+
+    val TOOL_ALIASES = mapOf(
+        "driver.goto" to "driver.navigateTo",
+        "driver.textContent" to "driver.selectFirstTextOrNull"
+    )
 
     val SELECTOR_ACTIONS = setOf(
         "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "visible", "focus",

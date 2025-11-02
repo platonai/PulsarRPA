@@ -428,11 +428,8 @@ window.scrollTo(x, y)
         val safeSelector = Strings.escapeJsString(selector)
         val js = """
 (() => {
-    let element = document.querySelector(selector)
-    if (element != null) {
-        return element.outerHTML
-    }
-    return null
+    const element = document.querySelector(selector);
+    return element?.outerHTML ?? null;
 })($safeSelector)
         """.trimIndent()
         // return evaluateValue("__pulsar_utils__.outerHTML('$safeSelector')")?.toString()
@@ -445,9 +442,19 @@ window.scrollTo(x, y)
 
     @Throws(WebDriverException::class)
     override suspend fun selectFirstTextOrNull(selector: String): String? {
+//        val safeSelector = Strings.escapeJsString(selector)
+//        val expression = String.format("__pulsar_utils__.selectFirstText('%s')", safeSelector)
+//        return evaluateValue(expression)?.toString()
+
         val safeSelector = Strings.escapeJsString(selector)
-        val expression = String.format("__pulsar_utils__.selectFirstText('%s')", safeSelector)
-        return evaluateValue(expression)?.toString()
+        val js = """
+((selector) => {
+    const element = document.querySelector(selector);
+    return element?.textContent ?? null;
+})($safeSelector)
+        """.trimIndent()
+        // return evaluateValue("__pulsar_utils__.outerHTML('$safeSelector')")?.toString()
+        return evaluateValue(js)?.toString()
     }
 
     @Throws(WebDriverException::class)

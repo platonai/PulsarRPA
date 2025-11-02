@@ -3,6 +3,7 @@ package ai.platon.pulsar.agentic.ai.tta
 import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
+import ai.platon.pulsar.agentic.ai.support.AgentTool.TOOL_ALIASES
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
@@ -215,8 +216,18 @@ open class TextToAction(
 
     fun reviseActionDescription(action: ActionDescription, browserUseState: BrowserUseState): ActionDescription {
         val observeElement = action.observeElement ?: return action
-        val toolCall = observeElement.toolCall ?: return action
+        var toolCall = observeElement.toolCall ?: return action
 
+        // 1. revised tool call
+        val domain = toolCall.domain
+        val method = toolCall.method
+        val revised = TOOL_ALIASES["$domain.$method"]
+        if (revised != null) {
+            val (domain2, method2) = revised.split(".")
+            toolCall = toolCall.copy(domain = domain2, method = method2)
+        }
+
+        // 2. revise selector
         val locator = observeElement.locator
         val arguments = toolCall.arguments
         val fbnLocator = browserUseState.domState.getAbsoluteFBNLocator(locator)
@@ -239,17 +250,17 @@ open class TextToAction(
             expression?.replace(locator, cssSelector)
         } else null
 
+        // 3. copy new object
         val revisedObserveElement = observeElement.copy(
             node = node,
             backendNodeId = node?.backendNodeId,
+            toolCall = toolCall,
             cssSelector = cssSelector,
             expressions = expression?.let { listOf(it) } ?: emptyList(),
             cssFriendlyExpressions = cssFriendlyExpression?.let { listOf(it) } ?: emptyList(),
         )
 
-        return action.copy(
-            observeElement = revisedObserveElement
-        )
+        return action.copy(observeElement = revisedObserveElement)
     }
 
     private fun jsonElementToKotlin(e: JsonElement): Any? = when {

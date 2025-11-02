@@ -6,8 +6,6 @@ class ProblemResolver {
     val session = AgenticContexts.getOrCreateSession()
 
     suspend fun run() {
-        val driver = session.createBoundDriver()
-        driver.navigateTo("https://news.ycombinator.com/news")
         val problems = """
 打开百度查找厦门岛旅游景点，给出一个总结
 open https://news.ycombinator.com/news , search for browser and read top 5 articles and give me a summary
