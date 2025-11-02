@@ -1,6 +1,7 @@
 package ai.platon.pulsar.external.impl
 
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.stringify
@@ -12,6 +13,7 @@ import dev.langchain4j.model.chat.request.ChatRequest
 import dev.langchain4j.model.chat.response.ChatResponse
 import dev.langchain4j.model.output.FinishReason
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.withContext
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
@@ -217,8 +219,11 @@ open class CachedBrowserChatModel(
                 // sendChatMessageInIOThread(sm, um)
                 sendChatMessageWithRetry(sm, um)
             }
+        } catch (e: ChatModelException) {
+            // let the higher level handle ChatModelException
+            throw e
         } catch (e: Exception) {
-            logger.warn("[Unexpected] Exception | {} | {}", langchainModel.javaClass.simpleName, e.message)
+            logger.warn("[Unexpected] Exception | {} | {}", langchainModel.javaClass.simpleName, e.stringify())
             return ModelResponse("", ResponseState.OTHER).also {
                 llmLogger.logResponse(requestId, it)
             }
@@ -267,22 +272,33 @@ open class CachedBrowserChatModel(
                 lastException = e
                 logger.info("IOException, trying $i-th time | {}", e.message)
                 continue
+            } catch (e: TimeoutCancellationException) {
+                lastException = e
+                logger.warn("Timeout and cancelled, trying $i-th time | {}", e.message)
+                continue
             } catch (e: RuntimeException) {
                 lastException = e
                 if (e.cause is InterruptedIOException) {
                     logger.info("InterruptedIOException, trying $i-th time | {}", e.message)
                     continue
                 } else {
-                    logger.warn("RuntimeException, trying $i-th time | {}", e.message)
+                    logger.warn("RuntimeException, trying $i-th time | {} | {}", e.message, e.cause?.brief())
                     continue
                 }
             }
         }
 
-        if (lastException != null) {
-            logger.warn("Failed to send chat message for $i times: {}", lastException.stringify())
-            throw lastException
-        } else throw RuntimeException("[Unexpected] Failed to send chat message for $i times with unknown reason")
+        when (lastException) {
+            null -> throw RuntimeException("[Unexpected] Failed to send chat message for $i times with unknown reason")
+            is TimeoutCancellationException -> {
+                logger.warn("Timeout and cancelled for $i times | {}", lastException.message)
+                throw lastException
+            }
+            else -> {
+                logger.warn("Failed to send chat message for $i times: {}", lastException.stringify())
+                throw ChatModelException("Timeout and cancelled for $i times | ${lastException.message}", lastException)
+            }
+        }
     }
 
     private suspend fun sendChatMessageInIOThread(vararg messages: ChatMessage): ChatResponse {

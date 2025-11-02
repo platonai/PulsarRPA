@@ -20,6 +20,7 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.Pson
 import ai.platon.pulsar.common.stringify
+import ai.platon.pulsar.external.ChatModelException
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.*
@@ -918,6 +919,7 @@ class BrowserPerceptiveAgent constructor(
             is TimeoutException -> PerceptiveAgentError.TimeoutError("Step $step timed out", e)
             is SocketTimeoutException -> PerceptiveAgentError.TimeoutError("Network timeout at step $step", e)
             is ConnectException -> PerceptiveAgentError.TransientError("Connection failed at step $step", e)
+            is ChatModelException -> PerceptiveAgentError.TimeoutError("Chat model timeout at step $step", e)
             is UnknownHostException -> PerceptiveAgentError.TransientError(
                 "DNS resolution failed at step $step", e
             )
@@ -1122,7 +1124,7 @@ class BrowserPerceptiveAgent constructor(
     private fun processTrace(entry: String) {
         val time = LocalDateTime.now()
         val id = _processTrace.size
-        _processTrace.add("> $id.\t$time - $entry")
+        _processTrace.add("""🧠$id.\t$time - $entry""")
     }
 
     /**
