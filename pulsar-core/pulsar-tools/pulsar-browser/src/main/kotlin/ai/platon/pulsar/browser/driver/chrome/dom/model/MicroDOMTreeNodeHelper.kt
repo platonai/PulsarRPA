@@ -31,7 +31,7 @@ class MicroToNanoTreeHelper(
         seenChunks.clear()
         seenChunks.addAll(merged)
 
-        getLogger(this).info("Created nano tree in range ($$startY, $$endY)], seen chunks: $$seenChunks")
+        getLogger(this).info("Created nano tree in range ($startY, $endY)], seen chunks: $seenChunks")
 
         return tree
     }
@@ -39,8 +39,6 @@ class MicroToNanoTreeHelper(
     fun toNanoTreeInRangeRecursive(microNode: MicroDOMTreeNode, startY: Double = 0.0, endY: Double = 100000.0): NanoDOMTree {
         // Create the current node from the micro node
         val root = newNode(microNode) ?: return NanoDOMTree()
-
-        seenChunks.add(Pair(startY, endY))
 
         // Recursively create child nano nodes, filter out empty placeholders
         val childNanoList = microNode.children
@@ -50,7 +48,14 @@ class MicroToNanoTreeHelper(
             ?.map { toNanoTreeInRangeRecursive(it, startY, endY) }
             ?.toList()
 
-        return if (childNanoList.isNullOrEmpty()) root else root.copy(children = childNanoList)
+        return if (childNanoList.isNullOrEmpty()) {
+            root
+        } else {
+            val y1 = childNanoList.minOf { it.bounds?.y ?: 100000.0 } // remove nulls
+            val y2 = childNanoList.maxOf { it.bounds?.y ?: -100000.0 } // remove nulls
+            seenChunks.add(Pair(y1, y2))
+            root.copy(children = childNanoList)
+        }
     }
 
     private fun newNode(n: MicroDOMTreeNode?): NanoDOMTree? {
@@ -85,7 +90,7 @@ class MicroToNanoTreeHelper(
         // merge chunks in seenChunks that intersects
         if (seenChunks.isEmpty()) return emptyList()
 
-        val eps = 1e-6
+        val eps = 50
         // Normalize and sort by start
         val sorted = seenChunks
             .map { (s, e) -> if (s <= e) s to e else e to s }
@@ -116,11 +121,14 @@ class MicroDOMTreeNodeHelper(
     private val seenChunks: MutableList<Pair<Double, Double>>,
     private val currentViewportIndex: Int,
     private val maxViewportIndex: Int = 10000,
-    private val maxNonInteractiveTextLength: Int = 200,
+    private val maxNonInteractiveTextLength: Int = 100,
 ) {
     companion object {
         fun slimHTML(n: MicroDOMTreeNode): String? {
             val o = n.originalNode ?: return null
+
+            val nodeName = o.nodeName
+            val nodeValue = Strings.compactWhitespaces(o.nodeValue)
 
             fun normalizeAttrValue(attrValue: Any?): String? {
                 if (attrValue == null) return null
@@ -132,13 +140,19 @@ class MicroDOMTreeNodeHelper(
                 ?.mapNotNull { (it.key to normalizeAttrValue(it.value)) }
                 ?.joinToString(" ", " ") { (k, v) -> "$k=$v" }
                 ?: ""
-            val nodeName = o.nodeName
-            val nodeValue = Strings.compactWhitespaces(o.nodeValue)
             return if (nodeValue == null) {
                 "<${nodeName}$attrs />"
             } else {
                 """<${nodeName}$attrs>$nodeValue</${nodeName}>"""
             }
+        }
+
+        fun estimatedSize(n: InteractiveDOMTreeNode): Int {
+            return "[0,812]{1}(369,1659,87,13)".length + (n.textBefore?.length ?: 0) + (n.slimHTML?.length ?: 0)
+        }
+
+        fun estimatedSize(nodes: List<InteractiveDOMTreeNode>): Int {
+            return nodes.sumOf { estimatedSize(it) }
         }
     }
 
@@ -195,7 +209,8 @@ class MicroDOMTreeNodeHelper(
                 )
                 interactiveNodeIdByIndex[idx] = o.nodeId
             } else if (o != null) {
-                nonInteractiveText(o)?.let { nonInteractiveTexts += o.nodeId to it }
+                val order = o.paintOrder ?: o.backendNodeId ?: o.nodeId
+                nonInteractiveText(o)?.let { nonInteractiveTexts += (order to it) }
             }
             n.children?.forEach { visit(it) }
         }
@@ -246,10 +261,27 @@ class MicroDOMTreeNodeHelper(
             )
         }
 
-        val desiredViewports = setOf(1, 2, currentViewportIndex, maxViewportIndex)
-        val shorterNodeList = nodes.filter { (it.viewportIndex ?: -1) in desiredViewports }
+        val desiredViewports = mutableSetOf(1, 2, currentViewportIndex, maxViewportIndex)
+        var shorterNodeList = nodes.filter { (it.viewportIndex ?: -1) in desiredViewports }
+
+        fun goodSize() = estimatedSize(shorterNodeList) <= 100_000
+
+        if (goodSize()) return InteractiveDOMTreeNodeList(shorterNodeList)
+
+        shorterNodeList = shorterNodeList.map {
+            it.copy(textBefore = StringUtils.abbreviateMiddle(it.textBefore ?: "", "...", 50))
+        }
+        if (goodSize()) return InteractiveDOMTreeNodeList(shorterNodeList)
+
+        val discardViewportIndexes = listOf(2, maxViewportIndex, 1)
+        discardViewportIndexes.forEach { discardViewportIndex ->
+            shorterNodeList = shorterNodeList.filterNot { it.viewportIndex == discardViewportIndex }
+            if (goodSize()) return InteractiveDOMTreeNodeList(shorterNodeList)
+        }
+
+        shorterNodeList = shorterNodeList.filterNot { it.isAnchor() }
+        if (goodSize()) return InteractiveDOMTreeNodeList(shorterNodeList)
 
         return InteractiveDOMTreeNodeList(shorterNodeList)
     }
-
 }

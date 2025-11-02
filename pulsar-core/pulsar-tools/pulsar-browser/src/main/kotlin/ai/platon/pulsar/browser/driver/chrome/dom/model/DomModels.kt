@@ -3,6 +3,7 @@ package ai.platon.pulsar.browser.driver.chrome.dom.model
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.FBNLocator
 import ai.platon.pulsar.browser.driver.chrome.dom.LocatorMap
+import ai.platon.pulsar.browser.driver.chrome.dom.model.MicroDOMTreeNodeHelper.Companion.estimatedSize
 import ai.platon.pulsar.browser.driver.chrome.dom.util.CSSSelectorUtils
 import ai.platon.pulsar.common.math.roundTo
 import com.fasterxml.jackson.annotation.JsonIgnore
@@ -361,6 +362,10 @@ data class InteractiveDOMTreeNode(
     @JsonIgnore
     val nextInteractiveIndex: Int? = null,
 ) {
+    fun isAnchor(): Boolean {
+        return slimHTML?.startsWith("<a") == true
+    }
+
     /**
      * String format:
      * ```
@@ -397,6 +402,8 @@ class InteractiveDOMTreeNodeList(
 
     @get:JsonIgnore
     val lazyString by lazy { toString() }
+
+    fun estimatedSize() = nodes.sumOf { estimatedSize(it) }
 
     override fun toString(): String {
         return nodes.joinToString("\n")

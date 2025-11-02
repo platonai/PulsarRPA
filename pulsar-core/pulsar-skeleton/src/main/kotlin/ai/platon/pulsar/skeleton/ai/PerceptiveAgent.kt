@@ -122,6 +122,7 @@ data class AgentState constructor(
     val currentPageContentSummary: String? = null,
     val actualLastActionImpact: String? = null,
     val expectedNextActionImpact: String? = null,
+    val url: String? = null,
     val timestamp: Instant = Instant.now(),
     // The last browser use state
     @JsonIgnore

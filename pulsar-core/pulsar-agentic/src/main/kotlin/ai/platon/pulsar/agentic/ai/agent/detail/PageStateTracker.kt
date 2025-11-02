@@ -3,8 +3,11 @@ package ai.platon.pulsar.agentic.ai.agent.detail
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.ai.AgentConfig
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
+import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.getLogger
 import kotlinx.coroutines.delay
+import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Tracks page state changes to detect loops and ensure DOM stability.
@@ -30,6 +33,9 @@ class PageStateTracker(
     private val recentHashes: ArrayDeque<Int> = ArrayDeque()
     private val maxRecentHashes = 10
 
+    private val domSettleJsLoaded = AtomicBoolean(false)
+    private var domSettleJs: String? = null
+
     /**
      * Calculate page state fingerprint for loop detection.
      * Combines URL, DOM structure, and scroll position into a single hash.
@@ -41,7 +47,7 @@ class PageStateTracker(
         val driver = requireNotNull(activeDriver)
 
         // Combine URL, DOM structure, and interactive elements for fingerprint
-        val urlHash = runCatching { driver.currentUrl() }.getOrNull()?.hashCode() ?: 0
+        val urlHash = driver.currentUrl().hashCode()
         // Prefer cached microTree JSON from DOMState to avoid repeated serialization cost
         val domJson = browserUseState.domState.microTree.toNanoTreeInRange().lazyJson
         val domHash = domJson.hashCode()
@@ -123,52 +129,13 @@ class PageStateTracker(
     // Install the lightweight DOM stability probe once per page to avoid re-parsing JS in the loop
     private suspend fun ensureDomStabilityProbeInstalled() {
         val driver = requireNotNull(activeDriver)
-        driver.evaluateValue(
-            """
-            (() => {
-              try {
-                const w = window;
-                if (!w.__pulsar_DomObserver) {
-                  w.__pulsar_DomStamp = 0;
-                  w.__pulsar_DomLastTs = (performance && performance.now) ? performance.now() : Date.now();
-                  const obs = new MutationObserver(() => {
-                    w.__pulsar_DomStamp++;
-                    w.__pulsar_DomLastTs = (performance && performance.now) ? performance.now() : Date.now();
-                  });
-                  // Observe subtree text/content/node additions; attributes are OFF to reduce noise
-                  const opts = { subtree: true, childList: true, characterData: true };
-                  // Intentionally DO NOT observe attributes or set attributeFilter
-                  // This avoids counting class/style/aria toggles as instability
-                  obs.observe(document, opts);
-                  w.__pulsar_DomObserver = obs;
-                }
-                // Bind lifecycle/navigation-ish events once to bump the stamp on non-mutation transitions
-                if (!w.__pulsar_DomEventsBound) {
-                  const bump = () => { try { w.__pulsar_DomStamp++; } catch(_) {} };
-                  document.addEventListener('readystatechange', bump, { once: false, passive: true });
-                  document.addEventListener('DOMContentLoaded', bump, { once: true, passive: true });
-                  window.addEventListener('load', bump, { once: false, passive: true });
-                  window.addEventListener('pageshow', bump, { once: false, passive: true });
-                  window.addEventListener('hashchange', bump, { once: false, passive: true });
-                  window.addEventListener('popstate', bump, { once: false, passive: true });
-                  document.addEventListener('visibilitychange', bump, { once: false, passive: true });
-                  w.__pulsar_DomEventsBound = true;
-                }
-                if (!w.__pulsar_GetDomSignature) {
-                  w.__pulsar_GetDomSignature = function () {
-                    const rs = document.readyState;
-                    const rsCode = rs === 'complete' ? 2 : (rs === 'interactive' ? 1 : 0);
-                    // Pack into a 53-bit safe integer: (stamp << 2) | rsCode
-                    return (w.__pulsar_DomStamp * 4) + rsCode;
-                  }
-                }
-                return 1;
-              } catch (e) {
-                return 0;
-              }
-            })()
-            """.trimIndent()
-        )
+
+        if (domSettleJsLoaded.compareAndSet(false, true)) {
+            domSettleJs = ResourceLoader.readString("js/dom_settle.js")
+        }
+
+        val js = requireNotNull(domSettleJs) { "dom_settle Js is null" }
+        driver.evaluateValue(js)
     }
 
     /**
@@ -204,6 +171,11 @@ class PageStateTracker(
                     """.trimIndent()
                 ) as? Number)?.toLong()
 
+                if (driver.currentUrl().contains("?q=")) {
+                    logger.info("signatureNum: $signatureNum")
+                    delay(3000)
+                }
+
                 if (signatureNum != null && signatureNum >= 0) {
                     val rsCode = (signatureNum % 4L).toInt()
                     val isSame = signatureNum == lastSignature
@@ -231,6 +203,6 @@ class PageStateTracker(
             }
         }
 
-        logger.debug("DOM settle timeout after ${timeoutMs}ms (lastReadyStateCode=$lastReadyStateCode)")
+        logger.info("DOM settle timeout after ${timeoutMs}ms (lastReadyStateCode=$lastReadyStateCode)")
     }
 }
