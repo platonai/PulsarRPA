@@ -96,7 +96,7 @@ class PulsarWebDriverInjectedJSTests : WebDriverTestBase() {
             assertNotNull(result)
             assertNotNull(result.exception)
 
-            val safeSelector = Strings.escapeForJsString(selector)
+            val safeSelector = Strings.escapeJsString(selector)
             result = driver.evaluateDetail("__pulsar_utils__.selectFirstText('$safeSelector')")
             assertNotNull(result)
             assertNull(result.exception)

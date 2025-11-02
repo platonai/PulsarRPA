@@ -258,10 +258,13 @@ class ToolCallExecutorMockSiteTest : WebDriverTestBase() {
 
     @Test
     fun `test driver goForward`() = runEnhancedWebDriverTest("$assetsBaseURL/dom.html", browser) { driver ->
+        val url1 = driver.currentUrl()
         val url2 = "$assetsBaseURL/form.html"
 
         // Navigate to another page
         driver.navigateTo(url2)
+        driver.waitForNavigation()
+        driver.waitForSelector("body")
 
         // Go back
         driver.goBack()

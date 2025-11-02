@@ -336,33 +336,50 @@ abstract class AbstractWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun isVisible(selector: String): Boolean {
-        val safeSelector = Strings.escapeForJsString(selector)
+        val safeSelector = Strings.escapeJsString(selector)
         return evaluateValue("__pulsar_utils__.isVisible('$safeSelector')") == true
     }
 
     override suspend fun isChecked(selector: String): Boolean {
-        val safeSelector = Strings.escapeForJsString(selector)
+        val safeSelector = Strings.escapeJsString(selector)
         return evaluateValue("__pulsar_utils__.isChecked('$safeSelector')") == true
     }
 
     @Throws(WebDriverException::class)
     override suspend fun scrollDown(count: Int) {
-        repeat(count) { evaluate("__pulsar_utils__.scrollDown()") }
+        repeat(count) { evaluate("window.scrollBy(0, 500);") }
     }
 
     @Throws(WebDriverException::class)
     override suspend fun scrollUp(count: Int) {
-        evaluate("__pulsar_utils__.scrollUp()")
+        evaluate("window.scrollBy(0, -500);")
     }
 
     @Throws(WebDriverException::class)
     override suspend fun scrollToTop() {
-        evaluate("__pulsar_utils__.scrollToTop()")
+        evaluate("window.scrollTo(0, 0)")
     }
 
     @Throws(WebDriverException::class)
     override suspend fun scrollToBottom() {
-        evaluate("__pulsar_utils__.scrollToBottom()")
+        val js = """
+(() => {
+if (!document || !document.documentElement || !document.body) {
+    return
+}
+
+let x = 0;
+let y = Math.max(
+    document.documentElement.scrollHeight,
+    document.documentElement.clientHeight,
+    document.body.scrollHeight
+);
+y = Math.min(y, 15000)
+
+window.scrollTo(x, y)
+})()
+        """.trimIndent()
+        // evaluate("__pulsar_utils__.scrollToBottom()")
     }
 
     @Throws(WebDriverException::class)
@@ -372,12 +389,33 @@ abstract class AbstractWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun scrollToViewport(n: Double) {
-        evaluate("__pulsar_utils__.scrollToViewport($n)")
+        val js = """
+((n = 1) => {
+    if (!document?.documentElement || !document?.body) return;
+
+    const viewportHeight = window.innerHeight;
+    const totalHeight = Math.min(
+        Math.max(
+            document.documentElement.scrollHeight,
+            document.body.scrollHeight
+        ),
+        15000
+    );
+
+    // n 为 1 表示第一屏（顶部 0px）
+    const y = Math.min(totalHeight, (n - 1) * viewportHeight);
+    window.scrollTo(0, y);
+})($n);
+
+        """.trimIndent()
+
+        evaluate(js)
+        // evaluate("__pulsar_utils__.scrollToViewport($n)")
     }
 
     @Throws(WebDriverException::class)
     override suspend fun clickNthAnchor(n: Int, rootSelector: String): String? {
-        val safeRootSelector = Strings.escapeForJsString(rootSelector)
+        val safeRootSelector = Strings.escapeJsString(rootSelector)
         val result = evaluate("__pulsar_utils__.clickNthAnchor($n, '$safeRootSelector')")
         return result?.toString()
     }
@@ -387,8 +425,18 @@ abstract class AbstractWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun outerHTML(selector: String): String? {
-        val safeSelector = Strings.escapeForJsString(selector)
-        return evaluateValue("__pulsar_utils__.outerHTML('$safeSelector')")?.toString()
+        val safeSelector = Strings.escapeJsString(selector)
+        val js = """
+(() => {
+    let element = document.querySelector(selector)
+    if (element != null) {
+        return element.outerHTML
+    }
+    return null
+})($safeSelector)
+        """.trimIndent()
+        // return evaluateValue("__pulsar_utils__.outerHTML('$safeSelector')")?.toString()
+        return evaluateValue(js)?.toString()
     }
 
     override suspend fun textContent(): String? {
@@ -397,26 +445,26 @@ abstract class AbstractWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun selectFirstTextOrNull(selector: String): String? {
-        val safeSelector = Strings.escapeForJsString(selector)
+        val safeSelector = Strings.escapeJsString(selector)
         val expression = String.format("__pulsar_utils__.selectFirstText('%s')", safeSelector)
         return evaluateValue(expression)?.toString()
     }
 
     @Throws(WebDriverException::class)
     override suspend fun selectTextAll(selector: String): List<String> {
-        val safeSelector = Strings.escapeForJsString(selector)
+        val safeSelector = Strings.escapeJsString(selector)
         val json = evaluate("__pulsar_utils__.selectTextAll('$safeSelector')")?.toString() ?: "[]"
         return jacksonObjectMapper().readValue(json)
     }
 
     @Throws(WebDriverException::class)
     override suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String? {
-        val safeSelector = Strings.escapeForJsString(selector)
+        val safeSelector = Strings.escapeJsString(selector)
         return evaluateValue("__pulsar_utils__.selectFirstAttribute('$safeSelector', '$attrName')")?.toString()
     }
 
     override suspend fun selectAttributes(selector: String): Map<String, String> {
-        val safeSelector = Strings.escapeForJsString(selector)
+        val safeSelector = Strings.escapeJsString(selector)
         val json = evaluate("__pulsar_utils__.selectAttributes('$safeSelector')")?.toString() ?: return mapOf()
         val attributes: List<String> = jacksonObjectMapper().readValue(json)
         return attributes.zipWithNext().associate { it }
@@ -425,7 +473,7 @@ abstract class AbstractWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun selectAttributeAll(selector: String, attrName: String, start: Int, limit: Int): List<String> {
         val end = start + limit
-        val safeSelector = Strings.escapeForJsString(selector)
+        val safeSelector = Strings.escapeJsString(selector)
         val expression = "__pulsar_utils__.selectAttributeAll('$safeSelector', '$attrName', $start, $end)"
         val json = evaluate(expression)?.toString() ?: return listOf()
         return jacksonObjectMapper().readValue(json)
@@ -433,20 +481,20 @@ abstract class AbstractWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun setAttribute(selector: String, attrName: String, attrValue: String) {
-        val safeSelector = Strings.escapeForJsString(selector)
+        val safeSelector = Strings.escapeJsString(selector)
         evaluate("__pulsar_utils__.setAttribute('$safeSelector', '$attrName', '$attrValue')")
     }
 
     @Throws(WebDriverException::class)
     override suspend fun setAttributeAll(selector: String, attrName: String, attrValue: String) {
-        val safeSelector = Strings.escapeForJsString(selector)
+        val safeSelector = Strings.escapeJsString(selector)
         evaluate("__pulsar_utils__.setAttributeAll('$safeSelector', '$attrName', '$attrValue')")
     }
 
     // --------------------------- Property helpers ---------------------------
     @Throws(WebDriverException::class)
     override suspend fun selectFirstPropertyValueOrNull(selector: String, propName: String): String? {
-        val safeSelector = Strings.escapeForJsString(selector)
+        val safeSelector = Strings.escapeJsString(selector)
         return evaluateValue("__pulsar_utils__.selectFirstPropertyValue('$safeSelector', '$propName')")?.toString()
 //        val safePropName = Strings.escapeForJsString(propName)
         // return evaluateValue(selector, "function() { return this['$safePropName']; }")?.toString()
@@ -460,7 +508,7 @@ abstract class AbstractWebDriver(
         limit: Int
     ): List<String> {
         val end = start + limit
-        val safeSelector = Strings.escapeForJsString(selector)
+        val safeSelector = Strings.escapeJsString(selector)
         val expression = "__pulsar_utils__.selectPropertyValueAll('$safeSelector', '$propName', $start, $end)"
         val json = evaluate(expression)?.toString() ?: return listOf()
         return jacksonObjectMapper().readValue(json)
@@ -468,13 +516,13 @@ abstract class AbstractWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun setProperty(selector: String, propName: String, propValue: String) {
-        val safeSelector = Strings.escapeForJsString(selector)
+        val safeSelector = Strings.escapeJsString(selector)
         evaluate("__pulsar_utils__.setProperty('$safeSelector', '$propName', '$propValue')")
     }
 
     @Throws(WebDriverException::class)
     override suspend fun setPropertyAll(selector: String, propName: String, propValue: String) {
-        val safeSelector = Strings.escapeForJsString(selector)
+        val safeSelector = Strings.escapeJsString(selector)
         evaluate("__pulsar_utils__.setPropertyAll('$safeSelector', '$propName', '$propValue')")
     }
 
@@ -503,25 +551,25 @@ abstract class AbstractWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun clickTextMatches(selector: String, pattern: String, count: Int) {
-        val safeSelector = Strings.escapeForJsString(selector)
+        val safeSelector = Strings.escapeJsString(selector)
         evaluate("__pulsar_utils__.clickTextMatches('$safeSelector', '$pattern')")
     }
 
     @Throws(WebDriverException::class)
     override suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int) {
-        val safeSelector = Strings.escapeForJsString(selector)
+        val safeSelector = Strings.escapeJsString(selector)
         evaluate("__pulsar_utils__.clickMatches('$safeSelector', '$attrName', '$pattern')")
     }
 
     @Throws(WebDriverException::class)
     override suspend fun check(selector: String) {
-        val safeSelector = Strings.escapeForJsString(selector)
+        val safeSelector = Strings.escapeJsString(selector)
         evaluate("__pulsar_utils__.check('$safeSelector')")
     }
 
     @Throws(WebDriverException::class)
     override suspend fun uncheck(selector: String) {
-        val safeSelector = Strings.escapeForJsString(selector)
+        val safeSelector = Strings.escapeJsString(selector)
         evaluate("__pulsar_utils__.uncheck('$safeSelector')")
     }
 

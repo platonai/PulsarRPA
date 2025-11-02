@@ -352,6 +352,9 @@ __pulsar_utils__.scrollToViewport = function (n = 1) {
     window.scrollTo(0, y);
 };
 
+/**
+ * @deprecated using CDP instead
+ * */
 __pulsar_utils__.scrollToBottom = function() {
     if (!document || !document.documentElement || !document.body) {
         return
@@ -368,6 +371,9 @@ __pulsar_utils__.scrollToBottom = function() {
     window.scrollTo(x, y)
 };
 
+/**
+ * @deprecated using CDP instead
+ * */
 __pulsar_utils__.scrollUp = function() {
     if (!document.__pulsar__Data) {
         // TODO: this occurs when do performance test, but the reason is not investigated
@@ -377,10 +383,16 @@ __pulsar_utils__.scrollUp = function() {
     window.scrollBy(0, -500);
 };
 
+/**
+ * @deprecated using CDP instead
+ * */
 __pulsar_utils__.scrollToTop = function() {
     window.scrollTo(0, 0)
 };
 
+/**
+ * @deprecated using CDP instead
+ * */
 __pulsar_utils__.scrollDown = function() {
     if (!document.__pulsar__Data) {
         // TODO: this occurs when do performance test, but the reason is not investigated
@@ -409,6 +421,7 @@ __pulsar_utils__.scrollDownN = function(scrollCount = 5) {
  *
  * @param  {String} selector
  * @return boolean
+ * @deprecated use CDP instead
  */
 __pulsar_utils__.isVisible = function(selector) {
     let ele = document.querySelector(selector)
@@ -544,6 +557,7 @@ __pulsar_utils__.isElementChecked = function(element, strict = true) {
  * Scroll into view.
  *
  * @param {String} selector The element to scroll to
+ * @deprecated use CDP instead
  * */
 __pulsar_utils__.scrollIntoView = function(selector) {
     let ele = document.querySelector(selector)
@@ -563,6 +577,7 @@ __pulsar_utils__.scrollIntoView = function(selector) {
  *
  * @param  {String} selector
  * @return
+ * @deprecated use CDP instead
  */
 __pulsar_utils__.click = function(selector) {
     let ele = document.querySelector(selector)
@@ -671,6 +686,7 @@ __pulsar_utils__.uncheck = function(selector) {
  *
  * @param  {String} selector
  * @return {String}
+ * @deprecated use CDP instead
  */
 __pulsar_utils__.outerHTML = function(selector) {
     let element = document.querySelector(selector)

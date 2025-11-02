@@ -318,7 +318,7 @@ interface WebDriver : Closeable {
      * chrome://newtab
      * chrome://settings
      *
-     * TODO: see [com.github.kklisura.cdt.protocol.types.page.NavigationEntry], userTypeURL
+     * see [ai.platon.cdt.kt.protocol.types.page.NavigationEntry.userTypedURL]
      *
      * @return A string containing the URL of the document, or the passed in url to navigate.
      */

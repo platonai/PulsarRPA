@@ -15,6 +15,7 @@ import ai.platon.pulsar.browser.driver.chrome.util.CDPReturnError
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeDriverException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.js.JsUtils
@@ -203,7 +204,8 @@ class PageHandler(
      * @return Attribute value or null if not found
      */
     @Throws(ChromeDriverException::class)
-    suspend fun getAttribute(selector: String, attrName: String) = invokeOnElement(selector) { getAttribute(it, attrName) }
+    suspend fun getAttribute(selector: String, attrName: String) =
+        invokeOnElement(selector) { getAttribute(it, attrName) }
 
     @Throws(ChromeDriverException::class)
     suspend fun getAttribute(node: NodeRef, attrName: String): String? {
@@ -228,10 +230,10 @@ class PageHandler(
      * @return true if visible, false otherwise
      */
     @Throws(ChromeDriverException::class)
-    suspend fun visible(selector: String) = predicateOnElement(selector) { visible(it) }
+    suspend fun isVisible(selector: String) = predicateOnElement(selector) { isVisible(it) }
 
     @Throws(ChromeDriverException::class)
-    suspend fun visible(node: NodeRef): Boolean {
+    suspend fun isVisible(node: NodeRef): Boolean {
         if (node.isNull()) {
             return false
         }
@@ -252,6 +254,40 @@ class PageHandler(
         }
 
         return isVisible
+    }
+
+    @Throws(ChromeDriverException::class)
+    suspend fun isChecked(selector: String): Boolean {
+        val expression = java.lang.String.format(
+            """
+((selector) => {
+  const el = document.querySelector(selector);
+  if (!el) return null;
+  const role = el.getAttribute('role');
+  const ariaChecked = el.getAttribute('aria-checked');
+
+  // 原生 input[type=checkbox|radio]
+  if (el.tagName === 'INPUT' && (el.type === 'checkbox' || el.type === 'radio')) {
+    return !!el.checked;
+  }
+
+  // ARIA 控件
+  if (role === 'checkbox' || role === 'radio' || role === 'switch') {
+    if (ariaChecked === 'true') return true;
+    if (ariaChecked === 'mixed') return 'mixed';
+    return false;
+  }
+
+  return null;
+})('%s')
+            """.trimIndent(), Strings.escapeJsString(selector)
+        )
+
+        val result = evaluateValue(expression)
+
+        if (result is Boolean) return result
+        // if ("mixed" == result) return null // 可按需返回 tri-state
+        return false
     }
 
     /**

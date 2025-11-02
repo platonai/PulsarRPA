@@ -111,7 +111,8 @@ class ClickableDOM(
     }
 
     suspend fun isVisible(): Boolean {
-        return clickablePoint().value != null
+        val point = clickablePoint().value
+        return point != null && point.x > 0 && point.y > 0
     }
 
     suspend fun boundingBox(): RectD? {

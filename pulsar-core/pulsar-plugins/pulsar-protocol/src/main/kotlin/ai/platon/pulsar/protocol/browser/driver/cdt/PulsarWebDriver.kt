@@ -262,6 +262,15 @@ class PulsarWebDriver(
     }
 
     @Throws(WebDriverException::class)
+    override suspend fun isVisible(selector: String): Boolean {
+        return page.isVisible(selector)
+    }
+
+    override suspend fun isChecked(selector: String): Boolean {
+        return page.isChecked(selector)
+    }
+
+    @Throws(WebDriverException::class)
     override suspend fun mouseWheelDown(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
         try {
             rpc.invokeDeferred("mouseWheelDown", 1) {

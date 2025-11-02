@@ -17,7 +17,6 @@
 
 package ai.platon.pulsar.common;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
@@ -128,7 +127,7 @@ public final class Strings {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
-    public static String escapeForJsString(String s) {
+    public static String escapeJsString(String s) {
         if (s == null) return "";
 
         StringBuilder sb = new StringBuilder(s.length() + 16);
