@@ -2,7 +2,7 @@ package ai.platon.pulsar.agentic
 
 import ai.platon.pulsar.agentic.ai.InternalAgentExecutor
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
-import ai.platon.pulsar.agentic.ai.tta.InstructionResult
+import ai.platon.pulsar.agentic.ai.tta.ToolCallResults
 import ai.platon.pulsar.agentic.context.AbstractAgenticContext
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.ql.SessionConfig
@@ -57,10 +57,10 @@ interface AgenticSession: PulsarSession {
      * @return The response from the model, though in this implementation, the return value is not explicitly used.
      */
     @Beta
-    suspend fun performAct(action: ActionDescription): InstructionResult
+    suspend fun performAct(action: ActionDescription): ToolCallResults
 
     @Beta
-    suspend fun execute(action: ActionDescription): InstructionResult
+    suspend fun execute(action: ActionDescription): ToolCallResults
 
     /**
      * Instructs the webdriver to perform a series of actions based on the given prompt.
@@ -70,7 +70,7 @@ interface AgenticSession: PulsarSession {
      * @return The response from the model, though in this implementation, the return value is not explicitly used.
      */
     @Deprecated("Use act instead", ReplaceWith("multiAct(action)"))
-    suspend fun instruct(prompt: String): InstructionResult
+    suspend fun instruct(prompt: String): ToolCallResults
 }
 
 abstract class AbstractAgenticSession(

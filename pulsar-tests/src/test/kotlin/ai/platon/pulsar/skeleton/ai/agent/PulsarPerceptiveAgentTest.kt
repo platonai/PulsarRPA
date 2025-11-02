@@ -4,7 +4,6 @@ import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.agentic.ai.AgentConfig
 import ai.platon.pulsar.agentic.ai.BrowserPerceptiveAgent
 import ai.platon.pulsar.common.printlnPro
-import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.ai.ExtractOptions
@@ -105,7 +104,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
                 // History should be updated
                 assertTrue(agent.stateHistory.isNotEmpty())
-                assertContains(agent.stateHistory.last().action, "extract")
+                assertContains(agent.stateHistory.last().action ?: "", "extract")
             }
         }
 
@@ -204,7 +203,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
                 // History should be updated
                 assertTrue(agent.stateHistory.isNotEmpty())
-                assertContains(agent.stateHistory.last().action, "observe")
+                assertContains(agent.stateHistory.last().action ?: "", "observe")
             }
         }
 
@@ -320,7 +319,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
                 // Manually add to history (simulating execution)
                 val history = agent.stateHistory as? MutableList
-                history?.add(AgentState(1, action = "Test action completed"))
+                history?.add(AgentState(1, "", action = "Test action completed"))
 
                 if (agent.stateHistory.isNotEmpty()) {
                     assertFalse(agent.toString().contains("no history"))

@@ -22,6 +22,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonElement
 import org.apache.commons.lang3.StringUtils
+import java.lang.ref.WeakReference
 import java.nio.file.Files
 
 open class TextToAction(
@@ -52,7 +53,7 @@ open class TextToAction(
     ): ActionDescription {
         require(driver is PulsarWebDriver) { "PulsarWebDriver is required to use agents" }
         val browserUseState = driver.domService.getBrowserUseState(snapshotOptions = SnapshotOptions())
-        val agentState = AgentState(1, "tta.generate", browserUseState = browserUseState)
+        val agentState = AgentState(1, instruction, browserUseState = browserUseState)
 
         return generate(instruction, agentState, browserUseState, screenshotB64)
     }

@@ -3,7 +3,7 @@ package ai.platon.pulsar.agentic.ai
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
-import ai.platon.pulsar.agentic.ai.tta.InstructionResult
+import ai.platon.pulsar.agentic.ai.tta.ToolCallResults
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.ai.ActResult
@@ -37,10 +37,10 @@ internal class InternalAgentExecutor(
         return agent.act(action)
     }
 
-    suspend fun performAct(action: ActionDescription): InstructionResult {
+    suspend fun performAct(action: ActionDescription): ToolCallResults {
         val toolCall = action.toolCall
         if (action.expressions.isEmpty() && toolCall == null) {
-            return InstructionResult(action = action)
+            return ToolCallResults(action = action)
         }
 
         val result = if (toolCall != null) {
@@ -49,7 +49,7 @@ internal class InternalAgentExecutor(
             action.expressions.take(1).map { expr -> toolCallExecutor.execute(expr, driver) }.firstOrNull()
         }
 
-        return InstructionResult(
+        return ToolCallResults(
             action.expressions,
             functionResults = listOf(result),
             action = action
@@ -59,7 +59,7 @@ internal class InternalAgentExecutor(
     suspend fun execute(action: ActionDescription) = performAct(action)
 
     @Deprecated("Use act instead", replaceWith = ReplaceWith("act(action)"))
-    suspend fun instruct(prompt: String): InstructionResult {
+    suspend fun instruct(prompt: String): ToolCallResults {
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
         val tta = TextToAction(conf)
 

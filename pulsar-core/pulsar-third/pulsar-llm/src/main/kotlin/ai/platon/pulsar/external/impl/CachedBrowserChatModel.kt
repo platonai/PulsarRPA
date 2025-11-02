@@ -243,13 +243,14 @@ open class CachedBrowserChatModel(
 
         val modelResponse = ModelResponse(response.aiMessage().text().trim(), state, tokenUsage)
         if (logger.isInfoEnabled) {
-            val log = Strings.compactLog(modelResponse.content, 500)
-            logger.info(
-                "◀ Chat - token: {} | [len: {}] {}",
-                modelResponse.tokenUsage.totalTokenCount,
-                modelResponse.content.length,
-                log
-            )
+            val content = modelResponse.content
+            val maxWidth = when {
+                content.contains("screenshotContentSummary") -> 2000 // A browser agent's response
+                else -> 500
+            }
+            val log = Strings.compactLog(modelResponse.content, maxWidth)
+            logger.info("◀ Chat - token: {} | [len: {}] {}",
+                modelResponse.tokenUsage.totalTokenCount, modelResponse.content.length, log)
         }
 
         // 记录响应
@@ -297,7 +298,7 @@ open class CachedBrowserChatModel(
             null -> throw RuntimeException("[Unexpected] Failed to send chat message for $i times with unknown reason")
             is TimeoutCancellationException -> {
                 logger.warn("Timeout and cancelled for $i times | {}", lastException.message)
-                throw lastException
+                throw ChatModelException("Timeout and cancelled for $i times | ${lastException.message}", lastException)
             }
             else -> {
                 logger.warn("Failed to send chat message for $i times: {}", lastException.stringify())

@@ -5,12 +5,13 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.external.ModelResponse
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.JsonNode
+import java.lang.ref.WeakReference
 
 import java.time.Instant
 import java.util.*
 
 data class ActionOptions(
-    val action: String,
+    val action: String,  // the user's action command
     val modelName: String? = null,
     val variables: Map<String, String>? = null,
     val domSettleTimeoutMs: Int? = null,
@@ -69,6 +70,12 @@ data class ToolCall constructor(
     override fun toString() = pseudoExpression
 }
 
+data class ToolCallResult(
+    val success: Boolean,
+    val result: Any? = null,
+    val message: String? = null
+)
+
 data class ObserveElement constructor(
     val locator: String? = null,
 
@@ -86,11 +93,15 @@ data class ObserveElement constructor(
     val xpath: String? = null,
     val cssSelector: String? = null,
     val expressions: List<String> = emptyList(),
-    val cssFriendlyExpressions: List<String> = emptyList()
+    val cssFriendlyExpressions: List<String> = emptyList(),
 ) {
+    @get:JsonIgnore
     val description: String? get() = toolCall?.description
+    @get:JsonIgnore
     val domain: String? get() = toolCall?.domain
+    @get:JsonIgnore
     val method: String? get() = toolCall?.method
+    @get:JsonIgnore
     val arguments: Map<String, Any?>? get() = toolCall?.arguments
 }
 
@@ -116,7 +127,9 @@ data class ObserveResult constructor(
 
 data class AgentState constructor(
     val step: Int,
-    val action: String,
+    val instruction: String,
+    val domain: String? = null,
+    val action: String? = null,
     val description: String? = null,
     val screenshotContentSummary: String? = null,
     val currentPageContentSummary: String? = null,
@@ -128,7 +141,9 @@ data class AgentState constructor(
     @JsonIgnore
     val browserUseState: BrowserUseState? = null,
     @JsonIgnore
-    val prevState: AgentState? = null,
+    var toolCallResult: ToolCallResult? = null,
+    @JsonIgnore
+    val prevState: AgentState? = null
 ) {
     override fun toString(): String {
         val summary = listOfNotNull(description,

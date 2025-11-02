@@ -17,16 +17,16 @@ class AgentMessageList(
 ) {
     val instruction get() = find("instruction")
 
-    fun addSystem(content: String, name: String? = null) {
-        addLast("system", content, name)
+    fun addSystem(message: String, name: String? = null) {
+        addLast("system", message, name)
     }
 
-    fun addUser(content: String, name: String? = null) {
-        addLast("user", content, name)
+    fun addUser(message: String, name: String? = null) {
+        addLast("user", message, name)
     }
 
-    fun addFirst(role: String, content: String, name: String? = null) {
-        val msg = SimpleMessage(role, content, name)
+    fun addFirst(role: String, message: String, name: String? = null) {
+        val msg = SimpleMessage(role, message, name)
         messages.add(0, msg)
     }
 

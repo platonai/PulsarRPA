@@ -244,6 +244,12 @@ $A11Y_TREE_NOTE_CONTENT
 
 ---
 
+## 数据提取
+
+- 上一步操作的数据提取结果，如 `textContent`
+
+---
+
 ## 动作规则
 
 - 在每一步中你允许使用最多 {$MAX_ACTIONS} 个动作。
@@ -495,6 +501,40 @@ $his
 		""".trimIndent()
 
         return msg
+    }
+
+    fun buildBrowserVisionInfo(): String {
+        val visionInfo = """
+## 视觉信息
+
+- 在推理中利用图像来评估你的进展。
+- 当不确定或想获取更多信息时使用截图。
+
+[Current page screenshot provided as base64 image]
+
+---
+
+""".trimIndent()
+
+        return visionInfo
+    }
+
+    fun buildExtractTextContentMessage(agentState: AgentState, domContent: String): String {
+        return """
+## 数据提取
+
+上一步操作：${agentState.prevState?.action}
+上一步操作期望结果：${agentState.prevState?.expectedNextActionImpact}
+
+上一步操作数据提取结果：
+
+<dom_content>
+$domContent
+</dom_content>
+
+---
+
+        """.trimIndent()
     }
 
     fun buildUserRequestMessage(userRequest: String): String {

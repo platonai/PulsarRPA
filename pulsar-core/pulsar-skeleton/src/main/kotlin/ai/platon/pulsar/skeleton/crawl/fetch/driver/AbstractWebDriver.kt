@@ -451,7 +451,7 @@ window.scrollTo(x, y)
 ((selector) => {
     const element = document.querySelector(selector);
     return element?.textContent ?? null;
-})($safeSelector)
+})('$safeSelector')
         """.trimIndent()
         // return evaluateValue("__pulsar_utils__.outerHTML('$safeSelector')")?.toString()
         return evaluateValue(js)?.toString()

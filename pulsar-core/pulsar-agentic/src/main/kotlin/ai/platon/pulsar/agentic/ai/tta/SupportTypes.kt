@@ -54,7 +54,7 @@ data class ActionDescription constructor(
     val cssFriendlyExpressions: List<String> get() = observeElement?.cssFriendlyExpressions ?: emptyList()
 }
 
-data class InstructionResult(
+data class ToolCallResults(
     val expressions: List<String> = emptyList(),
     val functionResults: List<Any?> = emptyList(),
     val action: ActionDescription? = null,
@@ -63,7 +63,7 @@ data class InstructionResult(
     val toolCalls: List<ToolCall>? get() = action?.toolCall?.let { listOf(it) }
 
     companion object {
-        val LLM_NOT_AVAILABLE = InstructionResult(
+        val LLM_NOT_AVAILABLE = ToolCallResults(
             emptyList(),
             emptyList(),
         )
@@ -72,7 +72,7 @@ data class InstructionResult(
 
 data class ActionExecuteResult(
     val action: ActionDescription,
-    val instructionResult: InstructionResult? = null,
+    val toolCallResults: ToolCallResults? = null,
     val success: Boolean = false,
     val summary: String? = null,
 ) {

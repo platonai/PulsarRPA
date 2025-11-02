@@ -31,6 +31,7 @@ driver.delay(millis: Long)
 
 // domain/object: browser
 browser.switchTab(tabId: String): Int
+
     """
 
     const val AGENT_TOOL_CALL_LIST = """
