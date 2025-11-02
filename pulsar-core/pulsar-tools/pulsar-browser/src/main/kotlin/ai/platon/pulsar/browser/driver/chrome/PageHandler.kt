@@ -308,7 +308,7 @@ class PageHandler(
         val nodeRef = resolveSelector(selector) ?: return null
 
         // Fix: Only use nodeId parameter, others should be null
-        domAPI?.focus(nodeRef.nodeId, nodeRef.backendNodeId, nodeRef.objectId)
+        domAPI?.focus(nodeRef.nodeId)
 
         return nodeRef
     }
@@ -337,6 +337,16 @@ class PageHandler(
         return null
     }
 
+    /**
+     * Scrolls the specified rect of the given node into view if not already visible.
+     * Note: exactly one between nodeId, backendNodeId and objectId should be passed
+     * to identify the node.
+     * - nodeId Identifier of the node.
+     * - backendNodeId Identifier of the backend node.
+     * - objectId JavaScript object id of the node wrapper.
+     * @param rect The rect to be scrolled into view, relative to the node's border box, in CSS pixels.
+     * When omitted, center of the node will be used, similar to Element.scrollIntoView.
+     */
     @Throws(ChromeDriverException::class)
     suspend fun scrollIntoViewIfNeeded(nodeRef: NodeRef, selector: String? = null, rect: Rect? = null): NodeRef? {
         val node = domAPI?.describeNode(nodeRef.nodeId, nodeRef.backendNodeId, nodeRef.objectId, null, false)
@@ -345,7 +355,8 @@ class PageHandler(
             return null
         }
 
-        domAPI?.scrollIntoViewIfNeeded(node.nodeId, node.backendNodeId, nodeRef.objectId, rect)
+        // nodeId, backendNodeId, objectId are mutually exclusive, only one can be passed in.
+        domAPI?.scrollIntoViewIfNeeded(node.nodeId, rect = rect)
 
         return nodeRef
     }

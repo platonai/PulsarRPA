@@ -29,7 +29,6 @@ open class ScriptLoader(
 
         val RESOURCES = """
             stealth.js
-            stagehand.js
             configs.js
             node_ext.js
             node_traversor.js

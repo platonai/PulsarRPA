@@ -1122,7 +1122,7 @@ class BrowserPerceptiveAgent constructor(
     private fun processTrace(entry: String) {
         val time = LocalDateTime.now()
         val id = _processTrace.size
-        _processTrace.add("$id.\t$time - $entry")
+        _processTrace.add("> $id.\t$time - $entry")
     }
 
     /**

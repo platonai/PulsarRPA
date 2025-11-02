@@ -3,6 +3,7 @@ package ai.platon.pulsar.external.impl
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.*
 import ai.platon.pulsar.external.logging.ChatModelLogger
@@ -208,26 +209,13 @@ open class CachedBrowserChatModel(
         val response: ChatResponse = try {
             if (systemMessage.isBlank()) {
                 // langchainModel.chat(um)
-                sendChatMessageInIOThread(um)
+                // sendChatMessageInIOThread(um)
+                sendChatMessageWithRetry(um)
             } else {
                 val sm = SystemMessage.systemMessage(systemMessage)
                 // langchainModel.chat(sm, um)
-                sendChatMessageInIOThread(sm, um)
-            }
-        } catch (e: IOException) {
-            logger.info("IOException | {}", e.message)
-            return ModelResponse("", ResponseState.OTHER).also {
-                llmLogger.logResponse(requestId, it)
-            }
-        } catch (e: RuntimeException) {
-            if (e.cause is InterruptedIOException) {
-                logger.info("InterruptedIOException | {}", e.message)
-                return ModelResponse("", ResponseState.OTHER).also {
-                    llmLogger.logResponse(requestId, it)
-                }
-            } else {
-                logger.warn("RuntimeException | {} | {}", langchainModel.javaClass.simpleName, e.message)
-                throw e
+                // sendChatMessageInIOThread(sm, um)
+                sendChatMessageWithRetry(sm, um)
             }
         } catch (e: Exception) {
             logger.warn("[Unexpected] Exception | {} | {}", langchainModel.javaClass.simpleName, e.message)
@@ -266,6 +254,35 @@ open class CachedBrowserChatModel(
         logger.debug("Cached response for key: $cacheKey")
 
         return modelResponse
+    }
+
+    private suspend fun sendChatMessageWithRetry(vararg messages: ChatMessage): ChatResponse {
+        var i = 0
+        val maxRetry = 3
+        var lastException: Exception? = null
+        while (i++ < maxRetry) {
+            try {
+                return sendChatMessageInIOThread(*messages)
+            } catch (e: IOException) {
+                lastException = e
+                logger.info("IOException, trying $i-th time | {}", e.message)
+                continue
+            } catch (e: RuntimeException) {
+                lastException = e
+                if (e.cause is InterruptedIOException) {
+                    logger.info("InterruptedIOException, trying $i-th time | {}", e.message)
+                    continue
+                } else {
+                    logger.warn("RuntimeException, trying $i-th time | {}", e.message)
+                    continue
+                }
+            }
+        }
+
+        if (lastException != null) {
+            logger.warn("Failed to send chat message for $i times: {}", lastException.stringify())
+            throw lastException
+        } else throw RuntimeException("[Unexpected] Failed to send chat message for $i times with unknown reason")
     }
 
     private suspend fun sendChatMessageInIOThread(vararg messages: ChatMessage): ChatResponse {
