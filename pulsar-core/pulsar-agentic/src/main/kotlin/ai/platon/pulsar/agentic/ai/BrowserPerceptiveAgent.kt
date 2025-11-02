@@ -753,13 +753,13 @@ class BrowserPerceptiveAgent constructor(
     private suspend fun doResolveProblem(
         action: ActionOptions, sessionId: String, startTime: Instant, attempt: Int
     ): ActResult {
-        val overallGoal = action.action
+        val userRequest = action.action
         val context = ExecutionContext(sessionId, 0, "execute", getCurrentUrl())
 
         val sid = context.sessionId.take(8)
         logger.info(
             "🚀 agent.start sid={} step={} url={} instr='{}' attempt={} maxSteps={} maxRetries={}",
-            sid, context.stepNumber, context.targetUrl, Strings.compactLog(overallGoal, 100),
+            sid, context.stepNumber, context.targetUrl, Strings.compactLog(userRequest, 100),
             attempt + 1, config.maxSteps, config.maxRetries)
 
         // agent general guide
@@ -792,7 +792,7 @@ class BrowserPerceptiveAgent constructor(
                 val currentUrl = driver.currentUrl()
                 // Extract nodes each step
                 val agentState = action.agentState ?: AgentState(
-                    step = 1, action = "observeAct", browserUseState = browserUseState, url = currentUrl)
+                    step = step, action = "", browserUseState = browserUseState, url = currentUrl)
 
                 // Medium Priority #10: Detect if page state hasn't changed
                 val unchangedCount = pageStateTracker.checkStateChange(browserUseState)
@@ -818,12 +818,15 @@ class BrowserPerceptiveAgent constructor(
                     null
                 }
 
-                messages.addLast("user", promptBuilder.buildOverallGoalMessage(overallGoal), name = "overallGoal")
+                messages.addLast("user", promptBuilder.buildUserRequestMessage(userRequest), name = "user_request")
                 messages.addUser(promptBuilder.buildAgentStateHistoryMessage(stateHistory))
 
                 if (screenshotB64 != null) {
                     val visionInfo = """
 ## 视觉信息
+
+- 在推理中利用图像来评估你的进展。
+- 当不确定或想获取更多信息时使用截图。
 
 [Current page screenshot provided as base64 image]
 
@@ -892,9 +895,9 @@ class BrowserPerceptiveAgent constructor(
                 "✅ agent.done sid={} steps={} dur={}", sid, step, executionTime.toString()
             )
 
-            val summary = generateFinalSummary(overallGoal, context)
+            val summary = generateFinalSummary(userRequest, context)
             val ok = summary.state != ResponseState.OTHER
-            return ActResult(success = ok, message = summary.content, action = overallGoal)
+            return ActResult(success = ok, message = summary.content, action = userRequest)
         } catch (e: Exception) {
             val executionTime = Duration.between(startTime, Instant.now())
             logger.error("💥 agent.fail sid={} steps={} dur={} err={}", sid, step, executionTime.toString(), e.message, e)

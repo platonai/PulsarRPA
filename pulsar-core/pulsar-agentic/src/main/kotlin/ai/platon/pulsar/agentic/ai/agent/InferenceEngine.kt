@@ -50,7 +50,7 @@ data class ExtractParams(
 )
 
 data class ObserveParams constructor(
-    val overallGoal: String? = null,
+    val user_request: String? = null,
     val agentState: AgentState,
     val browserUseState: BrowserUseState,
     val requestId: String = UUID.randomUUID().toString(),

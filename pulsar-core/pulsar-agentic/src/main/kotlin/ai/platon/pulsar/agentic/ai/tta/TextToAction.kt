@@ -123,10 +123,10 @@ open class TextToAction(
         screenshotB64: String? = null,
         toolCallLimit: Int = 100,
     ): ModelResponse {
-        var overallGoal: String? = messages.find("overallGoal")?.content
-        overallGoal = StringUtils.substringBetween(overallGoal, "<overallGoal>", "</overallGoal>")
+        var userRequest: String? = messages.find("user_request")?.content
+        userRequest = StringUtils.substringBetween(userRequest, "<user_request>", "</user_request>")
         val params = ObserveParams(
-            overallGoal ?: "",
+            userRequest ?: "",
             agentState = agentState,
             browserUseState = browserUseState,
             returnAction = true,
