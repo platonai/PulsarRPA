@@ -575,6 +575,10 @@ interface PulsarSession : AutoCloseable {
      */
     fun createBoundDriver(): WebDriver
     /**
+     * Create the default driver and bind it to the session.
+     */
+    fun getOrCreateBoundDriver(): WebDriver
+    /**
      * Bind a webdriver to the session.
      *
      * ```kotlin

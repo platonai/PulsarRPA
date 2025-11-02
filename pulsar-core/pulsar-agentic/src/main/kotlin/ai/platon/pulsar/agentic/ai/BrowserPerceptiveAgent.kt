@@ -89,7 +89,7 @@ class BrowserPerceptiveAgent constructor(
     private val slogger = StructuredAgentLogger(ownerLogger, config)
     private val logger = ownerLogger
 
-    private val activeDriver get() = session.boundDriver ?: session.createBoundDriver()
+    private val activeDriver get() = session.getOrCreateBoundDriver()
     private val baseDir = AppPaths.get("agent")
     private val conf get() = (activeDriver as AbstractWebDriver).settings.config
 

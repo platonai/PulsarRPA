@@ -209,6 +209,10 @@ abstract class AbstractPulsarSession(
         return context.launchDefaultBrowser().newDriver().also { bindDriver(it) }
     }
 
+    override fun getOrCreateBoundDriver(): WebDriver {
+        return boundDriver ?: context.launchDefaultBrowser().newDriver().also { bindDriver(it) }
+    }
+
     override fun bindDriver(driver: WebDriver) {
         sessionConfig.putBean(driver)
         bindBrowser(driver.browser)

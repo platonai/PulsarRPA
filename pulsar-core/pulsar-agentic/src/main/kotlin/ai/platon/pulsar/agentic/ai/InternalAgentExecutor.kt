@@ -17,7 +17,7 @@ internal class InternalAgentExecutor(
 ) {
     constructor(session: AgenticSession): this(
         session,
-        requireNotNull(session.boundDriver) { "Bind a driver for agentic functionalities: `session.bind(driver)`" },
+        session.getOrCreateBoundDriver(),
         session.sessionConfig
     )
 

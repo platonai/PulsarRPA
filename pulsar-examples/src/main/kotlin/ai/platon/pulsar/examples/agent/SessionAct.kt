@@ -33,7 +33,7 @@ class SessionAct {
         starter.start(url)
         session.registerClosable(starter)
 
-        val driver = session.createBoundDriver()
+        val driver = session.getOrCreateBoundDriver()
 
         step("Open URL: $url")
         var page = session.open(url)
