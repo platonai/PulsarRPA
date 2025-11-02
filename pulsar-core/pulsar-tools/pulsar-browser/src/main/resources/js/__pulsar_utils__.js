@@ -557,18 +557,40 @@ __pulsar_utils__.isElementChecked = function(element, strict = true) {
  * Scroll into view.
  *
  * @param {String} selector The element to scroll to
+ * @param {Object} [options] Optional scroll options to override defaults
  * @deprecated use CDP instead
  * */
-__pulsar_utils__.scrollIntoView = function(selector) {
-    let ele = document.querySelector(selector)
-    if (ele) {
-        ele.scrollIntoView(
-            {
-                block: "start",
-                inline: "nearest",
-                behavior: 'auto',
+__pulsar_utils__.scrollIntoView = function(selector, options) {
+    try {
+        const el = document.querySelector(selector);
+        if (!el) return false;
+
+        // Determine if scrolling is actually needed
+        const rect = el.getBoundingClientRect();
+        const vw = window.innerWidth || document.documentElement.clientWidth;
+        const vh = window.innerHeight || document.documentElement.clientHeight;
+        const fullyInView = rect.top >= 0 && rect.left >= 0 && rect.bottom <= vh && rect.right <= vw;
+
+        if (!fullyInView) {
+            const opts = Object.assign({
+                behavior: 'smooth',
+                block: 'center',
+                inline: 'nearest'
+            }, options || {});
+            el.scrollIntoView(opts);
+            return true;
+        }
+        return false;
+    } catch (e) {
+        // Fallback: best-effort immediate scroll to avoid breaking flows
+        try {
+            const el = document.querySelector(selector);
+            if (el) {
+                el.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
+                return true;
             }
-        )
+        } catch (_) { /* ignore */ }
+        return false;
     }
 };
 

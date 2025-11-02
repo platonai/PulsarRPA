@@ -324,17 +324,27 @@ class PageHandler(
     suspend fun scrollIntoViewIfNeeded(selector: String, rect: Rect? = null): NodeRef? {
         val node = resolveSelector(selector) ?: return null
 
-        try {
-            return scrollIntoViewIfNeeded(node, selector, rect)
+        // Prefer smooth behavior when rect is not specified; otherwise honor rect via CDP first
+        return try {
+            if (rect == null) {
+                // Try smooth scrolling via JS on the element itself
+                if (trySmoothScroll(node)) return node
+            }
+            // Fallback or rect path: use CDP DOM API
+            scrollIntoViewIfNeeded(node, selector, rect)
         } catch (e: ChromeRPCException) {
-            logger.warn("DOM.scrollIntoViewIfNeeded is not supported, fallback to Element.scrollIntoView | {} | {} | {}",
-                node, e.message, selector)
-            // Fallback to Element.scrollIntoView if DOM.scrollIntoViewIfNeeded is not supported
+            logger.warn(
+                "DOM.scrollIntoViewIfNeeded is not supported, fallback to Element.scrollIntoView | {} | {} | {}",
+                node, e.message, selector
+            )
+            // Fallback to legacy helper (CSS-only); safe stringify to avoid quoting issues
             val safeSelector = pulsarObjectMapper().writeValueAsString(selector)
-            evaluate("__pulsar_utils__.scrollIntoView('$safeSelector')")
+            evaluate("__pulsar_utils__.scrollIntoView($safeSelector)")
+            node
+        } catch (e: Exception) {
+            logger.warn("scrollIntoViewIfNeeded failed | {} | {}", selector, e.brief())
+            node
         }
-
-        return null
     }
 
     /**
@@ -355,10 +365,63 @@ class PageHandler(
             return null
         }
 
-        // nodeId, backendNodeId, objectId are mutually exclusive, only one can be passed in.
-        domAPI?.scrollIntoViewIfNeeded(node.nodeId, rect = rect)
+        // If a rect is provided, honor it via CDP; otherwise prefer smooth behavior via JS
+        return try {
+            if (rect != null) {
+                domAPI?.scrollIntoViewIfNeeded(node.nodeId, rect = rect)
+                nodeRef
+            } else {
+                if (trySmoothScroll(nodeRef)) nodeRef else {
+                    domAPI?.scrollIntoViewIfNeeded(node.nodeId, rect = null)
+                    nodeRef
+                }
+            }
+        } catch (e: ChromeRPCException) {
+            // As a last resort, attempt legacy JS utility when a CSS selector is available
+            if (!selector.isNullOrBlank()) {
+                val safeSelector = pulsarObjectMapper().writeValueAsString(selector)
+                evaluate("__pulsar_utils__.scrollIntoView($safeSelector)")
+            }
+            nodeRef
+        }
+    }
 
-        return nodeRef
+    /**
+     * Try to perform smooth scrolling for the given node using Element.scrollIntoView with behavior:'smooth'.
+     * This does not rely on querySelector and works even for backend node selectors.
+     *
+     * @return true if the call was issued without transport errors, false otherwise.
+     */
+    private suspend fun trySmoothScroll(nodeRef: NodeRef): Boolean {
+        return try {
+            val remote = domAPI?.resolveNode(nodeRef.nodeId, nodeRef.backendNodeId, null, null)
+            val objectId = remote?.objectId ?: return false
+            try {
+                // Execute on the element itself to avoid selector issues; center for stability
+                val fn = """
+                    function() {
+                        try {
+                            this.scrollIntoView({behavior:'smooth', block:'center', inline:'nearest'});
+                            return true;
+                        } catch (e) { return false; }
+                    }
+                """.trimIndent()
+                runtimeAPI?.callFunctionOn(
+                    fn,
+                    objectId = objectId,
+                    returnByValue = true,
+                    userGesture = true,
+                    awaitPromise = true
+                )
+                true
+            } finally {
+                // Always release to avoid leaks
+                try { runtimeAPI?.releaseObject(objectId) } catch (_: Exception) { }
+            }
+        } catch (e: Exception) {
+            // swallow and indicate failure; caller will fallback
+            false
+        }
     }
 
     /**
