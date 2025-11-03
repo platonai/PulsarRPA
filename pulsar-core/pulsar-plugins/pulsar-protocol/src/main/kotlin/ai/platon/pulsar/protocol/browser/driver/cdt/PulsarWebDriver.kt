@@ -11,6 +11,7 @@ import ai.platon.cdt.kt.protocol.types.network.ResourceType
 import ai.platon.pulsar.browser.driver.chrome.*
 import ai.platon.pulsar.browser.driver.chrome.dom.ChromeCdpDomService
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
+import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.NanoDOMTree
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
@@ -453,6 +454,28 @@ class PulsarWebDriver(
             when {
                 node.isNull() -> null
                 else -> domAPI?.getOuterHTML(node.nodeId, node.backendNodeId, node.objectId)
+            }
+        }
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun selectFirstTextOrNull(selector: String): String? {
+        val locator = Locator.parse(selector)
+        if (locator?.type == Locator.Type.CSS_PATH) {
+            return super.selectFirstTextOrNull(selector)
+        }
+
+        return driverHelper.invokeOnElement(selector, "selectFirstTextOrNull") { node ->
+            when {
+                node.isNull() -> null
+                else -> {
+                    val functionDeclaration = """function() { return this.textContent; }"""
+                    val nd = domAPI?.resolveNode(node.nodeId)
+                    if (nd?.objectId != null) {
+                        val remoteObject = runtimeAPI?.callFunctionOn(functionDeclaration, objectId = nd.objectId, returnByValue = true)
+                        remoteObject?.result?.value?.toString()
+                    } else null
+                }
             }
         }
     }

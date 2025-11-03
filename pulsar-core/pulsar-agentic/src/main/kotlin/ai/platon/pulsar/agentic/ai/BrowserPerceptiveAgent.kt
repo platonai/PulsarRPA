@@ -385,8 +385,8 @@ class BrowserPerceptiveAgent constructor(
                 description = ele.description ?: "(No comment ...)",
                 screenshotContentSummary = ele.screenshotContentSummary,
                 currentPageContentSummary = ele.currentPageContentSummary,
-                actualLastActionImpact = ele.actualLastActionImpact,
-                expectedNextActionImpact = ele.expectedNextActionImpact,
+                evaluationPreviousGoal = ele.evaluationPreviousGoal,
+                nextGoal = ele.nextGoal,
                 backendNodeId = ele.backendNodeId,
                 observeElements = observeElements,
             )
@@ -599,8 +599,8 @@ class BrowserPerceptiveAgent constructor(
                 description = ele.description ?: "(No comment ...)",
                 screenshotContentSummary = ele.screenshotContentSummary,
                 currentPageContentSummary = ele.currentPageContentSummary,
-                actualLastActionImpact = ele.actualLastActionImpact,
-                expectedNextActionImpact = ele.expectedNextActionImpact,
+                evaluationPreviousGoal = ele.evaluationPreviousGoal,
+                nextGoal = ele.nextGoal,
                 backendNodeId = ele.backendNodeId,
                 observeElements = observeElements,
             )
@@ -700,8 +700,8 @@ class BrowserPerceptiveAgent constructor(
             description = descMsg,
             screenshotContentSummary = observe?.screenshotContentSummary,
             currentPageContentSummary = observe?.currentPageContentSummary,
-            actualLastActionImpact = observe?.actualLastActionImpact,
-            expectedNextActionImpact = observe?.expectedNextActionImpact,
+            evaluationPreviousGoal = observe?.evaluationPreviousGoal,
+            nextGoal = observe?.nextGoal,
         )
         addToHistory(agentState)
         return agentState

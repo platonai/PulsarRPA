@@ -116,7 +116,8 @@ class ClickableDOM(
     }
 
     suspend fun boundingBox(): RectD? {
-        val box = dom.getBoxModel(node.nodeId, node.backendNodeId, node.objectId)
+        // Only provide nodeId to satisfy the "exactly one id" requirement
+        val box = dom.getBoxModel(node.nodeId, null, null)
 
         val quad = box.border.takeIf { it.isNotEmpty() } ?: return null
 

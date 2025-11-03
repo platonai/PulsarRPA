@@ -37,10 +37,11 @@ import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
  * References:
  * - [NodeId](https://chromedevtools.github.io/devtools-protocol/tot/DOM/#type-NodeId)
  * */
-data class NodeRef constructor(
+ data class NodeRef constructor(
     val nodeId: Int = 0,
     // backend node id is more stable
     val backendNodeId: Int = 0,
+    // objectId is ephemeral; do not cache across calls. Always resolve a fresh objectId when needed.
     val objectId: String? = null
 ) {
     /**
@@ -185,7 +186,7 @@ class PageHandler(
 
             // For FRAME_BACKEND_NODE_ID type, extract the backend node ID and resolve it.
             Locator.Type.FRAME_BACKEND_NODE_ID -> {
-                val backendNodeId = selector.substringAfterLast(",").toIntOrNull()
+                val backendNodeId = selector.substringAfterLast(",").toIntOrNull() ?: return null
                 resolveByBackendNodeId(backendNodeId)
             }
 
@@ -394,11 +395,16 @@ class PageHandler(
      */
     private suspend fun trySmoothScroll(nodeRef: NodeRef): Boolean {
         return try {
-            val remote = domAPI?.resolveNode(nodeRef.nodeId, nodeRef.backendNodeId, null, null)
-            val objectId = remote?.objectId ?: return false
+            // Resolve a fresh objectId every time; it's ephemeral and must not be cached
+            val resolved = when {
+                nodeRef.nodeId > 0 -> domAPI?.resolveNode(nodeRef.nodeId, null, null, null)
+                nodeRef.backendNodeId > 0 -> domAPI?.resolveNode(null, nodeRef.backendNodeId, null, null)
+                else -> null
+            }
+            val objectId = resolved?.objectId ?: return false
             try {
                 // Execute on the element itself to avoid selector issues; center for stability
-                val fn = """
+                val functionDeclaration = """
                     function() {
                         try {
                             this.scrollIntoView({behavior:'smooth', block:'center', inline:'nearest'});
@@ -406,13 +412,8 @@ class PageHandler(
                         } catch (e) { return false; }
                     }
                 """.trimIndent()
-                runtimeAPI?.callFunctionOn(
-                    fn,
-                    objectId = objectId,
-                    returnByValue = true,
-                    userGesture = true,
-                    awaitPromise = true
-                )
+                runtimeAPI?.callFunctionOn(functionDeclaration, objectId = objectId, returnByValue = true,
+                    userGesture = true, awaitPromise = true)
                 true
             } finally {
                 // Always release to avoid leaks
@@ -512,7 +513,23 @@ class PageHandler(
     @Throws(ChromeDriverException::class)
     suspend fun evaluateValueDetail(selector: String, functionDeclaration: String): CallFunctionOn? {
         val node = resolveSelector(selector) ?: return null
-        return runtimeAPI?.callFunctionOn(functionDeclaration, objectId = node.objectId, returnByValue = true)
+        // Resolve a fresh objectId and ensure it's released after the call
+        val resolved = try {
+            when {
+                node.nodeId > 0 -> domAPI?.resolveNode(node.nodeId, null, null, null)
+                node.backendNodeId > 0 -> domAPI?.resolveNode(null, node.backendNodeId, null, null)
+                else -> null
+            }
+        } catch (e: Exception) {
+            null
+        } ?: return null
+
+        val oid = resolved.objectId ?: return null
+        return try {
+            runtimeAPI?.callFunctionOn(functionDeclaration, objectId = oid, returnByValue = true)
+        } finally {
+            try { runtimeAPI?.releaseObject(oid) } catch (_: Exception) { }
+        }
     }
 
     @Throws(ChromeDriverException::class)
@@ -563,11 +580,11 @@ class PageHandler(
             return null
         }
 
-        return resolveNode(null, node.backendNodeId)
+        return resolveNode(node.nodeId, node.backendNodeId)
     }
 
     @Throws(ChromeDriverException::class)
-    private suspend fun resolveByBackendNodeId(backendNodeId: Int?): NodeRef? = resolveNode(null, backendNodeId)
+    private suspend fun resolveByBackendNodeId(backendNodeId: Int): NodeRef? = resolveNode(null, backendNodeId)
 
     /**
      * Resolves a backend node ID to a regular node ID.
@@ -578,21 +595,28 @@ class PageHandler(
     @Throws(ChromeDriverException::class)
     private suspend fun resolveNode(nodeId: Int?, backendNodeId: Int?): NodeRef? {
         return try {
-            // Use DOM.resolveNode to convert backendNodeId to a runtime object
-            val remoteObject = domAPI?.resolveNode(nodeId, backendNodeId, null, null)
+            // Protocol return error: "-32000/Either nodeId or backendNodeId must be specified."
+            val remoteObject = if (nodeId != null) {
+                domAPI?.resolveNode(nodeId, null, null, null)
+            } else if (backendNodeId != null) {
+                domAPI?.resolveNode(null, backendNodeId, null, null)
+            } else {
+                return null
+            }
 
             if (remoteObject?.objectId == null) {
                 logger.warn("Failed to resolve node: {}, {}", nodeId, backendNodeId)
                 return null
             }
 
-            val objectId = remoteObject.objectId
+            val tempObjectId = remoteObject.objectId
             // Use DOM.requestNode to get the nodeId from the runtime object
-            val nodeId = domAPI?.requestNode(objectId) ?: 0
+            val resolvedNodeId = domAPI?.requestNode(tempObjectId) ?: 0
             // Release the remote object to avoid memory leaks
-            runtimeAPI?.releaseObject(objectId)
+            try { runtimeAPI?.releaseObject(tempObjectId) } catch (_: Exception) { }
 
-            NodeRef(nodeId, backendNodeId ?: 0, objectId)
+            // Do NOT cache objectId; return only ids that are stable across calls
+            NodeRef(resolvedNodeId, backendNodeId ?: 0, null)
         } catch (e: Exception) {
             logger.warn("Exception resolving backend node ID {}: {}", backendNodeId, e.message)
             null
@@ -622,7 +646,7 @@ class PageHandler(
             val nodeId = domAPI?.requestNode(remoteObject.objectId)
 
             // Release the remote object to avoid memory leaks
-            runtimeAPI?.releaseObject(remoteObject.objectId)
+            try { runtimeAPI?.releaseObject(remoteObject.objectId) } catch (_: Exception) { }
 
             nodeId
         } catch (e: Exception) {

@@ -197,8 +197,8 @@ open class TextToAction(
 
                     screenshotContentSummary = ele.screenshotContentSummary,
                     currentPageContentSummary = ele.currentPageContentSummary,
-                    actualLastActionImpact = ele.actualLastActionImpact,
-                    expectedNextActionImpact = ele.expectedNextActionImpact,
+                    evaluationPreviousGoal = ele.evaluationPreviousGoal,
+                    nextGoal = ele.nextGoal,
 
                     toolCall = ToolCall(
                         domain = ele.domain ?: "",
@@ -232,7 +232,7 @@ open class TextToAction(
         val locator = observeElement.locator
         val arguments = toolCall.arguments
         val fbnLocator = browserUseState.domState.getAbsoluteFBNLocator(locator)
-        if (fbnLocator == null) {
+        if (!locator.isNullOrBlank() && fbnLocator == null) {
             logger.warn("FBN locator not found | {}", locator)
         }
 

@@ -81,8 +81,8 @@ data class ObserveElement constructor(
 
     val screenshotContentSummary: String? = null,
     val currentPageContentSummary: String? = null,
-    val actualLastActionImpact: String? = null,
-    val expectedNextActionImpact: String? = null,
+    val evaluationPreviousGoal: String? = null,
+    val nextGoal: String? = null,
 
     val modelResponse: ModelResponse? = null,
 
@@ -117,8 +117,8 @@ data class ObserveResult constructor(
 
     val screenshotContentSummary: String? = null,
     val currentPageContentSummary: String? = null,
-    val actualLastActionImpact: String? = null,
-    val expectedNextActionImpact: String? = null,
+    val evaluationPreviousGoal: String? = null,
+    val nextGoal: String? = null,
 
     val backendNodeId: Int? = null,
 
@@ -133,8 +133,8 @@ data class AgentState constructor(
     val description: String? = null,
     val screenshotContentSummary: String? = null,
     val currentPageContentSummary: String? = null,
-    val actualLastActionImpact: String? = null,
-    val expectedNextActionImpact: String? = null,
+    val evaluationPreviousGoal: String? = null,
+    val nextGoal: String? = null,
     val url: String? = null,
     val timestamp: Instant = Instant.now(),
     // The last browser use state
@@ -148,8 +148,8 @@ data class AgentState constructor(
     override fun toString(): String {
         val summary = listOfNotNull(description,
             currentPageContentSummary, screenshotContentSummary,
-            actualLastActionImpact,
-            expectedNextActionImpact)
+            evaluationPreviousGoal,
+            nextGoal)
             .joinToString("\n")
         return "$timestamp $action - $summary"
     }

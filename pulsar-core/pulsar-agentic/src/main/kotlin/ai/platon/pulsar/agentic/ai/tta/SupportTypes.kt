@@ -10,6 +10,7 @@ import ai.platon.pulsar.skeleton.ai.ToolCall
 
 data class ObserveResponseComplete(
     val taskComplete: Boolean = false,
+    val success: Boolean = false,
     val summary: String? = null,
     val keyFindings: List<String>? = null,
     val nextSuggestions: List<String>? = null,
@@ -31,8 +32,8 @@ data class ObserveResponseElement(
     val memory: String? = null,
     val screenshotContentSummary: String? = null,
     val currentPageContentSummary: String? = null,
-    val actualLastActionImpact: String? = null,
-    val expectedNextActionImpact: String? = null,
+    val evaluationPreviousGoal: String? = null,
+    val nextGoal: String? = null,
 )
 
 data class ActionDescription constructor(

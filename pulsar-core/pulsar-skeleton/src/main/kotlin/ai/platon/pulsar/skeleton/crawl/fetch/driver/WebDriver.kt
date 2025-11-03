@@ -962,6 +962,9 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun scrollUp(count: Int = 1)
 
+    @Throws(WebDriverException::class)
+    suspend fun scrollBy(pixels: Double = 200.0, smooth: Boolean = true): Double
+
     /**
      * The current page frame scrolls to the top.
      *
@@ -1014,7 +1017,7 @@ interface WebDriver : Closeable {
      * 1.00 means at the top of the first screen, 2.50 means halfway through the second screen.
      */
     @Throws(WebDriverException::class)
-    suspend fun scrollToViewport(n: Double)
+    suspend fun scrollToViewport(n: Double, smooth: Boolean = true): Double
 
     /**
      * The mouse wheels down for [count] times.

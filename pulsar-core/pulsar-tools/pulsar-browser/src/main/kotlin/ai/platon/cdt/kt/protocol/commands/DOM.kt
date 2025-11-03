@@ -458,11 +458,6 @@ interface DOM {
     @ParamName("executionContextId") @Optional executionContextId: Int? = null,
   ): RemoteObject
 
-  @Returns("object")
-  suspend fun resolveNode(): RemoteObject {
-    return resolveNode(null, null, null, null)
-  }
-
   /**
    * Sets attribute for an element with given id.
    * @param nodeId Id of the element to set attribute for.

@@ -30,7 +30,7 @@ class TabSwitchTest {
         y = 0.0,
         viewport = Dimension(1920, 1080),
         totalHeight = 2000.0,
-        scrollYRatio = 0.5
+        scrollYRatio = 0.5,
     )
 
     @Test

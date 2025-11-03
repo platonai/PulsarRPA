@@ -1,8 +1,6 @@
 package ai.platon.pulsar.agentic.ai.support
 
-import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.TimeoutCancellationException
@@ -123,6 +121,13 @@ class WebDriverToolCallExecutor {
                 } else {
                     driver.scrollUp(arg0!!.toIntOrNull() ?: 1)
                 }
+            }
+
+            "scrollBy" -> {
+                // Scroll by pixel amount with optional smooth behavior
+                val pixels = arg0?.toDoubleOrNull() ?: 200.0
+                val smooth = arg1?.toBooleanStrictOrNull() ?: arg1?.toBoolean() ?: true
+                driver.scrollBy(pixels, smooth)
             }
 
             "scrollToTop" -> {
@@ -443,9 +448,9 @@ class WebDriverToolCallExecutor {
             "waitForPage" -> {
                 // Wait for navigation to a specific URL
                 if (args.size >= 2) {
-                    driver.waitForPage(arg0!!, Duration.ofMillis(arg1!!.toLongOrNull() ?: 30000L))
+                    driver.waitForPage(arg0!!, java.time.Duration.ofMillis(arg1!!.toLongOrNull() ?: 30000L))
                 } else if (args.isNotEmpty()) {
-                    driver.waitForPage(arg0!!, Duration.ofMillis(30000L))
+                    driver.waitForPage(arg0!!, java.time.Duration.ofMillis(30000L))
                 } else {
                     null
                 }

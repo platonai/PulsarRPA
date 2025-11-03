@@ -174,6 +174,11 @@ open class ToolCallExecutor {
                 // Scrolling
                 "scrollDown" -> "driver.scrollDown(${arguments["count"] ?: 1})"
                 "scrollUp" -> "driver.scrollUp(${arguments["count"] ?: 1})"
+                "scrollBy" -> {
+                    val pixels = (arguments["pixels"] ?: 200.0).toString()
+                    val smooth = (arguments["smooth"] ?: true).toString()
+                    "driver.scrollBy(${pixels}, ${smooth})"
+                }
                 "scrollTo" -> arguments["selector"]?.let { "driver.scrollTo(\"${it.esc()}\")" }
                 "scrollToTop" -> "driver.scrollToTop()"
                 "scrollToBottom" -> "driver.scrollToBottom()"

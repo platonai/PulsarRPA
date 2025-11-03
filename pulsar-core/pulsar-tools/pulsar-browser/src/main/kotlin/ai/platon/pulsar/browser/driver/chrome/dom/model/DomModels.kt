@@ -470,9 +470,10 @@ data class MicroDOMTreeNode(
     }
 
     fun toNanoTreeInRange(startY: Double = 0.0, endY: Double = 100000.0): NanoDOMTree {
-        val key = "$startY$endY"
         val helper = MicroToNanoTreeHelper(seenChunks)
-        return nanoTreeCache.computeIfAbsent(key) { helper.toNanoTreeInRange0(this, startY, endY) }
+//        val key = "$startY$endY"
+//        return nanoTreeCache.computeIfAbsent(key) { helper.toNanoTreeInRange0(this, startY, endY) }
+        return helper.toNanoTreeInRange0(this, startY, endY)
     }
 }
 
@@ -580,7 +581,7 @@ data class FullClientInfo(
     val visibilityState: String? = null,
 )
 
-data class ScrollState(
+data class ScrollState constructor(
     val x: Double,
     val y: Double,
     val viewport: Dimension,

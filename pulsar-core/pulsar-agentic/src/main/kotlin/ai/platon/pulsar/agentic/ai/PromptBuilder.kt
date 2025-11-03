@@ -40,7 +40,7 @@ class PromptBuilder() {
         |"domain": string, "method": string, "arguments": [{"name": string, "value": string}],
         |"screenshotContentSummary": string, "currentPageContentSummary": string,
         |"memory": string,
-        |"actualLastActionImpact": string, "expectedNextActionImpact": string,
+        |"evaluationPreviousGoal": string, "nextGoal": string,
         |
         |""".trimMargin()
 
@@ -132,11 +132,11 @@ $schema
 [locator]{viewport}(x,y,width,height)<slimNode>textContent</slimNode>Text-Before-This-Interactive-Element-And-After-Previous-Interactive-Element
 
 - 默认列出当前焦点视口，第1，2视口和最后一视口元素。
-- 如需查看其他视口信息，使用 `scrollToViewport` 工具滚动到该视口。
 - `locator` 为节点唯一定位符，同无障碍树保持一致，由两个整数构成，不含括号。
 - 输出结果中，定位节点时 `selector` 字段始终填入 `locator` 的值。
 - `viewport` 为节点所在视口序号，1-based，不含括号。
-- `x,y,width,height` 为节点坐标和尺寸
+- 注意：网页内容变化可能导致视口位置随时发生变化。
+- `x,y,width,height` 为节点坐标和尺寸。
 
         """.trimIndent()
 
@@ -145,7 +145,6 @@ $schema
 无障碍树包含页面 DOM 关键节点的主要信息，包括节点文本内容，可见性，可交互性，坐标和尺寸等。
 
 - 除非特别指定，无障碍树仅包含网页当前视口内的节点信息，并包含少量视口外节点，以保证信息充分。
-- 如需其他视口内详细信息，使用 `scrollToViewport` 工具。
 - 节点唯一定位符 `locator` 由两个整数组成。
 - 所有节点可见，除非 `invisible` == true 显式指定。
 - 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
@@ -191,7 +190,7 @@ $schema
 
 单步信息示例：
 ```json
-{"step":1,"action":"action","description":"description","screenshotContentSummary":"screenshotContentSummary","currentPageContentSummary":"currentPageContentSummary","actualLastActionImpact":"actualLastActionImpact","expectedNextActionImpact":"expectedNextActionImpact","url":"https://example.com/","timestamp":1762076188.31}
+{"step":1,"action":"action","description":"description","screenshotContentSummary":"screenshotContentSummary","currentPageContentSummary":"currentPageContentSummary","evaluationPreviousGoal":"evaluationPreviousGoal","nextGoal":"nextGoal","url":"https://example.com/","timestamp":1762076188.31}
 ```
 
 ---
@@ -250,6 +249,21 @@ $A11Y_TREE_NOTE_CONTENT
 
 ---
 
+## 任务完成规则
+
+你必须在以下三种情况之一结束任务，按照`任务完成输出`格式要求输出相应 json 格式：
+- 当你已完全完成 USER REQUEST。
+- 当达到允许的最大步骤数（`max_steps`）时，即使任务未完成也要完成。
+- 如果绝对无法继续，也要完成。
+
+`任务完成输出` 是你终止并与用户共享发现结果的机会。
+- 仅当完整地、无缺失地完成 USER REQUEST 时，将 `success` 设为 `true`。
+- 如果有任何部分缺失、不完整或不确定，将 `success` 设为 `false`。
+- 如果用户要求特定格式（例如：“返回具有以下结构的 JSON”或“以指定格式返回列表”），确保在回答中使用正确的格式。
+- 如果用户要求结构化输出，`任务完成输出` 的 schema 将被修改。解决任务时请考虑该 schema。
+
+---
+
 ## 动作规则
 
 - 在每一步中你允许使用最多 {$MAX_ACTIONS} 个动作。
@@ -294,11 +308,11 @@ $A11Y_TREE_NOTE_CONTENT
 ### 评估示例
 
 - 正面示例：
-"actualLastActionImpact": "已成功导航到商品页面并找到了目标信息。结论：成功"
-"actualLastActionImpact": "已点击登录按钮并显示了用户认证表单。结论：成功"
+"evaluationPreviousGoal": "已成功导航到商品页面并找到了目标信息。结论：成功"
+"evaluationPreviousGoal": "已点击登录按钮并显示了用户认证表单。结论：成功"
 - 负面示例：
-"actualLastActionImpact": "无法在图像中看到搜索栏，因此未能在搜索栏输入文本。结论：失败"
-"actualLastActionImpact": "点击索引为 15 的提交按钮但表单未成功提交。结论：失败"
+"evaluationPreviousGoal": "无法在图像中看到搜索栏，因此未能在搜索栏输入文本。结论：失败"
+"evaluationPreviousGoal": "点击索引为 15 的提交按钮但表单未成功提交。结论：失败"
 
 ---
 
@@ -311,8 +325,8 @@ $A11Y_TREE_NOTE_CONTENT
 
 ### 下一目标示例
 
-"expectedNextActionImpact": "点击 '加入购物车' 按钮以继续购买流程。"
-"expectedNextActionImpact": "提取页面第一个项目的详细信息。"
+"nextGoal": "点击 '加入购物车' 按钮以继续购买流程。"
+"nextGoal": "提取页面第一个项目的详细信息。"
 
 ---
 
@@ -325,7 +339,7 @@ ${buildObserveResultSchema(true)}
 
 2) 任务完成输出：
 
-{"taskComplete":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]}
+{"taskComplete":bool,"success":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]}
 
 ## 安全要求：
 - 仅操作可见的交互元素
@@ -524,7 +538,7 @@ $his
 ## 数据提取
 
 上一步操作：${agentState.prevState?.action}
-上一步操作期望结果：${agentState.prevState?.expectedNextActionImpact}
+上一步操作期望结果：${agentState.prevState?.nextGoal}
 
 上一步操作数据提取结果：
 
@@ -786,6 +800,9 @@ $newTabsJson
         }
 
         val scrollState = browserState.scrollState
+        // Height in pixels of the page area above the current viewport. (被隐藏在视口上方的部分)
+        val hiddenTopHeight = scrollState.y.coerceAtLeast(0.0)
+        val hiddenBottomHeight = (scrollState.totalHeight - hiddenTopHeight - scrollState.viewport.height).coerceAtLeast(0.0)
         val viewportHeight = scrollState.viewport.height
         val domState = params.browserUseState.domState
 
@@ -817,13 +834,17 @@ $newTabsMessage
 ## 视口信息
 
 本次焦点视口序号: $processingViewport
-拟下次查看视口序号：$viewportToProcessNexTime
-总视口数: $viewportsTotal
+视口高度：$viewportHeight
+估算视口总数: $viewportsTotal
+视口之上像素高度: $hiddenTopHeight
+视口之下像素高度: $hiddenBottomHeight
 
 - 默认每次查看一个视口高度(viewport height)内的所有 DOM 节点
+- 视口之上像素高度: 当前视口上方、已滚动出可视范围的网页内容高度，单位为像素（px）。
+- 视口之下像素高度: 当前视口下方、已滚动出可视范围的网页内容高度，单位为像素（px）。
+- 注意：网页内容变化可能导致视口位置和视口序号随时发生变化。
 - 默认提供的无障碍树仅包含第`i`个视口内的 DOM 节点，并包含少量视口外节点，以保证信息完整
-- 调用 `scrollToViewport(n)` 获取第`n`个视口内的 DOM 节点（1-based），支持小数，如第 1 视口内，第 2.5 视口内
-- 第 `-1` 视口意味不需查看任何视口
+- 如需查看下一视口，调用 `scrollBy(viewportHeight)` 向下滚动一屏获取更多信息
 
 ## 可交互元素
 

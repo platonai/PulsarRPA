@@ -1,13 +1,14 @@
 package ai.platon.pulsar.browser.driver.chrome
 
+import ai.platon.cdt.kt.protocol.types.dom.Rect
 import ai.platon.cdt.kt.protocol.types.page.CaptureScreenshotFormat
 import ai.platon.cdt.kt.protocol.types.page.Viewport
 import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.math.geometric.RectD
 import com.google.gson.Gson
 import kotlin.math.roundToInt
+import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.math.geometric.RectD
 
 class ScreenshotHandler(
     private val pageHandler: PageHandler,
@@ -90,7 +91,8 @@ class ScreenshotHandler(
 
         // The viewport has to be visible before screenshot
         if (node != null) {
-            dom?.scrollIntoViewIfNeeded(node.nodeId, node.backendNodeId, node.objectId, null)
+            // Exactly one of nodeId, backendNodeId, objectId must be provided; use nodeId for stability
+            dom?.scrollIntoViewIfNeeded(node.nodeId, null, null, null)
         }
 
         val visible = ClickableDOM.create(page, dom, node)?.isVisible() ?: false
@@ -142,12 +144,14 @@ class ScreenshotHandler(
             return null
         }
 
-        val quad = clientRect.split(" ").map { it.toDoubleOrNull() ?: 0.0 }
-        if (quad.size != 4) {
-            return null
-        }
+        val rect = Gson().fromJson(clientRect, Rect::class.java)
 
-        return RectD(quad[0], quad[1], quad[2], quad[3])
+        val x = rect.x
+        val y = rect.y
+        val width = rect.width
+        val height = rect.height
+
+        return RectD(x, y, width, height)
     }
 
     private suspend fun debugNodeClipDebug(node: NodeRef, selector: String) {
