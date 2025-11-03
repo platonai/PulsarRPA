@@ -488,6 +488,19 @@ Print null or an empty string if no new information is found.
         return SimpleMessage(role = "system", content = content)
     }
 
+    fun buildAgentStateMessage(state: AgentState): String {
+        val message = """
+## 智能体状态
+
+当前的 <user_request>、<file_system> 摘要、<todo_contents> 和 <step_info> 摘要。
+
+---
+
+        """.trimIndent()
+
+        return message
+    }
+
     fun buildAgentStateHistoryMessage(history: List<AgentState>): String {
         if (history.isEmpty()) {
             return ""
@@ -807,15 +820,15 @@ $newTabsJson
         val domState = params.browserUseState.domState
 
         // The 1-based viewport to see.
-        val processingViewport = params.agentState.browserUseState?.nextViewportToSee() ?: 1
+        val processingViewport = (hiddenTopHeight / viewportHeight).toInt() + 1
         val viewportsTotal = params.browserUseState.browserState.scrollState.viewportsTotal
-        val viewportToProcessNexTime = if (processingViewport >= viewportsTotal) -1 else processingViewport.inc()
-        val viewportIndex = processingViewport
 
         val interactiveElements = domState.microTree.toInteractiveDOMTreeNodeList(
             currentViewportIndex = processingViewport, maxViewportIndex = viewportsTotal)
 
-        val nanoTree = domState.microTree.toNanoTreeInViewport(viewportHeight, viewportIndex, 1.5)
+        val startY = hiddenTopHeight - viewportHeight * 0.5
+        val endY = hiddenTopHeight + viewportHeight + viewportHeight * 0.5
+        val nanoTree = domState.microTree.toNanoTreeInRange(startY, endY)
         // val nanoTree = domState.microTree.toNanoTree()
 
         val schemaContract = buildObserveResultSchemaContract(params)

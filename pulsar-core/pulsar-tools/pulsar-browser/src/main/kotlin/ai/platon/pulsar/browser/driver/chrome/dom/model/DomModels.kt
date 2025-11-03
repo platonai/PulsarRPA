@@ -442,6 +442,7 @@ data class MicroDOMTreeNode(
     /**
      * The 1-based next chunk to see, each chunk is a viewport height.
      * */
+    @Deprecated("Deprecated")
     fun nextChunkToSee(viewportHeight: Double): Int {
         if (seenChunks.isEmpty()) {
             return 1
@@ -622,5 +623,6 @@ data class BrowserUseState(
     /**
      * The 1-based next chunk to see, each chunk is a viewport height.
      * */
+    @Deprecated("Deprecated")
     fun nextViewportToSee() = domState.microTree.nextChunkToSee(browserState.scrollState.totalHeight)
 }

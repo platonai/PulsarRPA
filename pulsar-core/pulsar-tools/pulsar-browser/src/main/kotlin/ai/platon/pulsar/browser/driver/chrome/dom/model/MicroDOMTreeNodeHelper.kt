@@ -84,10 +84,31 @@ class MicroToNanoTreeHelper(
         )
     }
 
+    /**
+     * Returns true if any portion of the node lies within the vertical interval (startY, endY],
+     * where startY and endY are coordinates along the page’s y-axis.
+     * */
     fun inYRange(no: MicroDOMTreeNode, startY: Double, endY: Double): Boolean {
-        val b = no.originalNode?.bounds ?: return false
-        val y = b.y ?: return false
-        return y in startY..<endY
+        // Invalid interval: (startY, endY] must have start < end
+        if (startY.isNaN() || endY.isNaN() || startY >= endY) return false
+
+        val o = no.originalNode ?: return false
+        // Prefer absolute page coordinates first, then bounds, then client rects
+        val r = o.absoluteBounds ?: o.bounds ?: o.clientRects ?: return false
+        val y = r.y ?: return false
+        val h = r.height ?: 0.0
+
+        // If height is missing or non-positive, treat it as a point at y
+        if (!(h > 0.0)) {
+            // open at start, closed at end: (startY, endY]
+            return y > startY && y <= endY
+        }
+
+        val top = y
+        val bottom = y + h
+        // Any overlap between [top, bottom] and (startY, endY]
+        // Open at start (>) and closed at end (<=)
+        return top <= endY && bottom > startY
     }
 
     fun mergeChunks(): List<Pair<Double, Double>> {
@@ -150,9 +171,9 @@ class MicroDOMTreeNodeHelper(
                 ?.joinToString(" ", " ") { (k, v) -> "$k=$v" }
                 ?: ""
             return if (nodeValue == null) {
-                "<${nodeName}$attrs />"
+                "<${'$'}{nodeName}${'$'}{attrs} />"
             } else {
-                """<${nodeName}$attrs>$nodeValue</${nodeName}>"""
+                """<${'$'}{nodeName}${'$'}{attrs}>${'$'}{nodeValue}</${'$'}{nodeName}>"""
             }
         }
 

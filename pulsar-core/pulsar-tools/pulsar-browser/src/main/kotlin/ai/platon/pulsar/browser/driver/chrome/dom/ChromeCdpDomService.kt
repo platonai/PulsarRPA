@@ -428,13 +428,13 @@ class ChromeCdpDomService(
 
         // Client info from browser (fallback to system defaults)
         val tzId = runCatching {
-            devTools.runtime.evaluate("Intl.DateTimeFormat().resolvedOptions().timeZone")?.result?.value?.toString()
+            devTools.runtime.evaluate("Intl.DateTimeFormat().resolvedOptions().timeZone").result.value?.toString()
         }.getOrNull()?.takeIf { it.isNotBlank() }
         val timeZone = runCatching { if (tzId != null) TimeZone.getTimeZone(tzId) else TimeZone.getDefault() }
             .getOrDefault(TimeZone.getDefault())
 
         val langTag = runCatching {
-            devTools.runtime.evaluate("navigator.language || (navigator.languages && navigator.languages[0]) || ''")?.result?.value?.toString()
+            devTools.runtime.evaluate("navigator.language || (navigator.languages && navigator.languages[0]) || ''").result.value?.toString()
         }.getOrNull()?.takeIf { it.isNotBlank() }
         val locale = runCatching { if (langTag != null) Locale.forLanguageTag(langTag) else Locale.getDefault() }
             .getOrDefault(Locale.getDefault())
@@ -462,15 +462,15 @@ class ChromeCdpDomService(
     override suspend fun computeFullClientInfo(): FullClientInfo {
         // Helpers
         suspend fun evalString(expr: String): String? = try {
-            devTools.runtime.evaluate(expr)?.result?.value?.toString()
+            devTools.runtime.evaluate(expr).result.value?.toString()
         } catch (_: Exception) { null }
         suspend fun evalDouble(expr: String): Double? = try {
-            val res = devTools.runtime.evaluate(expr)?.result
-            res?.value?.toString()?.toDoubleOrNull() ?: res?.unserializableValue?.toDoubleOrNull()
+            val res = devTools.runtime.evaluate(expr).result
+            res?.value?.toString()?.toDoubleOrNull() ?: res.unserializableValue?.toDoubleOrNull()
         } catch (_: Exception) { null }
         suspend fun evalInt(expr: String): Int? = evalDouble(expr)?.toInt()
         suspend fun evalBoolean(expr: String): Boolean? = try {
-            val v = devTools.runtime.evaluate(expr)?.result?.value
+            val v = devTools.runtime.evaluate(expr).result.value
             when (v) {
                 is Boolean -> v
                 is String -> v.equals("true", true)

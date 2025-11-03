@@ -1,14 +1,13 @@
 package ai.platon.pulsar.browser.driver.chrome
 
-import ai.platon.cdt.kt.protocol.types.dom.Rect
 import ai.platon.cdt.kt.protocol.types.page.CaptureScreenshotFormat
 import ai.platon.cdt.kt.protocol.types.page.Viewport
 import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.math.geometric.RectD
 import com.google.gson.Gson
 import kotlin.math.roundToInt
-import ai.platon.pulsar.common.AppContext
-import ai.platon.pulsar.common.math.geometric.RectD
 
 class ScreenshotHandler(
     private val pageHandler: PageHandler,
@@ -34,30 +33,12 @@ class ScreenshotHandler(
             return null
         }
 
-//        val vi = pageHandler.firstAttr(selector, "vi")
-        val vi: String? = null
-        return if (vi != null) {
-            captureScreenshotWithVi(node, selector, vi)
-        } else {
-            captureScreenshotWithoutVi(node, selector)
-        }
+        return captureScreenshotWithoutVi(node, selector)
     }
 
     suspend fun captureScreenshot(clip: RectD) = captureScreenshot0(null, clip)
 
     suspend fun captureScreenshot(viewport: Viewport) = captureScreenshot0(null, viewport)
-
-    private suspend fun captureScreenshotWithVi(node: NodeRef, selector: String, vi: String): String? {
-        val quad = vi.split(" ").map { it.toDoubleOrNull() ?: 0.0 }
-        if (quad.size != 4) {
-            logger.warn("Invalid node vi information for selector <{}>", selector)
-            return null
-        }
-
-        val rect = RectD(quad[0], quad[1], quad[2], quad[3])
-
-        return captureScreenshot0(node, rect)
-    }
 
     private suspend fun captureScreenshotWithoutVi(node: NodeRef, selector: String): String? {
         val nodeClip = calculateNodeClip(node, selector)
@@ -100,7 +81,6 @@ class ScreenshotHandler(
             return null
         }
 
-        // return page?.captureScreenshot(format, quality, viewport, true, false, false)
         return page?.captureScreenshot(
             format, quality, viewport,
             fromSurface = true,
@@ -135,23 +115,6 @@ class ScreenshotHandler(
     private suspend fun calculateNodeClip0(node: NodeRef, selector: String): RectD? {
         val clickableDOM = ClickableDOM(page!!, dom!!, node)
         return clickableDOM.boundingBox()
-    }
-
-    private suspend fun calculateNodeClip1(nodeId: Int, selector: String): RectD? {
-        val clientRect = pageHandler.evaluate("__pulsar_utils__.queryClientRect('$selector')")?.toString()
-        if (clientRect == null) {
-            logger.info("Can not query client rect for selector <{}>", selector)
-            return null
-        }
-
-        val rect = Gson().fromJson(clientRect, Rect::class.java)
-
-        val x = rect.x
-        val y = rect.y
-        val width = rect.width
-        val height = rect.height
-
-        return RectD(x, y, width, height)
     }
 
     private suspend fun debugNodeClipDebug(node: NodeRef, selector: String) {
