@@ -23,10 +23,11 @@ driver.scrollTo(selector: String)
 driver.scrollToTop()
 driver.scrollToBottom()
 driver.scrollToMiddle(ratio: Double = 0.5)
-driver.scrollToViewport(n: Double)                     // scroll to the [n]th viewport position, 1-based
+driver.scrollBy(pixels: Double = 200.0): Double
+driver.scrollToViewport(n: Double)                               // scroll to the [n]th viewport position, 1-based
 driver.goBack()
 driver.goForward()
-driver.textContent(selector: String): String?          // Returns the node's text content, the node is located by [selector]. If the node does not exist, returns null.
+driver.selectFirstTextOrNull(selector: String): String?          // Returns the node's text content, the node is located by [selector]. If the node does not exist, returns null.
 driver.delay(millis: Long)
 
 // domain/object: browser
@@ -71,7 +72,7 @@ agent.extract(options: ExtractOptions): ExtractResult
 
     @Suppress("unused")
     val NO_SELECTOR_ACTIONS = setOf(
-        "navigateTo", "open", "waitForNavigation", "scrollDown", "scrollUp", "scrollToTop", "scrollToBottom",
+        "navigateTo", "open", "waitForNavigation", "scrollDown", "scrollUp", "scrollBy", "scrollToTop", "scrollToBottom",
         "scrollToMiddle", "mouseWheelDown", "mouseWheelUp", "waitForPage", "bringToFront", "delay",
         "instruct", "getCookies", "deleteCookies", "clearBrowserCookies", "pause", "stop", "currentUrl",
         "url", "documentURI", "baseURI", "referrer", "pageSource", "newJsoupSession", "loadJsoupResource",

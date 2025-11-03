@@ -356,6 +356,43 @@ abstract class AbstractWebDriver(
     }
 
     @Throws(WebDriverException::class)
+    override suspend fun scrollBy(pixels: Double, smooth: Boolean): Double {
+        val js = """
+(async (delta, smooth) => {
+    if (!document || !document.documentElement || !document.body) return null;
+
+    const totalHeight = Math.min(
+        Math.max(document.documentElement.scrollHeight, document.body.scrollHeight),
+        15000
+    );
+    const viewportHeight = window.innerHeight;
+    const currentY = window.scrollY;
+
+    // 计算目标位置，并限制在可滚动范围内
+    const targetY = Math.max(0, Math.min(totalHeight - viewportHeight, currentY + delta));
+
+    // 执行滚动
+    window.scrollTo({
+        top: targetY,
+        behavior: smooth ? 'smooth' : 'instant'
+    });
+
+    // 如果启用平滑滚动，则等待动画结束
+    if (smooth) {
+        const start = performance.now();
+        while (Math.abs(window.scrollY - targetY) > 1 && performance.now() - start < 2000) {
+            await new Promise(r => setTimeout(r, 50));
+        }
+    }
+
+    return window.scrollY;
+})($pixels, ${if (smooth) "true" else "false"});
+    """.trimIndent()
+
+        return (evaluate(js) as? Number)?.toDouble() ?: 0.0
+    }
+
+    @Throws(WebDriverException::class)
     override suspend fun scrollToTop() {
         evaluate("window.scrollTo(0, 0)")
     }
@@ -379,7 +416,6 @@ y = Math.min(y, 15000)
 window.scrollTo(x, y)
 })()
         """.trimIndent()
-        // evaluate("__pulsar_utils__.scrollToBottom()")
     }
 
     @Throws(WebDriverException::class)
@@ -387,30 +423,45 @@ window.scrollTo(x, y)
         evaluate("__pulsar_utils__.scrollToMiddle($ratio)")
     }
 
-    @Throws(WebDriverException::class)
-    override suspend fun scrollToViewport(n: Double) {
+    /**
+     * Scrolls to the position of the n-th viewport.
+     *
+     * @param n Viewport index (1 represents the first screen)
+     * @param smooth Whether to use smooth scrolling
+     * @return Actual scrollY pixel value after scrolling
+     */
+    override suspend fun scrollToViewport(n: Double, smooth: Boolean): Double {
         val js = """
-((n = 1) => {
-    if (!document?.documentElement || !document?.body) return;
+(async (n, smooth) => {
+    if (!document?.documentElement || !document?.body) return null;
 
     const viewportHeight = window.innerHeight;
     const totalHeight = Math.min(
-        Math.max(
-            document.documentElement.scrollHeight,
-            document.body.scrollHeight
-        ),
+        Math.max(document.documentElement.scrollHeight, document.body.scrollHeight),
         15000
     );
 
-    // n 为 1 表示第一屏（顶部 0px）
-    const y = Math.min(totalHeight, (n - 1) * viewportHeight);
-    window.scrollTo(0, y);
-})($n);
+    const targetY = Math.max(0, Math.min(totalHeight - viewportHeight, (n - 1) * viewportHeight));
 
-        """.trimIndent()
+    // 执行滚动
+    window.scrollTo({
+        top: targetY,
+        behavior: smooth ? 'smooth' : 'instant'
+    });
 
-        evaluate(js)
-        // evaluate("__pulsar_utils__.scrollToViewport($n)")
+    // 若是平滑滚动，则等待滚动稳定
+    if (smooth) {
+        const start = performance.now();
+        while (Math.abs(window.scrollY - targetY) > 1 && performance.now() - start < 2000) {
+            await new Promise(r => setTimeout(r, 50));
+        }
+    }
+
+    return window.scrollY;
+})($n, ${if (smooth) "true" else "false"});
+    """.trimIndent()
+
+        return (evaluate(js) as? Number)?.toDouble() ?: 0.0
     }
 
     @Throws(WebDriverException::class)
@@ -442,10 +493,6 @@ window.scrollTo(x, y)
 
     @Throws(WebDriverException::class)
     override suspend fun selectFirstTextOrNull(selector: String): String? {
-//        val safeSelector = Strings.escapeJsString(selector)
-//        val expression = String.format("__pulsar_utils__.selectFirstText('%s')", safeSelector)
-//        return evaluateValue(expression)?.toString()
-
         val safeSelector = Strings.escapeJsString(selector)
         val js = """
 ((selector) => {
@@ -453,7 +500,6 @@ window.scrollTo(x, y)
     return element?.textContent ?? null;
 })('$safeSelector')
         """.trimIndent()
-        // return evaluateValue("__pulsar_utils__.outerHTML('$safeSelector')")?.toString()
         return evaluateValue(js)?.toString()
     }
 

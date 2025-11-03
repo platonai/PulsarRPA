@@ -48,6 +48,9 @@ class ActionValidator(
 
                 "waitForNavigation", "waitForSelector" -> validateWaitForNavigation(toolCall.arguments)
                 "captureScreenshot", "outerHTML" -> validateOptionalElementAction(toolCall.arguments)
+                // New no-selector actions
+                "scrollDown", "scrollUp" -> true
+                "scrollBy" -> validateScrollBy(toolCall.arguments)
                 "goBack", "goForward", "delay", "scrollToTop", "scrollToBottom", "scrollToMiddle", "scrollToViewport",
                 "currentUrl", "url", "documentURI", "baseURI", "referrer", "pageSource", "getCookies",
                 "textContent", "mouseWheelDown", "mouseWheelUp", "moveMouseTo", "dragAndDrop", "switchTab" -> true // These don't need validation
@@ -119,6 +122,30 @@ class ActionValidator(
 
         // If selector exists, validate it
         return validateElementAction(args)
+    }
+
+    /**
+     * Validate scrollBy arguments: pixels within a reasonable range and smooth is boolean-like when present.
+     */
+    private fun validateScrollBy(args: Map<String, Any?>?): Boolean {
+        args ?: return true
+        val pixelsAny = args["pixels"]
+        val smoothAny = args["smooth"]
+        val pixels = when (pixelsAny) {
+            is Number -> pixelsAny.toDouble()
+            is String -> pixelsAny.toDoubleOrNull()
+            null -> 200.0
+            else -> null
+        } ?: return false
+        // limit to -20000..20000 to avoid crazy values
+        if (pixels !in -20000.0..20000.0) return false
+        val smoothOk = when (smoothAny) {
+            null -> true
+            is Boolean -> true
+            is String -> smoothAny.equals("true", true) || smoothAny.equals("false", true)
+            else -> false
+        }
+        return smoothOk
     }
 
     /**
