@@ -49,7 +49,7 @@ class ClickableDOM(
     }
 
     suspend fun clickablePoint(): DescriptiveResult<PointD> {
-        val contentQuads = kotlin.runCatching {
+        val contentQuads = runCatching {
             // dom.getContentQuads(node.nodeId, node.backendNodeId, node.objectId)
             dom.getContentQuads(node.nodeId)
         }
@@ -490,8 +490,6 @@ class Mouse(private val devTools: ChromeDevTools) {
  * Keyboard provides an api for managing a virtual keyboard.
  * */
 class Keyboard(private val devTools: ChromeDevTools) {
-    private val logger = getLogger(this)
-
     private val input get() = devTools.input
     private val pressedModifiers = mutableSetOf<String>()
     private val pressedKeys = mutableSetOf<String>()
@@ -741,30 +739,36 @@ class EmulationHandler(
             offsetX = offsetX.coerceAtMost((width - minDeltaX).coerceAtLeast(0.0)).coerceAtLeast(minDeltaX)
             // Base X on the element's left edge to avoid overshooting from a center-based point
             point.x = box.x + offsetX
+
+            // Also keep Y inside the element bounds with a small margin
+            val minY = box.y + minDeltaX
+            val maxY = (box.y + box.height - minDeltaX).coerceAtLeast(minY)
+            point.y = point.y.coerceIn(minY, maxY)
         }
 
         var cdpModifiers = 0
-        var normModifier: KeyboardModifier? = null
-        var virtualKey: VirtualKey? = null
         if (modifier != null) {
-            normModifier = KeyboardModifier.valueOfOrNull(modifier)
-            if (normModifier != null) {
-                virtualKey = keyboard?.createVirtualKeyForSingleKeyString(normModifier)
-                if (virtualKey != null) {
-                    if (virtualKey.isModifier) {
-                        // Use CDP-compliant modifier bitmask for mouse events
-                        cdpModifiers = modifierMaskForKeyString(normModifier.name)
-                        logger.info("Clicking with virtual key: {}, modifiers: {}", virtualKey, cdpModifiers)
-                    }
-                    keyboard?.down(virtualKey)
+            val normModifier = KeyboardModifier.valueOfOrNull(modifier)
+            val kb = keyboard
+            if (normModifier != null && kb != null) {
+                val virtualKey = kb.createVirtualKeyForSingleKeyString(normModifier)
+                if (virtualKey.isModifier) {
+                    // Use CDP-compliant modifier bitmask for mouse events
+                    cdpModifiers = modifierMaskForKeyString(normModifier.name)
+                    logger.info("Clicking with virtual key: {}, modifiers: {}", virtualKey, cdpModifiers)
                 }
+                // Press and guarantee release via try/finally
+                try {
+                    kb.down(virtualKey)
+                    mouse?.click(point.x, point.y, count, modifiers = cdpModifiers, delayMillis = delayMillis)
+                } finally {
+                    runCatching { kb.up(virtualKey) }
+                }
+                return
             }
         }
 
+        // Fallback: no modifier handling
         mouse?.click(point.x, point.y, count, modifiers = cdpModifiers, delayMillis = delayMillis)
-
-        if (virtualKey != null) {
-            keyboard?.up(virtualKey)
-        }
     }
 }

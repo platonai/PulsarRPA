@@ -439,6 +439,8 @@ class PulsarWebDriver(
                 if (startPoint != null) {
                     // Calculate target point relative to start point
                     val targetPoint = PointD(startPoint.x + deltaX, startPoint.y + deltaY)
+                    tracer?.trace("dragAndDrop | from: {} to: {} | delta: {}, {}", startPoint, targetPoint, deltaX, deltaY)
+                    // Use mouse to perform drag-and-drop via CDP drag events
                     mouse?.dragAndDrop(startPoint, targetPoint, randomDelayMillis("dragAndDrop"))
                 }
                 gap()
