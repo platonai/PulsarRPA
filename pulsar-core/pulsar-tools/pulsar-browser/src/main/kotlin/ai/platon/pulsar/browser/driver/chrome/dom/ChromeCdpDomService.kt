@@ -88,7 +88,7 @@ class ChromeCdpDomService(
         val snapshotStart = System.currentTimeMillis()
         val snapshotByBackendId = if (options.includeSnapshot) {
             runCatching {
-                snapshot.captureEnhanced(
+                snapshot.capture(
                     includeStyles = options.includeStyles,
                     includePaintOrder = options.includePaintOrder,
                     includeDomRects = options.includeDOMRects,
@@ -631,7 +631,7 @@ class ChromeCdpDomService(
     override fun toInteractedElement(node: DOMTreeNodeEx): DOMInteractedElement {
         return DOMInteractedElement(
             elementHash = node.elementHash ?: HashUtils.simpleElementHash(node),
-            xPath = node.xpath,
+            xpath = node.xpath,
             bounds = node.snapshotNode?.clientRects,
             isVisible = node.isVisible,
             isInteractable = node.isInteractable

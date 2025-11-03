@@ -355,7 +355,7 @@ object DomDebug {
 
     fun summarize(el: DOMInteractedElement): String {
         val hashShort = el.elementHash.take(12)
-        val xPathShort = el.xPath?.takeLast(60)
+        val xPathShort = el.xpath?.takeLast(60)
         val xy = xyOf(el.bounds)
         val gt200 = if (xy != null && xy.first > 200.0 && xy.second > 200.0) 1 else 0
         val gt50Sorted = if (xy != null && xy.first > 50.0 && xy.second > 50.0) listOf(xy) else emptyList()

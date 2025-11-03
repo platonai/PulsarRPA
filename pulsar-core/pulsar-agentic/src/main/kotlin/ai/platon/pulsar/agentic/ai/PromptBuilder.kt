@@ -16,6 +16,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.time.LocalDate
 import java.util.*
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 /**
  * Description:
@@ -488,19 +489,6 @@ Print null or an empty string if no new information is found.
         return SimpleMessage(role = "system", content = content)
     }
 
-    fun buildAgentStateMessage(state: AgentState): String {
-        val message = """
-## 智能体状态
-
-当前的 <user_request>、<file_system> 摘要、<todo_contents> 和 <step_info> 摘要。
-
----
-
-        """.trimIndent()
-
-        return message
-    }
-
     fun buildAgentStateHistoryMessage(history: List<AgentState>): String {
         if (history.isEmpty()) {
             return ""
@@ -528,6 +516,19 @@ $his
 		""".trimIndent()
 
         return msg
+    }
+
+    fun buildAgentStateMessage(state: AgentState): String {
+        val message = """
+## 智能体状态
+
+当前的 <user_request>、<file_system> 摘要、<todo_contents> 和 <step_info> 摘要。
+
+---
+
+        """.trimIndent()
+
+        return message
     }
 
     fun buildBrowserVisionInfo(): String {
@@ -814,13 +815,14 @@ $newTabsJson
 
         val scrollState = browserState.scrollState
         // Height in pixels of the page area above the current viewport. (被隐藏在视口上方的部分)
-        val hiddenTopHeight = scrollState.y.coerceAtLeast(0.0)
-        val hiddenBottomHeight = (scrollState.totalHeight - hiddenTopHeight - scrollState.viewport.height).coerceAtLeast(0.0)
+        val hiddenTopHeight = scrollState.y.roundToInt().coerceAtLeast(0)
+        val hiddenBottomHeight = (scrollState.totalHeight - hiddenTopHeight - scrollState.viewport.height)
+            .roundToInt().coerceAtLeast(0)
         val viewportHeight = scrollState.viewport.height
         val domState = params.browserUseState.domState
 
         // The 1-based viewport to see.
-        val processingViewport = (hiddenTopHeight / viewportHeight).toInt() + 1
+        val processingViewport = (hiddenTopHeight / viewportHeight) + 1
         val viewportsTotal = params.browserUseState.browserState.scrollState.viewportsTotal
 
         val interactiveElements = domState.microTree.toInteractiveDOMTreeNodeList(

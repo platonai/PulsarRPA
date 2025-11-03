@@ -289,10 +289,21 @@ typealias TinyTree = TinyNode
 
 /**
  * DOM interacted element for agent interaction.
+ *
+ * @property elementHash A hash code calculated from the element
+ * @property xpath The xpath of the node
+ * @property bounds Bounds are in the page (document) absolute coordinate space.
+ *      Origin is the document’s top‑left, not the viewport and not the element’s offset parent.
+ *      Viewport coords = bounds - (window.scrollX, window.scrollY).
+ *      For iframes, each document’s bounds are relative to its own document; accumulate frame offsets
+ *      to get page/screen coords. clientRects/scrollRects here are treated in the same absolute
+ *      document space as bounds.
+ * @param isVisible If the element is visible
+ * @property isInteractable If the element is interactive
  */
 data class DOMInteractedElement(
     val elementHash: String,
-    val xPath: String? = null,
+    val xpath: String? = null,
     val bounds: DOMRect? = null,
     val isVisible: Boolean? = null,
     val isInteractable: Boolean? = null

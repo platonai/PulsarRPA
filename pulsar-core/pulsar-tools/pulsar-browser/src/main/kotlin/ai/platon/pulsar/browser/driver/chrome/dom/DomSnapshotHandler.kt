@@ -21,7 +21,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
      * Enhanced capture with absolute coordinates and stacking context analysis.
      * This method provides comprehensive layout information for interaction indices.
      */
-    suspend fun captureEnhanced(
+    suspend fun capture(
         includeStyles: Boolean = true,
         includePaintOrder: Boolean = true,
         includeDomRects: Boolean = true,
@@ -153,11 +153,7 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
 
         tracer?.trace(
             "DOMSnapshot captured | entries={} rowsApprox={} styles={} paintOrder={}",
-            byBackend.size,
-            totalRows,
-            includeStyles,
-            includePaintOrder
-        )
+            byBackend.size, totalRows, includeStyles, includePaintOrder)
         return byBackend
     }
 

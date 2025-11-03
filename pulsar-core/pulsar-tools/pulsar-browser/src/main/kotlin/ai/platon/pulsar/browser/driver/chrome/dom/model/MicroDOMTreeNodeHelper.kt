@@ -94,6 +94,7 @@ class MicroToNanoTreeHelper(
 
         val o = no.originalNode ?: return false
         // Prefer absolute page coordinates first, then bounds, then client rects
+//        val r = o.absoluteBounds ?: o.bounds ?: o.clientRects ?: return false
         val r = o.absoluteBounds ?: o.bounds ?: o.clientRects ?: return false
         val y = r.y ?: return false
         val h = r.height ?: 0.0
