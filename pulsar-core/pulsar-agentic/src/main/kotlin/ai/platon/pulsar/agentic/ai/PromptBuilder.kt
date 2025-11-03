@@ -505,7 +505,6 @@ Print null or an empty string if no new information is found.
         }
 
         val his = history.takeLast(min(8, history.size))
-            .map { it.copy(browserUseState = null, prevState = null) }
             .joinToString("\n") { mapper.writeValueAsString(it) }
 
         val msg = """

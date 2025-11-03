@@ -24,6 +24,12 @@ import com.google.gson.JsonElement
 import org.apache.commons.lang3.StringUtils
 import java.nio.file.Files
 
+data class TextToActionParams(
+    val messages: AgentMessageList,
+    val agentState: AgentState,
+    val screenshotB64: String? = null
+)
+
 open class TextToAction(
     val conf: ImmutableConfig
 ) {
@@ -58,22 +64,22 @@ open class TextToAction(
     }
 
     @ExperimentalApi
+    open suspend fun generate(params: TextToActionParams): ActionDescription {
+        return generate(params.messages, params.agentState, params.screenshotB64)
+    }
+
+    @ExperimentalApi
     open suspend fun generate(
-        messages: AgentMessageList,
-        agentState: AgentState,
-        browserUseState: BrowserUseState,
-        screenshotB64: String? = null
+        messages: AgentMessageList, agentState: AgentState, screenshotB64: String? = null
     ): ActionDescription {
         try {
-            val response = generateResponse(messages, agentState, browserUseState, screenshotB64, 1)
+            val response = generateResponse(messages, agentState, screenshotB64, 1)
 
             val action = modelResponseToActionDescription(response)
 
-            return reviseActionDescription(action, browserUseState)
+            return reviseActionDescription(action, agentState.browserUseState!!)
         } catch (e: Exception) {
-            val errorResponse = ModelResponse(
-                "Unknown exception" + e.brief(), ResponseState.OTHER
-            )
+            val errorResponse = ModelResponse("Unknown exception" + e.brief(), ResponseState.OTHER)
             return ActionDescription(modelResponse = errorResponse)
         }
     }
@@ -93,7 +99,7 @@ open class TextToAction(
         screenshotB64: String? = null
     ): ActionDescription {
         try {
-            return generateWithToolCallSpecs(instruction, agentState, browserUseState, screenshotB64, 1)
+            return generateWithToolCallSpecs(instruction, agentState, screenshotB64, 1)
         } catch (e: Exception) {
             e.printStackTrace()
             val errorResponse = ModelResponse(
@@ -107,20 +113,18 @@ open class TextToAction(
     open suspend fun generateResponse(
         instruction: String,
         agentState: AgentState,
-        browserUseState: BrowserUseState,
         screenshotB64: String? = null,
         toolCallLimit: Int = 100,
     ): ModelResponse {
         val messages = AgentMessageList()
         messages.addLast("user", instruction)
-        return generateResponse(messages, agentState, browserUseState, screenshotB64, toolCallLimit)
+        return generateResponse(messages, agentState, screenshotB64, toolCallLimit)
     }
 
     @ExperimentalApi
     open suspend fun generateResponse(
         messages: AgentMessageList,
         agentState: AgentState,
-        browserUseState: BrowserUseState,
         screenshotB64: String? = null,
         toolCallLimit: Int = 100,
     ): ModelResponse {
@@ -129,7 +133,7 @@ open class TextToAction(
         val params = ObserveParams(
             userRequest ?: "",
             agentState = agentState,
-            browserUseState = browserUseState,
+            browserUseState = agentState.browserUseState!!,
             returnAction = true,
             logInferenceToFile = true
         )
@@ -151,13 +155,12 @@ open class TextToAction(
     private suspend fun generateWithToolCallSpecs(
         instruction: String,
         agentState: AgentState,
-        browserUseState: BrowserUseState,
         screenshotB64: String? = null,
         toolCallLimit: Int = 100,
     ): ActionDescription {
-        val response = generateResponse(instruction, agentState, browserUseState, screenshotB64, toolCallLimit)
+        val response = generateResponse(instruction, agentState, screenshotB64, toolCallLimit)
 
-        return reviseActionDescription(modelResponseToActionDescription(response), browserUseState)
+        return reviseActionDescription(modelResponseToActionDescription(response), agentState.browserUseState!!)
     }
 
     fun modelResponseToActionDescription(response: ModelResponse): ActionDescription {

@@ -8,6 +8,7 @@ import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.ActionExecuteResult
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
+import ai.platon.pulsar.agentic.ai.tta.TextToActionParams
 import ai.platon.pulsar.agentic.ai.tta.ToolCallResults
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
@@ -845,7 +846,8 @@ class BrowserPerceptiveAgent constructor(
                 //**
 
                 // Generate the action for this step
-                val stepAction = generateStepAction(messages, agentState, browserUseState, screenshotB64, context)
+                val params = TextToActionParams(messages, agentState, screenshotB64)
+                val stepAction = generateStepAction(params, context)
 
                 // We will use the following code pattern
 //                val observeOptions = ObserveOptions(
@@ -987,15 +989,9 @@ class BrowserPerceptiveAgent constructor(
         return messages
     }
 
-    private suspend fun generateStepAction(
-        messages: AgentMessageList,
-        agentState: AgentState,
-        browserUseState: BrowserUseState,
-        screenshotB64: String?,
-        context: ExecutionContext
-    ): ActionDescription? {
+    private suspend fun generateStepAction(params: TextToActionParams, context: ExecutionContext): ActionDescription? {
         return try {
-            tta.generate(messages, agentState, browserUseState, screenshotB64)
+            tta.generate(params)
         } catch (e: Exception) {
             logger.error("🤖❌ action.gen.fail sid={} msg={}", context.sessionId.take(8), e.message, e)
             consecutiveFailureCounter.incrementAndGet()
