@@ -177,7 +177,6 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-tests-common</artifactId>
-            <classifier>tests</classifier>
             <scope>test</scope>
         </dependency>
     </dependencies>
