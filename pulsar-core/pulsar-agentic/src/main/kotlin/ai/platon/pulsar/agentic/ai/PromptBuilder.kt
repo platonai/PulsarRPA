@@ -34,6 +34,8 @@ class PromptBuilder() {
 
         val isZH = locale in listOf(Locale.CHINESE, Locale.SIMPLIFIED_CHINESE, Locale.TRADITIONAL_CHINESE)
 
+        val language = if (isZH) "中文" else "English"
+
         const val MAX_ACTIONS = 1
 
         val ACTION_SCHEMA = """
@@ -172,7 +174,7 @@ $schema
 
 ## 语言设置
 
-- 默认工作语言：**中文**
+- 默认工作语言：**$language**
 - 始终以与用户请求相同的语言回复
 
 ---
@@ -293,14 +295,12 @@ $A11Y_TREE_NOTE_CONTENT
 为成功完成 <user_request> 请遵循以下推理模式：
 
 - 基于 <agent_history> 推理，以追踪朝向 <user_request> 的进展与上下文。
-- 分析 <agent_history> 中最近的 “Next Goal” 与 “Action Result”，并明确说明你之前尝试达成的目标。
+- 分析 <agent_history> 中最近的 `nextGoal` 与 `evaluationPreviousGoal`，并明确说明你之前尝试达成的目标。
 - 分析所有相关的 <agent_history>、<browser_state> 和截图以了解当前状态。
 - 明确判断上一步动作的成功/失败/不确定性。不要仅仅因为上一步在 <agent_history> 中显示已执行就认为成功。例如，你可能记录了 “动作 1/1：在元素 3 中输入 '2025-05-05'”，但输入实际上可能失败。始终使用 <browser_vision>（截图）作为主要事实依据；如果截图不可用，则备选使用 <browser_state>。若预期变化缺失，请将上一步标记为失败（或不确定），并制定恢复计划。
 - 分析你是否陷入了重复无进展的状态；若是，考虑替代方法，例如滚动以获取更多上下文、使用发送键（`press`）直接模拟按键，或换用不同页面。
-- 分析 <read_state>（当上一步动作产生一次性信息时）并判断是否需要将该信息保存在文件中以便将来使用。
-- 如果发现与 <user_request> 相关的信息，计划将这些信息保存到文件中。
 - 决定应存储在记忆中的简明、可操作的上下文以供后续推理使用。
-- 在准备结束时，说明你准备调用 done 并向用户报告完成情况/结果。
+- 在准备结束时，说明你准备输出`taskComplete`并向用户报告完成情况/结果。
 - 始终关注 <user_request>。仔细分析所需的具体步骤和信息，例如特定筛选条件、表单字段等，确保当前轨迹与用户请求一致。
 
 ---

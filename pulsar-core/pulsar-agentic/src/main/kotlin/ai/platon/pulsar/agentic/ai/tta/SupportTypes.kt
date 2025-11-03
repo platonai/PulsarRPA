@@ -30,6 +30,7 @@ data class ObserveResponseElement(
     val arguments: List<Map<String, String>?>? = null,
 
     val memory: String? = null,
+    val thinking: String? = null,
     val screenshotContentSummary: String? = null,
     val currentPageContentSummary: String? = null,
     val evaluationPreviousGoal: String? = null,

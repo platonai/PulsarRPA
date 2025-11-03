@@ -206,15 +206,12 @@ class BrowserPerceptiveAgent constructor(
 
             val toolCallResults = doToolCallExecute(toolCall, action)
 
-            logger.info(
-                "✅ Action executed | {} | {}/{} | {}",
-                method, observe.locator, oe.cssSelector, oe.cssFriendlyExpressions
-            )
+            logger.info("✅ Action executed | {} | {}/{} | {}",
+                method, observe.locator, oe.cssSelector, oe.cssFriendlyExpressions)
 
             val msg = MessageFormatter.arrayFormat(
                 "✅ Action executed | {} | {}/{} | {}",
-                arrayOf(method, observe.locator, oe.cssSelector, oe.cssFriendlyExpressions)
-            )
+                arrayOf(method, observe.locator, oe.cssSelector, oe.cssFriendlyExpressions))
 
             // Record exactly once for this executed action
             updateAgentState(agentState, true, toolCall, toolCallResults, oe, message = msg.message)
@@ -1098,10 +1095,8 @@ class BrowserPerceptiveAgent constructor(
         logger.info("🕒 noop sid={} step={} consecutive={}", context.sessionId.take(8), step, consecutiveNoOps)
 
         if (consecutiveNoOps >= config.consecutiveNoOpLimit) {
-            logger.info(
-                "⛔ noop.stop sid={} step={} limit={}",
-                context.sessionId.take(8), step, config.consecutiveNoOpLimit
-            )
+            logger.info("⛔ noop.stop sid={} step={} limit={}",
+                context.sessionId.take(8), step, config.consecutiveNoOpLimit)
             return true
         }
 
