@@ -31,13 +31,13 @@ Simple guide to configure LLM:
 Make sure the environment variable is set:
 
 ```shell
-echo ${'$'}DEEPSEEK_API_KEY # make sure the environment variable is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+echo ${'$'}DEEPSEEK_API_KEY # make sure the environment variable is set. DASHSCOPE_API_KEY/VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
 ```
 
 Run Browser4 with the environment variable:
 
 ```shell
-java -D"EEPSEEK_API_KEY=${'$'}{DEEPSEEK_API_KEY}" -jar Browser4.jar
+java -D"DEEPSEEK_API_KEY=${'$'}{DEEPSEEK_API_KEY}" -jar Browser4.jar
 ```
 
 Or run Browser4 with Docker:
@@ -52,6 +52,7 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
     // 按顺序检查所有可能的API密钥配置
     val SUPPORTED_API_KEY_NAMES = listOf(
         "DEEPSEEK_API_KEY",
+        "DASHSCOPE_API_KEY",
         "VOLCENGINE_API_KEY",
         "OPENAI_API_KEY"
     )
@@ -116,8 +117,8 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
 
         val dashscopeAPIKey = conf["DASHSCOPE_API_KEY"]
         if (dashscopeAPIKey != null) {
-            val modelName = conf["VOLCENGINE_MODEL_NAME"] ?: "qwen-plus"
-            val baseURL = conf["VOLCENGINE_BASE_URL"] ?: "https://ark.cn-beijing.volces.com/api/v3"
+            val modelName = conf["DASHSCOPE_MODEL_NAME"] ?: "qwen-plus"
+            val baseURL = conf["DASHSCOPE_BASE_URL"] ?: "https://dashscope.aliyuncs.com/compatible-mode/v1"
             return getOrCreateOpenAICompatibleModel(modelName, dashscopeAPIKey, baseURL, conf)
         }
 
@@ -198,7 +199,7 @@ For more details, please refer to the [LLM configuration documentation]($DOCUMEN
     }
 
     private fun getOrCreateModel0(provider: String, modelName: String, apiKey: String, conf: ImmutableConfig): BrowserChatModel {
-        val key = "$modelName:$apiKey"
+        val key = "$provider:$modelName:$apiKey"
         return models.computeIfAbsent(key) { doCreateModel(provider, modelName, apiKey, conf) }
     }
 
