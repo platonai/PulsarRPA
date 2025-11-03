@@ -226,77 +226,6 @@ class BrowserPerceptiveAgent constructor(
         }
     }
 
-    data class ToolCallPatch(
-        val success: Boolean, val message: String, val action: String, val toolCall: ToolCall? = null
-    )
-
-    private suspend fun patchToolCall(toolCall: ToolCall, observe: ObserveResult): ToolCallPatch {
-        val observeElement =
-            observe.observeElements?.firstOrNull() ?: return ToolCallPatch(false, "No observe element", action = "")
-        val method = toolCall.method.trim().takeIf { it.isNotEmpty() }
-        val locator = observe.locator?.let { Locator.parse(it) }
-
-        if (method == null || locator == null) {
-            val msg = "⚠️ No valuable observations were made"
-            // Not an executed action
-            processTrace(msg)
-            return ToolCallPatch(success = false, message = msg, action = "")
-        }
-
-        val selectorActions = AgentTool.SELECTOR_ACTIONS
-        val lowerMethod = method
-        val backendNodeId = observe.backendNodeId
-        val selector =
-            observe.backendNodeId?.let { "backend:$backendNodeId" } ?: observe.locator?.takeIf { it.isNotBlank() }
-        if (lowerMethod in selectorActions) {
-            toolCall.arguments["selector"] = selector
-            if (selector == null) {
-                val msg = "⚠️ No selector observation were made $locator | $observe"
-                processTrace(msg)
-                return ToolCallPatch(success = false, message = msg, action = method)
-            }
-        }
-
-        val driver = requireNotNull(activeDriver)
-        if (lowerMethod == "waitForNavigation") {
-            if (toolCall.arguments["oldUrl"].isNullOrBlank()) {
-                toolCall.arguments["oldUrl"] = driver.currentUrl()
-            }
-            if (toolCall.arguments["timeoutMillis"] == null) {
-                toolCall.arguments["timeoutMillis"] = 5000L.toString()
-            }
-        }
-
-        if (lowerMethod == "navigateTo") {
-            val url = toolCall.arguments["url"]
-            if (url == null) {
-                val msg = "⚠️ No url observation were made | " + Pson.toJson(observe)
-                processTrace(msg)
-                return ToolCallPatch(false, msg, action = method)
-            }
-
-            if (!actionValidator.isSafeUrl(url)) {
-                val msg = "⛔ Blocked unsafe URL: $url"
-                processTrace(msg)
-                return ToolCallPatch(false, msg, action = method)
-            }
-        }
-
-        if (config.enablePreActionValidation) {
-            val ok = actionValidator.validateToolCall(observeElement.toolCall)
-            if (!ok) {
-                val msg = "🚫 Tool call validation failed for $lowerMethod with selector ${selector?.take(120)}"
-                val sid = uuid.toString().take(8)
-                val curUrl = driver.currentUrl()
-                logger.info("🚫 observe_act.validate.fail sid={} url={} msg={} ", sid, curUrl, msg)
-                processTrace(msg)
-                return ToolCallPatch(false, msg, action = method)
-            }
-        }
-
-        return ToolCallPatch(true, "", method, toolCall = toolCall)
-    }
-
     override suspend fun extract(instruction: String): ExtractResult {
         val opts = ExtractOptions(instruction = instruction, schema = null)
         return extract(opts)
@@ -365,7 +294,6 @@ class BrowserPerceptiveAgent constructor(
         )
 
         // Do OBSERVE
-        // TODO: check differences between `doObserve` and `observe`
         val action = doObserveForActionDescription(params, messages)
 
         val observeElements = listOfNotNull(action.observeElement)
@@ -463,6 +391,77 @@ class BrowserPerceptiveAgent constructor(
         return ToolCallResults(action.expressions, listOf(callResult), action = action)
     }
 
+    data class ToolCallPatch(
+        val success: Boolean, val message: String, val action: String, val toolCall: ToolCall? = null
+    )
+
+    private suspend fun patchToolCall(toolCall: ToolCall, observe: ObserveResult): ToolCallPatch {
+        val observeElement =
+            observe.observeElements?.firstOrNull() ?: return ToolCallPatch(false, "No observe element", action = "")
+        val method = toolCall.method.trim().takeIf { it.isNotEmpty() }
+        val locator = observe.locator?.let { Locator.parse(it) }
+
+        if (method == null || locator == null) {
+            val msg = "⚠️ No valuable observations were made"
+            // Not an executed action
+            processTrace(msg)
+            return ToolCallPatch(success = false, message = msg, action = "")
+        }
+
+        val selectorActions = AgentTool.SELECTOR_ACTIONS
+        val lowerMethod = method
+        val backendNodeId = observe.backendNodeId
+        val selector =
+            observe.backendNodeId?.let { "backend:$backendNodeId" } ?: observe.locator?.takeIf { it.isNotBlank() }
+        if (lowerMethod in selectorActions) {
+            toolCall.arguments["selector"] = selector
+            if (selector == null) {
+                val msg = "⚠️ No selector observation were made $locator | $observe"
+                processTrace(msg)
+                return ToolCallPatch(success = false, message = msg, action = method)
+            }
+        }
+
+        val driver = requireNotNull(activeDriver)
+        if (lowerMethod == "waitForNavigation") {
+            if (toolCall.arguments["oldUrl"].isNullOrBlank()) {
+                toolCall.arguments["oldUrl"] = driver.currentUrl()
+            }
+            if (toolCall.arguments["timeoutMillis"] == null) {
+                toolCall.arguments["timeoutMillis"] = 5000L.toString()
+            }
+        }
+
+        if (lowerMethod == "navigateTo") {
+            val url = toolCall.arguments["url"]
+            if (url == null) {
+                val msg = "⚠️ No url observation were made | " + Pson.toJson(observe)
+                processTrace(msg)
+                return ToolCallPatch(false, msg, action = method)
+            }
+
+            if (!actionValidator.isSafeUrl(url)) {
+                val msg = "⛔ Blocked unsafe URL: $url"
+                processTrace(msg)
+                return ToolCallPatch(false, msg, action = method)
+            }
+        }
+
+        if (config.enablePreActionValidation) {
+            val ok = actionValidator.validateToolCall(observeElement.toolCall)
+            if (!ok) {
+                val msg = "🚫 Tool call validation failed for $lowerMethod with selector ${selector?.take(120)}"
+                val sid = uuid.toString().take(8)
+                val curUrl = driver.currentUrl()
+                logger.info("🚫 observe_act.validate.fail sid={} url={} msg={} ", sid, curUrl, msg)
+                processTrace(msg)
+                return ToolCallPatch(false, msg, action = method)
+            }
+        }
+
+        return ToolCallPatch(true, "", method, toolCall = toolCall)
+    }
+
     /**
      * Handle switching to a new tab by binding the target driver to the session.
      */
@@ -520,15 +519,15 @@ class BrowserPerceptiveAgent constructor(
         )
 
         // 3) Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
-        val results = doObserve(params, messages)
+        val observeResults = doObserveForAct(params, messages)
 
-        if (results.isEmpty()) {
+        if (observeResults.isEmpty()) {
             val msg = "⚠️ doObserveAct: No actionable element found"
             processTrace(msg)
             return ActResult(false, msg, action = action.action)
         }
 
-        val resultsToTry = results.take(config.maxResultsToTry)
+        val resultsToTry = observeResults.take(config.maxResultsToTry)
         var lastError: String? = null
 
         for ((index, chosen) in resultsToTry.withIndex()) {
@@ -579,7 +578,7 @@ class BrowserPerceptiveAgent constructor(
         return ActResult(false, msg, action = action.action)
     }
 
-    private suspend fun doObserve(params: ObserveParams, messages: AgentMessageList): List<ObserveResult> {
+    private suspend fun doObserveForAct(params: ObserveParams, messages: AgentMessageList): List<ObserveResult> {
         requireNotNull(messages.instruction) { "User instruction is required | $messages" }
 
         val actionDescription = doObserveForActionDescription(params, messages)
@@ -841,6 +840,10 @@ class BrowserPerceptiveAgent constructor(
                 // Prepare messages for model
                 val messages = buildMessagesForStep(systemMsg, userRequest, screenshotB64, prevAgentState)
 
+                //**
+                // Observe and Generate Action
+                //**
+
                 // Generate the action for this step
                 val stepAction = generateStepAction(messages, agentState, browserUseState, screenshotB64, context)
 
@@ -870,6 +873,10 @@ class BrowserPerceptiveAgent constructor(
 
                 // Reset consecutive no-ops counter when we have a valid action
                 consecutiveNoOps = 0
+
+                //**
+                // Execute Tool Call
+                //**
 
                 // Execute the tool call with enhanced error handling
                 val exec = executeToolCall(stepAction, step, stepContext)
