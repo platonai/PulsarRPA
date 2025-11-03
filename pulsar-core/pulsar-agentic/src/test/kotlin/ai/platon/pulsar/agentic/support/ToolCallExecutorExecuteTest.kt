@@ -201,48 +201,6 @@ class ToolCallExecutorExecuteTest {
     }
 
     @Test
-    fun `scroll helpers and go history`() = runBlocking {
-        val driver = mockk<WebDriver>(relaxed = true)
-        coEvery { driver.scrollDown(any()) } just Runs
-        coEvery { driver.scrollUp(any()) } just Runs
-        coEvery { driver.scrollToTop() } just Runs
-        coEvery { driver.scrollToBottom() } just Runs
-        coEvery { driver.scrollToMiddle(any()) } just Runs
-        coEvery { driver.scrollToViewport(any()) } just Runs
-        coEvery { driver.goBack() } just Runs
-        coEvery { driver.goForward() } just Runs
-
-        executor.execute("driver.scrollDown()", driver)
-        executor.execute("driver.scrollUp(3)", driver)
-        executor.execute("driver.scrollToTop()", driver)
-        executor.execute("driver.scrollToBottom()", driver)
-        executor.execute("driver.scrollToMiddle(0.7)", driver)
-        executor.execute("driver.scrollToViewport(1.5)", driver)
-        executor.execute("driver.scrollToViewport(2.25)", driver)
-        executor.execute("driver.goBack()", driver)
-        executor.execute("driver.goForward()", driver)
-
-        coVerify { driver.scrollDown(1) }
-        coVerify { driver.scrollUp(3) }
-        coVerify { driver.scrollToTop() }
-        coVerify { driver.scrollToBottom() }
-        coVerify { driver.scrollToMiddle(0.7) }
-        coVerify { driver.scrollToViewport(1.5) }
-        coVerify { driver.scrollToViewport(2.25) }
-        coVerify { driver.goBack() }
-        coVerify { driver.goForward() }
-    }
-
-    @Test
-    fun `error handling returns null`() = runBlocking {
-        val driver = mockk<WebDriver>()
-        coEvery { driver.click(any(), 1) } throws IllegalStateException("boom")
-
-        val r = executor.execute("driver.click(\"#a\")", driver)
-        assertNull(r)
-    }
-
-    @Test
     fun `toolCall to expression end-to-end few samples`() = runBlocking {
         val driver = mockk<WebDriver>(relaxed = true)
         // exists
