@@ -276,6 +276,10 @@ $A11Y_TREE_NOTE_CONTENT
 ## 效率指南
 
 - 如需输入，直接输入，无需滚动和聚焦，工具层处理
+- 屏幕阅读规则
+  - 逐屏阅读，屏幕视觉内容是推理的最终依据
+  - 例外
+    - 如果你的任务仅依赖网页文本，不要逐屏阅读，滚动到网页底部 + 使用文本提取工具(selectFirstTextOrNull)直接获取网页内容
 - 不要在一步中尝试多条不同路径。始终为每一步设定一个明确目标。重要的是在下一步你能看到动作是否成功，因此不要链式调用会多次改变浏览器状态的动作，例如：
    - 不要使用 click 然后再 navigate，因为你无法确认 click 是否成功。
    - 不要连续使用 switch，因为你看不到中间状态。
@@ -814,7 +818,7 @@ $newTabsJson
         }
 
         val scrollState = browserState.scrollState
-        // Height in pixels of the page area above the current viewport. (被隐藏在视口上方的部分)
+        // Height in pixels of the page area above the current viewport. (被隐藏在视口上方的部分的高度)
         val hiddenTopHeight = scrollState.y.roundToInt().coerceAtLeast(0)
         val hiddenBottomHeight = (scrollState.totalHeight - hiddenTopHeight - scrollState.viewport.height)
             .roundToInt().coerceAtLeast(0)

@@ -1178,14 +1178,14 @@ class BrowserPerceptiveAgent constructor(
 
     private fun processTrace(entries: Map<String, String>) {
         val time = LocalDateTime.now()
-        val id = emo(_processTrace.size + 1)
-        _processTrace.add("""$id$time - """ + entries.entries.joinToString(" ") { (k, v) -> "$k:$v" })
+        val id = _processTrace.size + 1
+        _processTrace.add("""$id\t$time - """ + entries.entries.joinToString(" ") { (k, v) -> "$k:$v" })
     }
 
     private fun processTrace(entry: String) {
         val time = LocalDateTime.now()
-        val id = emo(_processTrace.size + 1)
-        _processTrace.add("""$id$time - $entry""")
+        val id = _processTrace.size + 1
+        _processTrace.add("""$id\t$time - $entry""")
     }
 
     /**
