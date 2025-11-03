@@ -171,9 +171,9 @@ class MicroDOMTreeNodeHelper(
                 ?.joinToString(" ", " ") { (k, v) -> "$k=$v" }
                 ?: ""
             return if (nodeValue == null) {
-                "<${'$'}{nodeName}${'$'}{attrs} />"
+                "<${nodeName}$attrs />"
             } else {
-                """<${'$'}{nodeName}${'$'}{attrs}>${'$'}{nodeValue}</${'$'}{nodeName}>"""
+                """<${nodeName}$attrs>$nodeValue</${nodeName}>"""
             }
         }
 
