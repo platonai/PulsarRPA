@@ -847,6 +847,18 @@ class BrowserPerceptiveAgent constructor(
                 // Generate the action for this step
                 val stepAction = generateStepAction(messages, agentState, browserUseState, screenshotB64, context)
 
+                // We will use the following code pattern
+//                val observeOptions = ObserveOptions(
+//                    instruction = agentState.instruction,
+//                    returnAction = true,
+//                    agentState = agentState
+//                )
+//                val observeResults = observe(observeOptions)
+//
+//                observeResults.forEach { observeResult ->
+//                    val actResult = act(observeResult)
+//                }
+
                 // Keep reference to previous AgentState for next loop
                 prevAgentState = agentState
 
