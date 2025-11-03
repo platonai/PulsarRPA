@@ -42,7 +42,7 @@ class PromptBuilder() {
         |,
         |"domain": string, "method": string, "arguments": [{"name": string, "value": string}],
         |"screenshotContentSummary": string, "currentPageContentSummary": string,
-        |"memory": string,
+        |"memory": string,"thinking": string,
         |"evaluationPreviousGoal": string, "nextGoal": string,
         |
         |""".trimMargin()

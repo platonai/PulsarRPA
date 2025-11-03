@@ -131,11 +131,17 @@ data class AgentState constructor(
     val domain: String? = null,
     val action: String? = null,
     val description: String? = null,
+    // AI: the summary of the screenshot provided in this step
     val screenshotContentSummary: String? = null,
+    // AI: the summary of the page content provided in this step
     val currentPageContentSummary: String? = null,
+    // AI: an evaluation for the previous goal: evaluation and state: [success, failed, partial success]
     val evaluationPreviousGoal: String? = null,
+    // AI: the next goal to archive
     val nextGoal: String? = null,
+    // the url to handle in this step
     val url: String? = null,
+    // timestamp
     val timestamp: Instant = Instant.now(),
     // The last browser use state
     @JsonIgnore
