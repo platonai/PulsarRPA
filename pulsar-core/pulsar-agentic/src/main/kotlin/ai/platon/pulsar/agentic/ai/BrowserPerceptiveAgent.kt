@@ -865,8 +865,9 @@ class BrowserPerceptiveAgent constructor(
                     messages.addUser(promptBuilder.buildBrowserVisionInfo())
                 }
 
-                if (prevAgentState?.action == "textContent") {
-                    val textContent = prevAgentState.toolCallResult.toString()
+                // add data extraction result
+                if (prevAgentState != null && prevAgentState.action in listOf("textContent", "selectFirstTextOrNull")) {
+                    val textContent = prevAgentState.toolCallResult?.result?.toString() ?: ""
                     val message = promptBuilder.buildExtractTextContentMessage(prevAgentState, textContent)
                     messages.addUser(message)
                 }
@@ -880,6 +881,7 @@ class BrowserPerceptiveAgent constructor(
                     null
                 }
 
+                // AI returned a response
                 prevAgentState = agentState
 
                 if (stepAction == null) {

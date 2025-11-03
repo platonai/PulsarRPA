@@ -22,7 +22,6 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonElement
 import org.apache.commons.lang3.StringUtils
-import java.lang.ref.WeakReference
 import java.nio.file.Files
 
 open class TextToAction(
