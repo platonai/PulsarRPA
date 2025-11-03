@@ -14,9 +14,7 @@ import ai.platon.pulsar.common.math.geometric.DimD
 import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
 import org.apache.commons.math3.util.Precision
 import kotlin.math.abs
 import kotlin.math.max
@@ -417,11 +415,9 @@ class Mouse(private val devTools: ChromeDevTools) {
     suspend fun drag(start: PointD, target: PointD): DragData? {
         var dragData: DragData? = null
 
-        withContext(Dispatchers.IO) {
-            input.setInterceptDrags(true)
-            input.onDragIntercepted {
-                dragData = it.data
-            }
+        input.setInterceptDrags(true)
+        input.onDragIntercepted {
+            dragData = it.data
         }
 
         try {
@@ -443,12 +439,10 @@ class Mouse(private val devTools: ChromeDevTools) {
      * @param data - drag data containing items and operations mask
      */
     suspend fun dragEnter(target: PointD, data: DragData) {
-        withContext(Dispatchers.IO) {
-            input.dispatchDragEvent(
-                DispatchDragEventType.DRAG_ENTER, target.x, target.y,
-                data
-            )
-        }
+        input.dispatchDragEvent(
+            DispatchDragEventType.DRAG_ENTER, target.x, target.y,
+            data
+        )
     }
 
     /**
@@ -457,12 +451,10 @@ class Mouse(private val devTools: ChromeDevTools) {
      * @param data - drag data containing items and operations mask
      */
     suspend fun dragOver(target: PointD, data: DragData) {
-        withContext(Dispatchers.IO) {
-            input.dispatchDragEvent(
-                DispatchDragEventType.DRAG_OVER, target.x, target.y,
-                data
-            )
-        }
+        input.dispatchDragEvent(
+            DispatchDragEventType.DRAG_OVER, target.x, target.y,
+            data
+        )
     }
 
     /**
@@ -471,12 +463,10 @@ class Mouse(private val devTools: ChromeDevTools) {
      * @param data - drag data containing items and operations mask
      */
     suspend fun drop(target: PointD, data: DragData) {
-        withContext(Dispatchers.IO) {
-            input.dispatchDragEvent(
-                DispatchDragEventType.DROP, target.x, target.y,
-                data
-            )
-        }
+        input.dispatchDragEvent(
+            DispatchDragEventType.DROP, target.x, target.y,
+            data
+        )
     }
 
     /**
