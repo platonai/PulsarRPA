@@ -60,12 +60,6 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>ai.platon.pulsar</groupId>
-            <artifactId>pulsar-tests-common</artifactId>
-            <scope>test</scope>
-        </dependency>
-
         <!--
         If your build relies on dependency management support from Spring Boot, you should not import
         the junit-bom in your build script since that will result in duplicate
@@ -80,6 +74,8 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-tests-common</artifactId>
+            <classifier>tests</classifier>
+            <scope>test</scope>
         </dependency>
     </dependencies>
 </project>
