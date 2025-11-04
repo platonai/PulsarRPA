@@ -39,7 +39,7 @@ internal class NetworkManager(
         private set
 
     var idleTimeout = Duration.ofSeconds(1)
-    val isIdle get() = DateTimes.elapsedTime(lastActiveTime) > idleTimeout
+    val isIdle get() = DateTimes.isExpired(lastActiveTime, idleTimeout)
 
     // TODO: is it a launch parameter?
     var ignoreHTTPSErrors = true

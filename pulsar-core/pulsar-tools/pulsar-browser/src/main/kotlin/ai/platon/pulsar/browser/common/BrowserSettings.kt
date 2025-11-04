@@ -303,8 +303,13 @@ open class BrowserSettings constructor(
         /**
          * Use the specified interact settings to interact with webpages.
          * */
-        fun withInteractSettings(settings: InteractSettings): Companion {
-            settings.overrideSystemProperties()
+        fun withInteractSettings(settings: InteractSettings, conf: MutableConfig? = null): Companion {
+            if (conf == null) {
+                settings.overrideSystemProperties()
+            } else {
+                settings.overrideConfiguration(conf)
+            }
+
             return BrowserSettings
         }
         /**

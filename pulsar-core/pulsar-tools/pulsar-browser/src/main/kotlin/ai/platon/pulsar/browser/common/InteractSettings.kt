@@ -21,7 +21,7 @@ enum class DomSettlePolicy {
 /**
  * The interaction settings.
  * */
-data class InteractSettings(
+data class InteractSettings constructor(
     /**
      * Page positions to scroll to, these numbers are percentages of the total height,
      * e.g., 0.2 means to scroll to 20% of the height of the page.
@@ -52,6 +52,11 @@ data class InteractSettings(
      * Whether to bring the page to the front before scroll.
      * */
     var bringToFront: Boolean = false,
+    /**
+     * DOM settle policy.
+     * TODO: the default value will be set to NETWORK_IDLE
+     * */
+    var domSettlePolicy: DomSettlePolicy = DomSettlePolicy.SMALL_FIELDS
 ) {
     /**
      * The minimum delay time in milliseconds.
@@ -106,8 +111,6 @@ data class InteractSettings(
         "default" to Duration.ofSeconds(60),
         "" to Duration.ofSeconds(60)
     )
-
-    var domSettlePolicy: DomSettlePolicy = DomSettlePolicy.SMALL_FIELDS
 
     /**
      * The delay policy for each action.

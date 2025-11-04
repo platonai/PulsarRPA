@@ -2,6 +2,7 @@ package ai.platon.pulsar.skeleton
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.common.DisplayMode
+import ai.platon.pulsar.browser.common.DomSettlePolicy
 import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.browser.BrowserProfileMode
 import ai.platon.pulsar.common.browser.BrowserType
@@ -251,17 +252,6 @@ data class PulsarSettings(
         /**
          * Set the max number of agents
          * */
-        @Deprecated("Use maxBrowserContexts instead", ReplaceWith("maxBrowserContexts(n)"))
-        @JvmStatic
-        @JvmOverloads
-        fun maxBrowsers(n: Int, conf: MutableConfig? = null): Companion {
-            maxBrowserContexts(n, conf)
-            return PulsarSettings
-        }
-
-        /**
-         * Set the max number of agents
-         * */
         @JvmStatic
         @JvmOverloads
         fun maxBrowserContexts(n: Int, conf: MutableConfig? = null): Companion {
@@ -313,7 +303,8 @@ data class PulsarSettings(
         @JvmOverloads
         fun withInteractLevel(level: InteractLevel, conf: MutableConfig? = null): Companion {
             // Interact settings modify config via settings override; no direct conf mapping here
-            BrowserSettings.withInteractSettings(InteractSettings.create(level))
+            val settings = InteractSettings.create(level)
+            BrowserSettings.withInteractSettings(settings, conf)
             return PulsarSettings
         }
 
@@ -324,9 +315,16 @@ data class PulsarSettings(
         @JvmOverloads
         fun withInteractSettings(settings: InteractSettings, conf: MutableConfig? = null): Companion {
             // Interact settings override system properties; conf routing is handled inside settings if needed
-            BrowserSettings.withInteractSettings(settings)
+            BrowserSettings.withInteractSettings(settings, conf)
             return PulsarSettings
         }
+
+        fun withDOMSettlePolicy(domSettlePolicy: DomSettlePolicy, conf: MutableConfig? = null): Companion {
+            val settings = InteractSettings.DEFAULT.copy(domSettlePolicy = domSettlePolicy)
+            BrowserSettings.withInteractSettings(settings, conf)
+            return PulsarSettings
+        }
+
         /**
          * Sets the Large Language Model (LLM) provider for the Browser4 settings.
          *
@@ -347,7 +345,6 @@ data class PulsarSettings(
          * @throws IllegalArgumentException If the provided `provider` is null.
          */
         @JvmStatic
-        @JvmOverloads
         fun withLLM(provider: String, name: String, apiKey: String): Companion {
             withLLMProvider(provider)
             withLLMName(name)
@@ -377,7 +374,6 @@ data class PulsarSettings(
          * @throws IllegalArgumentException If the provided `provider` is null.
          */
         @JvmStatic
-        @JvmOverloads
         fun withLLMProvider(provider: String?): Companion {
             // Validate that the provider is not null
             requireNotNull(provider) { "$LLM_PROVIDER NOT set" }
@@ -407,7 +403,6 @@ data class PulsarSettings(
          * @throws IllegalArgumentException If the provided name is null.
          */
         @JvmStatic
-        @JvmOverloads
         fun withLLMName(name: String?): Companion {
             // Validate that the LLM name is not null
             requireNotNull(name) { "$LLM_NAME NOT set" }
@@ -437,7 +432,6 @@ data class PulsarSettings(
          * @throws IllegalArgumentException If the provided API key is null, indicating that a valid key is required.
          */
         @JvmStatic
-        @JvmOverloads
         fun withLLMAPIKey(key: String?): Companion {
             // Validate that the API key is not null before setting it as a system property.
             requireNotNull(key) { "$LLM_API_KEY not set" }
