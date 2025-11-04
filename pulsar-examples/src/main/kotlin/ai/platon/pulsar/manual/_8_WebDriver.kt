@@ -113,7 +113,7 @@ fun main() {
     val url = TestResourceUtil.PRODUCT_DETAIL_URL
     val args = "-refresh -parse"
     // Set the system to work with single page applications (SPA)
-    val session = AgenticContexts.createSession(spa = true)
+    val session = AgenticContexts.createSession()
     val crawler = WebDriverDemo(session)
     session.load(url, crawler.options(args))
 }

@@ -30,10 +30,10 @@ object AgenticContexts {
     fun create(contextLocation: String): AgenticContext = create(ClassPathXmlAgenticContext(contextLocation))
 
     @Synchronized
-    fun createSession(settings: PulsarSettings = PulsarSettings()): AgenticSession = create().createSession(settings)
+    fun createSession(settings: PulsarSettings): AgenticSession = create().createSession(settings)
 
     @Synchronized
-    fun getOrCreateSession(settings: PulsarSettings = PulsarSettings()): AgenticSession = create().getOrCreateSession(settings)
+    fun getOrCreateSession(settings: PulsarSettings): AgenticSession = create().getOrCreateSession(settings)
 
     @Synchronized
     fun createSession(

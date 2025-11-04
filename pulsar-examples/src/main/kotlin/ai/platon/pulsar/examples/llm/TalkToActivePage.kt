@@ -1,6 +1,7 @@
 package ai.platon.pulsar.examples.llm
 
 import ai.platon.pulsar.agentic.context.AgenticContexts
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.skeleton.crawl.event.impl.DefaultPageEventHandlers
 import ai.platon.pulsar.test.TestResourceUtil
 import kotlinx.coroutines.delay
@@ -14,10 +15,10 @@ fun main() {
     val url = TestResourceUtil.PRODUCT_DETAIL_URL
 
     val actions = """
-move cursor to the element with id 'title' and click it
+move cursor to the search bar and click it
 scroll to middle
 scroll to top
-get the text of the element with id 'title'
+get the text of the element with id 'productTitle'
         """.trimIndent().split("\n").filter { it.isNotBlank() }
 
     val eventHandlers = DefaultPageEventHandlers()
@@ -42,7 +43,7 @@ get the text of the element with id 'title'
                         val s = functionResult.toString()
                         if (s.isNotBlank()) {
                             println()
-                            println(s)
+                            println(Strings.compactLog(s, 500))
                         }
                     }
                 }

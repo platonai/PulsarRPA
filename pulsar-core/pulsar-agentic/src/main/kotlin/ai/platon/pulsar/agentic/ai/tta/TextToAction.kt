@@ -16,6 +16,7 @@ import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.ai.ToolCall
+import ai.platon.pulsar.skeleton.common.llm.LLMUtils
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -39,7 +40,9 @@ open class TextToAction(
 
 ## 工具列表
 
+```kotlin
 {{TOOL_CALL_SPECIFICATION}}
+```
 
 ---
 
@@ -54,6 +57,8 @@ open class TextToAction(
 ## 输出
 
 - 仅输出 JSON 内容，无多余文字
+- domain 取值 driver
+- method 和 arguments 遵循 `## 工具列表` 的函数表达式
 
 动作输出格式：
 {{OUTPUT_SCHEMA_ACT}}
@@ -95,8 +100,17 @@ open class TextToAction(
 
     val chatModel: BrowserChatModel get() = ChatModelFactory.getOrCreate(conf)
 
+    val webDriverFile = baseDir.resolve("MiniWebDriver.kt")
+    val webDriverToolCallExpressions = mutableListOf<String>()
+
     init {
         Files.createDirectories(baseDir)
+
+        LLMUtils.copyWebDriverFile(webDriverFile)
+        Files.readAllLines(webDriverFile)
+            .filter { it.contains(" fun ") }
+            .map { it.substringAfterLast("suspend ") }
+            .toCollection(webDriverToolCallExpressions)
     }
 
     /**
@@ -120,7 +134,7 @@ open class TextToAction(
         val message = promptTemplate.render(
             mapOf(
                 "ACTION_DESCRIPTIONS" to actionDescriptions,
-                "TOOL_CALL_SPECIFICATION" to TOOL_CALL_SPECIFICATION,
+                "TOOL_CALL_SPECIFICATION" to webDriverToolCallExpressions.joinToString("\n"),
                 "NANO_TREE_LAZY_JSON" to domState.nanoTreeLazyJson,
                 "OUTPUT_SCHEMA_ACT" to buildObserveResultSchema(true),
             )
