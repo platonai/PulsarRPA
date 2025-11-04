@@ -1,10 +1,10 @@
 package ai.platon.pulsar.app.api.controller
 
+import ai.platon.pulsar.agentic.BasicAgenticSession
 import ai.platon.pulsar.boot.autoconfigure.PulsarContextConfiguration
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.browser.BrowserProfileMode
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.skeleton.session.BasicPulsarSession
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.apache.hc.client5.http.classic.HttpClient
 import org.apache.hc.client5.http.config.RequestConfig
@@ -30,7 +30,7 @@ import kotlin.test.assertTrue
 class IntegrationTestBase {
 
     @LocalServerPort
-    val serverPort: Int = 0
+    var serverPort: Int = 0
 
     @Autowired
     lateinit var restTemplate: TestRestTemplate
@@ -47,8 +47,9 @@ class IntegrationTestBase {
 
     @BeforeTest
     fun setup() {
-        assertTrue("Session should be BasicPulsarSession, actual ${session.javaClass}") { session is BasicPulsarSession }
+        assertTrue("Session should be BasicAgenticSession, actual ${session.javaClass}") { session is BasicAgenticSession }
         BrowserSettings.withBrowserContextMode(BrowserProfileMode.TEMPORARY)
+        assertTrue("Server port should have been injected and > 0, but was $serverPort") { serverPort > 0 }
     }
 
     // 自定义 RestTemplateBuilder 以设置超时时间

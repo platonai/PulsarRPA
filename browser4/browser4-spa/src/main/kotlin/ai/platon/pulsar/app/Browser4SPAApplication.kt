@@ -39,7 +39,8 @@ class Browser4Application {
     @PostConstruct
     fun initialize() {
         // Use a real browser for SPA rendering
-        PulsarSettings.withDefaultBrowser()
+        PulsarSettings.withDefaultBrowser().withSPA()
+        session.getOrCreateBoundDriver()
     }
 
     @PostConstruct

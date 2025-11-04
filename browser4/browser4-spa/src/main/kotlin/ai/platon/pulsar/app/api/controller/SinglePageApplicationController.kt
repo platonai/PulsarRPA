@@ -1,6 +1,7 @@
 package ai.platon.pulsar.app.api.controller
 
 import ai.platon.pulsar.agentic.AgenticSession
+import ai.platon.pulsar.agentic.context.QLAgenticContext
 import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.getLogger
@@ -42,7 +43,7 @@ class SinglePageApplicationController(
 ) {
     private val logger = getLogger(SinglePageApplicationController::class)
     private var browser: Browser? = null
-    private var activeDriver: WebDriver? = null
+    private val activeDriver: WebDriver get() = session.getOrCreateBoundDriver()
     private val browserLock = ReentrantLock()
     private var isInitialized = false // 添加初始化标志
 
@@ -61,11 +62,8 @@ class SinglePageApplicationController(
     fun init(): Map<String, String> {
         browserLock.withLock {
             try {
-                require(session.context is H2SQLContext)
+                require(session.context is QLAgenticContext)
                 require(session.isActive)
-
-                // Use a real browser for SPA rendering
-                PulsarSettings.withDefaultBrowser()
 
                 // 如果已经初始化过，直接返回健康状态
                 if (isInitialized && browser != null) {
@@ -79,10 +77,9 @@ class SinglePageApplicationController(
                 if (!isInitialized) {
                     val options = session.options("-refresh")
                     options.eventHandlers.browseEventHandlers.onWillNavigate.addLast { _, driver ->
-                        bindWebDriver(driver)
                     }
 
-                    val url = "https://www.baidu.com/"
+                    val url = "https://cn.bing.com/"
                     logger.info("Verify $url to initialize ...")
                     val page = session.load(url, options)
                     val document = session.parse(page)
@@ -120,11 +117,6 @@ class SinglePageApplicationController(
     @PostMapping("/navigate")
     fun navigate(@RequestBody request: NavigateRequest): ResponseEntity<Any> {
         val driver = activeDriver
-        if (driver == null) {
-            val status = CommandStatus.failed(ResourceStatus.SC_SERVICE_UNAVAILABLE)
-            status.message = "No active browser driver. Initialize via /api/spa/init and navigate first."
-            return ResponseEntity.status(status.statusCode).body(status)
-        }
 
         // Use a real browser for SPA rendering
         PulsarSettings.withDefaultBrowser()
@@ -147,11 +139,6 @@ class SinglePageApplicationController(
     @PostMapping("/act")
     suspend fun act(@RequestBody request: ActRequest): ResponseEntity<Any> {
         val driver = activeDriver
-        if (driver == null) {
-            val status = CommandStatus.failed(ResourceStatus.SC_SERVICE_UNAVAILABLE)
-            status.message = "No active browser driver. Initialize via /api/spa/init and navigate first."
-            return ResponseEntity.status(status.statusCode).body(status)
-        }
 
         return try {
             val result = session.act(request.act)
@@ -182,11 +169,6 @@ class SinglePageApplicationController(
     @GetMapping("/screenshot", produces = [MediaType.IMAGE_JPEG_VALUE])
     fun screenshot(@RequestBody request: ScreenshotRequest): ResponseEntity<Any> {
         val driver = activeDriver
-        if (driver == null) {
-            val status = CommandStatus.failed(ResourceStatus.SC_SERVICE_UNAVAILABLE)
-            status.message = "No active browser driver. Initialize via /api/spa/init and navigate first."
-            return ResponseEntity.status(status.statusCode).body(status)
-        }
 
         return try {
             val screenshotBase64 = runBlocking {
@@ -221,17 +203,10 @@ class SinglePageApplicationController(
      */
     @GetMapping("/extract")
     fun extract(@RequestBody request: ExtractRequest): ResponseEntity<Any> {
-        val driver = activeDriver
-        if (driver == null) {
-            val status = CommandStatus.failed(ResourceStatus.SC_SERVICE_UNAVAILABLE)
-            status.message = "No active browser driver. Initialize via /api/spa/init and navigate first."
-            return ResponseEntity.status(status.statusCode).body(status)
-        }
-
         val status = CommandStatus()
 
         runBlocking {
-            val page: WebPage = session.capture(driver)
+            val page: WebPage = session.capture(activeDriver)
             val document = session.parse(page)
             val command = CommandRequest(
                 url = page.url,
@@ -242,25 +217,5 @@ class SinglePageApplicationController(
         }
 
         return ResponseEntity.ok(status)
-    }
-
-    /**
-     * Guard that the given [browser] is configured for SPA and bind it to the [session].
-     *
-     * Preconditions
-     * - Requires: `browser.settings.isSPA == true`. Otherwise, throws [IllegalArgumentException].
-     *
-     * Side effects
-     * - Binds the browser into the session and stores it to the controller state.
-     */
-    private fun bindWebDriver(driver: WebDriver) {
-        require(driver.browser.settings.isSPA) { "The browser is not configured for SPA rendering" }
-
-        browserLock.withLock {
-            session.bindBrowser(driver.browser)
-            session.bindDriver(driver)
-            this.browser = driver.browser
-            this.activeDriver = driver
-        }
     }
 }
