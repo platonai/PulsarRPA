@@ -63,7 +63,7 @@ internal class InternalAgentExecutor(
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
         val tta = TextToAction(conf)
 
-        val action = tta.generate(prompt, driver)
+        val action = tta.generateAction(prompt, driver)
 
         return performAct(action)
     }

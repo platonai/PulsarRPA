@@ -2,22 +2,25 @@ package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder
+import ai.platon.pulsar.agentic.ai.PromptBuilder.Companion.buildObserveResultSchema
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.support.AgentTool.TOOL_ALIASES
+import ai.platon.pulsar.agentic.ai.support.AgentTool.TOOL_CALL_SPECIFICATION
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.ai.llm.PromptTemplate
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
-// import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver // Temporarily commented out due to dependency issues
 import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.ai.ToolCall
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonElement
@@ -33,6 +36,46 @@ data class TextToActionParams(
 open class TextToAction(
     val conf: ImmutableConfig
 ) {
+    companion object {
+
+        const val SINGLE_ACTION_GENERATION_PROMPT = """
+根据用户指令和网页内容，选择最合适一个工具。
+
+## 用户指令
+
+<user_request>
+{{INSTRUCTION}}
+</user_request>
+
+---
+
+## 工具列表
+
+{{TOOL_CALL_SPECIFICATION}}
+
+---
+
+## 网页内容
+
+网页内容以无障碍树的形式呈现:
+
+{{NANO_TREE_LAZY_JSON}}
+
+---
+
+## 输出
+
+- 输出严格使用下面两种 JSON 格式之一
+- 仅输出 JSON 内容，无多余文字
+
+1. 动作输出格式，最多一个元素(<output_act>)：
+{{OUTPUT_SCHEMA_ACT}}
+
+---
+
+        """
+    }
+
     private val logger = getLogger(this)
 
     val baseDir = AppPaths.get("tta")
@@ -51,17 +94,39 @@ open class TextToAction(
      * @return The action description
      * */
     @ExperimentalApi
-    open suspend fun generate(
+    open suspend fun generateAction(
         instruction: String,
         driver: WebDriver,
         screenshotB64: String? = null
     ): ActionDescription {
-        // Temporarily workaround: Skip browser state creation since PulsarWebDriver is not available
-        // TODO: Implement proper browser state extraction from generic WebDriver
-        // For now, call the overload that doesn't require browser state
-        val agentState = AgentState(1, instruction, browserUseState = null)
+        require(driver is AbstractWebDriver)
+        val domService = requireNotNull(driver.domService)
 
-        return generate(instruction, agentState, screenshotB64)
+        val options = SnapshotOptions()
+        val domState = domService.getDOMState(snapshotOptions = options)
+
+        val promptTemplate = PromptTemplate(SINGLE_ACTION_GENERATION_PROMPT)
+        val message = promptTemplate.render(
+            mapOf(
+                "INSTRUCTION" to instruction,
+                "TOOL_CALL_SPECIFICATION" to TOOL_CALL_SPECIFICATION,
+                "NANO_TREE_LAZY_JSON" to domState.nanoTreeLazyJson,
+                "OUTPUT_SCHEMA_ACT" to buildObserveResultSchema(true),
+            )
+        )
+
+        val messages = AgentMessageList()
+        messages.addUser(message)
+
+        val systemMessage = messages.systemMessages().joinToString("\n")
+        val userMessage = messages.userMessages().joinToString("\n")
+        val response = if (screenshotB64 != null) {
+            chatModel.call(systemMessage, userMessage, null, screenshotB64, "image/jpeg")
+        } else {
+            chatModel.call(systemMessage, userMessage)
+        }
+
+        return modelResponseToActionDescription(response)
     }
 
     @ExperimentalApi
@@ -112,7 +177,7 @@ open class TextToAction(
         instruction: String, agentState: AgentState, screenshotB64: String? = null, toolCallLimit: Int = 100,
     ): ModelResponse {
         val messages = AgentMessageList()
-        messages.addLast("user", instruction)
+        messages.addLast("user", instruction, "user_request")
         return generateResponse(messages, agentState, screenshotB64, toolCallLimit)
     }
 
@@ -124,7 +189,11 @@ open class TextToAction(
         toolCallLimit: Int = 100,
     ): ModelResponse {
         var userRequest: String? = messages.find("user_request")?.content
-        userRequest = StringUtils.substringBetween(userRequest, "<user_request>", "</user_request>")
+        requireNotNull(userRequest) { "user_request not found in message list: $messages" }
+        if (userRequest.contains("<user_request>")) {
+            userRequest = StringUtils.substringBetween(userRequest, "<user_request>", "</user_request>")
+        }
+
         val params = ObserveParams(
             userRequest ?: "",
             agentState = agentState,
@@ -181,6 +250,7 @@ open class TextToAction(
                     nextSuggestions = complete.nextSuggestions ?: emptyList()
                 )
             }
+
             contentStart.contains("\"elements\"") -> {
                 val elements: ObserveResponseElements = mapper.readValue(content)
                 val ele = elements.elements?.firstOrNull() ?: return ActionDescription(modelResponse = response)
@@ -208,6 +278,7 @@ open class TextToAction(
 
                 ActionDescription(observeElement = observeElement, modelResponse = response)
             }
+
             else -> ActionDescription(modelResponse = response)
         }
     }
