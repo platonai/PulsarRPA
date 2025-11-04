@@ -5,13 +5,13 @@ import ai.platon.pulsar.common.getLogger
 import org.apache.commons.lang3.StringUtils
 
 class MicroToNanoTreeHelper(
+    private val microTree: MicroDOMTreeNode,
     private val seenChunks: MutableList<Pair<Double, Double>>,
 ) {
     private val logger = getLogger(this)
 
-    fun toNanoTreeInViewport0(
-        microTree: MicroDOMTreeNode,
-        viewportHeight: Int,
+    fun toNanoTreeInViewport(
+        viewportHeight: Double,
         viewportIndex: Int = 1,
         scale: Double = 1.0
     ): NanoDOMTree {
@@ -23,10 +23,10 @@ class MicroToNanoTreeHelper(
         val startY = baseY - (deltaFactor * viewportHeight)
         val endY = baseY + viewportHeight + (deltaFactor * viewportHeight)
 
-        return toNanoTreeInRange0(microTree, startY, endY)
+        return toNanoTreeInRange(startY, endY)
     }
 
-    fun toNanoTreeInRange0(microTree: MicroDOMTree, startY: Double = 0.0, endY: Double = 100000.0): NanoDOMTree {
+    fun toNanoTreeInRange(startY: Double = 0.0, endY: Double = 100000.0): NanoDOMTree {
         val tree = toNanoTreeInRangeRecursive(microTree, startY, endY)
 
         if (seenChunks.size > 1) {
@@ -40,7 +40,11 @@ class MicroToNanoTreeHelper(
         return tree
     }
 
-    fun toNanoTreeInRangeRecursive(microNode: MicroDOMTreeNode, startY: Double = 0.0, endY: Double = 100000.0): NanoDOMTree {
+    fun toNanoTreeInRangeRecursive(
+        microNode: MicroDOMTreeNode,
+        startY: Double = 0.0,
+        endY: Double = 100000.0
+    ): NanoDOMTree {
         // Create the current node from the micro node
         val root = newNode(microNode) ?: return NanoDOMTree()
 

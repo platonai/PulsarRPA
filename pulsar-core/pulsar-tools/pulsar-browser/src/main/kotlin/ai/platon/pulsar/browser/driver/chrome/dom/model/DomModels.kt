@@ -477,15 +477,15 @@ data class MicroDOMTreeNode(
      * @param scale How much extra height to include above and below the viewport. 1.0 = exact viewport, 1.2 = 20% margin.
      */
     fun toNanoTreeInViewport(viewportHeight: Int, viewportIndex: Int = 1, scale: Double = 1.0): NanoDOMTree {
-        val helper = MicroToNanoTreeHelper(seenChunks)
-        return helper.toNanoTreeInViewport0(this, viewportHeight, viewportIndex, scale)
+        val helper = MicroToNanoTreeHelper(this, seenChunks)
+        return helper.toNanoTreeInViewport(viewportHeight.toDouble(), viewportIndex, scale)
     }
 
     fun toNanoTreeInRange(startY: Double = 0.0, endY: Double = 100000.0): NanoDOMTree {
-        val helper = MicroToNanoTreeHelper(seenChunks)
+        val helper = MicroToNanoTreeHelper(this, seenChunks)
 //        val key = "$startY$endY"
 //        return nanoTreeCache.computeIfAbsent(key) { helper.toNanoTreeInRange0(this, startY, endY) }
-        return helper.toNanoTreeInRange0(this, startY, endY)
+        return helper.toNanoTreeInRange(startY, endY)
     }
 }
 
