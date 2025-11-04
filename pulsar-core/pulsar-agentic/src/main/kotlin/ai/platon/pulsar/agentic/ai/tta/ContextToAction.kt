@@ -17,6 +17,12 @@ import ai.platon.pulsar.skeleton.ai.AgentState
 import org.apache.commons.lang3.StringUtils
 import java.nio.file.Files
 
+data class ContextToActionParams(
+    val messages: AgentMessageList,
+    val agentState: AgentState,
+    val screenshotB64: String? = null
+)
+
 open class ContextToAction(
     val conf: ImmutableConfig
 ) {
@@ -33,7 +39,7 @@ open class ContextToAction(
     }
 
     @ExperimentalApi
-    open suspend fun generate(params: TextToActionParams): ActionDescription {
+    open suspend fun generate(params: ContextToActionParams): ActionDescription {
         return generate(params.messages, params.agentState, params.screenshotB64)
     }
 

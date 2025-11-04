@@ -8,7 +8,7 @@ import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.ActionExecuteResult
 import ai.platon.pulsar.agentic.ai.tta.ContextToAction
-import ai.platon.pulsar.agentic.ai.tta.TextToActionParams
+import ai.platon.pulsar.agentic.ai.tta.ContextToActionParams
 import ai.platon.pulsar.agentic.ai.tta.ToolCallResults
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
@@ -846,7 +846,7 @@ class BrowserPerceptiveAgent constructor(
                 //**
 
                 // Generate the action for this step
-                val params = TextToActionParams(messages, agentState, screenshotB64)
+                val params = ContextToActionParams(messages, agentState, screenshotB64)
                 val stepAction = generateStepAction(params, context)
 
                 // We will use the following code pattern
@@ -989,7 +989,7 @@ class BrowserPerceptiveAgent constructor(
         return messages
     }
 
-    private suspend fun generateStepAction(params: TextToActionParams, context: ExecutionContext): ActionDescription? {
+    private suspend fun generateStepAction(params: ContextToActionParams, context: ExecutionContext): ActionDescription? {
         return try {
             contextToAction.generate(params)
         } catch (e: Exception) {

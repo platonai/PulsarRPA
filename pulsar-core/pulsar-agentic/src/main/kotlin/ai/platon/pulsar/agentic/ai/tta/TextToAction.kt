@@ -7,13 +7,9 @@ import ai.platon.pulsar.agentic.ai.support.AgentTool.TOOL_CALL_SPECIFICATION
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.ExperimentalApi
-import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.ai.llm.PromptTemplate
-import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
@@ -27,15 +23,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonElement
 import java.nio.file.Files
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.text.split
-
-data class TextToActionParams(
-    val messages: AgentMessageList,
-    val agentState: AgentState,
-    val screenshotB64: String? = null
-)
 
 open class TextToAction(
     val conf: ImmutableConfig
@@ -122,9 +109,7 @@ open class TextToAction(
      * */
     @ExperimentalApi
     open suspend fun generateActions(
-        actionDescriptions: String,
-        driver: WebDriver,
-        screenshotB64: String? = null
+        actionDescriptions: String, driver: WebDriver, screenshotB64: String? = null
     ): List<ActionDescription> {
         require(driver is AbstractWebDriver)
         val domService = requireNotNull(driver.domService)
@@ -158,35 +143,6 @@ open class TextToAction(
         val elements: ObserveResponseElements = mapper.readValue(content)
         return elements.elements?.map { toActionDescription(it, response) } ?: emptyList()
     }
-
-    @Deprecated("Use contextToAction.generate() instead")
-    @ExperimentalApi
-    open suspend fun generate(params: TextToActionParams) = ContextToAction(conf).generate(params)
-
-    @Deprecated("Use contextToAction.generate() instead")
-    @ExperimentalApi
-    open suspend fun generate(
-        messages: AgentMessageList, agentState: AgentState, screenshotB64: String? = null
-    ) = ContextToAction(conf).generate(messages, agentState, screenshotB64)
-
-    /**
-     * Generate EXACT ONE WebDriver action with interactive elements.
-     *
-     * @param instruction The action description with plain text
-     * @param driver The driver to use to collect the context, such as interactive elements
-     * @return The action description
-     * */
-    @Deprecated("Use contextToAction.generate() instead")
-    @ExperimentalApi
-    open suspend fun generate(
-        instruction: String, agentState: AgentState, screenshotB64: String? = null
-    ) = ContextToAction(conf).generate(instruction, agentState, screenshotB64)
-
-    @Deprecated("Use contextToAction.generateResponse() instead")
-    @ExperimentalApi
-    open suspend fun generateResponse(
-        instruction: String, agentState: AgentState, screenshotB64: String? = null, toolCallLimit: Int = 100,
-    ) = ContextToAction(conf).generateResponse(instruction, agentState, screenshotB64, toolCallLimit)
 
     fun modelResponseToActionDescription(response: ModelResponse): ActionDescription {
         try {
