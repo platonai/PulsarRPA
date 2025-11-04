@@ -141,35 +141,35 @@ class TextToActionComprehensiveTests : TextToActionTestBase() {
 @Test
 fun `When given clear action then generate precise WebDriver code`() = runWebDriverTest { driver ->
     val command = "click the login button"
-    val action = textToAction.generate(command, driver)
+    val action = textToAction.generateActions(command, driver)
     assertThat(action.expressions.joinToString("\n")).contains("driver.click(")
 }
 
 @Test
 fun `When asking to check element existence then generate exists check`() = runWebDriverTest { driver ->
     val command = "check whether the login button exists"
-    val action = textToAction.generate(command, driver)
+    val action = textToAction.generateActions(command, driver)
     assertThat(action.expressions.joinToString("\n")).contains("driver.exists(")
 }
 
 @Test
 fun `When asking to verify element visibility then generate visibility check`() = runWebDriverTest { driver ->
     val command = "ensure the submit button is visible"
-    val action = textToAction.generate(command, driver)
+    val action = textToAction.generateActions(command, driver)
     assertThat(action.expressions.joinToString("\n")).contains("driver.isVisible(")
 }
 
 @Test
 fun `When asking to focus element then generate focus action`() = runWebDriverTest { driver ->
     val command = "focus the search input"
-    val action = textToAction.generate(command, driver)
+    val action = textToAction.generateActions(command, driver)
     assertThat(action.expressions.joinToString("\n")).contains("driver.focus(")
 }
 
 @Test
 fun `When asking to scroll to element then generate scrollTo action`() = runWebDriverTest { driver ->
     val command = "scroll to the bottom of the page"
-    val action = textToAction.generate(command, driver)
+    val action = textToAction.generateActions(command, driver)
     assertThat(action.expressions.joinToString("\n")).contains("driver.scrollTo(")
 }
 ```
@@ -178,20 +178,20 @@ fun `When asking to scroll to element then generate scrollTo action`() = runWebD
 ```kotlin
 @Test
 fun `When element does not exist then return empty tool-calls`() = runWebDriverTest { driver ->
-    val action = textToAction.generate("click a non-existent button", driver)
+    val action = textToAction.generateActions("click a non-existent button", driver)
     assertThat(action.expressions.joinToString()).doesNotContain("driver.click(")
 }
 
 @Test
 fun `When asking for conditional action then include appropriate checks`() = runWebDriverTest { driver ->
-    val action = textToAction.generate("if the login button exists then click it", driver)
+    val action = textToAction.generateActions("if the login button exists then click it", driver)
     val calls = action.expressions.joinToString()
     assertThat(calls).contains("driver.exists(") || calls.contains("driver.click(")
 }
 
 @Test
 fun `When asking for defensive interaction then check visibility before action`() = runWebDriverTest { driver ->
-    val action = textToAction.generate("ensure the submit button is visible before clicking", driver)
+    val action = textToAction.generateActions("ensure the submit button is visible before clicking", driver)
     val calls = action.expressions.joinToString()
     assertThat(calls).contains("driver.isVisible(") || calls.contains("driver.click(")
 }
@@ -201,20 +201,20 @@ fun `When asking for defensive interaction then check visibility before action`(
 ```kotlin
 @Test
 fun `When ambiguous command then choose best match or ask to clarify`() = runWebDriverTest { driver ->
-    val action = textToAction.generate("click the button", driver)
+    val action = textToAction.generateActions("click the button", driver)
     // Verify strategy: prioritize data-testid or closest text match
 }
 
 @Test
 fun `When asking for navigation sequence then generate proper flow`() = runWebDriverTest { driver ->
-    val action = textToAction.generate("click the link and wait for navigation", driver)
+    val action = textToAction.generateActions("click the link and wait for navigation", driver)
     val calls = action.expressions.joinToString()
     assertThat(calls).contains("driver.click(") || calls.contains("driver.waitForNavigation(")
 }
 
 @Test
 fun `When asking for complex interaction then generate multi-step sequence`() = runWebDriverTest { driver ->
-    val action = textToAction.generate("scroll to the form, ensure the input is visible, then type text", driver)
+    val action = textToAction.generateActions("scroll to the form, ensure the input is visible, then type text", driver)
     val calls = action.expressions.joinToString()
     assertThat(calls).contains("driver.scrollTo(") ||
                   calls.contains("driver.isVisible(") ||

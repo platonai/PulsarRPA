@@ -52,8 +52,22 @@ data class ActionDescription constructor(
     val node: DOMTreeNodeEx? get() = observeElement?.node
     val xpath: String? get() = observeElement?.xpath
     val cssSelector: String? get() = observeElement?.cssSelector
+    val expression: String? get() = observeElement?.expression
+    val cssFriendlyExpression: String? get() = observeElement?.cssFriendlyExpression
+
+    @Deprecated("User expression instead")
     val expressions: List<String> get() = observeElement?.expressions ?: emptyList()
+    @Deprecated("User cssFriendlyExpression instead")
     val cssFriendlyExpressions: List<String> get() = observeElement?.cssFriendlyExpressions ?: emptyList()
+}
+
+data class ToolCallResult(
+    val expression: String = "",
+    val functionResult: Any? = null,
+    val action: ActionDescription? = null,
+) {
+    val modelResponse: ModelResponse get() = action?.modelResponse ?: ModelResponse.LLM_NOT_AVAILABLE
+    val toolCall: ToolCall? get() = action?.toolCall
 }
 
 data class ToolCallResults(

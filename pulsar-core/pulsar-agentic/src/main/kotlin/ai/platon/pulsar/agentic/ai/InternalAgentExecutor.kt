@@ -5,6 +5,7 @@ import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.ToolCallResults
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
+import ai.platon.pulsar.agentic.ai.tta.ToolCallResult
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.ai.ActResult
 import ai.platon.pulsar.skeleton.ai.ActionOptions
@@ -37,34 +38,33 @@ internal class InternalAgentExecutor(
         return agent.act(action)
     }
 
-    suspend fun performAct(action: ActionDescription): ToolCallResults {
+    suspend fun performAct(action: ActionDescription): ToolCallResult {
         val toolCall = action.toolCall
-        if (action.expressions.isEmpty() && toolCall == null) {
-            return ToolCallResults(action = action)
+        if (action.expression.isNullOrBlank() && toolCall == null) {
+            return ToolCallResult()
         }
 
         val result = if (toolCall != null) {
             toolCallExecutor.execute(toolCall, driver)
         } else {
-            action.expressions.take(1).map { expr -> toolCallExecutor.execute(expr, driver) }.firstOrNull()
+            action.expression?.let { expr -> toolCallExecutor.execute(expr, driver) }
         }
 
-        return ToolCallResults(
-            action.expressions,
-            functionResults = listOf(result),
+        return ToolCallResult(
+            action.expression ?: "",
+            functionResult = result,
             action = action
         )
     }
 
     suspend fun execute(action: ActionDescription) = performAct(action)
 
-    @Deprecated("Use act instead", replaceWith = ReplaceWith("act(action)"))
-    suspend fun instruct(prompt: String): ToolCallResults {
+    suspend fun plainActs(actionDescriptions: String): List<ToolCallResult> {
         // Converts the prompt into a sequence of webdriver actions using TextToAction.
         val tta = TextToAction(conf)
 
-        val action = tta.generateAction(prompt, driver)
+        val actions = tta.generateActions(actionDescriptions, driver)
 
-        return performAct(action)
+        return actions.map { performAct(it) }
     }
 }

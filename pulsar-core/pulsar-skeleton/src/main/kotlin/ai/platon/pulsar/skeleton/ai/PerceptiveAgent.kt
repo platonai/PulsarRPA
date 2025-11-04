@@ -92,9 +92,14 @@ data class ObserveElement constructor(
     val backendNodeId: Int? = null,
     val xpath: String? = null,
     val cssSelector: String? = null,
-    val expressions: List<String> = emptyList(),
-    val cssFriendlyExpressions: List<String> = emptyList(),
+    val expression: String? = null,
+    val cssFriendlyExpression: String? = null,
 ) {
+    @Deprecated("User expression instead")
+    val expressions: List<String> get() = expression?.let { listOf(it) } ?: emptyList()
+    @Deprecated("User cssFriendlyExpression instead")
+    val cssFriendlyExpressions: List<String> get() = cssFriendlyExpression?.let { listOf(it) } ?: emptyList()
+
     @get:JsonIgnore
     val description: String? get() = toolCall?.description
     @get:JsonIgnore

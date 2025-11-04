@@ -22,6 +22,7 @@ import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonElement
 import org.apache.commons.lang3.StringUtils
@@ -39,13 +40,11 @@ open class TextToAction(
     companion object {
 
         const val SINGLE_ACTION_GENERATION_PROMPT = """
-根据用户指令和网页内容，选择最合适一个工具。
+根据动作描述和网页内容，选择最合适一个或多个工具。
 
-## 用户指令
+## 动作描述
 
-<user_request>
-{{INSTRUCTION}}
-</user_request>
+{{ACTION_DESCRIPTIONS}}
 
 ---
 
@@ -65,10 +64,9 @@ open class TextToAction(
 
 ## 输出
 
-- 输出严格使用下面两种 JSON 格式之一
 - 仅输出 JSON 内容，无多余文字
 
-1. 动作输出格式，最多一个元素(<output_act>)：
+动作输出格式：
 {{OUTPUT_SCHEMA_ACT}}
 
 ---
@@ -89,16 +87,16 @@ open class TextToAction(
     /**
      * Generate EXACT ONE WebDriver action with interactive elements.
      *
-     * @param instruction The instruction
+     * @param actionDescriptions The action descriptions
      * @param driver The driver to use to collect the context, such as interactive elements
      * @return The action description
      * */
     @ExperimentalApi
-    open suspend fun generateAction(
-        instruction: String,
+    open suspend fun generateActions(
+        actionDescriptions: String,
         driver: WebDriver,
         screenshotB64: String? = null
-    ): ActionDescription {
+    ): List<ActionDescription> {
         require(driver is AbstractWebDriver)
         val domService = requireNotNull(driver.domService)
 
@@ -108,7 +106,7 @@ open class TextToAction(
         val promptTemplate = PromptTemplate(SINGLE_ACTION_GENERATION_PROMPT)
         val message = promptTemplate.render(
             mapOf(
-                "INSTRUCTION" to instruction,
+                "ACTION_DESCRIPTIONS" to actionDescriptions,
                 "TOOL_CALL_SPECIFICATION" to TOOL_CALL_SPECIFICATION,
                 "NANO_TREE_LAZY_JSON" to domState.nanoTreeLazyJson,
                 "OUTPUT_SCHEMA_ACT" to buildObserveResultSchema(true),
@@ -126,7 +124,10 @@ open class TextToAction(
             chatModel.call(systemMessage, userMessage)
         }
 
-        return modelResponseToActionDescription(response)
+        val mapper = jacksonObjectMapper()
+        val content = response.content
+        val elements: ObserveResponseElements = mapper.readValue(content)
+        return elements.elements?.map { toActionDescription(it, response) } ?: emptyList()
     }
 
     @ExperimentalApi
@@ -253,30 +254,8 @@ open class TextToAction(
 
             contentStart.contains("\"elements\"") -> {
                 val elements: ObserveResponseElements = mapper.readValue(content)
-                val ele = elements.elements?.firstOrNull() ?: return ActionDescription(modelResponse = response)
-                val arguments = ele.arguments
-                    ?.mapNotNull { arg -> arg?.get("name") to arg?.get("value") }
-                    ?.filter { it.first != null && it.second != null }
-                    ?.associate { it.first!! to it.second!! }
-
-                val observeElement = ObserveElement(
-                    locator = ele.locator?.removeSurrounding("[", "]"),
-
-                    screenshotContentSummary = ele.screenshotContentSummary,
-                    currentPageContentSummary = ele.currentPageContentSummary,
-                    evaluationPreviousGoal = ele.evaluationPreviousGoal,
-                    nextGoal = ele.nextGoal,
-
-                    toolCall = ToolCall(
-                        domain = ele.domain ?: "",
-                        method = ele.method ?: "",
-                        arguments = arguments?.toMutableMap() ?: mutableMapOf(),
-                    ),
-
-                    modelResponse = response,
-                )
-
-                ActionDescription(observeElement = observeElement, modelResponse = response)
+                elements.elements?.map { toActionDescription(it, response) }?.firstOrNull()
+                    ?: ActionDescription(modelResponse = response)
             }
 
             else -> ActionDescription(modelResponse = response)
@@ -325,8 +304,8 @@ open class TextToAction(
             backendNodeId = node?.backendNodeId,
             toolCall = toolCall,
             cssSelector = cssSelector,
-            expressions = expression?.let { listOf(it) } ?: emptyList(),
-            cssFriendlyExpressions = cssFriendlyExpression?.let { listOf(it) } ?: emptyList(),
+            expression = expression,
+            cssFriendlyExpression = cssFriendlyExpression,
         )
 
         return action.copy(observeElement = revisedObserveElement)
@@ -352,5 +331,31 @@ open class TextToAction(
         e.isJsonArray -> e.asJsonArray.map { jsonElementToKotlin(it) }
         e.isJsonObject -> e.asJsonObject.entrySet().associate { it.key to jsonElementToKotlin(it.value) }
         else -> null
+    }
+
+    private fun toActionDescription(ele: ObserveResponseElement, response: ModelResponse): ActionDescription {
+        val arguments = ele.arguments
+            ?.mapNotNull { arg -> arg?.get("name") to arg?.get("value") }
+            ?.filter { it.first != null && it.second != null }
+            ?.associate { it.first!! to it.second!! }
+
+        val observeElement = ObserveElement(
+            locator = ele.locator?.removeSurrounding("[", "]"),
+
+            screenshotContentSummary = ele.screenshotContentSummary,
+            currentPageContentSummary = ele.currentPageContentSummary,
+            evaluationPreviousGoal = ele.evaluationPreviousGoal,
+            nextGoal = ele.nextGoal,
+
+            toolCall = ToolCall(
+                domain = ele.domain ?: "",
+                method = ele.method ?: "",
+                arguments = arguments?.toMutableMap() ?: mutableMapOf(),
+            ),
+
+            modelResponse = response,
+        )
+
+        return ActionDescription(observeElement = observeElement, modelResponse = response)
     }
 }

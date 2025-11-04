@@ -2,6 +2,7 @@ package ai.platon.pulsar.agentic
 
 import ai.platon.pulsar.agentic.ai.InternalAgentExecutor
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
+import ai.platon.pulsar.agentic.ai.tta.ToolCallResult
 import ai.platon.pulsar.agentic.ai.tta.ToolCallResults
 import ai.platon.pulsar.agentic.context.AbstractAgenticContext
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -57,20 +58,19 @@ interface AgenticSession: PulsarSession {
      * @return The response from the model, though in this implementation, the return value is not explicitly used.
      */
     @Beta
-    suspend fun performAct(action: ActionDescription): ToolCallResults
+    suspend fun performAct(action: ActionDescription): ToolCallResult
 
     @Beta
-    suspend fun execute(action: ActionDescription): ToolCallResults
+    suspend fun execute(action: ActionDescription): ToolCallResult
 
     /**
      * Instructs the webdriver to perform a series of actions based on the given prompt.
      * This function converts the prompt into a sequence of webdriver actions, which are then executed.
      *
-     * @param prompt The textual prompt that describes the actions to be performed by the webdriver.
+     * @param actionDescriptions The textual prompt that describes the actions to be performed by the webdriver.
      * @return The response from the model, though in this implementation, the return value is not explicitly used.
      */
-    @Deprecated("Use act instead", ReplaceWith("multiAct(action)"))
-    suspend fun instruct(prompt: String): ToolCallResults
+    suspend fun plainActs(actionDescriptions: String): List<ToolCallResult>
 }
 
 abstract class AbstractAgenticSession(
@@ -105,8 +105,7 @@ open class BasicAgenticSession(
 
     override suspend fun execute(action: ActionDescription) = executor.execute(action)
 
-    @Deprecated("Use act instead", replaceWith = ReplaceWith("act(action)"))
-    override suspend fun instruct(prompt: String) = executor.instruct(prompt)
+    override suspend fun plainActs(actionDescriptions: String) = executor.plainActs(actionDescriptions)
 }
 
 open class AbstractAgenticQLSession(
@@ -135,8 +134,7 @@ open class AbstractAgenticQLSession(
 
     override suspend fun execute(action: ActionDescription) = executor.execute(action)
 
-    @Deprecated("Use act instead", replaceWith = ReplaceWith("act(action)"))
-    override suspend fun instruct(prompt: String) = executor.instruct(prompt)
+    override suspend fun plainActs(actionDescriptions: String) = executor.plainActs(actionDescriptions)
 }
 
 open class AgenticQLSession(

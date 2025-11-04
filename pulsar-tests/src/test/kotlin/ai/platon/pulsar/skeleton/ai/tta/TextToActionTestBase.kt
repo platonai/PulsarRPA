@@ -4,10 +4,10 @@ import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.util.server.EnableMockServerApplication
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
