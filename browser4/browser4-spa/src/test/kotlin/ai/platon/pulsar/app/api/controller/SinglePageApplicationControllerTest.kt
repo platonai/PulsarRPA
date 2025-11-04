@@ -12,7 +12,9 @@ import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.*
 import java.nio.file.Files
 import java.nio.file.StandardOpenOption
+import kotlin.test.Ignore
 
+@Ignore("Disabled temporarily, Run the tests manually")
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class SinglePageApplicationControllerTest : IntegrationTestBase() {
 

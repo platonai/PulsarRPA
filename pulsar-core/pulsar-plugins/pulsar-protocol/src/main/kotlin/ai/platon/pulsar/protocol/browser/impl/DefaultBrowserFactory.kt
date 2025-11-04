@@ -7,7 +7,6 @@ import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightBrowserLauncher
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLaunchException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLauncher
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 
