@@ -9,12 +9,15 @@ import ai.platon.cdt.kt.protocol.types.fetch.AuthChallengeResponseResponse
 import ai.platon.cdt.kt.protocol.types.fetch.RequestPattern
 import ai.platon.cdt.kt.protocol.types.network.Response
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.protocol.browser.driver.cdt.Credentials
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import kotlinx.coroutines.runBlocking
 import java.lang.ref.WeakReference
+import java.time.Duration
+import java.time.Instant
 import java.util.*
 
 internal class NetworkManager(
@@ -31,6 +34,12 @@ internal class NetworkManager(
     private val securityAPI get() = driver.devTools.security.takeIf { isActive }
 
     private val networkEventManager = NetworkEventManager()
+
+    var lastActiveTime = Instant.EPOCH
+        private set
+
+    var idleTimeout = Duration.ofSeconds(1)
+    val isIdle get() = DateTimes.elapsedTime(lastActiveTime) > idleTimeout
 
     // TODO: is it a launch parameter?
     var ignoreHTTPSErrors = true
@@ -159,6 +168,8 @@ internal class NetworkManager(
         tracer?.trace("onRequestWillBeSent | requestId: {}", event.requestId)
         // Request interception doesn't happen for data URLs with Network Service.
 
+        lastActiveTime = Instant.now()
+
         // Consider to remove RequestWillBeSent, use emit(NetworkManagerEvents.Request, request)
         emit(NetworkEvents.RequestWillBeSent, event)
 
@@ -240,6 +251,8 @@ internal class NetworkManager(
     }
 
     private fun onResponseReceived(event: ResponseReceived) {
+        lastActiveTime = Instant.now()
+
         val requestId = event.requestId
 
         tracer?.trace("onResponseReceived | {}", requestId)

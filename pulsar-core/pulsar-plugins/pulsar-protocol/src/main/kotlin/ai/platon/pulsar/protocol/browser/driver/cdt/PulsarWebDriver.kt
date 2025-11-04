@@ -83,6 +83,8 @@ class PulsarWebDriver(
     private var navigateUrl = chromeTab.url ?: ""
     private var credentials: Credentials? = null
 
+    val isNetworkIdle get() = networkManager.isIdle
+
     var injectedScriptIdentifier: String? = null
 
     /**
@@ -105,6 +107,8 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(entry: NavigateEntry) {
+        userTypedUrl = entry.url
+
         navigateHistory.add(entry)
         this.navigateEntry = entry
 

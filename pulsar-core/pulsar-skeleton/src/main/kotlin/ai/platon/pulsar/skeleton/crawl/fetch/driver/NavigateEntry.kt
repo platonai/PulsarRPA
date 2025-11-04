@@ -32,10 +32,6 @@ data class NavigateEntry constructor(
      */
     var pageReferrer: String? = null,
     /**
-     * The user typed url return from the browser, should be the same as `url`.
-     * */
-    var userTypedUrl: String? = null,
-    /**
      * Indicate if the navigation is stopped.
      */
     var stopped: Boolean = false,
@@ -54,6 +50,10 @@ data class NavigateEntry constructor(
 ): Comparable<NavigateEntry> {
     private val lock = ReentrantLock()
 
+    /**
+     * The user typed url return from the browser, should be the same as `url`.
+     * */
+    val userTypedUrl: String get() = url
     /**
      * Main request is only used for HTML documents for now.
      *

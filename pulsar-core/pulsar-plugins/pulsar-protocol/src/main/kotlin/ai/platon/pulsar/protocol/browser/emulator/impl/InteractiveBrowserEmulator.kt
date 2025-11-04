@@ -16,6 +16,7 @@
 package ai.platon.pulsar.protocol.browser.emulator.impl
 
 import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.browser.common.DomSettlePolicy
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.AppConstants.VAR_CAPTURE
@@ -28,6 +29,7 @@ import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.persist.model.ActiveDOMMessage
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
+import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import ai.platon.pulsar.protocol.browser.emulator.*
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.common.persist.ext.browseEventHandlers
@@ -556,6 +558,7 @@ open class InteractiveBrowserEmulator(
         val hasScript = waitForJavascriptInjected(task, result)
         if (hasScript) {
             // Wait until the document is actually ready, or timeout.
+            // wait for document be fully loaded, in another word, the DOM becomes settle
             waitForDocumentFullyLoaded(task, result)
         }
 
@@ -613,7 +616,10 @@ open class InteractiveBrowserEmulator(
         val driver = interactTask.driver
         require(driver is AbstractWebDriver)
 
-        waitForDocumentFullyLoaded1(interactTask, result)
+        when (interactTask.interactSettings.domSettlePolicy) {
+            DomSettlePolicy.SMALL_FIELDS -> waitForDocumentFullyLoaded1(interactTask, result)
+            else -> waitForNetworkIdle(interactTask, result)
+        }
     }
 
     /**
@@ -705,6 +711,21 @@ open class InteractiveBrowserEmulator(
         }
 
         result.protocolStatus = status
+    }
+
+    suspend fun waitForNetworkIdle(interactTask: InteractTask, result: InteractResult) {
+        val driver = interactTask.driver
+        require(driver is PulsarWebDriver)
+
+        val maxRound = 60
+        var i = 0
+        while (i++ < maxRound) {
+            if (driver.isNetworkIdle) {
+                break
+            }
+        }
+
+        result.protocolStatus = ProtocolStatus.STATUS_SUCCESS
     }
 
     /**

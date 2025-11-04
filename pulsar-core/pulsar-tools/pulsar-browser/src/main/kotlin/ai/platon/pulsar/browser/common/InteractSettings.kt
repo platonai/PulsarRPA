@@ -9,6 +9,15 @@ import com.fasterxml.jackson.core.JacksonException
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
 
+enum class DomSettlePolicy {
+    READY_STATE_INTERACTIVE,
+    READY_STATE_COMPLETE,
+    NETWORK_IDLE,
+    SMALL_FIELDS,
+    HASH,
+    OTHER
+}
+
 /**
  * The interaction settings.
  * */
@@ -48,10 +57,12 @@ data class InteractSettings(
      * The minimum delay time in milliseconds.
      * */
     var minDelayMillis = 100
+
     /**
      * The minimum delay time in milliseconds.
      * */
     var maxDelayMillis = 2000
+
     /**
      * The delay policy for each action.
      * The delay policy is a map from action to a range of delay time in milliseconds.
@@ -72,14 +83,17 @@ data class InteractSettings(
         "default" to 1000..2000,
         "" to 1000..2000
     )
+
     /**
      * The minimum delay time in milliseconds.
      * */
     var minTimeout = Duration.ofSeconds(1)
+
     /**
      * The minimum delay time in milliseconds.
      * */
     var maxTimeout = Duration.ofMinutes(3)
+
     /**
      * Timeout policy for each action in seconds.
      * */
@@ -92,6 +106,8 @@ data class InteractSettings(
         "default" to Duration.ofSeconds(60),
         "" to Duration.ofSeconds(60)
     )
+
+    var domSettlePolicy: DomSettlePolicy = DomSettlePolicy.SMALL_FIELDS
 
     /**
      * The delay policy for each action.
@@ -217,36 +233,39 @@ data class InteractSettings(
         /**
          * Interaction behavior to visit pages at fastest speed.
          * */
-        val FASTEST get() = InteractSettings(
-            scrollInterval = Duration.ofMillis(500),
-            scriptTimeout = Duration.ofSeconds(30),
-            pageLoadTimeout = Duration.ofMinutes(2),
-            bringToFront = false
-        ).noScroll()
+        val FASTEST
+            get() = InteractSettings(
+                scrollInterval = Duration.ofMillis(500),
+                scriptTimeout = Duration.ofSeconds(30),
+                pageLoadTimeout = Duration.ofMinutes(2),
+                bringToFront = false
+            ).noScroll()
 
         /**
          * Interaction behavior to visit pages at faster speed.
          * */
-        val FASTER get() = InteractSettings(
-            autoScrollCount = 0,
-            scrollInterval = Duration.ofMillis(500),
-            scriptTimeout = Duration.ofSeconds(30),
-            pageLoadTimeout = Duration.ofMinutes(2),
-            bringToFront = false,
-            initScrollPositions = "0.2"
-        )
+        val FASTER
+            get() = InteractSettings(
+                autoScrollCount = 0,
+                scrollInterval = Duration.ofMillis(500),
+                scriptTimeout = Duration.ofSeconds(30),
+                pageLoadTimeout = Duration.ofMinutes(2),
+                bringToFront = false,
+                initScrollPositions = "0.2"
+            )
 
         /**
          * Interaction behavior to visit pages at faster speed.
          * */
-        val FAST get() = InteractSettings(
-            autoScrollCount = 0,
-            scrollInterval = Duration.ofMillis(500),
-            scriptTimeout = Duration.ofSeconds(30),
-            pageLoadTimeout = Duration.ofMinutes(2),
-            bringToFront = false,
-            initScrollPositions = "0.2,0.5"
-        )
+        val FAST
+            get() = InteractSettings(
+                autoScrollCount = 0,
+                scrollInterval = Duration.ofMillis(500),
+                scriptTimeout = Duration.ofSeconds(30),
+                pageLoadTimeout = Duration.ofMinutes(2),
+                bringToFront = false,
+                initScrollPositions = "0.2,0.5"
+            )
 
         /**
          * Default interaction behavior.
@@ -256,38 +275,41 @@ data class InteractSettings(
         /**
          * Interaction behavior for good data.
          * */
-        val GOOD_DATA get() = InteractSettings(
-            autoScrollCount = 2,
-            scrollInterval = Duration.ofSeconds(1),
-            scriptTimeout = Duration.ofSeconds(30),
-            pageLoadTimeout = Duration.ofMinutes(3),
-            bringToFront = true,
-            initScrollPositions = "0.3,0.75,0.4,0.5"
-        )
+        val GOOD_DATA
+            get() = InteractSettings(
+                autoScrollCount = 2,
+                scrollInterval = Duration.ofSeconds(1),
+                scriptTimeout = Duration.ofSeconds(30),
+                pageLoadTimeout = Duration.ofMinutes(3),
+                bringToFront = true,
+                initScrollPositions = "0.3,0.75,0.4,0.5"
+            )
 
         /**
          * Interaction behavior for better data.
          * */
-        val BETTER_DATA get() = InteractSettings(
-            autoScrollCount = 3,
-            scrollInterval = Duration.ofSeconds(1),
-            scriptTimeout = Duration.ofSeconds(30),
-            pageLoadTimeout = Duration.ofMinutes(3),
-            bringToFront = true,
-            initScrollPositions = "0.3,0.75,0.4,0.5"
-        )
+        val BETTER_DATA
+            get() = InteractSettings(
+                autoScrollCount = 3,
+                scrollInterval = Duration.ofSeconds(1),
+                scriptTimeout = Duration.ofSeconds(30),
+                pageLoadTimeout = Duration.ofMinutes(3),
+                bringToFront = true,
+                initScrollPositions = "0.3,0.75,0.4,0.5"
+            )
 
         /**
          * Interaction behavior for best data.
          * */
-        val BEST_DATA get() = InteractSettings(
-            autoScrollCount = 5,
-            scrollInterval = Duration.ofSeconds(1),
-            scriptTimeout = Duration.ofSeconds(30),
-            pageLoadTimeout = Duration.ofMinutes(3),
-            bringToFront = true,
-            initScrollPositions = "0.3,0.75,0.3,0.5,0.75"
-        )
+        val BEST_DATA
+            get() = InteractSettings(
+                autoScrollCount = 5,
+                scrollInterval = Duration.ofSeconds(1),
+                scriptTimeout = Duration.ofSeconds(30),
+                pageLoadTimeout = Duration.ofMinutes(3),
+                bringToFront = true,
+                initScrollPositions = "0.3,0.75,0.3,0.5,0.75"
+            )
     }
 
     companion object {
@@ -299,7 +321,7 @@ data class InteractSettings(
         val DEFAULT get() = Builder.DEFAULT
 
         fun create(level: InteractLevel): InteractSettings {
-            return when  (level) {
+            return when (level) {
                 InteractLevel.FASTEST -> Builder.FASTEST
                 InteractLevel.FASTER -> Builder.FASTER
                 InteractLevel.FAST -> Builder.FAST
