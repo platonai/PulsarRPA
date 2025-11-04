@@ -7,7 +7,7 @@ import ai.platon.pulsar.agentic.ai.support.AgentTool
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.ActionExecuteResult
-import ai.platon.pulsar.agentic.ai.tta.TextToAction
+import ai.platon.pulsar.agentic.ai.tta.ContextToAction
 import ai.platon.pulsar.agentic.ai.tta.TextToActionParams
 import ai.platon.pulsar.agentic.ai.tta.ToolCallResults
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
@@ -95,8 +95,8 @@ class BrowserPerceptiveAgent constructor(
     private val baseDir = AppPaths.get("agent")
     private val conf get() = (activeDriver as AbstractWebDriver).settings.config
 
-    private val tta by lazy { TextToAction(conf) }
-    private val inference by lazy { InferenceEngine(session, tta.chatModel) }
+    private val contextToAction by lazy { ContextToAction(conf) }
+    private val inference by lazy { InferenceEngine(session, contextToAction.chatModel) }
     private val domService get() = inference.domService
     private val promptBuilder = PromptBuilder()
 
@@ -991,7 +991,7 @@ class BrowserPerceptiveAgent constructor(
 
     private suspend fun generateStepAction(params: TextToActionParams, context: ExecutionContext): ActionDescription? {
         return try {
-            tta.generate(params)
+            contextToAction.generate(params)
         } catch (e: Exception) {
             logger.error("🤖❌ action.gen.fail sid={} msg={}", context.sessionId.take(8), e.message, e)
             consecutiveFailureCounter.incrementAndGet()
@@ -1296,7 +1296,7 @@ class BrowserPerceptiveAgent constructor(
             val (system, user) = promptBuilder.buildSummaryPrompt(goal, stateHistory)
             slogger.info("📝⏳ Generating final summary", context)
 
-            val response = tta.chatModel.callUmSm(user, system)
+            val response = contextToAction.chatModel.callUmSm(user, system)
 
             slogger.info(
                 "📝✅ Summary generated successfully", context, mapOf(
