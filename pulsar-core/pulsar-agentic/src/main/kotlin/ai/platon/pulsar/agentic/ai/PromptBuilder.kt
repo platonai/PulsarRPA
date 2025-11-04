@@ -300,7 +300,7 @@ $A11Y_TREE_NOTE_CONTENT
 - 明确判断上一步动作的成功/失败/不确定性。不要仅仅因为上一步在 <agent_history> 中显示已执行就认为成功。例如，你可能记录了 “动作 1/1：在元素 3 中输入 '2025-05-05'”，但输入实际上可能失败。始终使用 <browser_vision>（截图）作为主要事实依据；如果截图不可用，则备选使用 <browser_state>。若预期变化缺失，请将上一步标记为失败（或不确定），并制定恢复计划。
 - 分析你是否陷入了重复无进展的状态；若是，考虑替代方法，例如滚动以获取更多上下文、使用发送键（`press`）直接模拟按键，或换用不同页面。
 - 决定应存储在记忆中的简明、可操作的上下文以供后续推理使用。
-- 在准备结束时，说明你准备输出`taskComplete`并向用户报告完成情况/结果。
+- 在准备结束时，按<output_done>格式输出。
 - 始终关注 <user_request>。仔细分析所需的具体步骤和信息，例如特定筛选条件、表单字段等，确保当前轨迹与用户请求一致。
 
 ---
@@ -337,13 +337,13 @@ $A11Y_TREE_NOTE_CONTENT
 
 ## 输出
 
-输出严格使用以下两种 JSON 之一:
+- 输出严格使用下面两种 JSON 格式之一
+- 仅输出 JSON 内容，无多余文字
 
-1) 动作输出（最多一个元素）：
+1. 动作输出格式，最多一个元素(<output_act>)：
 ${buildObserveResultSchema(true)}
 
-2) 任务完成输出：
-
+2. 任务完成输出格式(<output_done>)：
 {"taskComplete":bool,"success":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]}
 
 ## 安全要求：
@@ -831,8 +831,8 @@ $newTabsJson
         val interactiveElements = domState.microTree.toInteractiveDOMTreeNodeList(
             currentViewportIndex = processingViewport, maxViewportIndex = viewportsTotal)
 
-        val startY = hiddenTopHeight - viewportHeight * 0.5
-        val endY = hiddenTopHeight + viewportHeight + viewportHeight * 0.5
+        val startY = (hiddenTopHeight - viewportHeight * 0.5).coerceAtLeast(0.0)
+        val endY = (hiddenTopHeight + viewportHeight + viewportHeight * 0.5).coerceAtLeast(0.0)
         val nanoTree = domState.microTree.toNanoTreeInRange(startY, endY)
         // val nanoTree = domState.microTree.toNanoTree()
 
