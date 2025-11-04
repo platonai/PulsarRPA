@@ -555,10 +555,7 @@ window.scrollTo(x, y)
 
     @Throws(WebDriverException::class)
     override suspend fun selectPropertyValueAll(
-        selector: String,
-        propName: String,
-        start: Int,
-        limit: Int
+        selector: String, propName: String, start: Int, limit: Int
     ): List<String> {
         val end = start + limit
         val safeSelector = Strings.escapeJsString(selector)

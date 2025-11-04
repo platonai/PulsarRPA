@@ -50,6 +50,10 @@ class PlaywrightDriver(
 
     private var navigateUrl = ""
 
+    init {
+        logger.warn("**DO NOT** use this driver (PlaywrightDriver) in production, this driver is used only for test purpose")
+    }
+
     override suspend fun addBlockedURLs(urlPatterns: List<String>) {
         try {
             rpc.invokeDeferred("addBlockedURLs") {

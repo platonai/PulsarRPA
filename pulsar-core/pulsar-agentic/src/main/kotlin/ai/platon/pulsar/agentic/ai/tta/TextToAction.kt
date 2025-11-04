@@ -14,7 +14,6 @@ import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
