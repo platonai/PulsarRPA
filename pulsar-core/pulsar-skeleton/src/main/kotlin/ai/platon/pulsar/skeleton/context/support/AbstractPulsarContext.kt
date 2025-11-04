@@ -1,6 +1,7 @@
 package ai.platon.pulsar.skeleton.context.support
 
 import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.*
 import ai.platon.pulsar.dom.FeaturedDocument
@@ -229,7 +230,13 @@ abstract class AbstractPulsarContext(
     }
 
     override fun normalize(url: String, options: LoadOptions, toItemOption: Boolean): NormURL {
-        val url0 = url.takeIf { it.contains("://") } ?: String(Base64.getUrlDecoder().decode(url))
+        val url0 = try {
+            url.takeIf { it.contains("://") } ?: String(Base64.getUrlDecoder().decode(url))
+        } catch (e: IllegalArgumentException) {
+            logger.warn("Invalid URL, will goto the default search engine {}", Strings.compactLog(url))
+            AppConstants.SEARCH_ENGINE_URL
+        }
+
         val link = Hyperlink(url0, "", href = url0)
         return normalize(link, options, toItemOption)
     }

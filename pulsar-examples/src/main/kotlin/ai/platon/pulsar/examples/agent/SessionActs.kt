@@ -12,16 +12,6 @@ class SessionActs {
     private val logger = getLogger(this)
 
     private var stepNo = 0
-    private fun step(label: String) { logger.info("[STEP ${++stepNo}] $label") }
-    private fun result(label: String, value: Any?) {
-        val text = if (value is PerceptiveAgent) {
-            Strings.compactLog(value.processTrace.lastOrNull())
-        } else {
-            Strings.compactLog(value?.toString())
-        }
-
-        logger.info("[RESULT ${stepNo}] $label => $text")
-    }
 
     private val session = AgenticContexts.getOrCreateSession()
 
@@ -168,6 +158,21 @@ class SessionActs {
 
         session.context.close()
     }
+
+    private fun step(label: String) {
+        logger.info("[STEP ${++stepNo}] $label")
+    }
+
+    private fun result(label: String, value: Any?) {
+        val text = if (value is PerceptiveAgent) {
+            Strings.compactLog(value.processTrace.lastOrNull())
+        } else {
+            Strings.compactLog(value?.toString())
+        }
+
+        logger.info("[RESULT ${stepNo}] $label => $text")
+    }
+
 }
 
 suspend fun main() = SessionActs().run()
