@@ -2,13 +2,19 @@ package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder.Companion.buildObserveResultSchema
+import ai.platon.pulsar.agentic.ai.support.AgentTool.TOOL_ALIASES
 import ai.platon.pulsar.agentic.ai.support.AgentTool.TOOL_CALL_SPECIFICATION
+import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
+import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ExperimentalApi
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.ai.llm.PromptTemplate
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
@@ -19,7 +25,11 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.gson.JsonElement
 import java.nio.file.Files
+import kotlin.collections.component1
+import kotlin.collections.component2
+import kotlin.text.split
 
 data class TextToActionParams(
     val messages: AgentMessageList,
@@ -177,4 +187,109 @@ open class TextToAction(
     open suspend fun generateResponse(
         instruction: String, agentState: AgentState, screenshotB64: String? = null, toolCallLimit: Int = 100,
     ) = ContextToAction(conf).generateResponse(instruction, agentState, screenshotB64, toolCallLimit)
+
+    fun modelResponseToActionDescription(response: ModelResponse): ActionDescription {
+        try {
+            return modelResponseToActionDescription0(response)
+        } catch (e: Exception) {
+            logger.warn("Exception while parsing model response", e)
+            return ActionDescription(modelResponse = response, errors = e.brief())
+        }
+    }
+
+    private fun modelResponseToActionDescription0(response: ModelResponse): ActionDescription {
+        val content = response.content
+        val contentStart = Strings.compactWhitespaces(content.take(30))
+
+        val mapper = pulsarObjectMapper()
+        return when {
+            contentStart.contains("\"taskComplete\"") -> {
+                val complete: ObserveResponseComplete = mapper.readValue(content)
+                ActionDescription(
+                    isComplete = true,
+                    summary = complete.summary,
+                    nextSuggestions = complete.nextSuggestions ?: emptyList()
+                )
+            }
+
+            contentStart.contains("\"elements\"") -> {
+                val elements: ObserveResponseElements = mapper.readValue(content)
+                elements.elements?.map { TextToAction.toActionDescription(it, response) }?.firstOrNull()
+                    ?: ActionDescription(modelResponse = response)
+            }
+
+            else -> ActionDescription(modelResponse = response)
+        }
+    }
+
+    fun reviseActionDescription(action: ActionDescription, browserUseState: BrowserUseState): ActionDescription {
+        val observeElement = action.observeElement ?: return action
+        var toolCall = observeElement.toolCall ?: return action
+
+        // 1. revised tool call
+        val domain = toolCall.domain
+        val method = toolCall.method
+        val revised = TOOL_ALIASES["$domain.$method"]
+        if (revised != null) {
+            val (domain2, method2) = revised.split(".")
+            toolCall = toolCall.copy(domain = domain2, method = method2)
+        }
+
+        // 2. revise selector
+        val locator = observeElement.locator
+        val arguments = toolCall.arguments
+        val fbnLocator = browserUseState.domState.getAbsoluteFBNLocator(locator)
+        if (!locator.isNullOrBlank() && fbnLocator == null) {
+            logger.warn("FBN locator not found | {}", locator)
+        }
+
+        val node = if (fbnLocator != null) {
+            browserUseState.domState.locatorMap[fbnLocator]
+        } else null
+
+        val fbnSelector = fbnLocator?.absoluteSelector
+
+        arguments["selector"] = fbnSelector
+
+        // CSS friendly expression
+        val cssSelector = node?.cssSelector()
+        val expression = ToolCallExecutor.toolCallToExpression(toolCall)
+        val cssFriendlyExpression = if (locator != null && cssSelector != null) {
+            expression?.replace(locator, cssSelector)
+        } else null
+
+        // 3. copy new object
+        val revisedObserveElement = observeElement.copy(
+            node = node,
+            backendNodeId = node?.backendNodeId,
+            toolCall = toolCall,
+            cssSelector = cssSelector,
+            expression = expression,
+            cssFriendlyExpression = cssFriendlyExpression,
+        )
+
+        return action.copy(observeElement = revisedObserveElement)
+    }
+
+    private fun jsonElementToKotlin(e: JsonElement): Any? = when {
+        e.isJsonNull -> null
+        e.isJsonPrimitive -> {
+            val p = e.asJsonPrimitive
+            when {
+                p.isBoolean -> p.asBoolean
+                p.isNumber -> {
+                    val num = p.asNumber
+                    val d = num.toDouble()
+                    val i = num.toInt()
+                    if (d == i.toDouble()) i else d
+                }
+
+                else -> p.asString
+            }
+        }
+
+        e.isJsonArray -> e.asJsonArray.map { jsonElementToKotlin(it) }
+        e.isJsonObject -> e.asJsonObject.entrySet().associate { it.key to jsonElementToKotlin(it.value) }
+        else -> null
+    }
 }
