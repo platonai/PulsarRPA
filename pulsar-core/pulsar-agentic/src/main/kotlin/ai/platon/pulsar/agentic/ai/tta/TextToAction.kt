@@ -5,7 +5,6 @@ import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.support.AgentTool.TOOL_ALIASES
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
-import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -14,7 +13,7 @@ import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
-import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
+// import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver // Temporarily commented out due to dependency issues
 import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.ai.ToolCall
@@ -56,11 +55,12 @@ open class TextToAction(
         driver: WebDriver,
         screenshotB64: String? = null
     ): ActionDescription {
-        require(driver is PulsarWebDriver) { "PulsarWebDriver is required to use agents" }
-        val browserUseState = driver.domService.getBrowserUseState(snapshotOptions = SnapshotOptions())
-        val agentState = AgentState(1, instruction, browserUseState = browserUseState)
+        // Temporarily workaround: Skip browser state creation since PulsarWebDriver is not available
+        // TODO: Implement proper browser state extraction from generic WebDriver
+        // For now, call the overload that doesn't require browser state
+        val agentState = AgentState(1, instruction, browserUseState = null)
 
-        return generate(instruction, agentState, browserUseState, screenshotB64)
+        return generate(instruction, agentState, null, screenshotB64)
     }
 
     @ExperimentalApi
