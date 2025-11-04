@@ -18,7 +18,7 @@ fun main() {
     val session = AgenticContexts.createSession()
     val url = TestResourceUtil.PRODUCT_DETAIL_URL
 
-    val prompts = """
+    val actions = """
 move cursor to the element with id 'title' and click it
 scroll to middle
 scroll to top
@@ -30,12 +30,12 @@ get the text of the element with id 'title'
         while (true) {
             println("Talk and execute on the active page")
 
-            prompts.forEach { prompt ->
+            actions.forEach { action ->
                 println("\n")
                 println(OffsetDateTime.now())
-                println(">>> $prompt")
+                println(">>> $action")
                 session.bindDriver(driver)
-                val result = session.instruct(prompt)
+                val result = session.instruct(action)
                 println(result.modelResponse)
                 result.expressions.forEachIndexed { i, functionCall ->
                     println()
