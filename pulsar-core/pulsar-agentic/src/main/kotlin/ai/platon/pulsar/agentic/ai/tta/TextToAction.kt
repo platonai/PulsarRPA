@@ -5,6 +5,7 @@ import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.support.AgentTool.TOOL_ALIASES
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
+import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -60,7 +61,7 @@ open class TextToAction(
         // For now, call the overload that doesn't require browser state
         val agentState = AgentState(1, instruction, browserUseState = null)
 
-        return generate(instruction, agentState, null, screenshotB64)
+        return generate(instruction, agentState, screenshotB64)
     }
 
     @ExperimentalApi
@@ -95,7 +96,6 @@ open class TextToAction(
     open suspend fun generate(
         instruction: String,
         agentState: AgentState,
-        browserUseState: BrowserUseState,
         screenshotB64: String? = null
     ): ActionDescription {
         try {
