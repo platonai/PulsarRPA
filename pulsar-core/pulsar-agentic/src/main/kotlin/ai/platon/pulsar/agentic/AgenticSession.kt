@@ -57,7 +57,6 @@ interface AgenticSession: PulsarSession {
      * @param action The action description that describes the action to be performed by the webdriver.
      * @return The response from the model, though in this implementation, the return value is not explicitly used.
      */
-    @Beta
     suspend fun performAct(action: ActionDescription): ToolCallResult
 
     @Beta

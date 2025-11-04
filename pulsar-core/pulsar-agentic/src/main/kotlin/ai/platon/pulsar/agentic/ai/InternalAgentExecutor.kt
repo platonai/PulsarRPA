@@ -3,7 +3,6 @@ package ai.platon.pulsar.agentic.ai
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
-import ai.platon.pulsar.agentic.ai.tta.ToolCallResults
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.agentic.ai.tta.ToolCallResult
 import ai.platon.pulsar.common.config.ImmutableConfig

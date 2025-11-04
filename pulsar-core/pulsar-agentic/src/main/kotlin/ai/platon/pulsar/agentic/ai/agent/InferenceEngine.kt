@@ -5,6 +5,7 @@ import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.SimpleMessage
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
+import ai.platon.pulsar.agentic.ai.tta.ContextToAction
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
@@ -70,6 +71,7 @@ class InferenceEngine(
     // Reuse a single ObjectMapper for JSON parsing within this class
     private val mapper = ObjectMapper()
     private val tta = TextToAction(session.sessionConfig)
+    private val cta = ContextToAction(session.sessionConfig)
 
     private val driver get() = session.boundDriver
 
@@ -232,7 +234,8 @@ class InferenceEngine(
         requireNotNull(messages.instruction) { "User instruction is required | $messages" }
         if (params.returnAction) {
             require(messages.exists("toolSpecs")) {
-                "If `returnAction` is true, the tool specifications has to be included | $messages" }
+                "If `returnAction` is true, the tool specifications has to be included | $messages"
+            }
         }
 
         promptBuilder.buildObservePrompt(messages, params)
@@ -257,14 +260,16 @@ class InferenceEngine(
 
         val tu = resp.tokenUsage()
         val tokenUsage = TokenUsage(
-            inputTokenCount = tu.inputTokenCount(), outputTokenCount = tu.outputTokenCount(), totalTokenCount = tu.outputTokenCount()
+            inputTokenCount = tu.inputTokenCount(),
+            outputTokenCount = tu.outputTokenCount(),
+            totalTokenCount = tu.outputTokenCount()
         )
 
         val responseContent = resp.aiMessage().text().trim()
 
         val modeResponse = ModelResponse(content = responseContent, tokenUsage = tokenUsage)
-        var actionDescription = tta.modelResponseToActionDescription(modeResponse)
-        actionDescription = tta.reviseActionDescription(actionDescription, browserUseState = params.browserUseState)
+        var actionDescription = cta.modelResponseToActionDescription(modeResponse)
+        actionDescription = cta.reviseActionDescription(actionDescription, browserUseState = params.browserUseState)
 
         var respFile = ""
         if (params.logInferenceToFile) {
