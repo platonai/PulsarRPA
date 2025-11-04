@@ -94,9 +94,7 @@ open class TextToAction(
      * */
     @ExperimentalApi
     open suspend fun generate(
-        instruction: String,
-        agentState: AgentState,
-        screenshotB64: String? = null
+        instruction: String, agentState: AgentState, screenshotB64: String? = null
     ): ActionDescription {
         try {
             return generateWithToolCallSpecs(instruction, agentState, screenshotB64, 1)
@@ -111,10 +109,7 @@ open class TextToAction(
 
     @ExperimentalApi
     open suspend fun generateResponse(
-        instruction: String,
-        agentState: AgentState,
-        screenshotB64: String? = null,
-        toolCallLimit: Int = 100,
+        instruction: String, agentState: AgentState, screenshotB64: String? = null, toolCallLimit: Int = 100,
     ): ModelResponse {
         val messages = AgentMessageList()
         messages.addLast("user", instruction)
