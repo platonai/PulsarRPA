@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.ToolCall
 
-class FileToolCallExecutor {
+class FileSystemToolCallExecutor {
     private val logger = getLogger(this)
 
     suspend fun execute(expression: String, fs: FileSystem): Any? {

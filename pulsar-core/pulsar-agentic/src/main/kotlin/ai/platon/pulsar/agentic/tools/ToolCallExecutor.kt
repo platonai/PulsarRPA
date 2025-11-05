@@ -1,6 +1,7 @@
 package ai.platon.pulsar.agentic.tools
 
 import ai.platon.pulsar.agentic.AgenticSession
+import ai.platon.pulsar.agentic.common.FileSystem
 import ai.platon.pulsar.agentic.common.SimpleKotlinParser
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.brief
@@ -88,6 +89,10 @@ open class ToolCallExecutor {
 
     suspend fun execute(expression: String, browser: Browser, session: AgenticSession): Any? {
         return BrowserToolCallExecutor().execute(expression, browser, session)
+    }
+
+    suspend fun execute(expression: String, fs: FileSystem): Any? {
+        return FileSystemToolCallExecutor().execute(expression, fs)
     }
 
     suspend fun execute(toolCall: ToolCall, driver: WebDriver): Any? {

@@ -227,7 +227,6 @@ $schema
 
 ## 工具列表
 
-`WebDriver` 工具 (domain: driver):
 ```
 ${AgentTool.TOOL_CALL_SPECIFICATION}
 ```

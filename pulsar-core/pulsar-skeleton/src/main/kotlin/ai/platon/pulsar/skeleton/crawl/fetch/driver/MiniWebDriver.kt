@@ -872,12 +872,7 @@ interface MiniWebDriver {
      * @return The property values of the nodes.
      * */
     @Throws(WebDriverException::class)
-    suspend fun selectPropertyValueAll(
-        selector: String,
-        propName: String,
-        start: Int = 0,
-        limit: Int = 10000
-    ): List<String>
+    suspend fun selectPropertyValueAll(selector: String, propName: String, start: Int = 0, limit: Int = 10000): List<String>
 
     /**
      * Find image elements matching the CSS query.
