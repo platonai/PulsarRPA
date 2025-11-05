@@ -1,11 +1,11 @@
 package ai.platon.pulsar.agentic.ai
 
 import ai.platon.pulsar.agentic.AgenticSession
-import ai.platon.pulsar.agentic.tools.ToolCallExecutor
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
-import ai.platon.pulsar.agentic.ai.tta.ToolCallResult
+import ai.platon.pulsar.agentic.tools.ToolCallExecutor
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.skeleton.ai.ToolCallResult
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 
 internal class InternalAgentExecutor(
@@ -24,7 +24,7 @@ internal class InternalAgentExecutor(
     suspend fun performAct(action: ActionDescription): ToolCallResult {
         val toolCall = action.toolCall
         if (action.expression.isNullOrBlank() && toolCall == null) {
-            return ToolCallResult()
+            return ToolCallResult(success = false)
         }
 
         val result = if (toolCall != null) {
@@ -34,9 +34,10 @@ internal class InternalAgentExecutor(
         }
 
         return ToolCallResult(
-            action.expression ?: "",
-            functionResult = result,
-            action = action
+            true,
+            result = result,
+            message = "performing ${action.toolCall?.method} action",
+            expression = action.expression,
         )
     }
 

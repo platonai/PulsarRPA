@@ -48,11 +48,21 @@ class SessionAct {
         // Basic action examples (natural language instructions) - now operate on local mock page
         step("Action: search for 'browser'")
         var actOptions = ActionOptions("search for 'browser'")
-        agent.act(actOptions)
+        var result = agent.act(actOptions)
         result("action result", agent)
 
         var text = driver.selectFirstPropertyValueOrNull("#searchBox", "value")
         println("Input value of search box: $text")
+
+        step("Action: 提取网页全文")
+        actOptions = ActionOptions("提取网页全文")
+        result = agent.act(actOptions)
+        result("action result", agent)
+
+        step("Action: 总结网页全文")
+        actOptions = ActionOptions("总结网页全文: \n" + result.result?.result)
+        agent.act(actOptions)
+        result("action result", agent)
 
         AgenticContexts.close()
     }

@@ -40,6 +40,7 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.exp
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.time.Duration.Companion.hours
@@ -222,7 +223,7 @@ class BrowserPerceptiveAgent constructor(
         return try {
             val action = ActionDescription(observeElement = oe)
 
-            val toolCallResults = doToolCallExecute(toolCall, action)
+            val toolCallResult = doToolCallExecute(toolCall, action)
 
             logger.info(
                 "✅ Action executed | {} | {}/{} | {}",
@@ -235,15 +236,15 @@ class BrowserPerceptiveAgent constructor(
             )
 
             // Record exactly once for this executed action
-            updateAgentState(agentState, true, toolCall, toolCallResults, oe, message = msg.message)
+            updateAgentState(agentState, true, toolCall, oe, message = msg.message)
 
-            ActResult(success = true, message = msg.message, action = toolCall.method)
+            ActResult(success = true, action = toolCall.method, message = msg.message, result = toolCallResult)
         } catch (e: Exception) {
             logger.error("❌ observe.act execution failed sid={} msg={}", uuid.toString().take(8), e.message, e)
             val msg = e.message ?: "Execution failed"
 
             // Record failed action attempt once
-            updateAgentState(agentState, false, toolCall, null, oe, message = msg)
+            updateAgentState(agentState, success = false, toolCall, observe = oe, message = msg)
 
             ActResult(success = false, message = msg, action = toolCall.method)
         }
@@ -396,7 +397,7 @@ class BrowserPerceptiveAgent constructor(
         )
     }
 
-    private suspend fun doToolCallExecute(toolCall: ToolCall, action: ActionDescription): ToolCallResults {
+    private suspend fun doToolCallExecute(toolCall: ToolCall, action: ActionDescription): ToolCallResult {
         val driver = activeDriver
 
         val callResult = when (toolCall.domain) {
@@ -413,7 +414,7 @@ class BrowserPerceptiveAgent constructor(
             "navigateTo" -> onDidNavigateTo(driver, toolCall, callResult)
         }
 
-        return ToolCallResults(action.expressions, listOf(callResult), action = action)
+        return ToolCallResult(true, callResult, expression = action.expression)
     }
 
     data class ToolCallPatch(
@@ -545,6 +546,7 @@ class BrowserPerceptiveAgent constructor(
 
         // 3) Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
         val observeResults = doObserveForAct(params, messages)
+        val actResults = mutableListOf<ActResult>()
 
         if (observeResults.isEmpty()) {
             val msg = "⚠️ doObserveAct: No actionable element found"
@@ -562,11 +564,17 @@ class BrowserPerceptiveAgent constructor(
                 continue
             }
 
+            /////////////////////
+            // Execute action
+
             // 5) Execute action, and optionally wait for navigation if caller provided timeoutMs
             val driver = activeDriver
             val oldUrl = driver.currentUrl()
+
             val execResult = try {
-                act(chosen)
+                val result = act(chosen)
+                actResults.add(result)
+                result
             } catch (e: Exception) {
                 lastError = "Execution failed for candidate ${index + 1}: ${e.message}"
                 logger.warn("⚠️ Failed to execute candidate {}: {}", index + 1, e.message)
@@ -699,7 +707,6 @@ class BrowserPerceptiveAgent constructor(
         agentState: AgentState,
         success: Boolean,
         toolCall: ToolCall? = null,
-        @Suppress("UNUSED_PARAMETER") toolCallResults: ToolCallResults? = null,
         observe: ObserveElement? = null,
         message: String? = null
     ): AgentState {
@@ -934,7 +941,7 @@ class BrowserPerceptiveAgent constructor(
                     val toolCall = observe?.toolCall
 
                     updateAgentState(
-                        agentState, true, toolCall, exec.toolCallResults, observe = observe, message = exec.summary
+                        agentState, true, toolCall, observe = observe, message = exec.summary
                     )
 
                     // todolist.md progress hook
@@ -1163,12 +1170,12 @@ class BrowserPerceptiveAgent constructor(
                 context.sessionId.take(8), context.stepNumber, toolCall.method, toolCall.arguments
             )
 
-            val toolCallResults = doToolCallExecute(toolCall, action)
+            val toolCallResult = doToolCallExecute(toolCall, action)
             consecutiveFailureCounter.set(0) // Reset on success
 
             val summary = "✅ ${toolCall.method} executed successfully"
             processTrace(summary)
-            ActionExecuteResult(action, toolCallResults, success = true, summary)
+            ActionExecuteResult(action, toolCallResult, success = true, summary)
         } catch (e: Exception) {
             val failures = consecutiveFailureCounter.incrementAndGet()
             logger.error(

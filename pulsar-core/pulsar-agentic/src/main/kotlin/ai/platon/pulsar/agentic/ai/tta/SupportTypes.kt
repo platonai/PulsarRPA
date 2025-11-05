@@ -7,6 +7,7 @@ import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.ai.ToolCall
+import ai.platon.pulsar.skeleton.ai.ToolCallResult
 
 data class ObserveResponseComplete(
     val taskComplete: Boolean = false,
@@ -61,15 +62,6 @@ data class ActionDescription constructor(
     val cssFriendlyExpressions: List<String> get() = observeElement?.cssFriendlyExpressions ?: emptyList()
 }
 
-data class ToolCallResult(
-    val expression: String = "",
-    val functionResult: Any? = null,
-    val action: ActionDescription? = null,
-) {
-    val modelResponse: ModelResponse get() = action?.modelResponse ?: ModelResponse.LLM_NOT_AVAILABLE
-    val toolCall: ToolCall? get() = action?.toolCall
-}
-
 data class ToolCallResults(
     val expressions: List<String> = emptyList(),
     val functionResults: List<Any?> = emptyList(),
@@ -88,7 +80,7 @@ data class ToolCallResults(
 
 data class ActionExecuteResult(
     val action: ActionDescription,
-    val toolCallResults: ToolCallResults? = null,
+    val toolCallResult: ToolCallResult? = null,
     val success: Boolean = false,
     val summary: String? = null,
 ) {

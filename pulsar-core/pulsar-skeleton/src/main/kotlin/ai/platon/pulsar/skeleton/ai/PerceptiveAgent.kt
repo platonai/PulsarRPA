@@ -23,6 +23,7 @@ data class ActResult(
     val success: Boolean,
     val message: String,
     val action: String? = null,
+    val result: ToolCallResult? = null,
 )
 
 data class ExtractOptions(
@@ -72,7 +73,8 @@ data class ToolCall constructor(
 data class ToolCallResult(
     val success: Boolean,
     val result: Any? = null,
-    val message: String? = null
+    val message: String? = null,
+    val expression: String? = null,
 )
 
 data class ObserveElement constructor(
