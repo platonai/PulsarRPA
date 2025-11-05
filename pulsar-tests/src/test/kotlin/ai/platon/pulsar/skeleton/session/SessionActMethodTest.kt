@@ -142,7 +142,7 @@ class SessionActMethodTest : TextToActionTestBase() {
      */
     @Test
     fun testExtractArticleTitles() = runBlocking {
-        session.plainActs("extract article titles and their hrefs from the main list")
+        agent.resolve("extract article titles and their hrefs from the main list")
         val history = agent.stateHistory.joinToString("\n")
         printlnPro(history)
         assertTrue(
