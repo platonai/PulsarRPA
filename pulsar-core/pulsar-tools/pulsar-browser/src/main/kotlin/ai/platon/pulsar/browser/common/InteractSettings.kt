@@ -13,7 +13,7 @@ enum class DomSettlePolicy {
     READY_STATE_INTERACTIVE,
     READY_STATE_COMPLETE,
     NETWORK_IDLE,
-    SMALL_FIELDS,
+    FIELDS_SETTLE,
     HASH,
     OTHER
 }
@@ -56,7 +56,7 @@ data class InteractSettings constructor(
      * DOM settle policy.
      * TODO: the default value will be set to NETWORK_IDLE
      * */
-    var domSettlePolicy: DomSettlePolicy = DomSettlePolicy.SMALL_FIELDS
+    var domSettlePolicy: DomSettlePolicy = DomSettlePolicy.FIELDS_SETTLE
 ) {
     /**
      * The minimum delay time in milliseconds.

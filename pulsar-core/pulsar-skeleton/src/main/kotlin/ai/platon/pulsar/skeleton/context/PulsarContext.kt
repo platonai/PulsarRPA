@@ -318,7 +318,7 @@ interface PulsarContext: java.lang.AutoCloseable {
      * @param normURL The NormURL of the page.
      * @param driver The webdriver to attach to.
      */
-    suspend fun attach(normURL: NormURL, driver: WebDriver): WebPage
+    suspend fun capture(normURL: NormURL, driver: WebDriver): WebPage
 
     /**
      * Load a url with specified options, see [LoadOptions] for all options

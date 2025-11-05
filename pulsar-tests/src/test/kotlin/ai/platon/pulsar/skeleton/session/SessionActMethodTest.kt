@@ -35,7 +35,7 @@ class SessionActMethodTest : TextToActionTestBase() {
         PulsarSettings.withSPA()
 
         runBlocking {
-            driver = newBoundDriver()
+            driver = session.createBoundDriver()
             // Open demo page so each test begins from consistent state
             session.open(demoUrl)
         }
@@ -61,8 +61,6 @@ class SessionActMethodTest : TextToActionTestBase() {
         }
         return false
     }
-
-    private fun newBoundDriver() = browser.newDriver().also { session.bindDriver(it) }
 
     /**
      * Mirrors step: open URL and basic parse / extract title.
@@ -144,7 +142,7 @@ class SessionActMethodTest : TextToActionTestBase() {
      */
     @Test
     fun testExtractArticleTitles() = runBlocking {
-        agent.act(ActionOptions("extract article titles and their hrefs from the main list"))
+        session.plainActs("extract article titles and their hrefs from the main list")
         val history = agent.stateHistory.joinToString("\n")
         printlnPro(history)
         assertTrue(

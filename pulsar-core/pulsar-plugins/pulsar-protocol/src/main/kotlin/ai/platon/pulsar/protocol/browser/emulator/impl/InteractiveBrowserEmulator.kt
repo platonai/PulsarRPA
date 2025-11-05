@@ -422,8 +422,8 @@ open class InteractiveBrowserEmulator(
         // TODO: a better flag to specify whether to attach or navigate
         val page = fetchTask.page
         require(page is AbstractWebPage)
-        val attach = page.hasVar(VAR_CAPTURE)
-        val interactResult = if (attach) {
+        val capture = page.hasVar(VAR_CAPTURE)
+        val interactResult = if (capture) {
             driver.ignoreDOMFeatures = true
             captureLivePage(navigateTask, driver, browserSettings)
         } else {
@@ -617,7 +617,7 @@ open class InteractiveBrowserEmulator(
         require(driver is AbstractWebDriver)
 
         when (interactTask.interactSettings.domSettlePolicy) {
-            DomSettlePolicy.SMALL_FIELDS -> waitForDocumentFullyLoaded1(interactTask, result)
+            DomSettlePolicy.FIELDS_SETTLE -> waitForDocumentFullyLoaded1(interactTask, result)
             else -> waitForNetworkIdle(interactTask, result)
         }
     }

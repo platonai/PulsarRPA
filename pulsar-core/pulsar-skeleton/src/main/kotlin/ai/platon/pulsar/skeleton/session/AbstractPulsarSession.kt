@@ -15,15 +15,12 @@ import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
-import ai.platon.pulsar.skeleton.ai.ActionOptions
-import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.FetchEntry
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import org.jsoup.nodes.Element
@@ -202,7 +199,7 @@ abstract class AbstractPulsarSession(
     override suspend fun capture(driver: WebDriver, url: String?, eventHandlers: PageEventHandlers?): WebPage {
         bindDriver(driver)
         val normURL = normalize(url ?: driver.currentUrl())
-        return context.attach(normURL, driver)
+        return context.capture(normURL, driver)
     }
 
     override fun createBoundDriver(): WebDriver {
