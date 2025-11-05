@@ -2,7 +2,7 @@ package ai.platon.pulsar.agentic.ai
 
 import ai.platon.pulsar.agentic.ai.agent.ExtractParams
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
-import ai.platon.pulsar.agentic.ai.tools.AgentTool
+import ai.platon.pulsar.agentic.tools.AgentTool
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
@@ -227,7 +227,8 @@ $schema
 
 ## 工具列表
 
-```kotlin
+`WebDriver` 工具 (domain: driver):
+```
 ${AgentTool.TOOL_CALL_SPECIFICATION}
 ```
 

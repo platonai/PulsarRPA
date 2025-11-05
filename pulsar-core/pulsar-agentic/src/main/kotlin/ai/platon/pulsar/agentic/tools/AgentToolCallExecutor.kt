@@ -1,22 +1,24 @@
-package ai.platon.pulsar.agentic.ai.tools
+package ai.platon.pulsar.agentic.tools
 
 import ai.platon.pulsar.agentic.AgenticSession
-import ai.platon.pulsar.agentic.ai.tools.ToolCallExecutor.Companion.norm
+import ai.platon.pulsar.agentic.ai.BrowserPerceptiveAgent
+import ai.platon.pulsar.agentic.tools.ToolCallExecutor.Companion.norm
 import ai.platon.pulsar.agentic.common.SimpleKotlinParser
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 
-class BrowserToolCallExecutor {
+class AgentToolCallExecutor {
     private val logger = getLogger(this)
 
-    suspend fun execute(expression: String, browser: Browser): Any? {
+    suspend fun execute(expression: String, agent: PerceptiveAgent): Any? {
         return try {
-            val r = execute0(expression, browser)
+            val r = execute0(expression, agent)
             when (r) {
                 is Unit -> null
                 else -> r
@@ -27,29 +29,11 @@ class BrowserToolCallExecutor {
         }
     }
 
-    suspend fun execute(expression: String, browser: Browser, session: AgenticSession): Any? {
-        if (expression.contains("switchTab")) {
-            val driver = execute(expression, browser)
-            if (driver is WebDriver) {
-                session.bindDriver(driver)
-
-                // document.visibilityState should be visible after bringToFront()
-                // val isVisible = driver.evaluateValue("document.visibilityState == \"visible\"")
-                // require(isVisible)
-                // require(driver == browser.frontDriver)
-            }
-
-            return driver
-        }
-
-        return null
-    }
-
-    private suspend fun execute0(expression: String, browser: Browser): Any? {
+    private suspend fun execute0(expression: String, agent: PerceptiveAgent): Any? {
         // Extract function name and arguments from the expression string
         val (objectName, functionName, args) = SimpleKotlinParser().parseFunctionExpression(expression) ?: return null
 
-        return doExecute(objectName, functionName, args, browser)
+        return doExecute(objectName, functionName, args, agent)
     }
 
     /**
@@ -57,30 +41,13 @@ class BrowserToolCallExecutor {
      * */
     @Suppress("UNUSED_PARAMETER")
     private suspend fun doExecute(
-        objectName: String, functionName: String, args: Map<String, Any?>, browser: Browser
+        objectName: String, functionName: String, args: Map<String, Any?>, agent: PerceptiveAgent
     ): Any? {
         require(objectName == "browser") { "Object must be a Browser" }
         require(functionName.isNotBlank()) { "Function name must not be blank" }
 
         // Handle browser-level expressions
-        if (functionName == "switchTab") {
-            val tabId =
-                args["0"]?.toString() ?: return buildErrorResponse("tab_not_found", "Missing tabId parameter", browser)
-
-            require(browser is AbstractBrowser)
-            val driver = if (tabId.toIntOrNull() != null) {
-                browser.findDriverById(tabId.toInt())
-            } else {
-                browser.drivers[tabId]
-            }
-
-            if (driver == null || driver !is AbstractWebDriver) {
-                return null
-            }
-
-            driver.bringToFront()
-            logger.info("Switched to tab {} (driver {}/{})", tabId, driver.id, driver.guid)
-            return driver
+        if (functionName == "done") {
         }
 
         return null

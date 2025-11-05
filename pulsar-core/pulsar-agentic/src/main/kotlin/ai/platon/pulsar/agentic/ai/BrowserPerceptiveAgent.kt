@@ -3,10 +3,10 @@ package ai.platon.pulsar.agentic.ai
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.ai.agent.*
 import ai.platon.pulsar.agentic.ai.agent.detail.*
-import ai.platon.pulsar.agentic.ai.tools.ActionValidator
-import ai.platon.pulsar.agentic.ai.tools.AgentTool
-import ai.platon.pulsar.agentic.ai.tools.ToolCallExecutor
 import ai.platon.pulsar.agentic.ai.tta.*
+import ai.platon.pulsar.agentic.tools.ActionValidator
+import ai.platon.pulsar.agentic.tools.AgentTool
+import ai.platon.pulsar.agentic.tools.ToolCallExecutor
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
@@ -1157,7 +1157,12 @@ class BrowserPerceptiveAgent constructor(
         return min(exponentialDelay, 5000L)
     }
 
-    private fun shouldTerminate(action: ActionDescription): Boolean = action.isComplete
+    private fun shouldTerminate(action: ActionDescription): Boolean {
+        return if (action.isComplete) {
+            // backward compatibility
+            true
+        } else action.expression?.contains("agent.done") == true
+    }
 
     private fun handleTaskCompletion(action: ActionDescription, step: Int, context: ExecutionContext) {
         logger.info("✅ task.complete sid={} step={} complete={}", context.sessionId.take(8), step, action.isComplete)

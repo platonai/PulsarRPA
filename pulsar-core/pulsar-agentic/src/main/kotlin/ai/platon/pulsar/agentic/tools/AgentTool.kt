@@ -1,4 +1,4 @@
-package ai.platon.pulsar.agentic.ai.tools
+package ai.platon.pulsar.agentic.tools
 
 object AgentTool {
 
@@ -32,10 +32,16 @@ driver.delay(millis: Long)
 
 // domain: browser
 browser.switchTab(tabId: String): Int
+browser.closeTab(tabId: String)
+
+// domain: fs
+fs.writeString(filename: String, content: String)
+fs.readString(filename: String)
+fs.replaceContent(filename: String, oldStr: String, newStr: String)
 
     """
 
-    const val AGENT_TOOL_CALL_LIST = """
+    const val AGENT_TOOL_CALL_LIST_BAK = """
 // domain: agent
 agent.observe(instruction: String): List<ObserveResult>
 agent.observe(options: ObserveOptions): List<ObserveResult>
@@ -47,10 +53,16 @@ agent.extract(options: ExtractOptions): ExtractResult
 agent.done()
     """
 
+    const val AGENT_TOOL_CALL_LIST = """
+// domain: agent
+agent.done()
+    """
+
     const val FILE_TOOL_CALL_LIST = """
 // domain: fs
-fs.write(path: String)
-fs.read(path: String)
+fs.writeString(filename: String, content: String)
+fs.readString(filename: String)
+fs.replaceContent(filename: String, oldStr: String, newStr: String)
     """
 
     val SUPPORTED_TOOL_CALLS = TOOL_CALL_SPECIFICATION

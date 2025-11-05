@@ -1,4 +1,4 @@
-package ai.platon.pulsar.agentic.ai.tools
+package ai.platon.pulsar.agentic.tools
 
 import ai.platon.pulsar.browser.driver.chrome.dom.FBNLocator
 import ai.platon.pulsar.common.getLogger

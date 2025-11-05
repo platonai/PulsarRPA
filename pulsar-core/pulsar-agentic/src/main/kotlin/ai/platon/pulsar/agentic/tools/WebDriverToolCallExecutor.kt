@@ -1,13 +1,14 @@
-package ai.platon.pulsar.agentic.ai.tools
+package ai.platon.pulsar.agentic.tools
 
-import ai.platon.pulsar.agentic.ai.tools.ToolCallExecutor.Companion.esc
-import ai.platon.pulsar.agentic.ai.tools.ToolCallExecutor.Companion.norm
+import ai.platon.pulsar.agentic.tools.ToolCallExecutor.Companion.esc
+import ai.platon.pulsar.agentic.tools.ToolCallExecutor.Companion.norm
 import ai.platon.pulsar.agentic.common.SimpleKotlinParser
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.TimeoutCancellationException
+import java.time.Duration
 
 class WebDriverToolCallExecutor {
     private val logger = getLogger(this)
@@ -437,9 +438,9 @@ class WebDriverToolCallExecutor {
             "waitForPage" -> {
                 // Wait for navigation to a specific URL
                 if (args.size >= 2) {
-                    driver.waitForPage(arg0!!, java.time.Duration.ofMillis(arg1!!.toLongOrNull() ?: 30000L))
+                    driver.waitForPage(arg0!!, Duration.ofMillis(arg1!!.toLongOrNull() ?: 30000L))
                 } else if (args.isNotEmpty()) {
-                    driver.waitForPage(arg0!!, java.time.Duration.ofMillis(30000L))
+                    driver.waitForPage(arg0!!, Duration.ofMillis(30000L))
                 } else {
                     null
                 }
