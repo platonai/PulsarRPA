@@ -27,9 +27,6 @@ interface AgenticSession : PulsarSession {
      */
     suspend fun performAct(action: ActionDescription): ToolCallResult
 
-    @Beta
-    suspend fun execute(action: ActionDescription): ToolCallResult
-
     /**
      * Instructs the webdriver to perform a series of actions based on the given prompt.
      * This function converts the prompt into a sequence of webdriver actions, which are then executed.
@@ -58,9 +55,7 @@ open class BasicAgenticSession(
 
     override suspend fun performAct(action: ActionDescription) = executor.performAct(action)
 
-    override suspend fun execute(action: ActionDescription) = executor.execute(action)
-
-    override suspend fun plainActs(actionDescriptions: String) = executor.plainActs(actionDescriptions)
+    override suspend fun plainActs(actionDescriptions: String) = executor.performActs(actionDescriptions)
 }
 
 open class AbstractAgenticQLSession(
@@ -75,9 +70,7 @@ open class AbstractAgenticQLSession(
 
     override suspend fun performAct(action: ActionDescription) = executor.performAct(action)
 
-    override suspend fun execute(action: ActionDescription) = executor.execute(action)
-
-    override suspend fun plainActs(actionDescriptions: String) = executor.plainActs(actionDescriptions)
+    override suspend fun plainActs(actionDescriptions: String) = executor.performActs(actionDescriptions)
 }
 
 open class AgenticQLSession(
