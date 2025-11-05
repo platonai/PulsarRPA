@@ -3,6 +3,7 @@ package ai.platon.pulsar.agentic.ai
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.ai.agent.*
 import ai.platon.pulsar.agentic.ai.agent.detail.*
+import ai.platon.pulsar.agentic.ai.todo.ToDoManager
 import ai.platon.pulsar.agentic.ai.tta.*
 import ai.platon.pulsar.agentic.common.FileSystem
 import ai.platon.pulsar.agentic.tools.ActionValidator
@@ -76,7 +77,15 @@ data class AgentConfig(
     val maxSelectorLength: Int = 1000,
     val denyUnknownActions: Boolean = false,
     // Overall timeout for resolve() to avoid indefinite hangs
-    val resolveTimeoutMs: Long = 24.hours.inWholeMilliseconds
+    val resolveTimeoutMs: Long = 24.hours.inWholeMilliseconds,
+    // --- todolist.md integration flags ---
+    val enableTodoWrites: Boolean = true,
+    val todoPlanWithLLM: Boolean = false,
+    val todoWriteProgressEveryStep: Boolean = true,
+    val todoProgressWriteEveryNSteps: Int = 1,
+    val todoMaxProgressLines: Int = 200,
+    val todoEnableAutoCheck: Boolean = true,
+    val todoTagsFromToolCall: Boolean = true,
 )
 
 class BrowserPerceptiveAgent constructor(
@@ -99,6 +108,7 @@ class BrowserPerceptiveAgent constructor(
     // Reuse ToolCallExecutor to avoid recreation overhead (Medium Priority #14)
     private val toolCallExecutor = ToolCallExecutor()
     private val fs: FileSystem
+    private val todo: ToDoManager
 
     // Helper classes for better code organization
     private val pageStateTracker = PageStateTracker(session, config)
@@ -125,6 +135,7 @@ class BrowserPerceptiveAgent constructor(
     init {
         val baseDir = AppPaths.getTmpDirectory("agent").resolve(uuid.toString())
         fs = FileSystem(baseDir)
+        todo = ToDoManager(fs, config, uuid, slogger)
     }
 
     constructor(
@@ -806,6 +817,15 @@ class BrowserPerceptiveAgent constructor(
             attempt + 1, config.maxSteps, config.maxRetries
         )
 
+        // Initialize todolist.md if enabled and empty
+        if (config.enableTodoWrites) {
+            try {
+                todo.primeIfEmpty(userRequest, context.targetUrl)
+            } catch (e: Exception) {
+                slogger.logError("📝❌ todo.prime.fail", e, sid)
+            }
+        }
+
         // agent general guide
         val systemMsg = PromptBuilder().buildOperatorSystemPrompt()
         var consecutiveNoOps = 0
@@ -858,18 +878,6 @@ class BrowserPerceptiveAgent constructor(
                 val params = ContextToActionParams(messages, agentState, screenshotB64)
                 val stepAction = generateStepAction(params, context)
 
-                // We will use the following code pattern
-//                val observeOptions = ObserveOptions(
-//                    instruction = agentState.instruction,
-//                    returnAction = true,
-//                    agentState = agentState
-//                )
-//                val observeResults = observe(observeOptions)
-//
-//                observeResults.forEach { observeResult ->
-//                    val actResult = act(observeResult)
-//                }
-
                 // Keep reference to previous AgentState for next loop
                 prevAgentState = agentState
 
@@ -883,6 +891,14 @@ class BrowserPerceptiveAgent constructor(
                 // Check for task completion
                 if (shouldTerminate(stepAction)) {
                     handleTaskCompletion(stepAction, step, stepContext)
+                    // todolist.md completion hook
+                    if (config.enableTodoWrites) {
+                        try {
+                            todo.onTaskCompletion(userRequest)
+                        } catch (e: Exception) {
+                            slogger.logError("📝❌ todo.complete.fail", e, sid)
+                        }
+                    }
                     break
                 }
 
@@ -912,9 +928,28 @@ class BrowserPerceptiveAgent constructor(
                         agentState, true, toolCall, exec.toolCallResults, observe = observe, message = exec.summary
                     )
 
+                    // todolist.md progress hook
+                    if (config.enableTodoWrites) {
+                        val shouldWrite = config.todoWriteProgressEveryStep ||
+                                (config.todoProgressWriteEveryNSteps > 1 && step % config.todoProgressWriteEveryNSteps == 0)
+                        if (shouldWrite) {
+                            val urlNow0 = runCatching { activeDriver.currentUrl() }.getOrNull() ?: "(unknown)"
+                            try {
+                                todo.appendProgress(step, toolCall, observe, urlNow0, exec.summary)
+                                todo.updateProgressCounter()
+                                if (config.todoEnableAutoCheck) {
+                                    val tags = todo.buildTags(toolCall, urlNow0)
+                                    if (tags.isNotEmpty()) todo.markPlanItemDoneByTags(tags)
+                                }
+                            } catch (e: Exception) {
+                                slogger.logError("📝❌ todo.progress.fail", e, sid)
+                            }
+                        }
+                    }
+
                     updatePerformanceMetrics(step, stepStartTime, true)
 
-                    logger.info("🏁 step.done sid={} step={} summary={}", sid, step, exec.summary)
+                    logger.info("🏁 step.done sid={} step={} summary= {}", sid, step, exec.summary)
                 } else {
                     // Treat validation failures or execution skips as no-ops; no AgentState record
                     consecutiveNoOps++
@@ -1106,7 +1141,7 @@ class BrowserPerceptiveAgent constructor(
             logger.info(
                 "🛑 tool.validate.fail sid={} step={} locator={} | {}({}) | {}",
                 context.sessionId.take(8), context.stepNumber, action.locator, toolCall.method, toolCall.arguments,
-                action.cssFriendlyExpressions.joinToString()
+                action.cssFriendlyExpression
             )
             // Validation failure is meta info
             processTrace("🛑 #$step validation-failed ${toolCall.method}")
@@ -1160,12 +1195,6 @@ class BrowserPerceptiveAgent constructor(
         return false
     }
 
-    private fun calculateConsecutiveNoOpDelay(consecutiveNoOps: Int): Long {
-        val baseDelay = 250L
-        val exponentialDelay = baseDelay * consecutiveNoOps
-        return min(exponentialDelay, 5000L)
-    }
-
     private fun shouldTerminate(action: ActionDescription): Boolean {
         return if (action.isComplete) {
             // backward compatibility
@@ -1173,7 +1202,7 @@ class BrowserPerceptiveAgent constructor(
         } else action.expression?.contains("agent.done") == true
     }
 
-    private fun handleTaskCompletion(action: ActionDescription, step: Int, context: ExecutionContext) {
+    private suspend fun handleTaskCompletion(action: ActionDescription, step: Int, context: ExecutionContext) {
         logger.info("✅ task.complete sid={} step={} complete={}", context.sessionId.take(8), step, action.isComplete)
         processTrace("#$step complete: taskComplete=${action.isComplete}")
     }
@@ -1330,5 +1359,11 @@ class BrowserPerceptiveAgent constructor(
                 "Failed to generate summary: ${e.message}", ResponseState.OTHER
             )
         }
+    }
+
+    private fun calculateConsecutiveNoOpDelay(consecutiveNoOps: Int): Long {
+        val baseDelay = 250L
+        val exponentialDelay = baseDelay * consecutiveNoOps
+        return min(exponentialDelay, 5000L)
     }
 }

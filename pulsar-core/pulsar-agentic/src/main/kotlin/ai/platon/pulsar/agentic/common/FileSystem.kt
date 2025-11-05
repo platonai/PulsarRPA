@@ -115,7 +115,7 @@ class FileSystem(
     companion object {
         const val DISPLAY_CHARS = 400
 
-        val DEFAULT_FILES = listOf("todo.md")
+        val DEFAULT_FILES = listOf("todolist.md")
 
         fun fromState(state: FileSystemState): FileSystem {
             val fs = FileSystem(Path.of(state.baseDir), createDefaultFiles = false)
@@ -288,7 +288,7 @@ class FileSystem(
     fun describe(): String {
         val sb = StringBuilder()
         for (file in files.values) {
-            if (file.fullName == "todo.md") continue
+            if (file.fullName == "todolist.md") continue
             val content = file.readString()
             if (content.isEmpty()) {
                 sb.append("<file>\n${file.fullName} - [empty file]\n</file>\n")
@@ -339,7 +339,7 @@ class FileSystem(
         return sb.toString().trimEnd('\n')
     }
 
-    fun getTodoContents(): String = getFile("todo.md")?.readString() ?: ""
+    fun getTodoContents(): String = getFile("todolist.md")?.readString() ?: ""
 
     fun getState(): FileSystemState {
         val map = files.mapValues { (_, f) -> FileStateEntry(f::class.simpleName ?: "", f.name, f.content) }
