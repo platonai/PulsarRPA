@@ -2,7 +2,7 @@ package ai.platon.pulsar.agentic.ai
 
 import ai.platon.pulsar.agentic.ai.agent.ExtractParams
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
-import ai.platon.pulsar.agentic.ai.support.AgentTool
+import ai.platon.pulsar.agentic.ai.tools.AgentTool
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState

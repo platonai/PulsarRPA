@@ -1,10 +1,13 @@
-package ai.platon.pulsar.agentic.ai.support
+package ai.platon.pulsar.agentic.ai.tools
 
+import ai.platon.pulsar.agentic.ai.tools.ToolCallExecutor.Companion.esc
+import ai.platon.pulsar.agentic.ai.tools.ToolCallExecutor.Companion.norm
+import ai.platon.pulsar.agentic.common.SimpleKotlinParser
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.TimeoutCancellationException
-import java.time.Duration
 
 class WebDriverToolCallExecutor {
     private val logger = getLogger(this)
@@ -27,19 +30,20 @@ class WebDriverToolCallExecutor {
         }
     }
 
-    private suspend fun execute0(command: String, driver: WebDriver): Any? {
-        // Extract function name and arguments from the command string
-        val (objectName, functionName, args) = SimpleKotlinParser().parseFunctionExpression(command) ?: return null
+    private suspend fun execute0(expression: String, driver: WebDriver): Any? {
+        // Extract function name and arguments from the expression string
+        val (objectName, functionName, args) = SimpleKotlinParser().parseFunctionExpression(expression) ?: return null
 
         return doExecute(objectName, functionName, args, driver)
     }
 
     /**
-     * Extract function name and arguments from the command string
+     * Extract function name and arguments from the expression string
      * */
     @Suppress("UNUSED_PARAMETER")
     private suspend fun doExecute(
-        objectName: String, functionName: String, args: Map<String, Any?>, driver: WebDriver): Any? {
+        objectName: String, functionName: String, args: Map<String, Any?>, driver: WebDriver
+    ): Any? {
         // Execute the appropriate WebDriver method based on the function name
         val arg0 = args["0"]?.toString()
         val arg1 = args["1"]?.toString()
@@ -73,6 +77,7 @@ class WebDriverToolCallExecutor {
                             driver.click(arg0!!, countOrModifier)
                         }
                     }
+
                     else -> if (args.isNotEmpty()) driver.click(arg0!!) else null
                 }
             }
@@ -155,15 +160,11 @@ class WebDriverToolCallExecutor {
                     0 -> driver.mouseWheelDown(1, 0.0, 0.0, 0)
                     1 -> driver.mouseWheelDown(arg0!!.toIntOrNull() ?: 1)
                     2 -> driver.mouseWheelDown(
-                        arg0!!.toIntOrNull() ?: 1,
-                        arg1!!.toDoubleOrNull() ?: 0.0,
-                        0.0,
-                        0
+                        arg0!!.toIntOrNull() ?: 1, arg1!!.toDoubleOrNull() ?: 0.0, 0.0, 0
                     )
+
                     3 -> driver.mouseWheelDown(
-                        arg0!!.toIntOrNull() ?: 1,
-                        arg1!!.toDoubleOrNull() ?: 0.0,
-                        arg2!!.toDoubleOrNull() ?: 0.0
+                        arg0!!.toIntOrNull() ?: 1, arg1!!.toDoubleOrNull() ?: 0.0, arg2!!.toDoubleOrNull() ?: 0.0
                     )
 
                     else -> driver.mouseWheelDown(
@@ -181,15 +182,11 @@ class WebDriverToolCallExecutor {
                     0 -> driver.mouseWheelUp(1, 0.0, 0.0, 0)
                     1 -> driver.mouseWheelUp(arg0!!.toIntOrNull() ?: 1)
                     2 -> driver.mouseWheelUp(
-                        arg0!!.toIntOrNull() ?: 1,
-                        arg1!!.toDoubleOrNull() ?: 0.0,
-                        0.0,
-                        0
+                        arg0!!.toIntOrNull() ?: 1, arg1!!.toDoubleOrNull() ?: 0.0, 0.0, 0
                     )
+
                     3 -> driver.mouseWheelUp(
-                        arg0!!.toIntOrNull() ?: 1,
-                        arg1!!.toDoubleOrNull() ?: 0.0,
-                        arg2!!.toDoubleOrNull() ?: 0.0
+                        arg0!!.toIntOrNull() ?: 1, arg1!!.toDoubleOrNull() ?: 0.0, arg2!!.toDoubleOrNull() ?: 0.0
                     )
 
                     else -> driver.mouseWheelUp(
@@ -215,6 +212,7 @@ class WebDriverToolCallExecutor {
                             driver.moveMouseTo(sel, arg1?.toIntOrNull() ?: 0)
                         }
                     }
+
                     3 -> driver.moveMouseTo(arg0!!, arg1!!.toIntOrNull() ?: 0, arg2!!.toIntOrNull() ?: 0)
                     else -> null
                 }
@@ -267,10 +265,7 @@ class WebDriverToolCallExecutor {
                 when (args.size) {
                     2 -> driver.selectAttributeAll(arg0!!, arg1!!)
                     4 -> driver.selectAttributeAll(
-                        arg0!!,
-                        arg1!!,
-                        arg2!!.toIntOrNull() ?: 0,
-                        arg3!!.toIntOrNull() ?: 10000
+                        arg0!!, arg1!!, arg2!!.toIntOrNull() ?: 0, arg3!!.toIntOrNull() ?: 10000
                     )
 
                     else -> if (args.size >= 2) driver.selectAttributeAll(arg0!!, arg1!!) else null
@@ -300,9 +295,7 @@ class WebDriverToolCallExecutor {
                 when (args.size) {
                     1 -> driver.selectHyperlinks(arg0!!)
                     3 -> driver.selectHyperlinks(
-                        arg0!!,
-                        arg1!!.toIntOrNull() ?: 1,
-                        arg2!!.toIntOrNull() ?: Integer.MAX_VALUE
+                        arg0!!, arg1!!.toIntOrNull() ?: 1, arg2!!.toIntOrNull() ?: Integer.MAX_VALUE
                     )
 
                     else -> if (args.isNotEmpty()) driver.selectHyperlinks(arg0!!) else null
@@ -314,9 +307,7 @@ class WebDriverToolCallExecutor {
                 when (args.size) {
                     1 -> driver.selectAnchors(arg0!!)
                     3 -> driver.selectAnchors(
-                        arg0!!,
-                        arg1!!.toIntOrNull() ?: 1,
-                        arg2!!.toIntOrNull() ?: Integer.MAX_VALUE
+                        arg0!!, arg1!!.toIntOrNull() ?: 1, arg2!!.toIntOrNull() ?: Integer.MAX_VALUE
                     )
 
                     else -> if (args.isNotEmpty()) driver.selectAnchors(arg0!!) else null
@@ -328,9 +319,7 @@ class WebDriverToolCallExecutor {
                 when (args.size) {
                     1 -> driver.selectImages(arg0!!)
                     3 -> driver.selectImages(
-                        arg0!!,
-                        arg1!!.toIntOrNull() ?: 1,
-                        arg2!!.toIntOrNull() ?: Integer.MAX_VALUE
+                        arg0!!, arg1!!.toIntOrNull() ?: 1, arg2!!.toIntOrNull() ?: Integer.MAX_VALUE
                     )
 
                     else -> if (args.isNotEmpty()) driver.selectImages(arg0!!) else null
@@ -457,7 +446,7 @@ class WebDriverToolCallExecutor {
             }
 
             "waitUntil" -> {
-                // Cannot be implemented via string commands as it requires a lambda
+                // Cannot be implemented via string expressions as it requires a lambda
                 null
             }
 
@@ -579,10 +568,7 @@ class WebDriverToolCallExecutor {
                 when (args.size) {
                     2 -> driver.selectPropertyValueAll(arg0!!, arg1!!)
                     4 -> driver.selectPropertyValueAll(
-                        arg0!!,
-                        arg1!!,
-                        arg2!!.toIntOrNull() ?: 0,
-                        arg3!!.toIntOrNull() ?: 10000
+                        arg0!!, arg1!!, arg2!!.toIntOrNull() ?: 0, arg3!!.toIntOrNull() ?: 10000
                     )
 
                     else -> if (args.size >= 2) driver.selectPropertyValueAll(arg0!!, arg1!!) else null
@@ -640,8 +626,147 @@ class WebDriverToolCallExecutor {
             }
 
             else -> {
-                // Command not supported or implemented
+                // expression not supported or implemented
                 null
+            }
+        }
+    }
+
+    companion object {
+
+        fun toolCallToExpression(tc: ToolCall): String? {
+            ActionValidator().validateToolCall(tc)
+
+            val arguments = tc.arguments
+            return when (tc.method) {
+                // Navigation
+                "open" -> arguments["url"]?.let { "driver.open(${it.norm()})" }
+                "navigateTo" -> arguments["url"]?.let { "driver.navigateTo(${it.norm()})" }
+                "goBack" -> "driver.goBack()"
+                "goForward" -> "driver.goForward()"
+                // Wait
+                "waitForSelector" -> arguments["selector"]?.let { sel ->
+                    "driver.waitForSelector(${sel.norm()}, ${(arguments["timeoutMillis"] ?: 5000)})"
+                }
+                // Status checking (first batch of new tools)
+                "exists" -> arguments["selector"]?.let { "driver.exists(${it.norm()})" }
+                "isVisible" -> arguments["selector"]?.let { "driver.isVisible(${it.norm()})" }
+                "focus" -> arguments["selector"]?.let { "driver.focus(${it.norm()})" }
+                // Basic interactions
+                "click" -> arguments["selector"]?.esc()?.let {
+                    val modifier = arguments["modifier"]?.esc()
+                    val count = arguments["count"]?.toIntOrNull() ?: 1
+                    when {
+                        modifier != null -> "driver.click(\"$it\", \"$modifier\")"
+                        else -> "driver.click(\"$it\", $count)"
+                    }
+                }
+
+                "fill" -> arguments["selector"]?.let { s ->
+                    val text = arguments["text"]?.esc() ?: ""
+                    "driver.fill(\"${s.esc()}\", \"$text\")"
+                }
+
+                "press" -> arguments["selector"]?.let { s ->
+                    arguments["key"]?.let { k -> "driver.press(\"${s.esc()}\", \"${k.esc()}\")" }
+                }
+
+                "check" -> arguments["selector"]?.let { "driver.check(${it.norm()})" }
+                "uncheck" -> arguments["selector"]?.let { "driver.uncheck(${it.norm()})" }
+                // Scrolling
+                "scrollDown" -> "driver.scrollDown(${arguments["count"] ?: 1})"
+                "scrollUp" -> "driver.scrollUp(${arguments["count"] ?: 1})"
+                "scrollBy" -> {
+                    val pixels = (arguments["pixels"] ?: 200.0).toString()
+                    val smooth = (arguments["smooth"] ?: true).toString()
+                    "driver.scrollBy(${pixels}, ${smooth})"
+                }
+
+                "scrollTo" -> arguments["selector"]?.let { "driver.scrollTo(${it.norm()})" }
+                "scrollToTop" -> "driver.scrollToTop()"
+                "scrollToBottom" -> "driver.scrollToBottom()"
+                "scrollToMiddle" -> "driver.scrollToMiddle(${arguments["ratio"] ?: 0.5})"
+                "scrollToScreen" -> arguments["screenNumber"]?.let { n -> "driver.scrollToScreen(${n})" }
+                // Advanced clicks
+                "clickTextMatches" -> arguments["selector"]?.let { s ->
+                    val pattern = arguments["pattern"]?.esc() ?: return@let null
+                    val count = arguments["count"] ?: 1
+                    "driver.clickTextMatches(\"${s.esc()}\", \"$pattern\", $count)"
+                }
+
+                "clickMatches" -> arguments["selector"]?.let { s ->
+                    val attr = arguments["attrName"]?.esc() ?: return@let null
+                    val pattern = arguments["pattern"]?.esc() ?: return@let null
+                    val count = arguments["count"] ?: 1
+                    "driver.clickMatches(\"${s.esc()}\", \"$attr\", \"$pattern\", $count)"
+                }
+
+                "clickNthAnchor" -> arguments["n"]?.let { n ->
+                    val root = arguments["rootSelector"] ?: "body"
+                    "driver.clickNthAnchor(${n}, \"${root.esc()}\")"
+                }
+                // Enhanced navigation
+                "waitForNavigation" -> {
+                    val oldUrl = arguments["oldUrl"] ?: ""
+                    val timeout = arguments["timeoutMillis"] ?: 5000L
+                    "driver.waitForNavigation(\"${oldUrl.esc()}\", ${timeout})"
+                }
+                // Screenshots
+                "captureScreenshot" -> {
+                    val sel = arguments["selector"]
+                    if (sel.isNullOrBlank()) "driver.captureScreenshot()" else "driver.captureScreenshot(${sel.norm()})"
+                }
+                // Timing
+                "delay" -> "driver.delay(${arguments["millis"] ?: 1000})"
+                // URL and document info
+                "currentUrl" -> "driver.currentUrl()"
+                "url" -> "driver.url()"
+                "documentURI" -> "driver.documentURI()"
+                "baseURI" -> "driver.baseURI()"
+                "referrer" -> "driver.referrer()"
+                "pageSource" -> "driver.pageSource()"
+                "getCookies" -> "driver.getCookies()"
+                // Additional status checking
+                "isHidden" -> arguments["selector"]?.let { "driver.isHidden(${it.norm()})" }
+                "visible" -> arguments["selector"]?.let { "driver.visible(${it.norm()})" }
+                "isChecked" -> arguments["selector"]?.let { "driver.isChecked(${it.norm()})" }
+                "bringToFront" -> "driver.bringToFront()"
+                // Additional interactions
+                "type" -> arguments["selector"]?.let { s ->
+                    arguments["text"]?.let { t -> "driver.type(\"${s.esc()}\", \"${t.esc()}\")" }
+                }
+
+                "scrollToViewport" -> arguments["n"]?.let { "driver.scrollToViewport(${it})" }
+                "mouseWheelDown" -> "driver.mouseWheelDown(${arguments["count"] ?: 1}, ${arguments["deltaX"] ?: 0.0}, ${arguments["deltaY"] ?: 150.0}, ${arguments["delayMillis"] ?: 0})"
+                "mouseWheelUp" -> "driver.mouseWheelUp(${arguments["count"] ?: 1}, ${arguments["deltaX"] ?: 0.0}, ${arguments["deltaY"] ?: -150.0}, ${arguments["delayMillis"] ?: 0})"
+                "moveMouseTo" -> arguments["x"]?.let { x ->
+                    arguments["y"]?.let { y -> "driver.moveMouseTo(${x}, ${y})" }
+                } ?: arguments["selector"]?.let { s ->
+                    "driver.moveMouseTo(\"${s.esc()}\", ${arguments["deltaX"] ?: 0}, ${arguments["deltaY"] ?: 0})"
+                }
+
+                "dragAndDrop" -> arguments["selector"]?.let { s ->
+                    "driver.dragAndDrop(\"${s.esc()}\", ${arguments["deltaX"] ?: 0}, ${arguments["deltaY"] ?: 0})"
+                }
+                // HTML and text extraction
+                "outerHTML" -> arguments["selector"]?.let { "driver.outerHTML(${it.norm()})" } ?: "driver.outerHTML()"
+
+                "textContent" -> "driver.textContent()"
+                "selectFirstTextOrNull" -> arguments["selector"]?.let { "driver.selectFirstTextOrNull(${it.norm()})" }
+                "selectTextAll" -> arguments["selector"]?.let { "driver.selectTextAll(${it.norm()})" }
+                "selectFirstAttributeOrNull" -> arguments["selector"]?.let { s ->
+                    arguments["attrName"]?.let { a -> "driver.selectFirstAttributeOrNull(\"${s.esc()}\", \"${a.esc()}\")" }
+                }
+
+                "selectAttributes" -> arguments["selector"]?.let { "driver.selectAttributes(${it.norm()})" }
+                "selectAttributeAll" -> arguments["selector"]?.let { s ->
+                    arguments["attrName"]?.let { a -> "driver.selectAttributeAll(\"${s.esc()}\", \"${a.esc()}\", ${arguments["start"] ?: 0}, ${arguments["limit"] ?: 10000})" }
+                }
+
+                "selectImages" -> arguments["selector"]?.let { "driver.selectImages(${it.norm()}, ${arguments["offset"] ?: 1}, ${arguments["limit"] ?: Int.MAX_VALUE})" }
+                // JavaScript evaluation
+                "evaluate" -> arguments["expression"]?.let { "driver.evaluate(${it.norm()})" }
+                else -> null
             }
         }
     }

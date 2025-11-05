@@ -2,9 +2,9 @@ package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder.Companion.buildObserveResultSchema
-import ai.platon.pulsar.agentic.ai.support.AgentTool
-import ai.platon.pulsar.agentic.ai.support.AgentTool.TOOL_ALIASES
-import ai.platon.pulsar.agentic.ai.support.ToolCallExecutor
+import ai.platon.pulsar.agentic.ai.tools.AgentTool
+import ai.platon.pulsar.agentic.ai.tools.AgentTool.TOOL_ALIASES
+import ai.platon.pulsar.agentic.ai.tools.ToolCallExecutor
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions

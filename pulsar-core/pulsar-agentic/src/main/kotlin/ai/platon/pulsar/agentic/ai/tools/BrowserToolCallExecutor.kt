@@ -1,8 +1,11 @@
-package ai.platon.pulsar.agentic.ai.support
+package ai.platon.pulsar.agentic.ai.tools
 
 import ai.platon.pulsar.agentic.AgenticSession
+import ai.platon.pulsar.agentic.ai.tools.ToolCallExecutor.Companion.norm
+import ai.platon.pulsar.agentic.common.SimpleKotlinParser
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
@@ -42,15 +45,15 @@ class BrowserToolCallExecutor {
         return null
     }
 
-    private suspend fun execute0(command: String, browser: Browser): Any? {
-        // Extract function name and arguments from the command string
-        val (objectName, functionName, args) = SimpleKotlinParser().parseFunctionExpression(command) ?: return null
+    private suspend fun execute0(expression: String, browser: Browser): Any? {
+        // Extract function name and arguments from the expression string
+        val (objectName, functionName, args) = SimpleKotlinParser().parseFunctionExpression(expression) ?: return null
 
         return doExecute(objectName, functionName, args, browser)
     }
 
     /**
-     * Extract function name and arguments from the command string
+     * Extract function name and arguments from the expression string
      * */
     @Suppress("UNUSED_PARAMETER")
     private suspend fun doExecute(
@@ -59,10 +62,10 @@ class BrowserToolCallExecutor {
         require(objectName == "browser") { "Object must be a Browser" }
         require(functionName.isNotBlank()) { "Function name must not be blank" }
 
-        // Handle browser-level commands
+        // Handle browser-level expressions
         if (functionName == "switchTab") {
-            val tabId = args["0"]?.toString() ?:
-                return buildErrorResponse("tab_not_found", "Missing tabId parameter", browser)
+            val tabId =
+                args["0"]?.toString() ?: return buildErrorResponse("tab_not_found", "Missing tabId parameter", browser)
 
             require(browser is AbstractBrowser)
             val driver = if (tabId.toIntOrNull() != null) {
@@ -94,5 +97,19 @@ class BrowserToolCallExecutor {
             "message" to message,
             "availableTabs" to availableTabs
         )
+    }
+
+    companion object {
+
+        fun toolCallToExpression(tc: ToolCall): String? {
+            ActionValidator().validateToolCall(tc)
+
+            val arguments = tc.arguments
+            return when (tc.method) {
+                // Browser-level operations
+                "switchTab" -> arguments["tabId"]?.let { "browser.switchTab(${it.norm()})" }
+                else -> null
+            }
+        }
     }
 }

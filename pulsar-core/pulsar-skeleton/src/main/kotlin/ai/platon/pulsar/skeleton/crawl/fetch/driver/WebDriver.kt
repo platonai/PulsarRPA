@@ -731,6 +731,7 @@ interface WebDriver : Closeable {
      * @param selector - The selector of the element to check.
      * @return Whether the element is visible.
      * */
+    @Deprecated("Use isVisible instead", ReplaceWith("isVisible"))
     @Throws(WebDriverException::class)
     suspend fun visible(selector: String): Boolean = isVisible(selector)
 

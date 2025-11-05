@@ -840,10 +840,18 @@ public final class Strings {
         return StringUtils.reverse(s);
     }
 
+    public static String singleQuote(String s) {
+        return "'" + s + "'";
+    }
+
     public static String singleQuoteIfContainsWhitespace(String s) {
         if (s == null || s.isEmpty()) return "";
         if (StringUtils.containsWhitespace(s)) return "'" + s + "'";
         else return s;
+    }
+
+    public static String doubleQuote(String s) {
+        return "\"" + s + "\"";
     }
 
     public static String doubleQuoteIfContainsWhitespace(String s) {

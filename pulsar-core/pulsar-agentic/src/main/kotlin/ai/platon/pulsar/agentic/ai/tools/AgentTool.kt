@@ -1,4 +1,4 @@
-package ai.platon.pulsar.agentic.ai.support
+package ai.platon.pulsar.agentic.ai.tools
 
 object AgentTool {
 
@@ -6,7 +6,7 @@ object AgentTool {
      * The `TOOL_CALL_LIST` is written using kotlin syntax to express the tool's `domain`, `method`, `arguments`.
      * */
     const val TOOL_CALL_SPECIFICATION = """
-// domain/object: driver
+// domain: driver
 driver.navigateTo(url: String)
 driver.waitForSelector(selector: String, timeoutMillis: Long = 3000)
 driver.exists(selector: String): Boolean
@@ -30,12 +30,13 @@ driver.goForward()
 driver.textContent(selector: String): String?          // Returns the node's text content, the node is located by [selector]. If the node does not exist, returns null.
 driver.delay(millis: Long)
 
-// domain/object: browser
+// domain: browser
 browser.switchTab(tabId: String): Int
 
     """
 
     const val AGENT_TOOL_CALL_LIST = """
+// domain: agent
 agent.observe(instruction: String): List<ObserveResult>
 agent.observe(options: ObserveOptions): List<ObserveResult>
 agent.act(action: String): ActResult
@@ -43,6 +44,13 @@ agent.act(action: ActionOptions): ActResult
 agent.act(observe: ObserveResult): ActResult
 agent.extract(instruction: String): ExtractResult
 agent.extract(options: ExtractOptions): ExtractResult
+agent.done()
+    """
+
+    const val FILE_TOOL_CALL_LIST = """
+// domain: fs
+fs.write(path: String)
+fs.read(path: String)
     """
 
     val SUPPORTED_TOOL_CALLS = TOOL_CALL_SPECIFICATION

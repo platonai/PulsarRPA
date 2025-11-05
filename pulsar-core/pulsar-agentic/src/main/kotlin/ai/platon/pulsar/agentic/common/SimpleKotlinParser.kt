@@ -1,4 +1,4 @@
-package ai.platon.pulsar.agentic.ai.support
+package ai.platon.pulsar.agentic.common
 
 import ai.platon.pulsar.skeleton.ai.ToolCall
 
