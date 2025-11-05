@@ -23,7 +23,7 @@ class SessionActs {
         starter.start(url)
         session.registerClosable(starter)
 
-        val agent = session.agent
+        val agent = session.companionAgent
         val driver = session.getOrCreateBoundDriver()
 
         step("Open URL: $url")

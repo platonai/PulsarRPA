@@ -3,10 +3,9 @@ package ai.platon.pulsar.skeleton.ai
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.JsonNode
-import java.lang.ref.WeakReference
-
 import java.time.Instant
 import java.util.*
 
@@ -97,15 +96,19 @@ data class ObserveElement constructor(
 ) {
     @Deprecated("User expression instead")
     val expressions: List<String> get() = expression?.let { listOf(it) } ?: emptyList()
+
     @Deprecated("User cssFriendlyExpression instead")
     val cssFriendlyExpressions: List<String> get() = cssFriendlyExpression?.let { listOf(it) } ?: emptyList()
 
     @get:JsonIgnore
     val description: String? get() = toolCall?.description
+
     @get:JsonIgnore
     val domain: String? get() = toolCall?.domain
+
     @get:JsonIgnore
     val method: String? get() = toolCall?.method
+
     @get:JsonIgnore
     val arguments: Map<String, Any?>? get() = toolCall?.arguments
 }
@@ -157,10 +160,12 @@ data class AgentState constructor(
     val prevState: AgentState? = null
 ) {
     override fun toString(): String {
-        val summary = listOfNotNull(description,
+        val summary = listOfNotNull(
+            description,
             currentPageContentSummary, screenshotContentSummary,
             evaluationPreviousGoal,
-            nextGoal)
+            nextGoal
+        )
             .joinToString("\n")
         return "$timestamp $action - $summary"
     }

@@ -139,7 +139,7 @@ class SinglePageApplicationController(
         val driver = activeDriver
 
         return try {
-            val result = session.agent.act(request.act)
+            val result = session.companionAgent.act(request.act)
 
             val status = CommandStatus(
                 "",

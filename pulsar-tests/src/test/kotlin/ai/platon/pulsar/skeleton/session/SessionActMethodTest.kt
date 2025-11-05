@@ -28,7 +28,7 @@ class SessionActMethodTest : TextToActionTestBase() {
     // Resources initialized per test
     private lateinit var driver: WebDriver
 
-    private val agent get() = session.agent
+    private val agent get() = session.companionAgent
 
     @BeforeEach
     fun setUp() {

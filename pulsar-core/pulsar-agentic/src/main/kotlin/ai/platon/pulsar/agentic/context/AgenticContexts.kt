@@ -1,9 +1,13 @@
 package ai.platon.pulsar.agentic.context
 
 import ai.platon.pulsar.agentic.AgenticSession
+import ai.platon.pulsar.agentic.context.AgenticContexts.createSession
+import ai.platon.pulsar.agentic.context.AgenticContexts.getOrCreateSession
+import ai.platon.pulsar.agentic.context.AgenticContexts.shutdown
 import ai.platon.pulsar.browser.common.DisplayMode
 import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.skeleton.PulsarSettings
+import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.AbstractApplicationContext
@@ -134,6 +138,30 @@ object AgenticContexts {
         val settings = PulsarSettings(spa, displayMode, maxBrowsers, maxOpenTabs, interactSettings)
         return getOrCreateSession(settings)
     }
+
+    @Synchronized
+    fun createAgent(settings: PulsarSettings): PerceptiveAgent = create().createSession(settings).companionAgent
+
+    @Synchronized
+    fun getOrCreateAgent(settings: PulsarSettings): PerceptiveAgent = create().getOrCreateSession(settings).companionAgent
+
+    @Synchronized
+    fun createAgent(
+        spa: Boolean? = true,
+        headless: Boolean = false,
+        maxBrowsers: Int? = null,
+        maxOpenTabs: Int? = null,
+        interactSettings: InteractSettings? = null
+    ): PerceptiveAgent = createSession(spa, headless, maxBrowsers, maxOpenTabs, interactSettings).companionAgent
+
+    @Synchronized
+    fun getOrCreateAgent(
+        spa: Boolean? = true,
+        headless: Boolean = false,
+        maxBrowsers: Int? = null,
+        maxOpenTabs: Int? = null,
+        interactSettings: InteractSettings? = null
+    ): PerceptiveAgent = getOrCreateSession(spa, headless, maxBrowsers, maxOpenTabs, interactSettings).companionAgent
 
     /**
      * Block the current thread until the context shutdown is triggered.

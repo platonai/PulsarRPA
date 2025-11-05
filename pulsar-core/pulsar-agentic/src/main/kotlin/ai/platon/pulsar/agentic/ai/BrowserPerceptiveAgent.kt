@@ -92,9 +92,8 @@ class BrowserPerceptiveAgent constructor(
     private val slogger = StructuredAgentLogger(ownerLogger, config)
     private val logger = ownerLogger
 
-    private val activeDriver get() = session.getOrCreateBoundDriver()
     private val baseDir = AppPaths.get("agent")
-    private val conf get() = (activeDriver as AbstractWebDriver).settings.config
+    private val conf get() = session.sessionConfig
 
     private val contextToAction by lazy { ContextToAction(conf) }
     private val inference by lazy { InferenceEngine(session, contextToAction.chatModel) }
@@ -121,6 +120,7 @@ class BrowserPerceptiveAgent constructor(
     private val stepExecutionTimes = ConcurrentHashMap<Int, Long>()
 
     override val uuid = UUID.randomUUID()
+    override val activeDriver get() = session.getOrCreateBoundDriver()
     override val stateHistory: List<AgentState> get() = _stateHistory
     override val processTrace: List<String> get() = _processTrace
 

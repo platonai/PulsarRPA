@@ -13,11 +13,10 @@ import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.skeleton.session.AbstractPulsarSession
 import ai.platon.pulsar.skeleton.session.PulsarSession
-import com.google.common.annotations.Beta
 
 interface AgenticSession : PulsarSession {
 
-    val agent: PerceptiveAgent
+    val companionAgent: PerceptiveAgent
 
     /**
      * Perform an action described by [action].
@@ -49,7 +48,7 @@ open class BasicAgenticSession(
     id: Long = generateNextInProcessId()
 ) : AbstractAgenticSession(context, sessionConfig, id) {
 
-    override val agent: PerceptiveAgent by lazy { BrowserPerceptiveAgent(this) }
+    override val companionAgent: PerceptiveAgent by lazy { BrowserPerceptiveAgent(this) }
 
     private val executor by lazy { InternalAgentExecutor(this) }
 
@@ -64,7 +63,7 @@ open class AbstractAgenticQLSession(
     config: SessionConfig
 ) : AbstractH2SQLSession(context, sessionDelegate, config), AgenticSession {
 
-    override val agent: PerceptiveAgent by lazy { BrowserPerceptiveAgent(this) }
+    override val companionAgent: PerceptiveAgent by lazy { BrowserPerceptiveAgent(this) }
 
     private val executor by lazy { InternalAgentExecutor(this) }
 
