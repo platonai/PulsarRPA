@@ -7,12 +7,7 @@ import ai.platon.pulsar.skeleton.ai.tta.TextToActionTestBase
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.util.server.EnableMockServerApplication
 import kotlinx.coroutines.runBlocking
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.BeforeEach
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Order
-import org.junit.jupiter.api.Tag
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.*
 import org.springframework.boot.test.context.SpringBootTest
 import kotlin.test.Ignore
 import kotlin.test.assertEquals
@@ -22,7 +17,10 @@ import kotlin.test.assertTrue
 @Tag("ExternalServiceTest")
 @Tag("TimeConsumingTest")
 @Ignore("Takes very long time, run it manually.")
-@SpringBootTest(classes = [EnableMockServerApplication::class], webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+@SpringBootTest(
+    classes = [EnableMockServerApplication::class],
+    webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
+)
 class SessionActMethodTest : TextToActionTestBase() {
 
     private val demoUrl get() = "$ttaBaseURL/act/act-demo.html"
@@ -51,7 +49,11 @@ class SessionActMethodTest : TextToActionTestBase() {
     /**
      * Utility to wait for a condition with a timeout, reduces flakiness of dynamic actions.
      */
-    private suspend fun waitUntil(timeoutMs: Long = 6000, intervalMs: Long = 200, condition: suspend () -> Boolean): Boolean {
+    private suspend fun waitUntil(
+        timeoutMs: Long = 6000,
+        intervalMs: Long = 200,
+        condition: suspend () -> Boolean
+    ): Boolean {
         val deadline = System.currentTimeMillis() + timeoutMs
         while (System.currentTimeMillis() < deadline) {
             if (condition()) return true
@@ -78,7 +80,7 @@ class SessionActMethodTest : TextToActionTestBase() {
      */
     @Test
     fun testSearchActionShowsResults() = runBlocking {
-        agent.act(ActionOptions("search for 'browser'"))
+        agent.resolve("search for 'browser'")
         val appeared = waitUntil { driver.selectFirstTextOrNull("#searchResults")?.contains("browser") == true }
         assertTrue(appeared, "Search results should appear and contain query text 'browser'")
     }
@@ -111,16 +113,29 @@ class SessionActMethodTest : TextToActionTestBase() {
     }
 
     /**
-     * Mirrors actions: click 3rd link -> navigate back -> navigate forward.
+     * Mirrors actions: click link -> navigate back -> navigate forward.
      */
     @Test
-    fun testNavigationBackAndForward() = runBlocking {
-        agent.act(ActionOptions("click the 3rd link"))
-        assertTrue(waitUntil { driver.currentUrl().endsWith("pageC.html") }, "Should reach pageC.html, actual ${driver.currentUrl()}")
-        agent.act(ActionOptions("navigate back"))
-        assertTrue(waitUntil { driver.currentUrl().endsWith("act-demo.html") }, "Should navigate back to demo page, actual ${driver.currentUrl()}")
-        agent.act(ActionOptions("navigate forward"))
-        assertTrue(waitUntil { driver.currentUrl().endsWith("pageC.html") }, "Should navigate forward again to pageC.html, actual ${driver.currentUrl()}")
+    fun testNavigationBackAndForward() {
+        runBlocking {
+            agent.act(ActionOptions("click the 5th link"))
+            assertTrue(
+                waitUntil { driver.currentUrl().endsWith("pageE.html") },
+                "Should reach pageE.html, actual ${driver.currentUrl()}"
+            )
+
+            agent.act(ActionOptions("navigate back"))
+            assertTrue(
+                waitUntil { driver.currentUrl().endsWith("act-demo.html") },
+                "Should navigate back to demo page, actual ${driver.currentUrl()}"
+            )
+
+            agent.act(ActionOptions("navigate forward"))
+            assertTrue(
+                waitUntil { driver.currentUrl().endsWith("pageE.html") },
+                "Should navigate forward to pageE.html, actual ${driver.currentUrl()}"
+            )
+        }
     }
 
     /**
@@ -132,6 +147,9 @@ class SessionActMethodTest : TextToActionTestBase() {
         agent.act(ActionOptions("extract article titles and their hrefs from the main list"))
         val history = agent.stateHistory.joinToString("\n")
         printlnPro(history)
-        assertTrue(history.contains("Show HN") || history.contains("Ask HN"), "History should contain extracted article titles")
+        assertTrue(
+            history.contains("Show HN") || history.contains("Ask HN"),
+            "History should contain extracted article titles"
+        )
     }
 }
