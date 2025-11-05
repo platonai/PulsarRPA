@@ -2,7 +2,7 @@ package ai.platon.pulsar.examples.agent
 
 import ai.platon.pulsar.agentic.context.AgenticContexts
 
-class ProblemResolver {
+class Browser4Agent {
     val agent = AgenticContexts.getOrCreateAgent()
 
     suspend fun run() {
@@ -21,4 +21,4 @@ go to https://news.ycombinator.com/news , read top 3 articles and give me a summ
     }
 }
 
-suspend fun main() = ProblemResolver().run()
+suspend fun main() = Browser4Agent().run()

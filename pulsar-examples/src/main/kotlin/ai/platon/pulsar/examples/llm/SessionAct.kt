@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples.agent
+package ai.platon.pulsar.examples.llm
 
 import ai.platon.pulsar.agentic.context.AgenticContexts
 import ai.platon.pulsar.common.Strings
