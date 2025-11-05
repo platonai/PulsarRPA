@@ -601,6 +601,14 @@ data class ScrollState constructor(
     val scrollYRatio: Double,
 ) {
     val viewportsTotal get() = ceil(totalHeight / viewport.height).roundToInt()
+
+    // Height in pixels of the page area above the current viewport. (被隐藏在视口上方的部分的高度)
+    val hiddenTopHeight get() = y.roundToInt().coerceAtLeast(0)
+    val hiddenBottomHeight get() = (totalHeight - hiddenTopHeight - viewport.height)
+        .roundToInt().coerceAtLeast(0)
+    val viewportHeight get() = viewport.height
+
+    val processingViewport get() = (hiddenTopHeight / viewportHeight) + 1
 }
 
 /**
@@ -636,4 +644,16 @@ data class BrowserUseState(
      * */
     @Deprecated("Deprecated")
     fun nextViewportToSee() = domState.microTree.nextChunkToSee(browserState.scrollState.totalHeight)
+
+    fun getInteractiveElements(): InteractiveDOMTreeNodeList {
+        // The 1-based viewport to see.
+        val scrollState = browserState.scrollState
+
+        // The 1-based viewport to see.
+        val processingViewport = scrollState.processingViewport
+        val viewportsTotal = scrollState.viewportsTotal
+
+        return domState.microTree.toInteractiveDOMTreeNodeList(
+            currentViewportIndex = processingViewport, maxViewportIndex = viewportsTotal)
+    }
 }

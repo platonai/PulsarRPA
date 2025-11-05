@@ -819,18 +819,16 @@ $newTabsJson
 
         val scrollState = browserState.scrollState
         // Height in pixels of the page area above the current viewport. (被隐藏在视口上方的部分的高度)
-        val hiddenTopHeight = scrollState.y.roundToInt().coerceAtLeast(0)
-        val hiddenBottomHeight = (scrollState.totalHeight - hiddenTopHeight - scrollState.viewport.height)
-            .roundToInt().coerceAtLeast(0)
-        val viewportHeight = scrollState.viewport.height
+        val hiddenTopHeight = scrollState.hiddenTopHeight
+        val hiddenBottomHeight = scrollState.hiddenBottomHeight
+        val viewportHeight = scrollState.viewportHeight
         val domState = params.browserUseState.domState
 
         // The 1-based viewport to see.
-        val processingViewport = (hiddenTopHeight / viewportHeight) + 1
-        val viewportsTotal = params.browserUseState.browserState.scrollState.viewportsTotal
+        val processingViewport = scrollState.processingViewport
+        val viewportsTotal = scrollState.viewportsTotal
 
-        val interactiveElements = domState.microTree.toInteractiveDOMTreeNodeList(
-            currentViewportIndex = processingViewport, maxViewportIndex = viewportsTotal)
+        val interactiveElements = params.browserUseState.getInteractiveElements()
 
         val startY = (hiddenTopHeight - viewportHeight * 0.5).coerceAtLeast(0.0)
         val endY = (hiddenTopHeight + viewportHeight + viewportHeight * 0.5).coerceAtLeast(0.0)

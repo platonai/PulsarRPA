@@ -51,4 +51,9 @@ interface DomService {
      * Compute a rich client profile from the active browser context.
      */
     suspend fun computeFullClientInfo(): FullClientInfo
+
+    suspend fun addHighlights(elements: InteractiveDOMTreeNodeList)
+
+    suspend fun removeHighlights(elements: InteractiveDOMTreeNodeList)
+
 }

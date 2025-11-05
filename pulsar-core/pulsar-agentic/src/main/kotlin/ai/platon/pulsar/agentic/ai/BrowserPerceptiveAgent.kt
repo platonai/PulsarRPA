@@ -44,6 +44,7 @@ import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
 import kotlin.math.pow
+import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
@@ -862,6 +863,9 @@ class BrowserPerceptiveAgent constructor(
                     performMemoryCleanup(stepContext)
                 }
 
+                val interactiveElements = browserUseState.getInteractiveElements()
+                domService.addHighlights(interactiveElements)
+
                 // Optional screenshot
                 val screenshotB64 = if (step % config.screenshotEveryNSteps == 0) {
                     captureScreenshotWithRetry(stepContext)
@@ -916,6 +920,8 @@ class BrowserPerceptiveAgent constructor(
                 //**
                 // Execute Tool Call
                 //**
+
+                domService.removeHighlights(interactiveElements)
 
                 // Execute the tool call with enhanced error handling
                 val exec = executeToolCall(stepAction, step, stepContext)
