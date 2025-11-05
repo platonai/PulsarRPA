@@ -9,6 +9,22 @@ import ai.platon.pulsar.skeleton.context.support.StaticPulsarContext
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.AbstractApplicationContext
 
+/**
+ * Manage creation and lifecycle of Pulsar contexts and sessions.
+ *
+ * A Pulsar session provides:
+ * - Full-featured WebDriver
+ * - Capture of live web pages into a local `WebPage`
+ * - Parsing a `WebPage` into a lightweight `Document`
+ * - A full crawler (fetching, parsing, scheduling, priorities, crawl pool)
+ * - Basic LLM support for interacting with pages or documents
+ *
+ * Additional context types:
+ * - SQLContexts: enable X-SQL for advanced web page modeling
+ * - AgenticContexts: enable agentic/browser-based agents (AgenticSession)
+ *
+ * This object coordinates the active context, shutdown hooks and session creation.
+ */
 object PulsarContexts {
     private val logger = getLogger(this)
 

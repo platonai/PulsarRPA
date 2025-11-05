@@ -8,6 +8,20 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.AbstractApplicationContext
 
+/**
+ * Manage creation and lifecycle of Pulsar agentic contexts and sessions.
+ *
+ * An agentic session provides:
+ * - agentic/browser-based agents
+ * - Full-featured WebDriver
+ * - Capture of live web pages into a local `WebPage`
+ * - Parsing a `WebPage` into a lightweight `Document`
+ * - A full crawler (fetching, parsing, scheduling, priorities, crawl pool)
+ * - Basic LLM support for interacting with pages or documents
+ * - X-SQL for advanced web page modeling
+ *
+ * This object coordinates the active context, shutdown hooks and session creation.
+ */
 object AgenticContexts {
     @Synchronized
     fun create(): AgenticContext = (PulsarContexts.activeContext as? AgenticContext)
