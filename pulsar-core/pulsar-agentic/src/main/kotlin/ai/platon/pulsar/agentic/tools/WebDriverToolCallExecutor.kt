@@ -50,6 +50,7 @@ class WebDriverToolCallExecutor {
         val arg1 = args["1"]?.toString()
         val arg2 = args["2"]?.toString()
         val arg3 = args["3"]?.toString()
+
         return when (functionName) {
             "open" -> {
                 // Navigate to URL and wait for page to load

@@ -68,60 +68,32 @@ open class ToolCallExecutor {
         }
     }
 
-    /**
-     * Executes a WebDriver command provided as a string expression.
-     *
-     * Parses the command string to extract the function name and arguments, then invokes
-     * the corresponding WebDriver method. For example, the string "driver.open('https://example.com')"
-     * would be parsed and the driver.open() method would be called with the URL argument.
-     *
-     * @param expression The expression(e.g., "driver.method(arg1, arg2)").
-     * @param driver The WebDriver instance to execute the command on.
-     * @return The result of the command execution, or null if the command could not be executed.
-     */
-    suspend fun execute(expression: String, driver: WebDriver): Any? {
-        return WebDriverToolCallExecutor().execute(expression, driver)
-    }
-
-    suspend fun execute(expression: String, browser: Browser): Any? {
-        return BrowserToolCallExecutor().execute(expression, browser)
-    }
-
     suspend fun execute(expression: String, browser: Browser, session: AgenticSession): Any? {
         return BrowserToolCallExecutor().execute(expression, browser, session)
     }
 
-    suspend fun execute(expression: String, fs: FileSystem): Any? {
-        return FileSystemToolCallExecutor().execute(expression, fs)
-    }
-
-    suspend fun execute(toolCall: ToolCall, driver: WebDriver): Any? {
-        require(toolCall.domain == "driver") { "Tool call domain should be `driver`" }
-        val expression = toolCallToExpression(toolCall)
-            ?: throw IllegalArgumentException("Failed to convert to expression: $toolCall")
-
-        return try {
-            execute(expression, driver)
-        } catch (e: Exception) {
-            logger.warn("Error executing TOOL CALL: {} - {}", toolCall, e.brief())
-            null
-        }
-    }
-
-    suspend fun execute(toolCall: ToolCall, browser: Browser): Any? {
-        require(toolCall.domain == "browser") { "Tool call domain should be `browser`" }
+    suspend fun execute(toolCall: ToolCall, target: Any): Any? {
         val expression = toolCallToExpression(toolCall) ?: return null
 
         return try {
-            execute(expression, browser)
+            execute(expression, target)
         } catch (e: Exception) {
             logger.warn("Error executing TOOL CALL: {} - {}", toolCall, e.brief())
             null
         }
     }
 
-    suspend fun execute(toolCall: ToolCall, agent: PerceptiveAgent): Any? {
-        TODO("execute `toolCall` in browser domain")
+    suspend fun execute(expression: String, target: Any): Any? {
+        return when (target) {
+            is PerceptiveAgent -> AgentToolCallExecutor().execute(expression, target)
+            is FileSystem -> FileSystemToolCallExecutor().execute(expression, target)
+            is Browser -> BrowserToolCallExecutor().execute(expression, target)
+            is WebDriver -> WebDriverToolCallExecutor().execute(expression, target)
+            else -> {
+                logger.warn("Error executing expression: {}", expression)
+                null
+            }
+        }
     }
 
     companion object {
@@ -138,12 +110,16 @@ open class ToolCallExecutor {
         internal fun String.esc(): String = this
             .replace("\\", "\\\\")
             .replace("\"", "\\\"")
+
         internal fun String.norm() = Strings.doubleQuote(this.esc())
 
         fun toolCallToExpression(tc: ToolCall): String? {
             return when (tc.domain) {
                 "driver" -> WebDriverToolCallExecutor.toolCallToExpression(tc)
                 "browser" -> BrowserToolCallExecutor.toolCallToExpression(tc)
+                "fs" -> FileSystemToolCallExecutor.toolCallToExpression(tc)
+                // Fix: route agent domain to AgentToolCallExecutor
+                "agent" -> AgentToolCallExecutor.toolCallToExpression(tc)
                 else -> null
             }
         }

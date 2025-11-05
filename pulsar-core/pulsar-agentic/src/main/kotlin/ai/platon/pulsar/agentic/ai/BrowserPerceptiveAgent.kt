@@ -4,6 +4,7 @@ import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.ai.agent.*
 import ai.platon.pulsar.agentic.ai.agent.detail.*
 import ai.platon.pulsar.agentic.ai.tta.*
+import ai.platon.pulsar.agentic.common.FileSystem
 import ai.platon.pulsar.agentic.tools.ActionValidator
 import ai.platon.pulsar.agentic.tools.AgentTool
 import ai.platon.pulsar.agentic.tools.ToolCallExecutor
@@ -97,6 +98,7 @@ class BrowserPerceptiveAgent constructor(
 
     // Reuse ToolCallExecutor to avoid recreation overhead (Medium Priority #14)
     private val toolCallExecutor = ToolCallExecutor()
+    private val fs: FileSystem
 
     // Helper classes for better code organization
     private val pageStateTracker = PageStateTracker(session, config)
@@ -119,6 +121,11 @@ class BrowserPerceptiveAgent constructor(
     override val uuid = UUID.randomUUID()
     override val stateHistory: List<AgentState> get() = _stateHistory
     override val processTrace: List<String> get() = _processTrace
+
+    init {
+        val baseDir = AppPaths.getTmpDirectory("agent").resolve(uuid.toString())
+        fs = FileSystem(baseDir)
+    }
 
     constructor(
         driver: WebDriver, session: AgenticSession, maxSteps: Int = 100,
@@ -204,12 +211,12 @@ class BrowserPerceptiveAgent constructor(
 
             logger.info(
                 "✅ Action executed | {} | {}/{} | {}",
-                method, observe.locator, oe.cssSelector, oe.cssFriendlyExpressions
+                method, observe.locator, oe.cssSelector, oe.cssFriendlyExpression
             )
 
             val msg = MessageFormatter.arrayFormat(
                 "✅ Action executed | {} | {}/{} | {}",
-                arrayOf(method, observe.locator, oe.cssSelector, oe.cssFriendlyExpressions)
+                arrayOf(method, observe.locator, oe.cssSelector, oe.cssFriendlyExpression)
             )
 
             // Record exactly once for this executed action
@@ -380,6 +387,8 @@ class BrowserPerceptiveAgent constructor(
         val callResult = when (toolCall.domain) {
             "driver" -> toolCallExecutor.execute(toolCall, driver)
             "browser" -> toolCallExecutor.execute(toolCall, driver.browser)
+            "fs" -> toolCallExecutor.execute(toolCall, fs)
+            "agent" -> toolCallExecutor.execute(toolCall, this)
             else -> throw IllegalArgumentException("❓ Unsupported domain: ${toolCall.domain} | $toolCall")
         }
 

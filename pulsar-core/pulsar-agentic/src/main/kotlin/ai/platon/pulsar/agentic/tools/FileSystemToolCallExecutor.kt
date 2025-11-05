@@ -2,53 +2,33 @@ package ai.platon.pulsar.agentic.tools
 
 import ai.platon.pulsar.agentic.common.FileSystem
 import ai.platon.pulsar.agentic.tools.ToolCallExecutor.Companion.norm
-import ai.platon.pulsar.agentic.common.SimpleKotlinParser
-import ai.platon.pulsar.common.brief
-import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.ToolCall
 
-class FileSystemToolCallExecutor {
-    private val logger = getLogger(this)
-
-    suspend fun execute(expression: String, fs: FileSystem): Any? {
-        return try {
-            val r = execute0(expression, fs)
-            when (r) {
-                is Unit -> null
-                else -> r
-            }
-        } catch (e: Exception) {
-            logger.warn("Error executing expression: {} - {}", expression, e.brief())
-            null
-        }
-    }
-
-    private suspend fun execute0(expression: String, fs: FileSystem): Any? {
-        // Extract function name and arguments from the expression string
-        val (objectName, functionName, args) = SimpleKotlinParser().parseFunctionExpression(expression) ?: return null
-
-        return doExecute(objectName, functionName, args, fs)
-    }
-
+class FileSystemToolCallExecutor : AbstractToolCallExecutor() {
     /**
      * Extract function name and arguments from the expression string
      * */
     @Suppress("UNUSED_PARAMETER")
-    private suspend fun doExecute(
-        objectName: String, functionName: String, args: Map<String, Any?>, fs: FileSystem
+    override suspend fun doExecute(
+        objectName: String, functionName: String, args: Map<String, Any?>, target: Any
     ): Any? {
         require(objectName == "browser") { "Object must be a Browser" }
         require(functionName.isNotBlank()) { "Function name must not be blank" }
+        require(target is FileSystem) { "Target must be a FileSystem" }
 
+        val arg0 = args["0"]?.toString()
+        val arg1 = args["1"]?.toString()
+        val arg2 = args["2"]?.toString()
+        val arg3 = args["3"]?.toString()
         // Handle browser-level expressions
         when (functionName) {
-//            "write" -> {
+//            "writeString" -> {
 //                fs.writeString()
 //            }
-//            "read" -> {
+//            "readString" -> {
 //                fs.readString()
 //            }
-//            "replace" -> {
+//            "replaceContent" -> {
 //                fs.replaceContent()
 //            }
         }
@@ -64,7 +44,9 @@ class FileSystemToolCallExecutor {
             val arguments = tc.arguments
             return when (tc.method) {
                 // Filesystem-level operations
-                "write" -> arguments["tabId"]?.let { "fs.write(${it.norm()})" }
+                "writeString" -> arguments["todo"]?.let { "fs.writeString(${it.norm()})" }
+                "readString" -> arguments["todo"]?.let { "fs.readString(${it.norm()})" }
+                "replaceContent" -> arguments["todo"]?.let { "fs.replaceContent(${it.norm()})" }
                 else -> null
             }
         }
