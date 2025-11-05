@@ -116,11 +116,11 @@ class SessionActMethodTest : TextToActionTestBase() {
     @Test
     fun testNavigationBackAndForward() = runBlocking {
         agent.act(ActionOptions("click the 3rd link"))
-        assertTrue(waitUntil { driver.currentUrl().endsWith("pageC.html") }, "Should reach pageC.html")
+        assertTrue(waitUntil { driver.currentUrl().endsWith("pageC.html") }, "Should reach pageC.html, actual ${driver.currentUrl()}")
         agent.act(ActionOptions("navigate back"))
-        assertTrue(waitUntil { driver.currentUrl().endsWith("act-demo.html") }, "Should navigate back to demo page")
+        assertTrue(waitUntil { driver.currentUrl().endsWith("act-demo.html") }, "Should navigate back to demo page, actual ${driver.currentUrl()}")
         agent.act(ActionOptions("navigate forward"))
-        assertTrue(waitUntil { driver.currentUrl().endsWith("pageC.html") }, "Should navigate forward again to pageC.html")
+        assertTrue(waitUntil { driver.currentUrl().endsWith("pageC.html") }, "Should navigate forward again to pageC.html, actual ${driver.currentUrl()}")
     }
 
     /**

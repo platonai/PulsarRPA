@@ -70,7 +70,7 @@ class PromptBuilder() {
             return if (isZH) {
                 """
 ## Schema 要求
-你必须返回一个与以下模式匹配的有效 JSON 对象：
+你必须返回一个与以下模式匹配的有效 JSON 对象，`method` 字段不得为空：
 $schema
 
 ---
@@ -340,7 +340,7 @@ $A11Y_TREE_NOTE_CONTENT
 - 输出严格使用下面两种 JSON 格式之一
 - 仅输出 JSON 内容，无多余文字
 
-1. 动作输出格式，最多一个元素(<output_act>)：
+1. 动作输出格式，最多一个元素，method 字段不得为空(<output_act>)：
 ${buildObserveResultSchema(true)}
 
 2. 任务完成输出格式(<output_done>)：
@@ -359,7 +359,7 @@ ${buildObserveResultSchema(true)}
 你正在通过根据用户希望观察的页面内容来查找元素
 否则返回空数组。
 
-## 支持的工具列表
+## 工具列表
 ---
 
 ## 无障碍树
@@ -918,7 +918,7 @@ $schemaContract
         // Base instruction
         val toolSpecs = if (isZH) {
             """
-## 支持的工具列表
+## 工具列表
 
 ```kotlin
 ${toolCalls.joinToString("\n")}
