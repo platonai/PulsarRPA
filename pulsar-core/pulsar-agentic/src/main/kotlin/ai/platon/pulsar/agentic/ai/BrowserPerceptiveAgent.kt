@@ -6,11 +6,7 @@ import ai.platon.pulsar.agentic.ai.agent.detail.*
 import ai.platon.pulsar.agentic.ai.tools.ActionValidator
 import ai.platon.pulsar.agentic.ai.tools.AgentTool
 import ai.platon.pulsar.agentic.ai.tools.ToolCallExecutor
-import ai.platon.pulsar.agentic.ai.tta.ActionDescription
-import ai.platon.pulsar.agentic.ai.tta.ActionExecuteResult
-import ai.platon.pulsar.agentic.ai.tta.ContextToAction
-import ai.platon.pulsar.agentic.ai.tta.ContextToActionParams
-import ai.platon.pulsar.agentic.ai.tta.ToolCallResults
+import ai.platon.pulsar.agentic.ai.tta.*
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
@@ -26,7 +22,6 @@ import ai.platon.pulsar.external.ChatModelException
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.*
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import kotlinx.coroutines.TimeoutCancellationException
@@ -119,8 +114,9 @@ class BrowserPerceptiveAgent constructor(
     private val consecutiveFailureCounter = AtomicInteger(0)
     private val stepExecutionTimes = ConcurrentHashMap<Int, Long>()
 
+    private val activeDriver get() = session.getOrCreateBoundDriver()
+
     override val uuid = UUID.randomUUID()
-    override val activeDriver get() = session.getOrCreateBoundDriver()
     override val stateHistory: List<AgentState> get() = _stateHistory
     override val processTrace: List<String> get() = _processTrace
 
@@ -206,12 +202,15 @@ class BrowserPerceptiveAgent constructor(
 
             val toolCallResults = doToolCallExecute(toolCall, action)
 
-            logger.info("✅ Action executed | {} | {}/{} | {}",
-                method, observe.locator, oe.cssSelector, oe.cssFriendlyExpressions)
+            logger.info(
+                "✅ Action executed | {} | {}/{} | {}",
+                method, observe.locator, oe.cssSelector, oe.cssFriendlyExpressions
+            )
 
             val msg = MessageFormatter.arrayFormat(
                 "✅ Action executed | {} | {}/{} | {}",
-                arrayOf(method, observe.locator, oe.cssSelector, oe.cssFriendlyExpressions))
+                arrayOf(method, observe.locator, oe.cssSelector, oe.cssFriendlyExpressions)
+            )
 
             // Record exactly once for this executed action
             updateAgentState(agentState, true, toolCall, toolCallResults, oe, message = msg.message)
@@ -990,7 +989,10 @@ class BrowserPerceptiveAgent constructor(
         return messages
     }
 
-    private suspend fun generateStepAction(params: ContextToActionParams, context: ExecutionContext): ActionDescription? {
+    private suspend fun generateStepAction(
+        params: ContextToActionParams,
+        context: ExecutionContext
+    ): ActionDescription? {
         return try {
             contextToAction.generate(params)
         } catch (e: Exception) {
@@ -1137,8 +1139,10 @@ class BrowserPerceptiveAgent constructor(
         logger.info("🕒 noop sid={} step={} consecutive={}", context.sessionId.take(8), step, consecutiveNoOps)
 
         if (consecutiveNoOps >= config.consecutiveNoOpLimit) {
-            logger.info("⛔ noop.stop sid={} step={} limit={}",
-                context.sessionId.take(8), step, config.consecutiveNoOpLimit)
+            logger.info(
+                "⛔ noop.stop sid={} step={} limit={}",
+                context.sessionId.take(8), step, config.consecutiveNoOpLimit
+            )
             return true
         }
 
