@@ -14,12 +14,9 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
 import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.Pson
-import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.external.ChatModelException
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
@@ -35,6 +32,7 @@ import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.nio.file.Files
+import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
 import java.time.LocalDateTime
@@ -44,7 +42,6 @@ import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
 import kotlin.math.pow
-import kotlin.math.roundToInt
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
@@ -81,7 +78,7 @@ data class AgentConfig(
     val resolveTimeoutMs: Long = 24.hours.inWholeMilliseconds,
     // --- todolist.md integration flags ---
     val enableTodoWrites: Boolean = true,
-    val todoPlanWithLLM: Boolean = false,
+    val todoPlanWithLLM: Boolean = true,
     val todoWriteProgressEveryStep: Boolean = true,
     val todoProgressWriteEveryNSteps: Int = 1,
     val todoMaxProgressLines: Int = 200,
@@ -98,7 +95,8 @@ class BrowserPerceptiveAgent constructor(
     private val slogger = StructuredAgentLogger(ownerLogger, config)
     private val logger = ownerLogger
 
-    private val baseDir = AppPaths.get("agent")
+    private val startTime = Instant.now()
+    private val baseDir: Path
     private val conf get() = session.sessionConfig
 
     private val contextToAction by lazy { ContextToAction(conf) }
@@ -134,7 +132,12 @@ class BrowserPerceptiveAgent constructor(
     override val processTrace: List<String> get() = _processTrace
 
     init {
-        val baseDir = AppPaths.getTmpDirectory("agent").resolve(uuid.toString())
+        baseDir = AppPaths.get("agent")
+            .resolve(DateTimes.PATH_SAFE_FORMAT_101.format(startTime))
+            .resolve(uuid.toString())
+
+        Files.createDirectories(baseDir)
+
         fs = FileSystem(baseDir)
         todo = ToDoManager(fs, config, uuid, slogger)
     }

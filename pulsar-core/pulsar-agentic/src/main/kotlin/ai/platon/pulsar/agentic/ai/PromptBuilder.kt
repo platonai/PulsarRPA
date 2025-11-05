@@ -247,6 +247,17 @@ $A11Y_TREE_NOTE_CONTENT
 
 ---
 
+## 文件系统
+
+- 你可以访问一个持久化的文件系统，用于跟踪进度、存储结果和管理长期任务。
+- 文件系统已初始化一个 `todolist.md`：用于保存已知子任务的核对清单。每当你完成一项时，优先使用 `fs.replaceContent` 工具更新 `todolist.md` 中的标记。对于长期任务，这个文件应指导你的逐步执行。
+- 如果你要写入 CSV 文件，请注意当单元格内容包含逗号时使用双引号。
+- 如果文件过大，你只会得到预览；必要时使用 `fs.readString` 查看完整内容。
+- 如果任务非常长，请初始化一个 `results.md` 文件来汇总结果。
+- 如果任务少于 10 步，请不要使用文件系统！
+
+---
+
 ## 数据提取
 
 - 上一步操作的数据提取结果，如 `textContent`
@@ -299,6 +310,9 @@ $A11Y_TREE_NOTE_CONTENT
 - 分析 <agent_history> 中最近的 `nextGoal` 与 `evaluationPreviousGoal`，并明确说明你之前尝试达成的目标。
 - 分析所有相关的 <agent_history>、<browser_state> 和截图以了解当前状态。
 - 明确判断上一步动作的成功/失败/不确定性。不要仅仅因为上一步在 <agent_history> 中显示已执行就认为成功。例如，你可能记录了 “动作 1/1：在元素 3 中输入 '2025-05-05'”，但输入实际上可能失败。始终使用 <browser_vision>（截图）作为主要事实依据；如果截图不可用，则备选使用 <browser_state>。若预期变化缺失，请将上一步标记为失败（或不确定），并制定恢复计划。
+- 如果 `todo.md` 为空且任务是多步的，使用文件工具在 `todo.md` 中生成分步计划。
+- 分析 `todo.md` 以指导并追踪进展。
+- 如果有任何 `todo.md` 项已完成，请在文件中将其标记为完成。
 - 分析你是否陷入了重复无进展的状态；若是，考虑替代方法，例如滚动以获取更多上下文、使用发送键（`press`）直接模拟按键，或换用不同页面。
 - 决定应存储在记忆中的简明、可操作的上下文以供后续推理使用。
 - 在准备结束时，按<output_done>格式输出。
@@ -344,7 +358,7 @@ $A11Y_TREE_NOTE_CONTENT
 1. 动作输出格式，最多一个元素，method 字段不得为空(<output_act>)：
 ${buildObserveResultSchema(true)}
 
-2. 任务完成输出格式(<output_done>)：
+2. 任务完成输出格式(<output_done>):
 {"taskComplete":bool,"success":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]}
 
 ## 安全要求：
@@ -510,10 +524,9 @@ Print null or an empty string if no new information is found.
 
         val msg = """
 ## 智能体历史
-
 <agent_history>
+
 $his
-</agent_history>
 
 ---
 
@@ -537,7 +550,7 @@ $his
 
     fun buildBrowserVisionInfo(): String {
         val visionInfo = """
-## 视觉信息
+## 视觉信息<browser_vision>
 
 - 在推理中利用图像来评估你的进展。
 - 当不确定或想获取更多信息时使用截图。
@@ -841,8 +854,8 @@ $newTabsJson
 ## 浏览器状态
 
 <browser_state>
+
 ${browserState.lazyJson}
-</browser_state>
 
 $newTabsMessage
 
