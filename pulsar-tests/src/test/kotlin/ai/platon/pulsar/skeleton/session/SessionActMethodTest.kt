@@ -30,6 +30,8 @@ class SessionActMethodTest : TextToActionTestBase() {
     // Resources initialized per test
     private lateinit var driver: WebDriver
 
+    private val agent get() = session.agent
+
     @BeforeEach
     fun setUp() {
         PulsarSettings.withSPA()
@@ -76,7 +78,7 @@ class SessionActMethodTest : TextToActionTestBase() {
      */
     @Test
     fun testSearchActionShowsResults() = runBlocking {
-        session.act(ActionOptions("search for 'browser'"))
+        agent.act(ActionOptions("search for 'browser'"))
         val appeared = waitUntil { driver.selectFirstTextOrNull("#searchResults")?.contains("browser") == true }
         assertTrue(appeared, "Search results should appear and contain query text 'browser'")
     }
@@ -86,7 +88,7 @@ class SessionActMethodTest : TextToActionTestBase() {
      */
     @Test
     fun testClickThirdLinkNavigatesToPageC() = runBlocking {
-        session.act(ActionOptions("click the 3rd link"))
+        agent.act(ActionOptions("click the 3rd link"))
         val remainingTime = driver.waitUntil { driver.currentUrl().endsWith("pageC.html") }
         // val navigated = waitUntil { driver.currentUrl().endsWith("pageC.html") }
         assertTrue(remainingTime.seconds > 0, "Should navigate to pageC.html after clicking 3rd link")
@@ -100,7 +102,7 @@ class SessionActMethodTest : TextToActionTestBase() {
      */
     @Test
     fun testClickShowHNLikeLink() = runBlocking {
-        session.act(ActionOptions("click the first link that contains 'Show HN' or 'Ask HN'"))
+        agent.act(ActionOptions("click the first link that contains 'Show HN' or 'Ask HN'"))
         val navigated = waitUntil { driver.currentUrl().endsWith("page2.html") }
         assertTrue(navigated, "Should navigate to page2.html (Show HN: Demo Project)")
         val page = session.capture(driver)
@@ -113,11 +115,11 @@ class SessionActMethodTest : TextToActionTestBase() {
      */
     @Test
     fun testNavigationBackAndForward() = runBlocking {
-        session.act(ActionOptions("click the 3rd link"))
+        agent.act(ActionOptions("click the 3rd link"))
         assertTrue(waitUntil { driver.currentUrl().endsWith("pageC.html") }, "Should reach pageC.html")
-        session.act(ActionOptions("navigate back"))
+        agent.act(ActionOptions("navigate back"))
         assertTrue(waitUntil { driver.currentUrl().endsWith("act-demo.html") }, "Should navigate back to demo page")
-        session.act(ActionOptions("navigate forward"))
+        agent.act(ActionOptions("navigate forward"))
         assertTrue(waitUntil { driver.currentUrl().endsWith("pageC.html") }, "Should navigate forward again to pageC.html")
     }
 
@@ -127,10 +129,9 @@ class SessionActMethodTest : TextToActionTestBase() {
      */
     @Test
     fun testExtractArticleTitles() = runBlocking {
-        val agent = session.act(ActionOptions("extract article titles and their hrefs from the main list"))
+        agent.act(ActionOptions("extract article titles and their hrefs from the main list"))
         val history = agent.stateHistory.joinToString("\n")
         printlnPro(history)
         assertTrue(history.contains("Show HN") || history.contains("Ask HN"), "History should contain extracted article titles")
     }
 }
-

@@ -12,7 +12,10 @@ class SessionAct {
     private val logger = getLogger(this)
 
     private var stepNo = 0
-    private fun step(label: String) { logger.info("[STEP ${++stepNo}] $label") }
+    private fun step(label: String) {
+        logger.info("[STEP ${++stepNo}] $label")
+    }
+
     private fun result(label: String, value: Any?) {
         val text = if (value is PerceptiveAgent) {
             value.processTrace.joinToString("\n") { Strings.compactLog(it, 200) }
@@ -34,6 +37,7 @@ class SessionAct {
         session.registerClosable(starter)
 
         val driver = session.getOrCreateBoundDriver()
+        val agent = session.agent
 
         step("Open URL: $url")
         var page = session.open(url)
@@ -44,7 +48,7 @@ class SessionAct {
         // Basic action examples (natural language instructions) - now operate on local mock page
         step("Action: search for 'browser'")
         var actOptions = ActionOptions("search for 'browser'")
-        var agent = session.act(actOptions)
+        agent.act(actOptions)
         result("action result", agent)
 
         var text = driver.selectFirstPropertyValueOrNull("#searchBox", "value")

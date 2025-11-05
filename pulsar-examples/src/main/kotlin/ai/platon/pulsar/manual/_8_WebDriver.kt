@@ -2,7 +2,6 @@ package ai.platon.pulsar.manual
 
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.context.AgenticContexts
-import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.test.TestResourceUtil
@@ -102,7 +101,7 @@ internal class WebDriverDemo(private val session: AgenticSession = AgenticContex
         println("Using plain language, tell the browser to click $selector ...")
         // Only works when LLM is configured
         session.bindDriver(driver)
-        session.act("scroll to middle")
+        session.plainActs("scroll to middle")
     }
 }
 

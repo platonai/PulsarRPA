@@ -7,13 +7,11 @@ import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warnUnexpected
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.ql.context.H2SQLContext
 import ai.platon.pulsar.rest.api.entities.*
 import ai.platon.pulsar.rest.api.service.CommandService
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.skeleton.session.PulsarSession
 import kotlinx.coroutines.runBlocking
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -141,7 +139,7 @@ class SinglePageApplicationController(
         val driver = activeDriver
 
         return try {
-            val result = session.act(request.act)
+            val result = session.agent.act(request.act)
 
             val status = CommandStatus(
                 "",

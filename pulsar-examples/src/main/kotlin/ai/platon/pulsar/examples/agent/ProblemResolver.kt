@@ -15,9 +15,9 @@ go to https://news.ycombinator.com/news , read top 3 articles and give me a summ
         """.split("\n").map { it.trim() }.filter { it.length > 10 }
 
         val problem = problems[0]
-        val agent = session.resolve(problem)
+        session.agent.resolve(problem)
 
-        agent.processTrace.forEach { println(it) }
+        session.agent.processTrace.forEach { println(it) }
     }
 }
 

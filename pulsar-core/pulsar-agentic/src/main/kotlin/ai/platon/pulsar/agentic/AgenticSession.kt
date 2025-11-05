@@ -1,55 +1,23 @@
 package ai.platon.pulsar.agentic
 
+import ai.platon.pulsar.agentic.ai.BrowserPerceptiveAgent
 import ai.platon.pulsar.agentic.ai.InternalAgentExecutor
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.ToolCallResult
-import ai.platon.pulsar.agentic.ai.tta.ToolCallResults
 import ai.platon.pulsar.agentic.context.AbstractAgenticContext
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.ql.SessionConfig
 import ai.platon.pulsar.ql.h2.AbstractH2SQLSession
 import ai.platon.pulsar.ql.h2.H2SessionDelegate
-import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.skeleton.session.AbstractPulsarSession
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import com.google.common.annotations.Beta
 
-interface AgenticSession: PulsarSession {
+interface AgenticSession : PulsarSession {
 
-    /**
-     * Executes an action described by the given string.
-     * An agent will be created to analyze the action and generate a step-by-step plan to perform it.
-     * Each step in the plan uses at most one tool.
-     *
-     * @param problem A string describing the problem to be resolved.
-     * @return A [ai.platon.pulsar.skeleton.ai.PerceptiveAgent] instance that executes the action.
-     * @throws Exception if the action cannot be performed or if an error occurs during execution.
-     */
-    suspend fun resolve(problem: String): PerceptiveAgent
-
-    /**
-     * Executes an action described by the given string.
-     * An agent will be created to analyze the action and generate a step-by-step plan to perform it.
-     * Each step in the plan uses at most one tool.
-     *
-     * @param action A string describing the action to be performed.
-     * @return A [ai.platon.pulsar.skeleton.ai.PerceptiveAgent] instance that executes the action.
-     * @throws Exception if the action cannot be performed or if an error occurs during execution.
-     */
-    suspend fun act(action: String): PerceptiveAgent
-
-    /**
-     * Executes an action described by the given [ai.platon.pulsar.skeleton.ai.ActionOptions].
-     * An agent will be created to analyze the action and generate a step-by-step plan to perform it.
-     * Each step in the plan uses at most one tool.
-     *
-     * @param action An [ai.platon.pulsar.skeleton.ai.ActionOptions] object describing the action to be performed.
-     * @return A [ai.platon.pulsar.skeleton.ai.PerceptiveAgent] instance that executes the action.
-     * @throws Exception if the action cannot be performed or if an error occurs during execution.
-     */
-    suspend fun act(action: ActionOptions): PerceptiveAgent
+    val agent: PerceptiveAgent
 
     /**
      * Perform an action described by [action].
@@ -76,7 +44,7 @@ abstract class AbstractAgenticSession(
     context: AbstractPulsarContext,
     sessionConfig: VolatileConfig,
     id: Long = generateNextInProcessId()
-): AbstractPulsarSession(context, sessionConfig, id = id), AgenticSession
+) : AbstractPulsarSession(context, sessionConfig, id = id), AgenticSession
 
 open class BasicAgenticSession(
     context: AbstractAgenticContext,
@@ -84,21 +52,9 @@ open class BasicAgenticSession(
     id: Long = generateNextInProcessId()
 ) : AbstractAgenticSession(context, sessionConfig, id) {
 
+    override val agent: PerceptiveAgent by lazy { BrowserPerceptiveAgent(this) }
+
     private val executor by lazy { InternalAgentExecutor(this) }
-
-    override suspend fun resolve(problem: String): PerceptiveAgent {
-        executor.resolve(problem)
-        return executor.agent
-    }
-
-    override suspend fun act(action: String): PerceptiveAgent {
-        return act(ActionOptions(action = action))
-    }
-
-    override suspend fun act(action: ActionOptions): PerceptiveAgent {
-        executor.act(action)
-        return executor.agent
-    }
 
     override suspend fun performAct(action: ActionDescription) = executor.performAct(action)
 
@@ -113,21 +69,9 @@ open class AbstractAgenticQLSession(
     config: SessionConfig
 ) : AbstractH2SQLSession(context, sessionDelegate, config), AgenticSession {
 
+    override val agent: PerceptiveAgent by lazy { BrowserPerceptiveAgent(this) }
+
     private val executor by lazy { InternalAgentExecutor(this) }
-
-    override suspend fun resolve(problem: String): PerceptiveAgent {
-        executor.resolve(problem)
-        return executor.agent
-    }
-
-    override suspend fun act(action: String): PerceptiveAgent {
-        return act(ActionOptions(action = action))
-    }
-
-    override suspend fun act(action: ActionOptions): PerceptiveAgent {
-        executor.act(action)
-        return executor.agent
-    }
 
     override suspend fun performAct(action: ActionDescription) = executor.performAct(action)
 
