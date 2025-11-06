@@ -88,7 +88,7 @@ open class TextToAction(
                     arguments = arguments?.toMutableMap() ?: mutableMapOf(),
                 ),
 
-                modelResponse = response,
+                modelResponse = response.content,
             )
 
             return ActionDescription(observeElement = observeElement, modelResponse = response)
@@ -197,15 +197,16 @@ open class TextToAction(
         var toolCall = observeElement.toolCall ?: return action
 
         // 1. revised tool call
-        val domain = toolCall.domain
-        val method = toolCall.method
-        val revised = TOOL_ALIASES["$domain.$method"]
+        val revised = TOOL_ALIASES["${toolCall.domain}.${toolCall.method}"]
         if (revised != null) {
             val (domain2, method2) = revised.split(".")
             toolCall = toolCall.copy(domain = domain2, method = method2)
         }
 
         // 2. revise selector
+        val domain = toolCall.domain
+        val method = toolCall.method
+
         val locator = observeElement.locator
         val arguments = toolCall.arguments
 

@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
+import ai.platon.pulsar.skeleton.ai.TcEvaluation
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -46,52 +47,58 @@ open class ToolCallExecutor {
      * eval("""driver.click("#submit")""", driver)
      * ```
      * */
-    fun eval(expression: String, driver: WebDriver): Any? {
+    fun eval(expression: String, driver: WebDriver): TcEvaluation {
         return eval(expression, mapOf("driver" to driver))
     }
 
-    fun eval(expression: String, browser: Browser): Any? {
+    fun eval(expression: String, browser: Browser): TcEvaluation {
         return eval(expression, mapOf("browser" to browser))
     }
 
-    fun eval(expression: String, agent: PerceptiveAgent): Any? {
+    fun eval(expression: String, agent: PerceptiveAgent): TcEvaluation {
         return eval(expression, mapOf("agent" to agent))
     }
 
-    fun eval(expression: String, variables: Map<String, Any>): Any? {
+    fun eval(expression: String, variables: Map<String, Any>): TcEvaluation {
         return try {
             variables.forEach { (key, value) -> engine.put(key, value) }
-            engine.eval(expression)
+            val any = engine.eval(expression)
+            TcEvaluation(
+                value = any,
+                className = any::class.qualifiedName,
+                expression = expression
+            )
         } catch (e: Exception) {
-            logger.warn("Error eval expression: {} - {}", expression, e.brief())
-            null
+            logger.warn("Error eval expression: {} - {}", expression, e.stackTraceToString())
+            TcEvaluation(expression, e)
         }
     }
 
-    suspend fun execute(expression: String, browser: Browser, session: AgenticSession): Any? {
+    suspend fun execute(expression: String, browser: Browser, session: AgenticSession): TcEvaluation {
         return BrowserToolCallExecutor().execute(expression, browser, session)
     }
 
-    suspend fun execute(toolCall: ToolCall, target: Any): Any? {
-        val expression = toolCallToExpression(toolCall) ?: return null
+    suspend fun execute(toolCall: ToolCall, target: Any): TcEvaluation {
+        val expression = toolCallToExpression(toolCall)
+            ?: return TcEvaluation(toolCall.pseudoExpression, IllegalStateException("Illegal expression"))
 
         return try {
             execute(expression, target)
         } catch (e: Exception) {
             logger.warn("Error executing TOOL CALL: {} - {}", toolCall, e.brief())
-            null
+            TcEvaluation(expression, e)
         }
     }
 
-    suspend fun execute(expression: String, target: Any): Any? {
+    suspend fun execute(expression: String, target: Any): TcEvaluation {
         return when (target) {
-            is PerceptiveAgent -> AgentToolCallExecutor().execute(expression, target)
-            is FileSystem -> FileSystemToolCallExecutor().execute(expression, target)
-            is Browser -> BrowserToolCallExecutor().execute(expression, target)
             is WebDriver -> WebDriverToolCallExecutor().execute(expression, target)
+            is Browser -> BrowserToolCallExecutor().execute(expression, target)
+            is FileSystem -> FileSystemToolCallExecutor().execute(expression, target)
+            is PerceptiveAgent -> AgentToolCallExecutor().execute(expression, target)
             else -> {
                 logger.warn("Error executing expression: {}", expression)
-                null
+                TcEvaluation(expression, UnsupportedOperationException("Unknown target ${target::class}"))
             }
         }
     }

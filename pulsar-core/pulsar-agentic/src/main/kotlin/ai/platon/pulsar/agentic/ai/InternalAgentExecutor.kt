@@ -13,6 +13,8 @@ internal class InternalAgentExecutor(
     val driver: WebDriver,
     val conf: ImmutableConfig
 ) {
+
+
     constructor(session: AgenticSession) : this(
         session,
         session.getOrCreateBoundDriver(),
@@ -22,22 +24,22 @@ internal class InternalAgentExecutor(
     private val toolCallExecutor = ToolCallExecutor()
 
     suspend fun performAct(action: ActionDescription): ToolCallResult {
-        val toolCall = action.toolCall
-        if (action.expression.isNullOrBlank() && toolCall == null) {
-            return ToolCallResult(success = false)
-        }
+        val toolCall = action.toolCall ?: return ToolCallResult(success = false, message = "no tool call")
 
-        val result = if (toolCall != null) {
-            toolCallExecutor.execute(toolCall, driver)
-        } else {
-            action.expression?.let { expr -> toolCallExecutor.execute(expr, driver) }
+        val evaluate = when (toolCall.domain) {
+            "driver" -> toolCallExecutor.execute(toolCall, driver)
+            "browser" -> toolCallExecutor.execute(toolCall, driver.browser)
+//            "fs" -> toolCallExecutor.execute(toolCall, fs)
+//            "agent" -> toolCallExecutor.execute(toolCall, this)
+            else -> throw IllegalArgumentException("❓ Unsupported domain: ${toolCall.domain} | $toolCall")
         }
 
         return ToolCallResult(
-            true,
-            result = result,
-            message = "performing ${action.toolCall?.method} action",
-            expression = action.expression,
+            success = true,
+            evaluate = evaluate,
+            message = "performAct",
+            expression = action.cssFriendlyExpression,
+            modelResponse = action.modelResponse?.content
         )
     }
 

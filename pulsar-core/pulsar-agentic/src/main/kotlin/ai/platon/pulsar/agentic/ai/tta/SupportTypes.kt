@@ -56,8 +56,6 @@ data class ActionDescription constructor(
     val expression: String? get() = observeElement?.expression
     val cssFriendlyExpression: String? get() = observeElement?.cssFriendlyExpression
 
-    @Deprecated("User expression instead")
-    val expressions: List<String> get() = observeElement?.expressions ?: emptyList()
     @Deprecated("User cssFriendlyExpression instead")
     val cssFriendlyExpressions: List<String> get() = observeElement?.cssFriendlyExpressions ?: emptyList()
 }

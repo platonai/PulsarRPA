@@ -2,10 +2,9 @@ package ai.platon.pulsar.skeleton.ai
 
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
-import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.JsonNode
+import org.apache.commons.lang3.StringUtils
 import java.time.Instant
 import java.util.*
 
@@ -24,7 +23,10 @@ data class ActResult(
     val message: String,
     val action: String? = null,
     val result: ToolCallResult? = null,
-)
+) {
+    @get:JsonIgnore
+    val tcEvalValue get() = result?.evaluate?.value
+}
 
 data class ExtractOptions(
     val instruction: String? = null,
@@ -67,14 +69,36 @@ data class ToolCall constructor(
 
     val pseudoExpression: String get() = "$domain.${method}($pseudoNamedArguments)"
 
+
+
     override fun toString() = pseudoExpression
 }
 
-data class ToolCallResult(
+data class TcException(
+    val expression: String,
+    val cause: Exception? = null
+) {
+    val domain: String get() = expression.substringBefore('.')
+    val method: String get() = StringUtils.substringBetween(expression, ".", ")")
+}
+
+data class TcEvaluation constructor(
+    var value: Any? = null,
+    var className: String? = null,
+    var description: String? = null,
+    val expression: String? = null,
+    var exception: TcException? = null
+) {
+    constructor(expression: String, cause: Exception) :
+            this(expression = expression, exception = TcException(expression, cause))
+}
+
+data class ToolCallResult constructor(
     val success: Boolean,
-    val result: Any? = null,
+    val evaluate: TcEvaluation? = null,
     val message: String? = null,
     val expression: String? = null,
+    val modelResponse: String? = null,
 )
 
 data class ObserveElement constructor(
@@ -85,7 +109,7 @@ data class ObserveElement constructor(
     val evaluationPreviousGoal: String? = null,
     val nextGoal: String? = null,
 
-    val modelResponse: ModelResponse? = null,
+    val modelResponse: String? = null,
 
     // Revised fields
     val toolCall: ToolCall? = null,
@@ -96,10 +120,8 @@ data class ObserveElement constructor(
     val expression: String? = null,
     val cssFriendlyExpression: String? = null,
 ) {
-    @Deprecated("User expression instead")
-    val expressions: List<String> get() = expression?.let { listOf(it) } ?: emptyList()
-
     @Deprecated("User cssFriendlyExpression instead")
+    @get:JsonIgnore
     val cssFriendlyExpressions: List<String> get() = cssFriendlyExpression?.let { listOf(it) } ?: emptyList()
 
     @get:JsonIgnore

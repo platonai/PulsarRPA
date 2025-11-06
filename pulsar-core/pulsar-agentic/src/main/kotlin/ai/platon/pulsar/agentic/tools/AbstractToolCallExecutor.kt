@@ -3,24 +3,23 @@ package ai.platon.pulsar.agentic.tools
 import ai.platon.pulsar.agentic.common.SimpleKotlinParser
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.skeleton.ai.TcEvaluation
 
 abstract class AbstractToolCallExecutor {
 
     private val logger = getLogger(this)
     private val parser = SimpleKotlinParser()
 
-    suspend fun execute(expression: String, target: Any): Any? {
+    suspend fun execute(expression: String, target: Any): TcEvaluation {
         return try {
-            val (objectName, functionName, args) = parser.parseFunctionExpression(expression) ?: return null
+            val (objectName, functionName, args) = parser.parseFunctionExpression(expression)
+                ?: return TcEvaluation(expression = expression, cause = IllegalArgumentException("Illegal expression"))
 
             val r = doExecute(objectName, functionName, args, target)
-            when (r) {
-                is Unit -> null
-                else -> r
-            }
+            TcEvaluation(value = r, expression = expression)
         } catch (e: Exception) {
             logger.warn("Error executing expression: {} - {}", expression, e.brief())
-            null
+            TcEvaluation(expression, e)
         }
     }
 

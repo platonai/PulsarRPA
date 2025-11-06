@@ -56,7 +56,7 @@ class ToolCallExecutorMockSiteTest : WebDriverTestBase() {
 
         val result = executor.execute("driver.exists(\"$selector\")", driver)
 
-        assertEquals(true, result, "Element with selector '$selector' should exist")
+        assertEquals(true, result.value, "Element with selector '$selector' should exist")
     }
 
     @Test
@@ -65,7 +65,7 @@ class ToolCallExecutorMockSiteTest : WebDriverTestBase() {
 
         val result = executor.execute("driver.exists(\"$selector\")", driver)
 
-        assertEquals(false, result, "Non-existent element should return false")
+        assertEquals(false, result.value, "Non-existent element should return false")
     }
 
     @Test
@@ -74,7 +74,7 @@ class ToolCallExecutorMockSiteTest : WebDriverTestBase() {
 
         val result = executor.execute("driver.isVisible(\"$selector\")", driver)
 
-        assertEquals(true, result, "Visible element should return true")
+        assertEquals(true, result.value, "Visible element should return true")
     }
 
     @Test
@@ -294,7 +294,7 @@ class ToolCallExecutorMockSiteTest : WebDriverTestBase() {
         val result = executor.execute("driver.selectFirstTextOrNull(\"$selector\")", driver)
 
         // Should return null for non-existent element
-        assertEquals(null, result, "Should return null for non-existent element")
+        assertEquals(null, result.value, "Should return null for non-existent element")
     }
 
     @Test
@@ -304,7 +304,7 @@ class ToolCallExecutorMockSiteTest : WebDriverTestBase() {
         val result = executor.execute("driver.selectTextAll(\"$selector\")", driver)
 
         assertNotNull(result, "Should return a list")
-        assertTrue(result is List<*>, "Result should be a List")
+        assertTrue(result.value is List<*>, "Result should be a List")
     }
 
     @Test
@@ -319,7 +319,7 @@ class ToolCallExecutorMockSiteTest : WebDriverTestBase() {
         })
 
         // Switch to the new tab using the executor with eval
-        val result = executor.execute("browser.switchTab(\"$newDriverId\")", browser, session)
+        val result = executor.execute("browser.switchTab(\"$newDriverId\")", browser)
         assertIs<WebDriver>(result)
 
         assertEquals(newDriverId, result.id, "Should return the new driver ID after switching")

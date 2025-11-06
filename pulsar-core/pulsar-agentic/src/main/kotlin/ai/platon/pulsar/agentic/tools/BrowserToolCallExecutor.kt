@@ -2,32 +2,18 @@ package ai.platon.pulsar.agentic.tools
 
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.tools.ToolCallExecutor.Companion.norm
-import ai.platon.pulsar.agentic.common.SimpleKotlinParser
-import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.skeleton.ai.TcEvaluation
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 
-class BrowserToolCallExecutor {
+class BrowserToolCallExecutor: AbstractToolCallExecutor() {
     private val logger = getLogger(this)
 
-    suspend fun execute(expression: String, browser: Browser): Any? {
-        return try {
-            val r = execute0(expression, browser)
-            when (r) {
-                is Unit -> null
-                else -> r
-            }
-        } catch (e: Exception) {
-            logger.warn("Error executing expression: {} - {}", expression, e.brief())
-            null
-        }
-    }
-
-    suspend fun execute(expression: String, browser: Browser, session: AgenticSession): Any? {
+    suspend fun execute(expression: String, browser: Browser, session: AgenticSession): TcEvaluation {
         if (expression.contains("switchTab")) {
             val driver = execute(expression, browser)
             if (driver is WebDriver) {
@@ -42,32 +28,25 @@ class BrowserToolCallExecutor {
             return driver
         }
 
-        return null
-    }
-
-    private suspend fun execute0(expression: String, browser: Browser): Any? {
-        // Extract function name and arguments from the expression string
-        val (objectName, functionName, args) = SimpleKotlinParser().parseFunctionExpression(expression) ?: return null
-
-        return doExecute(objectName, functionName, args, browser)
+        return TcEvaluation(expression, IllegalArgumentException("Unknown expression: $expression, domain: browser"))
     }
 
     /**
      * Extract function name and arguments from the expression string
      * */
     @Suppress("UNUSED_PARAMETER")
-    private suspend fun doExecute(
-        objectName: String, functionName: String, args: Map<String, Any?>, browser: Browser
+    override suspend fun doExecute(
+        objectName: String, functionName: String, args: Map<String, Any?>, target: Any
     ): Any? {
         require(objectName == "browser") { "Object must be a Browser" }
         require(functionName.isNotBlank()) { "Function name must not be blank" }
+        val browser = requireNotNull(target as AbstractBrowser) { "Target must be Browser" }
 
         // Handle browser-level expressions
         if (functionName == "switchTab") {
             val tabId =
                 args["0"]?.toString() ?: return buildErrorResponse("tab_not_found", "Missing tabId parameter", browser)
 
-            require(browser is AbstractBrowser)
             val driver = if (tabId.toIntOrNull() != null) {
                 browser.findDriverById(tabId.toInt())
             } else {

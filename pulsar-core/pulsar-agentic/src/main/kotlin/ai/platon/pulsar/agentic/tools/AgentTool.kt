@@ -72,7 +72,6 @@ fs.replaceContent(filename: String, oldStr: String, newStr: String)
         .filter { it.contains("(") }
         .toList()
 
-    @Suppress("unused")
     val SUPPORTED_ACTIONS = SUPPORTED_TOOL_CALLS.map { it.substringBefore("(") }
 
     val TOOL_ALIASES = mapOf(
@@ -88,15 +87,6 @@ fs.replaceContent(filename: String, oldStr: String, newStr: String)
         "setAttribute", "setAttributeAll", "setProperty", "setPropertyAll", "evaluate", "evaluateValue",
         "evaluateDetail", "evaluateValueDetail", "clickMatches", "clickTextMatches", "clickablePoint",
         "boundingBox", "moveMouseTo", "dragAndDrop"
-    )
-
-    @Suppress("unused")
-    val NO_SELECTOR_ACTIONS = setOf(
-        "navigateTo", "open", "waitForNavigation", "scrollDown", "scrollUp", "scrollBy", "scrollToTop", "scrollToBottom",
-        "scrollToMiddle", "mouseWheelDown", "mouseWheelUp", "waitForPage", "bringToFront", "delay",
-        "instruct", "getCookies", "deleteCookies", "clearBrowserCookies", "pause", "stop", "currentUrl",
-        "url", "documentURI", "baseURI", "referrer", "pageSource", "newJsoupSession", "loadJsoupResource",
-        "loadResource", "waitUntil"
     )
 
     val MAY_NAVIGATE_ACTIONS = setOf("navigateTo", "click", "goBack", "goForward")

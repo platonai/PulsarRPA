@@ -9,42 +9,47 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.TimeoutCancellationException
 import java.time.Duration
+import kotlin.math.exp
 
-class WebDriverToolCallExecutor {
+class WebDriverToolCallExecutor: AbstractToolCallExecutor() {
     private val logger = getLogger(this)
 
-    @Throws(TimeoutCancellationException::class, Exception::class)
-    suspend fun execute(expression: String, driver: WebDriver): Any? {
-        return try {
-            val r = execute0(expression, driver)
+//    @Throws(TimeoutCancellationException::class, Exception::class)
+//    suspend fun execute(expression: String, driver: WebDriver): TcEvaluation {
+//        return try {
+//            execute0(expression, driver)
+//        } catch (e: TimeoutCancellationException) {
+//            logger.warn("Timeout to execute | $expression", e)
+//            TcEvaluation(expression, e)
+//        } catch (e: Exception) {
+//            logger.warn("[Unexpected] Error executing expression: {} - {}", expression, e.stackTraceToString())
+//            TcEvaluation(expression, e)
+//        }
+//    }
 
-            when (r) {
-                is Unit -> null
-                else -> r
-            }
-        } catch (e: TimeoutCancellationException) {
-            logger.warn("Timeout to execute | $expression", e)
-            throw e
-        } catch (e: Exception) {
-            logger.warn("[Unexpected] Error executing expression: {} - {}", expression, e.stackTraceToString())
-            throw e
-        }
-    }
-
-    private suspend fun execute0(expression: String, driver: WebDriver): Any? {
-        // Extract function name and arguments from the expression string
-        val (objectName, functionName, args) = SimpleKotlinParser().parseFunctionExpression(expression) ?: return null
-
-        return doExecute(objectName, functionName, args, driver)
-    }
+//    private suspend fun execute0(expression: String, driver: WebDriver): TcEvaluation {
+//        // Extract function name and arguments from the expression string
+//        val parser = SimpleKotlinParser()
+//        val (objectName, functionName, args) = parser.parseFunctionExpression(expression)
+//            ?: return TcEvaluation(expression = expression, cause = IllegalArgumentException("Illegal expression"))
+//
+//        val r = doExecute(objectName, functionName, args, driver)
+//
+//        return when {
+//            r == null -> TcEvaluation()
+//            else -> TcEvaluation(unserializableValue = r, className = r::class.qualifiedName)
+//        }
+//    }
 
     /**
      * Extract function name and arguments from the expression string
      * */
     @Suppress("UNUSED_PARAMETER")
-    private suspend fun doExecute(
-        objectName: String, functionName: String, args: Map<String, Any?>, driver: WebDriver
+    override suspend fun doExecute(
+        objectName: String, functionName: String, args: Map<String, Any?>, target: Any
     ): Any? {
+        val driver = requireNotNull(target as WebDriver) { "The target must be a WebDriver" }
+
         // Execute the appropriate WebDriver method based on the function name
         val arg0 = args["0"]?.toString()
         val arg1 = args["1"]?.toString()
@@ -772,5 +777,4 @@ class WebDriverToolCallExecutor {
             }
         }
     }
-
 }

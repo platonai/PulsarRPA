@@ -40,7 +40,6 @@ import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.math.exp
 import kotlin.math.min
 import kotlin.math.pow
 import kotlin.time.Duration.Companion.hours
@@ -105,7 +104,6 @@ class BrowserPerceptiveAgent constructor(
     private val domService get() = inference.domService
     private val promptBuilder = PromptBuilder()
 
-    // Reuse ToolCallExecutor to avoid recreation overhead (Medium Priority #14)
     private val toolCallExecutor = ToolCallExecutor()
     private val fs: FileSystem
     private val todo: ToDoManager
@@ -223,7 +221,7 @@ class BrowserPerceptiveAgent constructor(
         return try {
             val action = ActionDescription(observeElement = oe)
 
-            val toolCallResult = doToolCallExecute(toolCall, action)
+            val toolCallResult = doToolCallExecute(toolCall, action, "act")
 
             logger.info(
                 "✅ Action executed | {} | {}/{} | {}",
@@ -397,10 +395,10 @@ class BrowserPerceptiveAgent constructor(
         )
     }
 
-    private suspend fun doToolCallExecute(toolCall: ToolCall, action: ActionDescription): ToolCallResult {
+    private suspend fun doToolCallExecute(toolCall: ToolCall, action: ActionDescription, message: String? = null): ToolCallResult {
         val driver = activeDriver
 
-        val callResult = when (toolCall.domain) {
+        val evaluate = when (toolCall.domain) {
             "driver" -> toolCallExecutor.execute(toolCall, driver)
             "browser" -> toolCallExecutor.execute(toolCall, driver.browser)
             "fs" -> toolCallExecutor.execute(toolCall, fs)
@@ -410,11 +408,16 @@ class BrowserPerceptiveAgent constructor(
 
         val method = toolCall.method
         when (method) {
-            "switchTab" -> onDidSwitchTab(callResult)
-            "navigateTo" -> onDidNavigateTo(driver, toolCall, callResult)
+            "switchTab" -> onDidSwitchTab(evaluate)
+            "navigateTo" -> onDidNavigateTo(driver, toolCall, evaluate)
         }
 
-        return ToolCallResult(true, callResult, expression = action.expression)
+        return ToolCallResult(
+            success = true,
+            evaluate = evaluate,
+            message = message,
+            expression = action.cssFriendlyExpression,
+            modelResponse = action.modelResponse?.content)
     }
 
     data class ToolCallPatch(
@@ -492,7 +495,7 @@ class BrowserPerceptiveAgent constructor(
      * Handle switching to a new tab by binding the target driver to the session.
      */
     @Suppress("UNUSED_PARAMETER")
-    private fun onDidSwitchTab(result: Any?) {
+    private fun onDidSwitchTab(evaluate: TcEvaluation) {
         val frontDriver = session.boundBrowser?.frontDriver
         val boundDriver = session.boundDriver
         if (frontDriver == null) {
@@ -509,7 +512,7 @@ class BrowserPerceptiveAgent constructor(
     }
 
     @Suppress("UNUSED_PARAMETER")
-    private suspend fun onDidNavigateTo(driver: WebDriver, toolCall: ToolCall, toolCallResult: Any?) {
+    private suspend fun onDidNavigateTo(driver: WebDriver, toolCall: ToolCall, evaluate: TcEvaluation) {
         driver.waitForNavigation()
         driver.waitForSelector("body")
         delay(3000)
@@ -1042,7 +1045,7 @@ class BrowserPerceptiveAgent constructor(
         messages.addUser(promptBuilder.buildAgentStateHistoryMessage(stateHistory))
         if (screenshotB64 != null) messages.addUser(promptBuilder.buildBrowserVisionInfo())
         if (prevAgentState != null && prevAgentState.action in listOf("textContent", "selectFirstTextOrNull")) {
-            val textContent = prevAgentState.toolCallResult?.result?.toString() ?: ""
+            val textContent = prevAgentState.toolCallResult?.evaluate?.toString() ?: ""
             val message = promptBuilder.buildExtractTextContentMessage(prevAgentState, textContent)
             messages.addUser(message)
         }
@@ -1170,7 +1173,7 @@ class BrowserPerceptiveAgent constructor(
                 context.sessionId.take(8), context.stepNumber, toolCall.method, toolCall.arguments
             )
 
-            val toolCallResult = doToolCallExecute(toolCall, action)
+            val toolCallResult = doToolCallExecute(toolCall, action, "resolve, #$step")
             consecutiveFailureCounter.set(0) // Reset on success
 
             val summary = "✅ ${toolCall.method} executed successfully"
