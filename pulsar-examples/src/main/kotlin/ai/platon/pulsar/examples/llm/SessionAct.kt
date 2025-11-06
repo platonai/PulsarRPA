@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.ai.ActionOptions
-import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import ai.platon.pulsar.test.server.DemoSiteStarter
 
 class SessionAct {
@@ -46,14 +45,8 @@ class SessionAct {
         result("action result", result)
 
         step("Action: 总结网页全文")
-        actOptions = ActionOptions("总结网页全文: \n\n\n" + result.tcEvalValue)
-        result = agent.act(actOptions)
-        result("action result", result)
-
-        step("Action: 根据截图总结网页全文")
-        actOptions = ActionOptions("根据截图总结网页全文")
-        result = agent.act(actOptions)
-        result("action result", result)
+        val response = session.chat("总结网页全文: \n\n\n" + result.tcEvalValue)
+        result("action result", response)
 
         AgenticContexts.close()
     }
@@ -63,7 +56,8 @@ class SessionAct {
     private fun result(label: String, value: Any?) {
         val text = Strings.compactLog(value?.toString(), 2000)
 
-        printlnPro("[RESULT ${stepNo}] $label => $text")
+        val e = """🟢"""
+        printlnPro("$e [RESULT ${stepNo}] $label => $text")
     }
 }
 

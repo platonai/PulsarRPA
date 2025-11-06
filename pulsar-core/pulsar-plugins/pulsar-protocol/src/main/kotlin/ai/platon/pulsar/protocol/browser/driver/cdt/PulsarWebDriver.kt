@@ -475,7 +475,34 @@ class PulsarWebDriver(
             when {
                 node.isNull() -> null
                 else -> {
-                    val functionDeclaration = """function() { return this.textContent; }"""
+                    val functionDeclaration = """
+function() {
+  try {
+    const el = this;
+    const excluded = new Set(['SCRIPT','STYLE','NOSCRIPT','TEMPLATE']);
+    let text = '';
+    const walker = document.createTreeWalker(
+      el,
+      NodeFilter.SHOW_TEXT,
+      {
+        acceptNode(node) {
+          const p = node.parentNode;
+          return p && !excluded.has(p.nodeName)
+            ? NodeFilter.FILTER_ACCEPT
+            : NodeFilter.FILTER_REJECT;
+        }
+      }
+    );
+    let n;
+    while ((n = walker.nextNode())) {
+      text += n.nodeValue;
+    }
+    return text;
+  } catch (e) {
+    return null;
+  }
+}
+                    """.trimIndent()
                     val nd = domAPI?.resolveNode(node.nodeId)
                     if (nd?.objectId != null) {
                         val remoteObject = runtimeAPI?.callFunctionOn(functionDeclaration, objectId = nd.objectId, returnByValue = true)
