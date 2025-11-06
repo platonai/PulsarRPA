@@ -5,12 +5,20 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.InteractiveDOMTreeNodeLi
 import ai.platon.pulsar.common.getLogger
 
 class HighlightManager(
-    private val devTools: RemoteDevTools
+    private val devTools: RemoteDevTools,
 ) {
     private val logger = getLogger(this)
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
 
     suspend fun addHighlights(elements: InteractiveDOMTreeNodeList) {
+        addHighlights0(elements)
+    }
+
+    suspend fun removeHighlights(elements: InteractiveDOMTreeNodeList) {
+        removeHighlights0(elements)
+    }
+
+    private suspend fun addHighlights0(elements: InteractiveDOMTreeNodeList) {
         try {
             val nodes = elements.nodes
             if (nodes.isEmpty()) return
@@ -134,7 +142,7 @@ class HighlightManager(
         }
     }
 
-    suspend fun removeHighlights(elements: InteractiveDOMTreeNodeList) {
+    private suspend fun removeHighlights0(elements: InteractiveDOMTreeNodeList) {
         try {
             val script = """
 (function() {
