@@ -4,7 +4,10 @@ import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.ai.agent.*
 import ai.platon.pulsar.agentic.ai.agent.detail.*
 import ai.platon.pulsar.agentic.ai.todo.ToDoManager
-import ai.platon.pulsar.agentic.ai.tta.*
+import ai.platon.pulsar.agentic.ai.tta.ActionDescription
+import ai.platon.pulsar.agentic.ai.tta.ActionExecuteResult
+import ai.platon.pulsar.agentic.ai.tta.ContextToAction
+import ai.platon.pulsar.agentic.ai.tta.ContextToActionParams
 import ai.platon.pulsar.agentic.common.FileSystem
 import ai.platon.pulsar.agentic.tools.ActionValidator
 import ai.platon.pulsar.agentic.tools.AgentTool
@@ -35,7 +38,6 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
-import java.time.LocalDateTime
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.TimeoutException
@@ -118,7 +120,7 @@ class BrowserPerceptiveAgent constructor(
     // Enhanced state management
 
     private val _stateHistory = mutableListOf<AgentState>()
-    private val _processTrace = mutableListOf<String>()
+    private val _processTrace = mutableListOf<ProcessTrace>()
     private val performanceMetrics = PerformanceMetrics()
     private val retryCounter = AtomicInteger(0)
     private val consecutiveFailureCounter = AtomicInteger(0)
@@ -128,7 +130,7 @@ class BrowserPerceptiveAgent constructor(
 
     override val uuid = UUID.randomUUID()
     override val stateHistory: List<AgentState> get() = _stateHistory
-    override val processTrace: List<String> get() = _processTrace
+    override val processTrace: List<ProcessTrace> get() = _processTrace
 
     init {
         baseDir = AppPaths.get("agent")
@@ -1276,20 +1278,35 @@ class BrowserPerceptiveAgent constructor(
         if (stateHistory.size > config.maxHistorySize * 2) {
             _stateHistory.subList(0, config.maxHistorySize).clear()
         }
-        _processTrace.add(h.toString())
+
+        val items = mapOf(
+            "action" to h.action,
+            "expression" to h.toolCallResult?.expression,
+            "tcEvalResult" to h.toolCallResult?.evaluate?.value
+        ).filterValues { it != null }
+        val trace = ProcessTrace(step = h.step, items = items, message = h.toString())
+        _processTrace.add(trace)
     }
 
-    @Suppress("unused")
-    private fun processTrace(entries: Map<String, String>) {
-        val time = LocalDateTime.now()
-        val id = _processTrace.size + 1
-        _processTrace.add("""$id\t$time - """ + entries.entries.joinToString(" ") { (k, v) -> "$k:$v" })
+    private fun processTrace(h: AgentState?, items: Map<String, String>, message: String? = null) {
+        val items2 = if (h != null) {
+            mapOf(
+                "action" to h.action,
+                "expression" to h.toolCallResult?.expression,
+                "tcEvalResult" to h.toolCallResult?.evaluate?.value
+            ).filterValues { it != null }
+        } else emptyMap()
+
+        val items3 = items + items2
+
+        val step = h?.step ?: 0
+        val msg = message?.let { h.toString() }
+        val trace = ProcessTrace(step = step, items = items3, message = msg)
+        _processTrace.add(trace)
     }
 
-    private fun processTrace(entry: String) {
-        val time = LocalDateTime.now()
-        val id = _processTrace.size + 1
-        _processTrace.add("""$id\t$time - $entry""")
+    private fun processTrace(message: String) {
+        processTrace(stateHistory.lastOrNull(), emptyMap(), message)
     }
 
     /**

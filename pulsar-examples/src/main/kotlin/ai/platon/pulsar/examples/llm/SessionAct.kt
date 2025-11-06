@@ -35,7 +35,7 @@ class SessionAct {
         step("Action: search for 'browser'")
         var actOptions = ActionOptions("search for 'browser'")
         var result = agent.act(actOptions)
-        result("action result", agent)
+        result("action result", result)
 
         var text = driver.selectFirstPropertyValueOrNull("#searchBox", "value")
         println("Input value of search box: $text")
@@ -43,12 +43,17 @@ class SessionAct {
         step("Action: 提取网页全文")
         actOptions = ActionOptions("提取网页全文")
         result = agent.act(actOptions)
-        result("action result", agent)
+        result("action result", result)
 
         step("Action: 总结网页全文")
         actOptions = ActionOptions("总结网页全文: \n\n\n" + result.tcEvalValue)
-        agent.act(actOptions)
-        result("action result", agent)
+        result = agent.act(actOptions)
+        result("action result", result)
+
+        step("Action: 根据截图总结网页全文")
+        actOptions = ActionOptions("根据截图总结网页全文")
+        result = agent.act(actOptions)
+        result("action result", result)
 
         AgenticContexts.close()
     }
@@ -56,13 +61,9 @@ class SessionAct {
     private fun step(label: String) = logger.info("[STEP ${++stepNo}] $label")
 
     private fun result(label: String, value: Any?) {
-        val text = if (value is PerceptiveAgent) {
-            value.processTrace.joinToString("\n") { Strings.compactLog(it, 200) }
-        } else {
-            Strings.compactLog(value?.toString(), 2000)
-        }
+        val text = Strings.compactLog(value?.toString(), 2000)
 
-        logger.info("[RESULT ${stepNo}] $label => $text")
+        printlnPro("[RESULT ${stepNo}] $label => $text")
     }
 }
 

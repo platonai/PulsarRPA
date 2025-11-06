@@ -25,7 +25,13 @@ data class ActResult(
     val result: ToolCallResult? = null,
 ) {
     @get:JsonIgnore
+    val expression get() = result?.expression
+    @get:JsonIgnore
     val tcEvalValue get() = result?.evaluate?.value
+
+    override fun toString(): String {
+        return "[$action] expr: $expression eval: $tcEvalValue message: $message"
+    }
 }
 
 data class ExtractOptions(
@@ -195,6 +201,19 @@ data class AgentState constructor(
     }
 }
 
+data class ProcessTrace(
+    val step: Int,
+    val items: Map<String, Any?> = emptyMap(),
+    val message: String? = null,
+    val timestamp: Instant = Instant.now(),
+) {
+    override fun toString(): String {
+        val itemStr = items.entries.joinToString { (k, v) -> "$k=$v" }
+        val msg = message?.let { " | $it" } ?: ""
+        return "$timestamp [$step] $itemStr$msg"
+    }
+}
+
 interface PerceptiveAgent {
     val uuid: UUID
 
@@ -209,7 +228,7 @@ interface PerceptiveAgent {
     /**
      * The process trace.
      * */
-    val processTrace: List<String>
+    val processTrace: List<ProcessTrace>
 
     /**
      * Run `observe -> act -> observe -> act -> ...` loop to resolve the problem.
