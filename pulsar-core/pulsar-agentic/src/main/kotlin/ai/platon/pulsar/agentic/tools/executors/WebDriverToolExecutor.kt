@@ -1,8 +1,8 @@
 package ai.platon.pulsar.agentic.tools.executors
 
+import ai.platon.pulsar.agentic.tools.ActionValidator
 import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor.Companion.esc
 import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor.Companion.norm
-import ai.platon.pulsar.agentic.tools.ActionValidator
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.NavigateEntry
@@ -12,32 +12,10 @@ import java.time.Duration
 class WebDriverToolExecutor: AbstractToolExecutor() {
     private val logger = getLogger(this)
 
-//    @Throws(TimeoutCancellationException::class, Exception::class)
-//    suspend fun execute(expression: String, driver: WebDriver): TcEvaluation {
-//        return try {
-//            execute0(expression, driver)
-//        } catch (e: TimeoutCancellationException) {
-//            logger.warn("Timeout to execute | $expression", e)
-//            TcEvaluation(expression, e)
-//        } catch (e: Exception) {
-//            logger.warn("[Unexpected] Error executing expression: {} - {}", expression, e.stackTraceToString())
-//            TcEvaluation(expression, e)
-//        }
-//    }
-
-//    private suspend fun execute0(expression: String, driver: WebDriver): TcEvaluation {
-//        // Extract function name and arguments from the expression string
-//        val parser = SimpleKotlinParser()
-//        val (objectName, functionName, args) = parser.parseFunctionExpression(expression)
-//            ?: return TcEvaluation(expression = expression, cause = IllegalArgumentException("Illegal expression"))
-//
-//        val r = doExecute(objectName, functionName, args, driver)
-//
-//        return when {
-//            r == null -> TcEvaluation()
-//            else -> TcEvaluation(unserializableValue = r, className = r::class.qualifiedName)
-//        }
-//    }
+    @Throws(IllegalArgumentException::class)
+    override suspend fun toExpression(tc: ToolCall): String {
+        return Companion.toExpression(tc) ?: throw IllegalArgumentException("Unknown Tool call $tc")
+    }
 
     /**
      * Extract function name and arguments from the expression string
@@ -639,7 +617,7 @@ class WebDriverToolExecutor: AbstractToolExecutor() {
 
     companion object {
 
-        fun toolCallToExpression(tc: ToolCall): String? {
+        fun toExpression(tc: ToolCall): String? {
             ActionValidator().validateToolCall(tc)
 
             val arguments = tc.arguments

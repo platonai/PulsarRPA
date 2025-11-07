@@ -79,7 +79,7 @@ open class BasicToolCallExecutor {
     }
 
     suspend fun execute(toolCall: ToolCall, target: Any): TcEvaluate {
-        val expression = toolCallToExpression(toolCall)
+        val expression = toExpression(toolCall)
             ?: return TcEvaluate(toolCall.pseudoExpression, IllegalArgumentException("Illegal expression"))
 
         return try {
@@ -120,13 +120,12 @@ open class BasicToolCallExecutor {
 
         internal fun String.norm() = Strings.doubleQuote(this.esc())
 
-        fun toolCallToExpression(tc: ToolCall): String? {
+        fun toExpression(tc: ToolCall): String? {
             return when (tc.domain) {
-                "driver" -> WebDriverToolExecutor.toolCallToExpression(tc)
-                "browser" -> BrowserToolExecutor.toolCallToExpression(tc)
-                "fs" -> FileSystemToolExecutor.toolCallToExpression(tc)
-                // Fix: route agent domain to AgentToolCallExecutor
-                "agent" -> AgentToolExecutor.toolCallToExpression(tc)
+                "driver" -> WebDriverToolExecutor.toExpression(tc)
+                "browser" -> BrowserToolExecutor.toExpression(tc)
+                "fs" -> FileSystemToolExecutor.toExpression(tc)
+                "agent" -> AgentToolExecutor.toExpression(tc)
                 else -> null
             }
         }

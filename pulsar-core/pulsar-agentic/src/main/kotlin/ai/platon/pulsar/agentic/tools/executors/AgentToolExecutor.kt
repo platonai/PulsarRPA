@@ -1,13 +1,19 @@
 package ai.platon.pulsar.agentic.tools.executors
 
 import ai.platon.pulsar.agentic.tools.ActionValidator
+import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor.Companion.norm
+import ai.platon.pulsar.agentic.tools.executors.SystemToolExecutor
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import ai.platon.pulsar.skeleton.ai.ToolCall
-import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor.Companion.norm
 
 class AgentToolExecutor: AbstractToolExecutor() {
     private val logger = getLogger(this)
+
+    @Throws(IllegalArgumentException::class)
+    override suspend fun toExpression(tc: ToolCall): String {
+        return Companion.toExpression(tc) ?: throw IllegalArgumentException("Unknown Tool call $tc")
+    }
 
     /**
      * Execute agent.* expressions against a PerceptiveAgent target.
@@ -40,7 +46,7 @@ class AgentToolExecutor: AbstractToolExecutor() {
 
     companion object {
 
-        fun toolCallToExpression(tc: ToolCall): String? {
+        fun toExpression(tc: ToolCall): String? {
             ActionValidator().validateToolCall(tc)
 
             val arguments = tc.arguments

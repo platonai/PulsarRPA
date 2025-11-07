@@ -19,7 +19,7 @@ class AgentToolManager(
     val agent: BrowserPerceptiveAgent,
 ) {
     private val logger = getLogger(AgentToolManager::class)
-    private val toolCallExecutor = BasicToolCallExecutor()
+    private val executor = BasicToolCallExecutor()
 
     val baseDir: Path = AppPaths.get("agent")
         .resolve(DateTimes.PATH_SAFE_FORMAT_101.format(agent.startTime))
@@ -37,10 +37,10 @@ class AgentToolManager(
     suspend fun execute(toolCall: ToolCall, action: ActionDescription, message: String? = null): ToolCallResult {
         try {
             val evaluate = when (toolCall.domain) {
-                "driver" -> toolCallExecutor.execute(toolCall, driver)
-                "browser" -> toolCallExecutor.execute(toolCall, driver.browser)
-                "fs" -> toolCallExecutor.execute(toolCall, fs)
-                "agent" -> toolCallExecutor.execute(toolCall, this)
+                "driver" -> executor.execute(toolCall, driver)
+                "browser" -> executor.execute(toolCall, driver.browser)
+                "fs" -> executor.execute(toolCall, fs)
+                "agent" -> executor.execute(toolCall, this)
                 else -> throw IllegalArgumentException("❓ Unsupported domain: ${toolCall.domain} | $toolCall")
             }
 

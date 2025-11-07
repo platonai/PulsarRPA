@@ -4,13 +4,22 @@ import ai.platon.pulsar.agentic.common.SimpleKotlinParser
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.TcEvaluate
+import ai.platon.pulsar.skeleton.ai.ToolCall
 
-abstract class AbstractToolExecutor {
+interface ToolExecutor {
+    suspend fun execute(tc: ToolCall, target: Any): TcEvaluate
+    suspend fun execute(expression: String, target: Any): TcEvaluate
+    suspend fun toExpression(tc: ToolCall): String
+}
+
+abstract class AbstractToolExecutor: ToolExecutor {
 
     private val logger = getLogger(this)
     private val parser = SimpleKotlinParser()
 
-    suspend fun execute(expression: String, target: Any): TcEvaluate {
+    override suspend fun execute(tc: ToolCall, target: Any) = execute(toExpression(tc), target)
+
+    override suspend fun execute(expression: String, target: Any): TcEvaluate {
         return try {
             val (objectName, functionName, args) = parser.parseFunctionExpression(expression)
                 ?: return TcEvaluate(expression = expression, cause = IllegalArgumentException("Illegal expression"))

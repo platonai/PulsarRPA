@@ -30,7 +30,7 @@ class ToolCallExecutorTest {
     @Test
     fun `generate expression escapes quotes and backslashes`() {
         val url = "https://example.com?q=\"a b\"\\tail"
-        val expr = BasicToolCallExecutor.toolCallToExpression(
+        val expr = BasicToolCallExecutor.toExpression(
             ToolCall("driver", "navigateTo", mutableMapOf("url" to url))
         )
         assertNotNull(expr)
@@ -41,8 +41,8 @@ class ToolCallExecutorTest {
 
     @Test
     fun `generate expression for goBack and goForward`() {
-        val back = BasicToolCallExecutor.toolCallToExpression(ToolCall("driver", "goBack", mutableMapOf()))
-        val forward = BasicToolCallExecutor.toolCallToExpression(ToolCall("driver", "goForward", mutableMapOf()))
+        val back = BasicToolCallExecutor.toExpression(ToolCall("driver", "goBack", mutableMapOf()))
+        val forward = BasicToolCallExecutor.toExpression(ToolCall("driver", "goForward", mutableMapOf()))
         assertEquals("driver.goBack()", back)
         assertEquals("driver.goForward()", forward)
     }
@@ -59,7 +59,7 @@ class ToolCallExecutorTest {
                 "count" to "2"
             )
         )
-        val expr = BasicToolCallExecutor.toolCallToExpression(tc)
+        val expr = BasicToolCallExecutor.toExpression(tc)
         assertNotNull(expr)
         assertTrue(expr!!.contains("\\\"hi\\\""))
         assertTrue(expr.contains("driver.clickMatches(\"a.link\", \"data-title\","))
@@ -283,7 +283,7 @@ class ToolCallExecutorTest {
 
     @Test
     fun `toolCallToExpression waitForSelector with timeout`() {
-        val expr = BasicToolCallExecutor.toolCallToExpression(
+        val expr = BasicToolCallExecutor.toExpression(
             ToolCall("driver", "waitForSelector", mutableMapOf("selector" to "#a", "timeoutMillis" to "1234"))
         )
         assertEquals("driver.waitForSelector(\"#a\", 1234)", expr)
@@ -291,8 +291,8 @@ class ToolCallExecutorTest {
 
     @Test
     fun `toolCallToExpression captureScreenshot variants`() {
-        val none = BasicToolCallExecutor.toolCallToExpression(ToolCall("driver", "captureScreenshot", mutableMapOf()))
-        val withSel = BasicToolCallExecutor.toolCallToExpression(
+        val none = BasicToolCallExecutor.toExpression(ToolCall("driver", "captureScreenshot", mutableMapOf()))
+        val withSel = BasicToolCallExecutor.toExpression(
             ToolCall("driver", "captureScreenshot", mutableMapOf("selector" to "#root"))
         )
         assertEquals("driver.captureScreenshot()", none)
@@ -301,13 +301,13 @@ class ToolCallExecutorTest {
 
     @Test
     fun `toolCallToExpression scrollToMiddle default`() {
-        val expr = BasicToolCallExecutor.toolCallToExpression(ToolCall("driver", "scrollToMiddle", mutableMapOf()))
+        val expr = BasicToolCallExecutor.toExpression(ToolCall("driver", "scrollToMiddle", mutableMapOf()))
         assertEquals("driver.scrollToMiddle(0.5)", expr)
     }
 
     @Test
     fun `toolCallToExpression clickTextMatches escaping`() {
-        val expr = BasicToolCallExecutor.toolCallToExpression(
+        val expr = BasicToolCallExecutor.toExpression(
             ToolCall(
                 "driver",
                 "clickTextMatches",
@@ -322,7 +322,7 @@ class ToolCallExecutorTest {
 
     @Test
     fun `toolCallToExpression press generation`() {
-        val expr = BasicToolCallExecutor.toolCallToExpression(
+        val expr = BasicToolCallExecutor.toExpression(
             ToolCall("driver", "press", mutableMapOf("selector" to "#i", "key" to "Enter"))
         )
         assertEquals("driver.press(\"#i\", \"Enter\")", expr)
