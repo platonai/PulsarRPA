@@ -4,7 +4,7 @@ import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder.Companion.buildObserveResultSchema
 import ai.platon.pulsar.agentic.tools.ToolSpecification
 import ai.platon.pulsar.agentic.tools.ToolSpecification.TOOL_ALIASES
-import ai.platon.pulsar.agentic.tools.ToolCallExecutor
+import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
@@ -228,7 +228,7 @@ open class TextToAction(
 
         // CSS friendly expression
         val cssSelector = node?.cssSelector()
-        val expression = ToolCallExecutor.toolCallToExpression(toolCall)
+        val expression = BasicToolCallExecutor.toolCallToExpression(toolCall)
         val cssFriendlyExpression = if (locator != null && cssSelector != null) {
             expression?.replace(locator, cssSelector)
         } else null

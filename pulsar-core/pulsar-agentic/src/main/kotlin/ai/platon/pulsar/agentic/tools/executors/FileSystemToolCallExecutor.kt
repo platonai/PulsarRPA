@@ -2,7 +2,7 @@ package ai.platon.pulsar.agentic.tools.executors
 
 import ai.platon.pulsar.agentic.common.FileSystem
 import ai.platon.pulsar.agentic.tools.ActionValidator
-import ai.platon.pulsar.agentic.tools.ToolCallExecutor.Companion.norm
+import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor.Companion.norm
 import ai.platon.pulsar.skeleton.ai.ToolCall
 
 class FileSystemToolCallExecutor : AbstractToolCallExecutor() {

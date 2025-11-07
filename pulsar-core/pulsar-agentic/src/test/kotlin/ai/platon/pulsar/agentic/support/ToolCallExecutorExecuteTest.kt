@@ -1,7 +1,7 @@
 package ai.platon.pulsar.agentic.support
 
 import ai.platon.pulsar.skeleton.ai.ToolCall
-import ai.platon.pulsar.agentic.tools.ToolCallExecutor
+import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import io.mockk.*
@@ -12,7 +12,7 @@ import java.time.Duration
 
 class ToolCallExecutorExecuteTest {
 
-    private val executor = ToolCallExecutor()
+    private val executor = BasicToolCallExecutor()
 
     @Test
     fun `open and navigateTo basic mappings`() = runBlocking {

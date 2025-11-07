@@ -1,7 +1,7 @@
 package ai.platon.pulsar.agentic.support
 
 import ai.platon.pulsar.skeleton.ai.ToolCall
-import ai.platon.pulsar.agentic.tools.ToolCallExecutor
+import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.ClientInfo
 import ai.platon.pulsar.browser.driver.chrome.dom.model.ScrollState
@@ -79,7 +79,7 @@ class TabSwitchTest {
 
     @Test
     fun `parse browser switchTab call`() {
-        val tc = ToolCallExecutor.parseKotlinFunctionExpression("browser.switchTab(\"tab-1\")")
+        val tc = BasicToolCallExecutor.parseKotlinFunctionExpression("browser.switchTab(\"tab-1\")")
         assertNotNull(tc)
         tc!!
         assertEquals("browser", tc.domain)
@@ -90,7 +90,7 @@ class TabSwitchTest {
     @Test
     fun `parse browser switchTab with numeric id`() {
         // Even though the signature now uses String, test parsing of numeric-looking IDs
-        val tc = ToolCallExecutor.parseKotlinFunctionExpression("browser.switchTab(\"123\")")
+        val tc = BasicToolCallExecutor.parseKotlinFunctionExpression("browser.switchTab(\"123\")")
         assertNotNull(tc)
         tc!!
         assertEquals("browser", tc.domain)
@@ -101,7 +101,7 @@ class TabSwitchTest {
     @Test
     fun `generate expression for browser switchTab`() {
         val tc = ToolCall("browser", "switchTab", mutableMapOf("tabId" to "tab-42"))
-        val expr = ToolCallExecutor.toolCallToExpression(tc)
+        val expr = BasicToolCallExecutor.toolCallToExpression(tc)
         assertNotNull(expr)
         assertEquals("browser.switchTab(\"tab-42\")", expr)
     }

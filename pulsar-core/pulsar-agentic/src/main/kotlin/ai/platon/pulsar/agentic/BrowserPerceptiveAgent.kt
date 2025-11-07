@@ -2,7 +2,6 @@ package ai.platon.pulsar.agentic
 
 import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder
-import ai.platon.pulsar.agentic.tools.AgentToolManager
 import ai.platon.pulsar.agentic.ai.agent.*
 import ai.platon.pulsar.agentic.ai.agent.detail.*
 import ai.platon.pulsar.agentic.ai.todo.ToDoManager
@@ -11,15 +10,18 @@ import ai.platon.pulsar.agentic.ai.tta.ActionExecuteResult
 import ai.platon.pulsar.agentic.ai.tta.ContextToAction
 import ai.platon.pulsar.agentic.ai.tta.ContextToActionParams
 import ai.platon.pulsar.agentic.tools.ActionValidator
+import ai.platon.pulsar.agentic.tools.AgentToolManager
 import ai.platon.pulsar.agentic.tools.ToolSpecification
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
 import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.Pson
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.external.ChatModelException
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
@@ -98,8 +100,8 @@ class BrowserPerceptiveAgent constructor(
 
     private val conf get() = session.sessionConfig
 
-    private val contextToAction by lazy { ContextToAction(conf) }
-    private val inference by lazy { InferenceEngine(session, contextToAction.chatModel) }
+    private val cta by lazy { ContextToAction(conf) }
+    private val inference by lazy { InferenceEngine(session, cta.chatModel) }
     private val domService get() = inference.domService
     private val promptBuilder = PromptBuilder()
     private val toolExecutor by lazy { AgentToolManager(this) }
@@ -230,7 +232,7 @@ class BrowserPerceptiveAgent constructor(
 
             // Keep reference to previous AgentState for next loop
             val payload = UpdateAgentStatePayload(true, toolCall, oe, msg.message, toolCallResult)
-            val (prevAgentState0, newAgentState0) = updateAgentState(agentState, payload)
+            updateAgentState(agentState, payload)
 
             ActResult(success = true, action = toolCall.method, message = msg.message, result = toolCallResult)
         } catch (e: Exception) {
@@ -663,7 +665,7 @@ class BrowserPerceptiveAgent constructor(
     /**
      * history management: strictly record one AgentState per executed action with complete fields
      */
-    private fun updateAgentState(agentState: AgentState, payload: UpdateAgentStatePayload): Pair<AgentState, AgentState> {
+    private fun updateAgentState(agentState: AgentState, payload: UpdateAgentStatePayload) {
         val (success, toolCall, observe, message) = payload
         val computedStep = agentState.step.takeIf { it > 0 } ?: ((stateHistory.lastOrNull()?.step ?: 0) + 1)
         val descPrefix = if (success) "OK" else "FAIL"
@@ -675,19 +677,19 @@ class BrowserPerceptiveAgent constructor(
             }
         }
 
-        val updatedAgentState = agentState.copy(
-            step = computedStep,
-            domain = toolCall?.domain,
-            action = toolCall?.method,
-            description = descMsg,
-            screenshotContentSummary = observe?.screenshotContentSummary,
-            currentPageContentSummary = observe?.currentPageContentSummary,
-            evaluationPreviousGoal = observe?.evaluationPreviousGoal,
-            nextGoal = observe?.nextGoal,
+        agentState.apply {
+            step = computedStep
+            domain = toolCall?.domain
+            action = toolCall?.method
+            description = descMsg
+            screenshotContentSummary = observe?.screenshotContentSummary
+            currentPageContentSummary = observe?.currentPageContentSummary
+            evaluationPreviousGoal = observe?.evaluationPreviousGoal
+            nextGoal = observe?.nextGoal
             toolCallResult = payload.toolCallResult
-        )
-        addToHistory(updatedAgentState)
-        return agentState to updatedAgentState
+        }
+
+        addToHistory(agentState)
     }
 
     private fun addHistoryExtract(instruction: String, requestId: String, success: Boolean) {
@@ -794,7 +796,7 @@ class BrowserPerceptiveAgent constructor(
         }
 
         // agent general guide
-        val systemMsg = PromptBuilder().buildOperatorSystemPrompt()
+        val systemMsg = promptBuilder.buildOperatorSystemPrompt()
         var consecutiveNoOps = 0
         var step = 0
 
@@ -810,8 +812,7 @@ class BrowserPerceptiveAgent constructor(
                 ensureReadyForStep(action)
 
                 // Build AgentState and snapshot after settling
-                val (agentState0, browserUseState) = buildAgentStateForStep(step, action, prevAgentState)
-                var agentState = agentState0
+                val (agentState, browserUseState) = buildAgentStateForStep(step, action, prevAgentState)
 
                 // Detect unchanged state for heuristics
                 val unchangedCount = pageStateTracker.checkStateChange(browserUseState)
@@ -892,14 +893,14 @@ class BrowserPerceptiveAgent constructor(
                 // Execute the tool call with enhanced error handling
                 val exec = executeToolCall(stepAction, step, stepContext)
 
+                prevAgentState = agentState
+
                 if (exec != null) {
                     val observe = exec.action.observeElement
                     val toolCall = observe?.toolCall
 
                     val payload = UpdateAgentStatePayload(true, toolCall, observe, exec.summary, exec.toolCallResult)
-                    val (oldAgentState, newAgentState) = updateAgentState(agentState, payload)
-                    prevAgentState = oldAgentState
-                    agentState = newAgentState
+                    updateAgentState(agentState, payload)
 
                     // todolist.md progress hook
                     if (config.enableTodoWrites) {
@@ -943,8 +944,10 @@ class BrowserPerceptiveAgent constructor(
             return ActResult(success = ok, message = summary.content, action = userRequest)
         } catch (e: Exception) {
             val executionTime = Duration.between(startTime, Instant.now())
-            logger.error("💥 agent.fail sid={} steps={} dur={} err={}",
-                sid, step, executionTime.toString(), e.message, e)
+            logger.error(
+                "💥 agent.fail sid={} steps={} dur={} err={}",
+                sid, step, executionTime.toString(), e.message, e
+            )
             throw classifyError(e, step)
         }
     }
@@ -1032,13 +1035,15 @@ class BrowserPerceptiveAgent constructor(
         messages.addSystem(systemMsg)
         messages.addLast("user", promptBuilder.buildUserRequestMessage(userRequest), name = "user_request")
         messages.addUser(promptBuilder.buildAgentStateHistoryMessage(stateHistory))
-        if (screenshotB64 != null) messages.addUser(promptBuilder.buildBrowserVisionInfo())
-        // promptBuilder.buildAgentStateMessage(agentState)
-        if (prevAgentState != null && prevAgentState.action in listOf("textContent", "selectFirstTextOrNull")) {
-            val textContent = prevAgentState.toolCallResult?.evaluate?.value?.toString() ?: ""
-            val message = promptBuilder.buildExtractTextContentMessage(prevAgentState, textContent)
-            messages.addUser(message)
+        if (screenshotB64 != null) {
+            messages.addUser(promptBuilder.buildBrowserVisionInfo())
         }
+
+        val ctResult = prevAgentState?.toolCallResult
+        if (ctResult != null) {
+            messages.addUser(promptBuilder.buildPrevToolCallEvalValueMessage(prevAgentState, ctResult))
+        }
+
         return messages
     }
 
@@ -1047,7 +1052,7 @@ class BrowserPerceptiveAgent constructor(
         context: ExecutionContext
     ): ActionDescription? {
         return try {
-            contextToAction.generate(params)
+            cta.generate(params)
         } catch (e: Exception) {
             logger.error("🤖❌ action.gen.fail sid={} msg={}", context.sessionId.take(8), e.message, e)
             consecutiveFailureCounter.incrementAndGet()
@@ -1323,7 +1328,7 @@ class BrowserPerceptiveAgent constructor(
             val (system, user) = promptBuilder.buildSummaryPrompt(goal, stateHistory)
             slogger.info("📝⏳ Generating final summary", context)
 
-            val response = contextToAction.chatModel.callUmSm(user, system)
+            val response = cta.chatModel.callUmSm(user, system)
 
             slogger.info(
                 "📝✅ Summary generated successfully", context, mapOf(

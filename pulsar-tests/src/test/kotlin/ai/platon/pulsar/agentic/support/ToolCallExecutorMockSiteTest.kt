@@ -1,7 +1,7 @@
 package ai.platon.pulsar.agentic.support
 
 import ai.platon.pulsar.WebDriverTestBase
-import ai.platon.pulsar.agentic.tools.ToolCallExecutor
+import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor
 import ai.platon.pulsar.browser.FastWebDriverService
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.sleepSeconds
@@ -18,7 +18,7 @@ class ToolCallExecutorMockSiteTest : WebDriverTestBase() {
 
     override val webDriverService get() = FastWebDriverService(browserFactory)
 
-    private val executor = ToolCallExecutor()
+    private val executor = BasicToolCallExecutor()
 
     @Test
     fun `test driver navigateTo`() = runEnhancedWebDriverTest(browser) { driver ->

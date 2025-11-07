@@ -36,8 +36,8 @@ browser.closeTab(tabId: String)
 
 // domain: fs
 fs.writeString(filename: String, content: String)
-fs.readString(filename: String)
-fs.replaceContent(filename: String, oldStr: String, newStr: String)
+fs.readString(filename: String): String
+fs.replaceContent(filename: String, oldStr: String, newStr: String): String
 
     """
 

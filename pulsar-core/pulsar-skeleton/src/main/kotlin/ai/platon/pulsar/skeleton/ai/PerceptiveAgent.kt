@@ -27,6 +27,7 @@ data class ActResult(
 ) {
     @get:JsonIgnore
     val expression get() = result?.expression
+
     @get:JsonIgnore
     val tcEvalValue get() = result?.evaluate?.value
 
@@ -87,10 +88,10 @@ data class TcException(
     val method: String get() = StringUtils.substringBetween(expression, ".", ")")
 }
 
-data class TcEvaluation constructor(
+data class TcEvaluate constructor(
     var value: Any? = null,
-    var className: String? = null,
     var description: String? = null,
+    val className: String? = null,
     val expression: String? = null,
     var exception: TcException? = null
 ) {
@@ -100,7 +101,7 @@ data class TcEvaluation constructor(
 
 data class ToolCallResult constructor(
     val success: Boolean,
-    val evaluate: TcEvaluation? = null,
+    val evaluate: TcEvaluate? = null,
     val message: String? = null,
     val expression: String? = null,
     val modelResponse: String? = null,
@@ -163,30 +164,30 @@ data class ObserveResult constructor(
 )
 
 data class AgentState constructor(
-    val step: Int,
-    val instruction: String,
-    val domain: String? = null,
-    val action: String? = null,
-    val description: String? = null,
+    var step: Int,
+    var instruction: String,
+    var domain: String? = null,
+    var action: String? = null,
+    var description: String? = null,
     // AI: the summary of the screenshot provided in this step
-    val screenshotContentSummary: String? = null,
+    var screenshotContentSummary: String? = null,
     // AI: the summary of the page content provided in this step
-    val currentPageContentSummary: String? = null,
+    var currentPageContentSummary: String? = null,
     // AI: an evaluation for the previous goal: evaluation and state: [success, failed, partial success]
-    val evaluationPreviousGoal: String? = null,
+    var evaluationPreviousGoal: String? = null,
     // AI: the next goal to archive
-    val nextGoal: String? = null,
+    var nextGoal: String? = null,
     // the url to handle in this step
-    val url: String? = null,
+    var url: String? = null,
     // timestamp
-    val timestamp: Instant = Instant.now(),
+    var timestamp: Instant = Instant.now(),
     // The last browser use state
     @JsonIgnore
-    val browserUseState: BrowserUseState? = null,
+    var browserUseState: BrowserUseState? = null,
     @JsonIgnore
     var toolCallResult: ToolCallResult? = null,
     @JsonIgnore
-    val prevState: AgentState? = null
+    var prevState: AgentState? = null
 ) {
     override fun toString(): String {
         val summary = listOfNotNull(

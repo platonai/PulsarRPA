@@ -1,7 +1,7 @@
 package ai.platon.pulsar.agentic.support
 
 import ai.platon.pulsar.skeleton.ai.ToolCall
-import ai.platon.pulsar.agentic.tools.ToolCallExecutor
+import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
@@ -9,7 +9,7 @@ class ToolCallExecutorTest {
 
     @Test
     fun `parse simple call without args`() {
-        val tc = ToolCallExecutor.parseKotlinFunctionExpression("driver.goBack()")
+        val tc = BasicToolCallExecutor.parseKotlinFunctionExpression("driver.goBack()")
         assertNotNull(tc)
         tc!!
         assertEquals("driver", tc.domain)
@@ -19,7 +19,7 @@ class ToolCallExecutorTest {
 
     @Test
     fun `parse call with one arg`() {
-        val tc = ToolCallExecutor.parseKotlinFunctionExpression("driver.scrollToMiddle(0.4)")
+        val tc = BasicToolCallExecutor.parseKotlinFunctionExpression("driver.scrollToMiddle(0.4)")
         assertNotNull(tc)
         tc!!
         assertEquals("driver", tc.domain)
@@ -30,7 +30,7 @@ class ToolCallExecutorTest {
     @Test
     fun `generate expression escapes quotes and backslashes`() {
         val url = "https://example.com?q=\"a b\"\\tail"
-        val expr = ToolCallExecutor.toolCallToExpression(
+        val expr = BasicToolCallExecutor.toolCallToExpression(
             ToolCall("driver", "navigateTo", mutableMapOf("url" to url))
         )
         assertNotNull(expr)
@@ -41,8 +41,8 @@ class ToolCallExecutorTest {
 
     @Test
     fun `generate expression for goBack and goForward`() {
-        val back = ToolCallExecutor.toolCallToExpression(ToolCall("driver", "goBack", mutableMapOf()))
-        val forward = ToolCallExecutor.toolCallToExpression(ToolCall("driver", "goForward", mutableMapOf()))
+        val back = BasicToolCallExecutor.toolCallToExpression(ToolCall("driver", "goBack", mutableMapOf()))
+        val forward = BasicToolCallExecutor.toolCallToExpression(ToolCall("driver", "goForward", mutableMapOf()))
         assertEquals("driver.goBack()", back)
         assertEquals("driver.goForward()", forward)
     }
@@ -59,7 +59,7 @@ class ToolCallExecutorTest {
                 "count" to "2"
             )
         )
-        val expr = ToolCallExecutor.toolCallToExpression(tc)
+        val expr = BasicToolCallExecutor.toolCallToExpression(tc)
         assertNotNull(expr)
         assertTrue(expr!!.contains("\\\"hi\\\""))
         assertTrue(expr.contains("driver.clickMatches(\"a.link\", \"data-title\","))
@@ -69,7 +69,7 @@ class ToolCallExecutorTest {
     @Test
     fun `parse args with comma inside quotes`() {
         val src = "driver.clickTextMatches(\"a.link\", \"hello, world\", 2)"
-        val tc = ToolCallExecutor.parseKotlinFunctionExpression(src)
+        val tc = BasicToolCallExecutor.parseKotlinFunctionExpression(src)
         assertNotNull(tc)
         tc!!
         assertEquals("driver", tc.domain)
@@ -82,7 +82,7 @@ class ToolCallExecutorTest {
     @Test
     fun `parse single-quoted arg with escapes`() {
         val src = "driver.fill('#input', 'He said \\\'hi\\\' and \\\\path')"
-        val tc = ToolCallExecutor.parseKotlinFunctionExpression(src)
+        val tc = BasicToolCallExecutor.parseKotlinFunctionExpression(src)
         assertNotNull(tc)
         tc!!
         assertEquals("driver", tc.domain)
@@ -95,7 +95,7 @@ class ToolCallExecutorTest {
     fun `parse nested parentheses and comma inside string`() {
         val arg = "(function(){ return (1,(2+3)); })()"
         val src = "driver.evaluate(\"$arg\")"
-        val tc = ToolCallExecutor.parseKotlinFunctionExpression(src)
+        val tc = BasicToolCallExecutor.parseKotlinFunctionExpression(src)
         assertNotNull(tc)
         tc!!
         assertEquals("driver", tc.domain)
@@ -106,7 +106,7 @@ class ToolCallExecutorTest {
     @Test
     fun `parse trailing comma with one arg`() {
         val src = "driver.click(\"a.link\",)"
-        val tc = ToolCallExecutor.parseKotlinFunctionExpression(src)
+        val tc = BasicToolCallExecutor.parseKotlinFunctionExpression(src)
         assertNotNull(tc)
         tc!!
         assertEquals("click", tc.method)
@@ -117,7 +117,7 @@ class ToolCallExecutorTest {
     @Test
     fun `parse mixed whitespace and trailing comma`() {
         val src = "driver.scrollToMiddle(   0.75   ,   )"
-        val tc = ToolCallExecutor.parseKotlinFunctionExpression(src)
+        val tc = BasicToolCallExecutor.parseKotlinFunctionExpression(src)
         assertNotNull(tc)
         tc!!
         assertEquals("scrollToMiddle", tc.method)
@@ -128,7 +128,7 @@ class ToolCallExecutorTest {
     @Test
     fun testParseSimpleFunctionCall_validInput() {
         val input = "driver.open(\"https://t.tt\")"
-        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        val result = BasicToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNotNull(result)
         assertEquals("driver", result?.domain)
         assertEquals("open", result?.method)
@@ -138,7 +138,7 @@ class ToolCallExecutorTest {
     @Test
     fun testParseSimpleFunctionCall_noArguments() {
         val input = "driver.scrollToTop()"
-        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        val result = BasicToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNotNull(result)
         assertEquals("driver", result?.domain)
         assertEquals("scrollToTop", result?.method)
@@ -148,7 +148,7 @@ class ToolCallExecutorTest {
     @Test
     fun testParseSimpleFunctionCall_singleArgument() {
         val input = "driver.scrollToMiddle(0.4)"
-        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        val result = BasicToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNotNull(result)
         assertEquals("driver", result?.domain)
         assertEquals("scrollToMiddle", result?.method)
@@ -158,7 +158,7 @@ class ToolCallExecutorTest {
     @Test
     fun testParseSimpleFunctionCall_multipleArguments() {
         val input = "driver.mouseWheelUp(2, 200, 200)"
-        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        val result = BasicToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNotNull(result)
         assertEquals("driver", result?.domain)
         assertEquals("mouseWheelUp", result?.method)
@@ -168,7 +168,7 @@ class ToolCallExecutorTest {
     @Test
     fun testParseSimpleFunctionCall_multipleArgumentsWithSpaces() {
         val input = "driver.mouseWheelUp(2, 200, 200, 100)"
-        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        val result = BasicToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNotNull(result)
         assertEquals("driver", result?.domain)
         assertEquals("mouseWheelUp", result?.method)
@@ -178,42 +178,42 @@ class ToolCallExecutorTest {
     @Test
     fun testParseSimpleFunctionCall_invalidInput() {
         val input = "driver.open(\"https://t.tt"
-        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        val result = BasicToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNull(result)
     }
 
     @Test
     fun testParseSimpleFunctionCall_emptyInput() {
         val input = ""
-        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        val result = BasicToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNull(result)
     }
 
     @Test
     fun testParseSimpleFunctionCall_noMethodCall() {
         val input = "driver"
-        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        val result = BasicToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNull(result)
     }
 
     @Test
     fun testParseSimpleFunctionCall_noParentheses() {
         val input = "driver.open"
-        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        val result = BasicToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNull(result)
     }
 
     @Test
     fun testParseSimpleFunctionCall_noObject() {
         val input = ".open(\"https://t.tt\")"
-        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        val result = BasicToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNull(result)
     }
 
     @Test
     fun testParseSimpleFunctionCall_extraSpaces() {
         val input = "  driver  .  open  (  \"https://t.tt\"  )  "
-        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        val result = BasicToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNotNull(result)
         assertEquals("driver", result?.domain)
         assertEquals("open", result?.method)
@@ -223,7 +223,7 @@ class ToolCallExecutorTest {
     @Test
     fun testParseSimpleFunctionCall_emptyArguments() {
         val input = "driver.open(   )"
-        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        val result = BasicToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNotNull(result)
         assertEquals("driver", result?.domain)
         assertEquals("open", result?.method)
@@ -233,7 +233,7 @@ class ToolCallExecutorTest {
     @Test
     fun testParseSimpleFunctionCall_malformedArguments() {
         val input = "driver.open(\"https://t.tt\", )"
-        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        val result = BasicToolCallExecutor.parseKotlinFunctionExpression(input)
         assertEquals("driver", result?.domain)
         assertEquals("open", result?.method)
         assertEquals(mutableMapOf("0" to "https://t.tt"), result?.arguments)
@@ -242,7 +242,7 @@ class ToolCallExecutorTest {
     @Test
     fun testParseSimpleFunctionCall_unquotedStringArgument() {
         val input = "driver.open(https://t.tt)"
-        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        val result = BasicToolCallExecutor.parseKotlinFunctionExpression(input)
         assertEquals("driver", result?.domain)
         assertEquals("open", result?.method)
         assertEquals(mutableMapOf("0" to "https://t.tt"), result?.arguments)
@@ -251,7 +251,7 @@ class ToolCallExecutorTest {
     @Test
     fun testParseSimpleFunctionCall_specialCharactersInArgument() {
         val input = "driver.open(\"https://t.tt?query=123&param=abc\")"
-        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        val result = BasicToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNotNull(result)
         assertEquals("driver", result?.domain)
         assertEquals("open", result?.method)
@@ -262,7 +262,7 @@ class ToolCallExecutorTest {
     @Test
     fun `parse input with trailing semicolon`() {
         val input = "driver.open(\"https://t.tt\");"
-        val result = ToolCallExecutor.parseKotlinFunctionExpression(input)
+        val result = BasicToolCallExecutor.parseKotlinFunctionExpression(input)
         assertNotNull(result)
         assertEquals("driver", result?.domain)
         assertEquals("open", result?.method)
@@ -272,7 +272,7 @@ class ToolCallExecutorTest {
     @Test
     fun `parse double-quoted arg with escapes`() {
         val src = "driver.fill(\"#input\", \"He said \"hi\" and \\path\")"
-        val tc = ToolCallExecutor.parseKotlinFunctionExpression(src)
+        val tc = BasicToolCallExecutor.parseKotlinFunctionExpression(src)
         assertNotNull(tc)
         tc!!
         assertEquals("driver", tc.domain)
@@ -283,7 +283,7 @@ class ToolCallExecutorTest {
 
     @Test
     fun `toolCallToExpression waitForSelector with timeout`() {
-        val expr = ToolCallExecutor.toolCallToExpression(
+        val expr = BasicToolCallExecutor.toolCallToExpression(
             ToolCall("driver", "waitForSelector", mutableMapOf("selector" to "#a", "timeoutMillis" to "1234"))
         )
         assertEquals("driver.waitForSelector(\"#a\", 1234)", expr)
@@ -291,8 +291,8 @@ class ToolCallExecutorTest {
 
     @Test
     fun `toolCallToExpression captureScreenshot variants`() {
-        val none = ToolCallExecutor.toolCallToExpression(ToolCall("driver", "captureScreenshot", mutableMapOf()))
-        val withSel = ToolCallExecutor.toolCallToExpression(
+        val none = BasicToolCallExecutor.toolCallToExpression(ToolCall("driver", "captureScreenshot", mutableMapOf()))
+        val withSel = BasicToolCallExecutor.toolCallToExpression(
             ToolCall("driver", "captureScreenshot", mutableMapOf("selector" to "#root"))
         )
         assertEquals("driver.captureScreenshot()", none)
@@ -301,13 +301,13 @@ class ToolCallExecutorTest {
 
     @Test
     fun `toolCallToExpression scrollToMiddle default`() {
-        val expr = ToolCallExecutor.toolCallToExpression(ToolCall("driver", "scrollToMiddle", mutableMapOf()))
+        val expr = BasicToolCallExecutor.toolCallToExpression(ToolCall("driver", "scrollToMiddle", mutableMapOf()))
         assertEquals("driver.scrollToMiddle(0.5)", expr)
     }
 
     @Test
     fun `toolCallToExpression clickTextMatches escaping`() {
-        val expr = ToolCallExecutor.toolCallToExpression(
+        val expr = BasicToolCallExecutor.toolCallToExpression(
             ToolCall(
                 "driver",
                 "clickTextMatches",
@@ -322,7 +322,7 @@ class ToolCallExecutorTest {
 
     @Test
     fun `toolCallToExpression press generation`() {
-        val expr = ToolCallExecutor.toolCallToExpression(
+        val expr = BasicToolCallExecutor.toolCallToExpression(
             ToolCall("driver", "press", mutableMapOf("selector" to "#i", "key" to "Enter"))
         )
         assertEquals("driver.press(\"#i\", \"Enter\")", expr)

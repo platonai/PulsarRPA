@@ -8,7 +8,9 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
 import ai.platon.pulsar.common.KStrings
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.skeleton.ai.AgentState
+import ai.platon.pulsar.skeleton.ai.ToolCallResult
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -605,18 +607,26 @@ $his
         return visionInfo
     }
 
-    fun buildExtractTextContentMessage(agentState: AgentState, domContent: String): String {
+    fun buildPrevToolCallEvalValueMessage(agentState: AgentState, toolCallResult: ToolCallResult): String {
+        val evaluate = toolCallResult.evaluate
+        val evalResult = evaluate?.value?.toString()
+        val exception = evaluate?.exception?.cause
+        val evalMessage = when {
+            evalResult != null -> evalResult
+            exception != null -> "[执行异常]" + exception.brief()
+            else -> "(无结果)"
+        }.let { Strings.compactLog(it, 5000) }
+
         return """
 ## 上步输出
 
 上一步操作：${agentState.prevState?.action}
 上一步操作期望结果：${agentState.prevState?.nextGoal}
 
-上一步操作数据提取结果：
-
-<dom_content>
-$domContent
-</dom_content>
+上一步操作结果：
+```
+$evalMessage
+```
 
 ---
 

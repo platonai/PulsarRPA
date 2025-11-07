@@ -2,9 +2,9 @@ package ai.platon.pulsar.agentic.tools.executors
 
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.tools.ActionValidator
-import ai.platon.pulsar.agentic.tools.ToolCallExecutor.Companion.norm
+import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor.Companion.norm
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.skeleton.ai.TcEvaluation
+import ai.platon.pulsar.skeleton.ai.TcEvaluate
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
@@ -14,7 +14,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 class BrowserToolCallExecutor: AbstractToolCallExecutor() {
     private val logger = getLogger(this)
 
-    suspend fun execute(expression: String, browser: Browser, session: AgenticSession): TcEvaluation {
+    suspend fun execute(expression: String, browser: Browser, session: AgenticSession): TcEvaluate {
         if (expression.contains("switchTab")) {
             val driver = execute(expression, browser)
             if (driver is WebDriver) {
@@ -29,7 +29,7 @@ class BrowserToolCallExecutor: AbstractToolCallExecutor() {
             return driver
         }
 
-        return TcEvaluation(expression, IllegalArgumentException("Unknown expression: $expression, domain: browser"))
+        return TcEvaluate(expression, IllegalArgumentException("Unknown expression: $expression, domain: browser"))
     }
 
     /**

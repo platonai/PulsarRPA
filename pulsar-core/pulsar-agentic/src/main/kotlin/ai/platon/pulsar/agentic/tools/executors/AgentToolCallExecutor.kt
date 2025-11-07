@@ -4,7 +4,7 @@ import ai.platon.pulsar.agentic.tools.ActionValidator
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import ai.platon.pulsar.skeleton.ai.ToolCall
-import ai.platon.pulsar.agentic.tools.ToolCallExecutor.Companion.norm
+import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor.Companion.norm
 
 class AgentToolCallExecutor: AbstractToolCallExecutor() {
     private val logger = getLogger(this)

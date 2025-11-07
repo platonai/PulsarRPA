@@ -78,6 +78,11 @@ data class ActionDescription constructor(
 
     @Deprecated("User cssFriendlyExpression instead")
     val cssFriendlyExpressions: List<String> get() = observeElement?.cssFriendlyExpressions ?: emptyList()
+
+    override fun toString(): String {
+        return if (isComplete) "Completed. Summary: $summary"
+        else (cssFriendlyExpression ?: modelResponse?.toString() ?: "")
+    }
 }
 
 data class ToolCallResults(

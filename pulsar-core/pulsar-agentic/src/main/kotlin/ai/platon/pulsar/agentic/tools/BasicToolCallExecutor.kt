@@ -11,7 +11,7 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
-import ai.platon.pulsar.skeleton.ai.TcEvaluation
+import ai.platon.pulsar.skeleton.ai.TcEvaluate
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -38,7 +38,7 @@ import javax.script.ScriptEngineManager
  *
  * @author Vincent Zhang, ivincent.zhang@gmail.com, platon.ai
  */
-open class ToolCallExecutor {
+open class BasicToolCallExecutor {
     private val logger = getLogger(this)
     private val engine = ScriptEngineManager().getEngineByExtension("kts")
 
@@ -51,50 +51,46 @@ open class ToolCallExecutor {
      * eval("""driver.click("#submit")""", driver)
      * ```
      * */
-    fun eval(expression: String, driver: WebDriver): TcEvaluation {
+    fun eval(expression: String, driver: WebDriver): TcEvaluate {
         return eval(expression, mapOf("driver" to driver))
     }
 
-    fun eval(expression: String, browser: Browser): TcEvaluation {
+    fun eval(expression: String, browser: Browser): TcEvaluate {
         return eval(expression, mapOf("browser" to browser))
     }
 
-    fun eval(expression: String, agent: PerceptiveAgent): TcEvaluation {
+    fun eval(expression: String, agent: PerceptiveAgent): TcEvaluate {
         return eval(expression, mapOf("agent" to agent))
     }
 
-    fun eval(expression: String, variables: Map<String, Any>): TcEvaluation {
+    fun eval(expression: String, variables: Map<String, Any>): TcEvaluate {
         return try {
             variables.forEach { (key, value) -> engine.put(key, value) }
             val any = engine.eval(expression)
-            TcEvaluation(
-                value = any,
-                className = any::class.qualifiedName,
-                expression = expression
-            )
+            TcEvaluate(value = any, expression = expression)
         } catch (e: Exception) {
             logger.warn("Error eval expression: {} - {}", expression, e.stackTraceToString())
-            TcEvaluation(expression, e)
+            TcEvaluate(expression, e)
         }
     }
 
-    suspend fun execute(expression: String, browser: Browser, session: AgenticSession): TcEvaluation {
+    suspend fun execute(expression: String, browser: Browser, session: AgenticSession): TcEvaluate {
         return BrowserToolCallExecutor().execute(expression, browser, session)
     }
 
-    suspend fun execute(toolCall: ToolCall, target: Any): TcEvaluation {
+    suspend fun execute(toolCall: ToolCall, target: Any): TcEvaluate {
         val expression = toolCallToExpression(toolCall)
-            ?: return TcEvaluation(toolCall.pseudoExpression, IllegalStateException("Illegal expression"))
+            ?: return TcEvaluate(toolCall.pseudoExpression, IllegalArgumentException("Illegal expression"))
 
         return try {
             execute(expression, target)
         } catch (e: Exception) {
             logger.warn("Error executing TOOL CALL: {} - {}", toolCall, e.brief())
-            TcEvaluation(expression, e)
+            TcEvaluate(expression, e)
         }
     }
 
-    suspend fun execute(expression: String, target: Any): TcEvaluation {
+    suspend fun execute(expression: String, target: Any): TcEvaluate {
         return when (target) {
             is WebDriver -> WebDriverToolCallExecutor().execute(expression, target)
             is Browser -> BrowserToolCallExecutor().execute(expression, target)
@@ -102,7 +98,7 @@ open class ToolCallExecutor {
             is PerceptiveAgent -> AgentToolCallExecutor().execute(expression, target)
             else -> {
                 logger.warn("Error executing expression: {}", expression)
-                TcEvaluation(expression, UnsupportedOperationException("Unknown target ${target::class}"))
+                TcEvaluate(expression, UnsupportedOperationException("Unknown target ${target::class}"))
             }
         }
     }
