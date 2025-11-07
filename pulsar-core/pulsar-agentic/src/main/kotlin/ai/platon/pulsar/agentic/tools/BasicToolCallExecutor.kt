@@ -6,9 +6,9 @@ import ai.platon.pulsar.agentic.common.SimpleKotlinParser
 import ai.platon.pulsar.agentic.tools.executors.AgentToolExecutor
 import ai.platon.pulsar.agentic.tools.executors.BrowserToolExecutor
 import ai.platon.pulsar.agentic.tools.executors.FileSystemToolExecutor
+import ai.platon.pulsar.agentic.tools.executors.ToolExecutor
 import ai.platon.pulsar.agentic.tools.executors.WebDriverToolExecutor
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import ai.platon.pulsar.skeleton.ai.TcEvaluate
@@ -16,6 +16,7 @@ import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import javax.script.ScriptEngineManager
+import kotlin.reflect.full.isSuperclassOf
 
 /**
  * Executes WebDriver commands provided as string expressions.
@@ -38,9 +39,12 @@ import javax.script.ScriptEngineManager
  *
  * @author Vincent Zhang, ivincent.zhang@gmail.com, platon.ai
  */
-open class BasicToolCallExecutor {
+open class BasicToolCallExecutor(
+    val toolExecutors: List<ToolExecutor>
+) {
     private val logger = getLogger(this)
     private val engine = ScriptEngineManager().getEngineByExtension("kts")
+
 
     /**
      * Evaluate [expression].
@@ -78,29 +82,34 @@ open class BasicToolCallExecutor {
         return BrowserToolExecutor().execute(expression, browser, session)
     }
 
-    suspend fun execute(toolCall: ToolCall, target: Any): TcEvaluate {
-        val expression = toExpression(toolCall)
-            ?: return TcEvaluate(toolCall.pseudoExpression, IllegalArgumentException("Illegal expression"))
+    @Throws(UnsupportedOperationException::class)
+    suspend fun execute(tc: ToolCall, target: Any): TcEvaluate {
+        return toolExecutors.firstOrNull { target::class.isSuperclassOf(it.targetClass) }
+            ?.execute(tc, target)
+            ?: throw UnsupportedOperationException("❓ Unsupported target ${target::class}")
 
-        return try {
-            execute(expression, target)
-        } catch (e: Exception) {
-            logger.warn("Error executing TOOL CALL: {} - {}", toolCall, e.brief())
-            TcEvaluate(expression, e)
-        }
+//        return when (target) {
+//            is WebDriver -> WebDriverToolExecutor().execute(tc, target)
+//            is Browser -> BrowserToolExecutor().execute(tc, target)
+//            is FileSystem -> FileSystemToolExecutor().execute(tc, target)
+//            is PerceptiveAgent -> AgentToolExecutor().execute(tc, target)
+//            else -> throw UnsupportedOperationException("❓ Unsupported target ${target::class}")
+//        }
     }
 
+    @Throws(UnsupportedOperationException::class)
     suspend fun execute(expression: String, target: Any): TcEvaluate {
-        return when (target) {
-            is WebDriver -> WebDriverToolExecutor().execute(expression, target)
-            is Browser -> BrowserToolExecutor().execute(expression, target)
-            is FileSystem -> FileSystemToolExecutor().execute(expression, target)
-            is PerceptiveAgent -> AgentToolExecutor().execute(expression, target)
-            else -> {
-                logger.warn("Error executing expression: {}", expression)
-                TcEvaluate(expression, UnsupportedOperationException("Unknown target ${target::class}"))
-            }
-        }
+        return toolExecutors.firstOrNull { target::class.isSuperclassOf(it.targetClass) }
+            ?.execute(expression, target)
+            ?: throw UnsupportedOperationException("❓ Unsupported target ${target::class}")
+
+//        return when (target) {
+//            is WebDriver -> WebDriverToolExecutor().execute(expression, target)
+//            is Browser -> BrowserToolExecutor().execute(expression, target)
+//            is FileSystem -> FileSystemToolExecutor().execute(expression, target)
+//            is PerceptiveAgent -> AgentToolExecutor().execute(expression, target)
+//            else -> throw UnsupportedOperationException("❓ Unsupported target ${target::class}")
+//        }
     }
 
     companion object {
@@ -126,7 +135,7 @@ open class BasicToolCallExecutor {
                 "browser" -> BrowserToolExecutor.toExpression(tc)
                 "fs" -> FileSystemToolExecutor.toExpression(tc)
                 "agent" -> AgentToolExecutor.toExpression(tc)
-                else -> null
+                else -> throw IllegalArgumentException("Illegal tool call | $tc")
             }
         }
     }

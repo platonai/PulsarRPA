@@ -5,12 +5,18 @@ import ai.platon.pulsar.agentic.tools.ActionValidator
 import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor.Companion.norm
 import ai.platon.pulsar.agentic.tools.executors.SystemToolExecutor
 import ai.platon.pulsar.skeleton.ai.ToolCall
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
+import kotlin.reflect.KClass
 
 class FileSystemToolExecutor : AbstractToolExecutor() {
 
+    override val domain = "fs"
+
+    override val targetClass: KClass<*> = FileSystem::class
+
     @Throws(IllegalArgumentException::class)
     override suspend fun toExpression(tc: ToolCall): String {
-        return Companion.toExpression(tc) ?: throw IllegalArgumentException("Unknown Tool call $tc")
+        return Companion.toExpression(tc)
     }
 
     /**
@@ -51,11 +57,11 @@ class FileSystemToolExecutor : AbstractToolExecutor() {
 
     companion object {
 
-        fun toExpression(tc: ToolCall): String? {
+        fun toExpression(tc: ToolCall): String {
             ActionValidator().validateToolCall(tc)
 
             val arguments = tc.arguments
-            return when (tc.method) {
+            val expression = when (tc.method) {
                 // Filesystem-level operations
                 "writeString" -> arguments["filename"]?.let { f ->
                     val c = arguments["content"] ?: ""
@@ -73,6 +79,8 @@ class FileSystemToolExecutor : AbstractToolExecutor() {
                 }
                 else -> null
             }
+
+            return expression ?: throw IllegalArgumentException("Illegal tool call | $tc")
         }
     }
 }

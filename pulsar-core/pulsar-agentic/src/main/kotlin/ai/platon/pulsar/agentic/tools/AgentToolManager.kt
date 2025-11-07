@@ -4,6 +4,7 @@ import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.BrowserPerceptiveAgent
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.common.FileSystem
+import ai.platon.pulsar.agentic.tools.executors.*
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.getLogger
@@ -19,35 +20,44 @@ class AgentToolManager(
     val agent: BrowserPerceptiveAgent,
 ) {
     private val logger = getLogger(AgentToolManager::class)
-    private val executor = BasicToolCallExecutor()
 
     val baseDir: Path = AppPaths.get("agent")
         .resolve(DateTimes.PATH_SAFE_FORMAT_101.format(agent.startTime))
         .resolve(agent.uuid.toString())
     val fs: FileSystem
 
-    val session: AgenticSession get() = agent.session
-    val driver: WebDriver get() = session.getOrCreateBoundDriver()
-
     init {
         Files.createDirectories(baseDir)
         fs = FileSystem(baseDir)
     }
 
-    suspend fun execute(toolCall: ToolCall, action: ActionDescription, message: String? = null): ToolCallResult {
+    val session: AgenticSession get() = agent.session
+    val driver: WebDriver get() = session.getOrCreateBoundDriver()
+
+    val executors: List<ToolExecutor> = listOf(
+        WebDriverToolExecutor(),
+        BrowserToolExecutor(),
+        FileSystemToolExecutor(),
+        AgentToolExecutor(),
+    )
+
+    val executor = BasicToolCallExecutor(executors)
+
+    @Throws(UnsupportedOperationException::class)
+    suspend fun execute(tc: ToolCall, action: ActionDescription, message: String? = null): ToolCallResult {
         try {
-            val evaluate = when (toolCall.domain) {
-                "driver" -> executor.execute(toolCall, driver)
-                "browser" -> executor.execute(toolCall, driver.browser)
-                "fs" -> executor.execute(toolCall, fs)
-                "agent" -> executor.execute(toolCall, this)
-                else -> throw IllegalArgumentException("❓ Unsupported domain: ${toolCall.domain} | $toolCall")
+            val evaluate = when (tc.domain) {
+                "driver" -> executor.execute(tc, driver)
+                "browser" -> executor.execute(tc, driver.browser)
+                "fs" -> executor.execute(tc, fs)
+                "agent" -> executor.execute(tc, agent)
+                else -> throw UnsupportedOperationException("❓ Unsupported domain: ${tc.domain} | $tc")
             }
 
-            val method = toolCall.method
+            val method = tc.method
             when (method) {
                 "switchTab" -> onDidSwitchTab(evaluate)
-                "navigateTo" -> onDidNavigateTo(driver, toolCall, evaluate)
+                "navigateTo" -> onDidNavigateTo(driver, tc, evaluate)
             }
 
             return ToolCallResult(

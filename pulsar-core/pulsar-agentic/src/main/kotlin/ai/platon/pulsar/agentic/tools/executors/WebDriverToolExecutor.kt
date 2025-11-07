@@ -8,13 +8,18 @@ import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import java.time.Duration
+import kotlin.reflect.KClass
 
 class WebDriverToolExecutor: AbstractToolExecutor() {
     private val logger = getLogger(this)
 
+    override val domain = "driver"
+
+    override val targetClass: KClass<*> = WebDriver::class
+
     @Throws(IllegalArgumentException::class)
     override suspend fun toExpression(tc: ToolCall): String {
-        return Companion.toExpression(tc) ?: throw IllegalArgumentException("Unknown Tool call $tc")
+        return Companion.toExpression(tc)
     }
 
     /**
@@ -617,11 +622,11 @@ class WebDriverToolExecutor: AbstractToolExecutor() {
 
     companion object {
 
-        fun toExpression(tc: ToolCall): String? {
+        fun toExpression(tc: ToolCall): String {
             ActionValidator().validateToolCall(tc)
 
             val arguments = tc.arguments
-            return when (tc.method) {
+            val expression = when (tc.method) {
                 // Navigation
                 "open" -> arguments["url"]?.let { "driver.open(${it.norm()})" }
                 "navigateTo" -> arguments["url"]?.let { "driver.navigateTo(${it.norm()})" }
@@ -751,6 +756,8 @@ class WebDriverToolExecutor: AbstractToolExecutor() {
                 "evaluate" -> arguments["expression"]?.let { "driver.evaluate(${it.norm()})" }
                 else -> null
             }
+
+            return expression ?: throw IllegalArgumentException("Illegal tool call | $tc")
         }
     }
 }

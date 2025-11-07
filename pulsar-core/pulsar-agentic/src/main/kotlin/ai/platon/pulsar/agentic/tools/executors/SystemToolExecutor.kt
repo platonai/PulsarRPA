@@ -1,15 +1,19 @@
 package ai.platon.pulsar.agentic.tools.executors
 
-import ai.platon.pulsar.agentic.tools.executors.AgentToolExecutor
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.ToolCall
+import kotlin.reflect.KClass
 
 class SystemToolExecutor: AbstractToolExecutor() {
     private val logger = getLogger(this)
 
+    override val domain = "system"
+
+    override val targetClass: KClass<*> = SystemToolExecutor::class
+
     @Throws(IllegalArgumentException::class)
     override suspend fun toExpression(tc: ToolCall): String {
-        return Companion.toExpression(tc) ?: throw IllegalArgumentException("Unknown Tool call $tc")
+        return Companion.toExpression(tc)
     }
 
     /**
@@ -37,12 +41,14 @@ class SystemToolExecutor: AbstractToolExecutor() {
     }
 
     companion object {
-        fun toExpression(tc: ToolCall): String? {
+        fun toExpression(tc: ToolCall): String {
             val arguments = tc.arguments
-            return when (tc.method) {
+            val expression = when (tc.method) {
                 "help" -> "system.help()"
                 else -> null
             }
+
+            return expression ?: throw IllegalArgumentException("Illegal tool call | $tc")
         }
     }
 }

@@ -5,8 +5,13 @@ import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.TcEvaluate
 import ai.platon.pulsar.skeleton.ai.ToolCall
+import kotlin.reflect.KClass
 
 interface ToolExecutor {
+
+    val domain: String
+    val targetClass: KClass<*>
+
     suspend fun execute(tc: ToolCall, target: Any): TcEvaluate
     suspend fun execute(expression: String, target: Any): TcEvaluate
     suspend fun toExpression(tc: ToolCall): String
