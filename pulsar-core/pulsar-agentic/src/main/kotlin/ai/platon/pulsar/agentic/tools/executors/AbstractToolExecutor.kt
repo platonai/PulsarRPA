@@ -14,7 +14,7 @@ interface ToolExecutor {
 
     suspend fun execute(tc: ToolCall, target: Any): TcEvaluate
     suspend fun execute(expression: String, target: Any): TcEvaluate
-    suspend fun toExpression(tc: ToolCall): String
+    fun toExpression(tc: ToolCall): String
 }
 
 abstract class AbstractToolExecutor: ToolExecutor {

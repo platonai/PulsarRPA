@@ -18,7 +18,7 @@ class WebDriverToolExecutor: AbstractToolExecutor() {
     override val targetClass: KClass<*> = WebDriver::class
 
     @Throws(IllegalArgumentException::class)
-    override suspend fun toExpression(tc: ToolCall): String {
+    override fun toExpression(tc: ToolCall): String {
         return Companion.toExpression(tc)
     }
 
@@ -757,7 +757,7 @@ class WebDriverToolExecutor: AbstractToolExecutor() {
                 else -> null
             }
 
-            return expression ?: throw IllegalArgumentException("Illegal tool call | $tc")
+            return expression ?: throw IllegalArgumentException("⚠️ Illegal tool call | $tc")
         }
     }
 }

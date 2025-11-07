@@ -15,7 +15,7 @@ class AgentToolExecutor : AbstractToolExecutor() {
     override val targetClass: KClass<*> = PerceptiveAgent::class
 
     @Throws(IllegalArgumentException::class)
-    override suspend fun toExpression(tc: ToolCall): String {
+    override fun toExpression(tc: ToolCall): String {
         return Companion.toExpression(tc)
     }
 

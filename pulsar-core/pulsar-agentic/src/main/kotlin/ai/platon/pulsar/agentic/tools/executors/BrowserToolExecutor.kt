@@ -22,7 +22,7 @@ class BrowserToolExecutor: AbstractToolExecutor() {
     override val targetClass: KClass<*> = Browser::class
 
     @Throws(IllegalArgumentException::class)
-    override suspend fun toExpression(tc: ToolCall): String {
+    override fun toExpression(tc: ToolCall): String {
         return Companion.toExpression(tc)
     }
 

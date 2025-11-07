@@ -1,13 +1,8 @@
 package ai.platon.pulsar.agentic.tools
 
 import ai.platon.pulsar.agentic.AgenticSession
-import ai.platon.pulsar.agentic.common.FileSystem
 import ai.platon.pulsar.agentic.common.SimpleKotlinParser
-import ai.platon.pulsar.agentic.tools.executors.AgentToolExecutor
-import ai.platon.pulsar.agentic.tools.executors.BrowserToolExecutor
-import ai.platon.pulsar.agentic.tools.executors.FileSystemToolExecutor
-import ai.platon.pulsar.agentic.tools.executors.ToolExecutor
-import ai.platon.pulsar.agentic.tools.executors.WebDriverToolExecutor
+import ai.platon.pulsar.agentic.tools.executors.*
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
@@ -44,7 +39,6 @@ open class BasicToolCallExecutor(
 ) {
     private val logger = getLogger(this)
     private val engine = ScriptEngineManager().getEngineByExtension("kts")
-
 
     /**
      * Evaluate [expression].
@@ -112,6 +106,8 @@ open class BasicToolCallExecutor(
 //        }
     }
 
+    fun toExpression(tc: ToolCall) = Companion.toExpression(tc)
+
     companion object {
         /**
          * Parses a function call from a text string into its components.
@@ -129,14 +125,16 @@ open class BasicToolCallExecutor(
 
         internal fun String.norm() = Strings.doubleQuote(this.esc())
 
-        fun toExpression(tc: ToolCall): String? {
+        fun toExpression(tc: ToolCall): String {
             return when (tc.domain) {
                 "driver" -> WebDriverToolExecutor.toExpression(tc)
                 "browser" -> BrowserToolExecutor.toExpression(tc)
                 "fs" -> FileSystemToolExecutor.toExpression(tc)
                 "agent" -> AgentToolExecutor.toExpression(tc)
-                else -> throw IllegalArgumentException("Illegal tool call | $tc")
+                else -> throw IllegalArgumentException("⚠️ Illegal tool call | $tc")
             }
         }
+
+        fun toExpressionOrNull(tc: ToolCall): String? = runCatching { BasicToolCallExecutor.toExpression(tc) }.getOrNull()
     }
 }
