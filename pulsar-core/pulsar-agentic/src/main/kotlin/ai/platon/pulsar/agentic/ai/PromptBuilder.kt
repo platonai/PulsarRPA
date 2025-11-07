@@ -16,7 +16,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.time.LocalDate
 import java.util.*
 import kotlin.math.min
-import kotlin.math.roundToInt
 
 /**
  * Description:
@@ -38,30 +37,74 @@ class PromptBuilder() {
 
         const val MAX_ACTIONS = 1
 
-        val ACTION_SCHEMA = """
-        |,
-        |"domain": string, "method": string, "arguments": [{"name": string, "value": string}],
-        |"screenshotContentSummary": string, "currentPageContentSummary": string,
-        |"memory": string,"thinking": string,
-        |"evaluationPreviousGoal": string, "nextGoal": string,
-        |
-        |""".trimMargin()
+        fun buildAgentResponseSchema(): String {
+            val schema = """
+{
+  "screenshotContentSummary": "当前截图内容摘要",
+  "currentPageContentSummary": "当前网页文本内容摘要，基于无障碍树，或者网页内容提取结果",
+  "memory": "本步骤以及整体进展的 1-3 句具体记忆。这应包含有助于将来跟踪进度的信息，例如访问的页面数、找到的项数等。",
+  "thinking": "一个应用了 `## 推理规则` 的结构化 <think> 风格推理块。",
+  "evaluationPreviousGoal": "对上一步动作的简洁一句话分析。明确说明：成功、失败或不确定。",
+  "nextGoal": "下一步的直接目标和要采取的动作，用一句明确的话说明。",
+  "actions": [
+    {
+      "domain": "工具域, 如 `driver`",
+      "method": "方法名, 如 `click`",
+      "arguments": [
+        {
+          "name": "参数名，如 `selector`",
+          "value": "参数值，如 `0,4`"
+        }
+      ],
+      "locator": "网页节点定位器，由两个数字构成，如 `0,4`",
+      "description": "对当前定位器和工具选择的描述"
+    }
+  ]
+}
+"""
+
+            return schema
+        }
 
         fun buildObserveResultSchema(returnAction: Boolean): String {
-            val actionFields = if (returnAction) ACTION_SCHEMA else ""
+            // English is better for LLM to understand json
+            val schema1 = """
+{
+  "elements": [
+    {
+      "locator": "Web page node locator, composed of two numbers, such as `0,4`",
+      "description": "Description of the current locator and tool selection",
+      "domain": "Tool domain, such as `driver`",
+      "method": "Method name, such as `click`",
+      "arguments": [
+        {
+          "name": "Parameter name, such as `selector`",
+          "value": "Parameter value, such as `0,4`"
+        }
+      ],
+      "screenshotContentSummary": "Summary of the current screenshot content",
+      "currentPageContentSummary": "Summary of the current web page text content, based on the accessibility tree or web content extraction results",
+      "memory": "1–3 specific sentences describing this step and the overall progress. This should include information helpful for future progress tracking, such as the number of pages visited or items found.",
+      "thinking": "A structured <think>-style reasoning block that applies the `## 推理规则`.",
+      "evaluationPreviousGoal": "A concise one-sentence analysis of the previous action, clearly stating success, failure, or uncertainty.",
+      "nextGoal": "A clear one-sentence statement of the next direct goal and action to take."
+    }
+  ]
+}
+"""
 
-            val schema = """
+            val schema2 = """
 {
   "elements": [
     {
       "locator": string,
-      "description": string$actionFields
+      "description": string
     }
   ]
 }
 """.let { Strings.compactWhitespaces(it) }
 
-            return schema
+            return if (returnAction) schema1 else schema2
         }
 
         fun buildObserveResultSchemaContract(params: ObserveParams): String {
@@ -104,19 +147,17 @@ $schema
 - 使用 `click(selector, "Ctrl")` 新建标签页，在**新标签页**打开链接
 - 如果目标页面在**新标签页**打开，使用 `browser.switchTab(tabId: String)` 切换到目标页面，从`## 浏览器状态`段落获得 `tabId`
 - 若页面因输入文本等操作发生变化，需判断是否要交互新出现的元素（例如从列表中选择正确选项）。
-- 如需阅读整个网页文本，如总结信息，使用 `textContent`
+- 如需阅读整个网页文本，如总结信息，使用 `selectFirstContentOrNull`
 - 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。不要模拟点击屏幕键盘上的按键
 - 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
-- 若需导航到浏览历史的前一页，使用 `goBack`
-- 若需需要导航到浏览历史的下一页，使用 `goForward`
+- 导航到浏览历史的前一网页 - `goBack`, 后一网页 - `goForward`
 - 如非必要，避免重复点击同一链接，如必须这样做，提供理由
 - 若出现验证码，尽可能尝试解决；若无法解决，则启用备用策略（例如换其他站点、回退上一步）
 - 若预期元素缺失，尝试刷新页面、滚动或返回上一页
 - 若填写输入框后操作序列中断，通常是因为页面发生了变化（例如输入框下方弹出了建议选项）
 - 若上一步操作序列因页面变化而中断，需补全未执行的剩余操作。例如，若你尝试输入文本并点击搜索按钮，但点击未执行（因页面变化），应在下一步重试点击操作。
 - 若<user_request>中包含具体页面信息（如商品类型、评分、价格、地点等），尝试使用筛选功能以提高效率。
-- 若向字段输入内容，无需先滚动和聚焦，工具内部处理
-- 若向字段输入内容，可能需要按回车、点击搜索按钮或从下拉菜单选择以完成操作。
+- 若向字段输入内容：1. 无需先滚动和聚焦（工具内部处理）2. 可能需要按回车、点击搜索按钮或从下拉菜单选择以完成操作。
 - 如无必要，不要登录页面。没有凭证时，绝对不要尝试登录。
 - 始终考虑最终目标：<user_request>包含的内容。若用户指定了明确步骤，这些步骤始终具有最高优先级。
 - 始终先判断任务属于两类哪一种：
@@ -260,7 +301,7 @@ $A11Y_TREE_NOTE_CONTENT
 
 ## 数据提取
 
-- 上一步操作的数据提取结果，如 `textContent`
+- 上一步操作的数据提取结果，如 `selectFirstTextOrNull` 结果
 
 ---
 
@@ -271,11 +312,11 @@ $A11Y_TREE_NOTE_CONTENT
 - 当达到允许的最大步骤数（`max_steps`）时，即使任务未完成也要完成。
 - 如果绝对无法继续，也要完成。
 
-`任务完成输出` 是你终止并与用户共享发现结果的机会。
+`任务完成输出` 是你终止任务并与用户共享发现结果的机会。
 - 仅当完整地、无缺失地完成 USER REQUEST 时，将 `success` 设为 `true`。
 - 如果有任何部分缺失、不完整或不确定，将 `success` 设为 `false`。
 - 如果用户要求特定格式（例如：“返回具有以下结构的 JSON”或“以指定格式返回列表”），确保在回答中使用正确的格式。
-- 如果用户要求结构化输出，`任务完成输出` 的 schema 将被修改。解决任务时请考虑该 schema。
+- 如果用户要求结构化输出，`## 输出格式` 段落规定的 schema 将被修改。解决任务时请考虑该 schema。
 
 ---
 
@@ -291,9 +332,8 @@ $A11Y_TREE_NOTE_CONTENT
 
 - 如需输入，直接输入，无需滚动和聚焦，工具层处理
 - 屏幕阅读规则
-  - 逐屏阅读，屏幕视觉内容是推理的最终依据
-  - 例外
-    - 如果你的任务仅依赖网页文本，不要逐屏阅读，滚动到网页底部 + 使用文本提取工具(selectFirstTextOrNull)直接获取网页内容
+  - 默认逐屏阅读，屏幕视觉内容是推理的最终依据
+  - 当视口数超过5屏时，除非用户要求，否则不要逐屏阅读，而是滚动到网页底部保证网页完全加载，然后使用文本提取工具(selectFirstTextOrNull)提取网页内容进行分析
 - 不要在一步中尝试多条不同路径。始终为每一步设定一个明确目标。重要的是在下一步你能看到动作是否成功，因此不要链式调用会多次改变浏览器状态的动作，例如：
    - 不要使用 click 然后再 navigate，因为你无法确认 click 是否成功。
    - 不要连续使用 switch，因为你看不到中间状态。
@@ -350,12 +390,12 @@ $A11Y_TREE_NOTE_CONTENT
 
 ---
 
-## 输出
+## 输出格式
 
 - 输出严格使用下面两种 JSON 格式之一
 - 仅输出 JSON 内容，无多余文字
 
-1. 动作输出格式，最多一个元素，method 字段不得为空(<output_act>)：
+1. 动作输出格式，最多一个元素，domain & method 字段不得为空(<output_act>)：
 ${buildObserveResultSchema(true)}
 
 2. 任务完成输出格式(<output_done>):
@@ -848,8 +888,6 @@ $newTabsJson
         val nanoTree = domState.microTree.toNanoTreeInRange(startY, endY)
         // val nanoTree = domState.microTree.toNanoTree()
 
-        val schemaContract = buildObserveResultSchemaContract(params)
-
         fun contentCN() = """
 ## 浏览器状态
 
@@ -895,8 +933,6 @@ ${nanoTree.lazyJson}
 ```
 
 ---
-
-$schemaContract
 
 """
 

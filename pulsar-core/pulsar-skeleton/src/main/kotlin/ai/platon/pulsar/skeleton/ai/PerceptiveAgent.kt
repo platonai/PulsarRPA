@@ -2,6 +2,7 @@ package ai.platon.pulsar.skeleton.ai
 
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
+import ai.platon.pulsar.common.Strings
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.JsonNode
 import org.apache.commons.lang3.StringUtils
@@ -74,8 +75,6 @@ data class ToolCall constructor(
     val pseudoNamedArguments get() = arguments.entries.joinToString { (k, v) -> "$k=$v" }
 
     val pseudoExpression: String get() = "$domain.${method}($pseudoNamedArguments)"
-
-
 
     override fun toString() = pseudoExpression
 }
@@ -208,7 +207,7 @@ data class ProcessTrace(
     val timestamp: Instant = Instant.now(),
 ) {
     override fun toString(): String {
-        val itemStr = items.entries.joinToString { (k, v) -> "$k=$v" }
+        val itemStr = items.entries.joinToString { (k, v) -> "$k=" + Strings.compactLog(v.toString()) }
         val msg = message?.let { " | $it" } ?: ""
         return "$timestamp [$step] $itemStr$msg"
     }

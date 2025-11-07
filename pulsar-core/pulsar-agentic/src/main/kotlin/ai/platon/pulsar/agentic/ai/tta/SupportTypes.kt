@@ -9,6 +9,26 @@ import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.ai.ToolCallResult
 
+data class AgentResponseAction(
+    val domain: String? = null,
+    val method: String? = null,
+
+    val arguments: List<Map<String, String>?>? = null,
+    val locator: String? = null,
+    val description: String? = null,
+)
+
+data class AgentResponse(
+    val actions: List<AgentResponseAction>,
+
+    val memory: String? = null,
+    val thinking: String? = null,
+    val screenshotContentSummary: String? = null,
+    val currentPageContentSummary: String? = null,
+    val evaluationPreviousGoal: String? = null,
+    val nextGoal: String? = null,
+)
+
 data class ObserveResponseComplete(
     val taskComplete: Boolean = false,
     val success: Boolean = false,

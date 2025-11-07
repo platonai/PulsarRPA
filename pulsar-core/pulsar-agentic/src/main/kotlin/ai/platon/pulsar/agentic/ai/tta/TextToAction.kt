@@ -184,7 +184,7 @@ open class TextToAction(
 
             contentStart.contains("\"elements\"") -> {
                 val elements: ObserveResponseElements = mapper.readValue(content)
-                elements.elements?.map { TextToAction.toActionDescription(it, response) }?.firstOrNull()
+                elements.elements?.map { toActionDescription(it, response) }?.firstOrNull()
                     ?: ActionDescription(modelResponse = response)
             }
 
