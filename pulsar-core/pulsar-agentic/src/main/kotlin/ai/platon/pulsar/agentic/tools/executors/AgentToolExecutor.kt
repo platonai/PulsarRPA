@@ -6,7 +6,7 @@ import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor.Companion.norm
 
-class AgentToolCallExecutor: AbstractToolCallExecutor() {
+class AgentToolExecutor: AbstractToolExecutor() {
     private val logger = getLogger(this)
 
     /**

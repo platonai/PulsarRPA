@@ -1041,7 +1041,7 @@ class BrowserPerceptiveAgent constructor(
 
         val ctResult = prevAgentState?.toolCallResult
         if (ctResult != null) {
-            messages.addUser(promptBuilder.buildPrevToolCallEvalValueMessage(prevAgentState, ctResult))
+            messages.addUser(promptBuilder.buildPrevToolCallResultMessage(prevAgentState, ctResult))
         }
 
         return messages

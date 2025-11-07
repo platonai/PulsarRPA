@@ -11,7 +11,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 
-class BrowserToolCallExecutor: AbstractToolCallExecutor() {
+class BrowserToolExecutor: AbstractToolExecutor() {
     private val logger = getLogger(this)
 
     suspend fun execute(expression: String, browser: Browser, session: AgenticSession): TcEvaluate {

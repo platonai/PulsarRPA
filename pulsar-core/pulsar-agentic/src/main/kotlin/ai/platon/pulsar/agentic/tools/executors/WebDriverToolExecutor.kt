@@ -9,7 +9,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import java.time.Duration
 
-class WebDriverToolCallExecutor: AbstractToolCallExecutor() {
+class WebDriverToolExecutor: AbstractToolExecutor() {
     private val logger = getLogger(this)
 
 //    @Throws(TimeoutCancellationException::class, Exception::class)

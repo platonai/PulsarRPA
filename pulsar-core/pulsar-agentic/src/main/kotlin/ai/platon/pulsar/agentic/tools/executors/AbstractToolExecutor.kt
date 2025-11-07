@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.TcEvaluate
 
-abstract class AbstractToolCallExecutor {
+abstract class AbstractToolExecutor {
 
     private val logger = getLogger(this)
     private val parser = SimpleKotlinParser()

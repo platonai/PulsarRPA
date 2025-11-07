@@ -607,7 +607,7 @@ $his
         return visionInfo
     }
 
-    fun buildPrevToolCallEvalValueMessage(agentState: AgentState, toolCallResult: ToolCallResult): String {
+    fun buildPrevToolCallResultMessage(agentState: AgentState, toolCallResult: ToolCallResult): String {
         val evaluate = toolCallResult.evaluate
         val evalResult = evaluate?.value?.toString()
         val exception = evaluate?.exception?.cause
@@ -620,10 +620,10 @@ $his
         return """
 ## 上步输出
 
-上一步操作：${agentState.prevState?.action}
-上一步操作期望结果：${agentState.prevState?.nextGoal}
+上步操作：${agentState.prevState?.action}
+上步期望结果：${agentState.prevState?.nextGoal}
 
-上一步操作结果：
+上步执行结果：
 ```
 $evalMessage
 ```

@@ -3,10 +3,10 @@ package ai.platon.pulsar.agentic.tools
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.common.FileSystem
 import ai.platon.pulsar.agentic.common.SimpleKotlinParser
-import ai.platon.pulsar.agentic.tools.executors.AgentToolCallExecutor
-import ai.platon.pulsar.agentic.tools.executors.BrowserToolCallExecutor
-import ai.platon.pulsar.agentic.tools.executors.FileSystemToolCallExecutor
-import ai.platon.pulsar.agentic.tools.executors.WebDriverToolCallExecutor
+import ai.platon.pulsar.agentic.tools.executors.AgentToolExecutor
+import ai.platon.pulsar.agentic.tools.executors.BrowserToolExecutor
+import ai.platon.pulsar.agentic.tools.executors.FileSystemToolExecutor
+import ai.platon.pulsar.agentic.tools.executors.WebDriverToolExecutor
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
@@ -75,7 +75,7 @@ open class BasicToolCallExecutor {
     }
 
     suspend fun execute(expression: String, browser: Browser, session: AgenticSession): TcEvaluate {
-        return BrowserToolCallExecutor().execute(expression, browser, session)
+        return BrowserToolExecutor().execute(expression, browser, session)
     }
 
     suspend fun execute(toolCall: ToolCall, target: Any): TcEvaluate {
@@ -92,10 +92,10 @@ open class BasicToolCallExecutor {
 
     suspend fun execute(expression: String, target: Any): TcEvaluate {
         return when (target) {
-            is WebDriver -> WebDriverToolCallExecutor().execute(expression, target)
-            is Browser -> BrowserToolCallExecutor().execute(expression, target)
-            is FileSystem -> FileSystemToolCallExecutor().execute(expression, target)
-            is PerceptiveAgent -> AgentToolCallExecutor().execute(expression, target)
+            is WebDriver -> WebDriverToolExecutor().execute(expression, target)
+            is Browser -> BrowserToolExecutor().execute(expression, target)
+            is FileSystem -> FileSystemToolExecutor().execute(expression, target)
+            is PerceptiveAgent -> AgentToolExecutor().execute(expression, target)
             else -> {
                 logger.warn("Error executing expression: {}", expression)
                 TcEvaluate(expression, UnsupportedOperationException("Unknown target ${target::class}"))
@@ -122,11 +122,11 @@ open class BasicToolCallExecutor {
 
         fun toolCallToExpression(tc: ToolCall): String? {
             return when (tc.domain) {
-                "driver" -> WebDriverToolCallExecutor.toolCallToExpression(tc)
-                "browser" -> BrowserToolCallExecutor.toolCallToExpression(tc)
-                "fs" -> FileSystemToolCallExecutor.toolCallToExpression(tc)
+                "driver" -> WebDriverToolExecutor.toolCallToExpression(tc)
+                "browser" -> BrowserToolExecutor.toolCallToExpression(tc)
+                "fs" -> FileSystemToolExecutor.toolCallToExpression(tc)
                 // Fix: route agent domain to AgentToolCallExecutor
-                "agent" -> AgentToolCallExecutor.toolCallToExpression(tc)
+                "agent" -> AgentToolExecutor.toolCallToExpression(tc)
                 else -> null
             }
         }

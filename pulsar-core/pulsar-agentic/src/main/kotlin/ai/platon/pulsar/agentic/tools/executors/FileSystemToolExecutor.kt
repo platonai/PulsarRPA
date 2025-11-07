@@ -5,7 +5,7 @@ import ai.platon.pulsar.agentic.tools.ActionValidator
 import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor.Companion.norm
 import ai.platon.pulsar.skeleton.ai.ToolCall
 
-class FileSystemToolCallExecutor : AbstractToolCallExecutor() {
+class FileSystemToolExecutor : AbstractToolExecutor() {
     /**
      * Execute fs.* expressions against a FileSystem target.
      */
