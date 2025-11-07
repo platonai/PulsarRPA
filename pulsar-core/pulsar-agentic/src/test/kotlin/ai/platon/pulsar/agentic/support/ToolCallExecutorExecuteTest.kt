@@ -20,12 +20,12 @@ class ToolCallExecutorExecuteTest {
 
         coEvery { driver.open(any()) } just Runs
         val r1 = executor.execute("driver.open(\"https://t.tt\")", driver)
-        assertNull(r1) // open returns Unit -> null propagated
+        assertNull(r1.value) // open returns Unit -> null propagated
         coVerify(exactly = 1) { driver.open("https://t.tt") }
 
         coEvery { driver.navigateTo(any<String>()) } just Runs
         val r2 = executor.execute("driver.navigateTo(\"https://a.b\")", driver)
-        assertNull(r2)
+        assertNull(r2.value)
         coVerify(exactly = 1) { driver.navigateTo("https://a.b") }
 
         val slotEntry = slot<NavigateEntry>()
@@ -65,16 +65,16 @@ class ToolCallExecutorExecuteTest {
         val d0 = Duration.ofMillis(123)
         coEvery { driver.waitForNavigation() } returns d0
         val r0 = executor.execute("driver.waitForNavigation()", driver)
-        assertEquals(d0, r0)
+        assertEquals(d0, r0.value)
 
         val d1 = Duration.ofMillis(456)
         coEvery { driver.waitForNavigation(any<String>()) } returns d1
         val r1 = executor.execute("driver.waitForNavigation(\"old\")", driver)
-        assertEquals(d1, r1)
+        assertEquals(d1, r1.value)
 
         coEvery { driver.waitForNavigation(any<String>(), any<Long>()) } returns 789L
         val r2 = executor.execute("driver.waitForNavigation(\"old\", 789)", driver)
-        assertEquals(789L, r2)
+        assertEquals(789L, r2.value)
     }
 
     @Test
@@ -83,8 +83,8 @@ class ToolCallExecutorExecuteTest {
         coEvery { driver.captureScreenshot() } returns "img0"
         coEvery { driver.captureScreenshot(any<String>()) } returns "img1"
 
-        assertEquals("img0", executor.execute("driver.captureScreenshot()", driver))
-        assertEquals("img1", executor.execute("driver.captureScreenshot(\"#a\")", driver))
+        assertEquals("img0", executor.execute("driver.captureScreenshot()", driver).value)
+        assertEquals("img1", executor.execute("driver.captureScreenshot(\"#a\")", driver).value)
         coVerify { driver.captureScreenshot() }
         coVerify { driver.captureScreenshot("#a") }
     }
@@ -128,12 +128,12 @@ class ToolCallExecutorExecuteTest {
         coEvery { driver.selectFirstPropertyValueOrNull(any(), any()) } returns "pv"
         coEvery { driver.selectPropertyValueAll(any(), any(), any(), any()) } returns listOf("p1", "p2")
 
-        assertEquals("v", executor.execute("driver.selectFirstAttributeOrNull(\"#a\", \"href\")", driver))
-        assertEquals(mapOf("a" to "b"), executor.execute("driver.selectAttributes(\"#a\")", driver))
+        assertEquals("v", executor.execute("driver.selectFirstAttributeOrNull(\"#a\", \"href\")", driver).value)
+        assertEquals(mapOf("a" to "b"), executor.execute("driver.selectAttributes(\"#a\")", driver).value)
         executor.execute("driver.selectAttributeAll(\"#a\", \"href\", 2, 10)", driver)
         coVerify { driver.selectAttributeAll("#a", "href", 2, 10) }
 
-        assertEquals("pv", executor.execute("driver.selectFirstPropertyValueOrNull(\"#a\", \"value\")", driver))
+        assertEquals("pv", executor.execute("driver.selectFirstPropertyValueOrNull(\"#a\", \"value\")", driver).value)
         executor.execute("driver.selectPropertyValueAll(\"#a\", \"value\", 1, 100)", driver)
         coVerify { driver.selectPropertyValueAll("#a", "value", 1, 100) }
     }
@@ -169,10 +169,10 @@ class ToolCallExecutorExecuteTest {
         coEvery { driver.evaluateDetail(any()) } returns null
         coEvery { driver.evaluateValueDetail(any()) } returns null
 
-        assertEquals(42, executor.execute("driver.evaluate(\"1+41\")", driver))
-        assertEquals(mapOf("a" to 1), executor.execute("driver.evaluateValue(\"({a:1})\")", driver))
-        assertNull(executor.execute("driver.evaluateDetail(\"1\")", driver))
-        assertNull(executor.execute("driver.evaluateValueDetail(\"1\")", driver))
+        assertEquals(42, executor.execute("driver.evaluate(\"1+41\")", driver).value)
+        assertEquals(mapOf("a" to 1), executor.execute("driver.evaluateValue(\"({a:1})\")", driver).value)
+        assertNull(executor.execute("driver.evaluateDetail(\"1\")", driver).value)
+        assertNull(executor.execute("driver.evaluateValueDetail(\"1\")", driver).value)
     }
 
     @Test
@@ -195,9 +195,9 @@ class ToolCallExecutorExecuteTest {
         coEvery { driver.isVisible(any()) } returns false
         coEvery { driver.focus(any()) } just Runs
 
-        assertEquals(true, executor.execute("driver.exists(\"#a\")", driver))
-        assertEquals(false, executor.execute("driver.isVisible(\"#a\")", driver))
-        assertNull(executor.execute("driver.focus(\"#a\")", driver))
+        assertEquals(true, executor.execute("driver.exists(\"#a\")", driver).value)
+        assertEquals(false, executor.execute("driver.isVisible(\"#a\")", driver).value)
+        assertNull(executor.execute("driver.focus(\"#a\")", driver).value)
     }
 
     @Test
@@ -222,7 +222,7 @@ class ToolCallExecutorExecuteTest {
         val tc3 = ToolCall("driver", "waitForNavigation", mutableMapOf("oldUrl" to "u", "timeoutMillis" to "10"))
         coEvery { driver.waitForNavigation("u", 10) } returns 5L
         val r = executor.execute(tc3, driver)
-        assertEquals(5L, r)
+        assertEquals(5L, r.value)
     }
 }
 

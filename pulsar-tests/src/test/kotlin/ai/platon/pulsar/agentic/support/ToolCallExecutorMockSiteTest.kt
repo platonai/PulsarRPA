@@ -283,8 +283,8 @@ class ToolCallExecutorMockSiteTest : WebDriverTestBase() {
 
         val result = executor.execute("driver.selectFirstTextOrNull(\"$selector\")", driver)
 
-        assertNotNull(result, "Should return text content")
-        assertTrue(result is String, "Result should be a String")
+        assertNotNull(result.value, "Should return text content")
+        assertTrue(result.value is String, "Result should be a String")
     }
 
     @Test
@@ -320,9 +320,12 @@ class ToolCallExecutorMockSiteTest : WebDriverTestBase() {
 
         // Switch to the new tab using the executor with eval
         val result = executor.execute("browser.switchTab(\"$newDriverId\")", browser)
-        assertIs<WebDriver>(result)
+        assertIs<WebDriver>(result.value)
 
-        assertEquals(newDriverId, result.id, "Should return the new driver ID after switching")
+        val webDriver = result.value as? WebDriver
+        assertNotNull(webDriver, "Result should be a WebDriver")
+        val actualDriverId = webDriver.id.toString()
+        assertTrue(actualDriverId == newDriverId.toString(), "Should return the new driver ID after switching")
         val isVisible = newDriver.evaluateValue("document.visibilityState == \"visible\"")
         assertEquals(true, isVisible, "A document that brings to front is visible")
 

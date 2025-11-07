@@ -16,7 +16,9 @@ abstract class AbstractToolCallExecutor {
                 ?: return TcEvaluation(expression = expression, cause = IllegalArgumentException("Illegal expression"))
 
             val r = doExecute(objectName, functionName, args, target)
-            TcEvaluation(value = r, expression = expression)
+            // Convert kotlin.Unit to null to match expected behavior
+            val value = if (r == kotlin.Unit) null else r
+            TcEvaluation(value = value, expression = expression)
         } catch (e: Exception) {
             logger.warn("Error executing expression: {} - {}", expression, e.brief())
             TcEvaluation(expression, e)
