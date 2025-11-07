@@ -2,7 +2,7 @@ package ai.platon.pulsar.agentic.ai.todo
 
 import ai.platon.pulsar.agentic.AgentConfig
 import ai.platon.pulsar.agentic.ai.agent.detail.StructuredAgentLogger
-import ai.platon.pulsar.agentic.common.FileSystem
+import ai.platon.pulsar.agentic.common.AgentFileSystem
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.ai.ToolCall
@@ -15,7 +15,7 @@ import java.util.UUID
  * This is a thin wrapper over FileSystem with minimal policy from AgentConfig.
  */
 class ToDoManager(
-    private val fs: FileSystem,
+    private val fs: AgentFileSystem,
     private val config: AgentConfig,
     private val uuid: UUID,
     private val slogger: StructuredAgentLogger? = null,

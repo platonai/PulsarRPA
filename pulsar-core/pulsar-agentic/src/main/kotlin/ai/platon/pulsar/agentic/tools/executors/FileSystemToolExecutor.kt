@@ -1,18 +1,16 @@
 package ai.platon.pulsar.agentic.tools.executors
 
-import ai.platon.pulsar.agentic.common.FileSystem
+import ai.platon.pulsar.agentic.common.AgentFileSystem
 import ai.platon.pulsar.agentic.tools.ActionValidator
 import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor.Companion.norm
-import ai.platon.pulsar.agentic.tools.executors.SystemToolExecutor
 import ai.platon.pulsar.skeleton.ai.ToolCall
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import kotlin.reflect.KClass
 
 class FileSystemToolExecutor : AbstractToolExecutor() {
 
     override val domain = "fs"
 
-    override val targetClass: KClass<*> = FileSystem::class
+    override val targetClass: KClass<*> = AgentFileSystem::class
 
     @Throws(IllegalArgumentException::class)
     override fun toExpression(tc: ToolCall): String {
@@ -28,7 +26,7 @@ class FileSystemToolExecutor : AbstractToolExecutor() {
     ): Any? {
         require(objectName == "fs") { "Object must be fs" }
         require(functionName.isNotBlank()) { "Function name must not be blank" }
-        require(target is FileSystem) { "Target must be a FileSystem" }
+        require(target is AgentFileSystem) { "Target must be a FileSystem" }
 
         val fs = target
         val arg0 = args["0"]?.toString()

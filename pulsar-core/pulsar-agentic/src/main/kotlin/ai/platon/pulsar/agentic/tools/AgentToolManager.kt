@@ -3,7 +3,7 @@ package ai.platon.pulsar.agentic.tools
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.BrowserPerceptiveAgent
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
-import ai.platon.pulsar.agentic.common.FileSystem
+import ai.platon.pulsar.agentic.common.AgentFileSystem
 import ai.platon.pulsar.agentic.tools.executors.*
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
@@ -24,24 +24,24 @@ class AgentToolManager(
     val baseDir: Path = AppPaths.get("agent")
         .resolve(DateTimes.PATH_SAFE_FORMAT_101.format(agent.startTime))
         .resolve(agent.uuid.toString())
-    val fs: FileSystem
+    val fs: AgentFileSystem
 
     init {
         Files.createDirectories(baseDir)
-        fs = FileSystem(baseDir)
+        fs = AgentFileSystem(baseDir)
     }
 
     val session: AgenticSession get() = agent.session
     val driver: WebDriver get() = session.getOrCreateBoundDriver()
 
-    val executors: List<ToolExecutor> = listOf(
+    val concreteExecutors: List<ToolExecutor> = listOf(
         WebDriverToolExecutor(),
         BrowserToolExecutor(),
         FileSystemToolExecutor(),
         AgentToolExecutor(),
     )
 
-    val executor = BasicToolCallExecutor(executors)
+    val executor = BasicToolCallExecutor(concreteExecutors)
 
     @Throws(UnsupportedOperationException::class)
     suspend fun execute(tc: ToolCall, action: ActionDescription, message: String? = null): ToolCallResult {
@@ -104,5 +104,21 @@ class AgentToolManager(
         driver.waitForNavigation()
         driver.waitForSelector("body")
         delay(3000)
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    private suspend fun onDidScrollToBottom(driver: WebDriver, toolCall: ToolCall, evaluate: TcEvaluate) {
+        val expression = """
+(() => {
+    const docEl = document.documentElement, body = document.body;
+    if (!docEl || !body) return true;
+    const total = Math.min(Math.max(docEl.scrollHeight, body.scrollHeight, docEl.clientHeight), 15000);
+    const vh = window.innerHeight || docEl.clientHeight || 800;
+    const target = Math.max(0, total - vh);
+    return Math.abs(window.scrollY - target) < 2;
+})()
+"""
+
+        driver.waitUntil(5_000) { (driver.evaluateValue(expression) as? Boolean) == true }
     }
 }

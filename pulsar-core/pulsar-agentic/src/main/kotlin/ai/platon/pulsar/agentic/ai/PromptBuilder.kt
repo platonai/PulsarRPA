@@ -11,7 +11,6 @@ import ai.platon.pulsar.common.KStrings
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.skeleton.ai.AgentState
-import ai.platon.pulsar.skeleton.ai.ToolCallResult
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -897,10 +896,10 @@ $newTabsJson
 
         val interactiveElements = params.browserUseState.getInteractiveElements()
 
-        val startY = (hiddenTopHeight - viewportHeight * 0.5).coerceAtLeast(0.0)
-        val endY = (hiddenTopHeight + viewportHeight + viewportHeight * 0.5).coerceAtLeast(0.0)
+        val delta = viewportHeight * 0.5
+        val startY = (scrollState.y - delta).coerceAtLeast(0.0)
+        val endY = (scrollState.y + viewportHeight + delta).coerceAtLeast(0.0)
         val nanoTree = domState.microTree.toNanoTreeInRange(startY, endY)
-        // val nanoTree = domState.microTree.toNanoTree()
 
         fun contentCN() = """
 ## 浏览器状态
@@ -929,10 +928,6 @@ $newTabsMessage
 - 如需查看下一视口，调用 `scrollBy(viewportHeight)` 向下滚动一屏获取更多信息
 
 ## 可交互元素
-
-格式概要：
-
-[locator]{viewport}(x,y,width,height)<slimNode>textContent</slimNode>Text-Before-This-Interactive-Element-And-After-Previous-Interactive-Element
 
 聚焦第${processingViewport}视口可交互元素。
 

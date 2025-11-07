@@ -108,7 +108,7 @@ data class FileSystemState(
 )
 
 /** Enhanced file system with in-memory storage and multiple file type support */
-class FileSystem(
+class AgentFileSystem(
     private val baseDir: Path = AppPaths.getTmpDirectory("agent"),
     createDefaultFiles: Boolean = true
 ) {
@@ -117,8 +117,8 @@ class FileSystem(
 
         val DEFAULT_FILES = listOf("todolist.md")
 
-        fun fromState(state: FileSystemState): FileSystem {
-            val fs = FileSystem(Path.of(state.baseDir), createDefaultFiles = false)
+        fun fromState(state: FileSystemState): AgentFileSystem {
+            val fs = AgentFileSystem(Path.of(state.baseDir), createDefaultFiles = false)
             fs.extractedContentCount = state.extractedContentCount
             for ((full, data) in state.files) {
                 val ext = full.substringAfterLast('.', "").lowercase()
