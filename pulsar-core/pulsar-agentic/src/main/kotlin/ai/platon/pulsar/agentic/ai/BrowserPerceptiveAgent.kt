@@ -739,7 +739,7 @@ class BrowserPerceptiveAgent constructor(
             screenshotContentSummary = observe?.screenshotContentSummary,
             currentPageContentSummary = observe?.currentPageContentSummary,
             evaluationPreviousGoal = observe?.evaluationPreviousGoal,
-            nextGoal = observe?.nextGoal,
+            nextGoal = observe?.nextGoal
         )
         addToHistory(updatedAgentState)
         return agentState to updatedAgentState
@@ -1301,7 +1301,7 @@ class BrowserPerceptiveAgent constructor(
         val items3 = items + items2
 
         val step = h?.step ?: 0
-        val msg = message?.let { h.toString() }
+        val msg = message ?: h?.toString()
         val trace = ProcessTrace(step = step, items = items3, message = msg)
         _processTrace.add(trace)
     }
