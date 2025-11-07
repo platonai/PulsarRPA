@@ -238,7 +238,7 @@ class BrowserPerceptiveAgent constructor(
             // Record exactly once for this executed action
 
             // Keep reference to previous AgentState for next loop
-            val payload = UpdateAgentStatePayload(true, toolCall, oe, msg.message)
+            val payload = UpdateAgentStatePayload(true, toolCall, oe, msg.message, toolCallResult)
             val (prevAgentState0, newAgentState0) = updateAgentState(agentState, payload)
 
             ActResult(success = true, action = toolCall.method, message = msg.message, result = toolCallResult)
@@ -709,11 +709,12 @@ class BrowserPerceptiveAgent constructor(
         )
     }
 
-    data class UpdateAgentStatePayload(
+    data class UpdateAgentStatePayload constructor(
         val success: Boolean,
         val toolCall: ToolCall? = null,
         val observe: ObserveElement? = null,
-        val message: String? = null
+        val message: String? = null,
+        val toolCallResult: ToolCallResult? = null,
     )
 
     /**
@@ -739,7 +740,8 @@ class BrowserPerceptiveAgent constructor(
             screenshotContentSummary = observe?.screenshotContentSummary,
             currentPageContentSummary = observe?.currentPageContentSummary,
             evaluationPreviousGoal = observe?.evaluationPreviousGoal,
-            nextGoal = observe?.nextGoal
+            nextGoal = observe?.nextGoal,
+            toolCallResult = payload.toolCallResult
         )
         addToHistory(updatedAgentState)
         return agentState to updatedAgentState
@@ -951,7 +953,7 @@ class BrowserPerceptiveAgent constructor(
                     val observe = exec.action.observeElement
                     val toolCall = observe?.toolCall
 
-                    val payload = UpdateAgentStatePayload(true, toolCall, observe, exec.summary)
+                    val payload = UpdateAgentStatePayload(true, toolCall, observe, exec.summary, exec.toolCallResult)
                     val (oldAgentState, newAgentState) = updateAgentState(agentState, payload)
                     prevAgentState = oldAgentState
                     agentState = newAgentState
