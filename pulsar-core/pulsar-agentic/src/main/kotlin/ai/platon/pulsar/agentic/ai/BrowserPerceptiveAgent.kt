@@ -236,7 +236,10 @@ class BrowserPerceptiveAgent constructor(
             )
 
             // Record exactly once for this executed action
-            updateAgentState(agentState, true, toolCall, oe, message = msg.message)
+
+            // Keep reference to previous AgentState for next loop
+            val payload = UpdateAgentStatePayload(true, toolCall, oe, msg.message)
+            val (prevAgentState0, newAgentState0) = updateAgentState(agentState, payload)
 
             ActResult(success = true, action = toolCall.method, message = msg.message, result = toolCallResult)
         } catch (e: Exception) {
@@ -244,7 +247,8 @@ class BrowserPerceptiveAgent constructor(
             val msg = e.message ?: "Execution failed"
 
             // Record failed action attempt once
-            updateAgentState(agentState, success = false, toolCall, observe = oe, message = msg)
+            val payload = UpdateAgentStatePayload(false, toolCall, oe, msg)
+            updateAgentState(agentState, payload)
 
             ActResult(success = false, message = msg, action = toolCall.method)
         }
@@ -705,16 +709,18 @@ class BrowserPerceptiveAgent constructor(
         )
     }
 
+    data class UpdateAgentStatePayload(
+        val success: Boolean,
+        val toolCall: ToolCall? = null,
+        val observe: ObserveElement? = null,
+        val message: String? = null
+    )
+
     /**
      * history management: strictly record one AgentState per executed action with complete fields
      */
-    private fun updateAgentState(
-        agentState: AgentState,
-        success: Boolean,
-        toolCall: ToolCall? = null,
-        observe: ObserveElement? = null,
-        message: String? = null
-    ): AgentState {
+    private fun updateAgentState(agentState: AgentState, payload: UpdateAgentStatePayload): Pair<AgentState, AgentState> {
+        val (success, toolCall, observe, message) = payload
         val computedStep = agentState.step.takeIf { it > 0 } ?: ((stateHistory.lastOrNull()?.step ?: 0) + 1)
         val descPrefix = if (success) "OK" else "FAIL"
         val descMsg = buildString {
@@ -725,7 +731,7 @@ class BrowserPerceptiveAgent constructor(
             }
         }
 
-        val agentState = agentState.copy(
+        val updatedAgentState = agentState.copy(
             step = computedStep,
             domain = toolCall?.domain,
             action = toolCall?.method,
@@ -735,8 +741,8 @@ class BrowserPerceptiveAgent constructor(
             evaluationPreviousGoal = observe?.evaluationPreviousGoal,
             nextGoal = observe?.nextGoal,
         )
-        addToHistory(agentState)
-        return agentState
+        addToHistory(updatedAgentState)
+        return agentState to updatedAgentState
     }
 
     private fun addHistoryExtract(instruction: String, requestId: String, success: Boolean) {
@@ -859,7 +865,8 @@ class BrowserPerceptiveAgent constructor(
                 ensureReadyForStep(action)
 
                 // Build AgentState and snapshot after settling
-                val (agentState, browserUseState) = buildAgentStateForStep(step, action, prevAgentState)
+                val (agentState0, browserUseState) = buildAgentStateForStep(step, action, prevAgentState)
+                var agentState = agentState0
 
                 // Detect unchanged state for heuristics
                 val unchangedCount = pageStateTracker.checkStateChange(browserUseState)
@@ -897,7 +904,6 @@ class BrowserPerceptiveAgent constructor(
                 val params = ContextToActionParams(messages, agentState, screenshotB64)
                 val stepAction = generateStepAction(params, context)
 
-                // Keep reference to previous AgentState for next loop
                 prevAgentState = agentState
 
                 if (stepAction == null) {
@@ -945,16 +951,17 @@ class BrowserPerceptiveAgent constructor(
                     val observe = exec.action.observeElement
                     val toolCall = observe?.toolCall
 
-                    updateAgentState(
-                        agentState, true, toolCall, observe = observe, message = exec.summary
-                    )
+                    val payload = UpdateAgentStatePayload(true, toolCall, observe, exec.summary)
+                    val (oldAgentState, newAgentState) = updateAgentState(agentState, payload)
+                    prevAgentState = oldAgentState
+                    agentState = newAgentState
 
                     // todolist.md progress hook
                     if (config.enableTodoWrites) {
                         val shouldWrite = config.todoWriteProgressEveryStep ||
                                 (config.todoProgressWriteEveryNSteps > 1 && step % config.todoProgressWriteEveryNSteps == 0)
                         if (shouldWrite) {
-                            val urlNow0 = runCatching { activeDriver.currentUrl() }.getOrNull() ?: "(unknown)"
+                            val urlNow0 = activeDriver.currentUrl()
                             try {
                                 todo.appendProgress(step, toolCall, observe, urlNow0, exec.summary)
                                 todo.updateProgressCounter()
@@ -991,14 +998,8 @@ class BrowserPerceptiveAgent constructor(
             return ActResult(success = ok, message = summary.content, action = userRequest)
         } catch (e: Exception) {
             val executionTime = Duration.between(startTime, Instant.now())
-            logger.error(
-                "💥 agent.fail sid={} steps={} dur={} err={}",
-                sid,
-                step,
-                executionTime.toString(),
-                e.message,
-                e
-            )
+            logger.error("💥 agent.fail sid={} steps={} dur={} err={}",
+                sid, step, executionTime.toString(), e.message, e)
             throw classifyError(e, step)
         }
     }
@@ -1047,7 +1048,7 @@ class BrowserPerceptiveAgent constructor(
         messages.addUser(promptBuilder.buildAgentStateHistoryMessage(stateHistory))
         if (screenshotB64 != null) messages.addUser(promptBuilder.buildBrowserVisionInfo())
         if (prevAgentState != null && prevAgentState.action in listOf("textContent", "selectFirstTextOrNull")) {
-            val textContent = prevAgentState.toolCallResult?.evaluate?.toString() ?: ""
+            val textContent = prevAgentState.toolCallResult?.evaluate?.value?.toString() ?: ""
             val message = promptBuilder.buildExtractTextContentMessage(prevAgentState, textContent)
             messages.addUser(message)
         }
