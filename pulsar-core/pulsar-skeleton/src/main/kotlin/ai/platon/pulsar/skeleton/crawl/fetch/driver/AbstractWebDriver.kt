@@ -394,28 +394,82 @@ abstract class AbstractWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun scrollToTop() {
-        evaluate("window.scrollTo(0, 0)")
+        val js = """
+(async () => {
+    if (!document?.documentElement || !document?.body) return;
+
+    const docEl = document.documentElement;
+    const body = document.body;
+
+    const totalHeight = Math.min(
+        Math.max(docEl.scrollHeight, body.scrollHeight, docEl.clientHeight),
+        15000
+    );
+    const viewportHeight = window.innerHeight || docEl.clientHeight || 800;
+
+    const startY = window.scrollY || window.pageYOffset || docEl.scrollTop || body.scrollTop || 0;
+    const targetY = 0;
+
+    const distance = targetY - startY; // negative or zero
+    const stepSize = Math.max(64, Math.floor(viewportHeight * 0.8));
+    let steps = Math.ceil(Math.abs(distance) / stepSize);
+    steps = Math.max(1, Math.min(steps, 100));
+
+    for (let i = 1; i <= steps; i++) {
+        const y = startY + (distance * i) / steps;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        const start = performance.now();
+        while (Math.abs(window.scrollY - y) > 1 && performance.now() - start < 600) {
+            await new Promise(r => setTimeout(r, 20));
+        }
+        // settle a bit to allow lazy-loaders
+        await new Promise(r => setTimeout(r, 20));
+    }
+
+    window.scrollTo({ top: targetY, behavior: 'smooth' });
+})();
+        """.trimIndent()
+        evaluate(js)
     }
 
     @Throws(WebDriverException::class)
     override suspend fun scrollToBottom() {
         val js = """
-(() => {
-if (!document || !document.documentElement || !document.body) {
-    return
-}
+(async () => {
+    if (!document || !document.documentElement || !document.body) return;
 
-let x = 0;
-let y = Math.max(
-    document.documentElement.scrollHeight,
-    document.documentElement.clientHeight,
-    document.body.scrollHeight
-);
-y = Math.min(y, 15000)
+    const docEl = document.documentElement;
+    const body = document.body;
 
-window.scrollTo(x, y)
-})()
+    const totalHeight = Math.min(
+        Math.max(docEl.scrollHeight, body.scrollHeight, docEl.clientHeight),
+        15000
+    );
+    const viewportHeight = window.innerHeight || docEl.clientHeight || 800;
+
+    const startY = window.scrollY || window.pageYOffset || docEl.scrollTop || body.scrollTop || 0;
+    const targetY = Math.max(0, totalHeight - viewportHeight);
+
+    const distance = targetY - startY; // positive or zero
+    const stepSize = Math.max(64, Math.floor(viewportHeight * 0.8));
+    let steps = Math.ceil(Math.abs(distance) / stepSize);
+    steps = Math.max(1, Math.min(steps, 100));
+
+    for (let i = 1; i <= steps; i++) {
+        const y = startY + (distance * i) / steps;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        const start = performance.now();
+        while (Math.abs(window.scrollY - y) > 1 && performance.now() - start < 600) {
+            await new Promise(r => setTimeout(r, 20));
+        }
+        // settle a bit to allow lazy-loaders
+        await new Promise(r => setTimeout(r, 20));
+    }
+
+    window.scrollTo({ top: targetY, behavior: 'smooth' });
+})();
         """.trimIndent()
+        evaluate(js)
     }
 
     @Throws(WebDriverException::class)

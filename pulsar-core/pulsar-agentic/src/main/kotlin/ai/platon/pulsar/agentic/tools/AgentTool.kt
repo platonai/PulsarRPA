@@ -27,7 +27,7 @@ driver.scrollBy(pixels: Double = 200.0): Double
 driver.scrollToViewport(n: Double)                     // scroll to the [n]th viewport position, 1-based
 driver.goBack()
 driver.goForward()
-driver.textContent(selector: String): String?          // Returns the node's text content, the node is located by [selector]. If the node does not exist, returns null.
+driver.selectFirstTextOrNull(selector: String): String?  // Returns the node's text content including it's descendants, the node is located by [selector]. If the node does not exist, returns null.
 driver.delay(millis: Long)
 
 // domain: browser
