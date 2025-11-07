@@ -32,7 +32,7 @@ class StructuredAgentLogger(
         // Build proper JSON log data
         val logData = buildMap {
             put("actionType", context.actionType)
-            put("step", context.stepNumber)
+            put("step", context.step)
             put("message", message)
             put("sessionId", context.sessionId)
             put("timestamp", context.timestamp.toString())

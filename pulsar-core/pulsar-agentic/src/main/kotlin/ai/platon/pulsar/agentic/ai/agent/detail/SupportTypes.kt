@@ -1,5 +1,6 @@
 package ai.platon.pulsar.agentic.ai.agent.detail
 
+import ai.platon.pulsar.skeleton.ai.AgentState
 import java.time.Instant
 
 /**
@@ -32,9 +33,16 @@ data class PerformanceMetrics(
  */
 data class ExecutionContext(
     val sessionId: String,
-    val stepNumber: Int,
-    val actionType: String,
-    val targetUrl: String,
+    var step: Int,
+    var actionType: String,
+    var targetUrl: String? = null,
+
+    var userRequest: String = "",
+    var screenshotB64: String? = null,
+
     val timestamp: Instant = Instant.now(),
-    val additionalContext: Map<String, Any> = emptyMap()
+    val additionalContext: Map<String, Any> = emptyMap(),
+
+    var prevAgentState: AgentState? = null,
+    var agentState: AgentState? = null
 )

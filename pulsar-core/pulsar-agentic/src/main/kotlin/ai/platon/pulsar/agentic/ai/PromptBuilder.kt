@@ -2,6 +2,7 @@ package ai.platon.pulsar.agentic.ai
 
 import ai.platon.pulsar.agentic.ai.agent.ExtractParams
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
+import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
 import ai.platon.pulsar.agentic.tools.ToolSpecification
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
@@ -607,7 +608,9 @@ $his
         return visionInfo
     }
 
-    fun buildPrevToolCallResultMessage(agentState: AgentState, toolCallResult: ToolCallResult): String {
+    fun buildPrevToolCallResultMessage(context: ExecutionContext): String {
+        val agentState = requireNotNull(context.agentState)
+        val toolCallResult = requireNotNull(context.prevAgentState?.toolCallResult)
         val evaluate = toolCallResult.evaluate
         val evalResult = evaluate?.value?.toString()
         val exception = evaluate?.exception?.cause

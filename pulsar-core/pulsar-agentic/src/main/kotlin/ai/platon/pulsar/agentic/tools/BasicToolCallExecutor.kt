@@ -78,7 +78,8 @@ open class BasicToolCallExecutor(
 
     @Throws(UnsupportedOperationException::class)
     suspend fun execute(tc: ToolCall, target: Any): TcEvaluate {
-        return toolExecutors.firstOrNull { target::class.isSuperclassOf(it.targetClass) }
+        return toolExecutors
+            .firstOrNull { it.targetClass.isSuperclassOf(target::class) }
             ?.execute(tc, target)
             ?: throw UnsupportedOperationException("❓ Unsupported target ${target::class}")
 
@@ -93,7 +94,8 @@ open class BasicToolCallExecutor(
 
     @Throws(UnsupportedOperationException::class)
     suspend fun execute(expression: String, target: Any): TcEvaluate {
-        return toolExecutors.firstOrNull { target::class.isSuperclassOf(it.targetClass) }
+        return toolExecutors
+            .firstOrNull { it.targetClass.isSuperclassOf(target::class) }
             ?.execute(expression, target)
             ?: throw UnsupportedOperationException("❓ Unsupported target ${target::class}")
 
