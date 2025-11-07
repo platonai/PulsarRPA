@@ -1,8 +1,8 @@
 package ai.platon.pulsar.skeleton.ai.agent
 
 import ai.platon.pulsar.WebDriverTestBase
-import ai.platon.pulsar.agentic.ai.AgentConfig
-import ai.platon.pulsar.agentic.ai.BrowserPerceptiveAgent
+import ai.platon.pulsar.agentic.AgentConfig
+import ai.platon.pulsar.agentic.BrowserPerceptiveAgent
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.AgentState

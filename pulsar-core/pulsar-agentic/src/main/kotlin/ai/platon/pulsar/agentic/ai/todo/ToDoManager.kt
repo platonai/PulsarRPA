@@ -1,6 +1,6 @@
 package ai.platon.pulsar.agentic.ai.todo
 
-import ai.platon.pulsar.agentic.ai.AgentConfig
+import ai.platon.pulsar.agentic.AgentConfig
 import ai.platon.pulsar.agentic.ai.agent.detail.StructuredAgentLogger
 import ai.platon.pulsar.agentic.common.FileSystem
 import ai.platon.pulsar.common.Strings

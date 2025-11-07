@@ -1,7 +1,6 @@
 package ai.platon.pulsar.agentic
 
-import ai.platon.pulsar.agentic.ai.BrowserPerceptiveAgent
-import ai.platon.pulsar.agentic.ai.InternalAgentExecutor
+import ai.platon.pulsar.agentic.ai.SessionActExecutor
 import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.context.AbstractAgenticContext
 import ai.platon.pulsar.common.config.VolatileConfig
@@ -50,7 +49,7 @@ open class BasicAgenticSession(
 
     override val companionAgent: PerceptiveAgent by lazy { BrowserPerceptiveAgent(this) }
 
-    private val executor by lazy { InternalAgentExecutor(this) }
+    private val executor by lazy { SessionActExecutor(this) }
 
     override suspend fun performAct(action: ActionDescription) = executor.performAct(action)
 
@@ -65,7 +64,7 @@ open class AbstractAgenticQLSession(
 
     override val companionAgent: PerceptiveAgent by lazy { BrowserPerceptiveAgent(this) }
 
-    private val executor by lazy { InternalAgentExecutor(this) }
+    private val executor by lazy { SessionActExecutor(this) }
 
     override suspend fun performAct(action: ActionDescription) = executor.performAct(action)
 

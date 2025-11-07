@@ -2,8 +2,8 @@ package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder.Companion.buildObserveResultSchema
-import ai.platon.pulsar.agentic.tools.AgentTool
-import ai.platon.pulsar.agentic.tools.AgentTool.TOOL_ALIASES
+import ai.platon.pulsar.agentic.tools.ToolSpecification
+import ai.platon.pulsar.agentic.tools.ToolSpecification.TOOL_ALIASES
 import ai.platon.pulsar.agentic.tools.ToolCallExecutor
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
@@ -211,7 +211,7 @@ open class TextToAction(
         val arguments = toolCall.arguments
 
         var fbnLocator: Locator? = null
-        if (method in AgentTool.SELECTOR_ACTIONS) {
+        if (method in ToolSpecification.SELECTOR_ACTIONS) {
             fbnLocator = browserUseState.domState.getAbsoluteFBNLocator(locator)
             if (!locator.isNullOrBlank() && fbnLocator == null) {
                 logger.warn("FBN locator not found. method={}, locator={}", method, locator)

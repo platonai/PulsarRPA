@@ -1,6 +1,5 @@
 package ai.platon.pulsar.agentic.ai.agent.detail
 
-import ai.platon.pulsar.skeleton.ai.ToolCall
 import java.time.Instant
 
 /**

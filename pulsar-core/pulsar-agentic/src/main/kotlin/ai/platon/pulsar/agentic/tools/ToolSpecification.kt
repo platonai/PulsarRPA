@@ -1,6 +1,6 @@
 package ai.platon.pulsar.agentic.tools
 
-object AgentTool {
+object ToolSpecification {
 
     /**
      * The `TOOL_CALL_LIST` is written using kotlin syntax to express the tool's `domain`, `method`, `arguments`.

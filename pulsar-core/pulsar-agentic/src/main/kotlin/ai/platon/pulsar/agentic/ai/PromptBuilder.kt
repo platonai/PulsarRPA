@@ -2,7 +2,7 @@ package ai.platon.pulsar.agentic.ai
 
 import ai.platon.pulsar.agentic.ai.agent.ExtractParams
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
-import ai.platon.pulsar.agentic.tools.AgentTool
+import ai.platon.pulsar.agentic.tools.ToolSpecification
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
@@ -269,7 +269,7 @@ $schema
 ## 工具列表
 
 ```
-${AgentTool.TOOL_CALL_SPECIFICATION}
+${ToolSpecification.TOOL_CALL_SPECIFICATION}
 ```
 
 $TOOL_CALL_RULE_CONTENT
@@ -299,9 +299,9 @@ $A11Y_TREE_NOTE_CONTENT
 
 ---
 
-## 数据提取
+## 上步输出
 
-- 上一步操作的数据提取结果，如 `selectFirstTextOrNull` 结果
+- 上一步操作的输出结果
 
 ---
 
@@ -590,7 +590,8 @@ $his
 
     fun buildBrowserVisionInfo(): String {
         val visionInfo = """
-## 视觉信息<browser_vision>
+## 视觉信息
+<browser_vision>
 
 - 在推理中利用图像来评估你的进展。
 - 当不确定或想获取更多信息时使用截图。
@@ -606,7 +607,7 @@ $his
 
     fun buildExtractTextContentMessage(agentState: AgentState, domContent: String): String {
         return """
-## 数据提取
+## 上步输出
 
 上一步操作：${agentState.prevState?.action}
 上一步操作期望结果：${agentState.prevState?.nextGoal}

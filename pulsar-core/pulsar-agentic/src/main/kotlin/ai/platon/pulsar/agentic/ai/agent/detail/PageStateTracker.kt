@@ -1,13 +1,12 @@
 package ai.platon.pulsar.agentic.ai.agent.detail
 
 import ai.platon.pulsar.agentic.AgenticSession
-import ai.platon.pulsar.agentic.ai.AgentConfig
+import ai.platon.pulsar.agentic.AgentConfig
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.getLogger
 import kotlinx.coroutines.delay
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicReference
 
 /**
  * Tracks page state changes to detect loops and ensure DOM stability.

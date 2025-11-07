@@ -1,6 +1,8 @@
-package ai.platon.pulsar.agentic.ai
+package ai.platon.pulsar.agentic
 
-import ai.platon.pulsar.agentic.AgenticSession
+import ai.platon.pulsar.agentic.ai.AgentMessageList
+import ai.platon.pulsar.agentic.ai.PromptBuilder
+import ai.platon.pulsar.agentic.tools.AgentToolManager
 import ai.platon.pulsar.agentic.ai.agent.*
 import ai.platon.pulsar.agentic.ai.agent.detail.*
 import ai.platon.pulsar.agentic.ai.todo.ToDoManager
@@ -8,10 +10,8 @@ import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.ActionExecuteResult
 import ai.platon.pulsar.agentic.ai.tta.ContextToAction
 import ai.platon.pulsar.agentic.ai.tta.ContextToActionParams
-import ai.platon.pulsar.agentic.common.FileSystem
 import ai.platon.pulsar.agentic.tools.ActionValidator
-import ai.platon.pulsar.agentic.tools.AgentTool
-import ai.platon.pulsar.agentic.tools.ToolCallExecutor
+import ai.platon.pulsar.agentic.tools.ToolSpecification
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
@@ -35,7 +35,6 @@ import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.nio.file.Files
-import java.nio.file.Path
 import java.time.Duration
 import java.time.Instant
 import java.util.*
@@ -97,17 +96,14 @@ class BrowserPerceptiveAgent constructor(
     private val slogger = StructuredAgentLogger(ownerLogger, config)
     private val logger = ownerLogger
 
-    private val startTime = Instant.now()
-    private val baseDir: Path
     private val conf get() = session.sessionConfig
 
     private val contextToAction by lazy { ContextToAction(conf) }
     private val inference by lazy { InferenceEngine(session, contextToAction.chatModel) }
     private val domService get() = inference.domService
     private val promptBuilder = PromptBuilder()
+    private val toolExecutor by lazy { AgentToolManager(this) }
 
-    private val toolCallExecutor = ToolCallExecutor()
-    private val fs: FileSystem
     private val todo: ToDoManager
 
     // Helper classes for better code organization
@@ -128,26 +124,22 @@ class BrowserPerceptiveAgent constructor(
 
     private val activeDriver get() = session.getOrCreateBoundDriver()
 
+    val baseDir get() = toolExecutor.baseDir
+    val startTime = Instant.now()
+
     override val uuid = UUID.randomUUID()
     override val stateHistory: List<AgentState> get() = _stateHistory
     override val processTrace: List<ProcessTrace> get() = _processTrace
-
-    init {
-        baseDir = AppPaths.get("agent")
-            .resolve(DateTimes.PATH_SAFE_FORMAT_101.format(startTime))
-            .resolve(uuid.toString())
-
-        Files.createDirectories(baseDir)
-
-        fs = FileSystem(baseDir)
-        todo = ToDoManager(fs, config, uuid, slogger)
-    }
 
     constructor(
         driver: WebDriver, session: AgenticSession, maxSteps: Int = 100,
         config: AgentConfig = AgentConfig(maxSteps = maxSteps)
     ) : this(session, maxSteps = maxSteps, config = config) {
         session.bindDriver(driver)
+    }
+
+    init {
+        todo = ToDoManager(toolExecutor.fs, config, uuid, slogger)
     }
 
     override suspend fun resolve(problem: String): ActResult {
@@ -159,7 +151,6 @@ class BrowserPerceptiveAgent constructor(
      * Run `observe -> act -> observe -> act -> ...` loop to resolve the problem.
      * */
     override suspend fun resolve(action: ActionOptions): ActResult {
-        Files.createDirectories(baseDir)
         val startTime = Instant.now()
         val sessionId = uuid.toString()
 
@@ -223,7 +214,7 @@ class BrowserPerceptiveAgent constructor(
         return try {
             val action = ActionDescription(observeElement = oe)
 
-            val toolCallResult = doToolCallExecute(toolCall, action, "act")
+            val toolCallResult = toolExecutor.execute(toolCall, action, "act")
 
             logger.info(
                 "✅ Action executed | {} | {}/{} | {}",
@@ -345,6 +336,10 @@ class BrowserPerceptiveAgent constructor(
         return results
     }
 
+    override fun toString(): String {
+        return stateHistory.lastOrNull()?.toString() ?: "(no history)"
+    }
+
     private suspend fun getBrowserUseState(): BrowserUseState {
         val snapshotOptions = SnapshotOptions(
             maxDepth = 1000,
@@ -401,31 +396,6 @@ class BrowserPerceptiveAgent constructor(
         )
     }
 
-    private suspend fun doToolCallExecute(toolCall: ToolCall, action: ActionDescription, message: String? = null): ToolCallResult {
-        val driver = activeDriver
-
-        val evaluate = when (toolCall.domain) {
-            "driver" -> toolCallExecutor.execute(toolCall, driver)
-            "browser" -> toolCallExecutor.execute(toolCall, driver.browser)
-            "fs" -> toolCallExecutor.execute(toolCall, fs)
-            "agent" -> toolCallExecutor.execute(toolCall, this)
-            else -> throw IllegalArgumentException("❓ Unsupported domain: ${toolCall.domain} | $toolCall")
-        }
-
-        val method = toolCall.method
-        when (method) {
-            "switchTab" -> onDidSwitchTab(evaluate)
-            "navigateTo" -> onDidNavigateTo(driver, toolCall, evaluate)
-        }
-
-        return ToolCallResult(
-            success = true,
-            evaluate = evaluate,
-            message = message,
-            expression = action.cssFriendlyExpression,
-            modelResponse = action.modelResponse?.content)
-    }
-
     data class ToolCallPatch(
         val success: Boolean, val message: String, val action: String, val toolCall: ToolCall? = null
     )
@@ -443,7 +413,7 @@ class BrowserPerceptiveAgent constructor(
             return ToolCallPatch(success = false, message = msg, action = "")
         }
 
-        val selectorActions = AgentTool.SELECTOR_ACTIONS
+        val selectorActions = ToolSpecification.SELECTOR_ACTIONS
         val lowerMethod = method
         val backendNodeId = observe.backendNodeId
         val selector =
@@ -497,36 +467,9 @@ class BrowserPerceptiveAgent constructor(
         return ToolCallPatch(true, "", method, toolCall = toolCall)
     }
 
-    /**
-     * Handle switching to a new tab by binding the target driver to the session.
-     */
-    @Suppress("UNUSED_PARAMETER")
-    private fun onDidSwitchTab(evaluate: TcEvaluation) {
-        val frontDriver = session.boundBrowser?.frontDriver
-        val boundDriver = session.boundDriver
-        if (frontDriver == null) {
-            logger.warn("⚠️ No driver is in front after switchTab")
-            return
-        }
-
-        if (frontDriver == boundDriver) {
-            logger.warn("⚠️ The bound driver does not change after switchTab")
-            return
-        }
-
-        session.bindDriver(frontDriver)
-    }
-
-    @Suppress("UNUSED_PARAMETER")
-    private suspend fun onDidNavigateTo(driver: WebDriver, toolCall: ToolCall, evaluate: TcEvaluation) {
-        driver.waitForNavigation()
-        driver.waitForSelector("body")
-        delay(3000)
-    }
-
     private suspend fun doObserveAct(action: ActionOptions, messages: AgentMessageList): ActResult {
         // 1) Build instruction for action-oriented observe
-        val toolCalls = AgentTool.SUPPORTED_TOOL_CALLS
+        val toolCalls = ToolSpecification.SUPPORTED_TOOL_CALLS
 
         promptBuilder.buildObserveActToolSpecsPrompt(messages, toolCalls, action.variables)
 
@@ -597,7 +540,7 @@ class BrowserPerceptiveAgent constructor(
 
             // If a timeout is provided and the action likely triggers navigation, wait for navigation
             val timeoutMs = action.timeoutMs?.toLong()?.takeIf { it > 0 }
-            val maybeNavMethod = method in AgentTool.MAY_NAVIGATE_ACTIONS
+            val maybeNavMethod = method in ToolSpecification.MAY_NAVIGATE_ACTIONS
             if (timeoutMs != null && maybeNavMethod) {
                 // High Priority #4: Fail explicitly on navigation timeout
                 val remainingTime = driver.waitForNavigation(oldUrl, timeoutMs)
@@ -697,7 +640,7 @@ class BrowserPerceptiveAgent constructor(
         logger.info(
             "🔍 extract.start requestId={} instruction='{}'",
             requestId.take(8),
-            PromptBuilder.compactPrompt(instruction, 200)
+            PromptBuilder.Companion.compactPrompt(instruction, 200)
         )
     }
 
@@ -705,7 +648,7 @@ class BrowserPerceptiveAgent constructor(
         logger.info(
             "👀 observe.start requestId={} instruction='{}'",
             requestId.take(8),
-            PromptBuilder.compactPrompt(instruction, 200)
+            PromptBuilder.Companion.compactPrompt(instruction, 200)
         )
     }
 
@@ -748,7 +691,7 @@ class BrowserPerceptiveAgent constructor(
     }
 
     private fun addHistoryExtract(instruction: String, requestId: String, success: Boolean) {
-        val compactPrompt = PromptBuilder.compactPrompt(instruction, 200)
+        val compactPrompt = PromptBuilder.Companion.compactPrompt(instruction, 200)
         // Extraction is not a tool action; keep it in record history only
         processTrace("🔍 extract[$requestId] ${if (success) "OK" else "FAIL"} $compactPrompt")
     }
@@ -756,7 +699,7 @@ class BrowserPerceptiveAgent constructor(
     private fun addHistoryObserve(instruction: String, requestId: String, size: Int, success: Boolean) {
         processTrace(
             "👀 observe[$requestId] ${if (success) "OK" else "FAIL"} ${
-                PromptBuilder.compactPrompt(instruction, 200)
+                PromptBuilder.Companion.compactPrompt(instruction, 200)
             } -> $size elements"
         )
     }
@@ -1006,11 +949,52 @@ class BrowserPerceptiveAgent constructor(
         }
     }
 
-    // Enhanced helper methods for improved functionality
+    private suspend fun executeToolCall(
+        action: ActionDescription, step: Int, context: ExecutionContext
+    ): ActionExecuteResult? {
+        val toolCall = action.toolCall ?: return null
 
-    override fun toString(): String {
-        return stateHistory.lastOrNull()?.toString() ?: "(no history)"
+        if (config.enablePreActionValidation && !actionValidator.validateToolCall(toolCall)) {
+            logger.info(
+                "🛑 tool.validate.fail sid={} step={} locator={} | {}({}) | {}",
+                context.sessionId.take(8), context.stepNumber, action.locator, toolCall.method, toolCall.arguments,
+                action.cssFriendlyExpression
+            )
+            // Validation failure is meta info
+            processTrace("🛑 #$step validation-failed ${toolCall.method}")
+            return null
+        }
+
+        return try {
+            logger.info(
+                "🛠️ tool.exec sid={} step={} tool={} args={}",
+                context.sessionId.take(8), context.stepNumber, toolCall.method, toolCall.arguments
+            )
+
+            val toolCallResult = toolExecutor.execute(toolCall, action, "resolve, #$step")
+            consecutiveFailureCounter.set(0) // Reset on success
+
+            val summary = "✅ ${toolCall.method} executed successfully"
+            processTrace(summary)
+            ActionExecuteResult(action, toolCallResult, success = true, summary)
+        } catch (e: Exception) {
+            val failures = consecutiveFailureCounter.incrementAndGet()
+            logger.error(
+                "🛠️❌ tool.exec.fail sid={} step={} failures={} msg={}",
+                context.sessionId.take(8), context.stepNumber, failures, e.message, e
+            )
+
+            processTrace("💥 #$step unexpected failure ${toolCall.method}")
+
+            if (failures >= 3) {
+                throw PerceptiveAgentError.PermanentError("🛑 Too many consecutive failures at step $step", e)
+            }
+
+            null
+        }
     }
+
+    // Enhanced helper methods for improved functionality
 
     // --- Modularized helpers for doResolveProblem ---
 
@@ -1049,6 +1033,7 @@ class BrowserPerceptiveAgent constructor(
         messages.addLast("user", promptBuilder.buildUserRequestMessage(userRequest), name = "user_request")
         messages.addUser(promptBuilder.buildAgentStateHistoryMessage(stateHistory))
         if (screenshotB64 != null) messages.addUser(promptBuilder.buildBrowserVisionInfo())
+        // promptBuilder.buildAgentStateMessage(agentState)
         if (prevAgentState != null && prevAgentState.action in listOf("textContent", "selectFirstTextOrNull")) {
             val textContent = prevAgentState.toolCallResult?.evaluate?.value?.toString() ?: ""
             val message = promptBuilder.buildExtractTextContentMessage(prevAgentState, textContent)
@@ -1155,51 +1140,6 @@ class BrowserPerceptiveAgent constructor(
     }
 
     private suspend fun getCurrentUrl(): String = activeDriver.currentUrl()
-
-    private suspend fun executeToolCall(
-        action: ActionDescription, step: Int, context: ExecutionContext
-    ): ActionExecuteResult? {
-        val toolCall = action.toolCall ?: return null
-
-        if (config.enablePreActionValidation && !actionValidator.validateToolCall(toolCall)) {
-            logger.info(
-                "🛑 tool.validate.fail sid={} step={} locator={} | {}({}) | {}",
-                context.sessionId.take(8), context.stepNumber, action.locator, toolCall.method, toolCall.arguments,
-                action.cssFriendlyExpression
-            )
-            // Validation failure is meta info
-            processTrace("🛑 #$step validation-failed ${toolCall.method}")
-            return null
-        }
-
-        return try {
-            logger.info(
-                "🛠️ tool.exec sid={} step={} tool={} args={}",
-                context.sessionId.take(8), context.stepNumber, toolCall.method, toolCall.arguments
-            )
-
-            val toolCallResult = doToolCallExecute(toolCall, action, "resolve, #$step")
-            consecutiveFailureCounter.set(0) // Reset on success
-
-            val summary = "✅ ${toolCall.method} executed successfully"
-            processTrace(summary)
-            ActionExecuteResult(action, toolCallResult, success = true, summary)
-        } catch (e: Exception) {
-            val failures = consecutiveFailureCounter.incrementAndGet()
-            logger.error(
-                "🛠️❌ tool.exec.fail sid={} step={} failures={} msg={}",
-                context.sessionId.take(8), context.stepNumber, failures, e.message, e
-            )
-
-            processTrace("💥 #$step unexpected failure ${toolCall.method}")
-
-            if (failures >= 3) {
-                throw PerceptiveAgentError.PermanentError("🛑 Too many consecutive failures at step $step", e)
-            }
-
-            null
-        }
-    }
 
     private suspend fun handleConsecutiveNoOps(consecutiveNoOps: Int, step: Int, context: ExecutionContext): Boolean {
         // No-op is meta info only
@@ -1318,7 +1258,7 @@ class BrowserPerceptiveAgent constructor(
     private suspend fun safeScreenshot(context: ExecutionContext): String? {
         return runCatching {
             slogger.info("📸⏳ Attempting to capture screenshot", context)
-            val driver = requireNotNull(activeDriver)
+            val driver = activeDriver
             val screenshot = driver.captureScreenshot()
             if (screenshot != null) {
                 slogger.info("📸✅ Screenshot captured successfully", context, mapOf("size" to screenshot.length))

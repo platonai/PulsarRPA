@@ -1,4 +1,4 @@
-package ai.platon.pulsar.agentic.tools
+package ai.platon.pulsar.agentic.tools.executors
 
 import ai.platon.pulsar.agentic.common.SimpleKotlinParser
 import ai.platon.pulsar.common.brief
@@ -17,7 +17,7 @@ abstract class AbstractToolCallExecutor {
 
             val r = doExecute(objectName, functionName, args, target)
             // Convert kotlin.Unit to null to match expected behavior
-            val value = if (r == kotlin.Unit) null else r
+            val value = if (r == Unit) null else r
             TcEvaluation(value = value, expression = expression)
         } catch (e: Exception) {
             logger.warn("Error executing expression: {} - {}", expression, e.brief())
