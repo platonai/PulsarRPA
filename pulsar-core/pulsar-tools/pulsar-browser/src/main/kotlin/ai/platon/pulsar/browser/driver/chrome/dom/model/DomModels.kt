@@ -78,6 +78,10 @@ data class CompactRect(
     val width: Double? = null,
     val height: Double? = null
 ) {
+    fun uncompact(): DOMRect {
+        return DOMRect(x ?: 0.0, y ?: 0.0, width ?: 0.0, height ?: 0.0)
+    }
+
     /**
      * Round every field to the nearest integer
      * */
@@ -116,6 +120,15 @@ data class DOMRect(
             width.takeIf { it != 0.0 }, height.takeIf { it != 0.0 })
     }
 
+    fun roundTo(decimals: Int = 1): DOMRect {
+        return DOMRect(
+            x.roundTo(decimals),
+            y.roundTo(decimals),
+            width.roundTo(decimals),
+            height.roundTo(decimals),
+        )
+    }
+
     fun intersects(other: DOMRect): Boolean {
         return x < other.x + other.width &&
                 x + width > other.x &&
@@ -135,7 +148,7 @@ data class DOMRect(
             val y = bounds[1]
             val width = bounds[2] - bounds[0]
             val height = bounds[5] - bounds[1]
-            return DOMRect(x, y, width, height)
+            return DOMRect(x, y, width, height).roundTo(1)
         }
 
         /**
@@ -143,7 +156,7 @@ data class DOMRect(
          */
         fun fromRectArray(rect: List<Double>): DOMRect? {
             if (rect.size < 4) return null
-            return DOMRect(rect[0], rect[1], rect[2], rect[3])
+            return DOMRect(rect[0], rect[1], rect[2], rect[3]).roundTo(1)
         }
     }
 }
@@ -604,8 +617,9 @@ data class ScrollState constructor(
 
     // Height in pixels of the page area above the current viewport. (被隐藏在视口上方的部分的高度)
     val hiddenTopHeight get() = y.roundToInt().coerceAtLeast(0)
-    val hiddenBottomHeight get() = (totalHeight - hiddenTopHeight - viewport.height)
-        .roundToInt().coerceAtLeast(0)
+    val hiddenBottomHeight
+        get() = (totalHeight - hiddenTopHeight - viewport.height)
+            .roundToInt().coerceAtLeast(0)
     val viewportHeight get() = viewport.height
 
     val processingViewport get() = (hiddenTopHeight / viewportHeight) + 1
@@ -654,6 +668,7 @@ data class BrowserUseState(
         val viewportsTotal = scrollState.viewportsTotal
 
         return domState.microTree.toInteractiveDOMTreeNodeList(
-            currentViewportIndex = processingViewport, maxViewportIndex = viewportsTotal)
+            currentViewportIndex = processingViewport, maxViewportIndex = viewportsTotal
+        )
     }
 }

@@ -170,14 +170,15 @@ class ChromeCdpDomService(
 
         fun isElementVisibleAccordingToAllParents(node: DOMTreeNodeEx, htmlFrames: List<DOMTreeNodeEx>): Boolean {
             val snap = node.snapshotNode ?: return false
-            var current = snap.bounds?.let { DOMRect(it.x, it.y, it.width, it.height) } ?: return false
+            var current = snap.bounds?.roundTo(1)
+                ?.let { DOMRect(it.x, it.y, it.width, it.height) } ?: return false
 
             // Reverse iterate through frame stack
             for (frame in htmlFrames.asReversed()) {
                 val tag = frame.nodeName.uppercase()
                 val fsnap = frame.snapshotNode
                 if (tag == "IFRAME" || tag == "FRAME") {
-                    val fb = fsnap?.bounds
+                    val fb = fsnap?.bounds?.roundTo(1)
                     if (fb != null) {
                         current = DOMRect(current.x + fb.x, current.y + fb.y, current.width, current.height)
                     }
@@ -185,11 +186,11 @@ class ChromeCdpDomService(
                 if (tag == "HTML" && fsnap?.scrollRects != null && fsnap.clientRects != null) {
                     val viewportLeft = 0.0
                     val viewportTop = 0.0
-                    val viewportRight = fsnap.clientRects!!.width
-                    val viewportBottom = fsnap.clientRects!!.height
+                    val viewportRight = fsnap.clientRects.width
+                    val viewportBottom = fsnap.clientRects.height
 
-                    val adjustedX = current.x - fsnap.scrollRects!!.x
-                    val adjustedY = current.y - fsnap.scrollRects!!.y
+                    val adjustedX = current.x - fsnap.scrollRects.x
+                    val adjustedY = current.y - fsnap.scrollRects.y
 
                     val intersects = adjustedX < viewportRight &&
                             adjustedX + current.width > viewportLeft &&
@@ -220,7 +221,8 @@ class ChromeCdpDomService(
             val ax = if (options.includeAX && backendId != null) trees.axByBackendId[backendId] else null
 
             // Calculate absolute position based on accumulated offsets
-            val absolutePosition = snap?.bounds?.let { DOMRect(it.x + offsetX, it.y + offsetY, it.width, it.height) }
+            val absolutePosition = snap?.bounds?.roundTo(1)
+                ?.let { DOMRect(it.x + offsetX, it.y + offsetY, it.width, it.height) }
 
             // Visibility: style check first, then frame viewport check
             val isVisible = if (options.includeVisibility) {
@@ -232,7 +234,7 @@ class ChromeCdpDomService(
 
             // Interactivity and indices
             val isScrollable = if (options.includeScrollAnalysis) {
-                calculateScrollability(node, snap, ancestors)
+                calculateScalability(node, snap, ancestors)
             } else null
 
             val isInteractable = if (options.includeInteractivity) {
@@ -304,7 +306,7 @@ class ChromeCdpDomService(
                 var cOffsetY = nextOffsetY
                 if (tag == "IFRAME" || tag == "FRAME") {
                     cFrames = nextHtmlFrames + mergedNode
-                    val b = snap?.bounds
+                    val b = snap?.bounds?.roundTo(1)
                     if (b != null) {
                         cOffsetX += b.x
                         cOffsetY += b.y
@@ -632,7 +634,7 @@ class ChromeCdpDomService(
         return DOMInteractedElement(
             elementHash = node.elementHash ?: HashUtils.simpleElementHash(node),
             xpath = node.xpath,
-            bounds = node.snapshotNode?.clientRects,
+            bounds = node.snapshotNode?.clientRects?.roundTo(1),
             isVisible = node.isVisible,
             isInteractable = node.isInteractable
         )
@@ -732,9 +734,9 @@ class ChromeCdpDomService(
     }
 
     /**
-     * Calculate scrollability with enhanced logic covering iframe/body/html and nested containers.
+     * Calculate scalability with enhanced logic covering iframe/body/html and nested containers.
      */
-    private fun calculateScrollability(
+    private fun calculateScalability(
         node: DOMTreeNodeEx,
         snap: SnapshotNodeEx?,
         ancestors: List<DOMTreeNodeEx>
@@ -758,7 +760,7 @@ class ChromeCdpDomService(
             return scrollHeight > clientHeight + 1 // Allow 1px tolerance
         }
 
-        // For nested containers, check for duplicate scrollability in ancestors
+        // For nested containers, check for duplicate scalability in ancestors
         val hasScrollableAncestor = ancestors.any { ancestor ->
             ancestor.isScrollable == true && ancestor.snapshotNode?.scrollRects != null
         }
@@ -769,7 +771,7 @@ class ChromeCdpDomService(
             val ancestorScrollAreas = ancestors
                 .filter { it.isScrollable == true }
                 .mapNotNull { it.snapshotNode?.scrollRects }
-            val currentScrollArea = snap.scrollRects ?: return basicScrollable
+            val currentScrollArea = snap.scrollRects ?: return true
 
             // Check if current element has significantly different scroll area
             ancestorScrollAreas.none { ancestorArea ->
@@ -779,7 +781,7 @@ class ChromeCdpDomService(
                         kotlin.math.abs(ancestorArea.height - currentScrollArea.height) < 5
             }
         } else {
-            basicScrollable
+            true
         }
     }
 

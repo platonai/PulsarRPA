@@ -1,16 +1,8 @@
 package ai.platon.pulsar.browser.driver.chrome.dom.util
 
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
-import ai.platon.pulsar.browser.driver.chrome.dom.model.CompactRect
-import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMInteractedElement
-import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMRect
-import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
-import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
-import ai.platon.pulsar.browser.driver.chrome.dom.model.NanoDOMTree
-import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotNodeEx
-import ai.platon.pulsar.browser.driver.chrome.dom.model.TargetTrees
-import ai.platon.pulsar.browser.driver.chrome.dom.model.TinyNode
-import java.util.AbstractMap
+import ai.platon.pulsar.browser.driver.chrome.dom.model.*
+import java.util.*
 import kotlin.math.round
 
 /**
@@ -292,85 +284,105 @@ object DomDebug {
 
     // ----- Summaries -----
 
-    fun summarize(trees: TargetTrees): String {
+    // Helpers to convert nodes to map structures for summaries
+    fun toMidNodeMap(n: DOMTreeNodeEx): Map<String, Any?> = linkedMapOf(
+        "nodeId" to n.nodeId,
+        "backendNodeId" to n.backendNodeId,
+        "nodeType" to n.nodeType,
+        "name" to n.nodeName,
+        "label" to labelOfNode(n),
+        "hash" to n.elementHash?.take(12),
+        "bounds" to (n.snapshotNode?.clientRects ?: n.absolutePosition),
+    )
+    fun toMidNodeMap(n: TinyNode): Map<String, Any?> = toMidNodeMap(n.originalNode)
+    fun toMidNodeMap(n: NanoDOMTree): Map<String, Any?> = linkedMapOf(
+        "locator" to n.locator,
+        "label" to labelOfNano(n),
+        "bounds" to (n.clientRects ?: n.absoluteBounds ?: n.bounds)
+    )
+
+    fun summarize(trees: TargetTrees): Map<String, Any?> {
         val s = stats(trees.domTree)
         val b = boundsStats(trees.domTree)
         val (mid1, mid2) = midTwoWithBounds(trees.domTree)
-        // bounds sampling over the DOM tree
         val xyAll = collectXY(trees.domTree)
         val gt200 = filterGt(xyAll, 200.0)
         val gt50Sorted = sortedGt50(xyAll)
-        return buildString {
-            appendLine("TargetTrees")
-            appendLine("- devicePixelRatio=${trees.devicePixelRatio}")
-            appendLine("- timingsMs=${trees.cdpTiming}")
-            appendLine("- options=${trees.options}")
-            appendLine("- axTree.size=${trees.axTree.size}")
-            appendLine("- snapshotByBackendId.size=${trees.snapshotByBackendId.size}")
-            appendLine("- domByBackendId.size=${trees.domByBackendId.size}")
-            appendLine("- domTree.stats=($s)")
-            appendLine("- domTree.boundsStats=($b)")
-            appendLine("- domTree.bounds.zeroNonZero=(zero=${b.zero}, nonZero=${b.positive})")
-            if (mid1 != null) appendLine("- domTree.midBoundsNode1={ ${briefWithBounds(mid1)} }")
-            if (mid2 != null && mid2 !== mid1) appendLine("- domTree.midBoundsNode2={ ${briefWithBounds(mid2)} }")
-            appendLine("- bounds.samples.gt200.count=${gt200.size}")
-            appendLine("- bounds.coords.gt50.sorted=${formatXYList(gt50Sorted)}")
-        }
+        return linkedMapOf(
+            "type" to "TargetTrees",
+            "devicePixelRatio" to trees.devicePixelRatio,
+            "timingsMs" to trees.cdpTiming,
+            "options" to trees.options.toString(),
+            "axTree.size" to trees.axTree.size,
+            "snapshotByBackendId.size" to trees.snapshotByBackendId.size,
+            "domByBackendId.size" to trees.domByBackendId.size,
+            "domTree.stats" to s,
+            "domTree.boundsStats" to b,
+            "domTree.bounds.zeroNonZero" to mapOf("zero" to b.zero, "nonZero" to b.positive),
+            "domTree.midBoundsNode1" to (mid1?.let { toMidNodeMap(it) }),
+            "domTree.midBoundsNode2" to (mid2?.takeIf { it !== mid1 }?.let { toMidNodeMap(it) }),
+            "bounds.samples.gt200.count" to gt200.size,
+            "bounds.coords.gt50.sorted" to gt50Sorted
+        )
     }
 
-    fun summarize(node: DOMTreeNodeEx, includeTreeStats: Boolean = true): String {
+    fun summarize(node: DOMTreeNodeEx, includeTreeStats: Boolean = true): Map<String, Any?> {
         val attrs = node.attributes
         val id = attrs["id"]?.let { "#${it}" } ?: ""
         val klass = attrs["class"]?.let { "." + it.split(Regex("\\s+")).take(2).joinToString(".") } ?: ""
         val label = (node.nodeName.ifBlank { "?" } + id + klass).trim()
-        val hashShort = node.elementHash?.take(12) ?: ""
-        val xPathShort = node.xpath?.takeLast(40) ?: ""
-        val counts =
-            if (includeTreeStats) stats(node).toString() else "children=${node.children.size} shadowRoots=${node.shadowRoots.size} contentDocument=${node.contentDocument != null}"
-        val b = if (includeTreeStats) boundsStats(node).toString() else null
-        val bz = if (includeTreeStats) boundsStats(node) else null
+        val hashShort = node.elementHash?.take(12)
+        val xPathShort = node.xpath?.takeLast(40)
+        val counts = if (includeTreeStats) stats(node) else null
+        val b = if (includeTreeStats) boundsStats(node) else null
         val midPair = if (includeTreeStats) midTwoWithBounds(node) else null
-        // sampling
         val xyAll = collectXY(node)
         val gt200 = filterGt(xyAll, 200.0)
         val gt50Sorted = sortedGt50(xyAll)
-        return buildString {
-            appendLine("DOMTreeNodeEx")
-            appendLine("- nodeId=${node.nodeId} backendId=${node.backendNodeId} type=${node.nodeType} name=${node.nodeName}")
-            appendLine("- label=$label")
-            appendLine("- xPath=${xPathShort}")
-            appendLine("- elementHash=${hashShort}")
-            appendLine("- scrollable=${node.isScrollable} visible=${node.isVisible} interactable=${node.isInteractable} index=${node.interactiveIndex}")
-            appendLine("- bounds=${node.snapshotNode?.clientRects ?: node.absolutePosition}")
-            appendLine("- ${counts}")
-            if (b != null) appendLine("- boundsStats=($b)")
-            if (bz != null) appendLine("- bounds.zeroNonZero=(zero=${bz.zero}, nonZero=${bz.positive})")
-            val (mid1, mid2) = midPair ?: Pair(null, null)
-            if (mid1 != null) appendLine("- midBoundsNode1={ ${briefWithBounds(mid1)} }")
-            if (mid2 != null && mid2 !== mid1) appendLine("- midBoundsNode2={ ${briefWithBounds(mid2)} }")
-            appendLine("- bounds.samples.gt200.count=${gt200.size}")
-            appendLine("- bounds.coords.gt50.sorted=${formatXYList(gt50Sorted)}")
-        }
+        val (mid1, mid2) = midPair ?: Pair(null, null)
+        return linkedMapOf(
+            "type" to "DOMTreeNodeEx",
+            "nodeId" to node.nodeId,
+            "backendNodeId" to node.backendNodeId,
+            "nodeType" to node.nodeType,
+            "name" to node.nodeName,
+            "label" to label,
+            "xPath" to xPathShort,
+            "elementHash" to hashShort,
+            "scrollable" to node.isScrollable,
+            "visible" to node.isVisible,
+            "interactable" to node.isInteractable,
+            "interactiveIndex" to node.interactiveIndex,
+            "bounds" to (node.snapshotNode?.clientRects ?: node.absolutePosition),
+            "stats" to counts,
+            "boundsStats" to b,
+            "bounds.zeroNonZero" to (b?.let { mapOf("zero" to it.zero, "nonZero" to it.positive) }),
+            "midBoundsNode1" to (mid1?.let { toMidNodeMap(it) }),
+            "midBoundsNode2" to (mid2?.takeIf { it !== mid1 }?.let { toMidNodeMap(it) }),
+            "bounds.samples.gt200.count" to gt200.size,
+            "bounds.coords.gt50.sorted" to gt50Sorted
+        )
     }
 
-    fun summarize(el: DOMInteractedElement): String {
+    fun summarize(el: DOMInteractedElement): Map<String, Any?> {
         val hashShort = el.elementHash.take(12)
         val xPathShort = el.xpath?.takeLast(60)
         val xy = xyOf(el.bounds)
         val gt200 = if (xy != null && xy.first > 200.0 && xy.second > 200.0) 1 else 0
         val gt50Sorted = if (xy != null && xy.first > 50.0 && xy.second > 50.0) listOf(xy) else emptyList()
-        return buildString {
-            appendLine("DOMInteractedElement")
-            appendLine("- elementHash=${hashShort}")
-            appendLine("- xPath=${xPathShort}")
-            appendLine("- visible=${el.isVisible} interactable=${el.isInteractable}")
-            appendLine("- bounds=${el.bounds}")
-            appendLine("- bounds.samples.gt200.count=${gt200}")
-            appendLine("- bounds.coords.gt50.sorted=${formatXYList(gt50Sorted)}")
-        }
+        return linkedMapOf(
+            "type" to "DOMInteractedElement",
+            "elementHash" to hashShort,
+            "xPath" to xPathShort,
+            "visible" to el.isVisible,
+            "interactable" to el.isInteractable,
+            "bounds" to el.bounds,
+            "bounds.samples.gt200.count" to gt200,
+            "bounds.coords.gt50.sorted" to gt50Sorted
+        )
     }
 
-    fun summarize(root: TinyNode): String {
+    fun summarize(root: TinyNode): Map<String, Any?> {
         val s = stats(root)
         val b = boundsStats(root)
         val original = root.originalNode
@@ -379,63 +391,58 @@ object DomDebug {
         val xyAll = collectXY(root)
         val gt200 = filterGt(xyAll, 200.0)
         val gt50Sorted = sortedGt50(xyAll)
-        return buildString {
-            appendLine("TinyNode")
-            appendLine("- from nodeId=${original.nodeId} name=${original.nodeName} hash=${hashShort}")
-            appendLine("- shouldDisplay=${root.shouldDisplay} interactiveIndex=${root.interactiveIndex}")
-            appendLine("- stats=($s)")
-            appendLine("- boundsStats=($b)")
-            appendLine("- bounds.zeroNonZero=(zero=${b.zero}, nonZero=${b.positive})")
-            if (mid1 != null) appendLine("- midBoundsNode1={ ${briefWithBounds(mid1)} }")
-            if (mid2 != null && mid2 !== mid1) appendLine("- midBoundsNode2={ ${briefWithBounds(mid2)} }")
-            appendLine("- bounds.samples.gt200.count=${gt200.size}")
-            appendLine("- bounds.coords.gt50.sorted=${formatXYList(gt50Sorted)}")
-        }
+        return linkedMapOf(
+            "type" to "TinyNode",
+            "from.nodeId" to original.nodeId,
+            "from.name" to original.nodeName,
+            "from.hash" to hashShort,
+            "shouldDisplay" to root.shouldDisplay,
+            "interactiveIndex" to root.interactiveIndex,
+            "stats" to s,
+            "boundsStats" to b,
+            "bounds.zeroNonZero" to mapOf("zero" to b.zero, "nonZero" to b.positive),
+            "midBoundsNode1" to (mid1?.let { toMidNodeMap(it) }),
+            "midBoundsNode2" to (mid2?.takeIf { it !== mid1 }?.let { toMidNodeMap(it) }),
+            "bounds.samples.gt200.count" to gt200.size,
+            "bounds.coords.gt50.sorted" to gt50Sorted
+        )
     }
 
-    fun summarize(root: NanoDOMTree): String {
+    fun summarize(root: NanoDOMTree): Map<String, Any?> {
         val s = stats(root)
         val b = boundsStats(root)
-        val label = buildString {
-            val name = root.nodeName ?: "?"
-            append(name)
-            val id = (root.attributes?.get("id") as? String)?.takeIf { it.isNotBlank() }
-            if (!id.isNullOrBlank()) append("#").append(id)
-            val cls = (root.attributes?.get("class") as? String)
-                ?.trim()?.split(Regex("\\s+")).orEmpty().take(2)
-                .filter { it.isNotBlank() }
-            if (cls.isNotEmpty()) append(".").append(cls.joinToString("."))
-        }
+        val label = labelOfNano(root)
         val (mid1, mid2) = midTwoWithBounds(root)
         val xyAll = collectXY(root)
         val gt200 = filterGt(xyAll, 200.0)
         val gt50Sorted = sortedGt50(xyAll)
-        return buildString {
-            appendLine("NanoDOMTree")
-            appendLine("- root locator=${root.locator} label=${label}")
-            appendLine("- scrollable=${root.scrollable} interactive=${root.interactive} invisible=${root.invisible}")
-            appendLine("- bounds=${root.clientRects ?: root.absoluteBounds ?: root.bounds}")
-            appendLine("- stats=($s)")
-            appendLine("- boundsStats=($b)")
-            appendLine("- bounds.zeroNonZero=(zero=${b.zero}, nonZero=${b.positive})")
-            if (mid1 != null) appendLine("- midBoundsNode1={ ${briefWithBounds(mid1)} }")
-            if (mid2 != null && mid2 !== mid1) appendLine("- midBoundsNode2={ ${briefWithBounds(mid2)} }")
-            appendLine("- bounds.samples.gt200.count=${gt200.size}")
-            appendLine("- bounds.coords.gt50.sorted=${formatXYList(gt50Sorted)}")
-        }
+        return linkedMapOf(
+            "type" to "NanoDOMTree",
+            "locator" to root.locator,
+            "label" to label,
+            "scrollable" to root.scrollable,
+            "interactive" to root.interactive,
+            "invisible" to root.invisible,
+            "bounds" to (root.clientRects ?: root.absoluteBounds ?: root.bounds)?.roundTo(1),
+            "stats" to s,
+            "boundsStats" to b,
+            "bounds.zeroNonZero" to mapOf("zero" to b.zero, "nonZero" to b.positive),
+            "midBoundsNode1" to (mid1?.let { toMidNodeMap(it) }),
+            "midBoundsNode2" to (mid2?.takeIf { it !== mid1 }?.let { toMidNodeMap(it) }),
+            "bounds.samples.gt200.count" to gt200.size,
+            "bounds.coords.gt50.sorted" to gt50Sorted
+        )
     }
 
-    fun summarize(snapshotNode: Map<Int, SnapshotNodeEx>): String {
+    fun summarize(snapshotNode: Map<Int, SnapshotNodeEx>): Map<String, Any?> {
         var zero = 0
         var positive = 0
         var missing = 0
         var withClientRects = 0
         var withAbsolute = 0
         var withBounds = 0
-
         val eligible = mutableListOf<Map.Entry<Int, SnapshotNodeEx>>()
         val xyAll = mutableListOf<Pair<Double, Double>>()
-
         snapshotNode.entries.forEach { (k, s) ->
             val r = s.clientRects ?: s.absoluteBounds ?: s.bounds
             if (s.clientRects != null) withClientRects++
@@ -454,8 +461,7 @@ object DomDebug {
                 }
             }
         }
-
-        fun brief(entry: Map.Entry<Int, SnapshotNodeEx>): String {
+        fun briefMap(entry: Map.Entry<Int, SnapshotNodeEx>): Map<String, Any?> {
             val s = entry.value
             val source = when {
                 s.clientRects != null -> "clientRects"
@@ -464,36 +470,41 @@ object DomDebug {
                 else -> "none"
             }
             val r = s.clientRects ?: s.absoluteBounds ?: s.bounds
-            return "key=${entry.key}, source=${source}, rect=${r}"
+            return linkedMapOf(
+                "key" to entry.key,
+                "source" to source,
+                "rect" to r
+            )
         }
-
         val (mid1, mid2) = middleTwo(eligible)
         val gt200 = filterGt(xyAll, 200.0)
         val gt50Sorted = sortedGt50(xyAll)
-        return buildString {
-            appendLine("SnapshotNodeExMap")
-            appendLine("- entries=${snapshotNode.size}")
-            appendLine("- boundsStats=(zero=${zero}, positive=${positive}, missing=${missing})")
-            appendLine("- with: clientRects=${withClientRects}, absoluteBounds=${withAbsolute}, bounds=${withBounds}")
-            appendLine("- bounds.zeroNonZero=(zero=${zero}, nonZero=${positive})")
-            if (mid1 != null) appendLine("- midBoundsEntry1={ ${brief(mid1)} }")
-            if (mid2 != null && mid2.key != mid1?.key) appendLine("- midBoundsEntry2={ ${brief(mid2)} }")
-            appendLine("- bounds.samples.gt200.count=${gt200.size}")
-            appendLine("- bounds.coords.gt50.sorted=${formatXYList(gt50Sorted)}")
-        }
+        return linkedMapOf(
+            "type" to "SnapshotNodeExMap",
+            "entries" to snapshotNode.size,
+            "boundsStats" to mapOf("zero" to zero, "positive" to positive, "missing" to missing),
+            "with" to mapOf(
+                "clientRects" to withClientRects,
+                "absoluteBounds" to withAbsolute,
+                "bounds" to withBounds
+            ),
+            "bounds.zeroNonZero" to mapOf("zero" to zero, "nonZero" to positive),
+            "midBoundsEntry1" to (mid1?.let { briefMap(it) }),
+            "midBoundsEntry2" to (mid2?.takeIf { it.key != mid1?.key }?.let { briefMap(it) }),
+            "bounds.samples.gt200.count" to gt200.size,
+            "bounds.coords.gt50.sorted" to gt50Sorted
+        )
     }
 
-    fun summarize(state: DOMState): String {
+    fun summarize(state: DOMState): Map<String, Any?> {
         val totalEntries = state.selectorMap.size
         val keys = state.selectorMap.keys
         val xpathKeys = keys.count { it.startsWith("xpath:") }
         val backendKeys = keys.count { it.startsWith("backend:") }
         val nodeKeys = keys.count { it.startsWith("node:") }
         val hashKeys = totalEntries - xpathKeys - backendKeys - nodeKeys
-
         val uniqueNodes = state.selectorMap.values.distinctBy { it.nodeId }
         val uniqueCount = uniqueNodes.size
-
         val interactable = uniqueNodes.count { it.isInteractable == true }
         val visible = uniqueNodes.count { it.isVisible == true }
         val scrollable = uniqueNodes.count { it.isScrollable == true }
@@ -501,8 +512,6 @@ object DomDebug {
         val withHash = uniqueNodes.count { !it.elementHash.isNullOrBlank() }
         val withSnapshot = uniqueNodes.count { it.snapshotNode != null }
         val withBounds = uniqueNodes.count { it.snapshotNode?.clientRects != null || it.snapshotNode?.absoluteBounds != null || it.absolutePosition != null }
-
-        // Build a small sample label list
         fun labelOf(n: DOMTreeNodeEx): String {
             val attrs = n.attributes
             val id = attrs["id"]?.let { "#${it}" } ?: ""
@@ -510,27 +519,38 @@ object DomDebug {
             val name = n.nodeName.ifBlank { "?" }
             return (name + id + klass).trim()
         }
-        val sample = uniqueNodes.take(3).joinToString(", ") { labelOf(it) }
+        val sample = uniqueNodes.take(3).map { labelOf(it) }
         val json = DOMSerializer.toJson(state.microTree)
-
         val eligible = uniqueNodes.filter { hasNonZeroXY(rectOf(it)) }
         val (mid1, mid2) = middleTwo(eligible)
-
         val xyAll = uniqueNodes.mapNotNull { xyOf(rectOf(it)) }
         val gt200 = filterGt(xyAll, 200.0)
         val gt50Sorted = sortedGt50(xyAll)
-
-        return buildString {
-            appendLine("DOMState")
-            appendLine("- json.length=${json.length}")
-            appendLine("- selectorMap.entries=${totalEntries}")
-            appendLine("- selectorMap.uniqueNodes=${uniqueCount} (hashKeys=${hashKeys}, xpathKeys=${xpathKeys}, backendKeys=${backendKeys}, nodeKeys=${nodeKeys})")
-            appendLine("- nodes: interactable=${interactable}, visible=${visible}, scrollable=${scrollable}, withXPath=${withXPath}, withHash=${withHash}, withSnapshot=${withSnapshot}, withBounds=${withBounds}")
-            if (sample.isNotBlank()) appendLine("- sample=${sample}")
-            if (mid1 != null) appendLine("- midBoundsNode1={ ${briefWithBounds(mid1)} }")
-            if (mid2 != null && mid2 !== mid1) appendLine("- midBoundsNode2={ ${briefWithBounds(mid2)} }")
-            appendLine("- bounds.samples.gt200.count=${gt200.size}")
-            appendLine("- bounds.coords.gt50.sorted=${formatXYList(gt50Sorted)}")
-        }
+        return linkedMapOf(
+            "type" to "DOMState",
+            "json.length" to json.length,
+            "selectorMap.entries" to totalEntries,
+            "selectorMap.uniqueNodes" to uniqueCount,
+            "selectorMap.keyBreakdown" to mapOf(
+                "hashKeys" to hashKeys,
+                "xpathKeys" to xpathKeys,
+                "backendKeys" to backendKeys,
+                "nodeKeys" to nodeKeys
+            ),
+            "nodes" to mapOf(
+                "interactable" to interactable,
+                "visible" to visible,
+                "scrollable" to scrollable,
+                "withXPath" to withXPath,
+                "withHash" to withHash,
+                "withSnapshot" to withSnapshot,
+                "withBounds" to withBounds
+            ),
+            "sample" to sample,
+            "midBoundsNode1" to (mid1?.let { toMidNodeMap(it) }),
+            "midBoundsNode2" to (mid2?.takeIf { it !== mid1 }?.let { toMidNodeMap(it) }),
+            "bounds.samples.gt200.count" to gt200.size,
+            "bounds.coords.gt50.sorted" to gt50Sorted
+        )
     }
 }

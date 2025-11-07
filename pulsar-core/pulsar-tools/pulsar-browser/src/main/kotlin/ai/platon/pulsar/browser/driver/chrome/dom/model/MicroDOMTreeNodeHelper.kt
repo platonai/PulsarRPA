@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.math.roundTo
 import org.apache.commons.lang3.StringUtils
+import kotlin.math.max
 
 class MicroToNanoTreeHelper(
     private val microTree: MicroDOMTreeNode,
@@ -35,7 +36,7 @@ class MicroToNanoTreeHelper(
         if (seenChunks.size > 1) {
             val merged = mergeChunks()
             seenChunks.clear()
-            seenChunks.addAll(merged)
+            merged.map { max(0.0, it.first) to max(0.0, it.second) }.toCollection(seenChunks)
         }
 
         val y1 = startY.roundTo(1)
@@ -104,10 +105,9 @@ class MicroToNanoTreeHelper(
 
         val o = no.originalNode ?: return false
         // Prefer absolute page coordinates first, then bounds, then client rects
-//        val r = o.absoluteBounds ?: o.bounds ?: o.clientRects ?: return false
-        val r = o.absoluteBounds ?: o.bounds ?: o.clientRects ?: return false
-        val y = r.y ?: return false
-        val h = r.height ?: 0.0
+        val r = (o.absoluteBounds ?: o.bounds ?: o.clientRects)?.uncompact() ?: return true
+        val y = r.y
+        val h = r.height
 
         // If height is missing or non-positive, treat it as a point at y
         if (!(h > 0.0)) {

@@ -35,7 +35,7 @@ import kotlin.reflect.full.isSuperclassOf
  * @author Vincent Zhang, ivincent.zhang@gmail.com, platon.ai
  */
 open class BasicToolCallExecutor(
-    val toolExecutors: List<ToolExecutor>
+    val toolExecutors: List<ToolExecutor> = listOf(WebDriverToolExecutor(), BrowserToolExecutor())
 ) {
     private val logger = getLogger(this)
     private val engine = ScriptEngineManager().getEngineByExtension("kts")

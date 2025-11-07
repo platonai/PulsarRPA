@@ -127,8 +127,8 @@ class DomSnapshotHandler(private val devTools: RemoteDevTools) {
                 val isClickable = cursor in setOf("pointer", "hand")
 
                 // Parse layout bounds and scale to CSS pixels
-                val rawBoundsRect = parseBoundsRow(row)
-                val boundsRect = scaleRectToCssPx(rawBoundsRect)
+                val rawBoundsRect = parseBoundsRow(row)?.roundTo(1)
+                val boundsRect = scaleRectToCssPx(rawBoundsRect)?.roundTo(1)
                 val absoluteBounds = if (includeAbsoluteCoords) boundsRect else null
 
                 val snap = SnapshotNodeEx(
