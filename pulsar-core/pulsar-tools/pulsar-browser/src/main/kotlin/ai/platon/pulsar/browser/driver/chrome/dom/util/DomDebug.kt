@@ -294,6 +294,7 @@ object DomDebug {
         "hash" to n.elementHash?.take(12),
         "bounds" to (n.snapshotNode?.clientRects ?: n.absolutePosition),
     )
+
     fun toMidNodeMap(n: TinyNode): Map<String, Any?> = toMidNodeMap(n.originalNode)
     fun toMidNodeMap(n: NanoDOMTree): Map<String, Any?> = linkedMapOf(
         "locator" to n.locator,
@@ -455,6 +456,7 @@ object DomDebug {
                     positive++
                     if (hasNonZeroXY(r)) eligible += AbstractMap.SimpleEntry(k, s)
                 }
+
                 else -> {
                     zero++
                     if (hasNonZeroXY(r)) eligible += AbstractMap.SimpleEntry(k, s)
@@ -496,7 +498,12 @@ object DomDebug {
         )
     }
 
-    fun summarize(state: DOMState): Map<String, Any?> {
+    fun summarizeStr(state: DOMState, maxItems: Int = 100): String {
+        val map = summarize(state, maxItems).toMutableMap()
+        return map.toString()
+    }
+
+    fun summarize(state: DOMState, maxItems: Int = 100): Map<String, Any?> {
         val totalEntries = state.selectorMap.size
         val keys = state.selectorMap.keys
         val xpathKeys = keys.count { it.startsWith("xpath:") }
@@ -524,8 +531,8 @@ object DomDebug {
         val eligible = uniqueNodes.filter { hasNonZeroXY(rectOf(it)) }
         val (mid1, mid2) = middleTwo(eligible)
         val xyAll = uniqueNodes.mapNotNull { xyOf(rectOf(it)) }
-        val gt200 = filterGt(xyAll, 200.0)
-        val gt50Sorted = sortedGt50(xyAll)
+        val gt200 = filterGt(xyAll, 200.0).take(maxItems)
+        val gt50Sorted = sortedGt50(xyAll).take(maxItems)
         return linkedMapOf(
             "type" to "DOMState",
             "json.length" to json.length,

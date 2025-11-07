@@ -858,7 +858,7 @@ class BrowserPerceptiveAgent constructor(
 
                 logger.info("▶️ step.exec sid={} step={}/{} noOps={}", sid, step, config.maxSteps, consecutiveNoOps)
                 if (logger.isDebugEnabled) {
-                    logger.debug("🧩 dom={}", DomDebug.summarize(browserUseState.domState))
+                    logger.debug("🧩 dom={}", DomDebug.summarizeStr(browserUseState.domState, 5))
                 }
 
                 // Memory cleanup at intervals
