@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples.llm
+package ai.platon.pulsar.examples.fuse
 
 import ai.platon.pulsar.agentic.context.AgenticContexts
 import ai.platon.pulsar.common.Strings
@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.test.server.DemoSiteStarter
 
-class SessionAct {
+class SummarizePage {
     private val logger = getLogger(this)
 
     private var stepNo = 0
@@ -39,13 +39,13 @@ class SessionAct {
         var text = driver.selectFirstPropertyValueOrNull("#searchBox", "value")
         println("Input value of search box: $text")
 
-        step("Action: 提取网页全文")
-        actOptions = ActionOptions("提取网页全文")
+        step("Action: Extract the full text of the webpage")
+        actOptions = ActionOptions("Extract the full text of the webpage")
         result = agent.act(actOptions)
         result("action result", result)
 
-        step("Action: 总结网页全文")
-        val response = session.chat("总结网页全文: \n\n\n" + result.tcEvalValue)
+        step("Action: Summarize the full text of the webpage")
+        val response = session.chat("Summarize the full text of the webpage: \n\n\n" + result.tcEvalValue)
         result("action result", response)
 
         AgenticContexts.close()
@@ -61,4 +61,4 @@ class SessionAct {
     }
 }
 
-suspend fun main() = SessionAct().run()
+suspend fun main() = SummarizePage().run()
