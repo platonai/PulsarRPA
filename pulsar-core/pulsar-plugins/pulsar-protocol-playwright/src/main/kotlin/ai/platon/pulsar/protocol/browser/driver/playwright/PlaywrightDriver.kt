@@ -792,10 +792,15 @@ class PlaywrightDriver(
      * @return The screenshot as a base64 encoded string
      * @throws RuntimeException if screenshot capture fails
      */
-    override suspend fun captureScreenshot(): String? {
+    override suspend fun captureScreenshot(fullPage: Boolean): String? {
         return try {
             rpc.invokeDeferred("captureScreenshot") {
-                Base64.getEncoder().encodeToString(page.screenshot())
+                val options = Page.ScreenshotOptions()
+                if (fullPage) {
+                    options.setFullPage(true)
+                }
+                val src = page.screenshot(options)
+                Base64.getEncoder().encodeToString(src)
             }
         } catch (e: Exception) {
             rpc.handleWebDriverException(e, "captureScreenshot")
