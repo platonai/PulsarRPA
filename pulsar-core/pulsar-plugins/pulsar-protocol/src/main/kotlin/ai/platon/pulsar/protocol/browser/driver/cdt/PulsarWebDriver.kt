@@ -545,13 +545,13 @@ function() {
      * This method scrolls element into view if needed, and then uses
      * {@link screenshot.captureScreenshot} to take a screenshot of the element.
      * If the element is detached from DOM, the method throws an error.
-     *
-     *
      */
     @Throws(WebDriverException::class)
-    override suspend fun captureScreenshot(): String? {
+    override suspend fun captureScreenshot(fullPage: Boolean): String? {
         return try {
-            rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot() }
+            rpc.invokeDeferred("captureScreenshot") {
+                screenshot.captureScreenshot(fullPage)
+            }
         } catch (e: ChromeDriverException) {
             rpc.handleChromeException(e, "captureScreenshot")
             null

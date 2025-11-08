@@ -22,12 +22,41 @@ class ScreenshotHandler(
     /**
      * Capture page screenshot.
      * */
-    suspend fun captureScreenshot(): String? {
-        return page?.captureScreenshot()
+    suspend fun captureScreenshot(fullPage: Boolean): String? {
+        if (!fullPage) {
+            return page?.captureScreenshot()
+        }
+
+        val metrics = page?.getLayoutMetrics() ?: return null
+        val emulation = devTools.emulation.takeIf { isActive }
+        val rect = metrics.cssContentSize
+        val width = rect.width.toInt()
+        val height = rect.height.toInt()
+
+        emulation?.setDeviceMetricsOverride(
+            mobile = false,
+            width = width,
+            height = height,
+            deviceScaleFactor = 1.0,
+            screenWidth = width,
+            screenHeight = height,
+        ) ?: return null
+
+        // PNG = Crisp, precise, lossless, and supports transparency (ideal for testing and UI design)
+        // JPEG = Compact, softly detailed, lossy, and opaque (suitable for presentation and archiving)
+        val format = CaptureScreenshotFormat.JPEG
+        val result = page?.captureScreenshot(
+            format = format,
+            captureBeyondViewport = true,
+        )
+
+        emulation.clearDeviceMetricsOverride()
+
+        return result
     }
 
     suspend fun captureScreenshot(selector: String): String? {
-        val node = pageHandler.querySelector(selector)
+        val node = pageHandler.resolveSelector(selector)
         if (node == null) {
             logger.info("No such element <{}>", selector)
             return null
@@ -67,7 +96,11 @@ class ScreenshotHandler(
     }
 
     private suspend fun captureScreenshot0(node: NodeRef?, viewport: Viewport): String? {
+        // PNG = Crisp, precise, lossless, and supports transparency (ideal for testing and UI design)
+        // JPEG = Compact, softly detailed, lossy, and opaque (suitable for presentation and archiving)
         val format = CaptureScreenshotFormat.JPEG
+
+        // Compression quality from range [0..100] (jpeg only).
         val quality = BrowserSettings.SCREENSHOT_QUALITY
 
         // The viewport has to be visible before screenshot

@@ -1423,11 +1423,11 @@ interface WebDriver : Closeable {
      * ```
      */
     @Throws(WebDriverException::class)
-    suspend fun captureScreenshot(): String?
+    suspend fun captureScreenshot(fullPage: Boolean = false): String?
 
     /**
      * Scroll the element matched by [selector] into view (if needed) then take a screenshot of that element's bounding box.
-     * Returns a Base64 encoded image (implementation usually PNG/JPEG).
+     * Returns a Base64 encoded image (implementation usually PNG/JPEG), PNG by default.
      */
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(selector: String): String?
