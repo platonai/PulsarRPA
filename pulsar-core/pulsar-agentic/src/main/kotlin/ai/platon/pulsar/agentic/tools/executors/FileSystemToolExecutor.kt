@@ -21,7 +21,7 @@ class FileSystemToolExecutor : AbstractToolExecutor() {
      * Execute fs.* expressions against a FileSystem target.
      */
     @Suppress("UNUSED_PARAMETER")
-    override suspend fun doExecute(
+    override suspend fun execute(
         objectName: String, functionName: String, args: Map<String, Any?>, target: Any
     ): Any? {
         require(objectName == "fs") { "Object must be fs" }

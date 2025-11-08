@@ -29,7 +29,7 @@ abstract class AbstractToolExecutor: ToolExecutor {
             val (objectName, functionName, args) = parser.parseFunctionExpression(expression)
                 ?: return TcEvaluate(expression = expression, cause = IllegalArgumentException("Illegal expression"))
 
-            val r = doExecute(objectName, functionName, args, target)
+            val r = execute(objectName, functionName, args, target)
 
             val className = if (r == null) "null" else r::class.qualifiedName
             val value = if (r == Unit) null else r
@@ -40,5 +40,5 @@ abstract class AbstractToolExecutor: ToolExecutor {
         }
     }
 
-    abstract suspend fun doExecute(objectName: String, functionName: String, args: Map<String, Any?>, target: Any): Any?
+    abstract suspend fun execute(objectName: String, functionName: String, args: Map<String, Any?>, target: Any): Any?
 }

@@ -959,7 +959,7 @@ ${nanoTree.lazyJson}
     fun buildObserveActToolUsePrompt(action: String): String {
         val instruction =
             """
-## 用户指令
+## 用户输入
 
 根据以下动作选择一个工具来执行该动作：$action。查找动作、工具和目标最相关的页面元素。分析执行后的影响和预期结果。
 
@@ -974,8 +974,8 @@ ${nanoTree.lazyJson}
         messages: AgentMessageList, toolCalls: List<String>, variables: Map<String, String>? = null
     ) {
         // Base instruction
-        val toolSpecs = if (isZH) {
-            """
+        val toolSpecs =
+"""
 ## 工具列表
 
 ```kotlin
@@ -987,30 +987,6 @@ $TOOL_CALL_RULE_CONTENT
 ---
 
 """.trimIndent()
-        } else {
-            """
-## Supported Tool List
-
-```kotlin
-${toolCalls.joinToString("\n")}
-```
-
-• Treat locator as selector.
-• Ensure locator exactly matches the corresponding accessibility tree node attributes to accurately locate the node.
-• Do not provide uncertain parameters.
-• When JSON output is required, prohibit any additional text.
-• Note: Users cannot easily distinguish buttons from links.
-• If the action is unrelated to the page, return an empty array.
-• Return only the most relevant single action.
-• To access multiple links for research, use click(selector, "Ctrl") to open in a new tab.
-• For key actions (e.g., "press Enter"), use the press method (parameters: "A"/"Enter"/"Space"). Capitalize special keys. Do not simulate clicks on an on-screen keyboard.
-• Capitalize only special keys (e.g., Enter, Tab, Escape).
-• To interact with the previous page after navigation, use goBack.
-
----
-
-""".trimIndent()
-        }
 
         messages.addSystem(toolSpecs, "toolSpecs")
     }

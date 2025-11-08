@@ -26,7 +26,7 @@ class WebDriverToolExecutor: AbstractToolExecutor() {
      * Extract function name and arguments from the expression string
      * */
     @Suppress("UNUSED_PARAMETER")
-    override suspend fun doExecute(
+    override suspend fun execute(
         objectName: String, functionName: String, args: Map<String, Any?>, target: Any
     ): Any? {
         val driver = requireNotNull(target as WebDriver) { "The target must be a WebDriver" }
@@ -710,7 +710,7 @@ class WebDriverToolExecutor: AbstractToolExecutor() {
                     when {
                         arguments.isEmpty() -> "driver.captureScreenshot()"
                         !sel.isNullOrBlank() -> "driver.captureScreenshot(${sel.norm()})"
-                        fp == "true" -> "driver.captureScreenshot(fullPage = true)"
+                        fp == "true" -> "driver.captureScreenshot(true)"
                         else -> null
                     }
                 }

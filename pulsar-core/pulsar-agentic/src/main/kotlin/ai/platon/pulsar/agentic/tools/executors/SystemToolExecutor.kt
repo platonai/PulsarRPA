@@ -20,7 +20,7 @@ class SystemToolExecutor: AbstractToolExecutor() {
      * Execute agent.* expressions against a PerceptiveAgent target.
      */
     @Suppress("UNUSED_PARAMETER")
-    override suspend fun doExecute(
+    override suspend fun execute(
         objectName: String, functionName: String, args: Map<String, Any?>, target: Any
     ): Any? {
         require(objectName == "system") { "Object must be an System" }
