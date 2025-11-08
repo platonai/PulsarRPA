@@ -489,8 +489,6 @@ class BrowserPerceptiveAgent constructor(
         // 1) Build instruction for action-oriented observe
         val toolCalls = ToolSpecification.SUPPORTED_TOOL_CALLS
 
-        promptBuilder.buildObserveActToolSpecsPrompt(messages, toolCalls, action.variables)
-
         val instruction = promptBuilder.buildObserveActToolUsePrompt(action.action)
         messages.addUser(instruction, "instruction")
 

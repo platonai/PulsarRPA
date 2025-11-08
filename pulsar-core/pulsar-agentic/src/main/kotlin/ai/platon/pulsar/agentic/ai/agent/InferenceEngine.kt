@@ -231,12 +231,7 @@ class InferenceEngine(
     }
 
     suspend fun observe(params: ObserveParams, messages: AgentMessageList): ActionDescription {
-        requireNotNull(messages.instruction) { "User instruction is required | $messages" }
-        if (params.returnAction) {
-            require(messages.exists("toolSpecs")) {
-                "If `returnAction` is true, the tool specifications has to be included | $messages"
-            }
-        }
+        requireNotNull(messages.instruction) { "Instruction is required | $messages" }
 
         promptBuilder.buildObservePrompt(messages, params)
 

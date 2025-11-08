@@ -142,7 +142,7 @@ $schema
 - 不提供不能确定的参数
 - 要求 json 输出时，禁止包含任何额外文本
 - 注意：用户难以区分按钮和链接
-- 若操作与页面无关，返回空对象 `{}`
+- 若操作与页面无关，返回空数组 `[]`
 - 只返回一个最相关的操作
 - 从`## 浏览器状态`段落获得所有打开标签页的信息
 - 如需检索信息，新建标签页而非复用当前页
@@ -278,13 +278,13 @@ $TOOL_CALL_RULE_CONTENT
 
 ---
 
-## 可交互元素
+## 可交互元素说明
 
 $INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT
 
 ---
 
-## 无障碍树
+## 无障碍树说明
 
 $A11Y_TREE_NOTE_CONTENT
 
@@ -411,15 +411,93 @@ ${buildObserveResultSchema(true)}
 
         """.trimIndent()
 
+        val OBSERVE_GUIDE_SYSTEM_MESSAGE = """
+你正在通过根据用户希望观察的页面内容来查找元素，帮助用户实现浏览器操作自动化。
+你将获得：
+- 一条关于待观察元素的指令
+- 一个包含网页所有可交互元素信息的列表
+- 一个展示页面语义结构的分层无障碍树（accessibility tree）。该树是DOM（文档对象模型）与无障碍树的混合体。
+
+如果存在符合指令的元素，则返回这些元素的数组；否则返回空数组。
+
+## 浏览器状态
+
+浏览器状态包括：
+- 当前 URL：你当前查看页面的 URL。
+- 打开的标签页：带有 id 的打开标签页。
+
+---
+
+## 视觉信息
+
+- 如果你之前使用过截图，你将获得当前页面的截图。
+- 视觉信息是首要事实依据（GROUND TRUTH）：在推理中利用图像来评估你的进展。
+- 在推理中利用图像来评估你的进展。
+- 当不确定或想获取更多信息时使用截图。
+
+---
+
+## 工具列表
+
+```
+${ToolSpecification.TOOL_CALL_SPECIFICATION}
+```
+
+$TOOL_CALL_RULE_CONTENT
+
+---
+
+## 可交互元素说明
+
+$INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT
+
+---
+
+## 无障碍树说明
+
+$A11Y_TREE_NOTE_CONTENT
+
+---
+
+## 输出格式
+
+- 输出严格使用下面 JSON 格式，仅输出 JSON 内容，无多余文字
+- 最多一个元素，domain & method 字段不得为空(<output_act>)
+
+{
+  "elements": [
+    {
+      "locator": "Web page node locator, composed of two numbers, such as `0,4`",
+      "description": "Description of the current locator and tool selection",
+      "domain": "Tool domain, such as `driver`",
+      "method": "Method name, such as `click`",
+      "arguments": [
+        {
+          "name": "Parameter name, such as `selector`",
+          "value": "Parameter value, such as `0,4`"
+        }
+      ],
+      "screenshotContentSummary": "Summary of the current screenshot content",
+      "currentPageContentSummary": "Summary of the current web page text content, based on the accessibility tree or web content extraction results",
+      "memory": "1–3 specific sentences describing this step and the overall progress. This should include information helpful for future progress tracking, such as the number of pages visited or items found.",
+      "thinking": "A structured <think>-style reasoning block that applies the `## 推理规则`."
+    }
+  ]
+}
+
+---
+
+"""
+
         fun compactPrompt(prompt: String, maxWidth: Int = 200): String {
             val boundaries = """
 你正在通过根据用户希望观察的页面内容来查找元素
 否则返回空数组。
 
-## 工具列表
+## 工具列表说明
 ---
 
-## 无障碍树
+## 无障碍树说明
 ---
             """.trimIndent()
 
@@ -485,24 +563,20 @@ $AGENT_GUIDE_SYSTEM_PROMPT
         if (userProvidedInstructions.isNullOrBlank()) return null
 
         val contentCN = """
-***用户自定义指令***
+## 用户自定义指令
 
 在执行操作时请牢记用户的指令。如果这些指令与当前任务无关，请忽略。
 
 用户指令：
 $userProvidedInstructions
+
+---
+
 """.trim()
 
-        val contentEN = """
-***Custom Instructions Provided by the User***
+        val contentEN = contentCN
 
-Please keep the user's instructions in mind when performing actions. If the user's instructions are not relevant to the current task, ignore them.
-
-User Instructions:
-$userProvidedInstructions
-""".trim()
-
-        val content = if (locale == Locale.CHINESE) contentCN else contentEN
+        val content = if (isZH) contentCN else contentEN
 
         return SimpleMessage("system", content)
     }
@@ -788,64 +862,23 @@ The i-th chunk to process contains all DOM nodes located within the i-th viewpor
 
     fun buildObservePrompt(messages: AgentMessageList, params: ObserveParams) {
         // observe guide
-        val systemMsg = buildObserveGuideSystemPrompt(params.userProvidedInstructions)
-        messages.addFirst(systemMsg)
+        buildObserveGuideSystemPrompt(messages, params.userProvidedInstructions)
         // DOM + browser state + schema
         buildObserveUserMessage(messages, params)
     }
 
-    fun buildObserveGuideSystemPrompt(userProvidedInstructions: String? = null): SimpleMessage {
-        fun observeSystemPromptCN() = """
-你正在通过根据用户希望观察的页面内容来查找元素，帮助用户实现浏览器操作自动化。
-你将获得：
-- 一条关于待观察元素的指令
-- 一个包含网页所有可交互元素信息的列表
-- 一个展示页面语义结构的分层无障碍树（accessibility tree）。该树是DOM（文档对象模型）与无障碍树的混合体。
+    fun buildObserveGuideSystemPrompt(messages: AgentMessageList, userProvidedInstructions: String? = null) {
+        fun observeSystemPromptCN() = OBSERVE_GUIDE_SYSTEM_MESSAGE
 
-如果存在符合指令的元素，则返回这些元素的数组；否则返回空数组。
-
-## 可交互元素列表（Interactive Elements）说明：
-
-$INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT
-
----
-
-## 无障碍树（Accessibility Tree）说明：
-
-$A11Y_TREE_NOTE_CONTENT
-
----
-
-"""
-
-        fun observeSystemPromptEN() = """
-你正在通过根据用户希望观察的页面内容来查找元素，帮助用户实现浏览器操作自动化。
-你将获得：
-- 一条关于待观察元素的指令
-- 一个包含网页所有可交互元素信息的列表
-- 一个展示页面语义结构的分层无障碍树（accessibility tree）。该树是DOM（文档对象模型）与无障碍树的混合体。
-
-如果存在符合指令的元素，则返回这些元素的数组；否则返回空数组。
-
-## 可交互元素列表（Interactive Elements）说明：
-
-$INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT
-
----
-
-## 无障碍树（Accessibility Tree）说明：
-
-$A11Y_TREE_NOTE_CONTENT
-
----
-
-"""
+        fun observeSystemPromptEN() = observeSystemPromptCN()
 
         val observeSystemPrompt = if (isZH) observeSystemPromptCN() else observeSystemPromptEN()
-        val extra = buildObserveGuideSystemExtraPrompt(userProvidedInstructions)?.content
-        val content = if (extra != null) "$observeSystemPrompt\n\n$extra" else observeSystemPrompt
+        messages.addLast("system", observeSystemPrompt)
 
-        return SimpleMessage(role = "system", content = content)
+        val extra = buildObserveGuideSystemExtraPrompt(userProvidedInstructions)?.content
+        if (extra != null) {
+            messages.addLast("system", extra)
+        }
     }
 
     fun initObserveUserInstruction(instruction: String?): String {
@@ -933,7 +966,7 @@ $newTabsMessage
 
 ${interactiveElements.lazyString}
 
-## 无障碍树(Accessibility Tree)
+## 无障碍树
 
 聚焦第${processingViewport}视口节点。
 
@@ -968,27 +1001,6 @@ ${nanoTree.lazyJson}
 """
 
         return instruction
-    }
-
-    fun buildObserveActToolSpecsPrompt(
-        messages: AgentMessageList, toolCalls: List<String>, variables: Map<String, String>? = null
-    ) {
-        // Base instruction
-        val toolSpecs =
-"""
-## 工具列表
-
-```kotlin
-${toolCalls.joinToString("\n")}
-```
-
-$TOOL_CALL_RULE_CONTENT
-
----
-
-""".trimIndent()
-
-        messages.addSystem(toolSpecs, "toolSpecs")
     }
 
     fun buildSummaryPrompt(goal: String, stateHistory: List<AgentState>): Pair<String, String> {
