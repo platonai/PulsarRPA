@@ -935,7 +935,7 @@ interface MiniWebDriver {
      * ```
      */
     @Throws(WebDriverException::class)
-    suspend fun captureScreenshot(): String?
+    suspend fun captureScreenshot(fullPage: Boolean = false): String?
 
     /**
      * Scroll the element matched by [selector] into view (if needed) then take a screenshot of that element's bounding box.
