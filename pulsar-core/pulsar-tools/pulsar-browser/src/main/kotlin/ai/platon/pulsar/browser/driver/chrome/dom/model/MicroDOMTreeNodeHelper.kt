@@ -105,7 +105,7 @@ class MicroToNanoTreeHelper(
 
         val o = no.originalNode ?: return false
         // Prefer absolute page coordinates first, then bounds, then client rects
-        val r = (o.absoluteBounds ?: o.bounds ?: o.clientRects)?.uncompact() ?: return true
+        val r = (o.absoluteBounds ?: o.bounds ?: o.clientRects)?.uncompact() ?: return false
         val y = r.y
         val h = r.height
 
