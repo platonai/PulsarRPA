@@ -30,7 +30,7 @@ class SessionAct {
 
         printlnPro(driver.url())
 
-        // Basic action examples (natural language instructions) - now operate on local mock page
+        // Basic action examples (natural language instructions) - now operate on local mock page.
         step("Action: search for 'browser'")
         var actOptions = ActionOptions("search for 'browser'")
         var result = agent.act(actOptions)

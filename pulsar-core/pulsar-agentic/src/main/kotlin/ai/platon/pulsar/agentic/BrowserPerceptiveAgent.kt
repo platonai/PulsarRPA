@@ -495,8 +495,7 @@ class BrowserPerceptiveAgent constructor(
         messages.addUser(instruction, "instruction")
 
         val browserUseState = getBrowserUseState()
-        val driver = session.boundDriver
-        val currentUrl = driver?.currentUrl()
+        val currentUrl = activeDriver.currentUrl()
         val agentState = action.agentState ?: AgentState(
             step = 1,
             instruction = action.action,

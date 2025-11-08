@@ -94,7 +94,11 @@ class WebDriverToolExecutor: AbstractToolExecutor() {
                 if (args.isEmpty()) {
                     driver.captureScreenshot()
                 } else {
-                    driver.captureScreenshot(arg0!!)
+                    if (arg0?.toBooleanStrictOrNull() == true) {
+                        driver.captureScreenshot(true)
+                    } else {
+                        driver.captureScreenshot(arg0!!)
+                    }
                 }
             }
 
@@ -702,7 +706,13 @@ class WebDriverToolExecutor: AbstractToolExecutor() {
                 // Screenshots
                 "captureScreenshot" -> {
                     val sel = arguments["selector"]
-                    if (sel.isNullOrBlank()) "driver.captureScreenshot()" else "driver.captureScreenshot(${sel.norm()})"
+                    val fp = arguments["fullPage"]
+                    when {
+                        arguments.isEmpty() -> "driver.captureScreenshot()"
+                        !sel.isNullOrBlank() -> "driver.captureScreenshot(${sel.norm()})"
+                        fp == "true" -> "driver.captureScreenshot(fullPage = true)"
+                        else -> null
+                    }
                 }
                 // Timing
                 "delay" -> "driver.delay(${arguments["millis"] ?: 1000})"

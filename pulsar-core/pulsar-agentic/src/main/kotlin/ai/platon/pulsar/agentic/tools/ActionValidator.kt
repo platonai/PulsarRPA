@@ -92,7 +92,7 @@ class ActionValidator(
             return false
         }
 
-        val isSimplifiedFBN = selector.matches(FBNLocator.Companion.SIMPLIFIED_REGEX)
+        val isSimplifiedFBN = selector.matches(FBNLocator.SIMPLIFIED_REGEX)
         if (isSimplifiedFBN) {
             return true
         }

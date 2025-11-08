@@ -24,10 +24,12 @@ driver.scrollToTop()
 driver.scrollToBottom()
 driver.scrollToMiddle(ratio: Double = 0.5)
 driver.scrollBy(pixels: Double = 200.0): Double
-driver.scrollToViewport(n: Double)                     // scroll to the [n]th viewport position, 1-based
+driver.scrollToViewport(n: Double)                       // scroll to the [n]th viewport position, 1-based
 driver.goBack()
 driver.goForward()
 driver.selectFirstTextOrNull(selector: String): String?  // Returns the node's text content including it's descendants, the node is located by [selector]. If the node does not exist, returns null.
+driver.captureScreenshot(fullPage: Boolean)              // Capture a screenshot of the current viewport or full page
+driver.captureScreenshot(selector: String)               // Scroll the element matched by [selector] into view (if needed) then take a screenshot of that element's bounding box.
 driver.delay(millis: Long)
 
 // domain: browser

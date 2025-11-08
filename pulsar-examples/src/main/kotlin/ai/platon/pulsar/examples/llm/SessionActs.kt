@@ -77,7 +77,7 @@ class SessionActs {
         // 1) Use the page's search box (enter text and submit)
         step("Action: find the search box, type 'web scraping' and submit the form")
         actOptions = ActionOptions("find the search box, type 'web scraping' and submit the form")
-        result = agent.act(actOptions)
+        result = agent.resolve(actOptions)
         result("action result", result)
 
         step("Captures the live page and parse after search form submission")
@@ -103,7 +103,7 @@ class SessionActs {
         // 3) Scroll to bottom (triggers infinite scroll loading extra items on mock page)
         step("Action: scroll to the bottom of the page and wait for new content to load")
         actOptions = ActionOptions("scroll to the bottom of the page and wait for new content to load")
-        result = agent.act(actOptions)
+        result = agent.resolve(actOptions)
         result("action result", result)
 
         // 4) Open the first comment thread
@@ -127,13 +127,13 @@ class SessionActs {
         // 6) Take a screenshot
         step("Action: take a full-page screenshot and save it")
         actOptions = ActionOptions("take a full-page screenshot and save it")
-        result = agent.act(actOptions)
+        result = agent.resolve(actOptions)
         result("action result", result)
 
         // 7) Extract specific data after interactions
         step("Action: extract article titles and their hrefs from the main list")
         actOptions = ActionOptions("extract article titles and their hrefs from the main list")
-        result = agent.act(actOptions)
+        result = agent.resolve(actOptions)
         result("action result", result)
 
         step("Captures the live page as a local copy and parse for titles")
