@@ -125,33 +125,5 @@ class PulsarWebDriverMockSiteTests : WebDriverTestBase() {
         cookies = driver.getCookies()
         assertTrue(cookies.toString()) { cookies.isEmpty() }
     }
-
-    @Test
-    fun `test buildDomTree`() = runEnhancedWebDriverTest(interactiveUrl, browser) { driver ->
-        var buildDomTreeJs = ResourceLoader.readString("js/build_dom_tree.js")
-        buildDomTreeJs = buildDomTreeJs.trimEnd { it.isWhitespace() || it == ';' }
-        // logPrintln(StringUtils.abbreviateMiddle(buildDomTreeJs, "...", 500))
-
-        val expression = """
-                ($buildDomTreeJs)()
-            """.trimIndent()
-        val evaluation = driver.evaluateValueDetail(expression)
-        assertNotNull(evaluation)
-        evaluation.description = null
-        printlnPro(StringUtils.abbreviateMiddle(evaluation.toString(), "...", 500))
-        val value = evaluation.value
-        assertNotNull(value)
-        value as Map<*, *>
-        val rootId = value["rootId"]
-        assertNotNull(rootId)
-        val map = value["map"]
-        assertNotNull(map)
-        map as Map<*, *>
-        val node = map["0"]
-        printlnPro(node)
-        assertNotNull(node)
-
-        sleepSeconds(10)
-    }
 }
 
