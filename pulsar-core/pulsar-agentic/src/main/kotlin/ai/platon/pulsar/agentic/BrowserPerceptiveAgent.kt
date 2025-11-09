@@ -13,31 +13,20 @@ import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.external.ChatModelException
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import kotlinx.coroutines.TimeoutCancellationException
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.withTimeout
-import kotlinx.coroutines.Job
-import kotlin.coroutines.coroutineContext
+import kotlinx.coroutines.*
 import org.slf4j.helpers.MessageFormatter
-import java.io.IOException
-import java.net.ConnectException
-import java.net.SocketTimeoutException
-import java.net.UnknownHostException
 import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeoutException
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
-import kotlin.math.pow
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
 
@@ -111,9 +100,8 @@ open class BrowserPerceptiveAgent constructor(
     val maxSteps: Int = 100,
     val config: AgentConfig = AgentConfig(maxSteps = maxSteps)
 ) : PerceptiveAgent {
-    private val ownerLogger = getLogger(this)
-    private val slogger = StructuredAgentLogger(ownerLogger, config)
-    private val logger = ownerLogger
+    private val logger = getLogger(this)
+    private val slogger = StructuredAgentLogger(logger, config)
 
     private val conf get() = session.sessionConfig
 
@@ -209,7 +197,7 @@ open class BrowserPerceptiveAgent constructor(
         // Calculate effective timeout accounting for potential retry delays
         val maxPossibleDelays = (0 until config.maxRetries).sumOf { calculateRetryDelay(it) }
         val effectiveTimeout = config.resolveTimeoutMs + maxPossibleDelays
-        
+
         return try {
             val result = withTimeout(effectiveTimeout) {
                 resolveProblemWithRetry(action, context)
@@ -219,7 +207,8 @@ open class BrowserPerceptiveAgent constructor(
             stateManager.trace("✅ resolve DONE session=${sessionId.take(8)} success=${result.success} dur=${dur}ms")
             result
         } catch (_: TimeoutCancellationException) {
-            val msg = "⏳ Resolve timed out after ${effectiveTimeout}ms (base: ${config.resolveTimeoutMs}ms + retries: ${maxPossibleDelays}ms): ${instruction}"
+            val msg =
+                "⏳ Resolve timed out after ${effectiveTimeout}ms (base: ${config.resolveTimeoutMs}ms + retries: ${maxPossibleDelays}ms): ${instruction}"
             stateManager.trace("⏳ resolve TIMEOUT: ${Strings.compactLog(instruction, 160)}")
             ActResult(success = false, message = msg, action = instruction)
         }
@@ -378,7 +367,7 @@ open class BrowserPerceptiveAgent constructor(
 //        )
 
         val interactiveElements = context.agentState.browserUseState.getInteractiveElements()
-        
+
         val actionDescription = try {
             domService.addHighlights(interactiveElements)
 
@@ -447,11 +436,11 @@ open class BrowserPerceptiveAgent constructor(
                 // Re-throw as permanent error
                 throw PerceptiveAgentError.PermanentError(cbError.message ?: "Circuit breaker tripped", cbError)
             }
-            
+
             consecutiveLLMFailureCounter.set(failures) // Keep for backward compatibility
             logger.error("🤖❌ action.gen.fail sid={} failures={} msg={}", context.sid, failures, e.message, e)
             consecutiveFailureCounter.incrementAndGet()
-            
+
             ActionDescription(context.instruction, exception = e)
         }
     }
@@ -636,7 +625,7 @@ open class BrowserPerceptiveAgent constructor(
                 if (attempt < config.maxRetries) {
                     val backoffMs = calculateRetryDelay(attempt)
                     stateManager.trace("🔁 resolve RETRY $attemptNo cause=Transient delay=${backoffMs}ms msg=${e.message}")
-                    
+
                     // Clean up partial state before retry
                     try {
                         cleanupPartialState(currentContext)
@@ -645,7 +634,7 @@ open class BrowserPerceptiveAgent constructor(
                     } catch (cleanupError: Exception) {
                         logger.warn("⚠️ Failed to cleanup state before retry: ${cleanupError.message}")
                     }
-                    
+
                     delay(backoffMs)
                 }
             } catch (e: PerceptiveAgentError.TimeoutError) {
@@ -655,7 +644,7 @@ open class BrowserPerceptiveAgent constructor(
                 if (attempt < config.maxRetries) {
                     val baseBackoffMs = config.baseRetryDelayMs
                     stateManager.trace("🔁 resolve RETRY $attemptNo cause=Timeout delay=${baseBackoffMs}ms msg=${e.message}")
-                    
+
                     // Clean up partial state before retry
                     try {
                         cleanupPartialState(currentContext)
@@ -663,7 +652,7 @@ open class BrowserPerceptiveAgent constructor(
                     } catch (cleanupError: Exception) {
                         logger.warn("⚠️ Failed to cleanup state before retry: ${cleanupError.message}")
                     }
-                    
+
                     delay(baseBackoffMs)
                 }
             } catch (e: Exception) {
@@ -673,7 +662,7 @@ open class BrowserPerceptiveAgent constructor(
                 if (shouldRetryError(e) && attempt < config.maxRetries) {
                     val backoffMs = calculateRetryDelay(attempt)
                     stateManager.trace("🔁 resolve RETRY $attemptNo cause=Unexpected delay=${backoffMs}ms msg=${e.message}")
-                    
+
                     // Clean up partial state before retry
                     try {
                         cleanupPartialState(currentContext)
@@ -681,7 +670,7 @@ open class BrowserPerceptiveAgent constructor(
                     } catch (cleanupError: Exception) {
                         logger.warn("⚠️ Failed to cleanup state before retry: ${cleanupError.message}")
                     }
-                    
+
                     delay(backoffMs)
                 } else {
                     // Non-retryable error, exit loop
@@ -856,7 +845,7 @@ open class BrowserPerceptiveAgent constructor(
             } catch (cbError: CircuitBreakerTrippedException) {
                 throw PerceptiveAgentError.PermanentError(cbError.message ?: "Circuit breaker tripped", cbError)
             }
-            
+
             consecutiveValidationFailureCounter.set(failures) // Keep for backward compatibility
             logger.info(
                 "🛑 tool.validate.fail sid={} step={} failures={} locator={} | {}({}) | {}",
@@ -865,7 +854,7 @@ open class BrowserPerceptiveAgent constructor(
             )
             // Validation failure is meta info
             stateManager.trace("🛑 #$step validation-failed ${toolCall.method}")
-            
+
             return null
         }
 
@@ -892,7 +881,7 @@ open class BrowserPerceptiveAgent constructor(
             } catch (cbError: CircuitBreakerTrippedException) {
                 throw PerceptiveAgentError.PermanentError(cbError.message ?: "Circuit breaker tripped", cbError)
             }
-            
+
             consecutiveFailureCounter.set(failures) // Keep for backward compatibility
             logger.error(
                 "🛠️❌ tool.exec.fail sid={} step={} failures={} msg={}",
@@ -1058,18 +1047,18 @@ open class BrowserPerceptiveAgent constructor(
     private suspend fun cleanupPartialState(context: ExecutionContext) {
         try {
             logger.info("🧹 cleanup.partial sid={} step={}", context.sid, context.step)
-            
+
             // Reset circuit breaker
             circuitBreaker.reset()
-            
+
             // Reset failure counters (kept for backward compatibility)
             consecutiveFailureCounter.set(0)
             consecutiveLLMFailureCounter.set(0)
             consecutiveValidationFailureCounter.set(0)
-            
+
             // Clear validation cache
             actionValidator.clearCache()
-            
+
             // Allow page to stabilize
             pageStateTracker.waitForDOMSettle(1000, 100)
         } catch (e: Exception) {
@@ -1134,7 +1123,7 @@ open class BrowserPerceptiveAgent constructor(
         delay(delayMs)
 
         // Check coroutine cancellation and abort if cancelled
-        val job = coroutineContext[Job]
+        val job = currentCoroutineContext()[Job]
         if (job == null || !job.isActive) {
             logger.info("🕒 noop cancelled sid={} step={}", context.sid, step)
             return true
@@ -1190,7 +1179,7 @@ open class BrowserPerceptiveAgent constructor(
      */
     private fun saveCheckpoint(context: ExecutionContext) {
         if (!config.enableCheckpointing) return
-        
+
         val checkpoint = AgentCheckpoint(
             sessionId = context.sessionId,
             currentStep = context.step,
@@ -1211,23 +1200,23 @@ open class BrowserPerceptiveAgent constructor(
                 "startTime" to startTime.toString()
             )
         )
-        
+
         val path = checkpointManager.save(checkpoint)
         logger.info("💾 checkpoint.saved sid={} step={} path={}", context.sid, context.step, path)
-        
+
         // Prune old checkpoints
         checkpointManager.pruneOldCheckpoints(context.sessionId, config.maxCheckpointsPerSession)
     }
 
     /**
      * Attempt to restore from the latest checkpoint for a session.
-     * 
+     *
      * @param sessionId The session ID to restore
      * @return The restored checkpoint, or null if not found or restoration failed
      */
     fun restoreFromCheckpoint(sessionId: String): AgentCheckpoint? {
         if (!config.enableCheckpointing) return null
-        
+
         return try {
             val checkpoint = checkpointManager.load(sessionId)
             if (checkpoint != null) {

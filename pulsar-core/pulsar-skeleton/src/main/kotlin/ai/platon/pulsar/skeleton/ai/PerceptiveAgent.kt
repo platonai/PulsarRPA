@@ -101,12 +101,12 @@ data class TcEvaluate constructor(
     val expression: String? = null,
     var exception: TcException? = null
 ) {
-    val preview get() = getPreview()
+    val preview get() = doGetPreview()
 
     constructor(expression: String, cause: Exception) :
             this(expression = expression, exception = TcException(expression, cause))
 
-    private fun getPreview(): String {
+    private fun doGetPreview(): String {
         return when (value) {
             is Number -> "$value"
             is Boolean -> "$value"
