@@ -503,7 +503,7 @@ function() {
   }
 }
                     """.trimIndent()
-                    val nd = domAPI?.resolveNode(node.nodeId)
+                    val nd = domAPI?.resolveNode(null, node.backendNodeId)
                     if (nd?.objectId != null) {
                         val remoteObject = runtimeAPI?.callFunctionOn(functionDeclaration, objectId = nd.objectId, returnByValue = true)
                         remoteObject?.result?.value?.toString()
