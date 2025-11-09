@@ -349,19 +349,12 @@ class TextToActionAdvancedScenariosTest : TextToActionTestBase() {
         }
 
         results.forEachIndexed { index, result ->
-            printlnPro("Rapid execution ${index + 1}: ${result.cssFriendlyExpressions}")
+            printlnPro("Rapid execution ${index + 1}: ${result.cssFriendlyExpression}")
             assertNotNull(result, "Should have result for execution ${index + 1}")
-            assertTrue(result.cssFriendlyExpressions.size <= 1, "Should generate at most one action")
         }
 
         // Results should be consistent
         val firstResult = results.first()
-        results.forEach { result ->
-            assertEquals(
-                firstResult.cssFriendlyExpressions.size, result.cssFriendlyExpressions.size,
-                "Should be consistent in number of actions"
-            )
-        }
     }
 
     @Test

@@ -4,16 +4,15 @@ import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.SimpleMessage
-import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.ai.tta.ContextToAction
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
-import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.TokenUsage
+import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import com.fasterxml.jackson.databind.JsonNode
@@ -41,7 +40,6 @@ data class LLMUsage(
 data class ExtractParams(
     val instruction: String,
     val agentState: AgentState,
-    val browserUseState: BrowserUseState,
     /** JSON Schema string describing the desired extraction output */
     val schema: String,
     val chunksTotal: Int = 1,
@@ -51,15 +49,16 @@ data class ExtractParams(
 )
 
 data class ObserveParams constructor(
-    val user_request: String? = null,
+    val instruction: String,
     val agentState: AgentState,
-    val browserUseState: BrowserUseState,
     val requestId: String = UUID.randomUUID().toString(),
     val userProvidedInstructions: String? = null,
     val returnAction: Boolean = false,
     val logInferenceToFile: Boolean = false,
     val fromAct: Boolean = false,
-)
+) {
+    val browserUseState get() = agentState.browserUseState
+}
 
 class InferenceEngine(
     private val session: AgenticSession,
@@ -90,9 +89,9 @@ class InferenceEngine(
         val userMsg = promptBuilder.buildExtractUserPrompt(
             params.instruction,
             // Inject schema hint to strongly guide JSON output
-            promptBuilder.buildExtractDomContent(params.browserUseState.domState, params),
+            promptBuilder.buildExtractDomContent(params),
             // Include browser state JSON for tabs information
-            params.browserUseState.browserState.lazyJson
+            params.agentState.browserUseState.browserState.lazyJson
         )
 
         val messages = listOf(systemMsg, userMsg)
@@ -149,7 +148,7 @@ class InferenceEngine(
         /**
          * The 1-based next chunk to see, each chunk is a viewport height.
          * */
-        val nextChunkToSee = params.agentState.browserUseState?.nextViewportToSee() ?: 1
+        val nextChunkToSee = params.agentState.browserUseState.nextViewportToSee()
 
         // 2) Metadata call -------------------------------------------------------------------
         val metadataSystem = promptBuilder.buildMetadataSystemPrompt()
@@ -231,8 +230,10 @@ class InferenceEngine(
     }
 
     suspend fun observe(params: ObserveParams, messages: AgentMessageList): ActionDescription {
-        requireNotNull(messages.instruction) { "Instruction is required | $messages" }
+        requireNotNull(messages.instruction) { "User instruction is required | $messages" }
+        require(params.instruction == messages.instruction?.content)
 
+        val instruction = params.instruction
         promptBuilder.buildObservePrompt(messages, params)
 
         val prefix = if (params.fromAct) "act" else "observe"
@@ -251,7 +252,9 @@ class InferenceEngine(
             callTs = ts
         }
 
-        val (resp, elapsedMs) = doLangChainChat(messages.systemMessages(), messages.userMessages())
+        val systemMessages = messages.systemMessages()
+        val userMessages = messages.userMessages()
+        val (resp, elapsedMs) = doLangChainChat(systemMessages, userMessages)
 
         val tu = resp.tokenUsage()
         val tokenUsage = TokenUsage(
@@ -263,7 +266,7 @@ class InferenceEngine(
         val responseContent = resp.aiMessage().text().trim()
 
         val modeResponse = ModelResponse(content = responseContent, tokenUsage = tokenUsage)
-        var actionDescription = cta.tta.modelResponseToActionDescription(modeResponse)
+        var actionDescription = cta.tta.modelResponseToActionDescription(instruction, modeResponse)
         actionDescription = cta.tta.reviseActionDescription(actionDescription, browserUseState = params.browserUseState)
 
         var respFile = ""

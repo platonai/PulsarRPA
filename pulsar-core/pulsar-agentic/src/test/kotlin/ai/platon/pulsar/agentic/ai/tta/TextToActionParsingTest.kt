@@ -78,7 +78,7 @@ class TextToActionParsingTest {
 
         val ad = tta.parse(resp)
         // Should extract driver.* lines only
-        assertTrue(ad.toolCall == null || ad.cssFriendlyExpressions.isNotEmpty())
+        assertTrue(ad.toolCall == null || ad.cssFriendlyExpression != null)
 //        assertTrue(ad.cssFriendlyExpressions.any { it.startsWith("driver.click(") })
 //        assertTrue(ad.cssFriendlyExpressions.any { it.startsWith("driver.scrollToMiddle(") })
         assertFalse(ad.isComplete)

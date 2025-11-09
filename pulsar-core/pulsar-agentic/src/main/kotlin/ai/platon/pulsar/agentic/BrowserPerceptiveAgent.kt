@@ -5,14 +5,11 @@ import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.agent.*
 import ai.platon.pulsar.agentic.ai.agent.detail.*
 import ai.platon.pulsar.agentic.ai.todo.ToDoManager
-import ai.platon.pulsar.agentic.ai.tta.ActionDescription
-import ai.platon.pulsar.agentic.ai.tta.ActionExecuteResult
+import ai.platon.pulsar.agentic.ai.tta.DetailedActResult
 import ai.platon.pulsar.agentic.ai.tta.ContextToAction
 import ai.platon.pulsar.agentic.ai.tta.ContextToActionParams
 import ai.platon.pulsar.agentic.tools.ActionValidator
 import ai.platon.pulsar.agentic.tools.AgentToolManager
-import ai.platon.pulsar.agentic.tools.ToolSpecification
-import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
@@ -20,8 +17,6 @@ import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.serialize.json.Pson
-import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.external.ChatModelException
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
@@ -229,20 +224,27 @@ class BrowserPerceptiveAgent constructor(
      * validation, and updates AgentState history on success or failure.
      */
     override suspend fun act(observe: ObserveResult): ActResult {
-        val oe = observe.observeElements?.firstOrNull()
-            ?: return ActResult(false, "No observation", action = observe.method)
-        val toolCall0 = oe.toolCall ?: return ActResult(false, "No tool call", action = observe.method)
-
         val agentState = observe.agentState
-
-        val patch = patchToolCall(toolCall0, observe)
-        val toolCall = patch.toolCall ?: return ActResult(patch.success, patch.message, action = patch.action)
+        val instruction = agentState.instruction
+        val oe = observe.observeElements?.firstOrNull()
+            ?: return ActResult.failed("No observation", instruction)
+        val toolCall = oe.toolCall ?: return ActResult.failed("No tool call", instruction)
         val method = toolCall.method
 
         return try {
-            val action = ActionDescription(observeElement = oe)
+            // Reuse act(ActionDescription, ExecutionContext)
 
-            val toolCallResult = toolExecutor.execute(toolCall, action, "act")
+            val actionDescription = ActionDescription(instruction, observeElement = oe)
+            val context = buildExecutionContextForStep(instruction, 0, "step")
+
+            ///////////////
+            // act
+
+            val actResult = actInternal(actionDescription, context)
+
+            val toolCallResult = actResult?.toolCallResult
+
+            // val toolCallResult = toolExecutor.execute(toolCall, action, "act")
 
             logger.info(
                 "✅ Action executed | {} | {}/{} | {}",
@@ -293,7 +295,6 @@ class BrowserPerceptiveAgent constructor(
             val params = ExtractParams(
                 instruction = instruction,
                 agentState = agentState,
-                browserUseState = browserUseState,
                 schema = schemaJson,
                 chunksTotal = scrollState.viewportsTotal,
                 requestId = requestId,
@@ -322,16 +323,11 @@ class BrowserPerceptiveAgent constructor(
         val instruction = promptBuilder.initObserveUserInstruction(options.instruction)
         messages.addUser(instruction, name = "instruction")
 
-        val driver = session.boundDriver
-        val currentUrl = driver?.currentUrl()
-        val browserUseState = getBrowserUseState()
-        val agentState = options.agentState ?: AgentState(
-            1, options.instruction ?: "", browserUseState = browserUseState, url = currentUrl
-        )
+        val agentState = getAgentState(instruction)
 
         val params = ObserveParams(
+            instruction = instruction,
             agentState = agentState,
-            browserUseState = browserUseState,
             requestId = UUID.randomUUID().toString(),
             returnAction = options.returnAction ?: false,
             logInferenceToFile = config.enableStructuredLogging,
@@ -339,9 +335,9 @@ class BrowserPerceptiveAgent constructor(
         )
 
         // Do OBSERVE
-        val action = doObserveForActionDescription(params, messages)
+        val actionDescription = doObserve(params, messages)
 
-        val observeElements = listOfNotNull(action.observeElement)
+        val observeElements = listOfNotNull(actionDescription.observeElement)
         val results = observeElements.map { ele ->
             ObserveResult(
                 agentState = agentState,
@@ -382,8 +378,8 @@ class BrowserPerceptiveAgent constructor(
      * Collects all tabs from the current browser and marks the active tab.
      */
     private suspend fun injectTabsInfo(baseState: BrowserUseState): BrowserUseState {
-        val currentDriver = session.boundDriver ?: return baseState
-        val browser = currentDriver.browser
+        val currentDriver = activeDriver
+        val browser = activeDriver.browser
 
         // fetch all drivers
         browser.listDrivers()
@@ -414,104 +410,25 @@ class BrowserPerceptiveAgent constructor(
         )
     }
 
-    data class ToolCallPatch(
-        val success: Boolean, val message: String, val action: String, val toolCall: ToolCall? = null
-    )
-
-    private suspend fun patchToolCall(toolCall: ToolCall, observe: ObserveResult): ToolCallPatch {
-        val observeElement =
-            observe.observeElements?.firstOrNull() ?: return ToolCallPatch(false, "No observe element", action = "")
-        val method = toolCall.method.trim().takeIf { it.isNotEmpty() }
-        val locator = observe.locator?.let { Locator.parse(it) }
-
-        if (method == null || locator == null) {
-            val msg = "⚠️ No valuable observations were made"
-            // Not an executed action
-            processTrace(msg)
-            return ToolCallPatch(success = false, message = msg, action = "")
-        }
-
-        val selectorActions = ToolSpecification.SELECTOR_ACTIONS
-        val lowerMethod = method
-        val backendNodeId = observe.backendNodeId
-        val selector =
-            observe.backendNodeId?.let { "backend:$backendNodeId" } ?: observe.locator?.takeIf { it.isNotBlank() }
-        if (lowerMethod in selectorActions) {
-            toolCall.arguments["selector"] = selector
-            if (selector == null) {
-                val msg = "⚠️ No selector observation were made $locator | $observe"
-                processTrace(msg)
-                return ToolCallPatch(success = false, message = msg, action = method)
-            }
-        }
-
-        val driver = requireNotNull(activeDriver)
-        if (lowerMethod == "waitForNavigation") {
-            if (toolCall.arguments["oldUrl"].isNullOrBlank()) {
-                toolCall.arguments["oldUrl"] = driver.currentUrl()
-            }
-            if (toolCall.arguments["timeoutMillis"] == null) {
-                toolCall.arguments["timeoutMillis"] = 5000L.toString()
-            }
-        }
-
-        if (lowerMethod == "navigateTo") {
-            val url = toolCall.arguments["url"]
-            if (url == null) {
-                val msg = "⚠️ No url observation were made | " + Pson.toJson(observe)
-                processTrace(msg)
-                return ToolCallPatch(false, msg, action = method)
-            }
-
-            if (!actionValidator.isSafeUrl(url)) {
-                val msg = "⛔ Blocked unsafe URL: $url"
-                processTrace(msg)
-                return ToolCallPatch(false, msg, action = method)
-            }
-        }
-
-        if (config.enablePreActionValidation) {
-            val ok = actionValidator.validateToolCall(observeElement.toolCall)
-            if (!ok) {
-                val msg = "🚫 Tool call validation failed for $lowerMethod with selector ${selector?.take(120)}"
-                val sid = uuid.toString().take(8)
-                val curUrl = driver.currentUrl()
-                logger.info("🚫 observe_act.validate.fail sid={} url={} msg={} ", sid, curUrl, msg)
-                processTrace(msg)
-                return ToolCallPatch(false, msg, action = method)
-            }
-        }
-
-        return ToolCallPatch(true, "", method, toolCall = toolCall)
-    }
-
     private suspend fun doObserveAct(action: ActionOptions, messages: AgentMessageList): ActResult {
-        // 1) Build instruction for action-oriented observe
-        val toolCalls = ToolSpecification.SUPPORTED_TOOL_CALLS
-
         val instruction = promptBuilder.buildObserveActToolUsePrompt(action.action)
         messages.addUser(instruction, "instruction")
 
-        val browserUseState = getBrowserUseState()
-        val currentUrl = activeDriver.currentUrl()
-        val agentState = action.agentState ?: AgentState(
-            step = 1,
-            instruction = action.action,
-            action = "observeAct",
-            browserUseState = browserUseState,
-            url = currentUrl
-        )
+        val agentState = action.agentState ?: getAgentState(action.action)
 
         val params = ObserveParams(
-            agentState = agentState,
-            browserUseState = browserUseState,
-            requestId = UUID.randomUUID().toString(),
+            instruction = instruction,
             returnAction = true,
-            logInferenceToFile = config.enableStructuredLogging,
             fromAct = true,
+            agentState = agentState,
+            requestId = UUID.randomUUID().toString(),
+            logInferenceToFile = config.enableStructuredLogging,
         )
 
-        // 3) Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
+        /////////////////////
+        // I - Observe
+
+        // Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
         val observeResults = doObserveForAct(params, messages)
         val actResults = mutableListOf<ActResult>()
 
@@ -532,7 +449,7 @@ class BrowserPerceptiveAgent constructor(
             }
 
             /////////////////////
-            // Execute action
+            // II - Act
 
             // 5) Execute action, and optionally wait for navigation if caller provided timeoutMs
             val driver = activeDriver
@@ -553,20 +470,6 @@ class BrowserPerceptiveAgent constructor(
                 continue
             }
 
-            // If a timeout is provided and the action likely triggers navigation, wait for navigation
-            val timeoutMs = action.timeoutMs?.toLong()?.takeIf { it > 0 }
-            val maybeNavMethod = method in ToolSpecification.MAY_NAVIGATE_ACTIONS
-            if (timeoutMs != null && maybeNavMethod) {
-                // High Priority #4: Fail explicitly on navigation timeout
-                val remainingTime = driver.waitForNavigation(oldUrl, timeoutMs)
-                if (remainingTime <= 0) {
-                    val navError = "⏳ Navigation timeout after ${timeoutMs}ms for action: ${action.action}"
-                    logger.warn(navError)
-                    processTrace("⏳ act NAVIGATION_TIMEOUT: ${action.action}")
-                    return ActResult(success = false, message = navError, action = action.action)
-                }
-            }
-
             // Success! Return with original action text (act(chosen) already recorded one history entry)
             processTrace("✅ act SUCCESS (candidate ${index + 1}/${resultsToTry.size}): ${action.action}")
             return execResult.copy(action = action.action)
@@ -581,7 +484,7 @@ class BrowserPerceptiveAgent constructor(
     private suspend fun doObserveForAct(params: ObserveParams, messages: AgentMessageList): List<ObserveResult> {
         requireNotNull(messages.instruction) { "User instruction is required | $messages" }
 
-        val actionDescription = doObserveForActionDescription(params, messages)
+        val actionDescription = doObserve(params, messages)
 
         val observeElements = listOfNotNull(actionDescription.observeElement)
         return observeElements.map { ele ->
@@ -602,24 +505,25 @@ class BrowserPerceptiveAgent constructor(
         }
     }
 
-    private suspend fun doObserveForActionDescription(
-        params: ObserveParams, messages: AgentMessageList
-    ): ActionDescription {
-        val instruction = requireNotNull(messages.instruction) { "User instruction is required | $messages" }
+    private suspend fun doObserve(params: ObserveParams, messages: AgentMessageList): ActionDescription {
+        requireNotNull(messages.instruction) { "User instruction is required | $messages" }
+        require(params.instruction == messages.instruction?.content)
+
+        val instruction = params.instruction
         val requestId: String = params.requestId
-        logObserveStart(instruction.content, requestId)
+
         return try {
             val actionDescription = withTimeout(config.llmInferenceTimeoutMs) {
                 inference.observe(params, messages)
             }
 
             val results = listOfNotNull(actionDescription.observeElement)
-            addHistoryObserve(instruction.content, requestId, results.size, results.isNotEmpty())
+            addHistoryObserve(instruction, requestId, results.size, results.isNotEmpty())
             return actionDescription
         } catch (e: Exception) {
             logger.error("❌ observeAct.observe.error requestId={} msg={}", requestId.take(8), e.message, e)
-            addHistoryObserve(instruction.content, requestId, 0, false)
-            ActionDescription(errors = e.stringify())
+            addHistoryObserve(instruction, requestId, 0, false)
+            ActionDescription(instruction, exception = e)
         }
     }
 
@@ -837,14 +741,9 @@ class BrowserPerceptiveAgent constructor(
                 // Build AgentState and snapshot after settling
                 require(step == stepContext.step + 1) { "Step should be exactly (context.stepNumber + 1)" }
 
-                stepContext = buildExecutionContextForStep(step, "step", action, baseContext = stepContext)
+                stepContext = buildExecutionContextForStep(action.action, step, "step", baseContext = stepContext)
                 val agentState = requireNotNull(stepContext.agentState)
-                val browserUseState = requireNotNull(agentState.browserUseState)
-
-//                val (agentState, _) = buildAgentStateForStep(step, action, context.prevAgentState)
-//                val browserUseState = requireNotNull(agentState.browserUseState)
-//
-//                context.agentState = agentState
+                val browserUseState = agentState.browserUseState
 
                 // Detect unchanged state for heuristics
                 val unchangedCount = pageStateTracker.checkStateChange(browserUseState)
@@ -881,7 +780,7 @@ class BrowserPerceptiveAgent constructor(
 
                 // Generate the action for this step
                 val params = ContextToActionParams(messages, agentState, screenshotB64)
-                val stepAction = generateStepAction(params, stepContext)
+                val stepAction = observe(params, stepContext)
 
                 if (stepAction == null) {
                     consecutiveNoOps++
@@ -922,10 +821,10 @@ class BrowserPerceptiveAgent constructor(
                 domService.removeHighlights(interactiveElements)
 
                 // Execute the tool call with enhanced error handling
-                val exec = executeToolCall(stepAction, step, stepContext)
+                val exec = actInternal(stepAction, stepContext)
 
                 if (exec != null) {
-                    val observe = exec.action.observeElement
+                    val observe = exec.actionDescription.observeElement
                     val toolCall = observe?.toolCall
 
                     val payload = UpdateAgentStatePayload(true, toolCall, observe, exec.summary)
@@ -986,16 +885,16 @@ class BrowserPerceptiveAgent constructor(
         }
     }
 
-    private suspend fun executeToolCall(
-        action: ActionDescription, step: Int, context: ExecutionContext
-    ): ActionExecuteResult? {
-        val toolCall = action.toolCall ?: return null
+    private suspend fun actInternal(actionDescription: ActionDescription, context: ExecutionContext): DetailedActResult? {
+        val instruction = actionDescription.instruction
+        val step = context.step
+        val toolCall = actionDescription.toolCall ?: return null
 
         if (config.enablePreActionValidation && !actionValidator.validateToolCall(toolCall)) {
             logger.info(
                 "🛑 tool.validate.fail sid={} step={} locator={} | {}({}) | {}",
-                context.sessionId.take(8), context.step, action.locator, toolCall.method, toolCall.arguments,
-                action.cssFriendlyExpression
+                context.sessionId.take(8), context.step, actionDescription.locator, toolCall.method, toolCall.arguments,
+                actionDescription.cssFriendlyExpression
             )
             // Validation failure is meta info
             processTrace("🛑 #$step validation-failed ${toolCall.method}")
@@ -1008,12 +907,12 @@ class BrowserPerceptiveAgent constructor(
                 context.sessionId.take(8), context.step, toolCall.method, toolCall.arguments
             )
 
-            val toolCallResult = toolExecutor.execute(toolCall, action, "resolve, #$step")
+            val toolCallResult = toolExecutor.execute(actionDescription, "resolve, #$step")
             consecutiveFailureCounter.set(0) // Reset on success
 
             val summary = "✅ ${toolCall.method} executed successfully"
             processTrace(summary)
-            ActionExecuteResult(action, toolCallResult, success = true, summary)
+            DetailedActResult(actionDescription, toolCallResult, success = true, summary)
         } catch (e: Exception) {
             val failures = consecutiveFailureCounter.incrementAndGet()
             logger.error(
@@ -1047,11 +946,11 @@ class BrowserPerceptiveAgent constructor(
         }
     }
 
-    private suspend fun buildExecutionContextForStep(
-        step: Int, actionType: String, action: ActionOptions, baseContext: ExecutionContext
+    private suspend fun buildExecutionContextForAct(
+        step: Int, actionType: String, instruction: String, action: ActionDescription, baseContext: ExecutionContext
     ): ExecutionContext {
         val prevAgentState = baseContext.agentState
-        val (agentState, _) = buildAgentStateForStep(step, action, prevAgentState)
+        val agentState = getAgentState(instruction, step, prevAgentState)
 
         return ExecutionContext(
             sessionId = baseContext.sessionId,
@@ -1065,19 +964,48 @@ class BrowserPerceptiveAgent constructor(
         )
     }
 
-    private suspend fun buildAgentStateForStep(
-        step: Int, action: ActionOptions, prevAgentState: AgentState?
-    ): Pair<AgentState, BrowserUseState> {
-        val browserUseState = getBrowserUseState()
-        val currentUrl = activeDriver.currentUrl()
-        val agentState = AgentState(
+    private suspend fun buildExecutionContextForStep(
+        /**
+         * The user's instruction
+         * */
+        instruction: String,
+        step: Int,
+        actionType: String,
+        baseContext: ExecutionContext? = null
+    ): ExecutionContext {
+        val bc = baseContext ?: ExecutionContext(
+            userRequest = "",
+            step = 1,
+            actionType = "base",
+            sessionId = UUID.randomUUID().toString()
+        )
+
+        val prevAgentState = bc.agentState
+        val agentState = getAgentState(instruction, step, prevAgentState)
+
+        return ExecutionContext(
+            sessionId = bc.sessionId,
             step = step,
-            instruction = action.action,
+            actionType = actionType,
+            targetUrl = prevAgentState?.browserUseState?.browserState?.url,
+            userRequest = bc.userRequest,
+            timestamp = Instant.now(),
+            prevAgentState = bc.agentState,
+            agentState = agentState,
+        )
+    }
+
+    private suspend fun getAgentState(
+        instruction: String, step: Int = 0, prevAgentState: AgentState? = null
+    ): AgentState {
+        val browserUseState = getBrowserUseState()
+        val agentState = AgentState(
+            instruction = instruction,
+            step = step,
             browserUseState = browserUseState,
-            url = currentUrl,
             prevState = prevAgentState
         )
-        return agentState to browserUseState
+        return agentState
     }
 
     private fun buildMessagesForStep(
@@ -1100,10 +1028,7 @@ class BrowserPerceptiveAgent constructor(
         return messages
     }
 
-    private suspend fun generateStepAction(
-        params: ContextToActionParams,
-        context: ExecutionContext
-    ): ActionDescription? {
+    private suspend fun observe(params: ContextToActionParams, context: ExecutionContext): ActionDescription? {
         return try {
             cta.generate(params)
         } catch (e: Exception) {

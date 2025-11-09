@@ -2,9 +2,9 @@ package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder.Companion.buildObserveResultSchema
+import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor
 import ai.platon.pulsar.agentic.tools.ToolSpecification
 import ai.platon.pulsar.agentic.tools.ToolSpecification.TOOL_ALIASES
-import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
@@ -15,6 +15,7 @@ import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.common.llm.LLMUtils
@@ -68,7 +69,7 @@ open class TextToAction(
 
         """
 
-        fun toActionDescription(ele: ObserveResponseElement, response: ModelResponse): ActionDescription {
+        fun toActionDescription(instruction: String, ele: ObserveResponseElement, response: ModelResponse): ActionDescription {
             val arguments = ele.arguments
                 ?.mapNotNull { arg -> arg?.get("name") to arg?.get("value") }
                 ?.filter { it.first != null && it.second != null }
@@ -91,7 +92,7 @@ open class TextToAction(
                 modelResponse = response.content,
             )
 
-            return ActionDescription(observeElement = observeElement, modelResponse = response)
+            return ActionDescription(instruction, observeElement = observeElement, modelResponse = response)
         }
     }
 
@@ -155,19 +156,19 @@ open class TextToAction(
         val mapper = jacksonObjectMapper()
         val content = response.content
         val elements: ObserveResponseElements = mapper.readValue(content)
-        return elements.elements?.map { toActionDescription(it, response) } ?: emptyList()
+        return elements.elements?.map { toActionDescription(actionDescriptions, it, response) } ?: emptyList()
     }
 
-    fun modelResponseToActionDescription(response: ModelResponse): ActionDescription {
+    fun modelResponseToActionDescription(instruction: String, response: ModelResponse): ActionDescription {
         try {
-            return modelResponseToActionDescription0(response)
+            return modelResponseToActionDescription0(instruction, response)
         } catch (e: Exception) {
             logger.warn("Exception while parsing model response", e)
-            return ActionDescription(modelResponse = response, errors = e.brief())
+            return ActionDescription(instruction, modelResponse = response, exception = e)
         }
     }
 
-    private fun modelResponseToActionDescription0(response: ModelResponse): ActionDescription {
+    private fun modelResponseToActionDescription0(instruction: String, response: ModelResponse): ActionDescription {
         val content = response.content
         val contentStart = Strings.compactWhitespaces(content.take(30))
 
@@ -176,6 +177,7 @@ open class TextToAction(
             contentStart.contains("\"taskComplete\"") -> {
                 val complete: ObserveResponseComplete = mapper.readValue(content)
                 ActionDescription(
+                    instruction = instruction,
                     isComplete = true,
                     summary = complete.summary,
                     nextSuggestions = complete.nextSuggestions ?: emptyList()
@@ -184,11 +186,12 @@ open class TextToAction(
 
             contentStart.contains("\"elements\"") -> {
                 val elements: ObserveResponseElements = mapper.readValue(content)
-                elements.elements?.map { toActionDescription(it, response) }?.firstOrNull()
-                    ?: ActionDescription(modelResponse = response)
+                elements.elements?.map { toActionDescription(instruction, it, response) }
+                    ?.firstOrNull()
+                    ?: ActionDescription(instruction, modelResponse = response)
             }
 
-            else -> ActionDescription(modelResponse = response)
+            else -> ActionDescription(instruction, modelResponse = response)
         }
     }
 

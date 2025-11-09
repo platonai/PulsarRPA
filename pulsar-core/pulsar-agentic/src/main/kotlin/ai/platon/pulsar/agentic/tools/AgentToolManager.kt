@@ -2,12 +2,12 @@ package ai.platon.pulsar.agentic.tools
 
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.BrowserPerceptiveAgent
-import ai.platon.pulsar.agentic.ai.tta.ActionDescription
 import ai.platon.pulsar.agentic.common.AgentFileSystem
 import ai.platon.pulsar.agentic.tools.executors.*
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.TcEvaluate
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.ai.ToolCallResult
@@ -44,8 +44,10 @@ class AgentToolManager(
     val executor = BasicToolCallExecutor(concreteExecutors)
 
     @Throws(UnsupportedOperationException::class)
-    suspend fun execute(tc: ToolCall, action: ActionDescription, message: String? = null): ToolCallResult {
+    suspend fun execute(actionDescription: ActionDescription, message: String? = null): ToolCallResult {
         try {
+            val tc = requireNotNull(actionDescription.toolCall) { "Tool call is required" }
+
             val evaluate = when (tc.domain) {
                 "driver" -> executor.execute(tc, driver)
                 "browser" -> executor.execute(tc, driver.browser)
@@ -54,27 +56,45 @@ class AgentToolManager(
                 else -> throw UnsupportedOperationException("❓ Unsupported domain: ${tc.domain} | $tc")
             }
 
+            val tcResult = ToolCallResult(
+                success = true,
+                evaluate = evaluate,
+                message = message,
+                expression = actionDescription.cssFriendlyExpression,
+                modelResponse = actionDescription.modelResponse?.content
+            )
+
             val method = tc.method
             when (method) {
                 "switchTab" -> onDidSwitchTab(evaluate)
                 "navigateTo" -> onDidNavigateTo(driver, tc, evaluate)
             }
 
-            return ToolCallResult(
-                success = true,
-                evaluate = evaluate,
-                message = message,
-                expression = action.cssFriendlyExpression,
-                modelResponse = action.modelResponse?.content
-            )
+            // If a timeout is provided and the action likely triggers navigation, wait for navigation
+            // val timeoutMs = action.timeoutMs?.toLong()?.takeIf { it > 0 }
+            val timeoutMs = 3_000L
+            val oldUrl = actionDescription.agentState?.browserUseState?.browserState?.url
+            val expression = actionDescription.cssFriendlyExpression
+            val maybeNavMethod = method in ToolSpecification.MAY_NAVIGATE_ACTIONS
+            if (timeoutMs != null && oldUrl != null && maybeNavMethod) {
+                // High Priority #4: Fail explicitly on navigation timeout
+                val remainingTime = driver.waitForNavigation(oldUrl, timeoutMs)
+                if (remainingTime <= 0) {
+                    val navError = "⏳ Navigation timeout after ${timeoutMs}ms for expression: $expression"
+                    logger.warn(navError)
+                    return tcResult
+                }
+            }
+
+            return tcResult
         } catch (e: Exception) {
-            logger.warn("Failed to execute tool call $action", e)
+            logger.warn("Failed to execute tool call $actionDescription", e)
 
             return ToolCallResult(
                 success = false,
                 message = e.message,
-                expression = action.cssFriendlyExpression,
-                modelResponse = action.modelResponse?.content
+                expression = actionDescription.cssFriendlyExpression,
+                modelResponse = actionDescription.modelResponse?.content
             )
         }
     }

@@ -13,6 +13,7 @@ import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
+import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.AgentState
 import org.apache.commons.lang3.StringUtils
 import java.nio.file.Files
@@ -48,14 +49,16 @@ open class ContextToAction(
         messages: AgentMessageList, agentState: AgentState, screenshotB64: String? = null
     ): ActionDescription {
         try {
+            val instruction = agentState.instruction
+
             val response = generateResponse(messages, agentState, screenshotB64, 1)
 
-            val action = modelResponseToActionDescription(response)
+            val action = modelResponseToActionDescription(instruction, response)
 
-            return reviseActionDescription(action, agentState.browserUseState!!)
+            return reviseActionDescription(action, agentState.browserUseState)
         } catch (e: Exception) {
             val errorResponse = ModelResponse("Unknown exception" + e.brief(), ResponseState.OTHER)
-            return ActionDescription(modelResponse = errorResponse)
+            return ActionDescription(agentState.instruction, modelResponse = errorResponse)
         }
     }
 
@@ -77,7 +80,7 @@ open class ContextToAction(
             val errorResponse = ModelResponse(
                 "Unknown exception" + e.brief(), ResponseState.OTHER
             )
-            return ActionDescription(modelResponse = errorResponse)
+            return ActionDescription(agentState.instruction, modelResponse = errorResponse)
         }
     }
 
@@ -106,7 +109,6 @@ open class ContextToAction(
         val params = ObserveParams(
             userRequest ?: "",
             agentState = agentState,
-            browserUseState = agentState.browserUseState!!,
             returnAction = true,
             logInferenceToFile = true
         )
@@ -133,10 +135,10 @@ open class ContextToAction(
     ): ActionDescription {
         val response = generateResponse(instruction, agentState, screenshotB64, toolCallLimit)
 
-        return reviseActionDescription(modelResponseToActionDescription(response), agentState.browserUseState!!)
+        return reviseActionDescription(modelResponseToActionDescription(instruction, response), agentState.browserUseState)
     }
 
-    fun modelResponseToActionDescription(response: ModelResponse) = tta.modelResponseToActionDescription(response)
+    fun modelResponseToActionDescription(instruction: String, response: ModelResponse) = tta.modelResponseToActionDescription(instruction, response)
 
     fun reviseActionDescription(action: ActionDescription, browserUseState: BrowserUseState) = tta.reviseActionDescription(action, browserUseState)
 }

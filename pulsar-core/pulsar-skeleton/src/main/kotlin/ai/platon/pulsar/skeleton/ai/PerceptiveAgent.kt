@@ -3,6 +3,7 @@ package ai.platon.pulsar.skeleton.ai
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.external.ModelResponse
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.JsonNode
 import org.apache.commons.lang3.StringUtils
@@ -23,7 +24,7 @@ data class ActResult(
     val success: Boolean,
     val message: String,
     val action: String? = null,
-    val result: ToolCallResult? = null,
+    val result: ToolCallResult? = null
 ) {
     @get:JsonIgnore
     val expression get() = result?.expression
@@ -33,6 +34,10 @@ data class ActResult(
 
     override fun toString(): String {
         return "[$action] expr: $expression eval: $tcEvalValue message: $message"
+    }
+
+    companion object {
+        fun failed(message: String, action: String? = null) = ActResult(false, message, action)
     }
 }
 
@@ -64,7 +69,7 @@ data class ObserveOptions(
     val drawOverlay: Boolean? = null,
     val iframes: Boolean? = null,
     val frameId: String? = null,
-    val agentState: AgentState? = null,
+    // val agentState: AgentState? = null,
 )
 
 data class ToolCall constructor(
@@ -165,9 +170,16 @@ data class ObserveResult constructor(
 
 data class AgentState constructor(
     var step: Int,
+    // The user instruction
     var instruction: String,
+    // The current browser use state
+    @JsonIgnore
+    var browserUseState: BrowserUseState,
+    // AI:
     var domain: String? = null,
+    // AI:
     var action: String? = null,
+    // AI:
     var description: String? = null,
     // AI: the summary of the screenshot provided in this step
     var screenshotContentSummary: String? = null,
@@ -177,18 +189,16 @@ data class AgentState constructor(
     var evaluationPreviousGoal: String? = null,
     // AI: the next goal to archive
     var nextGoal: String? = null,
-    // the url to handle in this step
-    var url: String? = null,
     // timestamp
     var timestamp: Instant = Instant.now(),
-    // The last browser use state
-    @JsonIgnore
-    var browserUseState: BrowserUseState? = null,
     @JsonIgnore
     var toolCallResult: ToolCallResult? = null,
     @JsonIgnore
     var prevState: AgentState? = null
 ) {
+    // the url to handle in this step
+    val url: String get() = browserUseState.browserState.url
+
     override fun toString(): String {
         val summary = listOfNotNull(
             description,
@@ -198,6 +208,58 @@ data class AgentState constructor(
         )
             .joinToString("\n")
         return "$timestamp $action - $summary"
+    }
+}
+
+data class ActionDescription constructor(
+    /**
+     * The original instruction.
+     * */
+    val instruction: String,
+    /**
+     * AI: observe element
+     * */
+    val observeElement: ObserveElement? = null,
+
+    /**
+     * AI: whether the task is complete
+     * */
+    val isComplete: Boolean = false,
+    /**
+     * AI: a summary about this task
+     * */
+    val summary: String? = null,
+    /**
+     * AI: next suggestions
+     * */
+    val nextSuggestions: List<String> = emptyList(),
+    /**
+     * AI: model response
+     * */
+    val modelResponse: ModelResponse? = null,
+    /**
+     * The exception if any
+     * */
+    val exception: Exception? = null,
+    /**
+     * The agent state
+     * */
+    val agentState: AgentState? = null,
+) {
+    val toolCall: ToolCall? get() = observeElement?.toolCall
+    val locator: String? get() = observeElement?.locator
+    val node: DOMTreeNodeEx? get() = observeElement?.node
+    val xpath: String? get() = observeElement?.xpath
+    val cssSelector: String? get() = observeElement?.cssSelector
+    val expression: String? get() = observeElement?.expression
+    val cssFriendlyExpression: String? get() = observeElement?.cssFriendlyExpression
+
+    @Deprecated("User cssFriendlyExpression instead")
+    val cssFriendlyExpressions: List<String> get() = observeElement?.cssFriendlyExpressions ?: emptyList()
+
+    override fun toString(): String {
+        return if (isComplete) "Completed. Summary: $summary"
+        else (cssFriendlyExpression ?: modelResponse?.toString() ?: "")
     }
 }
 

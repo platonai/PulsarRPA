@@ -172,7 +172,6 @@ $schema
     """.trimIndent()
 
         val INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT = """
-
 可交互元素列表(interactive elements)包含页面 DOM 可交互元素的主要信息，包括元素简化 HTML 表示，文本内容，前后文本，所在视口，坐标和大小等。
 
 列表格式：
@@ -188,7 +187,6 @@ $schema
         """.trimIndent()
 
         val A11Y_TREE_NOTE_CONTENT = """
-
 无障碍树包含页面 DOM 关键节点的主要信息，包括节点文本内容，可见性，可交互性，坐标和尺寸等。
 
 - 除非特别指定，无障碍树仅包含网页当前视口内的节点信息，并包含少量视口外节点，以保证信息充分。
@@ -412,6 +410,8 @@ ${buildObserveResultSchema(true)}
         """.trimIndent()
 
         val OBSERVE_GUIDE_SYSTEM_MESSAGE = """
+## 总体要求
+
 你正在通过根据用户希望观察的页面内容来查找元素，帮助用户实现浏览器操作自动化。
 你将获得：
 - 一条关于待观察元素的指令
@@ -419,6 +419,8 @@ ${buildObserveResultSchema(true)}
 - 一个展示页面语义结构的分层无障碍树（accessibility tree）。该树是DOM（文档对象模型）与无障碍树的混合体。
 
 如果存在符合指令的元素，则返回这些元素的数组；否则返回空数组。
+
+---
 
 ## 浏览器状态
 
@@ -740,8 +742,8 @@ $userRequest
         return instruction
     }
 
-    fun buildExtractDomContent(domState: DOMState, params: ExtractParams): String {
-        val json = domState.microTree.toNanoTreeInRange().lazyJson
+    fun buildExtractDomContent(params: ExtractParams): String {
+        val json = params.agentState.browserUseState.domState.microTree.toNanoTreeInRange().lazyJson
 
         // Inject schema hint to strongly guide JSON output
         val hintCN = "你必须返回一个严格符合以下JSON Schema的有效JSON对象。不要包含任何额外说明。"
