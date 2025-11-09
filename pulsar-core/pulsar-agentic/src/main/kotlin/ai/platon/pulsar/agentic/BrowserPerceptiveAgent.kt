@@ -479,6 +479,7 @@ open class BrowserPerceptiveAgent constructor(
 
     private suspend fun doObserve(params: ObserveParams, messages: AgentMessageList): ActionDescription {
         requireNotNull(messages.instruction) { "User instruction is required | $messages" }
+        requireNotNull(params.agentState) { "Agent state has to be available" }
         require(params.instruction == messages.instruction?.content)
 
         val instruction = params.instruction

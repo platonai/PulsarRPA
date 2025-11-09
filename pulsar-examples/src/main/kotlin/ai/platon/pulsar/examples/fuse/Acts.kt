@@ -21,9 +21,14 @@ class Acts {
 
         driver.open(url)
 
-        val actOptions = ActionOptions("click the first link that contains 'Email' or 'Browser'")
+        val actOptions = ActionOptions("click the first link that contains 'Email' or 'Browser' in new tab")
         var result = agent.act(actOptions)
         result("action result", result)
+
+        var action = "switch to the newly open tab"
+        result = agent.act(action)
+        result("action result", result)
+
     }
 
     private fun result(label: String, value: Any?) {

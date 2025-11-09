@@ -215,12 +215,20 @@ open class TextToAction(
     }
 
     fun reviseActionDescription(action: ActionDescription): ActionDescription {
-        requireNotNull(action.agentState) { "Agent state is invalid" }
+        if (action.exception != null) {
+            return action
+        }
+
+        val agentState = requireNotNull(action.agentState) { "Agent state has to be available" }
         val observeElements = action.observeElements?.map { reviseObserveElement(it, action) }
         return action.copy(observeElements = observeElements)
     }
 
     fun reviseObserveElement(observeElement: ObserveElement, action: ActionDescription): ObserveElement {
+        if (action.exception != null) {
+            return observeElement
+        }
+
         val agentState = requireNotNull(action.agentState) { "Agent state has to be available" }
         var toolCall = observeElement.toolCall ?: return observeElement
 
