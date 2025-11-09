@@ -21,7 +21,7 @@ class Acts {
 
         driver.open(url)
 
-        val actOptions = ActionOptions("take the full page screenshot")
+        val actOptions = ActionOptions("click the first link that contains 'Show HN' or 'Ask HN'")
         var result = agent.act(actOptions)
         result("action result", result)
     }

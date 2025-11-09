@@ -4,6 +4,7 @@ package ai.platon.pulsar.examples.fuse
 import ai.platon.pulsar.agentic.context.AgenticContexts
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.test.server.DemoSiteStarter
 
@@ -162,10 +163,11 @@ class FusedActs {
     }
 
     private fun result(label: String, value: Any?) {
-        val text = Strings.compactLog(value?.toString())
-        logger.info("[RESULT ${stepNo}] $label => $text")
-    }
+        val text = Strings.compactLog(value?.toString(), 2000)
 
+        val e = """🟢"""
+        printlnPro("$e [RESULT ${stepNo}] $label => $text")
+    }
 }
 
 suspend fun main() = FusedActs().run()

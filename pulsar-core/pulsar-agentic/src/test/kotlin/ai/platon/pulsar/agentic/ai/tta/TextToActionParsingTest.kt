@@ -3,11 +3,12 @@ package ai.platon.pulsar.agentic.ai.tta
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
+import ai.platon.pulsar.skeleton.ai.ActionDescription
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 private class TestableTextToAction(conf: ImmutableConfig): TextToAction(conf) {
-    fun parse(response: ModelResponse): ActionDescription = modelResponseToActionDescription(response)
+    fun parse(response: ModelResponse): ActionDescription = modelResponseToActionDescription("", response)
 }
 
 class TextToActionParsingTest {
@@ -59,6 +60,7 @@ class TextToActionParsingTest {
         val resp = ModelResponse(json, ResponseState.STOP)
 
         val ad = tta.parse(resp)
+
         val tc = requireNotNull(ad.toolCall)
         assertEquals("driver", tc.domain)
         assertEquals("type", tc.method)
