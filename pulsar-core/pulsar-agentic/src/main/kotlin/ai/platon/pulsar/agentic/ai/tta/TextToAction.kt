@@ -6,6 +6,7 @@ import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor
 import ai.platon.pulsar.agentic.tools.ToolSpecification
 import ai.platon.pulsar.agentic.tools.ToolSpecification.TOOL_ALIASES
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
+import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ExperimentalApi
@@ -18,6 +19,7 @@ import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.ActionDescription
+import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.common.llm.LLMUtils
@@ -74,19 +76,15 @@ open class TextToAction(
         fun toActionDescription(
             instruction: String,
             elements: ObserveResponseElements,
+            agentState: AgentState,
             response: ModelResponse
         ): ActionDescription {
             val observeElements = elements.elements?.map { toObserveElement(it, response) } ?: emptyList()
-            return ActionDescription(instruction, observeElements = observeElements, modelResponse = response)
-        }
-
-        fun toActionDescription(
-            instruction: String,
-            ele: ObserveResponseElement,
-            response: ModelResponse
-        ): ActionDescription {
-            val observeElement = toObserveElement(ele, response)
-            return ActionDescription(instruction, observeElements = listOf(observeElement), modelResponse = response)
+            return ActionDescription(instruction,
+                observeElements = observeElements,
+                agentState = agentState,
+                modelResponse = response
+            )
         }
 
         fun toObserveElement(ele: ObserveResponseElement, response: ModelResponse): ObserveElement {
@@ -151,6 +149,8 @@ open class TextToAction(
 
         val options = SnapshotOptions()
         val domState = domService.getDOMState(snapshotOptions = options)
+        val browserUseState = domService.getBrowserUseState()
+        val agentState = AgentState(0, "", browserUseState = browserUseState)
 
         val promptTemplate = PromptTemplate(SINGLE_ACTION_GENERATION_PROMPT)
         val message = promptTemplate.render(
@@ -177,19 +177,19 @@ open class TextToAction(
         val content = response.content
         val elements: ObserveResponseElements = mapper.readValue(content)
 
-        return toActionDescription(actionDescriptions, elements, response).toActionDescriptions()
+        return toActionDescription(actionDescriptions, elements, agentState, response).toActionDescriptions()
     }
 
-    fun modelResponseToActionDescription(instruction: String, response: ModelResponse): ActionDescription {
+    fun modelResponseToActionDescription(instruction: String, agentState: AgentState, response: ModelResponse): ActionDescription {
         try {
-            return modelResponseToActionDescription0(instruction, response)
+            return modelResponseToActionDescription0(instruction, agentState, response)
         } catch (e: Exception) {
             logger.warn("Exception while parsing model response", e)
             return ActionDescription(instruction, modelResponse = response, exception = e)
         }
     }
 
-    private fun modelResponseToActionDescription0(instruction: String, response: ModelResponse): ActionDescription {
+    private fun modelResponseToActionDescription0(instruction: String, agentState: AgentState, response: ModelResponse): ActionDescription {
         val content = response.content
         val contentStart = Strings.compactWhitespaces(content.take(30))
 
@@ -207,7 +207,7 @@ open class TextToAction(
 
             contentStart.contains("\"elements\"") -> {
                 val elements: ObserveResponseElements = mapper.readValue(content)
-                toActionDescription(instruction, elements, response)
+                toActionDescription(instruction, elements, agentState, response)
             }
 
             else -> ActionDescription(instruction, modelResponse = response)
@@ -215,12 +215,21 @@ open class TextToAction(
     }
 
     fun reviseActionDescription(action: ActionDescription): ActionDescription {
+        if (action.exception != null) {
+            return action
+        }
+
+        val agentState = requireNotNull(action.agentState) { "Agent state has to be available" }
         val observeElements = action.observeElements?.map { reviseObserveElement(it, action) }
         return action.copy(observeElements = observeElements)
     }
 
     fun reviseObserveElement(observeElement: ObserveElement, action: ActionDescription): ObserveElement {
-        val agentState = action.agentState ?: return observeElement
+        if (action.exception != null) {
+            return observeElement
+        }
+
+        val agentState = requireNotNull(action.agentState) { "Agent state has to be available" }
         var toolCall = observeElement.toolCall ?: return observeElement
 
         // 1. revised tool call

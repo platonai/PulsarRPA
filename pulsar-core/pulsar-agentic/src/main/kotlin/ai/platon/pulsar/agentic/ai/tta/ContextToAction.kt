@@ -49,9 +49,9 @@ open class ContextToAction(
 
             val response = generateResponse(messages, agentState, screenshotB64, 1)
 
-            val actionDescription = modelResponseToActionDescription(instruction, response)
+            val actionDescription = tta.modelResponseToActionDescription(instruction, agentState, response)
 
-            return reviseActionDescription(actionDescription)
+            return tta.reviseActionDescription(actionDescription)
         } catch (e: Exception) {
             val errorResponse = ModelResponse("Unknown exception" + e.brief(), ResponseState.OTHER)
             return ActionDescription(agentState.instruction, modelResponse = errorResponse, exception = e)
@@ -130,11 +130,7 @@ open class ContextToAction(
         toolCallLimit: Int = 100,
     ): ActionDescription {
         val response = generateResponse(instruction, agentState, screenshotB64, toolCallLimit)
-
-        return reviseActionDescription(modelResponseToActionDescription(instruction, response))
+        val actionDescription = tta.modelResponseToActionDescription(instruction, agentState, response)
+        return tta.reviseActionDescription(actionDescription)
     }
-
-    fun modelResponseToActionDescription(instruction: String, response: ModelResponse) = tta.modelResponseToActionDescription(instruction, response)
-
-    fun reviseActionDescription(action: ActionDescription) = tta.reviseActionDescription(action)
 }

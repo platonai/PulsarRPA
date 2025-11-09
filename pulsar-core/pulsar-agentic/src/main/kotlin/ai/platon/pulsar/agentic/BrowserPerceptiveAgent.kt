@@ -472,6 +472,7 @@ open class BrowserPerceptiveAgent constructor(
         val instruction = promptBuilder.buildObserveActToolUsePrompt(options.action)
         messages.addUser(instruction, "instruction")
 
+        pageStateTracker.waitForDOMSettle()
         val context = stateManager.buildExecutionContext(instruction, "observeAct", agentState = options.agentState)
 
         /////////////////////
@@ -529,6 +530,7 @@ open class BrowserPerceptiveAgent constructor(
 
     private suspend fun doObserve(params: ObserveParams, messages: AgentMessageList): ActionDescription {
         requireNotNull(messages.instruction) { "User instruction is required | $messages" }
+        requireNotNull(params.agentState) { "Agent state has to be available" }
         require(params.instruction == messages.instruction?.content)
 
         val instruction = params.instruction
@@ -802,7 +804,8 @@ open class BrowserPerceptiveAgent constructor(
 
                     updatePerformanceMetrics(step, context.timestamp, true)
 
-                    logger.info("🏁 step.done sid={} step={} summary= {}", sid, step, detailedActResult.summary)
+                    val preview = detailedActResult.toolCallResult?.evaluate?.preview
+                    logger.info("🏁 step.done sid={} step={} tcResult={}", sid, step, preview)
                 } else {
                     // Treat validation failures or execution skips as no-ops; no AgentState record
                     consecutiveNoOps++

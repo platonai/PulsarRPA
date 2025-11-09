@@ -77,14 +77,11 @@ class InferenceEngine(
 
     // Reuse a single ObjectMapper for JSON parsing within this class
     private val mapper = ObjectMapper()
-    private val tta = TextToAction(session.sessionConfig)
     private val cta = ContextToAction(session.sessionConfig)
 
-    private val driver get() = session.boundDriver
-
     val domService: DomService
-        get() = (session.boundDriver as? AbstractWebDriver)?.domService
-            ?: throw IllegalStateException("No active driver bound to session or driver is not AbstractWebDriver")
+        get() = (session.getOrCreateBoundDriver() as? AbstractWebDriver)?.domService
+            ?: throw IllegalStateException("Bound driver is not AbstractWebDriver")
 
     /**
      * Returns an ObjectNode with extracted fields expanded at top-level, plus:
@@ -278,7 +275,7 @@ class InferenceEngine(
         val responseContent = resp.aiMessage().text().trim()
 
         val modeResponse = ModelResponse(content = responseContent, tokenUsage = tokenUsage)
-        var actionDescription = cta.tta.modelResponseToActionDescription(instruction, modeResponse)
+        var actionDescription = cta.tta.modelResponseToActionDescription(instruction, params.agentState, modeResponse)
         actionDescription = cta.tta.reviseActionDescription(actionDescription)
 
         var respFile = ""
