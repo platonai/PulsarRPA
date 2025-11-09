@@ -421,6 +421,7 @@ open class BrowserPerceptiveAgent constructor(
         val instruction = promptBuilder.buildObserveActToolUsePrompt(options.action)
         messages.addUser(instruction, "instruction")
 
+        pageStateTracker.waitForDOMSettle()
         val context = stateManager.buildExecutionContext(instruction, "observeAct", agentState = options.agentState)
 
         /////////////////////

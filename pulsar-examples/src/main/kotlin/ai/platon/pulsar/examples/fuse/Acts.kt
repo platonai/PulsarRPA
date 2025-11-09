@@ -14,14 +14,14 @@ class Acts {
 
     suspend fun run() {
         // Use local mock site instead of external site so actions are deterministic.
-        val url = "https://rona.substack.com/p/becoming-a-compiler-engineer"
+        val url = "https://news.ycombinator.com/news"
 
         val driver = session.getOrCreateBoundDriver()
         val agent = session.companionAgent
 
         driver.open(url)
 
-        val actOptions = ActionOptions("click the first link that contains 'Show HN' or 'Ask HN'")
+        val actOptions = ActionOptions("click the first link that contains 'Email' or 'Browser'")
         var result = agent.act(actOptions)
         result("action result", result)
     }
