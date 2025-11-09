@@ -1,7 +1,12 @@
 package ai.platon.pulsar.agentic.ai.agent.detail
 
+import ai.platon.pulsar.agentic.AgentConfig
+import ai.platon.pulsar.agentic.ai.agent.ObserveParams
+import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.AgentState
+import ai.platon.pulsar.skeleton.ai.ObserveOptions
 import java.time.Instant
+import java.util.*
 
 /**
  * Enhanced error classification for better retry strategies
@@ -32,17 +37,46 @@ data class PerformanceMetrics(
  * Structured logging context for better debugging
  */
 data class ExecutionContext(
-    val sessionId: String,
     var step: Int,
+
+    var instruction: String = "",
+    var screenshotB64: String? = null,
+
     var actionType: String,
     var targetUrl: String? = null,
 
-    var userRequest: String = "",
-    var screenshotB64: String? = null,
+    var prevAgentState: AgentState? = null,
+    val agentState: AgentState,
 
+    val config: AgentConfig,
+
+    val sessionId: String,
     val timestamp: Instant = Instant.now(),
     val additionalContext: Map<String, Any> = emptyMap(),
+) {
+    val sid get() = sessionId.take(8)
 
-    var prevAgentState: AgentState? = null,
-    var agentState: AgentState? = null
-)
+    val requestId = UUID.randomUUID().toString()
+
+    fun createObserveParams(options: ObserveOptions, fromAct: Boolean): ObserveParams {
+        return ObserveParams(
+            instruction = instruction,
+            agentState = agentState,
+            requestId = requestId,
+            returnAction = options.returnAction ?: false,
+            logInferenceToFile = config.enableStructuredLogging,
+            fromAct = fromAct
+        )
+    }
+
+    fun createObserveActParams(): ObserveParams {
+        return ObserveParams(
+            instruction = instruction,
+            agentState = agentState,
+            requestId = requestId,
+            fromAct = true,
+            returnAction = true,
+            logInferenceToFile = config.enableStructuredLogging,
+        )
+    }
+}

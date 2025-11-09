@@ -6,11 +6,13 @@ import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor
 import ai.platon.pulsar.agentic.tools.ToolSpecification
 import ai.platon.pulsar.agentic.tools.ToolSpecification.TOOL_ALIASES
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
-import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.ExperimentalApi
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.ai.llm.PromptTemplate
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
@@ -69,7 +71,25 @@ open class TextToAction(
 
         """
 
-        fun toActionDescription(instruction: String, ele: ObserveResponseElement, response: ModelResponse): ActionDescription {
+        fun toActionDescription(
+            instruction: String,
+            elements: ObserveResponseElements,
+            response: ModelResponse
+        ): ActionDescription {
+            val observeElements = elements.elements?.map { toObserveElement(it, response) } ?: emptyList()
+            return ActionDescription(instruction, observeElements = observeElements, modelResponse = response)
+        }
+
+        fun toActionDescription(
+            instruction: String,
+            ele: ObserveResponseElement,
+            response: ModelResponse
+        ): ActionDescription {
+            val observeElement = toObserveElement(ele, response)
+            return ActionDescription(instruction, observeElements = listOf(observeElement), modelResponse = response)
+        }
+
+        fun toObserveElement(ele: ObserveResponseElement, response: ModelResponse): ObserveElement {
             val arguments = ele.arguments
                 ?.mapNotNull { arg -> arg?.get("name") to arg?.get("value") }
                 ?.filter { it.first != null && it.second != null }
@@ -92,7 +112,7 @@ open class TextToAction(
                 modelResponse = response.content,
             )
 
-            return ActionDescription(instruction, observeElement = observeElement, modelResponse = response)
+            return observeElement
         }
     }
 
@@ -156,7 +176,8 @@ open class TextToAction(
         val mapper = jacksonObjectMapper()
         val content = response.content
         val elements: ObserveResponseElements = mapper.readValue(content)
-        return elements.elements?.map { toActionDescription(actionDescriptions, it, response) } ?: emptyList()
+
+        return toActionDescription(actionDescriptions, elements, response).toActionDescriptions()
     }
 
     fun modelResponseToActionDescription(instruction: String, response: ModelResponse): ActionDescription {
@@ -186,18 +207,21 @@ open class TextToAction(
 
             contentStart.contains("\"elements\"") -> {
                 val elements: ObserveResponseElements = mapper.readValue(content)
-                elements.elements?.map { toActionDescription(instruction, it, response) }
-                    ?.firstOrNull()
-                    ?: ActionDescription(instruction, modelResponse = response)
+                toActionDescription(instruction, elements, response)
             }
 
             else -> ActionDescription(instruction, modelResponse = response)
         }
     }
 
-    fun reviseActionDescription(action: ActionDescription, browserUseState: BrowserUseState): ActionDescription {
-        val observeElement = action.observeElement ?: return action
-        var toolCall = observeElement.toolCall ?: return action
+    fun reviseActionDescription(action: ActionDescription): ActionDescription {
+        val observeElements = action.observeElements?.map { reviseObserveElement(it, action) }
+        return action.copy(observeElements = observeElements)
+    }
+
+    fun reviseObserveElement(observeElement: ObserveElement, action: ActionDescription): ObserveElement {
+        val agentState = action.agentState ?: return observeElement
+        var toolCall = observeElement.toolCall ?: return observeElement
 
         // 1. revised tool call
         val revised = TOOL_ALIASES["${toolCall.domain}.${toolCall.method}"]
@@ -215,14 +239,14 @@ open class TextToAction(
 
         var fbnLocator: Locator? = null
         if (method in ToolSpecification.SELECTOR_ACTIONS) {
-            fbnLocator = browserUseState.domState.getAbsoluteFBNLocator(locator)
+            fbnLocator = agentState.browserUseState.domState.getAbsoluteFBNLocator(locator)
             if (!locator.isNullOrBlank() && fbnLocator == null) {
                 logger.warn("FBN locator not found. method={}, locator={}", method, locator)
             }
         }
 
         val node = if (fbnLocator != null) {
-            browserUseState.domState.locatorMap[fbnLocator]
+            agentState.browserUseState.domState.locatorMap[fbnLocator]
         } else null
 
         val fbnSelector = fbnLocator?.absoluteSelector
@@ -246,7 +270,7 @@ open class TextToAction(
             cssFriendlyExpression = cssFriendlyExpression,
         )
 
-        return action.copy(observeElement = revisedObserveElement)
+        return revisedObserveElement
     }
 
     private fun jsonElementToKotlin(e: JsonElement): Any? = when {

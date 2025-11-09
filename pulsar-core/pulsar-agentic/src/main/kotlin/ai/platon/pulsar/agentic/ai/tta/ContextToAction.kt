@@ -3,7 +3,7 @@ package ai.platon.pulsar.agentic.ai.tta
 import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
-import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
+import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ExperimentalApi
 import ai.platon.pulsar.common.brief
@@ -18,12 +18,6 @@ import ai.platon.pulsar.skeleton.ai.AgentState
 import org.apache.commons.lang3.StringUtils
 import java.nio.file.Files
 
-data class ContextToActionParams(
-    val messages: AgentMessageList,
-    val agentState: AgentState,
-    val screenshotB64: String? = null
-)
-
 open class ContextToAction(
     val conf: ImmutableConfig
 ) {
@@ -35,13 +29,15 @@ open class ContextToAction(
 
     val tta = TextToAction(conf)
 
+    val promptBuilder = PromptBuilder()
+
     init {
         Files.createDirectories(baseDir)
     }
 
     @ExperimentalApi
-    open suspend fun generate(params: ContextToActionParams): ActionDescription {
-        return generate(params.messages, params.agentState, params.screenshotB64)
+    open suspend fun generate(messages: AgentMessageList, context: ExecutionContext): ActionDescription {
+        return generate(messages, context.agentState, context.screenshotB64)
     }
 
     @ExperimentalApi
@@ -53,12 +49,12 @@ open class ContextToAction(
 
             val response = generateResponse(messages, agentState, screenshotB64, 1)
 
-            val action = modelResponseToActionDescription(instruction, response)
+            val actionDescription = modelResponseToActionDescription(instruction, response)
 
-            return reviseActionDescription(action, agentState.browserUseState)
+            return reviseActionDescription(actionDescription)
         } catch (e: Exception) {
             val errorResponse = ModelResponse("Unknown exception" + e.brief(), ResponseState.OTHER)
-            return ActionDescription(agentState.instruction, modelResponse = errorResponse)
+            return ActionDescription(agentState.instruction, modelResponse = errorResponse, exception = e)
         }
     }
 
@@ -113,7 +109,7 @@ open class ContextToAction(
             logInferenceToFile = true
         )
 
-        PromptBuilder().buildObserveUserMessage(messages, params)
+        promptBuilder.buildObserveUserMessage(messages, params)
 
         val systemMessage = messages.systemMessages().joinToString("\n")
         val userMessage = messages.userMessages().joinToString("\n")
@@ -135,10 +131,10 @@ open class ContextToAction(
     ): ActionDescription {
         val response = generateResponse(instruction, agentState, screenshotB64, toolCallLimit)
 
-        return reviseActionDescription(modelResponseToActionDescription(instruction, response), agentState.browserUseState)
+        return reviseActionDescription(modelResponseToActionDescription(instruction, response))
     }
 
     fun modelResponseToActionDescription(instruction: String, response: ModelResponse) = tta.modelResponseToActionDescription(instruction, response)
 
-    fun reviseActionDescription(action: ActionDescription, browserUseState: BrowserUseState) = tta.reviseActionDescription(action, browserUseState)
+    fun reviseActionDescription(action: ActionDescription) = tta.reviseActionDescription(action)
 }

@@ -5,10 +5,10 @@ import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
 import ai.platon.pulsar.agentic.tools.ToolSpecification
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
-import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
 import ai.platon.pulsar.common.KStrings
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.ai.llm.PromptTemplate
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.skeleton.ai.AgentState
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -283,6 +283,7 @@ $INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT
 ---
 
 ## 无障碍树说明
+(Accessibility Tree)
 
 $A11Y_TREE_NOTE_CONTENT
 
@@ -409,63 +410,22 @@ ${buildObserveResultSchema(true)}
 
         """.trimIndent()
 
-        val OBSERVE_GUIDE_SYSTEM_MESSAGE = """
-## 总体要求
+        val OBSERVE_GUIDE_OUTPUT_SCHEMA = """
+{
+  "elements": [
+    {
+      "locator": "Web page node locator, composed of two numbers, such as `0,4`",
+      "description": "Description of the current locator and tool selection",
+      "screenshotContentSummary": "Summary of the current screenshot content",
+      "currentPageContentSummary": "Summary of the current web page text content, based on the accessibility tree or web content extraction results",
+      "memory": "1–3 specific sentences describing this step and the overall progress. This should include information helpful for future progress tracking, such as the number of pages visited or items found.",
+      "thinking": "A structured <think>-style reasoning block that applies the `## 推理规则`."
+    }
+  ]
+}
+        """.trimIndent()
 
-你正在通过根据用户希望观察的页面内容来查找元素，帮助用户实现浏览器操作自动化。
-你将获得：
-- 一条关于待观察元素的指令
-- 一个包含网页所有可交互元素信息的列表
-- 一个展示页面语义结构的分层无障碍树（accessibility tree）。该树是DOM（文档对象模型）与无障碍树的混合体。
-
-如果存在符合指令的元素，则返回这些元素的数组；否则返回空数组。
-
----
-
-## 浏览器状态
-
-浏览器状态包括：
-- 当前 URL：你当前查看页面的 URL。
-- 打开的标签页：带有 id 的打开标签页。
-
----
-
-## 视觉信息
-
-- 如果你之前使用过截图，你将获得当前页面的截图。
-- 视觉信息是首要事实依据（GROUND TRUTH）：在推理中利用图像来评估你的进展。
-- 在推理中利用图像来评估你的进展。
-- 当不确定或想获取更多信息时使用截图。
-
----
-
-## 工具列表
-
-```
-${ToolSpecification.TOOL_CALL_SPECIFICATION}
-```
-
-$TOOL_CALL_RULE_CONTENT
-
----
-
-## 可交互元素说明
-
-$INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT
-
----
-
-## 无障碍树说明
-
-$A11Y_TREE_NOTE_CONTENT
-
----
-
-## 输出格式
-
-- 输出严格使用下面 JSON 格式，仅输出 JSON 内容，无多余文字
-- 最多一个元素，domain & method 字段不得为空(<output_act>)
-
+        val OBSERVE_GUIDE_OUTPUT_SCHEMA_RETURN_ACTIONS = """
 {
   "elements": [
     {
@@ -486,6 +446,67 @@ $A11Y_TREE_NOTE_CONTENT
     }
   ]
 }
+        """.trimIndent()
+
+        val OBSERVE_GUIDE_SYSTEM_MESSAGE = """
+## 总体要求
+
+你正在通过根据用户希望观察的页面内容来查找元素，帮助用户实现浏览器操作自动化。
+你将获得：
+- 一条关于待观察元素的指令
+- 一个包含网页所有可交互元素信息的列表
+- 一个展示页面语义结构的分层无障碍树（accessibility tree）。该树是DOM（文档对象模型）与无障碍树的混合体。
+
+如果存在符合指令的元素，则返回这些元素的数组；否则返回空数组。
+
+---
+
+## 浏览器状态说明
+
+浏览器状态包括：
+- 当前 URL：你当前查看页面的 URL。
+- 打开的标签页：带有 id 的打开标签页。
+
+---
+
+## 视觉信息说明
+
+- 如果你之前使用过截图，你将获得当前页面的截图。
+- 视觉信息是首要事实依据（GROUND TRUTH）：在推理中利用图像来评估你的进展。
+- 在推理中利用图像来评估你的进展。
+- 当不确定或想获取更多信息时使用截图。
+
+---
+
+## 可交互元素说明
+
+$INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT
+
+---
+
+## 无障碍树说明
+(Accessibility Tree)
+
+$A11Y_TREE_NOTE_CONTENT
+
+---
+
+## 工具列表
+
+```
+${ToolSpecification.TOOL_CALL_SPECIFICATION}
+```
+
+$TOOL_CALL_RULE_CONTENT
+
+---
+
+## 输出格式
+
+- 输出严格使用下面 JSON 格式，仅输出 JSON 内容，无多余文字
+- 最多一个元素，domain & method 字段不得为空(<output_act>)
+
+{{OUTPUT_SCHEMA_PLACEHOLDER}}
 
 ---
 
@@ -559,6 +580,27 @@ $AGENT_GUIDE_SYSTEM_PROMPT
         Today's date is ${LocalDate.now()}. You're currently on the website: ${url}.
         """.trimIndent()
         }
+    }
+
+    fun buildResolveObserveMessageList(context: ExecutionContext, stateHistory: List<AgentState>): AgentMessageList {
+        val instruction = context.instruction
+        val messages = AgentMessageList()
+
+        val systemMsg = buildOperatorSystemPrompt()
+
+        messages.addSystem(systemMsg)
+        messages.addLast("user", buildUserRequestMessage(instruction), name = "user_request")
+        messages.addUser(buildAgentStateHistoryMessage(stateHistory))
+        if (context.screenshotB64 != null) {
+            messages.addUser(buildBrowserVisionInfo())
+        }
+
+        val prevCTResult = context.prevAgentState?.toolCallResult
+        if (prevCTResult != null) {
+            messages.addUser(buildPrevToolCallResultMessage(context))
+        }
+
+        return messages
     }
 
     fun buildObserveGuideSystemExtraPrompt(userProvidedInstructions: String?): SimpleMessage? {
@@ -862,22 +904,16 @@ The i-th chunk to process contains all DOM nodes located within the i-th viewpor
         return SimpleMessage(role = "user", content = content)
     }
 
-    fun buildObservePrompt(messages: AgentMessageList, params: ObserveParams) {
-        // observe guide
-        buildObserveGuideSystemPrompt(messages, params.userProvidedInstructions)
-        // DOM + browser state + schema
-        buildObserveUserMessage(messages, params)
-    }
+    fun buildObserveGuideSystemPrompt(messages: AgentMessageList, params: ObserveParams) {
+        val schema = if (params.returnAction) OBSERVE_GUIDE_OUTPUT_SCHEMA_RETURN_ACTIONS else OBSERVE_GUIDE_OUTPUT_SCHEMA
 
-    fun buildObserveGuideSystemPrompt(messages: AgentMessageList, userProvidedInstructions: String? = null) {
-        fun observeSystemPromptCN() = OBSERVE_GUIDE_SYSTEM_MESSAGE
+        val observeSystemPrompt = PromptTemplate(OBSERVE_GUIDE_SYSTEM_MESSAGE).render(
+            mapOf("OUTPUT_SCHEMA_PLACEHOLDER" to schema)
+        )
 
-        fun observeSystemPromptEN() = observeSystemPromptCN()
-
-        val observeSystemPrompt = if (isZH) observeSystemPromptCN() else observeSystemPromptEN()
         messages.addLast("system", observeSystemPrompt)
 
-        val extra = buildObserveGuideSystemExtraPrompt(userProvidedInstructions)?.content
+        val extra = buildObserveGuideSystemExtraPrompt(params.userProvidedInstructions)?.content
         if (extra != null) {
             messages.addLast("system", extra)
         }

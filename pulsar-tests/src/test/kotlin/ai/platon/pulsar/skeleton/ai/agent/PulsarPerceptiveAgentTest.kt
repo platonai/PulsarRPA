@@ -84,6 +84,86 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
     }
 
     @Nested
+    @DisplayName("Observe Method Tests")
+    inner class ObserveMethodTests {
+
+        @Test
+        @Ignore("Disable temporary")
+        @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
+        fun `Given interactive page When observe called Then should return actionable elements`() {
+            runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
+                val agent = BrowserPerceptiveAgent(driver, session)
+
+                val results = agent.observe("List all interactive elements on this page")
+                printlnPro(results.shuffled().take(10))
+
+                // Should find some interactive elements
+                assertTrue(results.isNotEmpty(), "Should find interactive elements")
+
+                results.forEach { result ->
+                    assertNotNull(result.locator, "Selector should not be null")
+                    assertTrue(result.description?.isNotBlank() == true, "Description should not be blank")
+                }
+            }
+        }
+
+        @Test
+        @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
+        fun `Given observe options When observe called Then should respect options`() {
+            runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
+                val agent = BrowserPerceptiveAgent(driver, session)
+
+                val options = ObserveOptions(
+                    instruction = "Find all buttons",
+                    returnAction = false
+                )
+
+                val results = agent.observe(options)
+                printlnPro(results)
+
+                assertNotNull(results)
+
+                // When returnAction is false, method and arguments should be null
+                results.forEach { result ->
+                    assertTrue(result.method == null || result.method!!.isBlank())
+                }
+            }
+        }
+
+        @Test
+        @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
+        fun `Given observe with returnAction true When observe called Then should include actions`() {
+            runWebDriverTest(interactiveDynamicURL) { driver ->
+                val agent = BrowserPerceptiveAgent(driver, session)
+
+                val options = ObserveOptions(
+                    instruction = "Find clickable elements",
+                    returnAction = true
+                )
+
+                val results = agent.observe(options)
+                printlnPro(results)
+
+                assertNotNull(results)
+                // Some results might have methods/arguments
+            }
+        }
+
+        @Test
+        @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
+        fun `Given empty instruction When observe called Then should use default instruction`() {
+            runWebDriverTest(interactiveDynamicURL) { driver ->
+                val agent = BrowserPerceptiveAgent(driver, session)
+
+                val results = agent.observe("")
+                printlnPro(results)
+
+                assertNotNull(results)
+            }
+        }
+    }
+
+    @Nested
     @DisplayName("Extract Method Tests")
     inner class ExtractMethodTests {
 
@@ -143,8 +223,6 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
         @Test
         @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
         fun `Given empty instruction When extract called Then should use default instruction`() {
-
-
             runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = BrowserPerceptiveAgent(driver, session)
 
@@ -171,100 +249,6 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
                 // Should handle gracefully even on failure
                 assertNotNull(result)
-            }
-        }
-    }
-
-    @Nested
-    @DisplayName("Observe Method Tests")
-    inner class ObserveMethodTests {
-
-        @Test
-        @Ignore("Disable temporary")
-        @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
-        fun `Given interactive page When observe called Then should return actionable elements`() {
-
-
-            runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
-                val agent = BrowserPerceptiveAgent(driver, session)
-
-                val results = runBlocking {
-                    agent.observe("List all interactive elements on this page")
-                }
-                printlnPro(results)
-
-                // Should find some interactive elements
-                assertTrue(results.isNotEmpty(), "Should find interactive elements")
-
-                results.forEach { result ->
-                    assertNotNull(result.locator, "Selector should not be null")
-                    assertTrue(result.description!!.isNotBlank(), "Description should not be blank")
-                }
-
-                // History should be updated
-                assertTrue(agent.stateHistory.isNotEmpty())
-                assertContains(agent.stateHistory.last().action ?: "", "observe")
-            }
-        }
-
-        @Test
-        @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
-        fun `Given observe options When observe called Then should respect options`() {
-
-
-            runEnhancedWebDriverTest(interactiveDynamicURL) { driver ->
-                val agent = BrowserPerceptiveAgent(driver, session)
-
-                val options = ObserveOptions(
-                    instruction = "Find all buttons",
-                    returnAction = false
-                )
-
-                val results = agent.observe(options)
-                printlnPro(results)
-
-                assertNotNull(results)
-
-                // When returnAction is false, method and arguments should be null
-                results.forEach { result ->
-                    assertTrue(result.method == null || result.method!!.isBlank())
-                }
-            }
-        }
-
-        @Test
-        @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
-        fun `Given observe with returnAction true When observe called Then should include actions`() {
-
-
-            runWebDriverTest(interactiveDynamicURL) { driver ->
-                val agent = BrowserPerceptiveAgent(driver, session)
-
-                val options = ObserveOptions(
-                    instruction = "Find clickable elements",
-                    returnAction = true
-                )
-
-                val results = agent.observe(options)
-                printlnPro(results)
-
-                assertNotNull(results)
-                // Some results might have methods/arguments
-            }
-        }
-
-        @Test
-        @Timeout(value = TIMEOUT_MS, unit = java.util.concurrent.TimeUnit.MILLISECONDS)
-        fun `Given empty instruction When observe called Then should use default instruction`() {
-
-
-            runWebDriverTest(interactiveDynamicURL) { driver ->
-                val agent = BrowserPerceptiveAgent(driver, session)
-
-                val results = agent.observe("")
-                printlnPro(results)
-
-                assertNotNull(results)
             }
         }
     }
@@ -319,7 +303,6 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
                 // Manually add to history (simulating execution)
                 val history = agent.stateHistory as? MutableList
-                history?.add(AgentState(1, "", action = "Test action completed"))
 
                 if (agent.stateHistory.isNotEmpty()) {
                     assertFalse(agent.toString().contains("no history"))

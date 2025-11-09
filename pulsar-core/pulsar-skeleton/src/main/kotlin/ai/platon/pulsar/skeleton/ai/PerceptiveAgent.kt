@@ -23,6 +23,7 @@ data class ActionOptions(
 data class ActResult(
     val success: Boolean,
     val message: String,
+
     val action: String? = null,
     val result: ToolCallResult? = null
 ) {
@@ -165,8 +166,13 @@ data class ObserveResult constructor(
 
     val backendNodeId: Int? = null,
 
-    val observeElements: List<ObserveElement>? = null,
-)
+    val observeElement: ObserveElement? = null,
+
+    val actionDescription: ActionDescription? = null,
+) {
+    @Deprecated("Use observeElement instead", ReplaceWith("observeElement"))
+    val observeElements: List<ObserveElement>? get() = actionDescription?.observeElements
+}
 
 data class AgentState constructor(
     var step: Int,
@@ -211,15 +217,18 @@ data class AgentState constructor(
     }
 }
 
+/**
+ * The action description for the agent to go forward in the next step.
+ * */
 data class ActionDescription constructor(
     /**
      * The original instruction.
      * */
     val instruction: String,
     /**
-     * AI: observe element
+     * AI: observe elements
      * */
-    val observeElement: ObserveElement? = null,
+    val observeElements: List<ObserveElement>? = null,
 
     /**
      * AI: whether the task is complete
@@ -246,16 +255,39 @@ data class ActionDescription constructor(
      * */
     val agentState: AgentState? = null,
 ) {
+    val observeElement: ObserveElement? get() = observeElements?.firstOrNull()
     val toolCall: ToolCall? get() = observeElement?.toolCall
     val locator: String? get() = observeElement?.locator
-    val node: DOMTreeNodeEx? get() = observeElement?.node
     val xpath: String? get() = observeElement?.xpath
-    val cssSelector: String? get() = observeElement?.cssSelector
     val expression: String? get() = observeElement?.expression
     val cssFriendlyExpression: String? get() = observeElement?.cssFriendlyExpression
 
-    @Deprecated("User cssFriendlyExpression instead")
-    val cssFriendlyExpressions: List<String> get() = observeElement?.cssFriendlyExpressions ?: emptyList()
+    fun toActionDescriptions(): List<ActionDescription> {
+        val elements = observeElements ?: return emptyList()
+        return elements.map { this.copy(observeElements = listOf(it)) }
+    }
+
+    fun toObserveResults(agentState: AgentState): List<ObserveResult> {
+        val results = observeElements?.map { ele ->
+            ObserveResult(
+                agentState = agentState,
+                locator = ele.locator,
+                domain = ele.domain?.ifBlank { null },
+                method = ele.method?.ifBlank { null },
+                arguments = ele.arguments?.takeIf { it.isNotEmpty() },
+                description = ele.description ?: "(No comment ...)",
+                screenshotContentSummary = ele.screenshotContentSummary,
+                currentPageContentSummary = ele.currentPageContentSummary,
+                evaluationPreviousGoal = ele.evaluationPreviousGoal,
+                nextGoal = ele.nextGoal,
+                backendNodeId = ele.backendNodeId,
+                observeElement = ele,
+                actionDescription = this,
+            )
+        }
+
+        return results ?: emptyList()
+    }
 
     override fun toString(): String {
         return if (isComplete) "Completed. Summary: $summary"

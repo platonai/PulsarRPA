@@ -4,6 +4,7 @@ import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.SimpleMessage
+import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
 import ai.platon.pulsar.agentic.ai.tta.ContextToAction
 import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
@@ -49,13 +50,20 @@ data class ExtractParams(
 )
 
 data class ObserveParams constructor(
+    /**
+     * The user's instruction/request
+     * */
     val instruction: String,
     val agentState: AgentState,
     val requestId: String = UUID.randomUUID().toString(),
+    /**
+     * User provided additional system instructions
+     * */
     val userProvidedInstructions: String? = null,
     val returnAction: Boolean = false,
     val logInferenceToFile: Boolean = false,
     val fromAct: Boolean = false,
+    val context: ExecutionContext? = null
 ) {
     val browserUseState get() = agentState.browserUseState
 }
@@ -234,7 +242,11 @@ class InferenceEngine(
         require(params.instruction == messages.instruction?.content)
 
         val instruction = params.instruction
-        promptBuilder.buildObservePrompt(messages, params)
+        // promptBuilder.buildObservePrompt(params, messages)
+        // observe guide
+        promptBuilder.buildObserveGuideSystemPrompt(messages, params)
+        // browser state, viewport info, interactive elements, DOM
+        promptBuilder.buildObserveUserMessage(messages, params)
 
         val prefix = if (params.fromAct) "act" else "observe"
         var callFile = ""
@@ -267,7 +279,7 @@ class InferenceEngine(
 
         val modeResponse = ModelResponse(content = responseContent, tokenUsage = tokenUsage)
         var actionDescription = cta.tta.modelResponseToActionDescription(instruction, modeResponse)
-        actionDescription = cta.tta.reviseActionDescription(actionDescription, browserUseState = params.browserUseState)
+        actionDescription = cta.tta.reviseActionDescription(actionDescription)
 
         var respFile = ""
         if (params.logInferenceToFile) {

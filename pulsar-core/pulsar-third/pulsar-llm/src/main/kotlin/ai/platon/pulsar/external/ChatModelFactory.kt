@@ -21,7 +21,7 @@ object ChatModelFactory {
     private val llmGuideReported = AtomicBoolean(false)
     const val DOCUMENT_PATH = "https://github.com/platonai/browser4/blob/master/docs/config/llm/llm-config.md"
     const val LLM_DEVELOPER_GUIDE =
-        """
+        $$"""
 The LLM is not configured, the LLM feature is disabled.
 
 Simple guide to configure LLM:
@@ -31,22 +31,22 @@ Simple guide to configure LLM:
 Make sure the environment variable is set:
 
 ```shell
-echo ${'$'}DEEPSEEK_API_KEY # make sure the environment variable is set. DASHSCOPE_API_KEY/VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+echo $DEEPSEEK_API_KEY # make sure the environment variable is set. DASHSCOPE_API_KEY/VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
 ```
 
 Run Browser4 with the environment variable:
 
 ```shell
-java -D"DEEPSEEK_API_KEY=${'$'}{DEEPSEEK_API_KEY}" -jar Browser4.jar
+java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar Browser4.jar
 ```
 
 Or run Browser4 with Docker:
 
 ```shell
-docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${'$'}{DEEPSEEK_API_KEY} galaxyeye88/browser4:latest
+docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/browser4:latest
 ```
 
-For more details, please refer to the [LLM configuration documentation]($DOCUMENT_PATH)
+For more details, please refer to the [LLM configuration documentation]($$DOCUMENT_PATH)
 """
 
     // 按顺序检查所有可能的API密钥配置
