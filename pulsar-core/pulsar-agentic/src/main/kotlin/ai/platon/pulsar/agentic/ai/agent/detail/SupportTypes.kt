@@ -13,7 +13,7 @@ import java.util.*
  */
 sealed class PerceptiveAgentError(message: String, cause: Throwable? = null) : Exception(message, cause) {
     class TransientError(message: String, cause: Throwable? = null) : PerceptiveAgentError(message, cause)
-    class PermanentError(message: String, cause: Throwable? = null) : PerceptiveAgentError(message, cause)
+    open class PermanentError(message: String, cause: Throwable? = null) : PerceptiveAgentError(message, cause)
     class TimeoutError(message: String, cause: Throwable? = null) : PerceptiveAgentError(message, cause)
     class ResourceExhaustedError(message: String, cause: Throwable? = null) : PerceptiveAgentError(message, cause)
     class ValidationError(message: String, cause: Throwable? = null) : PerceptiveAgentError(message, cause)

@@ -12,6 +12,7 @@ import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.ai.ProcessTrace
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.ai.ToolCallResult
+import kotlinx.coroutines.withTimeout
 import java.time.Instant
 import java.util.*
 import kotlin.collections.component1
@@ -99,8 +100,11 @@ class AgentStateManager(
             includeVisibility = true,
             includeInteractivity = true
         )
-        val baseState = domService.getBrowserUseState(snapshotOptions = snapshotOptions)
-        return injectTabsInfo(baseState)
+        // Add timeout to prevent hanging on DOM snapshot operations
+        return withTimeout(30_000) {
+            val baseState = domService.getBrowserUseState(snapshotOptions = snapshotOptions)
+            injectTabsInfo(baseState)
+        }
     }
 
     fun updateAgentState(agentState: AgentState, detailedActResult: DetailedActResult) {
@@ -147,17 +151,23 @@ class AgentStateManager(
     }
 
     fun addToHistory(h: AgentState) {
-        _stateHistory.add(h)
-        if (stateHistory.size > config.maxHistorySize * 2) {
-            _stateHistory.subList(0, config.maxHistorySize).clear()
-        }
         val items = mapOf(
             "action" to h.action,
             "expression" to h.toolCallResult?.expression,
             "tcEvalResult" to h.toolCallResult?.evaluate?.value
         ).filterValues { it != null }
         val trace = ProcessTrace(step = h.step, items = items, message = h.toString())
-        _processTrace.add(trace)
+
+        synchronized(this) {
+            _stateHistory.add(h)
+            if (_stateHistory.size > config.maxHistorySize * 2) {
+                // Keep the latest maxHistorySize entries
+                val remaining = _stateHistory.takeLast(config.maxHistorySize)
+                _stateHistory.clear()
+                _stateHistory.addAll(remaining)
+            }
+            _processTrace.add(trace)
+        }
     }
 
     fun trace(h: AgentState?, items: Map<String, String>, message: String? = null) {
@@ -180,7 +190,28 @@ class AgentStateManager(
     }
 
     fun clearUpHistory(toRemove: Int) {
-        _stateHistory.subList(0, toRemove).clear()
+        synchronized(this) {
+            if (toRemove > 0) {
+                val safeToRemove = toRemove.coerceAtMost(_stateHistory.size)
+                if (safeToRemove > 0) {
+                    val remaining = _stateHistory.drop(safeToRemove)
+                    _stateHistory.clear()
+                    _stateHistory.addAll(remaining)
+                }
+            }
+        }
+    }
+
+    /**
+     * Remove the last history entry if its step is >= provided step. Used for rollback on errors.
+     */
+    fun removeLastIfStep(step: Int) {
+        synchronized(this) {
+            val last = _stateHistory.lastOrNull()
+            if (last != null && last.step >= step) {
+                _stateHistory.removeAt(_stateHistory.size - 1)
+            }
+        }
     }
 
     /**

@@ -22,6 +22,8 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.Job
+import kotlin.coroutines.coroutineContext
 import org.slf4j.helpers.MessageFormatter
 import java.io.IOException
 import java.net.ConnectException
@@ -87,6 +89,13 @@ data class AgentConfig(
     val denyUnknownActions: Boolean = false,
     // Overall timeout for resolve() to avoid indefinite hangs
     val resolveTimeoutMs: Long = 24.hours.inWholeMilliseconds,
+    // Circuit breaker configuration
+    val maxConsecutiveLLMFailures: Int = 5,
+    val maxConsecutiveValidationFailures: Int = 8,
+    // Checkpointing configuration
+    val enableCheckpointing: Boolean = false,
+    val checkpointIntervalSteps: Int = 10,
+    val maxCheckpointsPerSession: Int = 5,
     // --- todolist.md integration flags ---
     val enableTodoWrites: Boolean = true,
     val todoPlanWithLLM: Boolean = true,
@@ -129,7 +138,28 @@ open class BrowserPerceptiveAgent constructor(
     private val performanceMetrics = PerformanceMetrics()
     private val retryCounter = AtomicInteger(0)
     private val consecutiveFailureCounter = AtomicInteger(0)
+    private val consecutiveLLMFailureCounter = AtomicInteger(0)
+    private val consecutiveValidationFailureCounter = AtomicInteger(0)
     private val stepExecutionTimes = ConcurrentHashMap<Int, Long>()
+
+    // New components for better separation of concerns
+    private val circuitBreaker by lazy {
+        CircuitBreaker(
+            maxLLMFailures = config.maxConsecutiveLLMFailures,
+            maxValidationFailures = config.maxConsecutiveValidationFailures,
+            maxExecutionFailures = 3
+        )
+    }
+    private val retryStrategy by lazy {
+        RetryStrategy(
+            maxRetries = config.maxRetries,
+            baseDelayMs = config.baseRetryDelayMs,
+            maxDelayMs = config.maxRetryDelayMs
+        )
+    }
+    private val checkpointManager by lazy {
+        CheckpointManager(baseDir.resolve("checkpoints"))
+    }
 
     val baseDir get() = toolExecutor.baseDir
     val startTime = Instant.now()
@@ -176,8 +206,12 @@ open class BrowserPerceptiveAgent constructor(
         )
 
         // Overall timeout to prevent indefinite hangs for a full resolve session
+        // Calculate effective timeout accounting for potential retry delays
+        val maxPossibleDelays = (0 until config.maxRetries).sumOf { calculateRetryDelay(it) }
+        val effectiveTimeout = config.resolveTimeoutMs + maxPossibleDelays
+        
         return try {
-            val result = withTimeout(config.resolveTimeoutMs) {
+            val result = withTimeout(effectiveTimeout) {
                 resolveProblemWithRetry(action, context)
             }
             val dur = Duration.between(sessionStartTime, Instant.now()).toMillis()
@@ -185,7 +219,7 @@ open class BrowserPerceptiveAgent constructor(
             stateManager.trace("✅ resolve DONE session=${sessionId.take(8)} success=${result.success} dur=${dur}ms")
             result
         } catch (_: TimeoutCancellationException) {
-            val msg = "⏳ Resolve timed out after ${config.resolveTimeoutMs}ms: ${instruction}"
+            val msg = "⏳ Resolve timed out after ${effectiveTimeout}ms (base: ${config.resolveTimeoutMs}ms + retries: ${maxPossibleDelays}ms): ${instruction}"
             stateManager.trace("⏳ resolve TIMEOUT: ${Strings.compactLog(instruction, 160)}")
             ActResult(success = false, message = msg, action = instruction)
         }
@@ -344,16 +378,21 @@ open class BrowserPerceptiveAgent constructor(
 //        )
 
         val interactiveElements = context.agentState.browserUseState.getInteractiveElements()
-        domService.addHighlights(interactiveElements)
+        
+        val actionDescription = try {
+            domService.addHighlights(interactiveElements)
 
-        // Optional screenshot
-        // val screenshotB64 = captureScreenshotWithRetry(context)
+            // Optional screenshot
+            // val screenshotB64 = captureScreenshotWithRetry(context)
 
-        // Do OBSERVE
-        val params = context.createObserveParams(options, false)
-        val actionDescription = doObserve(params, messages)
-
-        domService.removeHighlights(interactiveElements)
+            // Do OBSERVE
+            val params = context.createObserveParams(options, false)
+            doObserve(params, messages)
+        } finally {
+            // Ensure highlights are always removed even on exception
+            runCatching { domService.removeHighlights(interactiveElements) }
+                .onFailure { e -> logger.warn("⚠️ Failed to remove highlights: ${e.message}") }
+        }
 
         val results = actionDescription.observeElements?.map { ele ->
             ObserveResult(
@@ -397,10 +436,22 @@ open class BrowserPerceptiveAgent constructor(
         val messages = promptBuilder.buildResolveObserveMessageList(context, stateHistory)
 
         return try {
-            cta.generate(messages, context)
+            val action = cta.generate(messages, context)
+            circuitBreaker.recordSuccess(CircuitBreaker.FailureType.LLM_FAILURE)
+            consecutiveLLMFailureCounter.set(0) // Keep for backward compatibility
+            action
         } catch (e: Exception) {
-            logger.error("🤖❌ action.gen.fail sid={} msg={}", context.sid, e.message, e)
+            val failures = try {
+                circuitBreaker.recordFailure(CircuitBreaker.FailureType.LLM_FAILURE)
+            } catch (cbError: CircuitBreakerTrippedException) {
+                // Re-throw as permanent error
+                throw PerceptiveAgentError.PermanentError(cbError.message ?: "Circuit breaker tripped", cbError)
+            }
+            
+            consecutiveLLMFailureCounter.set(failures) // Keep for backward compatibility
+            logger.error("🤖❌ action.gen.fail sid={} failures={} msg={}", context.sid, failures, e.message, e)
             consecutiveFailureCounter.incrementAndGet()
+            
             ActionDescription(context.instruction, exception = e)
         }
     }
@@ -563,6 +614,7 @@ open class BrowserPerceptiveAgent constructor(
     ): ActResult {
         var lastError: Exception? = null
         val sid = context.sid
+        var currentContext = context
 
         for (attempt in 0..config.maxRetries) {
             val attemptNo = attempt + 1
@@ -570,7 +622,7 @@ open class BrowserPerceptiveAgent constructor(
             stateManager.trace("🔁 resolve ATTEMPT ${attemptNo}/${config.maxRetries + 1}")
 
             try {
-                val res = doResolveProblem(action, context, attempt)
+                val res = doResolveProblem(action, currentContext, attempt)
 
                 stateManager.trace("✅ resolve ATTEMPT $attemptNo OK")
 
@@ -582,6 +634,16 @@ open class BrowserPerceptiveAgent constructor(
                 if (attempt < config.maxRetries) {
                     val backoffMs = calculateRetryDelay(attempt)
                     stateManager.trace("🔁 resolve RETRY $attemptNo cause=Transient delay=${backoffMs}ms msg=${e.message}")
+                    
+                    // Clean up partial state before retry
+                    try {
+                        cleanupPartialState(currentContext)
+                        // Rebuild context for next attempt to avoid corrupted state
+                        currentContext = stateManager.buildInitExecutionContext(action)
+                    } catch (cleanupError: Exception) {
+                        logger.warn("⚠️ Failed to cleanup state before retry: ${cleanupError.message}")
+                    }
+                    
                     delay(backoffMs)
                 }
             } catch (e: PerceptiveAgentError.TimeoutError) {
@@ -591,6 +653,15 @@ open class BrowserPerceptiveAgent constructor(
                 if (attempt < config.maxRetries) {
                     val baseBackoffMs = config.baseRetryDelayMs
                     stateManager.trace("🔁 resolve RETRY $attemptNo cause=Timeout delay=${baseBackoffMs}ms msg=${e.message}")
+                    
+                    // Clean up partial state before retry
+                    try {
+                        cleanupPartialState(currentContext)
+                        currentContext = stateManager.buildInitExecutionContext(action)
+                    } catch (cleanupError: Exception) {
+                        logger.warn("⚠️ Failed to cleanup state before retry: ${cleanupError.message}")
+                    }
+                    
                     delay(baseBackoffMs)
                 }
             } catch (e: Exception) {
@@ -600,6 +671,15 @@ open class BrowserPerceptiveAgent constructor(
                 if (shouldRetryError(e) && attempt < config.maxRetries) {
                     val backoffMs = calculateRetryDelay(attempt)
                     stateManager.trace("🔁 resolve RETRY $attemptNo cause=Unexpected delay=${backoffMs}ms msg=${e.message}")
+                    
+                    // Clean up partial state before retry
+                    try {
+                        cleanupPartialState(currentContext)
+                        currentContext = stateManager.buildInitExecutionContext(action)
+                    } catch (cleanupError: Exception) {
+                        logger.warn("⚠️ Failed to cleanup state before retry: ${cleanupError.message}")
+                    }
+                    
                     delay(backoffMs)
                 } else {
                     // Non-retryable error, exit loop
@@ -643,23 +723,21 @@ open class BrowserPerceptiveAgent constructor(
 
         // agent general guide
         var consecutiveNoOps = 0
-        var step = 0
 
         var context = initContext
 
         try {
-            while (step < config.maxSteps) {
-                step++
+            while (context.step < config.maxSteps) {
+                val nextStep = context.step + 1
 
                 // Step setup: ensure URL and settle DOM
                 ensureReadyForStep(action)
 
                 // Build AgentState and snapshot after settling
-                require(step == context.step + 1) { "Step should be exactly (context.stepNumber + 1)" }
-
-                context = stateManager.buildExecutionContext(action.action, "step", step, baseContext = context)
+                context = stateManager.buildExecutionContext(action.action, "step", nextStep, baseContext = context)
                 val agentState = context.agentState
                 val browserUseState = agentState.browserUseState
+                val step = context.step
 
                 // Detect unchanged state for heuristics
                 val unchangedCount = pageStateTracker.checkStateChange(browserUseState)
@@ -678,6 +756,15 @@ open class BrowserPerceptiveAgent constructor(
                     performMemoryCleanup(context)
                 }
 
+                // Checkpointing at intervals
+                if (config.enableCheckpointing && step % config.checkpointIntervalSteps == 0) {
+                    try {
+                        saveCheckpoint(context)
+                    } catch (e: Exception) {
+                        logger.warn("💾❌ checkpoint.save.fail sid={} step={} msg={}", sid, step, e.message)
+                    }
+                }
+
                 //**
                 // I - Observe and Generate Action
                 //**
@@ -693,7 +780,7 @@ open class BrowserPerceptiveAgent constructor(
 
                 if (actionDescription.toolCall == null) {
                     consecutiveNoOps++
-                    val stop = handleConsecutiveNoOps(consecutiveNoOps, step, context)
+                    val stop = handleConsecutiveNoOps(consecutiveNoOps, context)
                     if (stop) break
                     continue
                 }
@@ -719,7 +806,7 @@ open class BrowserPerceptiveAgent constructor(
                 } else {
                     // Treat validation failures or execution skips as no-ops; no AgentState record
                     consecutiveNoOps++
-                    val stop = handleConsecutiveNoOps(consecutiveNoOps, step, context)
+                    val stop = handleConsecutiveNoOps(consecutiveNoOps, context)
                     if (stop) break
                     updatePerformanceMetrics(step, context.timestamp, false)
                 }
@@ -729,7 +816,7 @@ open class BrowserPerceptiveAgent constructor(
             }
 
             val executionTime = Duration.between(startTime, Instant.now())
-            logger.info("✅ agent.done sid={} steps={} dur={}", sid, step, executionTime.toString())
+            logger.info("✅ agent.done sid={} steps={} dur={}", sid, context.step, executionTime.toString())
 
             val summary = generateFinalSummary(context.instruction, context)
             val ok = summary.state != ResponseState.OTHER
@@ -741,8 +828,14 @@ open class BrowserPerceptiveAgent constructor(
             )
         } catch (e: Exception) {
             val executionTime = Duration.between(startTime, Instant.now())
-            logger.error("💥 agent.fail sid={} steps={} dur={} err={}", sid, step, executionTime, e.message, e)
-            throw classifyError(e, step)
+            logger.error("💥 agent.fail sid={} steps={} dur={} err={}", sid, context.step, executionTime, e.message, e)
+            // Attempt to rollback last history entry which may be partially written for this step
+            try {
+                stateManager.removeLastIfStep(context.step)
+            } catch (re: Exception) {
+                logger.warn("⚠️ rollback failed sid={} step={} msg={}", sid, context.step, re.message)
+            }
+            throw classifyError(e, context.step)
         }
     }
 
@@ -755,15 +848,27 @@ open class BrowserPerceptiveAgent constructor(
         val toolCall = actionDescription.toolCall ?: return null
 
         if (config.enablePreActionValidation && !actionValidator.validateToolCall(toolCall)) {
+            val failures = try {
+                circuitBreaker.recordFailure(CircuitBreaker.FailureType.VALIDATION_FAILURE)
+            } catch (cbError: CircuitBreakerTrippedException) {
+                throw PerceptiveAgentError.PermanentError(cbError.message ?: "Circuit breaker tripped", cbError)
+            }
+            
+            consecutiveValidationFailureCounter.set(failures) // Keep for backward compatibility
             logger.info(
-                "🛑 tool.validate.fail sid={} step={} locator={} | {}({}) | {}",
-                context.sid, context.step, actionDescription.locator, toolCall.method, toolCall.arguments,
+                "🛑 tool.validate.fail sid={} step={} failures={} locator={} | {}({}) | {}",
+                context.sid, context.step, failures, actionDescription.locator, toolCall.method, toolCall.arguments,
                 actionDescription.cssFriendlyExpression
             )
             // Validation failure is meta info
             stateManager.trace("🛑 #$step validation-failed ${toolCall.method}")
+            
             return null
         }
+
+        // Reset validation failure counter on successful validation
+        circuitBreaker.recordSuccess(CircuitBreaker.FailureType.VALIDATION_FAILURE)
+        consecutiveValidationFailureCounter.set(0)
 
         return try {
             logger.info(
@@ -772,23 +877,26 @@ open class BrowserPerceptiveAgent constructor(
             )
 
             val toolCallResult = toolExecutor.execute(actionDescription, "resolve, #$step")
+            circuitBreaker.recordSuccess(CircuitBreaker.FailureType.EXECUTION_FAILURE)
             consecutiveFailureCounter.set(0) // Reset on success
 
             val summary = "✅ ${toolCall.method} executed successfully"
             stateManager.trace(summary)
             DetailedActResult(actionDescription, toolCallResult, success = true, summary)
         } catch (e: Exception) {
-            val failures = consecutiveFailureCounter.incrementAndGet()
+            val failures = try {
+                circuitBreaker.recordFailure(CircuitBreaker.FailureType.EXECUTION_FAILURE)
+            } catch (cbError: CircuitBreakerTrippedException) {
+                throw PerceptiveAgentError.PermanentError(cbError.message ?: "Circuit breaker tripped", cbError)
+            }
+            
+            consecutiveFailureCounter.set(failures) // Keep for backward compatibility
             logger.error(
                 "🛠️❌ tool.exec.fail sid={} step={} failures={} msg={}",
                 context.sid, context.step, failures, e.message, e
             )
 
             stateManager.trace("💥 #$step unexpected failure ${toolCall.method}")
-
-            if (failures >= 3) {
-                throw PerceptiveAgentError.PermanentError("🛑 Too many consecutive failures at step $step", e)
-            }
 
             null
         }
@@ -824,85 +932,51 @@ open class BrowserPerceptiveAgent constructor(
      * Classifies errors for appropriate retry strategies
      */
     private fun classifyError(e: Exception, step: Int): PerceptiveAgentError {
-        return when (e) {
-            is PerceptiveAgentError -> e
-            is TimeoutException -> PerceptiveAgentError.TimeoutError("⏳ Step $step timed out", e)
-            is SocketTimeoutException -> PerceptiveAgentError.TimeoutError("⏳ Network timeout at step $step", e)
-            is ConnectException -> PerceptiveAgentError.TransientError("🔄 Connection failed at step $step", e)
-            is ChatModelException -> PerceptiveAgentError.TimeoutError("⏳ Chat model timeout at step $step", e)
-            is UnknownHostException -> PerceptiveAgentError.TransientError(
-                "🔄 DNS resolution failed at step $step", e
-            )
-
-            is IOException -> {
-                when {
-                    e.message?.contains("connection") == true -> PerceptiveAgentError.TransientError(
-                        "🔄 Connection issue at step $step", e
-                    )
-
-                    e.message?.contains("timeout") == true -> PerceptiveAgentError.TimeoutError(
-                        "⏳ Network timeout at step $step", e
-                    )
-
-                    else -> PerceptiveAgentError.TransientError("🔄 IO error at step $step: ${e.message}", e)
-                }
-            }
-
-            is IllegalArgumentException -> PerceptiveAgentError.ValidationError(
-                "🚫 Validation error at step $step: ${e.message}", e
-            )
-
-            is IllegalStateException -> PerceptiveAgentError.PermanentError(
-                "🛑 Invalid state at step $step: ${e.message}", e
-            )
-
-            else -> PerceptiveAgentError.TransientError("💥 Unexpected error at step $step: ${e.message}", e)
-        }
+        return retryStrategy.classifyError(e, "step $step")
     }
 
     /**
      * Determines if an error should trigger a retry
      */
     private fun shouldRetryError(e: Exception): Boolean {
-        return when (e) {
-            is PerceptiveAgentError.TransientError, is PerceptiveAgentError.TimeoutError -> true
-            is SocketTimeoutException, is ConnectException, is UnknownHostException -> true
-
-            else -> false
-        }
+        return retryStrategy.shouldRetry(e)
     }
 
     /**
      * Calculates retry delay with exponential backoff and jitter
      */
     private fun calculateRetryDelay(attempt: Int): Long {
-        // Use multiplicative jitter so delay is monotonic w.r.t attempt
-        val baseExp = config.baseRetryDelayMs * (2.0.pow(attempt.toDouble()))
-        val jitterPercent = (0..30).random() / 100.0 // 0%..30% multiplicative jitter
-        val withJitter = baseExp * (1.0 + jitterPercent)
-        return min(withJitter.toLong(), config.maxRetryDelayMs)
+        return retryStrategy.calculateDelay(attempt)
     }
 
     /**
      * Captures screenshot with retry mechanism
      */
     protected suspend fun captureScreenshotWithRetry(context: ExecutionContext): String? {
-        // TODO: Consider reducing screenshot frequency or resolution for large pages to improve performance.
-        return try {
-            val screenshot = safeScreenshot(context)
-            if (screenshot != null) {
-                logger.info(
-                    "📸✅ screenshot.ok sid={} step={} size={} ",
-                    context.sid, context.step, screenshot.length
-                )
-            } else {
-                logger.info("📸⚪ screenshot.null sid={} step={}", context.sid, context.step)
+        // Simple retry: try twice with a short backoff
+        val attempts = 2
+        var lastEx: Exception? = null
+        for (i in 1..attempts) {
+            try {
+                val screenshot = safeScreenshot(context)
+                if (screenshot != null) {
+                    logger.info(
+                        "📸✅ screenshot.ok sid={} step={} size={} attempt={} ",
+                        context.sid, context.step, screenshot.length, i
+                    )
+                    return screenshot
+                } else {
+                    logger.info("📸⚪ screenshot.null sid={} step={} attempt={}", context.sid, context.step, i)
+                }
+            } catch (e: Exception) {
+                lastEx = e
+                logger.warn("📸⚠ screenshot attempt {} failed: {}", i, e.message)
+                // small backoff
+                delay(200)
             }
-            screenshot
-        } catch (e: Exception) {
-            logger.error("📸❌ screenshot.fail sid={} msg={}", context.sid, e.message, e)
-            null
         }
+        if (lastEx != null) logger.error("📸❌ screenshot.fail sid={} msg={}", context.sid, lastEx.message, lastEx)
+        return null
     }
 
 
@@ -975,6 +1049,31 @@ open class BrowserPerceptiveAgent constructor(
         return min(exponentialDelay, 5000L)
     }
 
+    /**
+     * Clean up partial state before retry to avoid corruption.
+     */
+    private suspend fun cleanupPartialState(context: ExecutionContext) {
+        try {
+            logger.info("🧹 cleanup.partial sid={} step={}", context.sid, context.step)
+            
+            // Reset circuit breaker
+            circuitBreaker.reset()
+            
+            // Reset failure counters (kept for backward compatibility)
+            consecutiveFailureCounter.set(0)
+            consecutiveLLMFailureCounter.set(0)
+            consecutiveValidationFailureCounter.set(0)
+            
+            // Clear validation cache
+            actionValidator.clearCache()
+            
+            // Allow page to stabilize
+            pageStateTracker.waitForDOMSettle(1000, 100)
+        } catch (e: Exception) {
+            logger.warn("⚠️ cleanup.partial.fail sid={} msg={}", context.sid, e.message)
+        }
+    }
+
     protected suspend fun safeScreenshot(context: ExecutionContext): String? {
         return runCatching {
             slogger.info("📸⏳ Attempting to capture screenshot", context)
@@ -993,12 +1092,15 @@ open class BrowserPerceptiveAgent constructor(
 
     private fun performMemoryCleanup(context: ExecutionContext) {
         try {
-            if (stateHistory.size > config.maxHistorySize) {
-                val toRemove = stateHistory.size - config.maxHistorySize + 10
-                stateManager.clearUpHistory(toRemove)
+            // Use synchronized removal to avoid ConcurrentModificationException
+            synchronized(stateManager) {
+                if (stateHistory.size > config.maxHistorySize) {
+                    val toRemove = stateHistory.size - config.maxHistorySize + 10
+                    stateManager.clearUpHistory(toRemove)
+                }
             }
             actionValidator.clearCache()
-            logger.info("🧹 mem.cleanup sid={} step={}", context.sid, context.step)
+            logger.info("🧹 mem.cleanup sid={} step={} historySize={}", context.sid, context.step, stateHistory.size)
         } catch (e: Exception) {
             logger.error("🧹❌ mem.cleanup.fail sid={} msg={}", context.sid, e.message, e)
         }
@@ -1016,8 +1118,8 @@ open class BrowserPerceptiveAgent constructor(
         }
     }
 
-    private suspend fun handleConsecutiveNoOps(consecutiveNoOps: Int, step: Int, context: ExecutionContext): Boolean {
-        require(step == context.step) { "Step should be consistent with context.stepNumber" }
+    private suspend fun handleConsecutiveNoOps(consecutiveNoOps: Int, context: ExecutionContext): Boolean {
+        val step = context.step
         stateManager.trace("🕒 #$step no-op (consecutive: $consecutiveNoOps)")
         logger.info("🕒 noop sid={} step={} consecutive={}", context.sid, step, consecutiveNoOps)
         if (consecutiveNoOps >= config.consecutiveNoOpLimit) {
@@ -1025,7 +1127,16 @@ open class BrowserPerceptiveAgent constructor(
             return true
         }
         val delayMs = calculateConsecutiveNoOpDelay(consecutiveNoOps)
+        // Use kotlinx.coroutines.delay which is cancellation-aware
         delay(delayMs)
+
+        // Check coroutine cancellation and abort if cancelled
+        val job = coroutineContext[Job]
+        if (job == null || !job.isActive) {
+            logger.info("🕒 noop cancelled sid={} step={}", context.sid, step)
+            return true
+        }
+
         return false
     }
 
@@ -1068,6 +1179,70 @@ open class BrowserPerceptiveAgent constructor(
             avgStepTime < 500 -> 50L
             avgStepTime < 2000 -> 100L
             else -> 200L
+        }
+    }
+
+    /**
+     * Save a checkpoint of the current session state.
+     */
+    private fun saveCheckpoint(context: ExecutionContext) {
+        if (!config.enableCheckpointing) return
+        
+        val checkpoint = AgentCheckpoint(
+            sessionId = context.sessionId,
+            currentStep = context.step,
+            instruction = context.instruction,
+            targetUrl = context.targetUrl,
+            recentStateHistory = stateHistory.takeLast(20).map { AgentStateSnapshot.from(it) },
+            totalSteps = performanceMetrics.totalSteps,
+            successfulActions = performanceMetrics.successfulActions,
+            failedActions = performanceMetrics.failedActions,
+            failureCounts = circuitBreaker.getFailureCounts().mapKeys { it.key.name },
+            configSnapshot = mapOf(
+                "maxSteps" to config.maxSteps,
+                "maxRetries" to config.maxRetries,
+                "consecutiveNoOpLimit" to config.consecutiveNoOpLimit
+            ),
+            metadata = mapOf(
+                "agentUuid" to uuid.toString(),
+                "startTime" to startTime.toString()
+            )
+        )
+        
+        val path = checkpointManager.save(checkpoint)
+        logger.info("💾 checkpoint.saved sid={} step={} path={}", context.sid, context.step, path)
+        
+        // Prune old checkpoints
+        checkpointManager.pruneOldCheckpoints(context.sessionId, config.maxCheckpointsPerSession)
+    }
+
+    /**
+     * Attempt to restore from the latest checkpoint for a session.
+     * 
+     * @param sessionId The session ID to restore
+     * @return The restored checkpoint, or null if not found or restoration failed
+     */
+    fun restoreFromCheckpoint(sessionId: String): AgentCheckpoint? {
+        if (!config.enableCheckpointing) return null
+        
+        return try {
+            val checkpoint = checkpointManager.load(sessionId)
+            if (checkpoint != null) {
+                logger.info(
+                    "💾 checkpoint.restored sid={} step={} age={}ms",
+                    sessionId.take(8), checkpoint.currentStep, checkpoint.age
+                )
+                // TODO: Restore state from checkpoint (implementation depends on requirements)
+                // This would involve:
+                // - Restoring performance metrics
+                // - Restoring circuit breaker state
+                // - Potentially navigating to targetUrl
+                // - Rebuilding execution context
+            }
+            checkpoint
+        } catch (e: Exception) {
+            logger.error("💾❌ checkpoint.restore.fail sid={} msg={}", sessionId.take(8), e.message, e)
+            null
         }
     }
 }
