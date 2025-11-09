@@ -5,7 +5,6 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.ai.ActionOptions
-import ai.platon.pulsar.test.server.DemoSiteStarter
 
 class Acts {
     private val logger = getLogger(this)
