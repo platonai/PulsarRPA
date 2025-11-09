@@ -101,8 +101,18 @@ data class TcEvaluate constructor(
     val expression: String? = null,
     var exception: TcException? = null
 ) {
+    val preview get() = getPreview()
+
     constructor(expression: String, cause: Exception) :
             this(expression = expression, exception = TcException(expression, cause))
+
+    private fun getPreview(): String {
+        return when (value) {
+            is Number -> "$value"
+            is Boolean -> "$value"
+            else -> Strings.compactLog("$value")
+        }
+    }
 }
 
 data class ToolCallResult constructor(

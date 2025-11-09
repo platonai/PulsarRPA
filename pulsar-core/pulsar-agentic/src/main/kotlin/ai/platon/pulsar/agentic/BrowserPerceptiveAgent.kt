@@ -717,7 +717,8 @@ open class BrowserPerceptiveAgent constructor(
 
                     updatePerformanceMetrics(step, context.timestamp, true)
 
-                    logger.info("🏁 step.done sid={} step={} summary= {}", sid, step, detailedActResult.summary)
+                    val preview = detailedActResult.toolCallResult?.evaluate?.preview
+                    logger.info("🏁 step.done sid={} step={} tcResult={}", sid, step, preview)
                 } else {
                     // Treat validation failures or execution skips as no-ops; no AgentState record
                     consecutiveNoOps++
