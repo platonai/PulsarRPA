@@ -149,7 +149,7 @@ $schema
 - 使用 `click(selector, "Ctrl")` 新建标签页，在**新标签页**打开链接
 - 如果目标页面在**新标签页**打开，使用 `browser.switchTab(tabId: String)` 切换到目标页面，从`## 浏览器状态`段落获得 `tabId`
 - 若页面因输入文本等操作发生变化，需判断是否要交互新出现的元素（例如从列表中选择正确选项）。
-- 如需阅读整个网页文本，如总结信息，使用 `selectFirstContentOrNull`
+- 如需阅读整个网页文本，如总结信息，使用 `selectFirstTextOrNull`
 - 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。不要模拟点击屏幕键盘上的按键
 - 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
 - 导航到浏览历史的前一网页 - `goBack`, 后一网页 - `goForward`
