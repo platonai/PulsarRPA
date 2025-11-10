@@ -30,45 +30,6 @@ class ToolCallExecutorTest {
     }
 
     @Test
-    fun `generate expression escapes quotes and backslashes`() {
-        val url = "https://example.com?q=\"a b\"\\tail"
-        val expr = BasicToolCallExecutor.toExpression(
-            ToolCall("driver", "navigateTo", mutableMapOf("url" to url))
-        )
-        assertNotNull(expr)
-        // Expect the embedded string to have escaped quotes and backslashes
-        assertTrue(expr!!.contains("\\\"a b\\\""))
-        assertTrue(expr.contains("\\\\tail"))
-    }
-
-    @Test
-    fun `generate expression for goBack and goForward`() {
-        val back = BasicToolCallExecutor.toExpression(ToolCall("driver", "goBack", mutableMapOf()))
-        val forward = BasicToolCallExecutor.toExpression(ToolCall("driver", "goForward", mutableMapOf()))
-        assertEquals("driver.goBack()", back)
-        assertEquals("driver.goForward()", forward)
-    }
-
-    @Test
-    fun `generate expression for clickMatches with escaping`() {
-        val tc = ToolCall(
-            "driver",
-            "clickMatches",
-            mutableMapOf(
-                "selector" to "a.link",
-                "attrName" to "data-title",
-                "pattern" to "He said \"hi\"",
-                "count" to "2"
-            )
-        )
-        val expr = BasicToolCallExecutor.toExpression(tc)
-        assertNotNull(expr)
-        assertTrue(expr!!.contains("\\\"hi\\\""))
-        assertTrue(expr.contains("driver.clickMatches(\"a.link\", \"data-title\","))
-        assertTrue(expr.endsWith(", 2)"))
-    }
-
-    @Test
     fun `parse args with comma inside quotes`() {
         val src = "driver.clickTextMatches(\"a.link\", \"hello, world\", 2)"
         val tc = parser.parseFunctionExpression(src)
@@ -281,52 +242,5 @@ class ToolCallExecutorTest {
         assertEquals("fill", tc.method)
         assertEquals("#input", tc.arguments["0"]) // unquoted
         assertEquals("He said \"hi\" and \\path", tc.arguments["1"]) // unescaped
-    }
-
-    @Test
-    fun `toolCallToExpression waitForSelector with timeout`() {
-        val expr = BasicToolCallExecutor.toExpression(
-            ToolCall("driver", "waitForSelector", mutableMapOf("selector" to "#a", "timeoutMillis" to "1234"))
-        )
-        assertEquals("driver.waitForSelector(\"#a\", 1234)", expr)
-    }
-
-    @Test
-    fun `toolCallToExpression captureScreenshot variants`() {
-        val none = BasicToolCallExecutor.toExpression(ToolCall("driver", "captureScreenshot", mutableMapOf()))
-        val withSel = BasicToolCallExecutor.toExpression(
-            ToolCall("driver", "captureScreenshot", mutableMapOf("selector" to "#root"))
-        )
-        assertEquals("driver.captureScreenshot()", none)
-        assertEquals("driver.captureScreenshot(\"#root\")", withSel)
-    }
-
-    @Test
-    fun `toolCallToExpression scrollToMiddle default`() {
-        val expr = BasicToolCallExecutor.toExpression(ToolCall("driver", "scrollToMiddle", mutableMapOf()))
-        assertEquals("driver.scrollToMiddle(0.5)", expr)
-    }
-
-    @Test
-    fun `toolCallToExpression clickTextMatches escaping`() {
-        val expr = BasicToolCallExecutor.toExpression(
-            ToolCall(
-                "driver",
-                "clickTextMatches",
-                mutableMapOf("selector" to "a", "pattern" to "He said \"hi\"", "count" to "2")
-            )
-        )
-        assertNotNull(expr)
-        assertTrue(expr!!.contains("\\\"hi\\\""))
-        assertTrue(expr.startsWith("driver.clickTextMatches(\"a\", \""))
-        assertTrue(expr.endsWith(", 2)"))
-    }
-
-    @Test
-    fun `toolCallToExpression press generation`() {
-        val expr = BasicToolCallExecutor.toExpression(
-            ToolCall("driver", "press", mutableMapOf("selector" to "#i", "key" to "Enter"))
-        )
-        assertEquals("driver.press(\"#i\", \"Enter\")", expr)
     }
 }

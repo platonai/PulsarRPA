@@ -100,14 +100,6 @@ class TabSwitchTest {
     }
 
     @Test
-    fun `generate expression for browser switchTab`() {
-        val tc = ToolCall("browser", "switchTab", mutableMapOf("tabId" to "tab-42"))
-        val expr = BasicToolCallExecutor.toExpression(tc)
-        assertNotNull(expr)
-        assertEquals("browser.switchTab(\"tab-42\")", expr)
-    }
-
-    @Test
     fun `BrowserState with empty tabs list`() {
         val browserState = BrowserState(
             url = "https://example.com",

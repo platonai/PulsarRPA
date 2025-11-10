@@ -1,9 +1,6 @@
 package ai.platon.pulsar.agentic.tools.executors
 
 import ai.platon.pulsar.agentic.common.AgentFileSystem
-import ai.platon.pulsar.agentic.tools.ActionValidator
-import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor.Companion.norm
-import ai.platon.pulsar.skeleton.ai.ToolCall
 import kotlin.reflect.KClass
 
 class FileSystemToolExecutor : AbstractToolExecutor() {
@@ -11,11 +8,6 @@ class FileSystemToolExecutor : AbstractToolExecutor() {
     override val domain = "fs"
 
     override val targetClass: KClass<*> = AgentFileSystem::class
-
-    @Throws(IllegalArgumentException::class)
-    override fun toExpression(tc: ToolCall): String {
-        return Companion.toExpression(tc)
-    }
 
     /**
      * Execute fs.* expressions against a FileSystem target using named args.
@@ -58,36 +50,6 @@ class FileSystemToolExecutor : AbstractToolExecutor() {
                 )
             }
             else -> throw IllegalArgumentException("Unsupported fs method: $functionName(${args.keys})")
-        }
-    }
-
-    companion object {
-
-        @Deprecated("Not used anymore")
-        fun toExpression(tc: ToolCall): String {
-            ActionValidator().validateToolCall(tc)
-
-            val arguments = tc.arguments
-            val expression = when (tc.method) {
-                // Filesystem-level operations
-                "writeString" -> arguments["filename"]?.let { f ->
-                    val c = arguments["content"] ?: ""
-                    "fs.writeString(${f.norm()}, ${c.norm()})"
-                }
-                "readString" -> arguments["filename"]?.let { f ->
-                    // optional external flag if provided
-                    val external = arguments["external"]
-                    if (external == null) "fs.readString(${f.norm()})" else "fs.readString(${f.norm()}, ${external})"
-                }
-                "replaceContent" -> arguments["filename"]?.let { f ->
-                    val oldStr = arguments["oldStr"] ?: return@let null
-                    val newStr = arguments["newStr"] ?: return@let null
-                    "fs.replaceContent(${f.norm()}, ${oldStr.norm()}, ${newStr.norm()})"
-                }
-                else -> null
-            }
-
-            return expression ?: throw IllegalArgumentException("Illegal tool call | $tc")
         }
     }
 }

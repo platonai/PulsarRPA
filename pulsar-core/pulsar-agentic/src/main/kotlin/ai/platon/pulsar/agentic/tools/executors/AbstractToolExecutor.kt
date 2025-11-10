@@ -20,7 +20,7 @@ interface ToolExecutor {
 abstract class AbstractToolExecutor: ToolExecutor {
 
     private val logger = getLogger(this)
-    private val parser = SimpleKotlinParser()
+    private val simpleParser = SimpleKotlinParser()
 
     // ---------------- Shared helpers for named parameter executors ----------------
     protected fun validateArgs(
@@ -110,6 +110,18 @@ abstract class AbstractToolExecutor: ToolExecutor {
         }
     }
 
+    protected fun paramDouble(
+        args: Map<String, Any?>,
+        name: String,
+        functionName: String,
+        required: Boolean = true,
+        default: Double? = null
+    ): Double? {
+        val v = args[name]
+        if (v == null) return if (required) throw IllegalArgumentException("Missing parameter '$name' for $functionName") else default
+        return v.toString().toDoubleOrNull() ?: throw IllegalArgumentException("Parameter '$name' must be Double for $functionName | actual='${v}'")
+    }
+
     @Deprecated("Not used anymore")
     override fun toExpression(tc: ToolCall): String {
         throw NotImplementedError()
@@ -134,7 +146,7 @@ abstract class AbstractToolExecutor: ToolExecutor {
     }
 
     override suspend fun execute(expression: String, target: Any): TcEvaluate {
-        val (objectName, functionName, args) = parser.parseFunctionExpression(expression)
+        val (objectName, functionName, args) = simpleParser.parseFunctionExpression(expression)
             ?: return TcEvaluate(expression = expression, cause = IllegalArgumentException("Illegal expression"))
 
         val tc = ToolCall(objectName, functionName, args)

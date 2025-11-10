@@ -1,9 +1,9 @@
 package ai.platon.pulsar.agentic.tools
 
 import ai.platon.pulsar.agentic.AgenticSession
-import ai.platon.pulsar.agentic.common.SimpleKotlinParser
-import ai.platon.pulsar.agentic.tools.executors.*
-import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.agentic.tools.executors.BrowserToolExecutor
+import ai.platon.pulsar.agentic.tools.executors.ToolExecutor
+import ai.platon.pulsar.agentic.tools.executors.WebDriverToolExecutor
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import ai.platon.pulsar.skeleton.ai.TcEvaluate
@@ -90,30 +90,5 @@ open class BasicToolCallExecutor(
             .firstOrNull { it.targetClass.isSuperclassOf(target::class) }
             ?.execute(expression, target)
             ?: throw UnsupportedOperationException("❓ Unsupported target ${target::class}")
-    }
-
-    @Deprecated("Not used anymore")
-    fun toExpression(tc: ToolCall) = Companion.toExpression(tc)
-
-    companion object {
-        // Basic string escaper to safely embed values inside Kotlin string literals
-        internal fun String.esc(): String = this
-            .replace("\\", "\\\\")
-            .replace("\"", "\\\"")
-
-        internal fun String.norm() = Strings.doubleQuote(this.esc())
-
-        @Deprecated("Not used anymore")
-        fun toExpression(tc: ToolCall): String {
-            return when (tc.domain) {
-                "driver" -> WebDriverToolExecutor.toExpression(tc)
-                "browser" -> BrowserToolExecutor.toExpression(tc)
-                "fs" -> FileSystemToolExecutor.toExpression(tc)
-                else -> throw IllegalArgumentException("⚠️ Illegal tool call | $tc")
-            }
-        }
-
-        @Deprecated("Not used anymore")
-        fun toExpressionOrNull(tc: ToolCall): String? = runCatching { BasicToolCallExecutor.toExpression(tc) }.getOrNull()
     }
 }
