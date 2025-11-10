@@ -1,5 +1,6 @@
 package ai.platon.pulsar.agentic.support
 
+import ai.platon.pulsar.agentic.common.SimpleKotlinParser
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserState
@@ -79,7 +80,7 @@ class TabSwitchTest {
 
     @Test
     fun `parse browser switchTab call`() {
-        val tc = BasicToolCallExecutor.parseKotlinFunctionExpression("browser.switchTab(\"tab-1\")")
+        val tc = SimpleKotlinParser().parseFunctionExpression("browser.switchTab(\"tab-1\")")
         assertNotNull(tc)
         tc!!
         assertEquals("browser", tc.domain)
@@ -90,7 +91,7 @@ class TabSwitchTest {
     @Test
     fun `parse browser switchTab with numeric id`() {
         // Even though the signature now uses String, test parsing of numeric-looking IDs
-        val tc = BasicToolCallExecutor.parseKotlinFunctionExpression("browser.switchTab(\"123\")")
+        val tc = SimpleKotlinParser().parseFunctionExpression("browser.switchTab(\"123\")")
         assertNotNull(tc)
         tc!!
         assertEquals("browser", tc.domain)

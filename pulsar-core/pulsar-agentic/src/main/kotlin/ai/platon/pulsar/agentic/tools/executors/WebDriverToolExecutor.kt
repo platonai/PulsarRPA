@@ -36,6 +36,9 @@ class WebDriverToolExecutor: AbstractToolExecutor() {
         val arg1 = args["1"]?.toString()
         val arg2 = args["2"]?.toString()
         val arg3 = args["3"]?.toString()
+        val arg4 = args["4"]?.toString()
+        val arg5 = args["5"]?.toString()
+        val arg6 = args["6"]?.toString()
 
         return when (functionName) {
             "open" -> {
