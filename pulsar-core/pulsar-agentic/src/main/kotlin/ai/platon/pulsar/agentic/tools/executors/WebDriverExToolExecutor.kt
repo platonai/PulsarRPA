@@ -3,7 +3,6 @@ package ai.platon.pulsar.agentic.tools.executors
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import kotlin.reflect.KClass
 
 class WebDriverExToolExecutor: AbstractToolExecutor() {
@@ -11,33 +10,37 @@ class WebDriverExToolExecutor: AbstractToolExecutor() {
 
     override val domain = "driverEx"
 
-    override val targetClass: KClass<*> = Browser::class
+    // target must be AbstractWebDriver (was Browser before, incorrect)
+    override val targetClass: KClass<*> = AbstractWebDriver::class
 
+    @Deprecated("Not used anymore")
     @Throws(IllegalArgumentException::class)
     override fun toExpression(tc: ToolCall): String {
         return Companion.toExpression(tc)
     }
 
     /**
-     * Extract function name and arguments from the expression string
-     * */
+     * Execute driverEx.* expressions with named args.
+     */
     @Suppress("UNUSED_PARAMETER")
+    @Throws(IllegalArgumentException::class)
     override suspend fun execute(
         objectName: String, functionName: String, args: Map<String, Any?>, target: Any
     ): Any? {
         require(objectName == "driverEx") { "Object must be a driverEx" }
         require(functionName.isNotBlank()) { "Function name must not be blank" }
-        val driver = requireNotNull(target as AbstractWebDriver) { "Target must be AbstractWebDriver" }
+        val driver = requireNotNull(target as? AbstractWebDriver) { "Target must be AbstractWebDriver" }
 
-        // Handle browser-level expressions
-        if (functionName == "extract") {
-            val selectors = (args["selectors"] as? List<*>)
-                ?.filterIsInstance<String>()
-                ?.joinToString() ?: return null
-            val fields = driver.selectTextAll(selectors)
+        return when (functionName) {
+            "extract" -> {
+                validateArgs(args, allowed = setOf("selectors"), required = setOf("selectors"), functionName)
+                val selectors = paramStringList(args, "selectors", functionName, required = true)
+                // simple behavior: union selection by comma
+                val union = selectors.joinToString(",")
+                driver.selectTextAll(union)
+            }
+            else -> throw IllegalArgumentException("Unsupported driverEx method: $functionName(${args.keys})")
         }
-
-        return null
     }
 
     companion object {

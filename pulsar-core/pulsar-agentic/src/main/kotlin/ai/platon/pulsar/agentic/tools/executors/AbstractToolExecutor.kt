@@ -22,6 +22,94 @@ abstract class AbstractToolExecutor: ToolExecutor {
     private val logger = getLogger(this)
     private val parser = SimpleKotlinParser()
 
+    // ---------------- Shared helpers for named parameter executors ----------------
+    protected fun validateArgs(
+        args: Map<String, Any?>,
+        allowed: Set<String>,
+        required: Set<String> = allowed,
+        functionName: String
+    ) {
+        required.forEach {
+            if (!args.containsKey(it)) throw IllegalArgumentException("Missing required parameter '$it' for $functionName")
+        }
+        args.keys.forEach {
+            if (it !in allowed) throw IllegalArgumentException("Extraneous parameter '$it' for $functionName. Allowed=$allowed")
+        }
+    }
+
+    protected fun paramString(
+        args: Map<String, Any?>,
+        name: String,
+        functionName: String,
+        required: Boolean = true,
+        default: String? = null
+    ): String? {
+        val v = args[name]
+        return when {
+            v == null && required && default == null -> throw IllegalArgumentException("Missing parameter '$name' for $functionName")
+            v == null -> default
+            else -> v.toString()
+        }
+    }
+
+    protected fun paramInt(
+        args: Map<String, Any?>,
+        name: String,
+        functionName: String,
+        required: Boolean = true,
+        default: Int? = null
+    ): Int? {
+        val v = args[name]
+        if (v == null) return if (required) throw IllegalArgumentException("Missing parameter '$name' for $functionName") else default
+        return v.toString().toIntOrNull() ?: throw IllegalArgumentException("Parameter '$name' must be Int for $functionName | actual='${v}'")
+    }
+
+    protected fun paramLong(
+        args: Map<String, Any?>,
+        name: String,
+        functionName: String,
+        required: Boolean = true,
+        default: Long? = null
+    ): Long? {
+        val v = args[name]
+        if (v == null) return if (required) throw IllegalArgumentException("Missing parameter '$name' for $functionName") else default
+        return v.toString().toLongOrNull() ?: throw IllegalArgumentException("Parameter '$name' must be Long for $functionName | actual='${v}'")
+    }
+
+    protected fun paramBool(
+        args: Map<String, Any?>,
+        name: String,
+        functionName: String,
+        required: Boolean = true,
+        default: Boolean? = null
+    ): Boolean? {
+        val v = args[name]
+        if (v == null) return if (required) throw IllegalArgumentException("Missing parameter '$name' for $functionName") else default
+        return when (v.toString().lowercase()) {
+            "true" -> true
+            "false" -> false
+            else -> throw IllegalArgumentException("Parameter '$name' must be Boolean for $functionName | actual='${v}'")
+        }
+    }
+
+    protected fun paramStringList(
+        args: Map<String, Any?>,
+        name: String,
+        functionName: String,
+        required: Boolean = true
+    ): List<String> {
+        val v = args[name]
+        if (v == null) {
+            if (required) throw IllegalArgumentException("Missing parameter '$name' for $functionName") else return emptyList()
+        }
+        return when (v) {
+            is List<*> -> v.filterIsInstance<String>()
+            is Array<*> -> v.filterIsInstance<String>()
+            is String -> v.split(',').map { it.trim() }.filter { it.isNotEmpty() }
+            else -> throw IllegalArgumentException("Parameter '$name' must be a list[string] or comma separated string for $functionName | actual='${v}'")
+        }
+    }
+
     @Deprecated("Not used anymore")
     override fun toExpression(tc: ToolCall): String {
         throw NotImplementedError()
@@ -53,5 +141,6 @@ abstract class AbstractToolExecutor: ToolExecutor {
         return execute(tc, target)
     }
 
+    @Throws(IllegalArgumentException::class)
     abstract suspend fun execute(objectName: String, functionName: String, args: Map<String, Any?>, target: Any): Any?
 }

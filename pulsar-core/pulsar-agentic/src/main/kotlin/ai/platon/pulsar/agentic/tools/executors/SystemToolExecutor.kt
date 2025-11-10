@@ -17,26 +17,25 @@ class SystemToolExecutor: AbstractToolExecutor() {
     }
 
     /**
-     * Execute agent.* expressions against a PerceptiveAgent target.
+     * Execute system.* expressions with named args.
      */
     @Suppress("UNUSED_PARAMETER")
+    @Throws(IllegalArgumentException::class)
     override suspend fun execute(
         objectName: String, functionName: String, args: Map<String, Any?>, target: Any
     ): Any? {
         require(objectName == "system") { "Object must be an System" }
         require(functionName.isNotBlank()) { "Function name must not be blank" }
 
-        val arg0 = args["0"]?.toString()
-
         return when (functionName) {
-            // Minimal supported agent API (string-based overloads)
             "help" -> {
-
+                validateArgs(args, allowed = emptySet(), required = emptySet(), functionName)
+                mapOf(
+                    "domain" to domain,
+                    "methods" to listOf("help")
+                )
             }
-            else -> {
-                logger.warn("Unsupported system method: {}({})", functionName, args)
-                null
-            }
+            else -> throw IllegalArgumentException("Unsupported system method: $functionName(${args.keys})")
         }
     }
 

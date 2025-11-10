@@ -43,8 +43,8 @@ class ProjectUtilsTest {
 
     @Test
     fun testFindFile() {
-        val foundFile = ProjectUtils.findFile("MiniWebDriver.kt")
-        assertEquals("MiniWebDriver.kt", ProjectUtils.findFile("MiniWebDriver.kt")?.fileName?.toString())
+        val foundFile = ProjectUtils.findFile("WebDriver.kt")
+        assertEquals("WebDriver.kt", ProjectUtils.findFile("WebDriver.kt")?.fileName?.toString())
         assertEquals("PulsarSession.kt", ProjectUtils.findFile("PulsarSession.kt")?.fileName?.toString())
     }
 

@@ -12,9 +12,10 @@ class AgentToolExecutor : AbstractToolExecutor() {
     override val targetClass: KClass<*> = PerceptiveAgent::class
 
     /**
-     * Execute agent.* expressions against a PerceptiveAgent target.
+     * Execute agent.* expressions against a PerceptiveAgent target using named args.
      */
     @Suppress("UNUSED_PARAMETER")
+    @Throws(IllegalArgumentException::class)
     override suspend fun execute(
         objectName: String, functionName: String, args: Map<String, Any?>, target: Any
     ): Any? {
@@ -23,19 +24,34 @@ class AgentToolExecutor : AbstractToolExecutor() {
 
         val agent = requireNotNull(target as? PerceptiveAgent) { "Target must be a PerceptiveAgent" }
 
-        val arg0 = args["0"]?.toString()
-
         return when (functionName) {
-            // Minimal supported agent API (string-based overloads)
-            "act" -> if (!arg0.isNullOrBlank()) agent.act(arg0) else null
-            "observe" -> if (!arg0.isNullOrBlank()) agent.observe(arg0) else emptyList<Any>()
-            "extract" -> if (!arg0.isNullOrBlank()) agent.extract(arg0) else null
-            "resolve" -> if (!arg0.isNullOrBlank()) agent.resolve(arg0) else null
-            // Signal completion; no operation on the agent itself
-            "done" -> true
+            // agent.act(action: String)
+            "act" -> {
+                validateArgs(args, allowed = setOf("action"), required = setOf("action"), functionName)
+                agent.act(paramString(args, "action", functionName)!!)
+            }
+            // agent.observe(instruction: String)
+            "observe" -> {
+                validateArgs(args, allowed = setOf("instruction"), required = setOf("instruction"), functionName)
+                agent.observe(paramString(args, "instruction", functionName)!!)
+            }
+            // agent.extract(instruction: String)
+            "extract" -> {
+                validateArgs(args, allowed = setOf("instruction"), required = setOf("instruction"), functionName)
+                agent.extract(paramString(args, "instruction", functionName)!!)
+            }
+            // agent.resolve(problem: String)
+            "resolve" -> {
+                validateArgs(args, allowed = setOf("problem"), required = setOf("problem"), functionName)
+                agent.resolve(paramString(args, "problem", functionName)!!)
+            }
+            // Signal completion; just return true
+            "done" -> {
+                validateArgs(args, allowed = emptySet(), required = emptySet(), functionName)
+                true
+            }
             else -> {
-                logger.warn("Unsupported agent method: {}({})", functionName, args)
-                null
+                throw IllegalArgumentException("Unsupported agent method: $functionName(${args.keys})")
             }
         }
     }

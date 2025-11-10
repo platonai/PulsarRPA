@@ -3,6 +3,7 @@ package ai.platon.pulsar.skeleton.crawl.fetch.driver
 import java.time.Duration
 
 @Suppress("unused")
+@Deprecated("Just use WebDriver")
 interface MiniWebDriver {
 
     /**

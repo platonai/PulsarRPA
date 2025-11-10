@@ -3,9 +3,7 @@ package ai.platon.pulsar.agentic.tools.executors
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.tools.ActionValidator
 import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor.Companion.norm
-import ai.platon.pulsar.agentic.tools.executors.SystemToolExecutor
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import ai.platon.pulsar.skeleton.ai.TcEvaluate
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractBrowser
@@ -32,11 +30,6 @@ class BrowserToolExecutor: AbstractToolExecutor() {
             val driver = execute(expression, browser)
             if (driver is WebDriver) {
                 session.bindDriver(driver)
-
-                // document.visibilityState should be visible after bringToFront()
-                // val isVisible = driver.evaluateValue("document.visibilityState == \"visible\"")
-                // require(isVisible)
-                // require(driver == browser.frontDriver)
             }
 
             return driver
@@ -46,9 +39,10 @@ class BrowserToolExecutor: AbstractToolExecutor() {
     }
 
     /**
-     * Extract function name and arguments from the expression string
-     * */
+     * Execute browser.* expressions against a Browser target using named args.
+     */
     @Suppress("UNUSED_PARAMETER")
+    @Throws(IllegalArgumentException::class)
     override suspend fun execute(
         objectName: String, functionName: String, args: Map<String, Any?>, target: Any
     ): Any? {
@@ -56,27 +50,20 @@ class BrowserToolExecutor: AbstractToolExecutor() {
         require(functionName.isNotBlank()) { "Function name must not be blank" }
         val browser = requireNotNull(target as AbstractBrowser) { "Target must be Browser" }
 
-        // Handle browser-level expressions
-        if (functionName == "switchTab") {
-            val tabId =
-                args["0"]?.toString() ?: return buildErrorResponse("tab_not_found", "Missing tabId parameter", browser)
-
-            val driver = if (tabId.toIntOrNull() != null) {
-                browser.findDriverById(tabId.toInt())
-            } else {
-                browser.drivers[tabId]
+        return when (functionName) {
+            "switchTab" -> {
+                validateArgs(args, allowed = setOf("tabId"), required = setOf("tabId"), functionName)
+                val tabId = paramString(args, "tabId", functionName)!!
+                val driver = tabId.toIntOrNull()?.let { browser.findDriverById(it) } ?: browser.drivers[tabId]
+                if (driver == null || driver !is AbstractWebDriver) {
+                    return buildErrorResponse("tab_not_found", "Tab '$tabId' not found", browser)
+                }
+                driver.bringToFront()
+                logger.info("Switched to tab {} (driver {}/{})", tabId, driver.id, driver.guid)
+                driver
             }
-
-            if (driver == null || driver !is AbstractWebDriver) {
-                return null
-            }
-
-            driver.bringToFront()
-            logger.info("Switched to tab {} (driver {}/{})", tabId, driver.id, driver.guid)
-            return driver
+            else -> throw IllegalArgumentException("Unsupported browser method: $functionName(${args.keys})")
         }
-
-        return null
     }
 
     /**
