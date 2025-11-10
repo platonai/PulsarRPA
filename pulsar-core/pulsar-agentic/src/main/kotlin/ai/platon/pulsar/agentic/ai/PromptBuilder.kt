@@ -760,12 +760,9 @@ $evalMessage
 # 当前任务
 
 ## 用户输入
+(<user_request>)
 
-<user_request>
 $userRequest
-</user_request>
-
-请基于当前页面截图、可交互元素列表、无障碍树与智能体历史，规划下一步（严格单步原子动作）。
 
 ---
 
@@ -845,16 +842,7 @@ $userRequest
 每个 chunk 表示一屏网页内容，第一屏对应第一个 chunk。
 """.trimIndent()
 
-    private val metadataSystemPromptEN: String = """
-You are an AI assistant tasked with evaluating the progress and completion status of an extraction task.
-Analyze the extraction response and determine if the task is completed or if more information is needed.
-Strictly abide by the following criteria:
-1. Once the instruction has been satisfied by the current extraction response, ALWAYS set completion status to true and stop processing, regardless of remaining chunks.
-2. Only set completion status to false if BOTH of these conditions are true:
-   - The instruction has not been satisfied yet
-   - There are still chunks left to process (chunksTotal > chunksSeen)
-Each chunk corresponds to one viewport-sized section of the page (the first chunk is the first screen).
-""".trimIndent()
+    private val metadataSystemPromptEN = metadataSystemPromptCN
 
     fun buildMetadataSystemPrompt(): SimpleMessage {
         val content = if (isZH) metadataSystemPromptCN else metadataSystemPromptEN
@@ -867,41 +855,50 @@ Each chunk corresponds to one viewport-sized section of the page (the first chun
     fun buildMetadataPrompt(
         instruction: String,
         extractionResponse: Any,
-        nextChunkToSee: Int,
-        chunksTotal: Int,
+        agentState: AgentState,
     ): SimpleMessage {
+        /**
+         * The 1-based next chunk to see, each chunk is a viewport height.
+         * */
+        val browserUseState = agentState.browserUseState
+        val scrollState = browserUseState.browserState.scrollState
+        // Height in pixels of the page area above the current viewport. (被隐藏在视口上方的部分的高度)
+        val hiddenTopHeight = scrollState.hiddenTopHeight
+        val hiddenBottomHeight = scrollState.hiddenBottomHeight
+        val viewportHeight = scrollState.viewportHeight
+
+        // The 1-based viewport to see.
+        val processingViewport = scrollState.processingViewport
+        val viewportsTotal = scrollState.viewportsTotal
+        val nextChunkToSee = 1 + processingViewport
+
         val extractedJson = DOMSerializer.MAPPER.writeValueAsString(extractionResponse)
 
-        val content = if (isZH) {
+        val content =
             """
 ## 元数据
 
 指令: $instruction
+## 视口信息
+
+本次焦点视口序号: $processingViewport
+视口高度：$viewportHeight
+估算视口总数: $viewportsTotal
+视口之上像素高度: $hiddenTopHeight
+视口之下像素高度: $hiddenBottomHeight
+
+- 默认每次查看一个视口高度(viewport height)内的所有 DOM 节点
+- 视口之上像素高度: 当前视口上方、已滚动出可视范围的网页内容高度
+- 视口之下像素高度: 当前视口下方、已滚动出可视范围的网页内容高度
+- 注意：网页内容变化可能导致视口位置和视口序号随时发生变化
+- 默认提供的无障碍树仅包含第`i`个视口内的 DOM 节点，并包含少量视口外邻近节点，以保证信息完整
+- 如需查看下一视口，调用 `scrollBy(viewportHeight)` 向下滚动一屏获取更多信息
+
 提取结果: $extractedJson
-待处理分片: $nextChunkToSee
-总分片数: $chunksTotal
-
-每个分片对应一个视口高度，第 i 个待处理分片指第 i 视口内所有 DOM nodes。
 
 ---
 
 """.trim()
-        } else {
-            """
-## Metadata
-
-Instruction: $instruction
-Extracted content: $extractedJson
-nextChunkToSee: $nextChunkToSee
-chunksTotal: $chunksTotal
-
-Each chunk represents one viewport-height range.
-The i-th chunk to process contains all DOM nodes located within the i-th viewport.
-
----
-
-""".trim()
-        }
 
         return SimpleMessage(role = "user", content = content)
     }
@@ -994,8 +991,8 @@ $newTabsMessage
 视口之下像素高度: $hiddenBottomHeight
 
 - 默认每次查看一个视口高度(viewport height)内的所有 DOM 节点
-- 视口之上像素高度: 当前视口上方、已滚动出可视范围的网页内容高度，单位为像素（px）。
-- 视口之下像素高度: 当前视口下方、已滚动出可视范围的网页内容高度，单位为像素（px）。
+- 视口之上像素高度: 当前视口上方、已滚动出可视范围的网页内容高度。
+- 视口之下像素高度: 当前视口下方、已滚动出可视范围的网页内容高度。
 - 注意：网页内容变化可能导致视口位置和视口序号随时发生变化。
 - 默认提供的无障碍树仅包含第`i`个视口内的 DOM 节点，并包含少量视口外邻近节点，以保证信息完整
 - 如需查看下一视口，调用 `scrollBy(viewportHeight)` 向下滚动一屏获取更多信息

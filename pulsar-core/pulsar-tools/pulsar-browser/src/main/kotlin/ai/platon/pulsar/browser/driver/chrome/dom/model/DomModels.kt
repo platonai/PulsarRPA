@@ -1,5 +1,6 @@
 package ai.platon.pulsar.browser.driver.chrome.dom.model
 
+import ai.platon.pulsar.browser.common.BrowserSettings.Companion.VIEWPORT
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.FBNLocator
 import ai.platon.pulsar.browser.driver.chrome.dom.LocatorMap
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import org.apache.commons.lang3.StringUtils
 import java.awt.Dimension
 import java.math.RoundingMode
+import java.time.ZoneId
 import java.util.*
 import kotlin.math.ceil
 import kotlin.math.roundToInt
@@ -545,10 +547,10 @@ typealias NanoDOMTree = NanoDOMTreeNode
 
 data class DOMState(
     val microTree: MicroDOMTree,
-    val interactiveNodes: List<MicroDOMTreeNode>,
-    val frameIds: List<String>,
-    val selectorMap: Map<String, DOMTreeNodeEx>,
-    val locatorMap: LocatorMap,
+    val interactiveNodes: List<MicroDOMTreeNode> = listOf(),
+    val frameIds: List<String> = listOf(),
+    val selectorMap: Map<String, DOMTreeNodeEx> = mapOf(),
+    val locatorMap: LocatorMap = LocatorMap(),
 ) {
     @get:JsonIgnore
     val nanoTreeLazyJson: String get() = microTree.toNanoTreeInRange().lazyJson
@@ -571,14 +573,13 @@ data class DOMState(
 
 data class ClientInfo(
     // time zone: "Asia/Shanghai"
-    val timeZone: String,
+    val timeZone: String = ZoneId.systemDefault().id,
     // locale: "zh_CN"
-    val locale: Locale,
-    //
-    val viewportWidth: Int,
-    val viewportHeight: Int,
-    val screenWidth: Int,
-    val screenHeight: Int
+    val locale: Locale = Locale.getDefault(),
+    val viewportWidth: Int = VIEWPORT.width,
+    val viewportHeight: Int = VIEWPORT.height,
+    val screenWidth: Int = VIEWPORT.width,
+    val screenHeight: Int = VIEWPORT.height
 )
 
 data class FullClientInfo(
@@ -607,11 +608,11 @@ data class FullClientInfo(
 )
 
 data class ScrollState constructor(
-    val x: Double,
-    val y: Double,
-    val viewport: Dimension,
-    val totalHeight: Double,
-    val scrollYRatio: Double,
+    val x: Double = 0.0,
+    val y: Double = 0.0,
+    val viewport: Dimension = VIEWPORT,
+    val totalHeight: Double = VIEWPORT.height.toDouble(),
+    val scrollYRatio: Double = 0.0,
 ) {
     val viewportsTotal get() = ceil(totalHeight / viewport.height).roundToInt()
 
@@ -638,12 +639,12 @@ data class TabState(
 
 data class BrowserState constructor(
     val url: String,
+    val scrollState: ScrollState = ScrollState(),
     val goBackUrl: String? = null,
     val goForwardUrl: String? = null,
-    val clientInfo: ClientInfo,
-    val scrollState: ScrollState,
     val tabs: List<TabState> = emptyList(),
-    val activeTabId: String? = null
+    val activeTabId: String? = null,
+    val clientInfo: ClientInfo = ClientInfo(),
 ) {
     @get:JsonIgnore
     val lazyJson: String by lazy { DOMSerializer.toJson(this) }
@@ -653,12 +654,6 @@ data class BrowserUseState(
     val browserState: BrowserState,
     val domState: DOMState
 ) {
-    /**
-     * The 1-based next chunk to see, each chunk is a viewport height.
-     * */
-    @Deprecated("Deprecated")
-    fun nextViewportToSee() = domState.microTree.nextChunkToSee(browserState.scrollState.totalHeight)
-
     fun getInteractiveElements(): InteractiveDOMTreeNodeList {
         // The 1-based viewport to see.
         val scrollState = browserState.scrollState
@@ -669,6 +664,13 @@ data class BrowserUseState(
 
         return domState.microTree.toInteractiveDOMTreeNodeList(
             currentViewportIndex = processingViewport, maxViewportIndex = viewportsTotal
+        )
+    }
+
+    companion object {
+        val DUMMY: BrowserUseState = BrowserUseState(
+            BrowserState(""),
+            DOMState(MicroDOMTree())
         )
     }
 }

@@ -75,7 +75,7 @@ class ExportPaths(val uri: String) {
     enum class Type {
         PORTAL, ANNOTATED, TILE, ENTITY
     }
-    
+
     private val namedPath = mutableMapOf<String, Path>()
 
     val filename by lazy { AppPaths.fromUri(uri, "", ".htm") }
@@ -88,7 +88,7 @@ class ExportPaths(val uri: String) {
 
     companion object {
         val BASE_DIR = AppPaths.DOC_EXPORT_DIR
-        
+
         fun get(first: String) = BASE_DIR.resolve(first)
 
         fun get(first: String, second: String) = get(first).resolve(second)
@@ -198,7 +198,7 @@ fun Element.slimCopy(): Element {
     val clone = this.clone()
     clone.forEach { it.extension.features = ArrayRealVector() }
     simplifyDOM(clone)
-    
+
     clone.clearAttributesCascaded()
 
     return clone
@@ -209,7 +209,7 @@ fun Element.slimCopy(): Element {
 fun Element.minimalCopy(): Element {
     val clone = this.clone()
     simplifyDOM(clone)
-    
+
     // TODO: might have a bug because of concurrent modification, it can be re-produced by calling dom_minimal_html()
     // clone.removeUnnecessaryAttributesCascaded()
 
@@ -1132,7 +1132,7 @@ fun Node.ancestors(): List<Element> {
         ancestors.add(p)
         p = p.parent()
     }
-    
+
     return ancestors
 }
 
@@ -1187,7 +1187,7 @@ private fun getValuableClassNames(classNames: MutableSet<String>): MutableSet<St
 }
 
 private fun Node.calculateViewPort(): Dimension {
-    val default = AppConstants.DEFAULT_VIEW_PORT
+    val default = AppConstants.DEFAULT_VIEWPORT
     val ob = extension.ownerBody ?: return default
     val parts = ob.attr("view-port").split("x")
     return if (parts.size == 2) {

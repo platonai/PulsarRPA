@@ -548,6 +548,10 @@ abstract class AbstractWebDriver(
         return evaluateValue("document.body.textContent")?.toString()
     }
 
+    override suspend fun extract(fields: Map<String, String>): Map<String, String?> {
+        return fields.entries.associate { it.key to selectFirstTextOrNull(it.value) }
+    }
+
     @Throws(WebDriverException::class)
     override suspend fun selectFirstTextOrNull(selector: String): String? {
         val safeSelector = Strings.escapeJsString(selector)

@@ -1131,6 +1131,8 @@ interface WebDriver : Closeable {
      * */
     suspend fun textContent(): String?
 
+    suspend fun extract(fields: Map<String, String>): Map<String, String?>
+
     /**
      * Returns the node's text content, the node is located by [selector].
      *

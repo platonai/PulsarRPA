@@ -1,14 +1,19 @@
 package ai.platon.pulsar.agentic.ai.tta
 
+import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserState
+import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.ActionDescription
+import ai.platon.pulsar.skeleton.ai.AgentState
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 private class TestableTextToAction(conf: ImmutableConfig): TextToAction(conf) {
-    fun parse(response: ModelResponse): ActionDescription = modelResponseToActionDescription("", response)
+    val agentState = AgentState(0, "", BrowserUseState.DUMMY)
+    fun parse(response: ModelResponse): ActionDescription = modelResponseToActionDescription("", agentState, response)
 }
 
 class TextToActionParsingTest {

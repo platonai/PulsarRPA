@@ -153,7 +153,17 @@ class InferenceEngine(
         /**
          * The 1-based next chunk to see, each chunk is a viewport height.
          * */
-        val nextChunkToSee = params.agentState.browserUseState.nextViewportToSee()
+        val browserUseState = params.agentState.browserUseState
+        val scrollState = browserUseState.browserState.scrollState
+        // Height in pixels of the page area above the current viewport. (被隐藏在视口上方的部分的高度)
+        val hiddenTopHeight = scrollState.hiddenTopHeight
+        val hiddenBottomHeight = scrollState.hiddenBottomHeight
+        val viewportHeight = scrollState.viewportHeight
+
+        // The 1-based viewport to see.
+        val processingViewport = scrollState.processingViewport
+        val viewportsTotal = scrollState.viewportsTotal
+        val nextChunkToSee = 1 + processingViewport
 
         // 2) Metadata call -------------------------------------------------------------------
         val metadataSystem = promptBuilder.buildMetadataSystemPrompt()
@@ -161,8 +171,7 @@ class InferenceEngine(
         val metadataUser = promptBuilder.buildMetadataPrompt(
             params.instruction,
             extractedNode,
-            nextChunkToSee,
-            params.chunksTotal
+            params.agentState
         )
 
         var metadataCallFile = ""

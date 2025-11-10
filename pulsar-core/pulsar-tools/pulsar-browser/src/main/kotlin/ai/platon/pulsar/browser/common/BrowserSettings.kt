@@ -25,7 +25,7 @@ open class BrowserSettings constructor(
         /**
          * The viewport size for browser to rendering all webpages.
          * */
-        var SCREEN_VIEWPORT = AppConstants.DEFAULT_VIEW_PORT
+        var VIEWPORT = AppConstants.DEFAULT_VIEWPORT!!
 
         /**
          * The screenshot quality.
@@ -447,7 +447,7 @@ open class BrowserSettings constructor(
     /**
      * The screen viewport.
      * */
-    val viewportSize get() = SCREEN_VIEWPORT
+    val viewportSize get() = VIEWPORT
 
     /**
      * The supervisor process
@@ -545,7 +545,7 @@ open class BrowserSettings constructor(
     val scriptLoader = ScriptLoader(confuser, jsPropertyNames)
 
     open fun formatViewPort(delimiter: String = ","): String {
-        return "${SCREEN_VIEWPORT.width}$delimiter${SCREEN_VIEWPORT.height}"
+        return "${VIEWPORT.width}$delimiter${VIEWPORT.height}"
     }
 
     open fun createChromeOptions(generalOptions: Map<String, Any>): ChromeOptions {

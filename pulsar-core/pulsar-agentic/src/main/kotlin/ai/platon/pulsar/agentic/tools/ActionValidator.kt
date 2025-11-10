@@ -43,7 +43,7 @@ class ActionValidator(
                 "open", "navigateTo" -> validateNavigateTo(toolCall.arguments)
                 "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "focus", "scrollTo",
                 "type", "isHidden", "visible", "isChecked", "bringToFront",
-                "selectFirstTextOrNull", "selectTextAll", "selectFirstAttributeOrNull", "selectAttributes", "selectAttributeAll", "selectImages",
+                "extract", "selectFirstTextOrNull", "selectTextAll", "selectFirstAttributeOrNull", "selectAttributes", "selectAttributeAll", "selectImages",
                 "evaluate", "clickablePoint", "boundingBox" -> validateElementAction(toolCall.arguments)
 
                 "waitForNavigation", "waitForSelector" -> validateWaitForNavigation(toolCall.arguments)

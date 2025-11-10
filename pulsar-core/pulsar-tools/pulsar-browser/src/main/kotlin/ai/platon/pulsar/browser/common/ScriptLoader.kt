@@ -2,7 +2,6 @@ package ai.platon.pulsar.browser.common
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.alwaysFalse
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
 import com.google.gson.GsonBuilder
@@ -125,8 +124,8 @@ open class ScriptLoader(
     private fun initDefaultJsParameters() {
         mapOf(
             "propertyNames" to jsPropertyNames,
-            "viewPortWidth" to BrowserSettings.SCREEN_VIEWPORT.width,
-            "viewPortHeight" to BrowserSettings.SCREEN_VIEWPORT.height,
+            "viewPortWidth" to BrowserSettings.VIEWPORT.width,
+            "viewPortHeight" to BrowserSettings.VIEWPORT.height,
 
             "META_INFORMATION_ID" to AppConstants.PULSAR_META_INFORMATION_ID,
             "SCRIPT_SECTION_ID" to AppConstants.PULSAR_SCRIPT_SECTION_ID,
