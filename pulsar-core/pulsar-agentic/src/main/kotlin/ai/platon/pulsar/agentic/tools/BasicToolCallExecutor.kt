@@ -111,15 +111,6 @@ open class BasicToolCallExecutor(
     fun toExpression(tc: ToolCall) = Companion.toExpression(tc)
 
     companion object {
-        /**
-         * Parses a function call from a text string into its components.
-         * Uses a robust state machine to correctly handle:
-         * - Strings with commas and escaped quotes/backslashes
-         * - Nested parentheses inside arguments
-         * - Optional whitespace and trailing commas
-         */
-        fun parseKotlinFunctionExpression(input: String) = SimpleKotlinParser().parseFunctionExpression(input)
-
         // Basic string escaper to safely embed values inside Kotlin string literals
         internal fun String.esc(): String = this
             .replace("\\", "\\\\")
