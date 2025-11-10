@@ -83,6 +83,10 @@ class PlaywrightDriver(
         }
     }
 
+    override suspend fun reload() {
+        page.reload()
+    }
+
     override suspend fun goBack() {
         page.goBack()
     }

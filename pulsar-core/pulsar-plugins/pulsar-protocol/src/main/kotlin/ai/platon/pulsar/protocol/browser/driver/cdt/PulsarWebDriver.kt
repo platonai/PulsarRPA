@@ -123,6 +123,10 @@ class PulsarWebDriver(
         }
     }
 
+    override suspend fun reload() {
+        pageAPI?.reload()
+    }
+
     override suspend fun goBack() {
         driverHelper.invokeOnPage("goBack") {
             val history = pageAPI?.getNavigationHistory() ?: return@invokeOnPage

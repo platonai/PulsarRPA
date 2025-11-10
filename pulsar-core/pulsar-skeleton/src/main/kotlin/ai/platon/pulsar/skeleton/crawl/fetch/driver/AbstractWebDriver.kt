@@ -296,6 +296,9 @@ abstract class AbstractWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(url: String) = navigateTo(NavigateEntry(url))
 
+    @Throws(WebDriverException::class)
+    override suspend fun reload() { evaluate("location.reload(true)") }
+
     override suspend fun currentUrl(): String = evaluate("document.URL", navigateEntry.url)
 
     @Throws(WebDriverException::class)

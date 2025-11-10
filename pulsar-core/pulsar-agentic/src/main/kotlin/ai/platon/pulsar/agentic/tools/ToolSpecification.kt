@@ -24,9 +24,9 @@ driver.scrollToTop()
 driver.scrollToBottom()
 driver.scrollToMiddle(ratio: Double = 0.5)
 driver.scrollBy(pixels: Double = 200.0): Double
-driver.scrollToViewport(n: Double)                       // scroll to the [n]th viewport position, 1-based
 driver.goBack()
 driver.goForward()
+driver.textContent(): String?                            // Returns the document's text content.
 driver.selectFirstTextOrNull(selector: String): String?  // Returns the node's text content including it's descendants, the node is located by [selector]. If the node does not exist, returns null.
 driver.captureScreenshot(fullPage: Boolean = false)      // Capture a screenshot of the current viewport or the full page
 driver.captureScreenshot(selector: String)               // Scroll the element matched by [selector] into view (if needed) then take a screenshot of that element's bounding box.
@@ -75,11 +75,6 @@ fs.replaceContent(filename: String, oldStr: String, newStr: String)
         .toList()
 
     val SUPPORTED_ACTIONS = SUPPORTED_TOOL_CALLS.map { it.substringBefore("(") }
-
-    val TOOL_ALIASES = mapOf(
-        "driver.goto" to "driver.navigateTo",
-        "driver.textContent" to "driver.selectFirstTextOrNull"
-    )
 
     val SELECTOR_ACTIONS = setOf(
         "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "visible", "focus",

@@ -282,6 +282,9 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun navigateTo(entry: NavigateEntry)
 
+    @Throws(WebDriverException::class)
+    suspend fun reload()
+
     /**
      * Navigates the browser to the previous page in the navigation history.
      *
