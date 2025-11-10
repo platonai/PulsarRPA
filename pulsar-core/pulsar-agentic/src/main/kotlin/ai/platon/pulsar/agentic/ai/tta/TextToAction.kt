@@ -227,9 +227,9 @@ open class TextToAction(
 
         // CSS friendly expression
         val cssSelector = node?.cssSelector()
-        val expression = BasicToolCallExecutor.toExpressionOrNull(toolCall)
+        val expression = toolCall.pseudoExpression
         val cssFriendlyExpression = if (locator != null && cssSelector != null) {
-            expression?.replace(locator, cssSelector)
+            expression.replace(locator, cssSelector)
         } else null
 
         // 3. copy new object

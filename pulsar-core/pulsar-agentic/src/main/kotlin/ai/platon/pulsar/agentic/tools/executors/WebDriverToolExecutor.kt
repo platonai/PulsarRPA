@@ -632,7 +632,7 @@ class WebDriverToolExecutor: AbstractToolExecutor() {
     }
 
     companion object {
-
+        @Deprecated("Not used anymore")
         fun toExpression(tc: ToolCall): String {
             ActionValidator().validateToolCall(tc)
 

@@ -82,14 +82,6 @@ open class BasicToolCallExecutor(
             .firstOrNull { it.targetClass.isSuperclassOf(target::class) }
             ?.execute(tc, target)
             ?: throw UnsupportedOperationException("❓ Unsupported target ${target::class}")
-
-//        return when (target) {
-//            is WebDriver -> WebDriverToolExecutor().execute(tc, target)
-//            is Browser -> BrowserToolExecutor().execute(tc, target)
-//            is FileSystem -> FileSystemToolExecutor().execute(tc, target)
-//            is PerceptiveAgent -> AgentToolExecutor().execute(tc, target)
-//            else -> throw UnsupportedOperationException("❓ Unsupported target ${target::class}")
-//        }
     }
 
     @Throws(UnsupportedOperationException::class)
@@ -98,16 +90,9 @@ open class BasicToolCallExecutor(
             .firstOrNull { it.targetClass.isSuperclassOf(target::class) }
             ?.execute(expression, target)
             ?: throw UnsupportedOperationException("❓ Unsupported target ${target::class}")
-
-//        return when (target) {
-//            is WebDriver -> WebDriverToolExecutor().execute(expression, target)
-//            is Browser -> BrowserToolExecutor().execute(expression, target)
-//            is FileSystem -> FileSystemToolExecutor().execute(expression, target)
-//            is PerceptiveAgent -> AgentToolExecutor().execute(expression, target)
-//            else -> throw UnsupportedOperationException("❓ Unsupported target ${target::class}")
-//        }
     }
 
+    @Deprecated("Not used anymore")
     fun toExpression(tc: ToolCall) = Companion.toExpression(tc)
 
     companion object {
@@ -118,16 +103,17 @@ open class BasicToolCallExecutor(
 
         internal fun String.norm() = Strings.doubleQuote(this.esc())
 
+        @Deprecated("Not used anymore")
         fun toExpression(tc: ToolCall): String {
             return when (tc.domain) {
                 "driver" -> WebDriverToolExecutor.toExpression(tc)
                 "browser" -> BrowserToolExecutor.toExpression(tc)
                 "fs" -> FileSystemToolExecutor.toExpression(tc)
-                "agent" -> AgentToolExecutor.toExpression(tc)
                 else -> throw IllegalArgumentException("⚠️ Illegal tool call | $tc")
             }
         }
 
+        @Deprecated("Not used anymore")
         fun toExpressionOrNull(tc: ToolCall): String? = runCatching { BasicToolCallExecutor.toExpression(tc) }.getOrNull()
     }
 }

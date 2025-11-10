@@ -21,6 +21,7 @@ class BrowserToolExecutor: AbstractToolExecutor() {
 
     override val targetClass: KClass<*> = Browser::class
 
+    @Deprecated("Not used anymore")
     @Throws(IllegalArgumentException::class)
     override fun toExpression(tc: ToolCall): String {
         return Companion.toExpression(tc)
@@ -93,6 +94,7 @@ class BrowserToolExecutor: AbstractToolExecutor() {
 
     companion object {
 
+        @Deprecated("Not used anymore")
         fun toExpression(tc: ToolCall): String {
             ActionValidator().validateToolCall(tc)
 

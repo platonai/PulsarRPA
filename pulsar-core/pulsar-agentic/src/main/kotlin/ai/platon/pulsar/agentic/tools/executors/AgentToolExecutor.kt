@@ -1,10 +1,7 @@
 package ai.platon.pulsar.agentic.tools.executors
 
-import ai.platon.pulsar.agentic.tools.ActionValidator
-import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor.Companion.norm
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
-import ai.platon.pulsar.skeleton.ai.ToolCall
 import kotlin.reflect.KClass
 
 class AgentToolExecutor : AbstractToolExecutor() {
@@ -13,11 +10,6 @@ class AgentToolExecutor : AbstractToolExecutor() {
     override val domain = "agent"
 
     override val targetClass: KClass<*> = PerceptiveAgent::class
-
-    @Throws(IllegalArgumentException::class)
-    override fun toExpression(tc: ToolCall): String {
-        return Companion.toExpression(tc)
-    }
 
     /**
      * Execute agent.* expressions against a PerceptiveAgent target.
@@ -28,6 +20,7 @@ class AgentToolExecutor : AbstractToolExecutor() {
     ): Any? {
         require(objectName == "agent") { "Object must be an Agent" }
         require(functionName.isNotBlank()) { "Function name must not be blank" }
+
         val agent = requireNotNull(target as? PerceptiveAgent) { "Target must be a PerceptiveAgent" }
 
         val arg0 = args["0"]?.toString()
@@ -44,33 +37,6 @@ class AgentToolExecutor : AbstractToolExecutor() {
                 logger.warn("Unsupported agent method: {}({})", functionName, args)
                 null
             }
-        }
-    }
-
-    companion object {
-
-        fun toExpression(tc: ToolCall): String {
-            ActionValidator().validateToolCall(tc)
-
-            val arguments = tc.arguments
-            val expression = when (tc.method) {
-                "act" -> arguments["action"]?.let { "agent.act(${it.norm()})" }
-                    ?: arguments["0"]?.let { "agent.act(${it.norm()})" }
-
-                "observe" -> arguments["instruction"]?.let { "agent.observe(${it.norm()})" }
-                    ?: arguments["0"]?.let { "agent.observe(${it.norm()})" }
-
-                "extract" -> arguments["instruction"]?.let { "agent.extract(${it.norm()})" }
-                    ?: arguments["0"]?.let { "agent.extract(${it.norm()})" }
-
-                "resolve" -> arguments["action"]?.let { "agent.resolve(${it.norm()})" }
-                    ?: arguments["0"]?.let { "agent.resolve(${it.norm()})" }
-
-                "done" -> "agent.done()"
-                else -> null
-            }
-
-            return expression ?: throw IllegalArgumentException("Illegal tool call | $tc")
         }
     }
 }

@@ -1,8 +1,6 @@
 package ai.platon.pulsar.agentic.ai.tta
 
-import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
-import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMState
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState

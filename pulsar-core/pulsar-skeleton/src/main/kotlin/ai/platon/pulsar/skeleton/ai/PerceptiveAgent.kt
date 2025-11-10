@@ -79,7 +79,7 @@ data class ToolCall constructor(
     val arguments: MutableMap<String, String?> = mutableMapOf(),
     val description: String? = null,
 ) {
-    val pseudoNamedArguments get() = arguments.entries.joinToString { (k, v) -> "$k=$v" }
+    val pseudoNamedArguments get() = arguments.entries.joinToString { (k, v) -> "$k=\"$v\"" }
 
     val pseudoExpression: String get() = "$domain.${method}($pseudoNamedArguments)"
 
