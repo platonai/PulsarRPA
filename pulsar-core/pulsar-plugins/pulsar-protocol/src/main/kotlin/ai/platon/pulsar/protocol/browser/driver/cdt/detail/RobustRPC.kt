@@ -10,9 +10,6 @@ import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserUnavailableException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.text.MessageFormat
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -51,7 +48,7 @@ class RobustRPC(
     }
 
     @Throws(Exception::class)
-    suspend fun <T> invokeDeferred(action: String, maxRetry: Int = 2, block: suspend () -> T): T? {
+    suspend fun <T> invokeWithRetry(action: String, maxRetry: Int = 2, block: suspend () -> T): T? {
         if (!driver.checkState(action)) {
             return null
         }
@@ -81,7 +78,7 @@ class RobustRPC(
         action: String, message: String? = null, maxRetry: Int = 2, block: suspend () -> T
     ): T? {
         return try {
-            invokeDeferred(action, maxRetry, block)
+            invokeWithRetry(action, maxRetry, block)
         } catch (e: ChromeRPCException) {
             handleChromeException(e, action, message)
             null

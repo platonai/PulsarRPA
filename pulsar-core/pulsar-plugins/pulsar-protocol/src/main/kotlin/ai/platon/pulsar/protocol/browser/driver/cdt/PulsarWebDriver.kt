@@ -124,7 +124,9 @@ class PulsarWebDriver(
     }
 
     override suspend fun reload() {
-        pageAPI?.reload()
+        driverHelper.invokeOnPage("reload") {
+            pageAPI?.reload()
+        }
     }
 
     override suspend fun goBack() {
@@ -282,7 +284,7 @@ class PulsarWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun mouseWheelDown(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
         try {
-            rpc.invokeDeferred("mouseWheelDown", 1) {
+            rpc.invokeWithRetry("mouseWheelDown", 1) {
                 repeat(count) { i ->
                     if (i > 0) {
                         if (delayMillis > 0) gap(delayMillis) else gap("mouseWheel")
@@ -299,7 +301,7 @@ class PulsarWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun mouseWheelUp(count: Int, deltaX: Double, deltaY: Double, delayMillis: Long) {
         try {
-            rpc.invokeDeferred("mouseWheelUp", 1) {
+            rpc.invokeWithRetry("mouseWheelUp", 1) {
                 repeat(count) { i ->
                     if (i > 0) {
                         if (delayMillis > 0) gap(delayMillis) else gap("mouseWheel")
@@ -321,7 +323,7 @@ class PulsarWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun moveMouseTo(selector: String, deltaX: Int, deltaY: Int) {
         try {
-            val node = rpc.invokeDeferred("scrollIntoViewIfNeeded") {
+            val node = rpc.invokeWithRetry("scrollIntoViewIfNeeded") {
                 page.scrollIntoViewIfNeeded(selector)
             } ?: return
 
@@ -329,7 +331,7 @@ class PulsarWebDriver(
             val p = pageAPI ?: return
             val d = domAPI ?: return
 
-            rpc.invokeDeferred("moveMouseTo") {
+            rpc.invokeWithRetry("moveMouseTo") {
                 val point = ClickableDOM(p, d, node, offset).clickablePoint().value
                 if (point != null) {
                     val point2 = PointD(point.x + deltaX, point.y + deltaY)
@@ -429,7 +431,7 @@ class PulsarWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun dragAndDrop(selector: String, deltaX: Int, deltaY: Int) {
         try {
-            val node = rpc.invokeDeferred("scrollIntoViewIfNeeded") {
+            val node = rpc.invokeWithRetry("scrollIntoViewIfNeeded") {
                 page.scrollIntoViewIfNeeded(selector)
             } ?: return
 
@@ -441,7 +443,7 @@ class PulsarWebDriver(
             val p = pageAPI ?: return
             val d = domAPI ?: return
 
-            rpc.invokeDeferred("dragAndDrop") {
+            rpc.invokeWithRetry("dragAndDrop") {
                 val clickableDOM = ClickableDOM(p, d, node, offset)
                 val startPoint = clickableDOM.clickablePoint().value
                 if (startPoint != null) {
@@ -520,7 +522,7 @@ function() {
     @Throws(WebDriverException::class)
     override suspend fun clickablePoint(selector: String): PointD? {
         try {
-            return rpc.invokeDeferred("clickablePoint") {
+            return rpc.invokeWithRetry("clickablePoint") {
                 val node = page.scrollIntoViewIfNeeded(selector)
                 ClickableDOM.create(pageAPI, domAPI, node)?.clickablePoint()?.value
             }
@@ -534,7 +536,7 @@ function() {
     @Throws(WebDriverException::class)
     override suspend fun boundingBox(selector: String): RectD? {
         try {
-            return rpc.invokeDeferred("boundingBox") {
+            return rpc.invokeWithRetry("boundingBox") {
                 val node = page.scrollIntoViewIfNeeded(selector)
                 ClickableDOM.create(pageAPI, domAPI, node)?.boundingBox()
             }
@@ -553,7 +555,7 @@ function() {
     @Throws(WebDriverException::class)
     override suspend fun captureScreenshot(fullPage: Boolean): String? {
         return try {
-            rpc.invokeDeferred("captureScreenshot") {
+            rpc.invokeWithRetry("captureScreenshot") {
                 screenshot.captureScreenshot(fullPage)
             }
         } catch (e: ChromeDriverException) {
@@ -572,7 +574,7 @@ function() {
         return try {
             val node = page.scrollIntoViewIfNeeded(selector) ?: return null
             // Force the page stop all navigations and pending resource fetches.
-            rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot(selector) }
+            rpc.invokeWithRetry("captureScreenshot") { screenshot.captureScreenshot(selector) }
         } catch (e: ChromeDriverException) {
             rpc.handleChromeException(e, "captureScreenshot")
             null
@@ -583,7 +585,7 @@ function() {
     override suspend fun captureScreenshot(rect: RectD): String? {
         return try {
             // Force the page stop all navigations and pending resource fetches.
-            rpc.invokeDeferred("captureScreenshot") { screenshot.captureScreenshot(rect) }
+            rpc.invokeWithRetry("captureScreenshot") { screenshot.captureScreenshot(rect) }
         } catch (e: ChromeDriverException) {
             rpc.handleChromeException(e, "captureScreenshot")
             null
@@ -600,7 +602,7 @@ function() {
     }
 
     override suspend fun nanoDOMTree(): NanoDOMTree? {
-        return rpc.invokeDeferred("nanoDOMTree") {
+        return rpc.invokeWithRetry("nanoDOMTree") {
             val snapshotOptions = SnapshotOptions()
             val domState = domService.getDOMState(snapshotOptions = snapshotOptions)
             domState.microTree.toNanoTreeInRange()
@@ -623,9 +625,9 @@ function() {
             disableCache = false, includeCredentials = false
         )
 
-        val response = rpc.invokeDeferred("loadNetworkResource") {
-            val frameId = pageAPI?.getFrameTree()?.frame?.id ?: return@invokeDeferred null
-            val resource = networkAPI?.loadNetworkResource(frameId, url, options) ?: return@invokeDeferred null
+        val response = rpc.invokeWithRetry("loadNetworkResource") {
+            val frameId = pageAPI?.getFrameTree()?.frame?.id ?: return@invokeWithRetry null
+            val resource = networkAPI?.loadNetworkResource(frameId, url, options) ?: return@invokeWithRetry null
             NetworkResourceResponse.from(resource)
         }
 

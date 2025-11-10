@@ -96,7 +96,7 @@ class WebDriverHelper(
 
     suspend fun <T> invokeOnPage(name: String, message: String? = null, action: suspend () -> T): T? {
         try {
-            return rpc.invokeDeferred(name) {
+            return rpc.invokeWithRetry(name) {
                 action()
             }
         } catch (e: ChromeDriverException) {
@@ -114,7 +114,7 @@ class WebDriverHelper(
         action: suspend (NodeRef) -> T
     ): T? {
         try {
-            return rpc.invokeDeferred(name) {
+            return rpc.invokeWithRetry(name) {
                 val node = if (focus) {
                     page.focusOnSelector(selector)
                 } else if (scrollIntoView) {
