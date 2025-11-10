@@ -226,9 +226,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
             runWebDriverTest(interactiveDynamicURL) { driver ->
                 val agent = BrowserPerceptiveAgent(driver, session)
 
-                val result = runBlocking {
-                    agent.extract("")
-                }
+                val result = agent.extract("")
                 printlnPro(result)
 
                 // Should still work with default instruction

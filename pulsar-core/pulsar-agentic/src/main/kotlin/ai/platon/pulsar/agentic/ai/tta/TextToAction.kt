@@ -4,9 +4,7 @@ import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder.Companion.buildObserveResultSchema
 import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor
 import ai.platon.pulsar.agentic.tools.ToolSpecification
-import ai.platon.pulsar.agentic.tools.ToolSpecification.TOOL_ALIASES
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
-import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ExperimentalApi
@@ -80,7 +78,8 @@ open class TextToAction(
             response: ModelResponse
         ): ActionDescription {
             val observeElements = elements.elements?.map { toObserveElement(it, response) } ?: emptyList()
-            return ActionDescription(instruction,
+            return ActionDescription(
+                instruction,
                 observeElements = observeElements,
                 agentState = agentState,
                 modelResponse = response
@@ -180,7 +179,11 @@ open class TextToAction(
         return toActionDescription(actionDescriptions, elements, agentState, response).toActionDescriptions()
     }
 
-    fun modelResponseToActionDescription(instruction: String, agentState: AgentState, response: ModelResponse): ActionDescription {
+    fun modelResponseToActionDescription(
+        instruction: String,
+        agentState: AgentState,
+        response: ModelResponse
+    ): ActionDescription {
         try {
             return modelResponseToActionDescription0(instruction, agentState, response)
         } catch (e: Exception) {
@@ -189,7 +192,11 @@ open class TextToAction(
         }
     }
 
-    private fun modelResponseToActionDescription0(instruction: String, agentState: AgentState, response: ModelResponse): ActionDescription {
+    private fun modelResponseToActionDescription0(
+        instruction: String,
+        agentState: AgentState,
+        response: ModelResponse
+    ): ActionDescription {
         val content = response.content
         val contentStart = Strings.compactWhitespaces(content.take(30))
 
@@ -230,14 +237,7 @@ open class TextToAction(
         }
 
         val agentState = requireNotNull(action.agentState) { "Agent state has to be available" }
-        var toolCall = observeElement.toolCall ?: return observeElement
-
-        // 1. revised tool call
-        val revised = TOOL_ALIASES["${toolCall.domain}.${toolCall.method}"]
-        if (revised != null) {
-            val (domain2, method2) = revised.split(".")
-            toolCall = toolCall.copy(domain = domain2, method = method2)
-        }
+        val toolCall = observeElement.toolCall ?: return observeElement
 
         // 2. revise selector
         val domain = toolCall.domain
