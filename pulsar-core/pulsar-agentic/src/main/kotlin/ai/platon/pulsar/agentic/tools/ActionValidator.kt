@@ -51,7 +51,7 @@ class ActionValidator(
                 // New no-selector actions
                 "scrollDown", "scrollUp" -> true
                 "scrollBy" -> validateScrollBy(toolCall.arguments)
-                "goBack", "goForward", "delay", "scrollToTop", "scrollToBottom", "scrollToMiddle", "scrollToViewport",
+                "reload", "goBack", "goForward", "delay", "scrollToTop", "scrollToBottom", "scrollToMiddle", "scrollToViewport",
                 "currentUrl", "url", "documentURI", "baseURI", "referrer", "pageSource", "getCookies",
                 "textContent", "mouseWheelDown", "mouseWheelUp", "moveMouseTo", "dragAndDrop", "switchTab" -> true // These don't need validation
                 "writeString", "readString", "replaceContent" -> true

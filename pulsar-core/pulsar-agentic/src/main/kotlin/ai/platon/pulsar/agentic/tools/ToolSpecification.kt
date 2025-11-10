@@ -24,6 +24,7 @@ driver.scrollToTop()
 driver.scrollToBottom()
 driver.scrollToMiddle(ratio: Double = 0.5)
 driver.scrollBy(pixels: Double = 200.0): Double
+driver.reload()
 driver.goBack()
 driver.goForward()
 driver.textContent(): String?                            // Returns the document's text content.
@@ -86,5 +87,5 @@ fs.replaceContent(filename: String, oldStr: String, newStr: String)
         "boundingBox", "moveMouseTo", "dragAndDrop"
     )
 
-    val MAY_NAVIGATE_ACTIONS = setOf("navigateTo", "click", "goBack", "goForward")
+    val MAY_NAVIGATE_ACTIONS = setOf("navigateTo", "click", "reload", "goBack", "goForward")
 }

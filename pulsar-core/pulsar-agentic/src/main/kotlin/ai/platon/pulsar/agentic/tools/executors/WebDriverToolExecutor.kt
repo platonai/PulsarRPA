@@ -609,6 +609,10 @@ class WebDriverToolExecutor: AbstractToolExecutor() {
             }
 
             // Navigation history controls
+            "reload" -> {
+                driver.reload()
+            }
+
             "goBack" -> {
                 driver.goBack()
             }
@@ -634,6 +638,7 @@ class WebDriverToolExecutor: AbstractToolExecutor() {
                 // Navigation
                 "open" -> arguments["url"]?.let { "driver.open(${it.norm()})" }
                 "navigateTo" -> arguments["url"]?.let { "driver.navigateTo(${it.norm()})" }
+                "reload" -> "driver.reload()"
                 "goBack" -> "driver.goBack()"
                 "goForward" -> "driver.goForward()"
                 // Wait
