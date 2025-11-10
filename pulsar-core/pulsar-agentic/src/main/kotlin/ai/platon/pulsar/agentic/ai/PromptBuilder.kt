@@ -39,35 +39,6 @@ class PromptBuilder() {
 
         const val MAX_ACTIONS = 1
 
-        fun buildAgentResponseSchema(): String {
-            val schema = """
-{
-  "screenshotContentSummary": "当前截图内容摘要",
-  "currentPageContentSummary": "当前网页文本内容摘要，基于无障碍树，或者网页内容提取结果",
-  "memory": "本步骤以及整体进展的 1-3 句具体记忆。这应包含有助于将来跟踪进度的信息，例如访问的页面数、找到的项数等。",
-  "thinking": "一个应用了 `## 推理规则` 的结构化 <think> 风格推理块。",
-  "evaluationPreviousGoal": "对上一步动作的简洁一句话分析。明确说明：成功、失败或不确定。",
-  "nextGoal": "下一步的直接目标和要采取的动作，用一句明确的话说明。",
-  "actions": [
-    {
-      "domain": "工具域, 如 `driver`",
-      "method": "方法名, 如 `click`",
-      "arguments": [
-        {
-          "name": "参数名，如 `selector`",
-          "value": "参数值，如 `0,4`"
-        }
-      ],
-      "locator": "网页节点定位器，由两个数字构成，如 `0,4`",
-      "description": "对当前定位器和工具选择的描述"
-    }
-  ]
-}
-"""
-
-            return schema
-        }
-
         fun buildObserveResultSchema(returnAction: Boolean): String {
             // English is better for LLM to understand json
             val schema1 = """
@@ -136,63 +107,60 @@ $schema
         val TOOL_CALL_RULE_CONTENT = """
 严格遵循以下规则使用浏览器和浏览网页：
 
-- domain: 方法的调用方，如 driver, browser 等
-- 输出结果中，定位节点时 `selector` 字段始终填入 `locator` 的值
-- 确保 `locator` 与对应的无障碍树节点属性完全匹配，准确定位该节点
-- 不提供不能确定的参数
-- 要求 json 输出时，禁止包含任何额外文本
-- 注意：用户难以区分按钮和链接
-- 若操作与页面无关，返回空 `{}`
-- 只返回一个最相关的操作
+- domain: 方法域，如 driver, browser 等
+- 输出结果中，定位节点时 `selector` 字段始终填入 `locator` 的值，不提供不能确定的参数
+- 确保 `locator` 与对应的可交互元素列表中的 `locator` 完全匹配，或者与无障碍树节点属性完全匹配，准确定位该节点
+- JSON 格式输出时，禁止包含任何额外文本
 - 从`## 浏览器状态`段落获得所有打开标签页的信息
 - 如需检索信息，新建标签页而非复用当前页
 - 使用 `click(selector, "Ctrl")` 新建标签页，在**新标签页**打开链接
 - 如果目标页面在**新标签页**打开，使用 `browser.switchTab(tabId: String)` 切换到目标页面，从`## 浏览器状态`段落获得 `tabId`
-- 若页面因输入文本等操作发生变化，需判断是否要交互新出现的元素（例如从列表中选择正确选项）。
-- 如需阅读整个网页文本，如总结信息，使用 `selectFirstTextOrNull`
 - 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。不要模拟点击屏幕键盘上的按键
 - 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
-- 导航到浏览历史的前一网页 - `goBack`, 后一网页 - `goForward`
-- 如非必要，避免重复点击同一链接，如必须这样做，提供理由
-- 若出现验证码，尽可能尝试解决；若无法解决，则启用备用策略（例如换其他站点、回退上一步）
+- 注意：用户难以区分按钮和链接
 - 若预期元素缺失，尝试刷新页面、滚动或返回上一页
-- 若填写输入框后操作序列中断，通常是因为页面发生了变化（例如输入框下方弹出了建议选项）
-- 若上一步操作序列因页面变化而中断，需补全未执行的剩余操作。例如，若你尝试输入文本并点击搜索按钮，但点击未执行（因页面变化），应在下一步重试点击操作。
-- 若<user_request>中包含具体页面信息（如商品类型、评分、价格、地点等），尝试使用筛选功能以提高效率。
 - 若向字段输入内容：1. 无需先滚动和聚焦（工具内部处理）2. 可能需要按回车、点击搜索按钮或从下拉菜单选择以完成操作。
-- 如无必要，不要登录页面。没有凭证时，绝对不要尝试登录。
+- 若填写输入框后操作序列中断，通常是因为页面发生了变化（例如输入框下方弹出了建议选项）
+- 若出现验证码，尽可能尝试解决；若无法解决，则启用备用策略（例如换其他站点、回退上一步）
+- 若页面因输入文本等操作发生变化，需判断是否要交互新出现的元素（例如从列表中选择正确选项）。
+- 若上一步操作序列因页面变化而中断，需补全未执行的剩余操作。例如，若你尝试输入文本并点击搜索按钮，但点击未执行（因页面变化），应在下一步重试点击操作。
 - 始终考虑最终目标：<user_request>包含的内容。若用户指定了明确步骤，这些步骤始终具有最高优先级。
+- 若<user_request>中包含具体页面信息（如商品类型、评分、价格、地点等），尝试使用筛选功能以提高效率。
+- 如无必要，不要登录页面。没有凭证时，绝对不要尝试登录。
 - 始终先判断任务属于两类哪一种：
-  1. 非常具体的逐步指令
-    - 精确地遵循这些步骤，不要跳过，尽力完成每一项要求。
-  2. 开放式任务：
-    - 自行规划并有创造性地完成任务。
-    - 如果你在开放式任务中被卡住（例如遇到登录或验证码），可以重新评估任务并尝试替代方案，例如有时即使出现登录弹窗，页面的某些部分仍可访问，或者可以通过网络搜索获得信息。
+    1. 非常具体的逐步指令
+       - 精确地遵循这些步骤，不要跳过，尽力完成每一项要求。
+    2. 开放式任务：
+       - 自行规划并有创造性地完成任务。
+       - 如果你在开放式任务中被卡住（例如遇到登录或验证码），可以重新评估任务并尝试替代方案，例如有时即使出现登录弹窗，页面的某些部分仍可访问，或者可以通过网络搜索获得信息。
 
     """.trimIndent()
 
         val INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT = """
-可交互元素列表(interactive elements)包含页面 DOM 可交互元素的主要信息，包括元素简化 HTML 表示，文本内容，前后文本，所在视口，坐标和大小等。
+(Interactive Elements)
+
+可交互元素列表包含页面 DOM 可交互元素的主要信息，包括元素简化 HTML 表示，文本内容，前后文本，所在视口，坐标和大小等。
 
 列表格式：
 [locator]{viewport}(x,y,width,height)<slimNode>textContent</slimNode>Text-Before-This-Interactive-Element-And-After-Previous-Interactive-Element
 
 - 默认列出当前焦点视口，第1，2视口和最后一视口元素。
-- `locator` 为节点唯一定位符，同无障碍树保持一致，由两个整数构成，不含括号。
-- 输出结果中，定位节点时 `selector` 字段始终填入 `locator` 的值。
+- 节点唯一定位符 `locator` 由两个整数组成，不含括号，同无障碍树保持一致。
 - `viewport` 为节点所在视口序号，1-based，不含括号。
 - 注意：网页内容变化可能导致视口位置随时发生变化。
 - `x,y,width,height` 为节点坐标和尺寸。
 
+
         """.trimIndent()
 
         val A11Y_TREE_NOTE_CONTENT = """
+(Accessibility Tree)
+
 无障碍树包含页面 DOM 关键节点的主要信息，包括节点文本内容，可见性，可交互性，坐标和尺寸等。
 
 - 除非特别指定，无障碍树仅包含网页当前视口内的节点信息，并包含少量视口外节点，以保证信息充分。
 - 节点唯一定位符 `locator` 由两个整数组成。
-- 所有节点可见，除非 `invisible` == true 显式指定。
-- 除非显式指定，`scrollable` 为 false, `interactive` 为 false。
+- 对所有节点：`invisible` 默认为 `false`，`scrollable` 默认为 `false`, `interactive` 默认为 `false`。
 - 对于坐标和尺寸，若未显式赋值，则视为 `0`。涉及属性：`clientRects`, `scrollRects`, `bounds`。
 
         """.trimIndent()
@@ -283,7 +251,6 @@ $INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT
 ---
 
 ## 无障碍树说明
-(Accessibility Tree)
 
 $A11Y_TREE_NOTE_CONTENT
 
@@ -413,11 +380,23 @@ $A11Y_TREE_NOTE_CONTENT
 - 输出严格使用下面两种 JSON 格式之一
 - 仅输出 JSON 内容，无多余文字
 
-1. 动作输出格式，最多一个元素，domain & method 字段不得为空(<output_act>)：
-${buildObserveResultSchema(true)}
+### 动作输出
+(<output_act>)
 
-2. 任务完成输出格式(<output_done>):
+最多一个元素，domain & method 字段不得为空，输出格式:
+```json
+${buildObserveResultSchema(true)}
+```
+
+### 任务完成输出
+(<output_done>)
+
+输出格式:
+```json
 {"taskComplete":bool,"success":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]}
+```
+
+---
 
 ## 安全要求：
 - 仅操作可见的交互元素
@@ -502,7 +481,6 @@ $INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT
 ---
 
 ## 无障碍树说明
-(Accessibility Tree)
 
 $A11Y_TREE_NOTE_CONTENT
 
