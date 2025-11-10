@@ -12,21 +12,17 @@ import kotlin.io.path.notExists
 
 object LLMUtils {
 
+    fun copyWebDriverAsResource() {
+        val file = ProjectUtils.findFile("WebDriver.kt")
+        if (file != null) {
+            ProjectUtils.copyFileAsCodeResource(file)
+        }
+    }
+
     fun copyWebDriverFile(dest: Path) {
-        val file = ProjectUtils.findFile("MiniWebDriver.kt")
+        val file = ProjectUtils.findFile("WebDriver.kt")
         if (file != null) {
             Files.copy(file, dest, StandardCopyOption.REPLACE_EXISTING)
-            return
-        }
-
-        // If we can not find the file, copy it from github.com or gitee.com
-        val webDriverURL =
-            "https://raw.githubusercontent.com/platonai/browser4/refs/heads/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/crawl/fetch/driver/MiniWebDriver.kt"
-        val webDriverURL2 = "https://gitee.com/platonai_galaxyeye/browser4/raw/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/crawl/fetch/driver/MiniWebDriver.kt"
-        listOf(webDriverURL, webDriverURL2).forEach { url ->
-            if (shouldCopyFile(dest)) {
-                Files.writeString(dest, URI(url).toURL().readText())
-            }
         }
     }
 
@@ -35,16 +31,6 @@ object LLMUtils {
         if (file != null) {
             Files.copy(file, dest, StandardCopyOption.REPLACE_EXISTING)
             return
-        }
-
-        // If we can not find the file, copy it from github.com or gitee.com
-        val webDriverURL =
-            "https://raw.githubusercontent.com/platonai/browser4/refs/heads/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/session/PulsarSession.kt"
-        val webDriverURL2 = "https://gitee.com/platonai_galaxyeye/browser4/raw/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/session/PulsarSession.kt"
-        listOf(webDriverURL, webDriverURL2).forEach { url ->
-            if (shouldCopyFile(dest)) {
-                Files.writeString(dest, URI(url).toURL().readText())
-            }
         }
     }
 

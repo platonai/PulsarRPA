@@ -3,16 +3,12 @@ package ai.platon.pulsar.agentic.ai.tta
 import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder.Companion.SINGLE_ACTION_GENERATION_PROMPT
 import ai.platon.pulsar.agentic.ai.PromptBuilder.Companion.buildObserveResultSchema
-import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor
 import ai.platon.pulsar.agentic.tools.ToolSpecification
 import ai.platon.pulsar.browser.driver.chrome.dom.Locator
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.ExperimentalApi
-import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.ai.llm.PromptTemplate
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
@@ -82,14 +78,15 @@ open class TextToAction(
 
     val chatModel: BrowserChatModel get() = ChatModelFactory.getOrCreate(conf)
 
-    val webDriverFile = baseDir.resolve("MiniWebDriver.kt")
     val webDriverToolCallExpressions = mutableListOf<String>()
 
     init {
         Files.createDirectories(baseDir)
 
-        LLMUtils.copyWebDriverFile(webDriverFile)
-        Files.readAllLines(webDriverFile)
+        LLMUtils.copyWebDriverAsResource()
+        val resource = "code-mirror/WebDriver.kt"
+        // TODO: too simple parsing which leads to bugs
+        ResourceLoader.readAllLines(resource)
             .filter { it.contains(" fun ") }
             .map { it.substringAfterLast("suspend ") }
             .toCollection(webDriverToolCallExpressions)

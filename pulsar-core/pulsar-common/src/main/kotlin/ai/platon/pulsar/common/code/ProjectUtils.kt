@@ -3,6 +3,7 @@ package ai.platon.pulsar.common.code
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import kotlin.io.path.notExists
 import kotlin.jvm.optionals.getOrNull
 
@@ -11,6 +12,9 @@ import kotlin.jvm.optionals.getOrNull
  * or finding specific files within the project structure.
  */
 object ProjectUtils {
+
+    const val CODE_RESOURCE_DIR = "pulsar-core/pulsar-resources/src/main/resources/code-mirror"
+
     /**
      * Finds the project root directory by searching for a file named `VERSION` in the current directory
      * and its parent directories.
@@ -34,6 +38,17 @@ object ProjectUtils {
         }
 
         return projectRootDir
+    }
+
+    fun copyFileAsCodeResource(source: Path): Boolean {
+        val rootDir = findProjectRootDir() ?: return false
+        val destPath = rootDir.resolve(CODE_RESOURCE_DIR)
+
+        val filename = source.fileName.toString()
+        val target = destPath.resolve(filename)
+        Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING)
+
+        return true
     }
 
     /**
