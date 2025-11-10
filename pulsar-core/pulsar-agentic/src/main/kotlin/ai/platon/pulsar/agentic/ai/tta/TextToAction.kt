@@ -1,6 +1,7 @@
 package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.agentic.ai.AgentMessageList
+import ai.platon.pulsar.agentic.ai.PromptBuilder.Companion.SINGLE_ACTION_GENERATION_PROMPT
 import ai.platon.pulsar.agentic.ai.PromptBuilder.Companion.buildObserveResultSchema
 import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor
 import ai.platon.pulsar.agentic.tools.ToolSpecification
@@ -32,44 +33,6 @@ open class TextToAction(
     val conf: ImmutableConfig
 ) {
     companion object {
-
-        const val SINGLE_ACTION_GENERATION_PROMPT = """
-根据动作描述和网页内容，选择最合适一个或多个工具。
-
-## 动作描述
-
-{{ACTION_DESCRIPTIONS}}
-
----
-
-## 工具列表
-
-```kotlin
-{{TOOL_CALL_SPECIFICATION}}
-```
-
----
-
-## 网页内容
-
-网页内容以无障碍树的形式呈现:
-
-{{NANO_TREE_LAZY_JSON}}
-
----
-
-## 输出
-
-- 仅输出 JSON 内容，无多余文字
-- domain 取值 driver
-- method 和 arguments 遵循 `## 工具列表` 的函数表达式
-
-动作输出格式：
-{{OUTPUT_SCHEMA_ACT}}
-
----
-
-        """
 
         fun toActionDescription(
             instruction: String,

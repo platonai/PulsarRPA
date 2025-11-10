@@ -80,30 +80,6 @@ class PromptBuilder() {
             return if (returnAction) schema1 else schema2
         }
 
-        fun buildObserveResultSchemaContract(params: ObserveParams): String {
-            val schema = buildObserveResultSchema(params.returnAction)
-
-            return if (isZH) {
-                """
-## Schema 要求
-你必须返回一个与以下模式匹配的有效 JSON 对象，`method` 字段不得为空：
-$schema
-
----
-
-""".trimIndent()
-            } else {
-                """
-## Schema Contract
-You MUST respond with a valid JSON object matching this schema:
-$schema
-
----
-
-""".trimIndent()
-            }
-        }
-
         val TOOL_CALL_RULE_CONTENT = """
 严格遵循以下规则使用浏览器和浏览网页：
 
@@ -375,26 +351,18 @@ $A11Y_TREE_NOTE_CONTENT
 
 ---
 
+
 ## 输出格式
 
 - 输出严格使用下面两种 JSON 格式之一
 - 仅输出 JSON 内容，无多余文字
 
-### 动作输出
-(<output_act>)
-
-最多一个元素，domain & method 字段不得为空，输出格式:
-```json
+1. 动作输出格式，最多一个元素，domain & method 字段不得为空(<output_act>)：
 ${buildObserveResultSchema(true)}
-```
 
-### 任务完成输出
-(<output_done>)
-
-输出格式:
-```json
+2. 任务完成输出格式(<output_done>):
 {"taskComplete":bool,"success":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]}
-```
+
 
 ---
 
@@ -405,6 +373,44 @@ ${buildObserveResultSchema(true)}
 ---
 
         """.trimIndent()
+
+        const val SINGLE_ACTION_GENERATION_PROMPT = """
+根据动作描述和网页内容，选择最合适一个或多个工具。
+
+## 动作描述
+
+{{ACTION_DESCRIPTIONS}}
+
+---
+
+## 工具列表
+
+```kotlin
+{{TOOL_CALL_SPECIFICATION}}
+```
+
+---
+
+## 网页内容
+
+网页内容以无障碍树的形式呈现:
+
+{{NANO_TREE_LAZY_JSON}}
+
+---
+
+## 输出
+
+- 仅输出 JSON 内容，无多余文字
+- domain 取值 driver
+- method 和 arguments 遵循 `## 工具列表` 的函数表达式
+
+动作输出格式：
+{{OUTPUT_SCHEMA_ACT}}
+
+---
+
+        """
 
         val OBSERVE_GUIDE_OUTPUT_SCHEMA = """
 {
@@ -497,9 +503,10 @@ $TOOL_CALL_RULE_CONTENT
 ---
 
 ## 输出格式
+(<output_act>)
 
 - 输出严格使用下面 JSON 格式，仅输出 JSON 内容，无多余文字
-- 最多一个元素，domain & method 字段不得为空(<output_act>)
+- 最多一个元素，domain & method 字段不得为空
 
 {{OUTPUT_SCHEMA_PLACEHOLDER}}
 

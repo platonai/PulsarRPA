@@ -284,7 +284,7 @@ fs.replaceContent(filename: String, oldStr: String, newStr: String): String
 
 最多一个元素，domain & method 字段不得为空：
 
-```json
+
 {
   "elements": [
     {
@@ -307,7 +307,7 @@ fs.replaceContent(filename: String, oldStr: String, newStr: String): String
     }
   ]
 }
-```
+
 
 ### 任务完成输出
 (<output_done>)
