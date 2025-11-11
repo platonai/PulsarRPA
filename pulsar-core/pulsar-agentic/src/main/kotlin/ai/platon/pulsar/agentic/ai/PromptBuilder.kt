@@ -840,15 +840,21 @@ $userRequest
         return instruction
     }
 
+    fun buildExtractUserRequestPrompt(params: ExtractParams): String {
+        return """
+## 用户指令
+<user_request>
+${params.instruction}
+</user_request>
+        """.trimIndent()
+    }
+
     fun buildExtractUserPrompt(params: ExtractParams): SimpleMessage {
         val browserState = params.agentState.browserUseState.browserState
         val nanoTree = params.agentState.browserUseState.domState.microTree.toNanoTreeInRange()
         val schema = params.schema
 
         val content = """
-## 用户指令
-${params.instruction}
-
 ## 浏览器状态
 ${browserState.lazyJson}
 

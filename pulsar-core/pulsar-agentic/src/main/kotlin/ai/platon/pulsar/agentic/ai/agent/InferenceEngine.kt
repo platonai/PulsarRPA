@@ -12,7 +12,6 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.external.TokenUsage
 import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
@@ -93,11 +92,9 @@ class InferenceEngine(
         val messages = AgentMessageList()
 
         // 1) Extraction call -----------------------------------------------------------------
-        val systemMsg = promptBuilder.buildExtractSystemPrompt(params.userProvidedInstructions)
-        val userMsg = promptBuilder.buildExtractUserPrompt(params)
-
-        messages.addLast(systemMsg)
-        messages.addLast(userMsg)
+        messages.addLast(promptBuilder.buildExtractSystemPrompt(params.userProvidedInstructions))
+        messages.addUser(promptBuilder.buildExtractUserRequestPrompt(params), "user_request")
+        messages.addLast(promptBuilder.buildExtractUserPrompt(params))
 
         // val messages = listOf(systemMsg, userMsg)
         var callFile = ""
@@ -116,7 +113,7 @@ class InferenceEngine(
         }
 
         val extractStartTime = Instant.now()
-        val extractResponse = cta.generateResponse(messages, params.agentState)
+        val extractResponse = cta.generateResponseRaw(messages)
 
         // val (extractResp, extractElapsedMs) = doLangChainChat(systemMsg, userMsg)
 
@@ -157,12 +154,10 @@ class InferenceEngine(
         val metadataMessages = AgentMessageList()
         val metadataSystem = promptBuilder.buildMetadataSystemPrompt()
         // For metadata, pass the extracted object directly
-        val metadataUser = promptBuilder.buildMetadataPrompt(
-            params.instruction,
-            extractedNode,
-            params.agentState
-        )
+        val metadataUser = promptBuilder.buildMetadataPrompt(params.instruction, extractedNode, params.agentState)
+
         metadataMessages.addLast(metadataSystem)
+        metadataMessages.addUser(promptBuilder.buildExtractUserRequestPrompt(params), "user_request")
         metadataMessages.addLast(metadataUser)
 
         var metadataCallFile = ""
@@ -180,7 +175,7 @@ class InferenceEngine(
         }
 
         val metadataStartTime = Instant.now()
-        val metadataResponse = cta.generateResponse(messages, params.agentState)
+        val metadataResponse = cta.generateResponseRaw(messages)
 
 //        val (metadataResp, metadataElapsedMs) = doLangChainChat(metadataSystem, metadataUser)
 
@@ -273,7 +268,7 @@ class InferenceEngine(
         // val (resp, elapsedMs) = doLangChainChat(systemMessages, userMessages)
 
         val startTime = Instant.now()
-        val modelResponse = cta.generateResponse(messages, params.agentState, screenshotB64 = params.screenshotB64)
+        val modelResponse = cta.generateObserveResponse(messages, params.agentState, screenshotB64 = params.screenshotB64)
 
         val tokenUsage = modelResponse.tokenUsage
 

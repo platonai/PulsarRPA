@@ -40,6 +40,17 @@ object LLMUtils {
         return ResourceLoader.readString(resource)
     }
 
+    fun writeAsResource(fileName: String, content: String): Path? {
+        val baseDir = ResourceLoader.getPath(CODE_MIRROR_DIR)
+        if (baseDir.notExists()) {
+            return null
+        }
+
+        val path = baseDir.resolve(fileName)
+        Files.writeString(path, content)
+        return path
+    }
+
     fun copyWebDriverFile(dest: Path) {
         val file = ProjectUtils.findFile("WebDriver.kt")
         if (file != null) {

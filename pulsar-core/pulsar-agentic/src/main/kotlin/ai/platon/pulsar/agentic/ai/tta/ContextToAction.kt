@@ -47,7 +47,7 @@ open class ContextToAction(
         try {
             val instruction = agentState.instruction
 
-            val response = generateResponse(messages, agentState, screenshotB64, 1)
+            val response = generateObserveResponse(messages, agentState, screenshotB64, 1)
 
             val actionDescription = tta.modelResponseToActionDescription(instruction, agentState, response)
 
@@ -81,16 +81,16 @@ open class ContextToAction(
     }
 
     @ExperimentalApi
-    open suspend fun generateResponse(
+    open suspend fun generateObserveResponse(
         instruction: String, agentState: AgentState, screenshotB64: String? = null, toolCallLimit: Int = 100,
     ): ModelResponse {
         val messages = AgentMessageList()
         messages.addLast("user", instruction, "user_request")
-        return generateResponse(messages, agentState, screenshotB64, toolCallLimit)
+        return generateObserveResponse(messages, agentState, screenshotB64, toolCallLimit)
     }
 
     @ExperimentalApi
-    open suspend fun generateResponse(
+    open suspend fun generateObserveResponse(
         messages: AgentMessageList,
         agentState: AgentState,
         screenshotB64: String? = null,
@@ -111,8 +111,14 @@ open class ContextToAction(
 
         promptBuilder.buildObserveUserMessage(messages, params)
 
+        return generateResponseRaw(messages, screenshotB64)
+    }
+
+    @ExperimentalApi
+    open suspend fun generateResponseRaw(messages: AgentMessageList, screenshotB64: String? = null): ModelResponse {
         val systemMessage = messages.systemMessages().joinToString("\n")
         val userMessage = messages.userMessages().joinToString("\n")
+
         val response = if (screenshotB64 != null) {
             chatModel.call(systemMessage, userMessage, null, screenshotB64, "image/jpeg")
         } else {
@@ -129,7 +135,7 @@ open class ContextToAction(
         screenshotB64: String? = null,
         toolCallLimit: Int = 100,
     ): ActionDescription {
-        val response = generateResponse(instruction, agentState, screenshotB64, toolCallLimit)
+        val response = generateObserveResponse(instruction, agentState, screenshotB64, toolCallLimit)
         val actionDescription = tta.modelResponseToActionDescription(instruction, agentState, response)
         return tta.reviseActionDescription(actionDescription)
     }
