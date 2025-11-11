@@ -90,11 +90,16 @@ class InferenceEngine(
      *   - prompt_tokens, completion_tokens, inferenceTimeMillis
      */
     suspend fun extract(params: ExtractParams): ObjectNode {
+        val messages = AgentMessageList()
+
         // 1) Extraction call -----------------------------------------------------------------
         val systemMsg = promptBuilder.buildExtractSystemPrompt(params.userProvidedInstructions)
         val userMsg = promptBuilder.buildExtractUserPrompt(params)
 
-        val messages = listOf(systemMsg, userMsg)
+        messages.addLast(systemMsg)
+        messages.addLast(userMsg)
+
+        // val messages = listOf(systemMsg, userMsg)
         var callFile = ""
         var extractCallTs = ""
         if (params.logInferenceToFile) {
@@ -103,7 +108,7 @@ class InferenceEngine(
                 kind = "extract_call",
                 requestId = params.requestId,
                 modelCall = "extract",
-                messages = messages,
+                messages = messages.messages,
                 enabled = true
             )
             callFile = file
@@ -111,7 +116,7 @@ class InferenceEngine(
         }
 
         val extractStartTime = Instant.now()
-        val extractResponse = cta.generateResponse(params.instruction, params.agentState)
+        val extractResponse = cta.generateResponse(messages, params.agentState)
 
         // val (extractResp, extractElapsedMs) = doLangChainChat(systemMsg, userMsg)
 
@@ -149,6 +154,7 @@ class InferenceEngine(
         }
 
         // 2) Metadata call -------------------------------------------------------------------
+        val metadataMessages = AgentMessageList()
         val metadataSystem = promptBuilder.buildMetadataSystemPrompt()
         // For metadata, pass the extracted object directly
         val metadataUser = promptBuilder.buildMetadataPrompt(
@@ -156,6 +162,8 @@ class InferenceEngine(
             extractedNode,
             params.agentState
         )
+        metadataMessages.addLast(metadataSystem)
+        metadataMessages.addLast(metadataUser)
 
         var metadataCallFile = ""
         var metadataCallTs = ""
@@ -165,14 +173,14 @@ class InferenceEngine(
                 kind = "metadata_call",
                 requestId = params.requestId,
                 modelCall = "metadata",
-                messages = listOf(metadataSystem, metadataUser),
+                messages = metadataMessages.messages,
                 enabled = true
             )
             metadataCallFile = file; metadataCallTs = ts
         }
 
         val metadataStartTime = Instant.now()
-        val metadataResponse = cta.generateResponse(params.instruction, params.agentState)
+        val metadataResponse = cta.generateResponse(messages, params.agentState)
 
 //        val (metadataResp, metadataElapsedMs) = doLangChainChat(metadataSystem, metadataUser)
 
