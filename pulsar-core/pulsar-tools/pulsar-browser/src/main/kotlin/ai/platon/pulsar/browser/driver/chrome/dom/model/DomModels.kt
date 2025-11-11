@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import org.apache.commons.lang3.StringUtils
 import java.awt.Dimension
 import java.math.RoundingMode
+import java.time.OffsetDateTime
 import java.time.ZoneId
 import java.util.*
 import kotlin.math.ceil
@@ -572,6 +573,7 @@ data class DOMState(
 }
 
 data class ClientInfo(
+    val datetime: String = OffsetDateTime.now().toString(),
     // time zone: "Asia/Shanghai"
     val timeZone: String = ZoneId.systemDefault().id,
     // locale: "zh_CN"

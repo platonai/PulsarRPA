@@ -869,8 +869,8 @@ ${schema.toJsonSchema()}
 1. 一旦当前抽取响应已经满足了指令，必须将完成状态设为 true 并停止处理，不论是否还有剩余分片。
 2. 只有在以下两个条件同时成立时，才将完成状态设为 false：
    - 指令尚未被满足
-   - 仍然有剩余分片需要处理（chunksTotal > chunksSeen）
-每个 chunk 表示一屏网页内容，第一屏对应第一个 chunk。
+   - 仍然有剩余视口需要处理（viewportsTotal > processingViewport）
+
 """.trimIndent()
 
     private val metadataSystemPromptEN = metadataSystemPromptCN
@@ -901,7 +901,7 @@ ${schema.toJsonSchema()}
         // The 1-based viewport to see.
         val processingViewport = scrollState.processingViewport
         val viewportsTotal = scrollState.viewportsTotal
-        val nextChunkToSee = 1 + processingViewport
+        val nextViewportToSee = 1 + processingViewport
 
         val extractedJson = DOMSerializer.MAPPER.writeValueAsString(extractionResponse)
 

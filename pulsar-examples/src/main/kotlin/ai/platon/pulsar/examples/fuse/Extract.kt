@@ -30,6 +30,7 @@ class Extract {
         var extractResult = agent.extract(action, ExtractionSchema.parse(schema))
         result("extract result", extractResult)
 
+        action = "提取前三页列表页数据：文章标题，评论信息"
         val result = agent.resolve(action)
         result("action result", result)
     }
