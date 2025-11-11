@@ -124,11 +124,7 @@ class PromptBuilder() {
 """
 
         val EXTRACTION_TOOL_NOTE_CONTENT_2 = """
-使用 `agent.extract` 满足高级数据提取要求：
-
-- 对提取结果格式有严格要求
-- 提取结果存在内嵌对象
-- 其他数据提取工具无法满足要求
+使用 `agent.extract` 满足高级数据提取要求，仅当 `textContent`, `selectFirstTextOrNull` 不能满足要求时使用。
 
 参数说明：
 
@@ -146,7 +142,7 @@ class ExtractionField(
 class ExtractionSchema(val fields: List<ExtractionField>)
 ```
 
-例 ：
+例：
 ```
 {
   "fields": [
