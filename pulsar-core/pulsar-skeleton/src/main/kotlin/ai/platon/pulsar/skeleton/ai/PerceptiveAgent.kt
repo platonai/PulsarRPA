@@ -221,7 +221,7 @@ data class AgentState constructor(
     // AI:
     var domain: String? = null,
     // AI:
-    var action: String? = null,
+    var method: String? = null,
     // AI:
     var description: String? = null,
     // AI: the summary of the screenshot provided in this step
@@ -250,7 +250,7 @@ data class AgentState constructor(
             nextGoal
         )
             .joinToString("\n")
-        return "$timestamp $action - $summary"
+        return "$timestamp $method - $summary"
     }
 }
 

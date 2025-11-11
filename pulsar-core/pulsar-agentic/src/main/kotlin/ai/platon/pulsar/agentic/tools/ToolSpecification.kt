@@ -17,7 +17,6 @@ agent.done()
     const val AGENT_TOOL_CALL_LIST = """
 // domain: agent
 agent.done()
-agent.extract(instruction: String, schema: Map<String, String>): ExtractResult
     """
 
     const val FILE_TOOL_CALL_LIST = """

@@ -5,7 +5,6 @@ import ai.platon.pulsar.agentic.AgentConfig
 import ai.platon.pulsar.agentic.BrowserPerceptiveAgent
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.ai.ActionOptions
-import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.ai.ExtractOptions
 import ai.platon.pulsar.skeleton.ai.ObserveOptions
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
@@ -186,7 +185,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
                 // History should be updated
                 assertTrue(agent.stateHistory.isNotEmpty())
-                assertContains(agent.stateHistory.last().action ?: "", "extract")
+                assertContains(agent.stateHistory.last().method ?: "", "extract")
             }
         }
 

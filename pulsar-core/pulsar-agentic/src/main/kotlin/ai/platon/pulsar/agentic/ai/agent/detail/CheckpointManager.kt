@@ -14,7 +14,7 @@ import java.util.*
 
 /**
  * Checkpoint data for resuming agent sessions.
- * 
+ *
  * Contains all necessary state to resume execution from a saved point.
  */
 data class AgentCheckpoint(
@@ -24,21 +24,21 @@ data class AgentCheckpoint(
     val currentStep: Int,
     val instruction: String,
     val targetUrl: String?,
-    
+
     // State history (limited to avoid large files)
     val recentStateHistory: List<AgentStateSnapshot>,
-    
+
     // Performance metrics
     val totalSteps: Int,
     val successfulActions: Int,
     val failedActions: Int,
-    
+
     // Circuit breaker state
     val failureCounts: Map<String, Int>,
-    
+
     // Configuration snapshot
     val configSnapshot: Map<String, Any>,
-    
+
     // Additional metadata
     val metadata: Map<String, String> = emptyMap()
 ) {
@@ -62,7 +62,7 @@ data class AgentStateSnapshot(
                 step = state.step,
                 instruction = state.instruction,
                 domain = state.domain,
-                action = state.action,
+                action = state.method,
                 description = state.description,
                 success = state.description?.contains("FAIL") != true
             )
@@ -72,7 +72,7 @@ data class AgentStateSnapshot(
 
 /**
  * Manages checkpointing and restoration of agent sessions.
- * 
+ *
  * Supports saving/loading session state to enable:
  * - Recovery from crashes
  * - Pause/resume functionality
@@ -87,33 +87,33 @@ class CheckpointManager(
         enable(SerializationFeature.INDENT_OUTPUT)
         disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
     }
-    
+
     init {
         Files.createDirectories(checkpointDir)
     }
-    
+
     /**
      * Save a checkpoint to disk.
-     * 
+     *
      * @param checkpoint The checkpoint data to save
      * @return Path to the saved checkpoint file
      */
     fun save(checkpoint: AgentCheckpoint): Path {
         val filename = "checkpoint-${checkpoint.sessionId}-${checkpoint.checkpointId}.json"
         val file = checkpointDir.resolve(filename)
-        
+
         mapper.writeValue(file.toFile(), checkpoint)
-        
+
         // Also save as "latest" for easy recovery
         val latestFile = checkpointDir.resolve("checkpoint-${checkpoint.sessionId}-latest.json")
         mapper.writeValue(latestFile.toFile(), checkpoint)
-        
+
         return file
     }
-    
+
     /**
      * Load a checkpoint from disk.
-     * 
+     *
      * @param sessionId The session ID to load
      * @param checkpointId Optional specific checkpoint ID, or null for latest
      * @return The loaded checkpoint, or null if not found
@@ -124,17 +124,17 @@ class CheckpointManager(
         } else {
             checkpointDir.resolve("checkpoint-$sessionId-latest.json")
         }
-        
+
         return if (Files.exists(file)) {
             mapper.readValue(file.toFile())
         } else {
             null
         }
     }
-    
+
     /**
      * List all checkpoints for a session.
-     * 
+     *
      * @param sessionId The session ID
      * @return List of checkpoint metadata
      */
@@ -155,10 +155,10 @@ class CheckpointManager(
             .sorted { a, b -> b.timestamp.compareTo(a.timestamp) }
             .toList()
     }
-    
+
     /**
      * Delete old checkpoints for a session, keeping only the most recent N.
-     * 
+     *
      * @param sessionId The session ID
      * @param keepCount Number of recent checkpoints to keep
      */
@@ -168,7 +168,7 @@ class CheckpointManager(
             Files.deleteIfExists(metadata.path)
         }
     }
-    
+
     /**
      * Delete all checkpoints for a session.
      */

@@ -141,7 +141,7 @@ class AgentStateManager(
         agentState.apply {
             step = computedStep
             domain = toolCall?.domain
-            action = toolCall?.method
+            method = toolCall?.method
             description = descMsg
             screenshotContentSummary = observeElement?.screenshotContentSummary
             currentPageContentSummary = observeElement?.currentPageContentSummary
@@ -155,7 +155,7 @@ class AgentStateManager(
 
     fun addToHistory(h: AgentState) {
         val items = mapOf(
-            "action" to h.action,
+            "action" to h.method,
             "expression" to h.toolCallResult?.expression,
             "tcEvalResult" to h.toolCallResult?.evaluate?.value
         ).filterValues { it != null }
@@ -176,7 +176,7 @@ class AgentStateManager(
     fun trace(h: AgentState?, items: Map<String, String>, message: String? = null) {
         val items2 = if (h != null) {
             mapOf(
-                "action" to h.action,
+                "action" to h.method,
                 "expression" to h.toolCallResult?.expression,
                 "tcEvalResult" to h.toolCallResult?.evaluate?.value
             ).filterValues { it != null }

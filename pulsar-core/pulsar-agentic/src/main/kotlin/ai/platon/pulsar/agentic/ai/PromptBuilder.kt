@@ -797,7 +797,7 @@ $his
         return """
 ## 上步输出
 
-上步操作：${agentState.prevState?.action}
+上步操作：${agentState.prevState?.method}
 上步期望结果：${agentState.prevState?.nextGoal}
 
 上步执行结果：

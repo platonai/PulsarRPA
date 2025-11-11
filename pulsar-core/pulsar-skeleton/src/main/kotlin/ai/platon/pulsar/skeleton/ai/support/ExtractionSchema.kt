@@ -151,7 +151,8 @@ class ExtractionSchema(val fields: List<ExtractionField>) {
         val DEFAULT: ExtractionSchema =
             ExtractionSchema(
                 listOf(
-                    ExtractionField("title", type = "string", description = "Page title"), ExtractionField(
+                    ExtractionField("title", type = "string", description = "Page title"),
+                    ExtractionField(
                         "content",
                         type = "string",
                         description = "Primary textual content of the page",
