@@ -5,10 +5,6 @@ data class ModelResponse constructor(
     var state: ResponseState = ResponseState.STOP,
     var tokenUsage: TokenUsage = TokenUsage(),
 ) {
-    fun isLocalCached(): Boolean {
-        return state == ResponseState.LOCAL_CACHE
-    }
-
     override fun toString() = content
 
     companion object {

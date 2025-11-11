@@ -76,7 +76,7 @@ class AgentToolManager(
             val oldUrl = actionDescription.agentState?.browserUseState?.browserState?.url
             val expression = actionDescription.cssFriendlyExpression
             val maybeNavMethod = method in ToolSpecification.MAY_NAVIGATE_ACTIONS
-            if (timeoutMs != null && oldUrl != null && maybeNavMethod) {
+            if (oldUrl != null && maybeNavMethod) {
                 // High Priority #4: Fail explicitly on navigation timeout
                 val remainingTime = driver.waitForNavigation(oldUrl, timeoutMs)
                 if (remainingTime <= 0) {

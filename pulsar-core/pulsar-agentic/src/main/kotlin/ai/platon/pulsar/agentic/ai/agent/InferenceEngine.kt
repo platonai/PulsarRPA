@@ -15,6 +15,7 @@ import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.TokenUsage
 import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.AgentState
+import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -41,9 +42,7 @@ data class LLMUsage(
 data class ExtractParams(
     val instruction: String,
     val agentState: AgentState,
-    /** JSON Schema string describing the desired extraction output */
-    val schema: String,
-    val chunksTotal: Int = 1,
+    val schema: ExtractionSchema,
     val requestId: String = UUID.randomUUID().toString(),
     val userProvidedInstructions: String? = null,
     val logInferenceToFile: Boolean = false,
@@ -91,13 +90,7 @@ class InferenceEngine(
     suspend fun extract(params: ExtractParams): ObjectNode {
         // 1) Extraction call -----------------------------------------------------------------
         val systemMsg = promptBuilder.buildExtractSystemPrompt(params.userProvidedInstructions)
-        val userMsg = promptBuilder.buildExtractUserPrompt(
-            params.instruction,
-            // Inject schema hint to strongly guide JSON output
-            promptBuilder.buildExtractDomContent(params),
-            // Include browser state JSON for tabs information
-            params.agentState.browserUseState.browserState.lazyJson
-        )
+        val userMsg = promptBuilder.buildExtractUserPrompt(params)
 
         val messages = listOf(systemMsg, userMsg)
         var callFile = ""
@@ -246,6 +239,7 @@ class InferenceEngine(
     suspend fun observe(params: ObserveParams, messages: AgentMessageList): ActionDescription {
         requireNotNull(messages.instruction) { "User instruction is required | $messages" }
         require(params.instruction == messages.instruction?.content)
+        requireNotNull(params.agentState.browserUseState) { "Agent state has to be available" }
 
         val instruction = params.instruction
         // promptBuilder.buildObservePrompt(params, messages)

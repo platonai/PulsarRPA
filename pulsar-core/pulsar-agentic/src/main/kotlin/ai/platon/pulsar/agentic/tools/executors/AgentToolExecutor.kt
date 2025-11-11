@@ -2,6 +2,8 @@ package ai.platon.pulsar.agentic.tools.executors
 
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
+import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
+import com.fasterxml.jackson.databind.ObjectMapper
 import kotlin.reflect.KClass
 
 class AgentToolExecutor : AbstractToolExecutor() {
@@ -10,6 +12,10 @@ class AgentToolExecutor : AbstractToolExecutor() {
     override val domain = "agent"
 
     override val targetClass: KClass<*> = PerceptiveAgent::class
+
+    companion object {
+        private val objectMapper = ObjectMapper()
+    }
 
     /**
      * Execute agent.* expressions against a PerceptiveAgent target using named args.
@@ -24,6 +30,21 @@ class AgentToolExecutor : AbstractToolExecutor() {
 
         val agent = requireNotNull(target as? PerceptiveAgent) { "Target must be a PerceptiveAgent" }
 
+        // Helper: coerce schema parameter to Map<String,String>, only accept Map or JSON object string
+        fun coerceSchema(raw: Any?, functionName: String): ExtractionSchema {
+            if (raw == null) throw IllegalArgumentException("Missing parameter 'schema' for $functionName")
+            return when (raw) {
+                is ExtractionSchema -> raw
+                is Map<*, *> -> {
+                    ExtractionSchema.fromMap(raw)
+                }
+                is String -> {
+                    ExtractionSchema.parse(raw)
+                }
+                else -> throw IllegalArgumentException("Parameter 'schema' must be ExtractionSchema or JSON object string; actual='${raw::class.simpleName}'")
+            }
+        }
+
         return when (functionName) {
             // agent.act(action: String)
             "act" -> {
@@ -35,10 +56,17 @@ class AgentToolExecutor : AbstractToolExecutor() {
                 validateArgs(args, allowed = setOf("instruction"), required = setOf("instruction"), functionName)
                 agent.observe(paramString(args, "instruction", functionName)!!)
             }
-            // agent.extract(instruction: String)
+            // agent.extract(instruction: String) OR agent.extract(instruction: String, schema: Map<String,String>)
             "extract" -> {
-                validateArgs(args, allowed = setOf("instruction"), required = setOf("instruction"), functionName)
-                agent.extract(paramString(args, "instruction", functionName)!!)
+                return if ("schema" in args) {
+                    validateArgs(args, allowed = setOf("instruction", "schema"), required = setOf("instruction", "schema"), functionName)
+                    val instruction = paramString(args, "instruction", functionName)!!
+                    val schema = coerceSchema(args["schema"], functionName)
+                    agent.extract(instruction, schema)
+                } else {
+                    validateArgs(args, allowed = setOf("instruction"), required = setOf("instruction"), functionName)
+                    agent.extract(paramString(args, "instruction", functionName)!!)
+                }
             }
             // agent.resolve(problem: String)
             "resolve" -> {

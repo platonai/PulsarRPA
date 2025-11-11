@@ -2,6 +2,31 @@ package ai.platon.pulsar.agentic.tools
 
 object ToolSpecification {
 
+    const val AGENT_TOOL_CALL_LIST_BAK = """
+// domain: agent
+agent.observe(instruction: String): List<ObserveResult>
+agent.observe(options: ObserveOptions): List<ObserveResult>
+agent.act(action: String): ActResult
+agent.act(action: ActionOptions): ActResult
+agent.act(observe: ObserveResult): ActResult
+agent.extract(instruction: String): ExtractResult
+agent.extract(options: ExtractOptions): ExtractResult
+agent.done()
+    """
+
+    const val AGENT_TOOL_CALL_LIST = """
+// domain: agent
+agent.done()
+agent.extract(instruction: String, schema: Map<String, String>): ExtractResult
+    """
+
+    const val FILE_TOOL_CALL_LIST = """
+// domain: fs
+fs.writeString(filename: String, content: String)
+fs.readString(filename: String)
+fs.replaceContent(filename: String, oldStr: String, newStr: String)
+    """
+
     /**
      * The `TOOL_CALL_LIST` is written using kotlin syntax to express the tool's `domain`, `method`, `arguments`.
      * */
@@ -42,30 +67,9 @@ fs.writeString(filename: String, content: String)
 fs.readString(filename: String): String
 fs.replaceContent(filename: String, oldStr: String, newStr: String): String
 
-    """
-
-    const val AGENT_TOOL_CALL_LIST_BAK = """
 // domain: agent
-agent.observe(instruction: String): List<ObserveResult>
-agent.observe(options: ObserveOptions): List<ObserveResult>
-agent.act(action: String): ActResult
-agent.act(action: ActionOptions): ActResult
-agent.act(observe: ObserveResult): ActResult
-agent.extract(instruction: String): ExtractResult
-agent.extract(options: ExtractOptions): ExtractResult
-agent.done()
-    """
+agent.extract(instruction: String, schema: String): String // Extract data from the whole web page, provide a json to define the data schema.
 
-    const val AGENT_TOOL_CALL_LIST = """
-// domain: agent
-agent.done()
-    """
-
-    const val FILE_TOOL_CALL_LIST = """
-// domain: fs
-fs.writeString(filename: String, content: String)
-fs.readString(filename: String)
-fs.replaceContent(filename: String, oldStr: String, newStr: String)
     """
 
     val SUPPORTED_TOOL_CALLS = TOOL_CALL_SPECIFICATION
@@ -76,16 +80,6 @@ fs.replaceContent(filename: String, oldStr: String, newStr: String)
         .toList()
 
     val SUPPORTED_ACTIONS = SUPPORTED_TOOL_CALLS.map { it.substringBefore("(") }
-
-    val SELECTOR_ACTIONS = setOf(
-        "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "visible", "focus",
-        "scrollTo", "captureScreenshot", "outerHTML", "selectFirstTextOrNull", "selectTextAll",
-        "selectFirstAttributeOrNull", "selectAttributes", "selectAttributeAll", "selectHyperlinks",
-        "selectAnchors", "selectImages", "selectFirstPropertyValueOrNull", "selectPropertyValueAll",
-        "setAttribute", "setAttributeAll", "setProperty", "setPropertyAll", "evaluate", "evaluateValue",
-        "evaluateDetail", "evaluateValueDetail", "clickMatches", "clickTextMatches", "clickablePoint",
-        "boundingBox", "moveMouseTo", "dragAndDrop"
-    )
 
     val MAY_NAVIGATE_ACTIONS = setOf("navigateTo", "click", "reload", "goBack", "goForward")
 }

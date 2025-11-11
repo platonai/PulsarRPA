@@ -8,6 +8,7 @@ import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.ai.ExtractOptions
 import ai.platon.pulsar.skeleton.ai.ObserveOptions
+import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import ai.platon.pulsar.util.TestHelper
 import ai.platon.pulsar.util.server.EnableMockServerApplication
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -95,10 +96,11 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 val agent = BrowserPerceptiveAgent(driver, session)
 
                 val results = agent.observe("List all interactive elements on this page")
-                printlnPro(results.shuffled().take(10))
-
                 // Should find some interactive elements
                 assertTrue(results.isNotEmpty(), "Should find interactive elements")
+
+                printlnPro(results.shuffled().take(5).map { it.actionDescription?.modelResponse })
+                printlnPro(results.first())
 
                 results.forEach { result ->
                     assertNotNull(result.locator, "Selector should not be null")
@@ -201,7 +203,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
 
                 val options = ExtractOptions(
                     instruction = "Extract title and count buttons",
-                    schema = customSchema
+                    schema = ExtractionSchema.fromMap(customSchema),
                 )
 
                 val result = agent.extract(options)

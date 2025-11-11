@@ -37,13 +37,17 @@ class ActionValidator(
             return false
         }
 
+        if (toolCall.domain != "driver") {
+            return true
+        }
+
         val cacheKey = "${toolCall.method}:${toolCall.arguments}"
         return validationCache.getOrPut(cacheKey) {
             when (toolCall.method) {
                 "open", "navigateTo" -> validateNavigateTo(toolCall.arguments)
                 "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "focus", "scrollTo",
                 "type", "isHidden", "visible", "isChecked", "bringToFront",
-                "extract", "selectFirstTextOrNull", "selectTextAll", "selectFirstAttributeOrNull", "selectAttributes", "selectAttributeAll", "selectImages",
+                "selectFirstTextOrNull", "selectTextAll", "selectFirstAttributeOrNull", "selectAttributes", "selectAttributeAll", "selectImages",
                 "evaluate", "clickablePoint", "boundingBox" -> validateElementAction(toolCall.arguments)
 
                 "waitForNavigation", "waitForSelector" -> validateWaitForNavigation(toolCall.arguments)

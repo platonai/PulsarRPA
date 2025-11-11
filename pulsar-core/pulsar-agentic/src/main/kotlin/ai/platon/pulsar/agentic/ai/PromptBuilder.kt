@@ -112,6 +112,31 @@ class PromptBuilder() {
 
     """.trimIndent()
 
+        val EXTRACTION_TOOL_NOTE_CONTENT = """
+使用 `agent.extract` 满足高级数据提取要求：
+
+- 对提取结果格式有严格要求
+- 提取结果存在内嵌对象
+- 其他数据提取工具无法满足要求
+
+参数说明：
+
+1. `instruction`: 准确描述 1. 数据提取目标 2. 数据提取要求
+2. `schema`: JSON 格式描述的数据提取结果 schema 要求，遵循如下模式：
+```
+class ExtractionField(
+    name: String,
+    type: String = "string",                 // JSON schema primitive or 'object' / 'array'
+    description: String,
+    required: Boolean = true,
+    properties: List<ExtractionField> = emptyList(), // children if object
+    items: ExtractionField? = null                    // item schema if array
+)
+class ExtractionSchema(fields: List<ExtractionField>)
+```
+
+"""
+
         val INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT = """
 (Interactive Elements)
 
@@ -218,6 +243,10 @@ ${ToolSpecification.TOOL_CALL_SPECIFICATION}
 
 $TOOL_CALL_RULE_CONTENT
 
+### 数据提取工具说明
+
+$EXTRACTION_TOOL_NOTE_CONTENT
+
 ---
 
 ## 可交互元素说明
@@ -277,7 +306,7 @@ $A11Y_TREE_NOTE_CONTENT
 - 如需输入，直接输入，无需滚动和聚焦，工具层处理
 - 屏幕阅读规则
   - 默认逐屏阅读，屏幕视觉内容是推理的最终依据
-  - 当视口数超过5屏时，除非用户要求，否则不要逐屏阅读，而是滚动到网页底部保证网页完全加载，然后使用文本提取工具(selectFirstTextOrNull)提取网页内容进行分析
+  - 当视口数超过5屏时，除非用户要求，否则不要逐屏阅读，而是滚动到网页底部保证网页完全加载，然后使用全文提取工具`driver.textContent()`提取网页内容进行分析
 - 不要在一步中尝试多条不同路径。始终为每一步设定一个明确目标。重要的是在下一步你能看到动作是否成功，因此不要链式调用会多次改变浏览器状态的动作，例如：
    - 不要使用 click 然后再 navigate，因为你无法确认 click 是否成功。
    - 不要连续使用 switch，因为你看不到中间状态。
@@ -628,44 +657,23 @@ $userProvidedInstructions
     }
 
     fun buildExtractSystemPrompt(userProvidedInstructions: String? = null): SimpleMessage {
-        val baseInstructionCN = """你正在代表用户提取内容。
-如果用户要求你提取“列表”信息或“全部”信息，
-你必须提取用户请求的所有信息。
+        val userInstructions = buildObserveGuideSystemExtraPrompt(userProvidedInstructions)
+
+        val content = """
+# 系统指南
+
+你正在代表用户提取内容。如果用户要求你提取“列表”信息或“全部”信息，你必须提取用户请求的所有信息。
 
 你将获得：
 1. 一条指令
-2. 一个要从中提取内容的 DOM 元素列表"""
+2. 一个要从中提取内容的 DOM 元素列表
 
-        val baseInstructionEN = """You are extracting content on behalf of a user.
-If a user asks you to extract a 'list' of information, or 'all' information,
-YOU MUST EXTRACT ALL OF THE INFORMATION THAT THE USER REQUESTS.
+- 从 DOM 元素中原样打印精确文本，包含所有符号、字符和换行。
+- 如果没有发现新的信息，打印 null 或空字符串。
 
-You will be given:
-1. An instruction
-2. A list of DOM elements to extract from"""
+$userInstructions
 
-        val instructionsCN = """
-从 DOM 元素中原样打印精确文本，包含所有符号、字符和换行。
-如果没有发现新的信息，打印 null 或空字符串。
-  """.trim()
-        val instructionsEN = """
-Print the exact text from the DOM elements with all symbols, characters, and endlines as is.
-Print null or an empty string if no new information is found.
-  """.trim()
-
-        val additionalInstructionsCN =
-            "如果用户尝试提取链接或 URL，则你必须仅返回链接元素的 ID。不要尝试直接从文本中提取链接，除非绝对必要。 "
-        val additionalInstructionsEN =
-            "If a user is attempting to extract links or URLs, you MUST respond with ONLY the IDs of the link elements. " +
-                    "Do not attempt to extract links directly from the text unless absolutely necessary. "
-
-        val userInstructions = buildObserveGuideSystemExtraPrompt(userProvidedInstructions)
-
-        val baseInstruction = if (isZH) baseInstructionCN else baseInstructionEN
-        val instructions = if (isZH) instructionsCN else instructionsEN
-        val additionalInstructions = if (isZH) additionalInstructionsCN else additionalInstructionsEN
-
-        val content = "$baseInstruction\n$instructions\n$additionalInstructions\n$userInstructions"
+"""
 
         return SimpleMessage(role = "system", content = content)
     }
@@ -787,48 +795,39 @@ $userRequest
         val json = params.agentState.browserUseState.domState.microTree.toNanoTreeInRange().lazyJson
 
         // Inject schema hint to strongly guide JSON output
-        val hintCN = "你必须返回一个严格符合以下JSON Schema的有效JSON对象。不要包含任何额外说明。"
-        val hintEN =
-            "You MUST respond with a valid JSON object that strictly conforms to the following JSON Schema. Do not include any extra commentary."
-        val hint = if (isZH) hintCN else hintEN
+        val hint = translate("你必须返回一个严格符合以下JSON Schema的有效JSON对象。不要包含任何额外说明。")
 
         return buildString {
             append(json)
             append("\n\n$hint")
             append("\nJSON Schema:\n")
-            append(params.schema)
+            append(params.schema.toJsonSchema())
         }
     }
 
-    fun buildExtractUserPrompt(instruction: String, domContent: String): SimpleMessage {
-        return buildExtractUserPrompt(instruction, domContent, null)
-    }
+    fun buildExtractUserPrompt(params: ExtractParams): SimpleMessage {
+        val browserState = params.agentState.browserUseState.browserState
+        val nanoTree = params.agentState.browserUseState.domState.microTree.toNanoTreeInRange()
+        val schema = params.schema
 
-    fun buildExtractUserPrompt(instruction: String, domContent: String, browserStateJson: String?): SimpleMessage {
-        val instructionLabel = if (isZH) "指令: \n" else "Instruction: \n"
-        val browserStateLabel = if (isZH) "当前浏览器状态" else "Current Browser State"
-        val domLabel = if (isZH) "DOM: " else "DOM: "
+        val content = """
+## 用户指令
+${params.instruction}
 
-        val sb = StringBuilder()
-            .append(instructionLabel)
-            .append('\n')
-            .append(instruction)
-            .append('\n')
+## 浏览器状态
+${browserState.lazyJson}
 
-        if (browserStateJson != null) {
-            sb.append('\n')
-                .append("## ")
-                .append(browserStateLabel)
-                .append('\n')
-                .append(browserStateJson)
-                .append('\n')
-        }
+## 无障碍树
+${nanoTree.lazyJson}
 
-        sb.append(domLabel)
-            .append('\n')
-            .append(domContent)
+## 输出
+你必须返回一个严格符合以下JSON Schema的有效JSON对象。不要包含任何额外说明。
 
-        return SimpleMessage(role = "user", content = sb.toString())
+${schema.toJsonSchema()}
+
+        """.trimIndent()
+
+        return SimpleMessage(role = "user", content = content)
     }
 
     private val metadataSystemPromptCN: String = """
@@ -1050,5 +1049,14 @@ ${nanoTree.lazyJson}
             appendLine("""请严格输出 JSON：{"taskComplete":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]} 无多余文字。""")
         }
         return system to user
+    }
+
+    fun tr(text: String) = translate(text)
+
+    /**
+     * Translate to another language, reserved
+     * */
+    fun translate(text: String): String {
+        return text
     }
 }

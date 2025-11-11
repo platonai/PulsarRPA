@@ -2,7 +2,9 @@ package ai.platon.pulsar.agentic
 
 import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder
-import ai.platon.pulsar.agentic.ai.agent.*
+import ai.platon.pulsar.agentic.ai.agent.ExtractParams
+import ai.platon.pulsar.agentic.ai.agent.InferenceEngine
+import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.agent.detail.*
 import ai.platon.pulsar.agentic.ai.todo.ToDoManager
 import ai.platon.pulsar.agentic.ai.tta.ContextToAction
@@ -16,6 +18,7 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.*
+import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import kotlinx.coroutines.*
@@ -116,7 +119,7 @@ open class BrowserPerceptiveAgent constructor(
     // Helper classes for better code organization
     private val pageStateTracker = PageStateTracker(session, config)
     private val actionValidator = ActionValidator()
-    private val defaultExtractionSchemaJson get() = defaultExtractionSchema.toJsonSchema()
+    private val defaultExtractionSchemaJson get() = ExtractionSchema.DEFAULT.toJsonSchema()
 
     // Enhanced state management
 
@@ -228,6 +231,12 @@ open class BrowserPerceptiveAgent constructor(
      * one successful execution is recorded in stateHistory.
      */
     override suspend fun act(action: ActionOptions): ActResult {
+        val context = stateManager.buildInitExecutionContext(action)
+        val action = if (action.agentState == null) {
+            // action.agentState = context.agentState
+            action.copy(agentState = context.agentState)
+        } else action
+
         return try {
             withTimeout(config.actTimeoutMs) {
                 val messages = AgentMessageList()
@@ -300,32 +309,29 @@ open class BrowserPerceptiveAgent constructor(
      */
     override suspend fun extract(options: ExtractOptions): ExtractResult {
         val instruction = promptBuilder.initExtractUserInstruction(options.instruction)
-        val requestId = UUID.randomUUID().toString()
-        logExtractStart(instruction, requestId)
+        val context = stateManager.buildExecutionContext(instruction, "extract")
+        logExtractStart(context)
 
-        val schemaJson = buildSchemaJsonFromMap(options.schema)
         return try {
-            val browserUseState = stateManager.getBrowserUseState()
-            val agentState = options.agentState ?: AgentState(
-                0, options.instruction ?: "", browserUseState = browserUseState
-            )
 
-            val scrollState = browserUseState.browserState.scrollState
+//            val browserUseState = stateManager.getBrowserUseState()
+//            val agentState = options.agentState ?: AgentState(
+//                0, options.instruction, browserUseState = browserUseState
+//            )
             val params = ExtractParams(
                 instruction = instruction,
-                agentState = agentState,
-                schema = schemaJson,
-                chunksTotal = scrollState.viewportsTotal,
-                requestId = requestId,
+                agentState = context.agentState,
+                schema = options.schema,
+                requestId = context.requestId,
                 logInferenceToFile = config.enableStructuredLogging,
             )
 
             val resultNode = inference.extract(params)
-            addHistoryExtract(instruction, requestId, true)
+            addHistoryExtract(instruction, context.sid, true)
             ExtractResult(success = true, message = "OK", data = resultNode)
         } catch (e: Exception) {
-            logger.error("❌ extract.error requestId={} msg={}", requestId.take(8), e.message, e)
-            addHistoryExtract(instruction, requestId, false)
+            logger.error("❌ extract.error requestId={} msg={}", context.sid, e.message, e)
+            addHistoryExtract(instruction, context.sid, false)
             ExtractResult(
                 success = false, message = e.message ?: "extract failed", data = JsonNodeFactory.instance.objectNode()
             )
@@ -334,7 +340,13 @@ open class BrowserPerceptiveAgent constructor(
 
     // Wrapper override to satisfy interface (extract by instruction string)
     override suspend fun extract(instruction: String): ExtractResult {
-        val opts = ExtractOptions(instruction = instruction, schema = null)
+        val opts = ExtractOptions(instruction = instruction, ExtractionSchema.DEFAULT)
+        return extract(opts)
+    }
+
+    // Wrapper override to satisfy interface (extract by instruction string)
+    override suspend fun extract(instruction: String, schema: ExtractionSchema): ExtractResult {
+        val opts = ExtractOptions(instruction = instruction, schema = schema)
         return extract(opts)
     }
 
@@ -540,37 +552,10 @@ open class BrowserPerceptiveAgent constructor(
         }
     }
 
-    /** Default rich extraction schema (JSON Schema string) */
-    private val defaultExtractionSchema: ExtractionSchema =
-        ExtractionSchema(
-            listOf(
-                ExtractionField("title", type = "string", description = "Page title"), ExtractionField(
-                    "content", type = "string", description = "Primary textual content of the page", required = false
-                ), ExtractionField(
-                    name = "links",
-                    type = "array",
-                    description = "Important hyperlinks on the page",
-                    required = false,
-                    items = ExtractionField(
-                        name = "link", type = "object", properties = listOf(
-                            ExtractionField("text", type = "string", description = "Anchor text", required = false),
-                            ExtractionField("href", type = "string", description = "Href URL", required = false)
-                        ), required = false
-                    )
-                )
-            )
-        )
-
-    private fun buildSchemaJsonFromMap(schema: Map<String, String>?): String {
-        if (schema == null || schema.isEmpty()) return defaultExtractionSchemaJson
-        return legacyMapToExtractionSchema(schema).toJsonSchema()
-    }
-
-    private fun logExtractStart(instruction: String, requestId: String) {
+    private fun logExtractStart(context: ExecutionContext) {
         logger.info(
             "🔍 extract.start requestId={} instruction='{}'",
-            requestId.take(8),
-            PromptBuilder.compactPrompt(instruction, 200)
+            context.sid, PromptBuilder.compactPrompt(context.instruction, 200)
         )
     }
 

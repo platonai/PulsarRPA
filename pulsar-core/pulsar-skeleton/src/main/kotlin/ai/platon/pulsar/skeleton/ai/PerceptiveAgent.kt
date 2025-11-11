@@ -4,6 +4,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.external.ModelResponse
+import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.JsonNode
 import org.apache.commons.lang3.StringUtils
@@ -43,8 +44,8 @@ data class ActResult(
 }
 
 data class ExtractOptions(
-    val instruction: String? = null,
-    val schema: Map<String, String>? = null,
+    val instruction: String,
+    val schema: ExtractionSchema,
     val modelName: String? = null,
     val modelClientOptions: Map<String, Any>? = null,
     val domSettleTimeoutMs: Long? = null,
@@ -318,6 +319,7 @@ data class ProcessTrace(
     }
 }
 
+
 interface PerceptiveAgent {
     val uuid: UUID
 
@@ -350,5 +352,6 @@ interface PerceptiveAgent {
     suspend fun act(action: ActionOptions): ActResult
     suspend fun act(observe: ObserveResult): ActResult
     suspend fun extract(instruction: String): ExtractResult
+    suspend fun extract(instruction: String, schema: ExtractionSchema): ExtractResult
     suspend fun extract(options: ExtractOptions): ExtractResult
 }

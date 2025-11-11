@@ -1,9 +1,12 @@
-package ai.platon.pulsar.agentic.ai.agent
+package ai.platon.pulsar.skeleton.ai.support
 
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ArrayNode
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import com.fasterxml.jackson.databind.node.ObjectNode
-import com.fasterxml.jackson.databind.node.ArrayNode
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 
 /**
  * A richer schema definition than a simple Map<String,String> for extraction output.
@@ -34,8 +37,10 @@ data class ExtractionField(
                     node.set<ArrayNode>("required", mapper.valueToTree<ArrayNode>(requiredList))
                 }
             }
+
             "array" -> {
-                val itemNode = items?.toJsonSchemaNode(mapper) ?: JsonNodeFactory.instance.objectNode().apply { put("type", "string") }
+                val itemNode = items?.toJsonSchemaNode(mapper) ?: JsonNodeFactory.instance.objectNode()
+                    .apply { put("type", "string") }
                 node.set<ObjectNode>("items", itemNode)
             }
         }
@@ -77,7 +82,7 @@ data class ExtractionField(
     }
 }
 
-class ExtractionSchema(private val fields: List<ExtractionField>) {
+class ExtractionSchema(val fields: List<ExtractionField>) {
     /**
      * Convert the internal representation to a standard JSON Schema (draft-agnostic) string.
      */
@@ -95,10 +100,49 @@ class ExtractionSchema(private val fields: List<ExtractionField>) {
         if (required.isNotEmpty()) root.set<ArrayNode>("required", mapper.valueToTree<ArrayNode>(required))
         return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(root)
     }
-}
 
-/** Utility adapter: build a schema from a legacy Map<String,String> where value = description */
-fun legacyMapToExtractionSchema(map: Map<String,String>): ExtractionSchema {
-    val fields = map.entries.map { (k,v) -> ExtractionField(name = k, description = v, required = false) }
-    return ExtractionSchema(fields)
+    companion object {
+        private val mapper = jacksonObjectMapper()
+
+        /** Default rich extraction schema (JSON Schema string) */
+        @JsonIgnore
+        val DEFAULT: ExtractionSchema =
+            ExtractionSchema(
+                listOf(
+                    ExtractionField("title", type = "string", description = "Page title"), ExtractionField(
+                        "content",
+                        type = "string",
+                        description = "Primary textual content of the page",
+                        required = false
+                    ), ExtractionField(
+                        name = "links",
+                        type = "array",
+                        description = "Important hyperlinks on the page",
+                        required = false,
+                        items = ExtractionField(
+                            name = "link", type = "object", properties = listOf(
+                                ExtractionField("text", type = "string", description = "Anchor text", required = false),
+                                ExtractionField("href", type = "string", description = "Href URL", required = false)
+                            ), required = false
+                        )
+                    )
+                )
+            )
+
+        fun parse(json: String): ExtractionSchema {
+            return mapper.readValue(json)
+        }
+
+        /** Utility adapter: build a schema from a legacy Map<String,String> where value = description */
+        fun fromMap(map: Map<*, *>): ExtractionSchema {
+            val fields = map.entries.map { (k, v) ->
+                ExtractionField(
+                    name = k.toString(),
+                    description = v.toString(),
+                    required = false
+                )
+            }
+            return ExtractionSchema(fields)
+        }
+    }
 }

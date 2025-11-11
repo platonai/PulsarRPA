@@ -3,8 +3,7 @@ package ai.platon.pulsar.agentic.ai.tta
 import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder.Companion.SINGLE_ACTION_GENERATION_PROMPT
 import ai.platon.pulsar.agentic.ai.PromptBuilder.Companion.buildObserveResultSchema
-import ai.platon.pulsar.agentic.tools.ToolSpecification
-import ai.platon.pulsar.browser.driver.chrome.dom.Locator
+import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.ai.llm.PromptTemplate
@@ -206,21 +205,21 @@ open class TextToAction(
         val locator = observeElement.locator
         val arguments = toolCall.arguments
 
-        var fbnLocator: Locator? = null
-        if (method in ToolSpecification.SELECTOR_ACTIONS) {
-            fbnLocator = agentState.browserUseState.domState.getAbsoluteFBNLocator(locator)
-            if (!locator.isNullOrBlank() && fbnLocator == null) {
+        var node: DOMTreeNodeEx? = null
+        if (!locator.isNullOrBlank()) {
+            val fbnLocator = agentState.browserUseState.domState.getAbsoluteFBNLocator(locator)
+            if (fbnLocator != null) {
+                node = agentState.browserUseState.domState.locatorMap[fbnLocator]
+                if ("selector" in arguments) {
+                    // revise selector
+                    arguments["selector"] = fbnLocator.absoluteSelector
+                }
+            }
+
+            if (fbnLocator == null) {
                 logger.warn("FBN locator not found. method={}, locator={}", method, locator)
             }
         }
-
-        val node = if (fbnLocator != null) {
-            agentState.browserUseState.domState.locatorMap[fbnLocator]
-        } else null
-
-        val fbnSelector = fbnLocator?.absoluteSelector
-
-        fbnSelector?.let { arguments["selector"] = it }
 
         // CSS friendly expression
         val cssSelector = node?.cssSelector()

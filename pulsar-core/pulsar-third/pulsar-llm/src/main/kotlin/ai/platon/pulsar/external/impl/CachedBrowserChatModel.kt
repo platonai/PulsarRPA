@@ -183,6 +183,7 @@ open class CachedBrowserChatModel(
         // Check if the response is already cached
         responseCache.get(cacheKey)?.let {
             logger.debug("Returning cached response for key: $cacheKey")
+            it.content
             return it
         }
 

@@ -1,13 +1,13 @@
 package ai.platon.pulsar.agentic.ai.tta
 
-import ai.platon.pulsar.agentic.ai.agent.ExtractionField
-import ai.platon.pulsar.agentic.ai.agent.ExtractionSchema
-import ai.platon.pulsar.agentic.ai.agent.legacyMapToExtractionSchema
+import ai.platon.pulsar.skeleton.ai.support.ExtractionField
+import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import kotlin.test.assertEquals
 
 class ExtractionSchemaTest {
 
@@ -15,9 +15,11 @@ class ExtractionSchemaTest {
 
     @Test
     fun `simple string field produces required and description`() {
-        val schema = ExtractionSchema(listOf(
-            ExtractionField.string("title", description = "The title", required = true)
-        ))
+        val schema = ExtractionSchema(
+            listOf(
+                ExtractionField.string("title", description = "The title", required = true)
+            )
+        )
         val json = schema.toJsonSchema()
         val root = mapper.readTree(json)
 
@@ -48,7 +50,8 @@ class ExtractionSchemaTest {
             )
         )
         val schema = ExtractionSchema(listOf(field))
-        val root = mapper.readTree(schema.toJsonSchema())
+        val jsonSchema = schema.toJsonSchema()
+        val root = mapper.readTree(jsonSchema)
 
         val product = root.get("properties").get("product")
         Assertions.assertEquals("object", product.get("type").asText())
@@ -81,12 +84,34 @@ class ExtractionSchemaTest {
     }
 
     @Test
+    fun `parse from JSON string`() {
+        val json = """
+            {
+              "fields" : [ {
+                "name" : "title",
+                "type" : "string",
+                "description" : "文章标题"
+              }, {
+                "name" : "comments",
+                "type" : "integer",
+                "description" : "评论数量，从评论链接中提取数字部分"
+              } ]
+            }
+        """.trimIndent()
+
+        val schema = ExtractionSchema.parse(json)
+        assertEquals(2, schema.fields.size)
+        assertEquals("title", schema.fields[0].name)
+        assertEquals("integer", schema.fields[1].type)
+    }
+
+    @Test
     fun `legacy map adapter marks fields optional and sets descriptions`() {
-        val legacy = mapOf(
+        val map = mapOf(
             "title" to "Title text",
             "price" to "Price number"
         )
-        val schema = legacyMapToExtractionSchema(legacy)
+        val schema = ExtractionSchema.fromMap(map)
         val root = mapper.readTree(schema.toJsonSchema())
 
         val props = root.get("properties")
