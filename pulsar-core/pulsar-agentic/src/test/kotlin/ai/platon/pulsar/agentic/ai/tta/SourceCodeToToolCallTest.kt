@@ -1,8 +1,8 @@
 package ai.platon.pulsar.agentic.ai.tta
 
-import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.skeleton.common.llm.LLMUtils
-import org.junit.jupiter.api.Assertions.*
+import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 
 class SourceCodeToToolCallTest {
