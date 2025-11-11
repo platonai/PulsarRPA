@@ -63,6 +63,7 @@ data class ObserveParams constructor(
     val returnAction: Boolean = false,
     val logInferenceToFile: Boolean = false,
     val fromAct: Boolean = false,
+    val screenshotB64: String? = null,
     val context: ExecutionContext? = null
 ) {
     val browserUseState get() = agentState.browserUseState
@@ -238,7 +239,6 @@ class InferenceEngine(
         requireNotNull(params.agentState.browserUseState) { "Agent state has to be available" }
 
         val instruction = params.instruction
-        // promptBuilder.buildObservePrompt(params, messages)
         // observe guide
         promptBuilder.buildObserveGuideSystemPrompt(messages, params)
         // browser state, viewport info, interactive elements, DOM
@@ -260,18 +260,17 @@ class InferenceEngine(
             callTs = ts
         }
 
-        val systemMessages = messages.systemMessages()
-        val userMessages = messages.userMessages()
-        val (resp, elapsedMs) = doLangChainChat(systemMessages, userMessages)
+        // val systemMessages = messages.systemMessages()
+        // val userMessages = messages.userMessages()
+        // val (resp, elapsedMs) = doLangChainChat(systemMessages, userMessages)
 
-        val tu = resp.tokenUsage()
-        val tokenUsage = TokenUsage(
-            inputTokenCount = tu.inputTokenCount(),
-            outputTokenCount = tu.outputTokenCount(),
-            totalTokenCount = tu.outputTokenCount()
-        )
+        val startTime = Instant.now()
+        val modelResponse = cta.generateResponse(messages, params.agentState, screenshotB64 = params.screenshotB64)
 
-        val responseContent = resp.aiMessage().text().trim()
+        val tokenUsage = modelResponse.tokenUsage
+
+        // val responseContent = resp.aiMessage().text().trim()
+        val responseContent = modelResponse.content
 
         val modeResponse = ModelResponse(content = responseContent, tokenUsage = tokenUsage)
         var actionDescription = cta.tta.modelResponseToActionDescription(instruction, params.agentState, modeResponse)
@@ -298,7 +297,8 @@ class InferenceEngine(
                     "LLM_output_file" to respFile,
                     "inputTokenCount" to tokenUsage.inputTokenCount,
                     "outputTokenCount" to tokenUsage.outputTokenCount,
-                    "inferenceTimeMillis" to elapsedMs
+                    "totalTokenCount" to tokenUsage.totalTokenCount,
+                    "inferenceTimeMillis" to DateTimes.elapsedTime(startTime).toMillis()
                 )
             )
         }

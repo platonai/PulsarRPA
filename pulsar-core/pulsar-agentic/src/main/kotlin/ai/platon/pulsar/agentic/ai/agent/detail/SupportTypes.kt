@@ -67,18 +67,19 @@ data class ExecutionContext(
         return options
     }
 
-    fun createObserveParams(options: ObserveOptions, fromAct: Boolean): ObserveParams {
+    fun createObserveParams(options: ObserveOptions, fromAct: Boolean, screenshotB64: String? = null): ObserveParams {
         return ObserveParams(
             instruction = instruction,
             agentState = agentState,
             requestId = requestId,
             returnAction = options.returnAction ?: false,
             logInferenceToFile = config.enableStructuredLogging,
-            fromAct = fromAct
+            fromAct = fromAct,
+            screenshotB64 = screenshotB64,
         )
     }
 
-    fun createObserveActParams(): ObserveParams {
+    fun createObserveActParams(screenshotB64: String? = null): ObserveParams {
         return ObserveParams(
             instruction = instruction,
             agentState = agentState,
@@ -86,6 +87,7 @@ data class ExecutionContext(
             fromAct = true,
             returnAction = true,
             logInferenceToFile = config.enableStructuredLogging,
+            screenshotB64 = screenshotB64
         )
     }
 

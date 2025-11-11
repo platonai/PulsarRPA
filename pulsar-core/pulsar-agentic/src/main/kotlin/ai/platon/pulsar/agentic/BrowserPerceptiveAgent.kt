@@ -369,10 +369,10 @@ open class BrowserPerceptiveAgent constructor(
             domService.addHighlights(interactiveElements)
 
             // Optional screenshot
-            // val screenshotB64 = captureScreenshotWithRetry(context)
+            val screenshotB64 = captureScreenshotWithRetry(context)
 
             // Do OBSERVE
-            val params = context.createObserveParams(options, false)
+            val params = context.createObserveParams(options, false, screenshotB64)
             doObserve(params, messages)
         } finally {
             // Ensure highlights are always removed even on exception
@@ -465,11 +465,22 @@ open class BrowserPerceptiveAgent constructor(
 
         /////////////////////
         // I - Observe
+        val interactiveElements = context.agentState.browserUseState.getInteractiveElements()
 
-        // Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
-        val params = context.createObserveActParams()
+        val actionDescription = try {
+            domService.addHighlights(interactiveElements)
 
-        val actionDescription = doObserve(params, messages)
+            // Optional screenshot
+            val screenshotB64 = captureScreenshotWithRetry(context)
+
+            // Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
+            val params = context.createObserveActParams(screenshotB64)
+            doObserve(params, messages)
+        } finally {
+            // Ensure highlights are always removed even on exception
+            runCatching { domService.removeHighlights(interactiveElements) }
+                .onFailure { e -> logger.warn("⚠️ Failed to remove highlights: ${e.message}") }
+        }
 
         val observeResults = actionDescription.toObserveResults(context.agentState)
 
