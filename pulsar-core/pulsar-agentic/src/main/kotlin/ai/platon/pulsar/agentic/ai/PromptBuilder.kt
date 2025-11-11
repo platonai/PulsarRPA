@@ -907,9 +907,10 @@ ${schema.toJsonSchema()}
 
         val content =
             """
-## 元数据
+## 用户指令
 
 指令: $instruction
+
 ## 视口信息
 
 本次焦点视口序号: $processingViewport
@@ -925,7 +926,9 @@ ${schema.toJsonSchema()}
 - 默认提供的无障碍树仅包含第`i`个视口内的 DOM 节点，并包含少量视口外邻近节点，以保证信息完整
 - 如需查看下一视口，调用 `scrollBy(viewportHeight)` 向下滚动一屏获取更多信息
 
-提取结果: $extractedJson
+提取结果:
+
+$extractedJson
 
 ---
 

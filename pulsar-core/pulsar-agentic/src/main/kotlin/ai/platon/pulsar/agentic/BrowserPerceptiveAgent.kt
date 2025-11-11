@@ -258,13 +258,14 @@ open class BrowserPerceptiveAgent constructor(
         val agentState = observe.agentState
         val observeElement = observe.observeElement
         observeElement ?: return ActResult.failed("No observation", instruction)
+        val actionDescription = observe.actionDescription ?: return ActResult.failed("No action description", instruction)
         val toolCall = observeElement.toolCall ?: return ActResult.failed("No tool call", instruction)
         val method = toolCall.method
 
         return try {
             // Reuse act(ActionDescription, ExecutionContext)
 
-            val actionDescription = ActionDescription(instruction, observe.observeElements, agentState = agentState)
+            // val actionDescription = ActionDescription(instruction, observe.observeElements, agentState = agentState)
             val context = stateManager.buildExecutionContext(instruction, "step")
 
             ///////////////

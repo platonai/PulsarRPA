@@ -255,8 +255,7 @@ class BrowserReasoningAgent constructor(
                     //**
 
                     // Execute the tool call with enhanced error handling
-                    val actOptions = ActionOptions(action = context.instruction)
-                    val actResult = act(actOptions)
+                    val actResult = act(result)
 
                     if (actResult.success) {
                         // updateAgentState(context.agentState, actResult)

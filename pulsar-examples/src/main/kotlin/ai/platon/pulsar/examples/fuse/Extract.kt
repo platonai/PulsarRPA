@@ -8,8 +8,6 @@ import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 
 class Extract {
-    private val logger = getLogger(this)
-
     private var stepNo = 0
     private val session = AgenticContexts.getOrCreateSession()
 
