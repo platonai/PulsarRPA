@@ -118,7 +118,6 @@ open class BrowserPerceptiveAgent constructor(
     // Helper classes for better code organization
     internal val pageStateTracker = PageStateTracker(session, config)
     private val actionValidator = ActionValidator()
-    private val defaultExtractionSchemaJson get() = ExtractionSchema.DEFAULT.toJsonSchema()
 
     // Enhanced state management
 
