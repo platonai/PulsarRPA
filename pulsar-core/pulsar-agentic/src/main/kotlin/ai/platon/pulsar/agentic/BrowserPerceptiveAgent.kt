@@ -341,13 +341,25 @@ open class BrowserPerceptiveAgent constructor(
         }
     }
 
-    // Wrapper override to satisfy interface (extract by instruction string)
+    /**
+     * Convenience overload for structured extraction. When only an instruction string is provided,
+     * it uses the built-in ExtractionSchema.DEFAULT.
+     *
+     * @param instruction The extraction instruction from the user.
+     * @return The extraction result produced by the model.
+     */
     override suspend fun extract(instruction: String): ExtractResult {
         val opts = ExtractOptions(instruction = instruction, ExtractionSchema.DEFAULT)
         return extract(opts)
     }
 
-    // Wrapper override to satisfy interface (extract by instruction string)
+    /**
+     * Convenience overload for structured extraction that constrains the result with a JSON schema.
+     *
+     * @param instruction The extraction instruction from the user.
+     * @param schema The JSON schema used to constrain the returned data structure.
+     * @return The extraction result produced by the model.
+     */
     override suspend fun extract(instruction: String, schema: ExtractionSchema): ExtractResult {
         val opts = ExtractOptions(instruction = instruction, schema = schema)
         return extract(opts)
@@ -426,6 +438,9 @@ open class BrowserPerceptiveAgent constructor(
         return observe(opts)
     }
 
+    /**
+     * Returns a concise summary of the latest agent state; if no history exists, returns a placeholder text.
+     */
     override fun toString(): String {
         return stateHistory.lastOrNull()?.toString() ?: "(no history)"
     }
