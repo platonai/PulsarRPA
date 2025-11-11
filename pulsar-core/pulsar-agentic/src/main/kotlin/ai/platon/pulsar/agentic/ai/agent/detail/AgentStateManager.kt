@@ -19,7 +19,8 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 
 class AgentStateManager(
-    val agent: BrowserPerceptiveAgent
+    val agent: BrowserPerceptiveAgent,
+    val pageStateTracker: PageStateTracker,
 ) {
     private val _stateHistory = mutableListOf<AgentState>()
     private val _processTrace = mutableListOf<ProcessTrace>()
@@ -78,6 +79,8 @@ class AgentStateManager(
     suspend fun getAgentState(
         instruction: String, step: Int = 0, prevAgentState: AgentState? = null
     ): AgentState {
+        pageStateTracker.waitForDOMSettle()
+
         val browserUseState = getBrowserUseState()
         val agentState = AgentState(
             instruction = instruction,

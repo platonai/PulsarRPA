@@ -1,9 +1,12 @@
 package ai.platon.pulsar.external
 
+import java.time.Instant
+
 data class ModelResponse constructor(
     var content: String,
     var state: ResponseState = ResponseState.STOP,
     var tokenUsage: TokenUsage = TokenUsage(),
+    var startTime: Instant? = null,
 ) {
     override fun toString() = content
 

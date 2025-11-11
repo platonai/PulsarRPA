@@ -2,7 +2,6 @@ package ai.platon.pulsar.agentic
 
 import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder
-import ai.platon.pulsar.agentic.ai.agent.ExtractParams
 import ai.platon.pulsar.agentic.ai.agent.InferenceEngine
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.agent.detail.*
@@ -117,7 +116,7 @@ open class BrowserPerceptiveAgent constructor(
     private val todo: ToDoManager
 
     // Helper classes for better code organization
-    private val pageStateTracker = PageStateTracker(session, config)
+    internal val pageStateTracker = PageStateTracker(session, config)
     private val actionValidator = ActionValidator()
     private val defaultExtractionSchemaJson get() = ExtractionSchema.DEFAULT.toJsonSchema()
 
@@ -125,7 +124,7 @@ open class BrowserPerceptiveAgent constructor(
 
     internal val activeDriver get() = session.getOrCreateBoundDriver()
 
-    private val stateManager by lazy { AgentStateManager(this) }
+    internal val stateManager by lazy { AgentStateManager(this, pageStateTracker) }
     private val performanceMetrics = PerformanceMetrics()
     private val retryCounter = AtomicInteger(0)
     private val consecutiveFailureCounter = AtomicInteger(0)
@@ -265,8 +264,6 @@ open class BrowserPerceptiveAgent constructor(
         return try {
             // Reuse act(ActionDescription, ExecutionContext)
 
-            // val actionDescription = ActionDescription(instruction, observe.observeElements, agentState = agentState)
-            pageStateTracker.waitForDOMSettle()
             val context = stateManager.buildExecutionContext(instruction, "step")
 
             ///////////////
@@ -311,24 +308,11 @@ open class BrowserPerceptiveAgent constructor(
      */
     override suspend fun extract(options: ExtractOptions): ExtractResult {
         val instruction = promptBuilder.initExtractUserInstruction(options.instruction)
-        pageStateTracker.waitForDOMSettle()
         val context = stateManager.buildExecutionContext(instruction, "extract")
         logExtractStart(context)
 
         return try {
-
-//            val browserUseState = stateManager.getBrowserUseState()
-//            val agentState = options.agentState ?: AgentState(
-//                0, options.instruction, browserUseState = browserUseState
-//            )
-            val params = ExtractParams(
-                instruction = instruction,
-                agentState = context.agentState,
-                schema = options.schema,
-                requestId = context.requestId,
-                logInferenceToFile = config.enableStructuredLogging,
-            )
-
+            val params = context.createExtractParams(options.schema)
             val resultNode = inference.extract(params)
             addHistoryExtract(instruction, context.sid, true)
             ExtractResult(success = true, message = "OK", data = resultNode)
@@ -370,29 +354,14 @@ open class BrowserPerceptiveAgent constructor(
      * candidate elements and potential actions (if returnAction=true).
      */
     override suspend fun observe(options: ObserveOptions): List<ObserveResult> {
-        // Prepare messages for model
-
-        // val systemMsg = promptBuilder.buildOperatorSystemPrompt()
-        // val messages = buildMessagesForObserve(systemMsg, context)
-
         val messages = AgentMessageList()
 
         // returns options.instruction if it's not empty, or the default
         val instruction = promptBuilder.initObserveUserInstruction(options.instruction)
         messages.addUser(instruction, name = "instruction")
 
-        // val agentState = getAgentState(instruction)
-        pageStateTracker.waitForDOMSettle()
-        val context = stateManager.buildExecutionContext(instruction, "observe")
-
-//        val params = ObserveParams(
-//            instruction = context.instruction,
-//            agentState = context.agentState,
-//            requestId = context.requestId,
-//            returnAction = options.returnAction ?: false,
-//            logInferenceToFile = config.enableStructuredLogging,
-//            fromAct = false
-//        )
+        val context = (options.additionalContext["context"] ?.get() as? ExecutionContext)
+            ?: throw IllegalStateException("Illegal context")
 
         val interactiveElements = context.agentState.browserUseState.getInteractiveElements()
 
@@ -411,25 +380,25 @@ open class BrowserPerceptiveAgent constructor(
                 .onFailure { e -> logger.warn("⚠️ Failed to remove highlights: ${e.message}") }
         }
 
-        val results = actionDescription.observeElements?.map { ele ->
-            ObserveResult(
-                agentState = context.agentState,
-                locator = ele.locator,
-                domain = ele.domain?.ifBlank { null },
-                method = ele.method?.ifBlank { null },
-                arguments = ele.arguments?.takeIf { it.isNotEmpty() },
-                description = ele.description ?: "(No comment ...)",
-                screenshotContentSummary = ele.screenshotContentSummary,
-                currentPageContentSummary = ele.currentPageContentSummary,
-                evaluationPreviousGoal = ele.evaluationPreviousGoal,
-                nextGoal = ele.nextGoal,
-                backendNodeId = ele.backendNodeId,
-                observeElement = ele,
-                actionDescription = actionDescription,
-            )
-        }
+//        val results = actionDescription.observeElements?.map { ele ->
+//            ObserveResult(
+//                agentState = context.agentState,
+//                locator = ele.locator,
+//                domain = ele.domain?.ifBlank { null },
+//                method = ele.method?.ifBlank { null },
+//                arguments = ele.arguments?.takeIf { it.isNotEmpty() },
+//                description = ele.description ?: "(No comment ...)",
+//                screenshotContentSummary = ele.screenshotContentSummary,
+//                currentPageContentSummary = ele.currentPageContentSummary,
+//                evaluationPreviousGoal = ele.evaluationPreviousGoal,
+//                nextGoal = ele.nextGoal,
+//                backendNodeId = ele.backendNodeId,
+//                observeElement = ele,
+//                actionDescription = actionDescription,
+//            )
+//        }
 
-        return results ?: emptyList()
+        return actionDescription.toObserveResults(context.agentState)
     }
 
     // Wrapper override to satisfy interface (observe by instruction string)
@@ -492,7 +461,6 @@ open class BrowserPerceptiveAgent constructor(
         val instruction = promptBuilder.buildObserveActToolUsePrompt(options.action)
         messages.addUser(instruction, "instruction")
 
-        pageStateTracker.waitForDOMSettle()
         val context = stateManager.buildExecutionContext(instruction, "observeAct", agentState = options.agentState)
 
         /////////////////////
@@ -729,7 +697,6 @@ open class BrowserPerceptiveAgent constructor(
                 ensureReadyForStep(action)
 
                 // Build AgentState and snapshot after settling
-                pageStateTracker.waitForDOMSettle()
                 context = stateManager.buildExecutionContext(action.action, "step", nextStep, baseContext = context)
                 val agentState = context.agentState
                 val browserUseState = agentState.browserUseState

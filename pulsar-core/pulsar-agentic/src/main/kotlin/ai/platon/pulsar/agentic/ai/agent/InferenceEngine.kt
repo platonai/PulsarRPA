@@ -6,8 +6,8 @@ import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.SimpleMessage
 import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
 import ai.platon.pulsar.agentic.ai.tta.ContextToAction
-import ai.platon.pulsar.agentic.ai.tta.TextToAction
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
@@ -29,6 +29,7 @@ import dev.langchain4j.model.chat.response.ChatResponse
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.Instant
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
@@ -85,7 +86,7 @@ class InferenceEngine(
     /**
      * Returns an ObjectNode with extracted fields expanded at top-level, plus:
      *   - metadata: { progress, completed }
-     *   - prompt_tokens, completion_tokens, inference_time_ms
+     *   - prompt_tokens, completion_tokens, inferenceTimeMillis
      */
     suspend fun extract(params: ExtractParams): ObjectNode {
         // 1) Extraction call -----------------------------------------------------------------
@@ -108,13 +109,16 @@ class InferenceEngine(
             extractCallTs = ts
         }
 
-        val (extractResp, extractElapsedMs) = doLangChainChat(systemMsg, userMsg)
+        val extractStartTime = Instant.now()
+        val extractResponse = cta.generateResponse(params.instruction, params.agentState)
 
-        val messageText = extractResp.aiMessage().text().trim()
-        val usage1 = toUsage(extractResp)
+        // val (extractResp, extractElapsedMs) = doLangChainChat(systemMsg, userMsg)
+
+//        val messageText = extractResp.aiMessage().text().trim()
+//        val usage1 = toUsage(extractResp)
 
         val extractedNode: ObjectNode = runCatching {
-            mapper.readTree(messageText) as? ObjectNode ?: JsonNodeFactory.instance.objectNode()
+            mapper.readTree(extractResponse.content) as? ObjectNode ?: JsonNodeFactory.instance.objectNode()
         }.getOrElse { JsonNodeFactory.instance.objectNode() }
 
         var extractRespFile = ""
@@ -125,7 +129,7 @@ class InferenceEngine(
                 payload = mapOf(
                     "requestId" to params.requestId,
                     "modelResponse" to "extract",
-                    "rawResponse" to safeJsonPreview(messageText)
+                    "rawResponse" to safeJsonPreview(extractResponse.content),
                 )
             ).first
 
@@ -136,9 +140,9 @@ class InferenceEngine(
                     "timestamp" to extractCallTs,
                     "LLM_input_file" to callFile,
                     "LLM_output_file" to extractRespFile,
-                    "prompt_tokens" to usage1.promptTokens,
-                    "completion_tokens" to usage1.completionTokens,
-                    "inference_time_ms" to extractElapsedMs
+                    "outputTokenCount" to extractResponse.tokenUsage.outputTokenCount,
+                    "totalTokenCount" to extractResponse.tokenUsage.totalTokenCount,
+                    "inferenceTimeMillis" to DateTimes.elapsedTime(extractStartTime).toMillis()
                 )
             )
         }
@@ -166,13 +170,16 @@ class InferenceEngine(
             metadataCallFile = file; metadataCallTs = ts
         }
 
-        val (metadataResp, metadataElapsedMs) = doLangChainChat(metadataSystem, metadataUser)
+        val metadataStartTime = Instant.now()
+        val metadataResponse = cta.generateResponse(params.instruction, params.agentState)
 
-        val usage2 = toUsage(metadataResp)
+//        val (metadataResp, metadataElapsedMs) = doLangChainChat(metadataSystem, metadataUser)
 
-        val metaText = metadataResp.aiMessage().text().trim()
+        // val usage2 = toUsage(metadataResponse)
+
+        // val metaText = metadataResp.aiMessage().text().trim()
         val metaNode: ObjectNode = runCatching {
-            mapper.readTree(metaText) as? ObjectNode ?: JsonNodeFactory.instance.objectNode()
+            mapper.readTree(metadataResponse.content) as? ObjectNode ?: JsonNodeFactory.instance.objectNode()
         }.getOrElse { JsonNodeFactory.instance.objectNode() }
         val progress = metaNode.path("progress").asText("")
         val completed = metaNode.path("completed").asBoolean(false)
@@ -197,26 +204,30 @@ class InferenceEngine(
                     "timestamp" to metadataCallTs,
                     "LLM_input_file" to metadataCallFile,
                     "LLM_output_file" to metadataRespFile,
-                    "prompt_tokens" to usage2.promptTokens,
-                    "completion_tokens" to usage2.completionTokens,
-                    "inference_time_ms" to metadataElapsedMs
+                    "inputTokenCount" to metadataResponse.tokenUsage.inputTokenCount,
+                    "outputTokenCount" to metadataResponse.tokenUsage.outputTokenCount,
+                    "totalTokenCount" to metadataResponse.tokenUsage.totalTokenCount,
+                    "inferenceTimeMillis" to DateTimes.elapsedTime(metadataStartTime).toMillis()
                 )
             )
         }
 
         // 3) Merge & return ------------------------------------------------------------------
-        val totalPrompt = (usage1.promptTokens) + (usage2.promptTokens)
-        val totalCompletion = (usage1.completionTokens) + (usage2.completionTokens)
-        val totalTime = metadataElapsedMs + extractElapsedMs
+        val usage1 = extractResponse.tokenUsage
+        val usage2 = extractResponse.tokenUsage
+        val inputTokenCount = usage1.inputTokenCount + usage2.inputTokenCount
+        val outputTokenCount = usage1.outputTokenCount + usage2.outputTokenCount
+        val totalTokenCount = usage1.totalTokenCount + usage2.totalTokenCount
 
         val result: ObjectNode = (extractedNode.deepCopy()).apply {
             set<ObjectNode>("metadata", JsonNodeFactory.instance.objectNode().apply {
                 put("progress", progress)
                 put("completed", completed)
             })
-            put("prompt_tokens", totalPrompt)
-            put("completion_tokens", totalCompletion)
-            put("inference_time_ms", totalTime)
+            put("inputTokenCount", inputTokenCount)
+            put("outputTokenCount", outputTokenCount)
+            put("totalTokenCount", totalTokenCount)
+            put("inferenceTimeMillis", DateTimes.elapsedTime(extractStartTime).toMillis())
         }
         return result
     }
@@ -287,7 +298,7 @@ class InferenceEngine(
                     "LLM_output_file" to respFile,
                     "inputTokenCount" to tokenUsage.inputTokenCount,
                     "outputTokenCount" to tokenUsage.outputTokenCount,
-                    "inference_time_ms" to elapsedMs
+                    "inferenceTimeMillis" to elapsedMs
                 )
             )
         }

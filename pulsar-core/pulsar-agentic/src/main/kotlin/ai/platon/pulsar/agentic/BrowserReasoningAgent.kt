@@ -34,12 +34,7 @@ class BrowserReasoningAgent constructor(
     private val logger = getLogger(this)
     private val slogger = StructuredAgentLogger(logger, config)
 
-    private val todo: ToDoManager
-
-    // Helper classes for better code organization
-    private val pageStateTracker = PageStateTracker(session, config)
-    private val stateManager by lazy { AgentStateManager(this) }
-    // Enhanced state management
+    private val todo: ToDoManager = ToDoManager(toolExecutor.fs, config, uuid, slogger)
 
     private val performanceMetrics = PerformanceMetrics()
     private val retryCounter = AtomicInteger(0)
@@ -48,10 +43,6 @@ class BrowserReasoningAgent constructor(
 
     override val stateHistory: List<AgentState> get() = stateManager.stateHistory
     override val processTrace: List<ProcessTrace> get() = stateManager.processTrace
-
-    init {
-        todo = ToDoManager(toolExecutor.fs, config, uuid, slogger)
-    }
 
     /**
      * High-level problem resolution entry. Builds an ActionOptions and delegates to resolve(ActionOptions).
@@ -202,13 +193,10 @@ class BrowserReasoningAgent constructor(
                 // Build AgentState and snapshot after settling
                 require(step == context.step + 1) { "Step should be exactly (context.stepNumber + 1)" }
 
-                pageStateTracker.waitForDOMSettle()
                 context = stateManager.buildExecutionContext(action.action, "step", step, baseContext = context)
-                val agentState = context.agentState
-                val browserUseState = agentState.browserUseState
 
                 // Detect unchanged state for heuristics
-                val unchangedCount = pageStateTracker.checkStateChange(browserUseState)
+                val unchangedCount = pageStateTracker.checkStateChange(context.agentState.browserUseState)
                 if (unchangedCount >= 3) {
                     logger.info("⚠️ loop.warn sid={} step={} unchangedSteps={}", sid, step, unchangedCount)
                     consecutiveNoOps++
@@ -216,7 +204,7 @@ class BrowserReasoningAgent constructor(
 
                 logger.info("▶️ step.exec sid={} step={}/{} noOps={}", sid, step, config.maxSteps, consecutiveNoOps)
                 if (logger.isDebugEnabled) {
-                    logger.debug("🧩 dom={}", DomDebug.summarizeStr(browserUseState.domState, 5))
+                    logger.debug("🧩 dom={}", DomDebug.summarizeStr(context.agentState.browserUseState.domState, 5))
                 }
 
                 // Memory cleanup at intervals
@@ -229,8 +217,7 @@ class BrowserReasoningAgent constructor(
                 //**
 
                 // Generate the action for this step
-                val options = ObserveOptions(instruction = context.instruction)
-                val observeResults = observe(options)
+                val observeResults = observe(context.createObserveOptions())
 
                 observeResults.forEach { result ->
                     val actionDescription = result.actionDescription

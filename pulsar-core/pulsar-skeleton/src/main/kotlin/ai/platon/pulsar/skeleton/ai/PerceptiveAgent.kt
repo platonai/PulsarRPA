@@ -8,6 +8,7 @@ import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.JsonNode
 import org.apache.commons.lang3.StringUtils
+import java.lang.ref.WeakReference
 import java.time.Instant
 import java.util.*
 
@@ -71,6 +72,8 @@ data class ObserveOptions(
     val drawOverlay: Boolean? = null,
     val iframes: Boolean? = null,
     val frameId: String? = null,
+
+    val additionalContext: MutableMap<String, WeakReference<Any>> = mutableMapOf(),
 )
 
 data class ToolCallSpec constructor(
