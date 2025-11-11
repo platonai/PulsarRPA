@@ -112,7 +112,18 @@ class PromptBuilder() {
 
     """.trimIndent()
 
-        val EXTRACTION_TOOL_NOTE_CONTENT = """
+        val EXTRACTION_TOOL_NOTE_CONTENT_1 = """
+使用 `agent.extract` 满足高级数据提取要求：
+
+- 对提取结果格式有严格要求
+- 提取结果存在内嵌对象
+- 其他数据提取工具无法满足要求
+
+使用 `agent.extract` 工具前，你需要先调用 `system.help("agent", "extract")` 工具获得完整的帮助信息。
+
+"""
+
+        val EXTRACTION_TOOL_NOTE_CONTENT_2 = """
 使用 `agent.extract` 满足高级数据提取要求：
 
 - 对提取结果格式有严格要求
@@ -122,22 +133,59 @@ class PromptBuilder() {
 参数说明：
 
 1. `instruction`: 准确描述 1. 数据提取目标 2. 数据提取要求
-2. `schema`: JSON 格式描述的数据提取结果 schema 要求，遵循如下模式：
+2. `schema`: 数据提取结果的 schema 要求，以 JSON 格式描述，并且遵循下述结构：
 ```
 class ExtractionField(
-    name: String,
-    type: String = "string",                 // JSON schema primitive or 'object' / 'array'
-    description: String,
-    required: Boolean = true,
-    properties: List<ExtractionField> = emptyList(), // children if object
-    items: ExtractionField? = null                    // item schema if array
+    val name: String,
+    val type: String = "string",                 // JSON schema primitive or 'object' / 'array'
+    val description: String,
+    val required: Boolean = true,
+    val objectMemberProperties: List<ExtractionField> = emptyList(), // define the schema of member properties if type == object
+    val arrayElements: ExtractionField? = null                    // define the schema of elements if type == array
 )
-class ExtractionSchema(fields: List<ExtractionField>)
+class ExtractionSchema(val fields: List<ExtractionField>)
 ```
 
-如有疑问，调用 `system.help("agent", "extract")` 工具获得帮助信息。
+例 ：
+```
+{
+  "fields": [
+    {
+      "name": "product",
+      "type": "object",
+      "description": "Product info",
+      "objectMemberProperties": [
+        {
+          "name": "name",
+          "type": "string",
+          "description": "Product name",
+          "required": true
+        },
+        {
+          "name": "variants",
+          "type": "array",
+          "required": false,
+          "arrayElements": {
+            "name": "variant",
+            "type": "object",
+            "required": false,
+            "objectMemberProperties": [
+              { "name": "sku", "type": "string", "required": false },
+              { "name": "price", "type": "number", "required": false }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
+```
+
+如遇到错误，调用 `system.help("agent", "extract")` 工具获得帮助信息。
 
 """
+
+        val EXTRACTION_TOOL_NOTE_CONTENT = EXTRACTION_TOOL_NOTE_CONTENT_2
 
         val INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT = """
 (Interactive Elements)
@@ -180,7 +228,7 @@ class ExtractionSchema(fields: List<ExtractionField>)
 2. 自动化表单提交与交互式网页操作
 3. 收集并保存信息
 4. 有效使用文件系统来决定在上下文中保留哪些内容
-5. 在代理循环中高效运行
+5. 在智能体循环中高效运行
 6. 高效地执行各类网页任务
 
 ---
@@ -791,20 +839,6 @@ $userRequest
         }
 
         return instruction
-    }
-
-    fun buildExtractDomContent(params: ExtractParams): String {
-        val json = params.agentState.browserUseState.domState.microTree.toNanoTreeInRange().lazyJson
-
-        // Inject schema hint to strongly guide JSON output
-        val hint = translate("你必须返回一个严格符合以下JSON Schema的有效JSON对象。不要包含任何额外说明。")
-
-        return buildString {
-            append(json)
-            append("\n\n$hint")
-            append("\nJSON Schema:\n")
-            append(params.schema.toJsonSchema())
-        }
     }
 
     fun buildExtractUserPrompt(params: ExtractParams): SimpleMessage {

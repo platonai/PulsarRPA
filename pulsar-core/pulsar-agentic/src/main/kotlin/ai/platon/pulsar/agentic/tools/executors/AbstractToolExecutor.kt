@@ -16,6 +16,7 @@ interface ToolExecutor {
     suspend fun execute(expression: String, target: Any): TcEvaluate
 
     fun help(): String
+    fun help(method: String): String
 }
 
 abstract class AbstractToolExecutor : ToolExecutor {
@@ -53,6 +54,10 @@ abstract class AbstractToolExecutor : ToolExecutor {
     abstract suspend fun execute(objectName: String, functionName: String, args: Map<String, Any?>, target: Any): Any?
 
     override fun help(): String {
+        return "system.help(domain: String, method: String): String"
+    }
+
+    override fun help(method: String): String {
         return "system.help(domain: String, method: String): String"
     }
 

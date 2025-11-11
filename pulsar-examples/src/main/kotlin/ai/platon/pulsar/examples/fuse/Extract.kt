@@ -7,7 +7,7 @@ import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 
-class Acts {
+class Extract {
     private val logger = getLogger(this)
 
     private var stepNo = 0
@@ -22,7 +22,7 @@ class Acts {
 
         driver.open(url)
 
-        var action = "提取列表页数据：文章标题，评论数"
+        var action = "提取列表页数据：文章标题，评论信息"
         var schema = """
 {"fields": [{"name": "articles", "type": "array", "description": "文章列表", "arrayElements": {"name": "article", "type": "object", "objectMemberProperties": [{"name": "title", "type": "string", "description": "文章标题", "required": true}, {"name": "comments", "type": "string", "description": "评论数", "required": true}]}}]}
         """.trimIndent()
@@ -42,4 +42,4 @@ class Acts {
     }
 }
 
-suspend fun main() = Acts().run()
+suspend fun main() = Extract().run()

@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import kotlin.collections.get
+import org.junit.jupiter.api.assertNotNull
 import kotlin.test.assertEquals
 
 class ExtractionSchemaTest {
@@ -38,7 +38,7 @@ class ExtractionSchemaTest {
     fun `object with nested array renders children and item schema`() {
         val item = ExtractionField.obj(
             name = "item",
-            properties = listOf(
+            objectMemberProperties = listOf(
                 ExtractionField.string("name"),
                 ExtractionField.string("sku", required = false)
             ),
@@ -46,7 +46,7 @@ class ExtractionSchemaTest {
         )
         val field = ExtractionField.obj(
             name = "product",
-            properties = listOf(
+            objectMemberProperties = listOf(
                 ExtractionField.arrayOf("variants", item = item)
             )
         )
@@ -75,13 +75,23 @@ class ExtractionSchemaTest {
         val field = ExtractionField(
             name = "tags",
             type = "array",
-            items = null
+            arrayElements = null
         )
         val schema = ExtractionSchema(listOf(field))
         val root = mapper.readTree(schema.toJsonSchema())
         val tags = root.get("properties").get("tags")
         Assertions.assertEquals("array", tags.get("type").asText())
         Assertions.assertEquals("string", tags.get("items").get("type").asText())
+    }
+
+    @Test
+    fun `When parse from JSON string Then success`() {
+        val json = """
+{"fields":[{"name":"articles","type":"array","description":"文章列表","arrayElements":{"name":"article","type":"object","objectMemberProperties":[{"name":"title","type":"string","description":"文章标题","required":true},{"name":"comments","type":"number","description":"评论数量","required":true}]}}]}
+
+        """.trimIndent()
+
+        val schema = ExtractionSchema.parse(json)
     }
 
     @Test
@@ -116,7 +126,7 @@ class ExtractionSchemaTest {
               "name": "product",
               "type": "object",
               "description": "Product info",
-              "properties": [
+              "objectMemberProperties": [
                 {
                   "name": "name",
                   "type": "string",
@@ -127,11 +137,11 @@ class ExtractionSchemaTest {
                   "name": "variants",
                   "type": "array",
                   "required": false,
-                  "items": {
+                  "arrayElements": {
                     "name": "variant",
                     "type": "object",
                     "required": false,
-                    "properties": [
+                    "objectMemberProperties": [
                       { "name": "sku", "type": "string", "required": false },
                       { "name": "price", "type": "number", "required": false }
                     ]
@@ -152,23 +162,56 @@ class ExtractionSchemaTest {
         Assertions.assertEquals("Product info", product.description)
 
         // properties under object
-        assertEquals(2, product.properties.size)
-        val nameField = product.properties.first { it.name == "name" }
+        assertEquals(2, product.objectMemberProperties.size)
+        val nameField = product.objectMemberProperties.first { it.name == "name" }
         assertEquals("string", nameField.type)
         assertTrue(nameField.required)
 
-        val variantsField = product.properties.first { it.name == "variants" }
+        val variantsField = product.objectMemberProperties.first { it.name == "variants" }
         assertEquals("array", variantsField.type)
         assertFalse(variantsField.required)
-        Assertions.assertNotNull(variantsField.items)
+        Assertions.assertNotNull(variantsField.arrayElements)
 
         // items under array
-        val item = variantsField.items!!
+        val item = variantsField.arrayElements!!
         assertEquals("variant", item.name)
         assertEquals("object", item.type)
         assertFalse(item.required)
-        assertTrue(item.properties.any { it.name == "sku" && it.type == "string" && !it.required })
-        assertTrue(item.properties.any { it.name == "price" && it.type == "number" && !it.required })
+        assertTrue(item.objectMemberProperties.any { it.name == "sku" && it.type == "string" && !it.required })
+        assertTrue(item.objectMemberProperties.any { it.name == "price" && it.type == "number" && !it.required })
+    }
+
+    // Kotlin
+    @Test
+    fun `parse from JSON string `() {
+        val json = """
+{
+  "fields": [
+    {
+      "name": "articles",
+      "type": "array",
+      "description": "文章列表",
+      "items": {
+        "type": "object",
+        "fields": [
+          {
+            "name": "title",
+            "type": "string",
+            "description": "文章标题",
+            "required": true
+          },
+          {
+            "name": "comments",
+            "type": "string",
+            "description": "评论数",
+            "required": true
+          }
+        ]
+      }
+    }
+  ]
+}
+        """.trimIndent()
     }
 
     @Test

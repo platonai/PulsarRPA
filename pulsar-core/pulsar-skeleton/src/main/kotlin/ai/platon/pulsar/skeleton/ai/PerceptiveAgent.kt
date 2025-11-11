@@ -71,7 +71,6 @@ data class ObserveOptions(
     val drawOverlay: Boolean? = null,
     val iframes: Boolean? = null,
     val frameId: String? = null,
-    // val agentState: AgentState? = null,
 )
 
 data class ToolCallSpec constructor(
@@ -170,10 +169,6 @@ data class ObserveElement constructor(
     val expression: String? = null,
     val cssFriendlyExpression: String? = null,
 ) {
-    @Deprecated("User cssFriendlyExpression instead")
-    @get:JsonIgnore
-    val cssFriendlyExpressions: List<String> get() = cssFriendlyExpression?.let { listOf(it) } ?: emptyList()
-
     @get:JsonIgnore
     val description: String? get() = toolCall?.description
 

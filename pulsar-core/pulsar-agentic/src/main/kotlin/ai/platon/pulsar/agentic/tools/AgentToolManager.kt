@@ -30,7 +30,7 @@ class AgentToolManager(
     init {
         Files.createDirectories(baseDir)
         fs = AgentFileSystem(baseDir)
-        system = SystemToolExecutor()
+        system = SystemToolExecutor(this)
     }
 
     val session: AgenticSession get() = agent.session
@@ -41,10 +41,14 @@ class AgentToolManager(
         BrowserToolExecutor(),
         FileSystemToolExecutor(),
         AgentToolExecutor(),
-        SystemToolExecutor()
+        system
     )
 
     val executor = BasicToolCallExecutor(concreteExecutors)
+
+    fun help(domain: String, method: String): String {
+        return concreteExecutors.firstOrNull { it.domain == domain }?.help(method) ?: ""
+    }
 
     @Throws(UnsupportedOperationException::class)
     suspend fun execute(actionDescription: ActionDescription, message: String? = null): ToolCallResult {

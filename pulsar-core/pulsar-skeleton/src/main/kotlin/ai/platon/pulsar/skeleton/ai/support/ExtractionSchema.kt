@@ -13,8 +13,8 @@ data class ExtractionField(
     val type: String = "string",                 // JSON schema primitive or 'object' / 'array'
     val description: String? = null,
     val required: Boolean = true,
-    val properties: List<ExtractionField> = emptyList(), // children if object
-    val items: ExtractionField? = null                    // item schema if array
+    val objectMemberProperties: List<ExtractionField> = emptyList(), // define the schema of member properties if type == object
+    val arrayElements: ExtractionField? = null                   // define the schema of elements if type == array
 ) {
     fun toJsonSchemaNode(mapper: ObjectMapper): ObjectNode {
         val node = JsonNodeFactory.instance.objectNode()
@@ -24,7 +24,7 @@ data class ExtractionField(
             "object" -> {
                 val propsNode = JsonNodeFactory.instance.objectNode()
                 val requiredList = mutableListOf<String>()
-                properties.forEach { child ->
+                objectMemberProperties.forEach { child ->
                     propsNode.set<ObjectNode>(child.name, child.toJsonSchemaNode(mapper))
                     if (child.required) requiredList += child.name
                 }
@@ -35,7 +35,7 @@ data class ExtractionField(
             }
 
             "array" -> {
-                val itemNode = items?.toJsonSchemaNode(mapper) ?: JsonNodeFactory.instance.objectNode()
+                val itemNode = arrayElements?.toJsonSchemaNode(mapper) ?: JsonNodeFactory.instance.objectNode()
                     .apply { put("type", "string") }
                 node.set<ObjectNode>("items", itemNode)
             }
@@ -51,7 +51,7 @@ data class ExtractionField(
         /** Convenience for an object field with child properties. */
         fun obj(
             name: String,
-            properties: List<ExtractionField>,
+            objectMemberProperties: List<ExtractionField>,
             description: String? = null,
             required: Boolean = true
         ): ExtractionField = ExtractionField(
@@ -59,7 +59,7 @@ data class ExtractionField(
             type = "object",
             description = description,
             required = required,
-            properties = properties
+            objectMemberProperties = objectMemberProperties
         )
 
         /** Convenience for an array field with a given item schema. */
@@ -73,7 +73,7 @@ data class ExtractionField(
             type = "array",
             description = description,
             required = required,
-            items = item
+            arrayElements = item
         )
     }
 }
@@ -161,8 +161,8 @@ class ExtractionSchema(val fields: List<ExtractionField>) {
                         type = "array",
                         description = "Important hyperlinks on the page",
                         required = false,
-                        items = ExtractionField(
-                            name = "link", type = "object", properties = listOf(
+                        arrayElements = ExtractionField(
+                            name = "link", type = "object", objectMemberProperties = listOf(
                                 ExtractionField("text", type = "string", description = "Anchor text", required = false),
                                 ExtractionField("href", type = "string", description = "Href URL", required = false)
                             ), required = false
