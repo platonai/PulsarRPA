@@ -2,11 +2,10 @@ package ai.platon.pulsar.skeleton.common.llm
 
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.code.ProjectUtils
-import java.net.URI
+import kotlinx.io.files.FileNotFoundException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
-import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.io.path.notExists
@@ -14,10 +13,17 @@ import kotlin.io.path.notExists
 object LLMUtils {
 
     fun copyWebDriverAsResource() {
-        val file = ProjectUtils.findFile("WebDriver.kt")
-        if (file != null) {
-            ProjectUtils.copyFileAsCodeResource(file)
+        copySourceFileAsResource("WebDriver.kt")
+    }
+
+    fun copySourceFileAsResource(filename: String) {
+        if (ProjectUtils.findProjectRootDir() == null) {
+            // we are not in a source code project
+            return
         }
+
+        val file = ProjectUtils.findFile(filename) ?: throw FileNotFoundException(filename)
+        ProjectUtils.copySourceFileAsCodeResource(file)
     }
 
     fun readWebDriverFromResource(): String {

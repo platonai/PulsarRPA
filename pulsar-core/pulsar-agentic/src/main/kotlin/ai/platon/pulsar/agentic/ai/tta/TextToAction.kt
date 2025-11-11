@@ -5,9 +5,12 @@ import ai.platon.pulsar.agentic.ai.PromptBuilder.Companion.SINGLE_ACTION_GENERAT
 import ai.platon.pulsar.agentic.ai.PromptBuilder.Companion.buildObserveResultSchema
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.ExperimentalApi
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.ai.llm.PromptTemplate
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
@@ -16,8 +19,6 @@ import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.ai.ToolCall
-import ai.platon.pulsar.skeleton.ai.ToolCallSpec
-import ai.platon.pulsar.skeleton.common.llm.LLMUtils
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
@@ -28,66 +29,9 @@ import java.nio.file.Files
 open class TextToAction(
     val conf: ImmutableConfig
 ) {
-    companion object {
-
-        fun toActionDescription(
-            instruction: String,
-            elements: ObserveResponseElements,
-            agentState: AgentState,
-            response: ModelResponse
-        ): ActionDescription {
-            val observeElements = elements.elements?.map { toObserveElement(it, response) } ?: emptyList()
-            return ActionDescription(
-                instruction,
-                observeElements = observeElements,
-                agentState = agentState,
-                modelResponse = response
-            )
-        }
-
-        fun toObserveElement(ele: ObserveResponseElement, response: ModelResponse): ObserveElement {
-            val arguments = ele.arguments
-                ?.mapNotNull { arg -> arg?.get("name") to arg?.get("value") }
-                ?.filter { it.first != null && it.second != null }
-                ?.associate { it.first!! to it.second!! }
-
-            val observeElement = ObserveElement(
-                locator = ele.locator?.removeSurrounding("[", "]"),
-
-                screenshotContentSummary = ele.screenshotContentSummary,
-                currentPageContentSummary = ele.currentPageContentSummary,
-                evaluationPreviousGoal = ele.evaluationPreviousGoal,
-                nextGoal = ele.nextGoal,
-
-                toolCall = ToolCall(
-                    domain = ele.domain ?: "",
-                    method = ele.method ?: "",
-                    arguments = arguments?.toMutableMap() ?: mutableMapOf(),
-                ),
-
-                modelResponse = response.content,
-            )
-
-            return observeElement
-        }
-    }
-
     private val logger = getLogger(this)
 
-    val baseDir = AppPaths.get("tta")
-
     val chatModel: BrowserChatModel get() = ChatModelFactory.getOrCreate(conf)
-
-    val webDriverToolCallFullList = mutableListOf<ToolCallSpec>()
-
-    init {
-        Files.createDirectories(baseDir)
-
-        LLMUtils.copyWebDriverAsResource()
-        val resource = "code-mirror/WebDriver.kt"
-        val sourceCode = ResourceLoader.readString(resource)
-        SourceCodeToToolCallSpec.extract("driver", sourceCode).toCollection(webDriverToolCallFullList)
-    }
 
     /**
      * Generate EXACT ONE WebDriver action with interactive elements.
@@ -112,7 +56,7 @@ open class TextToAction(
         val message = promptTemplate.render(
             mapOf(
                 "ACTION_DESCRIPTIONS" to actionDescriptions,
-                "TOOL_CALL_SPECIFICATION" to webDriverToolCallFullList.joinToString("\n") { it.expression },
+                "TOOL_CALL_SPECIFICATION" to SourceCodeToToolCallSpec.toolCallExpressions,
                 "NANO_TREE_LAZY_JSON" to domState.nanoTreeLazyJson,
                 "OUTPUT_SCHEMA_ACT" to buildObserveResultSchema(true),
             )
@@ -260,4 +204,56 @@ open class TextToAction(
         e.isJsonObject -> e.asJsonObject.entrySet().associate { it.key to jsonElementToKotlin(it.value) }
         else -> null
     }
+
+
+    companion object {
+
+        val baseDir = AppPaths.get("tta")
+
+        init {
+            Files.createDirectories(baseDir)
+        }
+
+        fun toActionDescription(
+            instruction: String,
+            elements: ObserveResponseElements,
+            agentState: AgentState,
+            response: ModelResponse
+        ): ActionDescription {
+            val observeElements = elements.elements?.map { toObserveElement(it, response) } ?: emptyList()
+            return ActionDescription(
+                instruction,
+                observeElements = observeElements,
+                agentState = agentState,
+                modelResponse = response
+            )
+        }
+
+        fun toObserveElement(ele: ObserveResponseElement, response: ModelResponse): ObserveElement {
+            val arguments = ele.arguments
+                ?.mapNotNull { arg -> arg?.get("name") to arg?.get("value") }
+                ?.filter { it.first != null && it.second != null }
+                ?.associate { it.first!! to it.second!! }
+
+            val observeElement = ObserveElement(
+                locator = ele.locator?.removeSurrounding("[", "]"),
+
+                screenshotContentSummary = ele.screenshotContentSummary,
+                currentPageContentSummary = ele.currentPageContentSummary,
+                evaluationPreviousGoal = ele.evaluationPreviousGoal,
+                nextGoal = ele.nextGoal,
+
+                toolCall = ToolCall(
+                    domain = ele.domain ?: "",
+                    method = ele.method ?: "",
+                    arguments = arguments?.toMutableMap() ?: mutableMapOf(),
+                ),
+
+                modelResponse = response.content,
+            )
+
+            return observeElement
+        }
+    }
+
 }

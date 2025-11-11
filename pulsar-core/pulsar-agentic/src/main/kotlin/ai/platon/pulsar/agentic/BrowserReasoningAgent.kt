@@ -202,6 +202,7 @@ class BrowserReasoningAgent constructor(
                 // Build AgentState and snapshot after settling
                 require(step == context.step + 1) { "Step should be exactly (context.stepNumber + 1)" }
 
+                pageStateTracker.waitForDOMSettle()
                 context = stateManager.buildExecutionContext(action.action, "step", step, baseContext = context)
                 val agentState = context.agentState
                 val browserUseState = agentState.browserUseState

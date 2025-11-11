@@ -15,6 +15,11 @@ object ProjectUtils {
 
     const val CODE_RESOURCE_DIR = "pulsar-core/pulsar-resources/src/main/resources/code-mirror"
 
+    fun isInJar(): Boolean {
+        val location = this::class.java.protectionDomain.codeSource.location
+        return location.protocol == "jar" || location.path.endsWith(".jar")
+    }
+
     /**
      * Finds the project root directory by searching for a file named `VERSION` in the current directory
      * and its parent directories.
@@ -31,6 +36,10 @@ object ProjectUtils {
      * @return The project root directory if found, otherwise null.
      */
     fun findProjectRootDir(startDir: Path): Path? {
+        if (isInJar()) {
+            return null
+        }
+
         var projectRootDir: Path? = startDir
 
         while (projectRootDir != null && projectRootDir.resolve("VERSION").notExists()) {
@@ -40,7 +49,7 @@ object ProjectUtils {
         return projectRootDir
     }
 
-    fun copyFileAsCodeResource(source: Path): Boolean {
+    fun copySourceFileAsCodeResource(source: Path): Boolean {
         val rootDir = findProjectRootDir() ?: return false
         val destPath = rootDir.resolve(CODE_RESOURCE_DIR)
 

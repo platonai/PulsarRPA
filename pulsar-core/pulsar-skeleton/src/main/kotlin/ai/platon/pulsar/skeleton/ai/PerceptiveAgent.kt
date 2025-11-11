@@ -115,7 +115,8 @@ data class ToolCall constructor(
 
 data class TcException(
     val expression: String,
-    val cause: Exception? = null
+    val cause: Exception,
+    var help: String,
 ) {
     val domain: String get() = expression.substringBefore('.')
     val method: String get() = StringUtils.substringBetween(expression, ".", ")")
@@ -130,8 +131,8 @@ data class TcEvaluate constructor(
 ) {
     val preview get() = doGetPreview()
 
-    constructor(expression: String, cause: Exception) :
-            this(expression = expression, exception = TcException(expression, cause))
+    constructor(expression: String, cause: Exception, help: String) :
+            this(expression = expression, exception = TcException(expression, cause, help))
 
     private fun doGetPreview(): String {
         return when (value) {

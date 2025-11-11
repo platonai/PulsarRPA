@@ -1,9 +1,22 @@
 package ai.platon.pulsar.agentic.ai.tta
 
+import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.skeleton.ai.ToolCallSpec
+import ai.platon.pulsar.skeleton.common.llm.LLMUtils
 
 object SourceCodeToToolCallSpec {
+
+    val webDriverToolCallFullList = mutableListOf<ToolCallSpec>()
+
+    init {
+        LLMUtils.copyWebDriverAsResource()
+        val resource = "code-mirror/WebDriver.kt"
+        val sourceCode = ResourceLoader.readString(resource)
+        extract("driver", sourceCode).toCollection(webDriverToolCallFullList)
+    }
+
+    val toolCallExpressions get() = webDriverToolCallFullList.joinToString("\n") { it.expression }
 
     fun extract(domain: String, sourceCode: String): List<ToolCallSpec> {
         // Parse WebDriver interface methods and build ToolCall specs

@@ -38,7 +38,8 @@ abstract class AbstractToolExecutor : ToolExecutor {
             TcEvaluate(value = value, className = className, expression = pseudoExpression)
         } catch (e: Exception) {
             logger.warn("Error executing expression: {} - {}", pseudoExpression, e.brief())
-            TcEvaluate(pseudoExpression, e)
+            val h = help(functionName)
+            TcEvaluate(pseudoExpression, e, help = h)
         }
     }
 

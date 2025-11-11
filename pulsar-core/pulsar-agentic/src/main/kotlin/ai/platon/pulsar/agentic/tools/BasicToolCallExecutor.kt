@@ -68,7 +68,7 @@ open class BasicToolCallExecutor(
             TcEvaluate(value = any, expression = expression)
         } catch (e: Exception) {
             logger.warn("Error eval expression: {} - {}", expression, e.stackTraceToString())
-            TcEvaluate(expression, e)
+            TcEvaluate(expression, e, EVAL_HELP)
         }
     }
 
@@ -90,5 +90,11 @@ open class BasicToolCallExecutor(
             .firstOrNull { it.targetClass.isSuperclassOf(target::class) }
             ?.execute(expression, target)
             ?: throw UnsupportedOperationException("❓ Unsupported target ${target::class}")
+    }
+
+    companion object {
+        val EVAL_HELP = """
+Evaluate an Kotlin expression using ScriptEngineManager.
+        """.trimIndent()
     }
 }

@@ -266,6 +266,7 @@ open class BrowserPerceptiveAgent constructor(
             // Reuse act(ActionDescription, ExecutionContext)
 
             // val actionDescription = ActionDescription(instruction, observe.observeElements, agentState = agentState)
+            pageStateTracker.waitForDOMSettle()
             val context = stateManager.buildExecutionContext(instruction, "step")
 
             ///////////////
@@ -310,6 +311,7 @@ open class BrowserPerceptiveAgent constructor(
      */
     override suspend fun extract(options: ExtractOptions): ExtractResult {
         val instruction = promptBuilder.initExtractUserInstruction(options.instruction)
+        pageStateTracker.waitForDOMSettle()
         val context = stateManager.buildExecutionContext(instruction, "extract")
         logExtractStart(context)
 
@@ -368,6 +370,7 @@ open class BrowserPerceptiveAgent constructor(
         messages.addUser(instruction, name = "instruction")
 
         // val agentState = getAgentState(instruction)
+        pageStateTracker.waitForDOMSettle()
         val context = stateManager.buildExecutionContext(instruction, "observe")
 
 //        val params = ObserveParams(
@@ -711,6 +714,7 @@ open class BrowserPerceptiveAgent constructor(
                 ensureReadyForStep(action)
 
                 // Build AgentState and snapshot after settling
+                pageStateTracker.waitForDOMSettle()
                 context = stateManager.buildExecutionContext(action.action, "step", nextStep, baseContext = context)
                 val agentState = context.agentState
                 val browserUseState = agentState.browserUseState

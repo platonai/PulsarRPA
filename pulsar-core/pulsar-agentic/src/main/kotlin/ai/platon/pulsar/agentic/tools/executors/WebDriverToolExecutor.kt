@@ -1,5 +1,6 @@
 package ai.platon.pulsar.agentic.tools.executors
 
+import ai.platon.pulsar.agentic.ai.tta.SourceCodeToToolCallSpec
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.NavigateEntry
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import java.time.Duration
@@ -9,6 +10,12 @@ class WebDriverToolExecutor: AbstractToolExecutor() {
     override val domain = "driver"
 
     override val targetClass: KClass<*> = WebDriver::class
+
+    private val toolCallSpecs = SourceCodeToToolCallSpec.webDriverToolCallFullList.associateBy { it.method }
+
+    override fun help(method: String): String {
+        return toolCallSpecs[method]?.description ?: ""
+    }
 
     /**
      * Execute a WebDriver function by name with named arguments.
