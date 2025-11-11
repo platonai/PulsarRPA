@@ -8,10 +8,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 
-/**
- * A richer schema definition than a simple Map<String,String> for extraction output.
- * Supports nested objects and arrays so that callers can express hierarchical expectations.
- */
 data class ExtractionField(
     val name: String,
     val type: String = "string",                 // JSON schema primitive or 'object' / 'array'
@@ -82,6 +78,52 @@ data class ExtractionField(
     }
 }
 
+/**
+ * ```json
+ * {
+ *   "$schema": "http://json-schema.org/draft-07/schema#",
+ *   "title": "ExtractionSchema",
+ *   "type": "object",
+ *   "required": ["fields"],
+ *   "properties": {
+ *     "fields": {
+ *       "type": "array",
+ *       "items": {
+ *         "$ref": "#/definitions/ExtractionField"
+ *       }
+ *     }
+ *   },
+ *   "definitions": {
+ *     "ExtractionField": {
+ *       "type": "object",
+ *       "required": ["name", "description"],
+ *       "properties": {
+ *         "name": { "type": "string" },
+ *         "type": {
+ *           "type": "string",
+ *           "default": "string",
+ *           "enum": ["string", "number", "boolean", "object", "array"]
+ *         },
+ *         "description": { "type": "string" },
+ *         "required": {
+ *           "type": "boolean",
+ *           "default": true
+ *         },
+ *         "properties": {
+ *           "type": "array",
+ *           "items": { "$ref": "#/definitions/ExtractionField" },
+ *           "default": []
+ *         },
+ *         "items": {
+ *           "$ref": "#/definitions/ExtractionField",
+ *           "default": null
+ *         }
+ *       }
+ *     }
+ *   }
+ * }
+ * ```
+ * */
 class ExtractionSchema(val fields: List<ExtractionField>) {
     /**
      * Convert the internal representation to a standard JSON Schema (draft-agnostic) string.

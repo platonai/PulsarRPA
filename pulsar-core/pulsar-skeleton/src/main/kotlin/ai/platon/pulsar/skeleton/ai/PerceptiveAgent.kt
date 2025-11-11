@@ -74,14 +74,41 @@ data class ObserveOptions(
     // val agentState: AgentState? = null,
 )
 
+data class ToolCallSpec constructor(
+    val domain: String,
+    val method: String,
+    val arguments: List<Arg> = listOf(),
+    val returnType: String = "Unit",
+    val description: String? = null,
+) {
+    data class Arg(
+        val name: String,
+        val type: String,
+        val defaultValue: String? = null,
+    ) {
+        @get:JsonIgnore
+        val expression: String get() {
+            return if (defaultValue != null) "$name: $type = $defaultValue" else "$name: $type"
+        }
+    }
+
+    @get:JsonIgnore
+    val expression: String get() {
+        val args = arguments.joinToString(prefix = "(", postfix = ")")
+        return "$domain.$method$args"
+    }
+}
+
 data class ToolCall constructor(
     val domain: String,
     val method: String,
     val arguments: MutableMap<String, String?> = mutableMapOf(),
     val description: String? = null,
 ) {
+    @get:JsonIgnore
     val pseudoNamedArguments get() = arguments.entries.joinToString { (k, v) -> "$k=\"$v\"" }
 
+    @get:JsonIgnore
     val pseudoExpression: String get() = "$domain.${method}($pseudoNamedArguments)"
 
     override fun toString() = pseudoExpression

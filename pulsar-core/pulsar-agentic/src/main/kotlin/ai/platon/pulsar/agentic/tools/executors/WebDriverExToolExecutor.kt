@@ -13,12 +13,6 @@ class WebDriverExToolExecutor: AbstractToolExecutor() {
     // target must be AbstractWebDriver (was Browser before, incorrect)
     override val targetClass: KClass<*> = AbstractWebDriver::class
 
-    @Deprecated("Not used anymore")
-    @Throws(IllegalArgumentException::class)
-    override fun toExpression(tc: ToolCall): String {
-        return Companion.toExpression(tc)
-    }
-
     /**
      * Execute driverEx.* expressions with named args.
      */

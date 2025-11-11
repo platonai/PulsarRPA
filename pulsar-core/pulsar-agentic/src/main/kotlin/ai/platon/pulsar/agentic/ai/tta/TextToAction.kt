@@ -16,6 +16,7 @@ import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.ai.ObserveElement
 import ai.platon.pulsar.skeleton.ai.ToolCall
+import ai.platon.pulsar.skeleton.ai.ToolCallSpec
 import ai.platon.pulsar.skeleton.common.llm.LLMUtils
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
@@ -77,18 +78,15 @@ open class TextToAction(
 
     val chatModel: BrowserChatModel get() = ChatModelFactory.getOrCreate(conf)
 
-    val webDriverToolCallExpressions = mutableListOf<String>()
+    val webDriverToolCallFullList = mutableListOf<ToolCallSpec>()
 
     init {
         Files.createDirectories(baseDir)
 
         LLMUtils.copyWebDriverAsResource()
         val resource = "code-mirror/WebDriver.kt"
-        // TODO: too simple parsing which leads to bugs
-        ResourceLoader.readAllLines(resource)
-            .filter { it.contains(" fun ") }
-            .map { it.substringAfterLast("suspend ") }
-            .toCollection(webDriverToolCallExpressions)
+        val sourceCode = ResourceLoader.readString(resource)
+        SourceCodeToToolCallSpec.extract("driver", sourceCode).toCollection(webDriverToolCallFullList)
     }
 
     /**
@@ -114,7 +112,7 @@ open class TextToAction(
         val message = promptTemplate.render(
             mapOf(
                 "ACTION_DESCRIPTIONS" to actionDescriptions,
-                "TOOL_CALL_SPECIFICATION" to webDriverToolCallExpressions.joinToString("\n"),
+                "TOOL_CALL_SPECIFICATION" to webDriverToolCallFullList.joinToString("\n") { it.expression },
                 "NANO_TREE_LAZY_JSON" to domState.nanoTreeLazyJson,
                 "OUTPUT_SCHEMA_ACT" to buildObserveResultSchema(true),
             )

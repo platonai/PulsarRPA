@@ -14,13 +14,47 @@ interface ToolExecutor {
 
     suspend fun execute(tc: ToolCall, target: Any): TcEvaluate
     suspend fun execute(expression: String, target: Any): TcEvaluate
-    fun toExpression(tc: ToolCall): String
+
+    fun help(): String
 }
 
-abstract class AbstractToolExecutor: ToolExecutor {
+abstract class AbstractToolExecutor : ToolExecutor {
 
     private val logger = getLogger(this)
     private val simpleParser = SimpleKotlinParser()
+
+    override suspend fun execute(tc: ToolCall, target: Any): TcEvaluate {
+        val objectName = tc.domain
+        val functionName = tc.method
+        val args = tc.arguments
+        val pseudoExpression = tc.pseudoExpression
+
+        return try {
+            val r = execute(objectName, functionName, args, target)
+
+            val className = if (r == null) "null" else r::class.qualifiedName
+            val value = if (r == Unit) null else r
+            TcEvaluate(value = value, className = className, expression = pseudoExpression)
+        } catch (e: Exception) {
+            logger.warn("Error executing expression: {} - {}", pseudoExpression, e.brief())
+            TcEvaluate(pseudoExpression, e)
+        }
+    }
+
+    override suspend fun execute(expression: String, target: Any): TcEvaluate {
+        val (objectName, functionName, args) = simpleParser.parseFunctionExpression(expression)
+            ?: return TcEvaluate(expression = expression, cause = IllegalArgumentException("Illegal expression"))
+
+        val tc = ToolCall(objectName, functionName, args)
+        return execute(tc, target)
+    }
+
+    @Throws(IllegalArgumentException::class)
+    abstract suspend fun execute(objectName: String, functionName: String, args: Map<String, Any?>, target: Any): Any?
+
+    override fun help(): String {
+        return "system.help(domain: String, method: String): String"
+    }
 
     // ---------------- Shared helpers for named parameter executors ----------------
     protected fun validateArgs(
@@ -59,9 +93,12 @@ abstract class AbstractToolExecutor: ToolExecutor {
         required: Boolean = true,
         default: Int? = null
     ): Int? {
-        val v = args[name]
-        if (v == null) return if (required) throw IllegalArgumentException("Missing parameter '$name' for $functionName") else default
-        return v.toString().toIntOrNull() ?: throw IllegalArgumentException("Parameter '$name' must be Int for $functionName | actual='${v}'")
+        val v = args[name] ?: when {
+            required -> throw IllegalArgumentException("Missing parameter '$name' for $functionName")
+            else -> return default
+        }
+        return v.toString().toIntOrNull()
+            ?: throw IllegalArgumentException("Parameter '$name' must be Int for $functionName | actual='${v}'")
     }
 
     protected fun paramLong(
@@ -71,9 +108,12 @@ abstract class AbstractToolExecutor: ToolExecutor {
         required: Boolean = true,
         default: Long? = null
     ): Long? {
-        val v = args[name]
-        if (v == null) return if (required) throw IllegalArgumentException("Missing parameter '$name' for $functionName") else default
-        return v.toString().toLongOrNull() ?: throw IllegalArgumentException("Parameter '$name' must be Long for $functionName | actual='${v}'")
+        val v = args[name] ?: when {
+            required -> throw IllegalArgumentException("Missing parameter '$name' for $functionName")
+            else -> return default
+        }
+        return v.toString().toLongOrNull()
+            ?: throw IllegalArgumentException("Parameter '$name' must be Long for $functionName | actual='${v}'")
     }
 
     protected fun paramBool(
@@ -83,8 +123,10 @@ abstract class AbstractToolExecutor: ToolExecutor {
         required: Boolean = true,
         default: Boolean? = null
     ): Boolean? {
-        val v = args[name]
-        if (v == null) return if (required) throw IllegalArgumentException("Missing parameter '$name' for $functionName") else default
+        val v = args[name] ?: return when {
+            required -> throw IllegalArgumentException("Missing parameter '$name' for $functionName")
+            else -> default
+        }
         return when (v.toString().lowercase()) {
             "true" -> true
             "false" -> false
@@ -98,9 +140,9 @@ abstract class AbstractToolExecutor: ToolExecutor {
         functionName: String,
         required: Boolean = true
     ): List<String> {
-        val v = args[name]
-        if (v == null) {
-            if (required) throw IllegalArgumentException("Missing parameter '$name' for $functionName") else return emptyList()
+        val v = args[name] ?: when {
+            required -> throw IllegalArgumentException("Missing parameter '$name' for $functionName")
+            else -> return emptyList()
         }
         return when (v) {
             is List<*> -> v.filterIsInstance<String>()
@@ -117,42 +159,12 @@ abstract class AbstractToolExecutor: ToolExecutor {
         required: Boolean = true,
         default: Double? = null
     ): Double? {
-        val v = args[name]
-        if (v == null) return if (required) throw IllegalArgumentException("Missing parameter '$name' for $functionName") else default
-        return v.toString().toDoubleOrNull() ?: throw IllegalArgumentException("Parameter '$name' must be Double for $functionName | actual='${v}'")
-    }
-
-    @Deprecated("Not used anymore")
-    override fun toExpression(tc: ToolCall): String {
-        throw NotImplementedError()
-    }
-
-    override suspend fun execute(tc: ToolCall, target: Any): TcEvaluate {
-        val objectName = tc.domain
-        val functionName = tc.method
-        val args = tc.arguments
-        val pseudoExpression = tc.pseudoExpression
-
-        return try {
-            val r = execute(objectName, functionName, args, target)
-
-            val className = if (r == null) "null" else r::class.qualifiedName
-            val value = if (r == Unit) null else r
-            TcEvaluate(value = value, className = className, expression = pseudoExpression)
-        } catch (e: Exception) {
-            logger.warn("Error executing expression: {} - {}", pseudoExpression, e.brief())
-            TcEvaluate(pseudoExpression, e)
+        val v = args[name] ?: return when {
+            required -> throw IllegalArgumentException("Missing parameter '$name' for $functionName")
+            else -> default
         }
+
+        return v.toString().toDoubleOrNull()
+            ?: throw IllegalArgumentException("Parameter '$name' must be Double for $functionName | actual='${v}'")
     }
-
-    override suspend fun execute(expression: String, target: Any): TcEvaluate {
-        val (objectName, functionName, args) = simpleParser.parseFunctionExpression(expression)
-            ?: return TcEvaluate(expression = expression, cause = IllegalArgumentException("Illegal expression"))
-
-        val tc = ToolCall(objectName, functionName, args)
-        return execute(tc, target)
-    }
-
-    @Throws(IllegalArgumentException::class)
-    abstract suspend fun execute(objectName: String, functionName: String, args: Map<String, Any?>, target: Any): Any?
 }

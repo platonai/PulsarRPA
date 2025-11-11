@@ -1,5 +1,6 @@
 package ai.platon.pulsar.skeleton.common.llm
 
+import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.code.ProjectUtils
 import java.net.URI
 import java.nio.file.Files
@@ -17,6 +18,12 @@ object LLMUtils {
         if (file != null) {
             ProjectUtils.copyFileAsCodeResource(file)
         }
+    }
+
+    fun readWebDriverFromResource(): String {
+        copyWebDriverAsResource()
+        val resource = "code-mirror/WebDriver.kt"
+        return ResourceLoader.readString(resource)
     }
 
     fun copyWebDriverFile(dest: Path) {

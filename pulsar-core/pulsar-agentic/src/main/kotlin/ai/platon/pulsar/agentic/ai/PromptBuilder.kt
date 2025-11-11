@@ -135,6 +135,8 @@ class ExtractionField(
 class ExtractionSchema(fields: List<ExtractionField>)
 ```
 
+如有疑问，调用 `system.help("agent", "extract")` 工具获得帮助信息。
+
 """
 
         val INTERACTIVE_ELEMENT_LIST_NOTE_CONTENT = """

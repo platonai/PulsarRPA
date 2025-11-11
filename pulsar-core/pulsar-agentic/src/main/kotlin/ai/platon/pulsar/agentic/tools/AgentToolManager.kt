@@ -25,10 +25,12 @@ class AgentToolManager(
         .resolve(DateTimes.PATH_SAFE_FORMAT_101.format(agent.startTime))
         .resolve(agent.uuid.toString())
     val fs: AgentFileSystem
+    val system: SystemToolExecutor
 
     init {
         Files.createDirectories(baseDir)
         fs = AgentFileSystem(baseDir)
+        system = SystemToolExecutor()
     }
 
     val session: AgenticSession get() = agent.session
@@ -39,6 +41,7 @@ class AgentToolManager(
         BrowserToolExecutor(),
         FileSystemToolExecutor(),
         AgentToolExecutor(),
+        SystemToolExecutor()
     )
 
     val executor = BasicToolCallExecutor(concreteExecutors)
@@ -53,6 +56,7 @@ class AgentToolManager(
                 "browser" -> executor.execute(tc, driver.browser)
                 "fs" -> executor.execute(tc, fs)
                 "agent" -> executor.execute(tc, agent)
+                "system" -> executor.execute(tc, system)
                 else -> throw UnsupportedOperationException("❓ Unsupported domain: ${tc.domain} | $tc")
             }
 

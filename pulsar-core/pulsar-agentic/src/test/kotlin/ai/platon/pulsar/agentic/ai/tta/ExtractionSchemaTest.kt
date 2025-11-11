@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import kotlin.collections.get
 import kotlin.test.assertEquals
 
 class ExtractionSchemaTest {
@@ -103,6 +104,71 @@ class ExtractionSchemaTest {
         assertEquals(2, schema.fields.size)
         assertEquals("title", schema.fields[0].name)
         assertEquals("integer", schema.fields[1].type)
+    }
+
+    // Kotlin
+    @Test
+    fun `parse from JSON string with nested fields`() {
+        val json = """
+        {
+          "fields": [
+            {
+              "name": "product",
+              "type": "object",
+              "description": "Product info",
+              "properties": [
+                {
+                  "name": "name",
+                  "type": "string",
+                  "description": "Product name",
+                  "required": true
+                },
+                {
+                  "name": "variants",
+                  "type": "array",
+                  "required": false,
+                  "items": {
+                    "name": "variant",
+                    "type": "object",
+                    "required": false,
+                    "properties": [
+                      { "name": "sku", "type": "string", "required": false },
+                      { "name": "price", "type": "number", "required": false }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        }
+    """.trimIndent()
+
+        val schema = ExtractionSchema.parse(json)
+        assertEquals(1, schema.fields.size)
+
+        val product = schema.fields[0]
+        assertEquals("product", product.name)
+        assertEquals("object", product.type)
+        Assertions.assertEquals("Product info", product.description)
+
+        // properties under object
+        assertEquals(2, product.properties.size)
+        val nameField = product.properties.first { it.name == "name" }
+        assertEquals("string", nameField.type)
+        assertTrue(nameField.required)
+
+        val variantsField = product.properties.first { it.name == "variants" }
+        assertEquals("array", variantsField.type)
+        assertFalse(variantsField.required)
+        Assertions.assertNotNull(variantsField.items)
+
+        // items under array
+        val item = variantsField.items!!
+        assertEquals("variant", item.name)
+        assertEquals("object", item.type)
+        assertFalse(item.required)
+        assertTrue(item.properties.any { it.name == "sku" && it.type == "string" && !it.required })
+        assertTrue(item.properties.any { it.name == "price" && it.type == "number" && !it.required })
     }
 
     @Test
