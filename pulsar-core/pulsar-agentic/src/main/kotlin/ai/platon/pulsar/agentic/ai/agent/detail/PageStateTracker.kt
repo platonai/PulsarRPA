@@ -24,7 +24,7 @@ class PageStateTracker(
 ) {
     private val logger = getLogger(this)
 
-    private val activeDriver get() = session.boundDriver
+    private val activeDriver get() = session.getOrCreateBoundDriver()
     private var lastPageStateHash: Int? = null
     private var sameStateCount = 0
 
