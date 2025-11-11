@@ -179,36 +179,30 @@ class BrowserReasoningAgent constructor(
 
         // agent general guide
         var consecutiveNoOps = 0
-        var step = 0
 
         var context = initContext
 
         try {
-            loop@ while (step < config.maxSteps) {
-                step++
-
+            loop@ while (context.step < config.maxSteps) {
                 // Step setup: ensure URL and settle DOM
                 ensureReadyForStep(action)
 
-                // Build AgentState and snapshot after settling
-                require(step == context.step + 1) { "Step should be exactly (context.stepNumber + 1)" }
-
-                context = stateManager.buildExecutionContext(action.action, "step", step, baseContext = context)
+                context = stateManager.buildExecutionContext(action.action, "step", context.step, baseContext = context)
 
                 // Detect unchanged state for heuristics
                 val unchangedCount = pageStateTracker.checkStateChange(context.agentState.browserUseState)
                 if (unchangedCount >= 3) {
-                    logger.info("⚠️ loop.warn sid={} step={} unchangedSteps={}", sid, step, unchangedCount)
+                    logger.info("⚠️ loop.warn sid={} step={} unchangedSteps={}", sid, context.step, unchangedCount)
                     consecutiveNoOps++
                 }
 
-                logger.info("▶️ step.exec sid={} step={}/{} noOps={}", sid, step, config.maxSteps, consecutiveNoOps)
+                logger.info("▶️ step.exec sid={} step={}/{} noOps={}", sid, context.step, config.maxSteps, consecutiveNoOps)
                 if (logger.isDebugEnabled) {
                     logger.debug("🧩 dom={}", DomDebug.summarizeStr(context.agentState.browserUseState.domState, 5))
                 }
 
                 // Memory cleanup at intervals
-                if (step % config.memoryCleanupIntervalSteps == 0) {
+                if (context.step % config.memoryCleanupIntervalSteps == 0) {
                     performMemoryCleanup(context)
                 }
 
@@ -230,7 +224,7 @@ class BrowserReasoningAgent constructor(
 
                     if (actionDescription?.toolCall == null) {
                         consecutiveNoOps++
-                        val stop = handleConsecutiveNoOps(consecutiveNoOps, step, context)
+                        val stop = handleConsecutiveNoOps(consecutiveNoOps, context.step, context)
                         if (stop) break@loop
                         continue@loop
                     }
@@ -250,15 +244,15 @@ class BrowserReasoningAgent constructor(
 
                         updateTodo(context, actResult)
 
-                        updatePerformanceMetrics(step, context.timestamp, true)
+                        updatePerformanceMetrics(context.step, context.timestamp, true)
 
-                        logger.info("🏁 step.done sid={} step={} result={}", sid, step, actResult.result)
+                        logger.info("🏁 step.done sid={} step={} result={}", sid, context.step, actResult.result)
                     } else {
                         // Treat validation failures or execution skips as no-ops; no AgentState record
                         consecutiveNoOps++
-                        val stop = handleConsecutiveNoOps(consecutiveNoOps, step, context)
+                        val stop = handleConsecutiveNoOps(consecutiveNoOps, context.step, context)
                         if (stop) break@loop
-                        updatePerformanceMetrics(step, context.timestamp, false)
+                        updatePerformanceMetrics(context.step, context.timestamp, false)
                     }
                 }
 
@@ -276,8 +270,8 @@ class BrowserReasoningAgent constructor(
             )
         } catch (e: Exception) {
             val executionTime = Duration.between(startTime, Instant.now())
-            logger.error("💥 agent.fail sid={} steps={} dur={} err={}", sid, step, executionTime, e.message, e)
-            throw classifyError(e, step)
+            logger.error("💥 agent.fail sid={} steps={} dur={} err={}", sid, context.step, executionTime, e.message, e)
+            throw classifyError(e, context.step)
         }
     }
 

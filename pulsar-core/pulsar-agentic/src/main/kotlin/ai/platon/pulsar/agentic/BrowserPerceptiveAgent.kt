@@ -363,40 +363,7 @@ open class BrowserPerceptiveAgent constructor(
         val context = (options.additionalContext["context"] ?.get() as? ExecutionContext)
             ?: throw IllegalStateException("Illegal context")
 
-        val interactiveElements = context.agentState.browserUseState.getInteractiveElements()
-
-        val actionDescription = try {
-            domService.addHighlights(interactiveElements)
-
-            // Optional screenshot
-            val screenshotB64 = captureScreenshotWithRetry(context)
-
-            // Do OBSERVE
-            val params = context.createObserveParams(options, false, screenshotB64)
-            doObserve(params, messages)
-        } finally {
-            // Ensure highlights are always removed even on exception
-            runCatching { domService.removeHighlights(interactiveElements) }
-                .onFailure { e -> logger.warn("⚠️ Failed to remove highlights: ${e.message}") }
-        }
-
-//        val results = actionDescription.observeElements?.map { ele ->
-//            ObserveResult(
-//                agentState = context.agentState,
-//                locator = ele.locator,
-//                domain = ele.domain?.ifBlank { null },
-//                method = ele.method?.ifBlank { null },
-//                arguments = ele.arguments?.takeIf { it.isNotEmpty() },
-//                description = ele.description ?: "(No comment ...)",
-//                screenshotContentSummary = ele.screenshotContentSummary,
-//                currentPageContentSummary = ele.currentPageContentSummary,
-//                evaluationPreviousGoal = ele.evaluationPreviousGoal,
-//                nextGoal = ele.nextGoal,
-//                backendNodeId = ele.backendNodeId,
-//                observeElement = ele,
-//                actionDescription = actionDescription,
-//            )
-//        }
+        val actionDescription = takeScreenshotAndObserve(options, context, messages)
 
         return actionDescription.toObserveResults(context.agentState)
     }
@@ -465,22 +432,24 @@ open class BrowserPerceptiveAgent constructor(
 
         /////////////////////
         // I - Observe
-        val interactiveElements = context.agentState.browserUseState.getInteractiveElements()
+//        val interactiveElements = context.agentState.browserUseState.getInteractiveElements()
+//
+//        val actionDescription = try {
+//            domService.addHighlights(interactiveElements)
+//
+//            // Optional screenshot
+//            val screenshotB64 = captureScreenshotWithRetry(context)
+//
+//            // Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
+//            val params = context.createObserveActParams(screenshotB64)
+//            doObserve(params, messages)
+//        } finally {
+//            // Ensure highlights are always removed even on exception
+//            runCatching { domService.removeHighlights(interactiveElements) }
+//                .onFailure { e -> logger.warn("⚠️ Failed to remove highlights: ${e.message}") }
+//        }
 
-        val actionDescription = try {
-            domService.addHighlights(interactiveElements)
-
-            // Optional screenshot
-            val screenshotB64 = captureScreenshotWithRetry(context)
-
-            // Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
-            val params = context.createObserveActParams(screenshotB64)
-            doObserve(params, messages)
-        } finally {
-            // Ensure highlights are always removed even on exception
-            runCatching { domService.removeHighlights(interactiveElements) }
-                .onFailure { e -> logger.warn("⚠️ Failed to remove highlights: ${e.message}") }
-        }
+        val actionDescription = takeScreenshotAndObserve(options, context, messages)
 
         val observeResults = actionDescription.toObserveResults(context.agentState)
 
@@ -527,7 +496,33 @@ open class BrowserPerceptiveAgent constructor(
         return ActResult.failed(msg, instruction)
     }
 
-    private suspend fun doObserve(params: ObserveParams, messages: AgentMessageList): ActionDescription {
+    private suspend fun takeScreenshotAndObserve(options: Any, context: ExecutionContext, messages: AgentMessageList): ActionDescription {
+        val interactiveElements = context.agentState.browserUseState.getInteractiveElements()
+
+        val actionDescription = try {
+            domService.addHighlights(interactiveElements)
+
+            // Optional screenshot
+            val screenshotB64 = captureScreenshotWithRetry(context)
+
+            // Do OBSERVE
+            val params = when (options) {
+                is ObserveOptions -> context.createObserveParams(options, false, screenshotB64)
+                is ActionOptions -> context.createObserveActParams(screenshotB64)
+                else -> throw IllegalArgumentException("Not supported option")
+            }
+
+            observeAndInference(params, messages)
+        } finally {
+            // Ensure highlights are always removed even on exception
+            runCatching { domService.removeHighlights(interactiveElements) }
+                .onFailure { e -> logger.warn("⚠️ Failed to remove highlights: ${e.message}") }
+        }
+
+        return actionDescription
+    }
+
+    private suspend fun observeAndInference(params: ObserveParams, messages: AgentMessageList): ActionDescription {
         requireNotNull(messages.instruction) { "User instruction is required | $messages" }
         requireNotNull(params.agentState) { "Agent state has to be available" }
         require(params.instruction == messages.instruction?.content)
