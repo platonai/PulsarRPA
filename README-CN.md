@@ -105,6 +105,18 @@ docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/b
 
 ---
 
+## ✨ Browser Use
+
+```kotlin
+val problems = """
+    go to amazon.com, search for pens to draw on whiteboards, compare the first 4 ones, write the result to a markdown file.
+    打开百度查找厦门岛旅游景点，给出一个总结
+    go to https://news.ycombinator.com/news , read top 3 articles and give me a summary
+    """.split("\n").map { it.trim() }.filter { it.length > 10 }
+
+problems.forEach { agent.resolve(it) }
+```
+
 ## 🌟 面向初学者 – 只需文本，无需代码！
 
 使用`commands` API执行浏览器操作、提取网页数据、分析网站等。

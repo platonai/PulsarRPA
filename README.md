@@ -14,7 +14,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 ### ✨ Key Capabilities:
 
-- 🤖 **Browser Use** – Agents, browsers, persistence, profiles, auth, cookies, extraction, and LLMs.
+- 🤖 **AI Integration with LLMs** – Smarter automation powered by large language models.
 - ⚡ **Ultra-Fast Automation** – Coroutine-safe browser automation concurrency, spider-level crawling performance.
 - 🧠 **Web Understanding** – Deep comprehension of dynamic web content.
 - 📊 **Data Extraction APIs** – Powerful tools to extract structured data effortlessly.
@@ -104,6 +104,18 @@ docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/b
 </details>
 
 ---
+
+## ✨ Browser Use
+
+```kotlin
+val problems = """
+    go to amazon.com, search for pens to draw on whiteboards, compare the first 4 ones, write the result to a markdown file.
+    打开百度查找厦门岛旅游景点，给出一个总结
+    go to https://news.ycombinator.com/news , read top 3 articles and give me a summary
+    """.split("\n").map { it.trim() }.filter { it.length > 10 }
+
+problems.forEach { agent.resolve(it) }
+```
 
 ## 🌟 For Beginners – Just Text, No Code!
 
