@@ -51,12 +51,13 @@ open class TextToAction(
         val domState = domService.getDOMState(snapshotOptions = options)
         val browserUseState = domService.getBrowserUseState()
         val agentState = AgentState(0, "", browserUseState = browserUseState)
+        val toolCallExpressions = SourceCodeToToolCallSpec.webDriverToolCallList.joinToString("\n") { it.expression }
 
         val promptTemplate = PromptTemplate(SINGLE_ACTION_GENERATION_PROMPT)
         val message = promptTemplate.render(
             mapOf(
                 "ACTION_DESCRIPTIONS" to actionDescriptions,
-                "TOOL_CALL_SPECIFICATION" to SourceCodeToToolCallSpec.toolCallExpressions,
+                "TOOL_CALL_SPECIFICATION" to toolCallExpressions,
                 "NANO_TREE_LAZY_JSON" to domState.nanoTreeLazyJson,
                 "OUTPUT_SCHEMA_ACT" to buildObserveResultSchema(true),
             )

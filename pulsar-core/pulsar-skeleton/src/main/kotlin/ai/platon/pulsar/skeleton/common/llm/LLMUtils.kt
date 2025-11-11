@@ -12,6 +12,8 @@ import kotlin.io.path.notExists
 
 object LLMUtils {
 
+    const val CODE_MIRROR_DIR = "code-mirror"
+
     fun copyWebDriverAsResource() {
         copySourceFileAsResource("WebDriver.kt")
     }
@@ -28,7 +30,13 @@ object LLMUtils {
 
     fun readWebDriverFromResource(): String {
         copyWebDriverAsResource()
-        val resource = "code-mirror/WebDriver.kt"
+        val resource = "$CODE_MIRROR_DIR/WebDriver.kt"
+        return ResourceLoader.readString(resource)
+    }
+
+    fun readSourceFileFromResource(fileName: String): String {
+        copySourceFileAsResource(fileName)
+        val resource = "$CODE_MIRROR_DIR/$fileName"
         return ResourceLoader.readString(resource)
     }
 

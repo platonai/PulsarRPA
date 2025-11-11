@@ -18,15 +18,18 @@ class BrowserToolExecutor: AbstractToolExecutor() {
 
     suspend fun execute(expression: String, browser: Browser, session: AgenticSession): TcEvaluate {
         if (expression.contains("switchTab")) {
-            val driver = execute(expression, browser)
-            if (driver is WebDriver) {
-                session.bindDriver(driver)
+            val result = execute(expression, browser)
+
+            val value = result.value
+            if (value is WebDriver) {
+                session.bindDriver(value)
             }
 
-            return driver
+            return result
         }
 
-        return TcEvaluate(expression, IllegalArgumentException("Unknown expression: $expression, domain: browser"))
+        val exception = IllegalArgumentException("Unknown expression: $expression, domain: browser")
+        return TcEvaluate(expression, exception, "")
     }
 
     /**

@@ -672,8 +672,8 @@ $AGENT_GUIDE_SYSTEM_PROMPT
             messages.addUser(buildBrowserVisionInfo())
         }
 
-        val prevCTResult = context.prevAgentState?.toolCallResult
-        if (prevCTResult != null) {
+        val prevTCResult = context.prevAgentState?.toolCallResult
+        if (prevTCResult != null) {
             messages.addUser(buildPrevToolCallResultMessage(context))
         }
 
@@ -788,10 +788,11 @@ $his
         val evalResult = evaluate?.value?.toString()
         val exception = evaluate?.exception?.cause
         val evalMessage = when {
-            evalResult != null -> evalResult
-            exception != null -> "[执行异常]" + exception.brief()
-            else -> "(无结果)"
+            exception != null -> "[执行异常]\n" + exception.brief()
+            else -> evalResult
         }.let { Strings.compactLog(it, 5000) }
+        val help = evaluate?.exception?.help?.takeIf { it.isNotBlank() }
+        val helpMessage = help?.let { "帮助信息：\n```\n$it\n```" } ?: ""
 
         return """
 ## 上步输出
@@ -803,6 +804,8 @@ $his
 ```
 $evalMessage
 ```
+
+$helpMessage
 
 ---
 

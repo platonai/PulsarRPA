@@ -1,37 +1,36 @@
 package ai.platon.pulsar.agentic.ai.tta
 
-import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.skeleton.ai.ToolCallSpec
 import ai.platon.pulsar.skeleton.common.llm.LLMUtils
 
 object SourceCodeToToolCallSpec {
 
-    val webDriverToolCallFullList = mutableListOf<ToolCallSpec>()
+    val webDriverToolCallList = mutableListOf<ToolCallSpec>()
+    val perceptiveAgentToolCallList = mutableListOf<ToolCallSpec>()
 
     init {
-        LLMUtils.copyWebDriverAsResource()
-        val resource = "code-mirror/WebDriver.kt"
-        val sourceCode = ResourceLoader.readString(resource)
-        extract("driver", sourceCode).toCollection(webDriverToolCallFullList)
+        var sourceCode = LLMUtils.readSourceFileFromResource("WebDriver.kt")
+        extractInterface("driver", sourceCode, "WebDriver").toCollection(webDriverToolCallList)
+
+        sourceCode = LLMUtils.readSourceFileFromResource("PerceptiveAgent.kt")
+        extractInterface("agent", sourceCode, "PerceptiveAgent").toCollection(perceptiveAgentToolCallList)
     }
 
-    val toolCallExpressions get() = webDriverToolCallFullList.joinToString("\n") { it.expression }
-
-    fun extract(domain: String, sourceCode: String): List<ToolCallSpec> {
+    fun extractInterface(domain: String, sourceCode: String, interfaceName: String): List<ToolCallSpec> {
         // Parse WebDriver interface methods and build ToolCall specs
-        val ifaceBody = extractInterfaceBody(sourceCode, "WebDriver") ?: sourceCode
-        val methods = parseFunctionsWithKDoc(ifaceBody)
+        val interfaceBody = extractInterfaceBody(sourceCode, interfaceName) ?: sourceCode
+        val methods = parseFunctionsWithKDoc(interfaceBody)
         val toolCallSpecs = mutableListOf<ToolCallSpec>()
         for (m in methods) {
             val arguments = mutableListOf<ToolCallSpec.Arg>()
             for (p in m.params) {
-                val v = when {
+                val defaultValue = when {
                     p.defaultValue != null && p.type.equals("String", ignoreCase = true) -> unquote(p.defaultValue)
                     p.defaultValue != null -> p.defaultValue
                     else -> ""
                 }
-                val arg = ToolCallSpec.Arg(p.name, p.type, p.defaultValue)
+                val arg = ToolCallSpec.Arg(p.name, p.type, defaultValue)
                 arguments.add(arg)
             }
 
@@ -49,8 +48,8 @@ object SourceCodeToToolCallSpec {
     private data class ParamSig(val name: String, val type: String, val defaultValue: String?)
     private data class FuncSig(val name: String, val params: List<ParamSig>, val returnType: String, val kdoc: String?)
 
-    private fun extractInterfaceBody(src: String, ifaceName: String): String? {
-        val regex = Regex("interface\\s+$ifaceName")
+    private fun extractInterfaceBody(src: String, interfaceName: String): String? {
+        val regex = Regex("interface\\s+$interfaceName")
         val match = regex.find(src) ?: return null
         val idx = match.range.first
         val braceIdx = src.indexOf('{', idx)
