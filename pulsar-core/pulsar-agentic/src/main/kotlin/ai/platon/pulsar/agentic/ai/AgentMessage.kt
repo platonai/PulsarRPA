@@ -15,7 +15,7 @@ data class SimpleMessage(
 class AgentMessageList(
     val messages: MutableList<SimpleMessage> = mutableListOf()
 ) {
-    val instruction get() = find("instruction")
+    val instruction get() = find("instruction") ?: find("user_request")
 
     fun addSystem(message: String, name: String? = null) {
         addLast("system", message, name)

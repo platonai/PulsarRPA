@@ -193,6 +193,10 @@ class AgentStateManager(
         trace(stateHistory.lastOrNull(), emptyMap(), message)
     }
 
+    fun complete() {
+        _stateHistory.clear()
+    }
+
     fun clearUpHistory(toRemove: Int) {
         synchronized(this) {
             if (toRemove > 0) {

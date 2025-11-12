@@ -389,7 +389,7 @@ open class BrowserPerceptiveAgent constructor(
 
         // returns options.instruction if it's not empty, or the default
         val instruction = promptBuilder.initObserveUserInstruction(options.instruction)
-        messages.addUser(instruction, name = "instruction")
+        messages.addUser(instruction, name = "user_request")
 
         val context = (options.additionalContext["context"] ?.get() as? ExecutionContext)
             ?: throw IllegalStateException("Illegal context")
@@ -457,7 +457,7 @@ open class BrowserPerceptiveAgent constructor(
 
     private suspend fun doObserveAct(options: ActionOptions, messages: AgentMessageList): ActResult {
         val instruction = promptBuilder.buildObserveActToolUsePrompt(options.action)
-        messages.addUser(instruction, "instruction")
+        messages.addUser(instruction, "user_request")
 
         val context = stateManager.buildExecutionContext(instruction, "observeAct", agentState = options.agentState)
 
@@ -1243,6 +1243,9 @@ open class BrowserPerceptiveAgent constructor(
     protected suspend fun onTaskCompletion(action: ActionDescription, context: ExecutionContext) {
         val step = context.step
         val sid = context.sessionId
+
+        stateManager.complete()
+
         logger.info("✅ task.complete sid={} step={} complete={}", sid.take(8), step, action.isComplete)
         stateManager.trace(
             context.agentState,

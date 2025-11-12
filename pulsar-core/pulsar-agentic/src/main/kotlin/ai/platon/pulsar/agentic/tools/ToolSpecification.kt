@@ -53,8 +53,6 @@ driver.goBack()
 driver.goForward()
 driver.textContent(): String?                            // Returns the document's text content.
 driver.selectFirstTextOrNull(selector: String): String?  // Returns the node's text content including it's descendants, the node is located by [selector]. If the node does not exist, returns null.
-driver.captureScreenshot(fullPage: Boolean = false)      // Capture a screenshot of the current viewport or the full page
-driver.captureScreenshot(selector: String)               // Scroll the element matched by [selector] into view (if needed) then take a screenshot of that element's bounding box.
 driver.delay(millis: Long)
 
 // domain: browser
