@@ -408,7 +408,17 @@ class PlaywrightDriver(
                 page.bringToFront()
             }
         } catch (e: Exception) {
-            logger.warn("Failed to bring to front: ${e.message}")
+            rpc.handleWebDriverException(e, "bringToFront")
+        }
+    }
+
+    override suspend fun hover(selector: String) {
+        try {
+            rpc.invokeDeferred("hover") {
+                page.querySelector(selector).hover()
+            }
+        } catch (e: Exception) {
+            rpc.handleWebDriverException(e, "hover", selector)
         }
     }
 

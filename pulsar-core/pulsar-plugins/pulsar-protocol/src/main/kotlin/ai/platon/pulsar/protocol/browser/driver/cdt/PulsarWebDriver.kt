@@ -344,22 +344,13 @@ class PulsarWebDriver(
         }
     }
 
-    /**
-     * This method fetches an element with `selector`, scrolls it into view if
-     * needed, and then uses {@link Mouse} to click in the center of the
-     * element. If there's no element matching `selector`, the method do not click anything.
-     * @remarks Bear in mind that if `click()` triggers a navigation event and
-     * there's a separate `driver.waitForNavigation()` promise to be resolved, you
-     * may end up with a race condition that yields unexpected results. The
-     * correct pattern for click and wait for navigation is the following:
-     * ```kotlin
-     * driver.waitForNavigation()
-     * driver.click(selector)
-     * ```
-     * @param selector - A `selector` to search for element to click. If there are
-     * multiple elements satisfying the `selector`, the first will be clicked
-     * @param count - Click count
-     */
+    @Throws(WebDriverException::class)
+    override suspend fun hover(selector: String) {
+        driverHelper.invokeOnElement(selector, "hover", scrollIntoView = true) { node ->
+            emulator.hover(node, position = "center")
+        }
+    }
+
     @Throws(WebDriverException::class)
     override suspend fun click(selector: String, count: Int) {
         driverHelper.invokeOnElement(selector, "click", scrollIntoView = true) { node ->

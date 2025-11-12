@@ -697,28 +697,32 @@ class EmulationHandler(
 ) {
     private val logger = getLogger(this)
 
-    private fun modifierMaskForKeyString(key: String): Int {
-        return when (key.trim().lowercase()) {
-            "alt" -> 1
-            "control", "ctrl" -> 2
-            "meta", "command", "cmd", "win", "super" -> 4
-            "shift" -> 8
-            else -> 0
-        }
-    }
-
-    // Map Ctrl->Meta on macOS for consistency with platform conventions.
-    private fun mapModifierForOS(mod: String): String {
-        val m = mod.trim()
-        return if (SystemUtils.IS_OS_MAC && (m.equals("ctrl", true) || m.equals("control", true))) {
-            "Meta"
-        } else m
-    }
-
     suspend fun click(
+        node: NodeRef, count: Int, position: String = "center", modifier: String? = null, delayMillis: Long = 100
+    ) {
+        click0(node, count, position, modifier, delayMillis = delayMillis)
+    }
+
+    suspend fun hover(node: NodeRef, position: String = "center") {
+        val point = getInteractPoint(node, position) ?: return
+        // Smoothly move the mouse to trigger hover state
+        mouse?.moveTo(point, steps = 5, delayMillis = 40)
+    }
+
+    private suspend fun click0(
         node: NodeRef, count: Int, position: String = "center", modifier: String? = null,
         delayMillis: Long = 100
     ) {
+        val point = getInteractPoint(node, position) ?: return
+
+        if (modifier != null) {
+            clickWithModifiers(point, modifier, count, delayMillis = delayMillis)
+        } else {
+            mouse?.click(point.x, point.y, count, delayMillis = delayMillis)
+        }
+    }
+
+    private suspend fun getInteractPoint(node: NodeRef, position: String = "center"): PointD? {
         val deltaX = 4.0 + Random.nextInt(4)
         val deltaY = 4.0
         val offset = OffsetD(deltaX, deltaY)
@@ -727,14 +731,15 @@ class EmulationHandler(
         val p = pageAPI
         val d = domAPI
         if (p == null || d == null) {
-            return
+            return null
         }
 
         val clickableDOM = ClickableDOM(p, d, node, offset)
-        val point = clickableDOM.clickablePoint().value ?: return
+        val point = clickableDOM.clickablePoint().value ?: return null
+
         val box = runCatching { clickableDOM.boundingBox() }
             .onFailure { getLogger(this).warn("clickable bounding box failed", it) }
-            .getOrNull() ?: return
+            .getOrNull() ?: return point
 
         val width = box.width
         // if it's an input element, we should click on the right side of the element to activate the input box,
@@ -755,34 +760,51 @@ class EmulationHandler(
             point.y = point.y.coerceIn(minY, maxY)
         }
 
+        return point
+    }
+
+    private suspend fun clickWithModifiers(point: PointD, modifier: String, count: Int, delayMillis: Long = 100) {
         var cdpModifiers = 0
-        if (modifier != null) {
-            val kb = keyboard
-            // Normalize modifier for the current OS (Ctrl->Meta on macOS)
-            val mappedModifierName = mapModifierForOS(modifier)
-            val normModifier = KeyboardModifier.valueOfOrNull(mappedModifierName)
-            if (normModifier != null && kb != null) {
-                val virtualKey = kb.createVirtualKeyForSingleKeyString(normModifier)
-                if (virtualKey.isModifier) {
-                    // Use CDP-compliant modifier bitmask for mouse events
-                    cdpModifiers = modifierMaskForKeyString(normModifier.name)
-                    if (!modifier.equals(mappedModifierName, true)) {
-                        logger.info("OS mapped modifier {} -> {} (macOS={})", modifier, mappedModifierName, SystemUtils.IS_OS_MAC)
-                    }
-                    logger.info("Clicking with virtual key: {}, modifiers: {}", virtualKey, cdpModifiers)
+        val kb = keyboard
+        // Normalize modifier for the current OS (Ctrl->Meta on macOS)
+        val mappedModifierName = mapModifierForOS(modifier)
+        val normModifier = KeyboardModifier.valueOfOrNull(mappedModifierName)
+        if (normModifier != null && kb != null) {
+            val virtualKey = kb.createVirtualKeyForSingleKeyString(normModifier)
+            if (virtualKey.isModifier) {
+                // Use CDP-compliant modifier bitmask for mouse events
+                cdpModifiers = modifierMaskForKeyString(normModifier.name)
+                if (!modifier.equals(mappedModifierName, true)) {
+                    logger.info("OS mapped modifier {} -> {} (macOS={})", modifier, mappedModifierName, SystemUtils.IS_OS_MAC)
                 }
-                // Press and guarantee release via try/finally
-                try {
-                    kb.down(virtualKey)
-                    mouse?.click(point.x, point.y, count, modifiers = cdpModifiers, delayMillis = delayMillis)
-                } finally {
-                    runCatching { kb.up(virtualKey) }
-                }
-                return
+                logger.info("Clicking with virtual key: {}, modifiers: {}", virtualKey, cdpModifiers)
+            }
+            // Press and guarantee release via try/finally
+            try {
+                kb.down(virtualKey)
+                mouse?.click(point.x, point.y, count, modifiers = cdpModifiers, delayMillis = delayMillis)
+            } finally {
+                runCatching { kb.up(virtualKey) }
             }
         }
-
-        // Fallback: no modifier handling
-        mouse?.click(point.x, point.y, count, modifiers = cdpModifiers, delayMillis = delayMillis)
     }
+
+    private fun modifierMaskForKeyString(key: String): Int {
+        return when (key.trim().lowercase()) {
+            "alt" -> 1
+            "control", "ctrl" -> 2
+            "meta", "command", "cmd", "win", "super" -> 4
+            "shift" -> 8
+            else -> 0
+        }
+    }
+
+    // Map Ctrl->Meta on macOS for consistency with platform conventions.
+    private fun mapModifierForOS(mod: String): String {
+        val m = mod.trim()
+        return if (SystemUtils.IS_OS_MAC && (m.equals("ctrl", true) || m.equals("control", true))) {
+            "Meta"
+        } else m
+    }
+
 }
