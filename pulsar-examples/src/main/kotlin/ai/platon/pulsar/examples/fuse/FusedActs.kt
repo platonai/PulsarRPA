@@ -42,8 +42,7 @@ class FusedActs {
 
         // Basic action examples (natural language instructions) - now operate on local mock page
         log.info("[STEP ${++stepNo}] Action: search for 'browser'")
-        var actOptions = ActionOptions("search for 'browser'")
-        var result = agent.act(actOptions)
+        var result = agent.act("search for 'browser'")
         result("action result", result)
 
         log.info("[STEP ${++stepNo}] Capture body text in the live DOM after search (snippet)")
@@ -51,8 +50,7 @@ class FusedActs {
         result("body snippet", content?.take(160))
 
         log.info("[STEP ${++stepNo}] Action: click the 3rd link")
-        actOptions = ActionOptions("click the 3rd link")
-        result = agent.act(actOptions)
+        result = agent.act("click the 3rd link")
         result("action result", result)
 
         log.info("[STEP ${++stepNo}] Capture body text in the live DOM after clicking 3rd link (snippet)")
@@ -60,26 +58,22 @@ class FusedActs {
         result("body snippet", content?.take(160))
 
         log.info("[STEP ${++stepNo}] Action: go back")
-        actOptions = ActionOptions("go back")
-        result = agent.act(actOptions)
+        result = agent.act("go back")
         result("action result", result)
 
         log.info("[STEP ${++stepNo}] Action: open the 4th link in new tab")
-        actOptions = ActionOptions("open the 4th link in new tab")
-        result = agent.act(actOptions)
+        result = agent.act("open the 4th link in new tab")
         result("action result", result)
 
         log.info("[STEP ${++stepNo}] Action: switch to the newly open tab")
-        actOptions = ActionOptions("switch to the newly open tab")
-        result = agent.act(actOptions)
+        result = agent.act("switch to the newly open tab")
         result("action result", result)
 
         // More typical session.act() examples
 
         // 1) Use the page's search box (enter text and submit)
         log.info("[STEP ${++stepNo}] Action: find the search box, type 'web scraping' and submit the form")
-        actOptions = ActionOptions("find the search box, type 'web scraping' and submit the form")
-        result = agent.resolve(actOptions)
+        result = agent.resolve("find the search box, type 'web scraping' and submit the form")
         result("action result", result)
 
         log.info("[STEP ${++stepNo}] Captures the live page and parse after search form submission")
@@ -94,8 +88,7 @@ class FusedActs {
 
         // 2) Click a link by visible text (Show/Ask HN like titles in mock page)
         log.info("[STEP ${++stepNo}] Action: click the first link that contains 'Show HN' or 'Ask HN'")
-        actOptions = ActionOptions("click the first link that contains 'Show HN' or 'Ask HN'")
-        result = agent.act(actOptions)
+        result = agent.act("click the first link that contains 'Show HN' or 'Ask HN'")
         result("action result", result)
 
         log.info("[STEP ${++stepNo}] Capture body text after clicking Show/Ask HN link (snippet)")
@@ -104,38 +97,32 @@ class FusedActs {
 
         // 3) Scroll to bottom (triggers infinite scroll loading extra items on mock page)
         log.info("[STEP ${++stepNo}] Action: scroll to the bottom of the page and wait for new content to load")
-        actOptions = ActionOptions("scroll to the bottom of the page and wait for new content to load")
-        result = agent.resolve(actOptions)
+        result = agent.resolve("scroll to the bottom of the page and wait for new content to load")
         result("action result", result)
 
         // 4) Open the first comment thread
         log.info("[STEP ${++stepNo}] Action: open the first comment thread on the page")
-        actOptions = ActionOptions("open the first comment thread on the page")
-        result = agent.act(actOptions)
+        result = agent.act("open the first comment thread on the page")
         result("action result", result)
 
         // 5) Navigate back
         log.info("[STEP ${++stepNo}] Action: navigate back")
-        actOptions = ActionOptions("navigate back")
-        result = agent.act(actOptions)
+        result = agent.act("navigate back")
         result("action result", result)
 
         // 5b) Navigate forward
         log.info("[STEP ${++stepNo}] Action: navigate forward")
-        actOptions = ActionOptions("navigate forward")
-        result = agent.act(actOptions)
+        result = agent.act("navigate forward")
         result("action result", result)
 
         // 6) Take a screenshot
         log.info("[STEP ${++stepNo}] Action: take a full-page screenshot and save it")
-        actOptions = ActionOptions("take a full-page screenshot and save it")
-        result = agent.resolve(actOptions)
+        result = agent.resolve("take a full-page screenshot and save it")
         result("action result", result)
 
         // 7) Extract specific data after interactions
         log.info("[STEP ${++stepNo}] Action: extract article titles and their hrefs from the main list")
-        actOptions = ActionOptions("extract article titles and their hrefs from the main list")
-        result = agent.resolve(actOptions)
+        result = agent.resolve("extract article titles and their hrefs from the main list")
         result("action result", result)
 
         log.info("[STEP ${++stepNo}] Captures the live page as a local copy and parse for titles")
