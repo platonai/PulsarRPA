@@ -28,7 +28,7 @@ abstract class AbstractToolExecutor : ToolExecutor {
         val objectName = tc.domain
         val functionName = tc.method
         val args = tc.arguments
-        val pseudoExpression = tc.expression
+        val pseudoExpression = tc.pseudoExpression
 
         return try {
             val r = execute(objectName, functionName, args, target)
