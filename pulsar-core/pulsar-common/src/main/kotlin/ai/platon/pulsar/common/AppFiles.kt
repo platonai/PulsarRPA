@@ -1,35 +1,27 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.AppPaths.CONFIG_AVAILABLE_DIR
 import ai.platon.pulsar.common.AppPaths.CONFIG_ENABLED_DIR
-import org.apache.commons.io.FileUtils
-import org.apache.commons.lang3.RandomStringUtils
-import org.apache.commons.lang3.StringUtils.SPACE
+import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.SystemUtils
-import org.apache.commons.lang3.math.NumberUtils
-import java.io.File
 import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.nio.file.StandardOpenOption
 import java.util.zip.ZipEntry
 import java.util.zip.ZipInputStream
-import kotlin.io.path.createFile
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
 import kotlin.io.path.notExists
-import kotlin.random.Random
 
 object AppFiles {
 
     private val logger = getLogger(AppFiles::class.java)
-    
+
     fun supportSymbolicLink(path: Path): Boolean {
         return !SystemUtils.IS_OS_WINDOWS && path.fileSystem.supportedFileAttributeViews().contains("posix")
     }
-    
+
     /*
      * Create a symbolic link to the given target if the target platform
      * supports symbolic link; otherwise, it will create a tiny file
@@ -44,7 +36,7 @@ object AppFiles {
             Files.newBufferedWriter(dstFile).use { writer -> writer.write(String.format("Please see %s%n", target.toString())) }
         }
     }
-    
+
     /**
      * Create a temporary file with the given prefix and suffix.
      *
@@ -62,7 +54,7 @@ object AppFiles {
         Files.writeString(path, "")
         return path
     }
-    
+
     fun saveTo(any: Any, path: Path, deleteIfExists: Boolean = false): Path {
         return saveTo(any.toString().toByteArray(), path, deleteIfExists)
     }
@@ -124,8 +116,8 @@ object AppFiles {
     }
 
     fun logUnreachableHosts(unreachableHosts: Collection<String>) {
-        val report = unreachableHosts.map { Strings.reverse(it) }.sorted()
-                .map { Strings.reverse(it) }.joinToString { "\n" }
+        val report = unreachableHosts.map { StringUtils.reverse(it) }.sorted()
+                .map { StringUtils.reverse(it) }.joinToString { "\n" }
 
         try {
             Files.write(AppPaths.PATH_UNREACHABLE_HOSTS, report.toByteArray(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)

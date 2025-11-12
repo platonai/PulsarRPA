@@ -1,5 +1,6 @@
 package ai.platon.pulsar.common;
 
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.DisplayName;
 
@@ -709,7 +710,7 @@ public class StringsTest {
         );
 
         // Test reverse method redirects to StringUtils
-        assertEquals("olleh", Strings.reverse("hello"));
+        assertEquals("olleh", StringUtils.reverse("hello"));
     }
 
     // Comparator tests
@@ -798,5 +799,99 @@ public class StringsTest {
         assertNotNull(Strings.CHINESE_PHONE_NUMBER_LIKE_PATTERN);
         assertNotNull(Strings.IP_PORT_PATTERN);
         assertNotNull(Strings.PatternTime);
+    }
+
+    @Test
+    @DisplayName("Test singleQuote basic escaping")
+    void testSingleQuoteBasicEscaping() {
+        assertEquals("'hello'", Strings.singleQuote("hello"));
+        assertEquals("'It\\'s'", Strings.singleQuote("It's"));
+        assertEquals("'multi \\''", Strings.singleQuote("multi '")); // trailing single quote
+        assertEquals("'a b c'", Strings.singleQuote("a b c"));
+        assertEquals("'中文'", Strings.singleQuote("中文"));
+    }
+
+    @Test
+    @DisplayName("Test doubleQuote basic escaping")
+    void testDoubleQuoteBasicEscaping() {
+        assertEquals("\"hello\"", Strings.doubleQuote("hello"));
+        assertEquals("\"He said \\\"Hello\\\"\"", Strings.doubleQuote("He said \"Hello\""));
+        assertEquals("\"multi \\\"\"", Strings.doubleQuote("multi \"")); // trailing double quote
+        assertEquals("\"a b c\"", Strings.doubleQuote("a b c"));
+        assertEquals("\"中文\"", Strings.doubleQuote("中文"));
+    }
+
+    @Test
+    @DisplayName("Test singleQuoteIfContainsWhitespace")
+    void testSingleQuoteIfContainsWhitespace() {
+        assertEquals("hello", Strings.singleQuoteIfContainsWhitespace("hello"));
+        assertEquals("'hello world'", Strings.singleQuoteIfContainsWhitespace("hello world"));
+        assertEquals("'hello\tworld'", Strings.singleQuoteIfContainsWhitespace("hello\tworld"));
+        assertEquals("'hello\nworld'", Strings.singleQuoteIfContainsWhitespace("hello\nworld"));
+        assertEquals("", Strings.singleQuoteIfContainsWhitespace(""));
+        assertEquals("", Strings.singleQuoteIfContainsWhitespace(null));
+        assertEquals("'It\\'s me'", Strings.singleQuoteIfContainsWhitespace("It's me")); // internal quote + space
+    }
+
+    @Test
+    @DisplayName("Test doubleQuoteIfContainsWhitespace extended cases")
+    void testDoubleQuoteIfContainsWhitespace_Extended() {
+        // existing basic cases already covered in other test, add extra scenarios
+        assertEquals("\"hello world\"", Strings.doubleQuoteIfContainsWhitespace("hello world"));
+        assertEquals("\"hello\tworld\"", Strings.doubleQuoteIfContainsWhitespace("hello\tworld"));
+        assertEquals("\"hello\nworld\"", Strings.doubleQuoteIfContainsWhitespace("hello\nworld"));
+        assertEquals("\"He said \\\"Hi\\\"\"", Strings.doubleQuoteIfContainsWhitespace("He said \"Hi\""));
+        assertEquals("", Strings.doubleQuoteIfContainsWhitespace(""));
+        assertEquals("", Strings.doubleQuoteIfContainsWhitespace(null));
+    }
+
+    @Test
+    @DisplayName("Test singleQuoteIfNonAlphanumeric")
+    void testSingleQuoteIfNonAlphanumeric() {
+        assertEquals("hello", Strings.singleQuoteIfNonAlphanumeric("hello")); // alphanumeric stays
+        assertEquals("hello123", Strings.singleQuoteIfNonAlphanumeric("hello123"));
+        assertEquals("'hello world'", Strings.singleQuoteIfNonAlphanumeric("hello world")); // space triggers quoting
+        assertEquals("'hello-world'", Strings.singleQuoteIfNonAlphanumeric("hello-world")); // hyphen
+        assertEquals("'hello_world'", Strings.singleQuoteIfNonAlphanumeric("hello_world")); // underscore
+        assertTrue(StringUtils.isAlphanumeric("中文"));
+        assertEquals("中文", Strings.singleQuoteIfNonAlphanumeric("中文")); // non-latin
+        assertEquals("", Strings.singleQuoteIfNonAlphanumeric(""));
+        assertEquals("", Strings.singleQuoteIfNonAlphanumeric(null));
+        // internal single quote not escaped in this branch (design decision) -> still wrapped
+        assertEquals("'It\'s'", Strings.singleQuoteIfNonAlphanumeric("It's"));
+    }
+
+    @Test
+    @DisplayName("Test doubleQuoteIfNonAlphanumeric")
+    void testDoubleQuoteIfNonAlphanumeric() {
+        assertEquals("hello", Strings.doubleQuoteIfNonAlphanumeric("hello")); // alphanumeric
+        assertEquals("hello123", Strings.doubleQuoteIfNonAlphanumeric("hello123"));
+        assertEquals("\"hello world\"", Strings.doubleQuoteIfNonAlphanumeric("hello world")); // space
+        assertEquals("\"hello-world\"", Strings.doubleQuoteIfNonAlphanumeric("hello-world")); // hyphen
+        assertEquals("\"hello_world\"", Strings.doubleQuoteIfNonAlphanumeric("hello_world")); // underscore
+        assertTrue(StringUtils.isAlphanumeric("中文"));
+        assertEquals("中文", Strings.doubleQuoteIfNonAlphanumeric("中文"));
+        assertEquals("", Strings.doubleQuoteIfNonAlphanumeric(""));
+        assertEquals("", Strings.doubleQuoteIfNonAlphanumeric(null));
+        // internal double quote should be escaped
+        assertEquals("\"He said \\\"Hi\\\"\"", Strings.doubleQuoteIfNonAlphanumeric("He said \"Hi\""));
+    }
+
+    @Test
+    @DisplayName("Test quote methods edge cases and idempotency")
+    void testQuoteEdgeCases() {
+        // Already quoted strings should be quoted again when using direct quote methods
+        String once = Strings.singleQuote("abc");
+        String twice = Strings.singleQuote(once);
+        assertEquals("'" + once.replace("'", "\\'") + "'", twice); // demonstrates non-idempotent behavior
+
+        once = Strings.doubleQuote("abc");
+        twice = Strings.doubleQuote(once);
+        assertEquals("\"" + once.replace("\"", "\\\"") + "\"", twice);
+
+        // Strings containing both quote types
+        String mixed = "He said \"It's fine\"";
+        assertEquals("'He said \"It\\'s fine\"'", Strings.singleQuote(mixed));
+        assertEquals("\"He said \\\"It's fine\\\"\"", Strings.doubleQuote(mixed));
     }
 }

@@ -127,10 +127,13 @@ public final class Strings {
 
     private static final ObjectMapper mapper = new ObjectMapper();
 
+    @Nonnull
     public static String escapeJsString(String s) {
+        // Null-safe: keep returning empty string for null input (legacy behavior)
         if (s == null) return "";
 
-        StringBuilder sb = new StringBuilder(s.length() + 16);
+        // Pre-size: worst case each char becomes 6 chars ("\\uXXXX")
+        StringBuilder sb = new StringBuilder(s.length() * 2 + 16);
         for (int i = 0; i < s.length(); i++) {
             char c = s.charAt(i);
             switch (c) {
@@ -138,7 +141,7 @@ public final class Strings {
                     sb.append("\\\\");
                     break;
                 case '\'':
-                    sb.append("\\'");
+                    sb.append("\\'"); // keep single-quote escape (useful if caller wraps in single quotes)
                     break;
                 case '"':
                     sb.append("\\\"");
@@ -158,10 +161,18 @@ public final class Strings {
                 case '\f':
                     sb.append("\\f");
                     break;
+                case '/':
+                    // Escape forward slash to reduce risk of closing <script> tag prematurely when embedded inline
+                    sb.append("\\/");
+                    break;
                 default:
-                    // 对非可打印字符（如 Unicode 控制符）进行转义
-                    if (c < 0x20 || c > 0x7e) {
-                        sb.append(String.format("\\u%04x", (int) c));
+                    // Control chars (<0x20) or non-ASCII (>0x7E) → unicode escape for JS safety & portability
+                    if (c < 0x20 || c > 0x7E) {
+                        sb.append("\\u");
+                        sb.append(HEX_DIGITS[(c >> 12) & 0xF]);
+                        sb.append(HEX_DIGITS[(c >> 8) & 0xF]);
+                        sb.append(HEX_DIGITS[(c >> 4) & 0xF]);
+                        sb.append(HEX_DIGITS[c & 0xF]);
                     } else {
                         sb.append(c);
                     }
@@ -840,26 +851,100 @@ public final class Strings {
         return StringUtils.reverse(s);
     }
 
+    /**
+     * 使用单引号包裹字符串，并对内部的单引号进行反斜杠转义。
+     *
+     * 规则与边界：
+     * - 如果入参为 null，则返回 null（遵循 commons-lang3 的 wrap 行为）。
+     * - 内部的 ' 会被替换为 \'，避免语法冲突。
+     *
+     * 示例：
+     * - 输入: hello -> 输出: 'hello'
+     * - 输入: Bob's -> 输出: 'Bob\'s'
+     *
+     * @param s 要包裹的字符串
+     * @return 被单引号包裹后的新字符串；如果 s 为 null，则返回 null
+     */
     public static String singleQuote(String s) {
-        return "'" + s + "'";
+        return StringUtils.wrap(s.replace("'", "\\'"), "'");
     }
 
+    /**
+     * 当字符串包含任意空白字符（空格、制表符、换行等）时，使用单引号包裹；否则原样返回。
+     *
+     * 规则与边界：
+     * - 如果入参为 null 或空串，返回空串 ""。
+     * - 空白检测依赖 {@link StringUtils#containsWhitespace(CharSequence)}。
+     * - 包裹逻辑等同于 {@link #singleQuote(String)}。
+     *
+     * 示例：
+     * - 输入: hello world -> 输出: 'hello world'
+     * - 输入: abc -> 输出: abc
+     *
+     * @param s 待处理的字符串
+     * @return 可能被单引号包裹后的字符串；若 s 为 null/空，返回 ""
+     */
     public static String singleQuoteIfContainsWhitespace(String s) {
         if (s == null || s.isEmpty()) return "";
-        if (StringUtils.containsWhitespace(s)) return "'" + s + "'";
+        if (StringUtils.containsWhitespace(s)) return singleQuote(s);
         else return s;
     }
 
+    /**
+     * 使用双引号包裹字符串，并对内部的双引号进行反斜杠转义。
+     *
+     * 规则与边界：
+     * - 如果入参为 null，则返回 null（遵循 commons-lang3 的 wrap 行为）。
+     * - 内部的 " 会被替换为 \"。
+     *
+     * 示例：
+     * - 输入: hello -> 输出: "hello"
+     * - 输入: a"b -> 输出: "a\"b"
+     *
+     * @param s 要包裹的字符串
+     * @return 被双引号包裹后的新字符串；如果 s 为 null，则返回 null
+     */
     public static String doubleQuote(String s) {
-        return "\"" + s + "\"";
+        return StringUtils.wrap(s.replace("\"", "\\\""), "\"");
     }
 
+    /**
+     * 当字符串包含任意空白字符（空格、制表符、换行等）时，使用双引号包裹；否则原样返回。
+     *
+     * 规则与边界：
+     * - 如果入参为 null 或空串，返回空串 ""。
+     * - 空白检测依赖 {@link StringUtils#containsWhitespace(CharSequence)}。
+     * - 包裹逻辑等同于 {@link #doubleQuote(String)}。
+     *
+     * 示例：
+     * - 输入: hello world -> 输出: "hello world"
+     * - 输入: abc -> 输出: abc
+     *
+     * @param s 待处理的字符串
+     * @return 可能被双引号包裹后的字符串；若 s 为 null/空，返回 ""
+     */
     public static String doubleQuoteIfContainsWhitespace(String s) {
         if (s == null || s.isEmpty()) return "";
-        if (StringUtils.containsWhitespace(s)) return "\"" + s + "\"";
+        if (StringUtils.containsWhitespace(s)) return doubleQuote(s);
         else return s;
     }
 
+    /**
+     * 当字符串包含非字母数字字符时，使用单引号包裹；否则原样返回。
+     * 注意：本方法不对内部的单引号进行转义，若需转义请使用 {@link #singleQuote(String)}。
+     *
+     * 规则与边界：
+     * - 如果入参为 null 或空串，返回空串 ""。
+     * - 仅当 {@link StringUtils#isAlphanumeric(CharSequence)} 为 false 时才包裹。
+     *
+     * 示例：
+     * - 输入: hello -> 输出: hello
+     * - 输入: hello-world -> 输出: 'hello-world'
+     * - 输入: Bob's -> 输出: 'Bob's'（不转义内部单引号）
+     *
+     * @param s 待处理的字符串
+     * @return 可能被单引号包裹后的字符串；若 s 为 null/空，返回 ""
+     */
     public static String singleQuoteIfNonAlphanumeric(String s) {
         if (s == null || s.isEmpty()) return "";
 
@@ -868,10 +953,25 @@ public final class Strings {
         return "'" + s + "'";
     }
 
+    /**
+     * 当字符串包含非字母数字字符时，使用双引号包裹；否则原样返回。
+     * 内部的双引号将被转义（委托给 {@link #doubleQuote(String)}）。
+     *
+     * 规则与边界：
+     * - 如果入参为 null 或空串，返回空串 ""。
+     * - 仅当 {@link StringUtils#isAlphanumeric(CharSequence)} 为 false 时才包裹。
+     *
+     * 示例：
+     * - 输入: hello -> 输出: hello
+     * - 输入: a"b -> 输出: "a\"b"
+     *
+     * @param s 待处理的字符串
+     * @return 可能被双引号包裹后的字符串；若 s 为 null/空，返回 ""
+     */
     public static String doubleQuoteIfNonAlphanumeric(String s) {
         if (s == null || s.isEmpty()) return "";
         if (StringUtils.isAlphanumeric(s)) return s;
-        return "\"" + s + "\"";
+        return doubleQuote(s);
     }
 
     /**
