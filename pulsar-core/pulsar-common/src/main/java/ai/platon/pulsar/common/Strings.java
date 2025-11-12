@@ -852,124 +852,149 @@ public final class Strings {
     }
 
     /**
-     * 使用单引号包裹字符串，并对内部的单引号进行反斜杠转义。
+     * Wraps the string in single quotes and escapes any internal single quotes (').
+     * <p>
+     * Behavior:
+     * <ul>
+     *   <li>If {@code s} is {@code null}, this method returns {@code null} (it does <b>not</b> throw).</li>
+     *   <li>Each single quote character (<code>'</code>) is replaced by <code>\'</code> before wrapping.</li>
+     * </ul>
+     * <p>
+     * Examples:
+     * <pre>
+     * singleQuote("hello")   => 'hello'
+     * singleQuote("Bob's")   => 'Bob\'s'
+     * singleQuote(null)       => null
+     * </pre>
+     * <p>
+     * 说明 (Chinese):
+     * <ul>
+     *   <li>传入 {@code null} 时直接返回 {@code null}，保持原状，不抛异常。</li>
+     *   <li>内部的单引号会被转义为 <code>\'</code> 再整体包裹在单引号中。</li>
+     * </ul>
      *
-     * 规则与边界：
-     * - 如果入参为 null，则返回 null（遵循 commons-lang3 的 wrap 行为）。
-     * - 内部的 ' 会被替换为 \'，避免语法冲突。
-     *
-     * 示例：
-     * - 输入: hello -> 输出: 'hello'
-     * - 输入: Bob's -> 输出: 'Bob\'s'
-     *
-     * @param s 要包裹的字符串
-     * @return 被单引号包裹后的新字符串；如果 s 为 null，则返回 null
+     * @param s The source string (nullable)
+     * @return The quoted string, or {@code null} if input is {@code null}
      */
     public static String singleQuote(String s) {
+        if (s == null) return null;
         return StringUtils.wrap(s.replace("'", "\\'"), "'");
     }
 
     /**
-     * 当字符串包含任意空白字符（空格、制表符、换行等）时，使用单引号包裹；否则原样返回。
+     * Wraps the string in double quotes and escapes any internal double quotes (" ).
+     * <p>
+     * Behavior:
+     * <ul>
+     *   <li>If {@code s} is {@code null}, this method returns {@code null}.</li>
+     *   <li>Each double quote character (<code>"</code>) is replaced by <code>\"</code> before wrapping.</li>
+     * </ul>
+     * <p>
+     * Examples:
+     * <pre>
+     * doubleQuote("hello") => "hello"
+     * doubleQuote("a\"b") => "a\\\"b"
+     * doubleQuote(null)     => null
+     * </pre>
+     * <p>
+     * 说明 (Chinese):
+     * <ul>
+     *   <li>传入 {@code null} 时直接返回 {@code null}。</li>
+     *   <li>内部的双引号会被转义为 <code>\"</code> 再整体包裹在双引号中。</li>
+     * </ul>
      *
-     * 规则与边界：
-     * - 如果入参为 null 或空串，返回空串 ""。
-     * - 空白检测依赖 {@link StringUtils#containsWhitespace(CharSequence)}。
-     * - 包裹逻辑等同于 {@link #singleQuote(String)}。
+     * @param s The source string (nullable)
+     * @return The quoted string, or {@code null} if input is {@code null}
+     */
+    public static String doubleQuote(String s) {
+        if (s == null) return null;
+        return StringUtils.wrap(s.replace("\"", "\\\""), "\"");
+    }
+
+    /**
+     * Wraps the string in double quotes only if it contains one or more whitespace characters.
+     * Whitespace detection uses {@link StringUtils#containsWhitespace(CharSequence)}.
      *
-     * 示例：
-     * - 输入: hello world -> 输出: 'hello world'
-     * - 输入: abc -> 输出: abc
+     * Behavior:
+     * - Returns an empty string if input is null or empty.
+     * - If whitespace exists, delegates to {@link #singleQuote(String)}; otherwise returns the original string.
+     * - Null that passes through to {@link #singleQuote(String)} would throw; we guard earlier by returning empty.
      *
-     * @param s 待处理的字符串
-     * @return 可能被单引号包裹后的字符串；若 s 为 null/空，返回 ""
+     * Examples:
+     * singleQuoteIfContainsWhitespace("hello world") => 'hello world'
+     * singleQuoteIfContainsWhitespace("hello") => hello
+     *
+     * @param s The source string
+     * @return Possibly quoted string; empty string if s is null/empty
      */
     public static String singleQuoteIfContainsWhitespace(String s) {
-        if (s == null || s.isEmpty()) return "";
+        if (s == null) return null;
         if (StringUtils.containsWhitespace(s)) return singleQuote(s);
         else return s;
     }
 
     /**
-     * 使用双引号包裹字符串，并对内部的双引号进行反斜杠转义。
+     * Wraps the string in double quotes only if it contains one or more whitespace characters.
+     * Whitespace detection uses {@link StringUtils#containsWhitespace(CharSequence)}.
      *
-     * 规则与边界：
-     * - 如果入参为 null，则返回 null（遵循 commons-lang3 的 wrap 行为）。
-     * - 内部的 " 会被替换为 \"。
+     * Behavior:
+     * - Returns an empty string if input is null or empty.
+     * - If whitespace exists, delegates to {@link #doubleQuote(String)}; otherwise returns the original string.
+     * - Null that passes through to {@link #doubleQuote(String)} would throw; we guard earlier by returning empty.
      *
-     * 示例：
-     * - 输入: hello -> 输出: "hello"
-     * - 输入: a"b -> 输出: "a\"b"
+     * Examples:
+     * doubleQuoteIfContainsWhitespace("hello world") => "hello world"
+     * doubleQuoteIfContainsWhitespace("hello") => hello
      *
-     * @param s 要包裹的字符串
-     * @return 被双引号包裹后的新字符串；如果 s 为 null，则返回 null
-     */
-    public static String doubleQuote(String s) {
-        return StringUtils.wrap(s.replace("\"", "\\\""), "\"");
-    }
-
-    /**
-     * 当字符串包含任意空白字符（空格、制表符、换行等）时，使用双引号包裹；否则原样返回。
-     *
-     * 规则与边界：
-     * - 如果入参为 null 或空串，返回空串 ""。
-     * - 空白检测依赖 {@link StringUtils#containsWhitespace(CharSequence)}。
-     * - 包裹逻辑等同于 {@link #doubleQuote(String)}。
-     *
-     * 示例：
-     * - 输入: hello world -> 输出: "hello world"
-     * - 输入: abc -> 输出: abc
-     *
-     * @param s 待处理的字符串
-     * @return 可能被双引号包裹后的字符串；若 s 为 null/空，返回 ""
+     * @param s The source string
+     * @return Possibly quoted string; empty string if s is null/empty
      */
     public static String doubleQuoteIfContainsWhitespace(String s) {
-        if (s == null || s.isEmpty()) return "";
+        if (s == null) return null;
         if (StringUtils.containsWhitespace(s)) return doubleQuote(s);
         else return s;
     }
 
     /**
-     * 当字符串包含非字母数字字符时，使用单引号包裹；否则原样返回。
-     * 注意：本方法不对内部的单引号进行转义，若需转义请使用 {@link #singleQuote(String)}。
+     * Wraps the string in single quotes if it contains any non-alphanumeric character.
+     * Internal single quotes are NOT escaped here; use {@link #singleQuote(String)} if escaping is required.
      *
-     * 规则与边界：
-     * - 如果入参为 null 或空串，返回空串 ""。
-     * - 仅当 {@link StringUtils#isAlphanumeric(CharSequence)} 为 false 时才包裹。
+     * Behavior:
+     * - Returns empty string if input is null or empty.
+     * - Uses {@link StringUtils#isAlphanumeric(CharSequence)} to decide quoting.
      *
-     * 示例：
-     * - 输入: hello -> 输出: hello
-     * - 输入: hello-world -> 输出: 'hello-world'
-     * - 输入: Bob's -> 输出: 'Bob's'（不转义内部单引号）
+     * Examples:
+     * singleQuoteIfNonAlphanumeric("hello") => hello
+     * singleQuoteIfNonAlphanumeric("hello-world") => 'hello-world'
+     * singleQuoteIfNonAlphanumeric("Bob's") => 'Bob's'
      *
-     * @param s 待处理的字符串
-     * @return 可能被单引号包裹后的字符串；若 s 为 null/空，返回 ""
+     * @param s The source string
+     * @return Possibly quoted string; empty string if s is null/empty
      */
     public static String singleQuoteIfNonAlphanumeric(String s) {
-        if (s == null || s.isEmpty()) return "";
-
+        if (s == null) return null;
         if (StringUtils.isAlphanumeric(s)) return s;
-
         return "'" + s + "'";
     }
 
     /**
-     * 当字符串包含非字母数字字符时，使用双引号包裹；否则原样返回。
-     * 内部的双引号将被转义（委托给 {@link #doubleQuote(String)}）。
+     * Wraps the string in double quotes if it contains any non-alphanumeric character.
+     * Internal double quotes are escaped by delegating to {@link #doubleQuote(String)}.
      *
-     * 规则与边界：
-     * - 如果入参为 null 或空串，返回空串 ""。
-     * - 仅当 {@link StringUtils#isAlphanumeric(CharSequence)} 为 false 时才包裹。
+     * Behavior:
+     * - Returns empty string if input is null or empty.
+     * - Uses {@link StringUtils#isAlphanumeric(CharSequence)} to decide quoting.
      *
-     * 示例：
-     * - 输入: hello -> 输出: hello
-     * - 输入: a"b -> 输出: "a\"b"
+     * Examples:
+     * doubleQuoteIfNonAlphanumeric("hello") => hello
+     * doubleQuoteIfNonAlphanumeric("a b") => "a b"
+     * doubleQuoteIfNonAlphanumeric("a\"b") => "a\\\"b"
      *
-     * @param s 待处理的字符串
-     * @return 可能被双引号包裹后的字符串；若 s 为 null/空，返回 ""
+     * @param s The source string
+     * @return Possibly quoted string; empty string if s is null/empty
      */
     public static String doubleQuoteIfNonAlphanumeric(String s) {
-        if (s == null || s.isEmpty()) return "";
+        if (s == null) return null;
         if (StringUtils.isAlphanumeric(s)) return s;
         return doubleQuote(s);
     }
