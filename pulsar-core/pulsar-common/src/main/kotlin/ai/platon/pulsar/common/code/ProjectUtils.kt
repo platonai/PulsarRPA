@@ -70,6 +70,7 @@ object ProjectUtils {
     fun walkToFindFile(fileName: String, baseDir: Path): Path? {
         return Files.walk(baseDir)
             .filter { it.fileName.toString() == fileName }
+            .filter { it.resolve("classes").notExists() && it.resolve("generated-sources").notExists() }
             .findFirst().getOrNull()
     }
 
