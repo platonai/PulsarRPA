@@ -108,12 +108,11 @@ data class ToolCall constructor(
     val description: String? = null,
 ) {
     @get:JsonIgnore
-    val pseudoNamedArguments get() = arguments.entries.joinToString { (k, v) -> "$k=\"$v\"" }
+    val namedArguments get() = arguments.entries.joinToString { (k, v) -> "$k=" + Strings.doubleQuote(v) }
 
-    @get:JsonIgnore
-    val pseudoExpression: String get() = "$domain.${method}($pseudoNamedArguments)"
+    val expression: String get() = "$domain.${method}($namedArguments)"
 
-    override fun toString() = pseudoExpression
+    override fun toString() = expression
 }
 
 data class TcException(
