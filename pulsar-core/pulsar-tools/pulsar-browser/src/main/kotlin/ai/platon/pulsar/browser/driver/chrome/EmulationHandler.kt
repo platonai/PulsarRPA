@@ -15,6 +15,7 @@ import ai.platon.pulsar.common.math.geometric.OffsetD
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
 import kotlinx.coroutines.delay
+import org.apache.commons.lang3.SystemUtils
 import org.apache.commons.math3.util.Precision
 import kotlin.math.abs
 import kotlin.math.max
@@ -706,6 +707,14 @@ class EmulationHandler(
         }
     }
 
+    // Map Ctrl->Meta on macOS for consistency with platform conventions.
+    private fun mapModifierForOS(mod: String): String {
+        val m = mod.trim()
+        return if (SystemUtils.IS_OS_MAC && (m.equals("ctrl", true) || m.equals("control", true))) {
+            "Meta"
+        } else m
+    }
+
     suspend fun click(
         node: NodeRef, count: Int, position: String = "center", modifier: String? = null,
         delayMillis: Long = 100
@@ -748,13 +757,18 @@ class EmulationHandler(
 
         var cdpModifiers = 0
         if (modifier != null) {
-            val normModifier = KeyboardModifier.valueOfOrNull(modifier)
             val kb = keyboard
+            // Normalize modifier for the current OS (Ctrl->Meta on macOS)
+            val mappedModifierName = mapModifierForOS(modifier)
+            val normModifier = KeyboardModifier.valueOfOrNull(mappedModifierName)
             if (normModifier != null && kb != null) {
                 val virtualKey = kb.createVirtualKeyForSingleKeyString(normModifier)
                 if (virtualKey.isModifier) {
                     // Use CDP-compliant modifier bitmask for mouse events
                     cdpModifiers = modifierMaskForKeyString(normModifier.name)
+                    if (!modifier.equals(mappedModifierName, true)) {
+                        logger.info("OS mapped modifier {} -> {} (macOS={})", modifier, mappedModifierName, SystemUtils.IS_OS_MAC)
+                    }
                     logger.info("Clicking with virtual key: {}, modifiers: {}", virtualKey, cdpModifiers)
                 }
                 // Press and guarantee release via try/finally
