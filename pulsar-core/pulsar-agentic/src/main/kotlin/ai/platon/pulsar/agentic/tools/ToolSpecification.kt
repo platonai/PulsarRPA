@@ -67,7 +67,7 @@ fs.readString(filename: String): String
 fs.replaceContent(filename: String, oldStr: String, newStr: String): String
 
 // domain: agent
-agent.extract(instruction: String, schema: String): String // Extract data from the whole web page, provide a json to define the data schema.
+agent.extract(instruction: String, schema: String): String // Extract data with given JSON schema
 
 // domain: system
 system.help(domain: String, method: String): String        // get help for a tool call

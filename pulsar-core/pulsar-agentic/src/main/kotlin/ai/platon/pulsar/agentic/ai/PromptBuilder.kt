@@ -10,14 +10,10 @@ import ai.platon.pulsar.common.KStrings
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.ai.llm.PromptTemplate
 import ai.platon.pulsar.common.brief
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.skeleton.ai.AgentState
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.time.LocalDate
 import java.util.*
-import kotlin.math.min
 
 /**
  * Description:
@@ -243,6 +239,8 @@ class ExtractionSchema(val fields: List<ExtractionField>)
 2. `## 智能体状态`：当前的 <user_request>、<file_system> 摘要、<todo_contents> 和 <step_info> 摘要。
 3. `## 浏览器状态`：当前 URL、打开的标签页、可交互元素的索引及可见页面内容。
 4. `## 视觉信息`：浏览器截图。如果你之前使用过截图，这里将包含截图。
+
+---
 
 ## 智能体历史
 
@@ -729,20 +727,22 @@ $userInstructions
             return ""
         }
 
-        val mapper: ObjectMapper = jacksonObjectMapper().apply {
-            setSerializationInclusion(JsonInclude.Include.NON_NULL)
-            setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
-            registerModule(JavaTimeModule())
+        val headingSize = 2
+        val tailingSize = 8
+        val totalSize = headingSize + tailingSize
+        val result = when {
+            history.size <= totalSize -> history
+            else -> history.take(headingSize) + history.takeLast(tailingSize)
         }
 
-        val his = history.takeLast(min(8, history.size))
-            .joinToString("\n") { mapper.writeValueAsString(it) }
+        val historyJson = result.joinToString("\n") { pulsarObjectMapper().writeValueAsString(it) }
 
         val msg = """
 ## 智能体历史
 <agent_history>
+(仅保留 $totalSize 步骤)
 
-$his
+$historyJson
 
 ---
 

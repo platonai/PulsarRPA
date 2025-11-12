@@ -69,6 +69,22 @@ Ensure all expressions in tool call specification can be correctly executed.
 4. 选择效率高的方法
 5. 判断策略
 
+## Agent Process Tracking
+
+Track everything, write to file, can be restored, can be analyzed by human and by AI.
+
+- Execution context
+- Step Result
+- ProcessTrace
+- LLM conversation
+
+May be combined:
+
+- Checkpoint
+- AgentState history
+
+充分使用文件系统来保留各种现场数据，智能体需要能够随时调阅文档库。
+
 ## Notes
 
 - if a tool call not handled by parser in ToolCallExecutor, fallback to ToolCallExecutor.eval()
