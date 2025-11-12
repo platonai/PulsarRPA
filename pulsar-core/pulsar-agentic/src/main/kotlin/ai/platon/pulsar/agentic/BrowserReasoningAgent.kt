@@ -66,8 +66,15 @@ class BrowserReasoningAgent constructor(
         // Add start history for better traceability (meta record only)
         val goal = Strings.compactLog(instruction, 160)
         stateManager.trace(
-            "🚀 resolve START session=${sessionId.take(8)} goal='$goal' " +
-                    "maxSteps=${config.maxSteps} maxRetries=${config.maxRetries}"
+            context.agentState,
+            mapOf(
+                "event" to "resolveStart",
+                "session" to sessionId.take(8),
+                "goal" to goal,
+                "maxSteps" to config.maxSteps.toString(),
+                "maxRetries" to config.maxRetries.toString()
+            ),
+            "🚀 resolve START"
         )
 
         // Overall timeout to prevent indefinite hangs for a full resolve session
@@ -77,11 +84,29 @@ class BrowserReasoningAgent constructor(
             }
             val dur = Duration.between(sessionStartTime, Instant.now()).toMillis()
             // Not a single-step action, keep it out of AgentState history
-            stateManager.trace("✅ resolve DONE session=${sessionId.take(8)} success=${result.success} dur=${dur}ms")
+            stateManager.trace(
+                context.agentState,
+                mapOf(
+                    "event" to "resolveDone",
+                    "session" to sessionId.take(8),
+                    "success" to result.success.toString(),
+                    "durationMs" to dur.toString()
+                ),
+                "✅ resolve DONE"
+            )
             result
         } catch (_: TimeoutCancellationException) {
+            val compact = Strings.compactLog(instruction, 160)
             val msg = "⏳ Resolve timed out after ${config.resolveTimeoutMs}ms: ${instruction}"
-            stateManager.trace("⏳ resolve TIMEOUT: ${Strings.compactLog(instruction, 160)}")
+            stateManager.trace(
+                context.agentState,
+                mapOf(
+                    "event" to "resolveTimeout",
+                    "timeoutMs" to config.resolveTimeoutMs.toString(),
+                    "instruction" to compact
+                ),
+                "⏳ resolve TIMEOUT"
+            )
             ActResult(success = false, message = msg, action = instruction)
         }
     }
@@ -103,12 +128,27 @@ class BrowserReasoningAgent constructor(
         for (attempt in 0..config.maxRetries) {
             val attemptNo = attempt + 1
 
-            stateManager.trace("🔁 resolve ATTEMPT ${attemptNo}/${config.maxRetries + 1}")
+            stateManager.trace(
+                context.agentState,
+                mapOf(
+                    "event" to "resolveAttempt",
+                    "attemptNo" to attemptNo.toString(),
+                    "attemptsTotal" to (config.maxRetries + 1).toString()
+                ),
+                "🔁 resolve ATTEMPT"
+            )
 
             try {
                 val res = doResolveProblem(action, context, attempt)
 
-                stateManager.trace("✅ resolve ATTEMPT $attemptNo OK")
+                stateManager.trace(
+                    context.agentState,
+                    mapOf(
+                        "event" to "resolveAttemptOk",
+                        "attemptNo" to attemptNo.toString()
+                    ),
+                    "✅ resolve ATTEMPT OK"
+                )
 
                 return res
             } catch (e: PerceptiveAgentError.TransientError) {
@@ -117,7 +157,17 @@ class BrowserReasoningAgent constructor(
 
                 if (attempt < config.maxRetries) {
                     val backoffMs = calculateRetryDelay(attempt)
-                    stateManager.trace("🔁 resolve RETRY $attemptNo cause=Transient delay=${backoffMs}ms msg=${e.message}")
+                    stateManager.trace(
+                        context.agentState,
+                        mapOf(
+                            "event" to "resolveRetry",
+                            "cause" to "Transient",
+                            "attemptNo" to attemptNo.toString(),
+                            "delayMs" to backoffMs.toString(),
+                            "msg" to (e.message ?: "")
+                        ),
+                        "🔁 resolve RETRY"
+                    )
                     delay(backoffMs)
                 }
             } catch (e: PerceptiveAgentError.TimeoutError) {
@@ -126,7 +176,17 @@ class BrowserReasoningAgent constructor(
 
                 if (attempt < config.maxRetries) {
                     val baseBackoffMs = config.baseRetryDelayMs
-                    stateManager.trace("🔁 resolve RETRY $attemptNo cause=Timeout delay=${baseBackoffMs}ms msg=${e.message}")
+                    stateManager.trace(
+                        context.agentState,
+                        mapOf(
+                            "event" to "resolveRetry",
+                            "cause" to "Timeout",
+                            "attemptNo" to attemptNo.toString(),
+                            "delayMs" to baseBackoffMs.toString(),
+                            "msg" to (e.message ?: "")
+                        ),
+                        "🔁 resolve RETRY"
+                    )
                     delay(baseBackoffMs)
                 }
             } catch (e: Exception) {
@@ -135,7 +195,17 @@ class BrowserReasoningAgent constructor(
 
                 if (shouldRetryError(e) && attempt < config.maxRetries) {
                     val backoffMs = calculateRetryDelay(attempt)
-                    stateManager.trace("🔁 resolve RETRY $attemptNo cause=Unexpected delay=${backoffMs}ms msg=${e.message}")
+                    stateManager.trace(
+                        context.agentState,
+                        mapOf(
+                            "event" to "resolveRetry",
+                            "cause" to "Unexpected",
+                            "attemptNo" to attemptNo.toString(),
+                            "delayMs" to backoffMs.toString(),
+                            "msg" to (e.message ?: "")
+                        ),
+                        "🔁 resolve RETRY"
+                    )
                     delay(backoffMs)
                 } else {
                     // Non-retryable error, exit loop
@@ -144,7 +214,15 @@ class BrowserReasoningAgent constructor(
             }
         }
 
-        stateManager.trace("❌ resolve FAIL after ${config.maxRetries + 1} attempts: ${lastError?.message}")
+        stateManager.trace(
+            context.agentState,
+            mapOf(
+                "event" to "resolveFail",
+                "attemptsTotal" to (config.maxRetries + 1).toString(),
+                "msg" to (lastError?.message ?: "")
+            ),
+            "❌ resolve FAIL"
+        )
         return ActResult(
             success = false,
             message = "Failed after ${config.maxRetries + 1} attempts. Last error: ${lastError?.message}",
@@ -363,7 +441,15 @@ class BrowserReasoningAgent constructor(
 
     private suspend fun handleConsecutiveNoOps(consecutiveNoOps: Int, step: Int, context: ExecutionContext): Boolean {
         require(step == context.step) { "Step should be consistent with context.stepNumber" }
-        stateManager.trace("🕒 #$step no-op (consecutive: $consecutiveNoOps)")
+        stateManager.trace(
+            context.agentState,
+            mapOf(
+                "event" to "noop",
+                "step" to step.toString(),
+                "consecutive" to consecutiveNoOps.toString()
+            ),
+            "🕒 no-op"
+        )
         logger.info("🕒 noop sid={} step={} consecutive={}", context.sid, step, consecutiveNoOps)
         if (consecutiveNoOps >= config.consecutiveNoOpLimit) {
             logger.info("⛔ noop.stop sid={} step={} limit={}", context.sid, step, config.consecutiveNoOpLimit)

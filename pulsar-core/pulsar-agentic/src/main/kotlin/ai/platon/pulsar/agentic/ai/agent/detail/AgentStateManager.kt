@@ -173,17 +173,18 @@ class AgentStateManager(
         }
     }
 
-    fun trace(h: AgentState?, items: Map<String, String>, message: String? = null) {
-        val items2 = if (h != null) {
+    fun trace(state: AgentState?, items: Map<String, String>, message: String? = null) {
+        val items2 = if (state != null) {
             mapOf(
-                "action" to h.method,
-                "expression" to h.toolCallResult?.expression,
-                "tcEvalResult" to h.toolCallResult?.evaluate?.value
+                "action" to state.method,
+                "expression" to state.toolCallResult?.expression,
+                "tcEvalResult" to state.toolCallResult?.evaluate?.value
             ).filterValues { it != null }
         } else emptyMap()
+
         val items3 = items + items2
-        val step = h?.step ?: 0
-        val msg = message ?: h?.toString()
+        val step = state?.step ?: 0
+        val msg = message ?: state?.toString()
         val trace = ProcessTrace(step = step, items = items3, message = msg)
         _processTrace.add(trace)
     }
