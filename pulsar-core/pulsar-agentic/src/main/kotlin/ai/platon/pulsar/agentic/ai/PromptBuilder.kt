@@ -89,13 +89,13 @@ class PromptBuilder() {
 - JSON 格式输出时，禁止包含任何额外文本
 - 从`## 浏览器状态`段落获得所有打开标签页的信息
 - 如需检索信息，新建标签页而非复用当前页
-- 使用 `click(selector, "Ctrl")` 新建标签页，在**新标签页**打开链接
+- 使用 `click(selector, "Ctrl")` 新建标签页，在**新标签页**打开链接。系统若为 macOS，自动将 Ctrl 映射为 Meta
 - 如果目标页面在**新标签页**打开，使用 `browser.switchTab(tabId: String)` 切换到目标页面，从`## 浏览器状态`段落获得 `tabId`
 - 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。不要模拟点击屏幕键盘上的按键
 - 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
 - 注意：用户难以区分按钮和链接
 - 若预期元素缺失，尝试刷新页面、滚动或返回上一页
-- 若向字段输入内容：1. 无需先滚动和聚焦（工具内部处理）2. 可能需要按回车、点击搜索按钮或从下拉菜单选择以完成操作。
+- 若向字段输入内容：1. 无需先滚动和聚焦（工具内部处理）2. 可能需1) 回车 2) 显式搜索按钮 3) 下拉选项以完成操作。
 - 若填写输入框后操作序列中断，通常是因为页面发生了变化（例如输入框下方弹出了建议选项）
 - 若出现验证码，尽可能尝试解决；若无法解决，则启用备用策略（例如换其他站点、回退上一步）
 - 若页面因输入文本等操作发生变化，需判断是否要交互新出现的元素（例如从列表中选择正确选项）。
@@ -112,24 +112,16 @@ class PromptBuilder() {
 
     """.trimIndent()
 
-        val EXTRACTION_TOOL_NOTE_CONTENT_1 = """
-使用 `agent.extract` 满足高级数据提取要求：
-
-- 对提取结果格式有严格要求
-- 提取结果存在内嵌对象
-- 其他数据提取工具无法满足要求
-
-使用 `agent.extract` 工具前，你需要先调用 `system.help("agent", "extract")` 工具获得完整的帮助信息。
-
-"""
-
         val EXTRACTION_TOOL_NOTE_CONTENT_2 = """
 使用 `agent.extract` 满足高级数据提取要求，仅当 `textContent`, `selectFirstTextOrNull` 不能满足要求时使用。
 
 参数说明：
 
 1. `instruction`: 准确描述 1. 数据提取目标 2. 数据提取要求
-2. `schema`: 数据提取结果的 schema 要求，以 JSON 格式描述，并且遵循下述结构：
+2. `schema`: 数据提取结果的 schema 要求，以 JSON 格式描述，并且遵循下面结构
+3. instruction 负责『做什么』，schema 负责『输出形状』；出现冲突时以 schema 为准
+
+Schema 参数结构：
 ```
 class ExtractionField(
     val name: String,
@@ -176,8 +168,6 @@ class ExtractionSchema(val fields: List<ExtractionField>)
   ]
 }
 ```
-
-如遇到错误，调用 `system.help("agent", "extract")` 工具获得帮助信息。
 
 """
 
@@ -314,9 +304,10 @@ $A11Y_TREE_NOTE_CONTENT
 - 你可以访问一个持久化的文件系统，用于跟踪进度、存储结果和管理长期任务。
 - 文件系统已初始化一个 `todolist.md`：用于保存已知子任务的核对清单。每当你完成一项时，优先使用 `fs.replaceContent` 工具更新 `todolist.md` 中的标记。对于长期任务，这个文件应指导你的逐步执行。
 - 如果你要写入 CSV 文件，请注意当单元格内容包含逗号时使用双引号。
-- 如果文件过大，你只会得到预览；必要时使用 `fs.readString` 查看完整内容。
-- 如果任务非常长，请初始化一个 `results.md` 文件来汇总结果。
-- 如果任务少于 10 步，请不要使用文件系统！
+- 若文件过大，你只会得到预览；必要时使用 `fs.readString` 查看完整内容。
+- 若任务非常长，请初始化一个 `results.md` 文件来汇总结果。
+- 若需长期状态记忆，可将 memory 内容写入 fs。
+- 若你判断可在 5 分钟内完成，且无需跨页面汇总，则跳过文件系统！
 
 ---
 
