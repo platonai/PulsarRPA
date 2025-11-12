@@ -852,80 +852,59 @@ public final class Strings {
     }
 
     /**
+     * Internal unified quote helper.
+     * Escapes same quote characters before wrapping.
+     * @param s Source string (nullable)
+     * @param quoteChar Quote character, either '\'' or '"'
+     * @return Quoted string or null if input is null
+     */
+    private static String quote(String s, char quoteChar) {
+        if (s == null) return null;
+        String escaped = s;
+        if (quoteChar == '\'') {
+            escaped = escaped.replace("'", "\\'");
+        } else if (quoteChar == '"') {
+            escaped = escaped.replace("\"", "\\\"");
+        }
+        return quoteChar + escaped + quoteChar;
+    }
+
+    /**
      * Wraps the string in single quotes and escapes any internal single quotes (').
-     * <p>
-     * Behavior:
-     * <ul>
-     *   <li>If {@code s} is {@code null}, this method returns {@code null} (it does <b>not</b> throw).</li>
-     *   <li>Each single quote character (<code>'</code>) is replaced by <code>\'</code> before wrapping.</li>
-     * </ul>
-     * <p>
-     * Examples:
-     * <pre>
-     * singleQuote("hello")   => 'hello'
-     * singleQuote("Bob's")   => 'Bob\'s'
-     * singleQuote(null)       => null
-     * </pre>
-     * <p>
-     * 说明 (Chinese):
-     * <ul>
-     *   <li>传入 {@code null} 时直接返回 {@code null}，保持原状，不抛异常。</li>
-     *   <li>内部的单引号会被转义为 <code>\'</code> 再整体包裹在单引号中。</li>
-     * </ul>
-     *
+     * <p>Uses unified {@link #quote(String, char)} helper.</p>
      * @param s The source string (nullable)
      * @return The quoted string, or {@code null} if input is {@code null}
      */
     public static String singleQuote(String s) {
-        if (s == null) return null;
-        return StringUtils.wrap(s.replace("'", "\\'"), "'");
+        return quote(s, '\'');
     }
 
     /**
      * Wraps the string in double quotes and escapes any internal double quotes (" ).
-     * <p>
-     * Behavior:
-     * <ul>
-     *   <li>If {@code s} is {@code null}, this method returns {@code null}.</li>
-     *   <li>Each double quote character (<code>"</code>) is replaced by <code>\"</code> before wrapping.</li>
-     * </ul>
-     * <p>
-     * Examples:
-     * <pre>
-     * doubleQuote("hello") => "hello"
-     * doubleQuote("a\"b") => "a\\\"b"
-     * doubleQuote(null)     => null
-     * </pre>
-     * <p>
-     * 说明 (Chinese):
-     * <ul>
-     *   <li>传入 {@code null} 时直接返回 {@code null}。</li>
-     *   <li>内部的双引号会被转义为 <code>\"</code> 再整体包裹在双引号中。</li>
-     * </ul>
-     *
+     * <p>Uses unified {@link #quote(String, char)} helper.</p>
      * @param s The source string (nullable)
      * @return The quoted string, or {@code null} if input is {@code null}
      */
     public static String doubleQuote(String s) {
-        if (s == null) return null;
-        return StringUtils.wrap(s.replace("\"", "\\\""), "\"");
+        return quote(s, '"');
     }
 
     /**
-     * Wraps the string in double quotes only if it contains one or more whitespace characters.
+     * Wraps the string in single quotes only if it contains one or more whitespace characters.
      * Whitespace detection uses {@link StringUtils#containsWhitespace(CharSequence)}.
      *
      * Behavior:
-     * - Returns an empty string if input is null or empty.
+     * - Returns null if input is null; returns empty string if input is empty.
      * - If whitespace exists, delegates to {@link #singleQuote(String)}; otherwise returns the original string.
-     * - Null that passes through to {@link #singleQuote(String)} would throw; we guard earlier by returning empty.
      *
      * Examples:
      * singleQuoteIfContainsWhitespace("hello world") => 'hello world'
      * singleQuoteIfContainsWhitespace("hello") => hello
+     * singleQuoteIfContainsWhitespace("") => ""
+     * singleQuoteIfContainsWhitespace(null) => null
      *
      * @param s The source string
-     * @return Possibly quoted string; empty string if s is null/empty
+     * @return Possibly quoted string; null if input is null; empty string if input is empty
      */
     public static String singleQuoteIfContainsWhitespace(String s) {
         if (s == null) return null;
@@ -938,16 +917,17 @@ public final class Strings {
      * Whitespace detection uses {@link StringUtils#containsWhitespace(CharSequence)}.
      *
      * Behavior:
-     * - Returns an empty string if input is null or empty.
+     * - Returns null if input is null; returns empty string if input is empty.
      * - If whitespace exists, delegates to {@link #doubleQuote(String)}; otherwise returns the original string.
-     * - Null that passes through to {@link #doubleQuote(String)} would throw; we guard earlier by returning empty.
      *
      * Examples:
      * doubleQuoteIfContainsWhitespace("hello world") => "hello world"
      * doubleQuoteIfContainsWhitespace("hello") => hello
+     * doubleQuoteIfContainsWhitespace("") => ""
+     * doubleQuoteIfContainsWhitespace(null) => null
      *
      * @param s The source string
-     * @return Possibly quoted string; empty string if s is null/empty
+     * @return Possibly quoted string; null if input is null; empty string if input is empty
      */
     public static String doubleQuoteIfContainsWhitespace(String s) {
         if (s == null) return null;
@@ -960,21 +940,24 @@ public final class Strings {
      * Internal single quotes are NOT escaped here; use {@link #singleQuote(String)} if escaping is required.
      *
      * Behavior:
-     * - Returns empty string if input is null or empty.
+     * - Returns null if input is null.
      * - Uses {@link StringUtils#isAlphanumeric(CharSequence)} to decide quoting.
+     * - For empty input, returns two single quotes: ''
      *
      * Examples:
      * singleQuoteIfNonAlphanumeric("hello") => hello
      * singleQuoteIfNonAlphanumeric("hello-world") => 'hello-world'
      * singleQuoteIfNonAlphanumeric("Bob's") => 'Bob's'
+     * singleQuoteIfNonAlphanumeric("") => "''"
+     * singleQuoteIfNonAlphanumeric(null) => null
      *
      * @param s The source string
-     * @return Possibly quoted string; empty string if s is null/empty
+     * @return Possibly quoted string; null if input is null
      */
     public static String singleQuoteIfNonAlphanumeric(String s) {
         if (s == null) return null;
         if (StringUtils.isAlphanumeric(s)) return s;
-        return "'" + s + "'";
+        return singleQuote(s);
     }
 
     /**
@@ -982,19 +965,22 @@ public final class Strings {
      * Internal double quotes are escaped by delegating to {@link #doubleQuote(String)}.
      *
      * Behavior:
-     * - Returns empty string if input is null or empty.
+     * - Returns null if input is null; returns empty string if input is empty.
      * - Uses {@link StringUtils#isAlphanumeric(CharSequence)} to decide quoting.
      *
      * Examples:
      * doubleQuoteIfNonAlphanumeric("hello") => hello
      * doubleQuoteIfNonAlphanumeric("a b") => "a b"
      * doubleQuoteIfNonAlphanumeric("a\"b") => "a\\\"b"
+     * doubleQuoteIfNonAlphanumeric("") => ""
+     * doubleQuoteIfNonAlphanumeric(null) => null
      *
      * @param s The source string
-     * @return Possibly quoted string; empty string if s is null/empty
+     * @return Possibly quoted string; null if input is null; empty string if input is empty
      */
     public static String doubleQuoteIfNonAlphanumeric(String s) {
         if (s == null) return null;
+        if (s.isEmpty()) return "";
         if (StringUtils.isAlphanumeric(s)) return s;
         return doubleQuote(s);
     }
