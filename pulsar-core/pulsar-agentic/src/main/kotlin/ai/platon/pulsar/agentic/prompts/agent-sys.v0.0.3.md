@@ -299,7 +299,7 @@ class ExtractionSchema(val fields: List<ExtractionField>)
 
 ### 推理模式
 
-为成功完成 <user_request> 请遵循以下推理模式：
+为成功完成 <user_request> 遵循以下推理模式：
 
 ```
 <thinking>

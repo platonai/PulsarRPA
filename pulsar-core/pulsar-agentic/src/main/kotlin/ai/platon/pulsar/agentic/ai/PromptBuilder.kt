@@ -76,6 +76,10 @@ class PromptBuilder() {
             return if (returnAction) schema1 else schema2
         }
 
+        val TASK_COMPLETE_SCHEMA = """
+            {"taskComplete":bool,"success":bool,"errorCause":string?,"summary":string,"keyFindings":[string],"nextSuggestions":[string]}
+        """.trimIndent()
+
         val TOOL_CALL_RULE_CONTENT = """
 严格遵循以下规则使用浏览器和浏览网页：
 
@@ -394,6 +398,10 @@ $A11Y_TREE_NOTE_CONTENT
 
 ---
 
+## 容错行为
+
+- 如果上一步工具调用内部出现异常，该异常会在 `## 上步输出` 中显示
+
 ## 示例
 
 下面是一些良好输出模式的示例。可参考但不要直接复制。
@@ -430,11 +438,11 @@ $A11Y_TREE_NOTE_CONTENT
 - 输出严格使用下面两种 JSON 格式之一
 - 仅输出 JSON 内容，无多余文字
 
-1. 动作输出格式，最多一个元素，domain & method 字段不得为空(<output_act>)：
+1. 动作输出格式，最多一个元素，domain & method 字段非空, arguments 必须按工具方法声明顺序排列(<output_act>)：
 ${buildObserveResultSchema(true)}
 
 2. 任务完成输出格式(<output_done>):
-{"taskComplete":bool,"success":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]}
+$TASK_COMPLETE_SCHEMA
 
 
 ---
@@ -548,7 +556,6 @@ ${buildObserveResultSchema(true)}
 
 - 如果你之前使用过截图，你将获得当前页面的截图。
 - 视觉信息是首要事实依据（GROUND TRUTH）：在推理中利用图像来评估你的进展。
-- 在推理中利用图像来评估你的进展。
 - 当不确定或想获取更多信息时使用截图。
 
 ---
@@ -1090,7 +1097,7 @@ ${nanoTree.lazyJson}
             appendLine("执行轨迹(按序)：")
             stateHistory.forEach { appendLine(it) }
             appendLine()
-            appendLine("""请严格输出 JSON：{"taskComplete":bool,"summary":string,"keyFindings":[string],"nextSuggestions":[string]} 无多余文字。""")
+            appendLine("""请严格输出 JSON：$TASK_COMPLETE_SCHEMA 无多余文字。""")
         }
         return system to user
     }
