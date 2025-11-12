@@ -1,6 +1,7 @@
 package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.skeleton.ai.ToolCallSpec
 import ai.platon.pulsar.skeleton.common.llm.LLMUtils
@@ -18,11 +19,11 @@ object SourceCodeToToolCallSpec {
         extractInterface("agent", sourceCode, "PerceptiveAgent").toCollection(perceptiveAgentToolCallList)
 
         var fileName = "driver-tool-call-specs.json"
-        var content = pulsarObjectMapper().writeValueAsString(webDriverToolCallList)
+        var content = prettyPulsarObjectMapper().writeValueAsString(webDriverToolCallList)
         LLMUtils.writeAsResource(fileName, content)
 
         fileName = "agent-tool-call-specs.json"
-        content = pulsarObjectMapper().writeValueAsString(perceptiveAgentToolCallList)
+        content = prettyPulsarObjectMapper().writeValueAsString(perceptiveAgentToolCallList)
         LLMUtils.writeAsResource(fileName, content)
     }
 

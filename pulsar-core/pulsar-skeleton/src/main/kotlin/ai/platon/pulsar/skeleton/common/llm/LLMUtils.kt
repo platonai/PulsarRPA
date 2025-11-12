@@ -41,7 +41,7 @@ object LLMUtils {
     }
 
     fun writeAsResource(fileName: String, content: String): Path? {
-        val baseDir = ResourceLoader.getPath(CODE_MIRROR_DIR).toRealPath()
+        val baseDir = ProjectUtils.findFile(CODE_MIRROR_DIR) ?: return null
         if (baseDir.notExists()) {
             return null
         }

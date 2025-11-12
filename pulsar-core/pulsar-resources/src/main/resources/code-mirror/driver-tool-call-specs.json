@@ -1,0 +1,1183 @@
+[ {
+  "domain" : "driver",
+  "method" : "jvm",
+  "arguments" : [ ],
+  "returnType" : "JvmWebDriver",
+  "description" : "Returns a JvmWebDriver to support other JVM languages, such as java, clojure, scala, and so on, the other JVM languages might have difficulty to handle kotlin suspend methods."
+}, {
+  "domain" : "driver",
+  "method" : "addInitScript",
+  "arguments" : [ {
+    "name" : "script",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "Adds a script which would be evaluated in one of the following scenarios: * Whenever the page is navigated. The script is evaluated after the document was created but before any of its scripts were run. This is useful to amend the JavaScript environment, e.g. to seed [Math.random]. This function should be invoked before a navigation, usually in an onWillN..."
+}, {
+  "domain" : "driver",
+  "method" : "addBlockedURLs",
+  "arguments" : [ {
+    "name" : "urlPatterns",
+    "type" : "List<String>",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "Blocks resource URLs from loading."
+}, {
+  "domain" : "driver",
+  "method" : "open",
+  "arguments" : [ {
+    "name" : "url",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "Opens the specified URL in the web driver. This function navigates the web driver to the provided URL and waits for the navigation to complete. It is a suspend function, meaning it can be used within coroutines for asynchronous execution. Example usage:"
+}, {
+  "domain" : "driver",
+  "method" : "navigateTo",
+  "arguments" : [ {
+    "name" : "url",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "Navigates current page to the given URL."
+}, {
+  "domain" : "driver",
+  "method" : "navigateTo",
+  "arguments" : [ {
+    "name" : "entry",
+    "type" : "NavigateEntry",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "Navigates current page to the given URL."
+}, {
+  "domain" : "driver",
+  "method" : "reload",
+  "arguments" : [ ],
+  "returnType" : "Unit",
+  "description" : null
+}, {
+  "domain" : "driver",
+  "method" : "goBack",
+  "arguments" : [ ],
+  "returnType" : "Unit",
+  "description" : "Navigates the browser to the previous page in the navigation history. This method is expected to use the browser's navigation history to move back to the previous page. It should handle any exceptions that may occur during the navigation process."
+}, {
+  "domain" : "driver",
+  "method" : "goForward",
+  "arguments" : [ ],
+  "returnType" : "Unit",
+  "description" : "Navigates the browser to the next page in the navigation history. This method is expected to use the browser's navigation history to move forward to the next page. It should handle any exceptions that may occur during the navigation process."
+}, {
+  "domain" : "driver",
+  "method" : "currentUrl",
+  "arguments" : [ ],
+  "returnType" : "String",
+  "description" : "Returns a string representing the current URL that the browser is looking at. The current url is always the main frame's `document.documentURI` if the browser succeed to return it, and is displayed in the browser's address bar. If the browser failed to return a proper url, returns the passed in url to navigate, just like a real user enter a url in the add..."
+}, {
+  "domain" : "driver",
+  "method" : "url",
+  "arguments" : [ ],
+  "returnType" : "String",
+  "description" : "The URL read-only property of the Document interface returns the document location as a string. This property equals to javascript `document.URL`. The `document.URL` property returns the same value. The `document.documentURI` property can be used on any document types, while the `document.URL` property can only be used on HTML documents."
+}, {
+  "domain" : "driver",
+  "method" : "documentURI",
+  "arguments" : [ ],
+  "returnType" : "String",
+  "description" : "Returns the document location as a string. This property equals to javascript `document.documentURI`. The `document.URL` property which returns the same value. The `document.documentURI` property can be used on any document types, while the `document.URL` property can only be used on HTML documents."
+}, {
+  "domain" : "driver",
+  "method" : "baseURI",
+  "arguments" : [ ],
+  "returnType" : "String",
+  "description" : "Returns the document's baseURI. The baseURI is a property of Node, it's the absolute base URL of the document containing the node. A baseURI is used to resolve relative URLs. The base URL is determined as follows: 1. By default, the base URL is the location of the document (as determined by window.location). 2. If the document has an `<base>` element, its..."
+}, {
+  "domain" : "driver",
+  "method" : "referrer",
+  "arguments" : [ ],
+  "returnType" : "String",
+  "description" : "The referrer property returns the URI of the page that linked to this page. The value is an empty string if the user navigated to the page directly (not through a link, but, for example, by using a bookmark). Inside an <iframe>, the referrer will initially be set to the same value as the href of the parent window's Window.location."
+}, {
+  "domain" : "driver",
+  "method" : "pageSource",
+  "arguments" : [ ],
+  "returnType" : "String?",
+  "description" : "Returns the source of the last loaded page. If the page has been modified after loading (for example, by Javascript) there is no guarantee that the returned text is that of the modified page. PageSource and outerHTML: - pageSource: returns document HTML markup, will support non-HTML document - outerHTML: returns document HTML markup, for HTML document only"
+}, {
+  "domain" : "driver",
+  "method" : "nanoDOMTree",
+  "arguments" : [ ],
+  "returnType" : "NanoDOMTree?",
+  "description" : "Retrieve a nano version of the DOM tree, which is based on the accessibility tree, enhanced by DOM and document snapshot. References: - [ai.platon.cdt.kt.protocol.commands.Accessibility.getFullAXTree] - [ai.platon.cdt.kt.protocol.commands.DOM.getDocument] - [ai.platon.cdt.kt.protocol.types.domsnapshot.DocumentSnapshot]"
+}, {
+  "domain" : "driver",
+  "method" : "chat",
+  "arguments" : [ {
+    "name" : "prompt",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "ModelResponse",
+  "description" : "Chat with the AI model about the specified element."
+}, {
+  "domain" : "driver",
+  "method" : "getCookies",
+  "arguments" : [ ],
+  "returnType" : "List<Map<String, String>>",
+  "description" : "Returns the cookies of the current page."
+}, {
+  "domain" : "driver",
+  "method" : "deleteCookies",
+  "arguments" : [ {
+    "name" : "name",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : null
+}, {
+  "domain" : "driver",
+  "method" : "deleteCookies",
+  "arguments" : [ {
+    "name" : "name",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "url",
+    "type" : "String?",
+    "defaultValue" : "null"
+  }, {
+    "name" : "domain",
+    "type" : "String?",
+    "defaultValue" : "null"
+  }, {
+    "name" : "path",
+    "type" : "String?",
+    "defaultValue" : "null"
+  } ],
+  "returnType" : "Unit",
+  "description" : "Deletes browser cookies with matching name and url or domain/path pair."
+}, {
+  "domain" : "driver",
+  "method" : "clearBrowserCookies",
+  "arguments" : [ ],
+  "returnType" : "Unit",
+  "description" : "Clears browser cookies."
+}, {
+  "domain" : "driver",
+  "method" : "waitForSelector",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Duration",
+  "description" : "Wait until the element identified by the selector becomes present in the DOM or timeout."
+}, {
+  "domain" : "driver",
+  "method" : "waitForSelector",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "timeoutMillis",
+    "type" : "Long",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Long",
+  "description" : "Wait until the element identified by the selector becomes present in the DOM or timeout."
+}, {
+  "domain" : "driver",
+  "method" : "waitForSelector",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "timeout",
+    "type" : "Duration",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Duration",
+  "description" : "Wait for the element identified by the selector to become present in the DOM, or until timeout."
+}, {
+  "domain" : "driver",
+  "method" : "waitForSelector",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "action",
+    "type" : "suspend (",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "Wait for the element identified by the selector to become present in the DOM, or until timeout. This method periodically checks for the existence of the element. If the element is not found during a check, the action will be executed, such as scrolling the page down."
+}, {
+  "domain" : "driver",
+  "method" : "waitForSelector",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "timeoutMillis",
+    "type" : "Long",
+    "defaultValue" : ""
+  }, {
+    "name" : "action",
+    "type" : "suspend (",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "Wait for the element identified by the selector to become present in the DOM, or until timeout. This method periodically checks for the existence of the element. If the element is not found during a check, the action will be executed, such as scrolling the page down."
+}, {
+  "domain" : "driver",
+  "method" : "waitForSelector",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "timeout",
+    "type" : "Duration",
+    "defaultValue" : ""
+  }, {
+    "name" : "action",
+    "type" : "suspend (",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "Wait for the element identified by the selector to become present in the DOM, or until timeout. This method periodically checks for the existence of the element. If the element is not found during a check, the action will be executed, such as scrolling the page down."
+}, {
+  "domain" : "driver",
+  "method" : "waitForNavigation",
+  "arguments" : [ {
+    "name" : "oldUrl",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Duration",
+  "description" : "Wait until the current url changes or timeout."
+}, {
+  "domain" : "driver",
+  "method" : "waitForNavigation",
+  "arguments" : [ {
+    "name" : "oldUrl",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "timeoutMillis",
+    "type" : "Long",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Long",
+  "description" : "Wait until the current url changes or timeout."
+}, {
+  "domain" : "driver",
+  "method" : "waitForNavigation",
+  "arguments" : [ {
+    "name" : "oldUrl",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "timeout",
+    "type" : "Duration",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Duration",
+  "description" : "Wait until the current url changes or timeout."
+}, {
+  "domain" : "driver",
+  "method" : "waitForPage",
+  "arguments" : [ {
+    "name" : "url",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "timeout",
+    "type" : "Duration",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "WebDriver?",
+  "description" : "Await navigation to the specified URL page or timeout if necessary."
+}, {
+  "domain" : "driver",
+  "method" : "waitUntil",
+  "arguments" : [ {
+    "name" : "predicate",
+    "type" : "suspend (",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "Wait until the predicate returns true."
+}, {
+  "domain" : "driver",
+  "method" : "waitUntil",
+  "arguments" : [ {
+    "name" : "timeoutMillis",
+    "type" : "Long",
+    "defaultValue" : ""
+  }, {
+    "name" : "predicate",
+    "type" : "suspend (",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "Wait until the predicate returns true."
+}, {
+  "domain" : "driver",
+  "method" : "waitUntil",
+  "arguments" : [ {
+    "name" : "timeout",
+    "type" : "Duration",
+    "defaultValue" : ""
+  }, {
+    "name" : "predicate",
+    "type" : "suspend (",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "Wait until the predicate returns true."
+}, {
+  "domain" : "driver",
+  "method" : "exists",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Boolean",
+  "description" : "Returns whether the element exists."
+}, {
+  "domain" : "driver",
+  "method" : "isHidden",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Boolean",
+  "description" : "Returns whether the element is hidden."
+}, {
+  "domain" : "driver",
+  "method" : "isVisible",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Boolean",
+  "description" : "Returns whether the element is visible."
+}, {
+  "domain" : "driver",
+  "method" : "visible",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Boolean",
+  "description" : "Returns whether the element is visible."
+}, {
+  "domain" : "driver",
+  "method" : "isChecked",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Boolean",
+  "description" : "Returns whether the element is checked."
+}, {
+  "domain" : "driver",
+  "method" : "bringToFront",
+  "arguments" : [ ],
+  "returnType" : "Unit",
+  "description" : "Brings the browser window to the front."
+}, {
+  "domain" : "driver",
+  "method" : "focus",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "This method fetches an element with `selector` and focuses it. If there's no element matching `selector`, nothing to do."
+}, {
+  "domain" : "driver",
+  "method" : "type",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "text",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "This method emulates inserting text that doesn't come from a key press."
+}, {
+  "domain" : "driver",
+  "method" : "fill",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "text",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "This method emulates inserting text that doesn't come from a key press. Unlike [type], this method clears the existing value before typing."
+}, {
+  "domain" : "driver",
+  "method" : "press",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "key",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "Shortcut for keyboard down and keyboard up. The key is specified as a string, which can be a single character, a key name, or a combination of both. For example, 'a', 'A', 'KeyA', 'Enter', 'Shift+A', and 'Control+Shift+Tab' are all valid keys."
+}, {
+  "domain" : "driver",
+  "method" : "click",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "count",
+    "type" : "Int",
+    "defaultValue" : "1"
+  } ],
+  "returnType" : "Unit",
+  "description" : "This method focuses an element with [selector] and clicks it. If there's no element matching `selector`, nothing to do."
+}, {
+  "domain" : "driver",
+  "method" : "click",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "modifier",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "focus on an element with [selector] and click it with [modifier] pressed"
+}, {
+  "domain" : "driver",
+  "method" : "clickTextMatches",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "pattern",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "count",
+    "type" : "Int",
+    "defaultValue" : "1"
+  } ],
+  "returnType" : "Unit",
+  "description" : "This method clicks an element with [selector] whose text content matches [pattern], and then focuses it. If there's no element matching [selector], or the element's text content doesn't match [pattern], nothing to do."
+}, {
+  "domain" : "driver",
+  "method" : "clickMatches",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "attrName",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "pattern",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "count",
+    "type" : "Int",
+    "defaultValue" : "1"
+  } ],
+  "returnType" : "Unit",
+  "description" : "This method clicks an element with [selector] whose attribute name is [attrName] and value matches [pattern], and then focuses it. If there's no element matching [selector], or the element has no attribute [attrName], or the element's attribute value doesn't match [pattern], nothing to do."
+}, {
+  "domain" : "driver",
+  "method" : "clickNthAnchor",
+  "arguments" : [ {
+    "name" : "n",
+    "type" : "Int",
+    "defaultValue" : ""
+  }, {
+    "name" : "rootSelector",
+    "type" : "String",
+    "defaultValue" : "body"
+  } ],
+  "returnType" : "String?",
+  "description" : "Clicks the nth anchor element in the DOM. This function searches for all anchor (`<a>`) elements within the specified root element, and clicks the nth anchor element (0-based index). If the anchor element exists, it returns the `href` attribute of the clicked anchor element. If the element does not exist, it returns null."
+}, {
+  "domain" : "driver",
+  "method" : "check",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "This method check an element with [selector]. If there's no element matching [selector], nothing to do. [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors) of an element to check. If there are multiple elements satisfying the selector, the first will be checked."
+}, {
+  "domain" : "driver",
+  "method" : "uncheck",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "This method uncheck an element with [selector]. If there's no element matching [selector], nothing to do. [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors) of an element to uncheck. If there are multiple elements satisfying the selector, the first will be focused."
+}, {
+  "domain" : "driver",
+  "method" : "scrollTo",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "This method fetches an element with [selector], scrolls it into view if needed. If there's no element matching [selector], the method does nothing."
+}, {
+  "domain" : "driver",
+  "method" : "scrollDown",
+  "arguments" : [ {
+    "name" : "count",
+    "type" : "Int",
+    "defaultValue" : "1"
+  } ],
+  "returnType" : "Unit",
+  "description" : "The current page frame scrolls down for [count] times."
+}, {
+  "domain" : "driver",
+  "method" : "scrollUp",
+  "arguments" : [ {
+    "name" : "count",
+    "type" : "Int",
+    "defaultValue" : "1"
+  } ],
+  "returnType" : "Unit",
+  "description" : "The current page frame scrolls up for [count] times."
+}, {
+  "domain" : "driver",
+  "method" : "scrollBy",
+  "arguments" : [ {
+    "name" : "pixels",
+    "type" : "Double",
+    "defaultValue" : "200.0"
+  }, {
+    "name" : "smooth",
+    "type" : "Boolean",
+    "defaultValue" : "true"
+  } ],
+  "returnType" : "Double",
+  "description" : null
+}, {
+  "domain" : "driver",
+  "method" : "scrollToTop",
+  "arguments" : [ ],
+  "returnType" : "Unit",
+  "description" : "The current page frame scrolls to the top."
+}, {
+  "domain" : "driver",
+  "method" : "scrollToBottom",
+  "arguments" : [ ],
+  "returnType" : "Unit",
+  "description" : "The current page frame scrolls to the bottom."
+}, {
+  "domain" : "driver",
+  "method" : "scrollToMiddle",
+  "arguments" : [ {
+    "name" : "ratio",
+    "type" : "Double",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "The current page frame scrolls to the middle."
+}, {
+  "domain" : "driver",
+  "method" : "scrollToScreen",
+  "arguments" : [ {
+    "name" : "screenNumber",
+    "type" : "Double",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : null
+}, {
+  "domain" : "driver",
+  "method" : "scrollToViewport",
+  "arguments" : [ {
+    "name" : "n",
+    "type" : "Double",
+    "defaultValue" : ""
+  }, {
+    "name" : "smooth",
+    "type" : "Boolean",
+    "defaultValue" : "true"
+  } ],
+  "returnType" : "Double",
+  "description" : "Scroll to the 2.5th viewport position."
+}, {
+  "domain" : "driver",
+  "method" : "mouseWheelDown",
+  "arguments" : [ {
+    "name" : "count",
+    "type" : "Int",
+    "defaultValue" : "1"
+  }, {
+    "name" : "deltaX",
+    "type" : "Double",
+    "defaultValue" : "0.0"
+  }, {
+    "name" : "deltaY",
+    "type" : "Double",
+    "defaultValue" : "150.0"
+  }, {
+    "name" : "delayMillis",
+    "type" : "Long",
+    "defaultValue" : "0"
+  } ],
+  "returnType" : "Unit",
+  "description" : "The mouse wheels down for [count] times."
+}, {
+  "domain" : "driver",
+  "method" : "mouseWheelUp",
+  "arguments" : [ {
+    "name" : "count",
+    "type" : "Int",
+    "defaultValue" : "1"
+  }, {
+    "name" : "deltaX",
+    "type" : "Double",
+    "defaultValue" : "0.0"
+  }, {
+    "name" : "deltaY",
+    "type" : "Double",
+    "defaultValue" : "-150.0"
+  }, {
+    "name" : "delayMillis",
+    "type" : "Long",
+    "defaultValue" : "0"
+  } ],
+  "returnType" : "Unit",
+  "description" : "The mouse wheels up for [count] times."
+}, {
+  "domain" : "driver",
+  "method" : "moveMouseTo",
+  "arguments" : [ {
+    "name" : "x",
+    "type" : "Double",
+    "defaultValue" : ""
+  }, {
+    "name" : "y",
+    "type" : "Double",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "The mouse moves to the position specified by [x] and [y]."
+}, {
+  "domain" : "driver",
+  "method" : "moveMouseTo",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "deltaX",
+    "type" : "Int",
+    "defaultValue" : ""
+  }, {
+    "name" : "deltaY",
+    "type" : "Int",
+    "defaultValue" : "0"
+  } ],
+  "returnType" : "Unit",
+  "description" : "The mouse moves to the element with [selector]."
+}, {
+  "domain" : "driver",
+  "method" : "dragAndDrop",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "deltaX",
+    "type" : "Int",
+    "defaultValue" : ""
+  }, {
+    "name" : "deltaY",
+    "type" : "Int",
+    "defaultValue" : "0"
+  } ],
+  "returnType" : "Unit",
+  "description" : "Performs a drag, dragenter, dragover, and drop in sequence."
+}, {
+  "domain" : "driver",
+  "method" : "outerHTML",
+  "arguments" : [ ],
+  "returnType" : "String?",
+  "description" : "Returns the document's HTML markup."
+}, {
+  "domain" : "driver",
+  "method" : "outerHTML",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "String?",
+  "description" : "Returns the node's HTML markup, the node is located by [selector]. If the node does not exist, returns null."
+}, {
+  "domain" : "driver",
+  "method" : "textContent",
+  "arguments" : [ ],
+  "returnType" : "String?",
+  "description" : "Returns the document's text content. If the document does not exist, returns null."
+}, {
+  "domain" : "driver",
+  "method" : "extract",
+  "arguments" : [ {
+    "name" : "fields",
+    "type" : "Map<String, String>",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Map<String, String?>",
+  "description" : null
+}, {
+  "domain" : "driver",
+  "method" : "selectFirstTextOrNull",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "String?",
+  "description" : "Returns the node's text content, the node is located by [selector]. If the node does not exist, returns null."
+}, {
+  "domain" : "driver",
+  "method" : "selectTextAll",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "List<String>",
+  "description" : "Returns a list of text contents of all the elements matching the specified selector within the page. If no elements match the selector, returns an empty list."
+}, {
+  "domain" : "driver",
+  "method" : "selectFirstAttributeOrNull",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "attrName",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "String?",
+  "description" : "Returns the node's attribute value, the node is located by [selector], the attribute is [attrName]. If the node does not exist, or the attribute does not exist, returns null."
+}, {
+  "domain" : "driver",
+  "method" : "selectAttributes",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Map<String, String>",
+  "description" : "Returns the node's attribute values, the node is located by [selector]. If the node do not exist, or the attribute does not exist, returns an empty list."
+}, {
+  "domain" : "driver",
+  "method" : "selectAttributeAll",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "attrName",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "start",
+    "type" : "Int",
+    "defaultValue" : "0"
+  }, {
+    "name" : "limit",
+    "type" : "Int",
+    "defaultValue" : "10000"
+  } ],
+  "returnType" : "List<String>",
+  "description" : "Returns the nodes' attribute values, the nodes are located by [selector], the attribute is [attrName]. If the nodes do not exist, or the attribute does not exist, returns an empty list."
+}, {
+  "domain" : "driver",
+  "method" : "setAttribute",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "attrName",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "attrValue",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "Set the attribute of an element located by [selector]."
+}, {
+  "domain" : "driver",
+  "method" : "setAttributeAll",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "attrName",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "attrValue",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "Set the attribute of all elements matching the CSS query."
+}, {
+  "domain" : "driver",
+  "method" : "selectFirstPropertyValueOrNull",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "propName",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "String?",
+  "description" : "Returns the node's property value, the node is located by [selector], the property is [propName]. If the node does not exist, or the property does not exist, returns null."
+}, {
+  "domain" : "driver",
+  "method" : "selectPropertyValueAll",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "propName",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "start",
+    "type" : "Int",
+    "defaultValue" : "0"
+  }, {
+    "name" : "limit",
+    "type" : "Int",
+    "defaultValue" : "10000"
+  } ],
+  "returnType" : "List<String>",
+  "description" : "Returns the nodes' property values, the nodes are located by [selector], the property is [propName]. If the nodes do not exist, or the property does not exist, returns an empty list."
+}, {
+  "domain" : "driver",
+  "method" : "setProperty",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "propName",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "propValue",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "Set the property of an element located by [selector]."
+}, {
+  "domain" : "driver",
+  "method" : "setPropertyAll",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "propName",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "propValue",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "Set the property of all elements matching the CSS query."
+}, {
+  "domain" : "driver",
+  "method" : "selectHyperlinks",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "offset",
+    "type" : "Int",
+    "defaultValue" : "1"
+  }, {
+    "name" : "limit",
+    "type" : "Int",
+    "defaultValue" : "Int.MAX_VALUE"
+  } ],
+  "returnType" : "List<Hyperlink>",
+  "description" : "Find hyperlinks in elements matching the CSS query."
+}, {
+  "domain" : "driver",
+  "method" : "selectAnchors",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "offset",
+    "type" : "Int",
+    "defaultValue" : "1"
+  }, {
+    "name" : "limit",
+    "type" : "Int",
+    "defaultValue" : "Int.MAX_VALUE"
+  } ],
+  "returnType" : "List<GeoAnchor>",
+  "description" : "Find anchor elements matching the CSS query."
+}, {
+  "domain" : "driver",
+  "method" : "selectImages",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "offset",
+    "type" : "Int",
+    "defaultValue" : "1"
+  }, {
+    "name" : "limit",
+    "type" : "Int",
+    "defaultValue" : "Int.MAX_VALUE"
+  } ],
+  "returnType" : "List<String>",
+  "description" : "Find image elements matching the CSS query."
+}, {
+  "domain" : "driver",
+  "method" : "evaluate",
+  "arguments" : [ {
+    "name" : "expression",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Any?",
+  "description" : "Executes JavaScript in the context of the currently selected frame or window. If the result is not Javascript object, it is not returned. If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression)."
+}, {
+  "domain" : "driver",
+  "method" : "evaluate",
+  "arguments" : [ {
+    "name" : "expression",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "defaultValue",
+    "type" : "T",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "T",
+  "description" : "Executes JavaScript and returns the result or [defaultValue] if evaluation returns null or incompatible type."
+}, {
+  "domain" : "driver",
+  "method" : "evaluateValue",
+  "arguments" : [ {
+    "name" : "expression",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Any?",
+  "description" : "Detailed evaluation metadata (beta)."
+}, {
+  "domain" : "driver",
+  "method" : "evaluateValueDetail",
+  "arguments" : [ {
+    "name" : "expression",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "JsEvaluation?",
+  "description" : "Executes JS returning JSONifiable value or [defaultValue] if null/incompatible."
+}, {
+  "domain" : "driver",
+  "method" : "evaluateValue",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "functionDeclaration",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Any?",
+  "description" : null
+}, {
+  "domain" : "driver",
+  "method" : "captureScreenshot",
+  "arguments" : [ {
+    "name" : "fullPage",
+    "type" : "Boolean",
+    "defaultValue" : "false"
+  } ],
+  "returnType" : "String?",
+  "description" : "Capture a screenshot of the current viewport (or primary browsing context) after ensuring any pending layout. If the backend supports element-centric capture this may represent the full page; implementation specific. The target element (if any) is scrolled into view before capture."
+}, {
+  "domain" : "driver",
+  "method" : "captureScreenshot",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "String?",
+  "description" : "Scroll the element matched by [selector] into view (if needed) then take a screenshot of that element's bounding box. Returns a Base64 encoded image (implementation usually PNG/JPEG), PNG by default."
+}, {
+  "domain" : "driver",
+  "method" : "captureScreenshot",
+  "arguments" : [ {
+    "name" : "rect",
+    "type" : "RectD",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "String?",
+  "description" : "Take a screenshot of the rectangle specified by [rect] in the current page coordinate space. Caller is responsible for ensuring the rectangle is visible or scrolled into view if the implementation requires it."
+}, {
+  "domain" : "driver",
+  "method" : "clickablePoint",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "PointD?",
+  "description" : "Calculate the clickable point of an element located by [selector]. If the element does not exist, or is not clickable, returns null."
+}, {
+  "domain" : "driver",
+  "method" : "boundingBox",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "RectD?",
+  "description" : "Return the bounding box of an element located by [selector]. If the element does not exist, returns null."
+}, {
+  "domain" : "driver",
+  "method" : "newJsoupSession",
+  "arguments" : [ ],
+  "returnType" : "Connection",
+  "description" : "Create a new Jsoup session with the last page's context, which means, the same headers and cookies."
+}, {
+  "domain" : "driver",
+  "method" : "loadJsoupResource",
+  "arguments" : [ {
+    "name" : "url",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Connection.Response",
+  "description" : "Load the url as a resource with Jsoup rather than browser rendering, with the last page's context, which means, the same headers and cookies."
+}, {
+  "domain" : "driver",
+  "method" : "loadResource",
+  "arguments" : [ {
+    "name" : "url",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "NetworkResourceResponse",
+  "description" : "Load the url as a resource without browser rendering, with the last page's context, which means, the same headers and cookies."
+}, {
+  "domain" : "driver",
+  "method" : "delay",
+  "arguments" : [ {
+    "name" : "millis",
+    "type" : "Long",
+    "defaultValue" : "1000"
+  } ],
+  "returnType" : "Unit",
+  "description" : "Delay for a given amount of time."
+}, {
+  "domain" : "driver",
+  "method" : "delay",
+  "arguments" : [ {
+    "name" : "duration",
+    "type" : "Duration",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "Delay for a given amount of time."
+}, {
+  "domain" : "driver",
+  "method" : "delay",
+  "arguments" : [ {
+    "name" : "duration",
+    "type" : "kotlin.time.Duration",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "Delay for a given amount of time."
+}, {
+  "domain" : "driver",
+  "method" : "pause",
+  "arguments" : [ ],
+  "returnType" : "Unit",
+  "description" : "Force the page pauses all navigations and PENDING resource fetches. If the page loading pauses, the user can still interact with the page, and therefore resources can continue to load."
+}, {
+  "domain" : "driver",
+  "method" : "stop",
+  "arguments" : [ ],
+  "returnType" : "Unit",
+  "description" : "Force the page stop all navigations and RELEASES all resources. Interaction with the stop page results in undefined behavior and the results should not be trusted. If a web driver stops, it can later be used to visit other pages."
+} ]
