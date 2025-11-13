@@ -178,7 +178,7 @@ class AgentStateManager(
         }
     }
 
-    fun trace(state: AgentState?, items: Map<String, Any?>, message: String? = null) {
+    fun addTrace(state: AgentState?, items: Map<String, Any?>, message: String? = null) {
         val items2 = if (state != null) {
             mapOf(
                 "action" to state.method,
@@ -194,8 +194,8 @@ class AgentStateManager(
         _processTrace.add(trace)
     }
 
-    fun trace(message: String) {
-        trace(stateHistory.lastOrNull(), emptyMap(), message)
+    fun addTrace(message: String) {
+        addTrace(stateHistory.lastOrNull(), emptyMap(), message)
     }
 
     fun clearUpHistory(toRemove: Int) {

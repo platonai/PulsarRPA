@@ -1,6 +1,5 @@
 package ai.platon.pulsar.agentic
 
-import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.agent.InferenceEngine
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
@@ -8,7 +7,6 @@ import ai.platon.pulsar.agentic.ai.agent.detail.AgentStateManager
 import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
 import ai.platon.pulsar.agentic.ai.agent.detail.PageStateTracker
 import ai.platon.pulsar.agentic.ai.agent.detail.getContext
-import ai.platon.pulsar.agentic.ai.agent.detail.setContext
 import ai.platon.pulsar.agentic.ai.tta.ContextToAction
 import ai.platon.pulsar.agentic.tools.AgentToolManager
 import ai.platon.pulsar.common.AppPaths
@@ -92,7 +90,7 @@ open class BrowserAgentActor(
             }
         } catch (_: TimeoutCancellationException) {
             val msg = "⏳ Action timed out after ${config.actTimeoutMs}ms: ${action.action}"
-            stateManager.trace(
+            stateManager.addTrace(
                 context.agentState,
                 mapOf(
                     "event" to "actTimeout",
@@ -101,7 +99,7 @@ open class BrowserAgentActor(
                 ),
                 "⏳ act TIMEOUT"
             )
-            ActResult(success = false, message = msg, action = action.action)
+            ActResult.failed(msg, action.action)
         }
     }
 
@@ -218,7 +216,10 @@ open class BrowserAgentActor(
     }
 
     private suspend fun doObserveAct(options: ActionOptions): ActResult {
-        val instruction = promptBuilder.buildObserveActToolUsePrompt(options.action)
+        val options = when {
+            !options.resolve -> options.copy(action = promptBuilder.buildObserveActToolUsePrompt(options.action))
+            else -> options
+        }
 
         val context = requireNotNull(options.getContext()) { "Context is required to doObserveAct" }
 
@@ -231,9 +232,9 @@ open class BrowserAgentActor(
         val observeResults = actionDescription.toObserveResults(context.agentState, context)
 
         if (observeResults.isEmpty()) {
-            val msg = "⚠️ doObserveAct: No actionable element found"
-            stateManager.trace(context.agentState, mapOf("event" to "observeActNoAction"), msg)
-            return ActResult(false, msg, action = instruction)
+            val msg = "⚠️ doObserveAct: No observe result found"
+            stateManager.addTrace(context.agentState, mapOf("event" to "observeActNoAction"), msg)
+            return ActResult.failed(msg, action = options.action)
         }
 
         val resultsToTry = observeResults.take(config.maxResultsToTry)
@@ -259,21 +260,19 @@ open class BrowserAgentActor(
                 continue
             }
 
-            stateManager.trace(
+            stateManager.addTrace(
                 context.agentState,
                 mapOf(
-                    "event" to "actSuccess",
-                    "candidateIndex" to (index + 1),
-                    "candidateTotal" to resultsToTry.size
-                ),
+                    "event" to "actSuccess", "candidateIndex" to (index + 1), "candidateTotal" to resultsToTry.size),
                 "✅ act SUCCESS"
             )
+
             return actResult
         }
 
         val msg = "❌ All ${resultsToTry.size} candidates failed. Last error: $lastError"
-        stateManager.trace(context.agentState, mapOf("event" to "actAllFailed", "candidates" to resultsToTry.size), msg)
-        return ActResult.failed(msg, instruction)
+        stateManager.addTrace(context.agentState, mapOf("event" to "actAllFailed", "candidates" to resultsToTry.size), msg)
+        return ActResult.failed(msg, options.action)
     }
 
     private suspend fun executeToolCall(
@@ -295,7 +294,7 @@ open class BrowserAgentActor(
             val toolCallResult = toolExecutor.execute(actionDescription, "resolve, #$step")
 
             val summary = "✅ ${toolCall.method} executed successfully"
-            stateManager.trace(context.agentState, mapOf("event" to "toolExecOk", "tool" to toolCall.method), summary)
+            stateManager.addTrace(context.agentState, mapOf("event" to "toolExecOk", "tool" to toolCall.method), summary)
             DetailedActResult(actionDescription, toolCallResult, success = true, summary)
         } catch (e: Exception) {
             logger.error(
@@ -305,7 +304,7 @@ open class BrowserAgentActor(
                 e.message,
                 e
             )
-            stateManager.trace(
+            stateManager.addTrace(
                 context.agentState,
                 mapOf("event" to "toolExecUnexpectedFail", "tool" to toolCall.method),
                 "💥 unexpected failure"
