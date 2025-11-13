@@ -2,31 +2,27 @@ package ai.platon.pulsar.agentic.ai.agent.detail
 
 import ai.platon.pulsar.agentic.BrowserAgentActor
 import ai.platon.pulsar.agentic.ai.tta.DetailedActResult
+import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.skeleton.ai.ActionOptions
-import ai.platon.pulsar.skeleton.ai.AgentState
-import ai.platon.pulsar.skeleton.ai.ObserveElement
-import ai.platon.pulsar.skeleton.ai.ProcessTrace
-import ai.platon.pulsar.skeleton.ai.ToolCall
-import ai.platon.pulsar.skeleton.ai.ToolCallResult
+import ai.platon.pulsar.skeleton.ai.*
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.withTimeout
 import java.time.Instant
 import java.util.*
-import kotlin.collections.component1
-import kotlin.collections.component2
 
 class AgentStateManager(
     val agent: BrowserAgentActor,
+    val domService: DomService,
     val pageStateTracker: PageStateTracker,
 ) {
     private val _stateHistory = mutableListOf<AgentState>()
     private val _processTrace = mutableListOf<ProcessTrace>()
     private val config get() = agent.config
-    private val domService get() = agent.domService
 
+    val driver: WebDriver get() = agent.session.getOrCreateBoundDriver()
     val stateHistory: List<AgentState> get() = _stateHistory
     val processTrace: List<ProcessTrace> get() = _processTrace
 
@@ -223,8 +219,8 @@ class AgentStateManager(
      * Collects all tabs from the current browser and marks the active tab.
      */
     private suspend fun injectTabsInfo(baseState: BrowserUseState): BrowserUseState {
-        val currentDriver = agent.activeDriver
-        val browser = agent.activeDriver.browser
+        val currentDriver = this.driver
+        val browser = currentDriver.browser
 
         // fetch all drivers
         browser.listDrivers()

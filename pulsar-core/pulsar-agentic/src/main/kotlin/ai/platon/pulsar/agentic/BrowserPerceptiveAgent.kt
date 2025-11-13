@@ -1,11 +1,7 @@
 package ai.platon.pulsar.agentic
 
-import ai.platon.pulsar.agentic.ai.AgentMessageList
-import ai.platon.pulsar.agentic.ai.PromptBuilder
-import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.agent.detail.*
 import ai.platon.pulsar.agentic.ai.todo.ToDoManager
-import ai.platon.pulsar.agentic.ai.tta.DetailedActResult
 import ai.platon.pulsar.agentic.tools.ActionValidator
 import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
 import ai.platon.pulsar.common.Strings
@@ -18,11 +14,9 @@ import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import kotlinx.coroutines.*
-import org.slf4j.helpers.MessageFormatter
 import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
@@ -103,57 +97,35 @@ open class BrowserPerceptiveAgent constructor(
     private val logger = getLogger(this)
     private val slogger = StructuredAgentLogger(logger, config)
 
-    private val closed = AtomicBoolean(false)
+    protected val closed = AtomicBoolean(false)
     val isClosed: Boolean get() = closed.get()
 
     // A dedicated scope for all agent work so close() can cancel promptly
-    private val agentJob = SupervisorJob()
-    private val agentScope = CoroutineScope(Dispatchers.Default + agentJob)
+    protected val agentJob = SupervisorJob()
+    protected val agentScope = CoroutineScope(Dispatchers.Default + agentJob)
 
-    private val conf get() = session.sessionConfig
+    protected val todo: ToDoManager by lazy { ToDoManager(toolExecutor.fs, config, uuid, slogger) }
+    protected val actionValidator = ActionValidator()
 
-//    private val cta by lazy { ContextToAction(conf) }
-//    internal val inference by lazy { InferenceEngine(session, cta.chatModel) }
-//    internal val domService get() = inference.domService
-//    internal val promptBuilder = PromptBuilder()
-//    internal val toolExecutor by lazy { AgentToolManager(this) }
-
-    private val todo: ToDoManager by lazy { ToDoManager(toolExecutor.fs, config, uuid, slogger) }
-
-//    internal val activeDriver get() = session.getOrCreateBoundDriver()
-
-    // Helper classes for better code organization
-//    internal val pageStateTracker = PageStateTracker(session, config)
-    private val actionValidator = ActionValidator()
-
-    // Enhanced state management
-
-//    internal val stateManager by lazy { AgentStateManager(this, pageStateTracker) }
-    private val performanceMetrics = PerformanceMetrics()
-    private val consecutiveFailureCounter = AtomicInteger(0)
-    private val consecutiveLLMFailureCounter = AtomicInteger(0)
-    private val consecutiveValidationFailureCounter = AtomicInteger(0)
-    private val stepExecutionTimes = ConcurrentHashMap<Int, Long>()
+    protected val performanceMetrics = PerformanceMetrics()
+    protected val consecutiveFailureCounter = AtomicInteger(0)
+    protected val consecutiveLLMFailureCounter = AtomicInteger(0)
+    protected val consecutiveValidationFailureCounter = AtomicInteger(0)
+    protected val stepExecutionTimes = ConcurrentHashMap<Int, Long>()
 
     // New components for better separation of concerns
-    private val circuitBreaker = CircuitBreaker(
+    protected val circuitBreaker = CircuitBreaker(
         maxLLMFailures = config.maxConsecutiveLLMFailures,
         maxValidationFailures = config.maxConsecutiveValidationFailures,
         maxExecutionFailures = 3
     )
-    private val retryStrategy = RetryStrategy(
+    protected val retryStrategy = RetryStrategy(
         maxRetries = config.maxRetries,
         baseDelayMs = config.baseRetryDelayMs,
         maxDelayMs = config.maxRetryDelayMs
     )
-    private val retryCounter = AtomicInteger(0)
-    private val checkpointManager = CheckpointManager(baseDir.resolve("checkpoints"))
-
-    val baseDir get() = toolExecutor.baseDir
-
-    override val uuid = UUID.randomUUID()
-    override val stateHistory: List<AgentState> get() = stateManager.stateHistory
-    override val processTrace: List<ProcessTrace> get() = stateManager.processTrace
+    protected val retryCounter = AtomicInteger(0)
+    protected val checkpointManager = CheckpointManager(baseDir.resolve("checkpoints"))
 
     constructor(
         driver: WebDriver, session: AgenticSession, maxSteps: Int = 100,
@@ -262,32 +234,6 @@ open class BrowserPerceptiveAgent constructor(
         }
     }
 
-    private suspend fun actInCoroutine(action: ActionOptions): ActResult {
-        val context = stateManager.buildInitExecutionContext(action)
-        val action = if (action.agentState == null) {
-            action.copy(agentState = context.agentState)
-        } else action
-
-        return try {
-            withTimeout(config.actTimeoutMs) {
-                val messages = AgentMessageList()
-                doObserveAct(action, messages)
-            }
-        } catch (_: TimeoutCancellationException) {
-            val msg = "⏳ Action timed out after ${config.actTimeoutMs}ms: ${action.action}"
-            stateManager.trace(
-                context.agentState,
-                mapOf(
-                    "event" to "actTimeout",
-                    "timeoutMs" to config.actTimeoutMs,
-                    "instruction" to action.action
-                ),
-                "⏳ act TIMEOUT"
-            )
-            ActResult(success = false, message = msg, action = action.action)
-        }
-    }
-
     /**
      * Executes a tool call derived from a prior observation result. Performs patching (selector/url),
      * validation, and updates AgentState history on success or failure.
@@ -301,44 +247,6 @@ open class BrowserPerceptiveAgent constructor(
             }
         } catch (_: CancellationException) {
             ActResult(false, "USER interrupted", action = observe.agentState.instruction)
-        }
-    }
-
-    private suspend fun actInCoroutine(observe: ObserveResult): ActResult {
-        val instruction = observe.agentState.instruction
-        val agentState = observe.agentState
-        val observeElement = observe.observeElement
-        observeElement ?: return ActResult.failed("No observation", instruction)
-        val actionDescription =
-            observe.actionDescription ?: return ActResult.failed("No action description", instruction)
-        val toolCall = observeElement.toolCall ?: return ActResult.failed("No tool call", instruction)
-        val method = toolCall.method
-
-        return try {
-            val context = stateManager.buildExecutionContext(instruction, "step")
-            val detailedActResult = actInternal(actionDescription, context)
-            val toolCallResult = detailedActResult?.toolCallResult
-
-            logger.info(
-                "✅ Action executed | {} | {}/{} | {}",
-                method, observe.locator, observeElement.cssSelector, observeElement.cssFriendlyExpression
-            )
-
-            val msg = MessageFormatter.arrayFormat(
-                "✅ Action executed | {} | {}/{} | {}",
-                arrayOf(method, observe.locator, observeElement.cssSelector, observeElement.cssFriendlyExpression)
-            )
-
-            stateManager.updateAgentState(agentState, observeElement, toolCall, toolCallResult, msg.message)
-
-            ActResult(success = true, action = toolCall.method, message = msg.message, result = toolCallResult)
-        } catch (e: Exception) {
-            logger.error("❌ observe.act execution failed sid={} msg={}", uuid.toString().take(8), e.message, e)
-            val msg = e.message ?: "Execution failed"
-
-            stateManager.updateAgentState(agentState, observeElement, toolCall, null, msg, success = false)
-
-            ActResult(success = false, message = msg, action = toolCall.method)
         }
     }
 
@@ -359,25 +267,6 @@ open class BrowserPerceptiveAgent constructor(
             }
         } catch (_: CancellationException) {
             ExtractResult(success = false, message = "USER interrupted", data = JsonNodeFactory.instance.objectNode())
-        }
-    }
-
-    private suspend fun extractInCoroutine(options: ExtractOptions): ExtractResult {
-        val instruction = promptBuilder.initExtractUserInstruction(options.instruction)
-        val context = stateManager.buildExecutionContext(instruction, "extract")
-        logExtractStart(context)
-
-        return try {
-            val params = context.createExtractParams(options.schema)
-            val resultNode = inference.extract(params)
-            addHistoryExtract(instruction, context.sid, true)
-            ExtractResult(success = true, message = "OK", data = resultNode)
-        } catch (e: Exception) {
-            logger.error("❌ extract.error requestId={} msg={}", context.sid, e.message, e)
-            addHistoryExtract(instruction, context.sid, false)
-            ExtractResult(
-                success = false, message = e.message ?: "extract failed", data = JsonNodeFactory.instance.objectNode()
-            )
         }
     }
 
@@ -420,19 +309,6 @@ open class BrowserPerceptiveAgent constructor(
     override suspend fun observe(instruction: String): List<ObserveResult> {
         val opts = ObserveOptions(instruction = instruction, returnAction = null)
         return observe(opts)
-    }
-
-    private suspend fun observeInCoroutine(options: ObserveOptions): List<ObserveResult> {
-        val messages = AgentMessageList()
-        val instruction = promptBuilder.initObserveUserInstruction(options.instruction)
-        messages.addUser(instruction, name = "user_request")
-
-        val context = (options.additionalContext["context"]?.get() as? ExecutionContext)
-            ?: throw IllegalStateException("Illegal context")
-
-        val actionDescription = takeScreenshotAndObserve(options, context, messages)
-
-        return actionDescription.toObserveResults(context.agentState)
     }
 
     fun stop() = close()
@@ -526,157 +402,6 @@ open class BrowserPerceptiveAgent constructor(
         }
     }
 
-    private suspend fun doObserveAct(options: ActionOptions, messages: AgentMessageList): ActResult {
-        val instruction = promptBuilder.buildObserveActToolUsePrompt(options.action)
-        messages.addUser(instruction, "user_request")
-
-        val context = stateManager.buildExecutionContext(instruction, "observeAct", agentState = options.agentState)
-
-        val actionDescription = takeScreenshotAndObserve(options, context, messages)
-
-        val observeResults = actionDescription.toObserveResults(context.agentState)
-
-        if (observeResults.isEmpty()) {
-            val msg = "⚠️ doObserveAct: No actionable element found"
-            stateManager.trace(context.agentState, mapOf("event" to "observeActNoAction"), msg)
-            return ActResult(false, msg, action = instruction)
-        }
-
-        val resultsToTry = observeResults.take(config.maxResultsToTry)
-        var lastError: String? = null
-        val actResults = mutableListOf<ActResult>()
-        for ((index, chosen) in resultsToTry.withIndex()) {
-            if (isClosed) return ActResult(false, "USER interrupted", action = instruction)
-            val method = chosen.method?.trim().orEmpty()
-            if (method.isBlank()) {
-                lastError = "LLM returned no method for candidate ${index + 1}"
-                continue
-            }
-
-            val actResult = try {
-                act(chosen).also { actResults.add(it) }
-            } catch (e: Exception) {
-                lastError = "Execution failed for candidate ${index + 1}: ${e.message}"
-                logger.warn("⚠️ Failed to execute candidate {}: {}", index + 1, e.message)
-                continue
-            }
-
-            if (!actResult.success) {
-                lastError = "Candidate ${index + 1} failed: ${actResult.message}"
-                continue
-            }
-
-            stateManager.trace(
-                context.agentState,
-                mapOf(
-                    "event" to "actSuccess",
-                    "candidateIndex" to (index + 1),
-                    "candidateTotal" to resultsToTry.size
-                ),
-                "✅ act SUCCESS"
-            )
-            return actResult
-        }
-
-        val msg = "❌ All ${resultsToTry.size} candidates failed. Last error: $lastError"
-        stateManager.trace(context.agentState, mapOf("event" to "actAllFailed", "candidates" to resultsToTry.size), msg)
-        return ActResult.failed(msg, instruction)
-    }
-
-    private suspend fun takeScreenshotAndObserve(
-        options: Any,
-        context: ExecutionContext,
-        messages: AgentMessageList
-    ): ActionDescription {
-        val interactiveElements = context.agentState.browserUseState.getInteractiveElements()
-
-        val actionDescription = try {
-            domService.addHighlights(interactiveElements)
-
-            if (isClosed) return ActionDescription(context.instruction, exception = CancellationException("closed"))
-            val screenshotB64 = captureScreenshotWithRetry(context)
-
-            val params = when (options) {
-                is ObserveOptions -> context.createObserveParams(options, false, screenshotB64)
-                is ActionOptions -> context.createObserveActParams(screenshotB64)
-                else -> throw IllegalArgumentException("Not supported option")
-            }
-
-            observeAndInference(params, messages)
-        } finally {
-            runCatching { domService.removeHighlights(interactiveElements) }
-                .onFailure { e -> logger.warn("⚠️ Failed to remove highlights: ${e.message}") }
-        }
-
-        return actionDescription
-    }
-
-    private suspend fun observeAndInference(params: ObserveParams, messages: AgentMessageList): ActionDescription {
-        requireNotNull(messages.instruction) { "User instruction is required | $messages" }
-        requireNotNull(params.agentState) { "Agent state has to be available" }
-        require(params.instruction == messages.instruction?.content)
-
-        val instruction = params.instruction
-        val requestId: String = params.requestId
-
-        return try {
-            val actionDescription = withTimeout(config.llmInferenceTimeoutMs) {
-                inference.observe(params, messages)
-            }
-
-            val results = actionDescription.observeElements ?: emptyList()
-            addHistoryObserve(instruction, requestId, results.size, results.isNotEmpty())
-            return actionDescription
-        } catch (e: Exception) {
-            logger.error("❌ observeAct.observe.error requestId={} msg={}", requestId.take(8), e.message, e)
-            addHistoryObserve(instruction, requestId, 0, false)
-            ActionDescription(instruction, exception = e, modelResponse = ModelResponse.INTERNAL_ERROR)
-        }
-    }
-
-    private fun logExtractStart(context: ExecutionContext) {
-        logger.info(
-            "🔍 extract.start requestId={} instruction='{}'",
-            context.sid, PromptBuilder.compactPrompt(context.instruction, 200)
-        )
-    }
-
-    private fun logObserveStart(instruction: String, requestId: String) {
-        logger.info(
-            "👀 observe.start requestId={} instruction='{}'",
-            requestId.take(8),
-            PromptBuilder.compactPrompt(instruction, 200)
-        )
-    }
-
-    private fun addHistoryExtract(instruction: String, requestId: String, success: Boolean) {
-        val compactPrompt = PromptBuilder.compactPrompt(instruction, 200)
-        // Extraction is not a tool action; keep it in record history only
-        stateManager.trace(
-            stateHistory.lastOrNull(),
-            mapOf(
-                "event" to "extract",
-                "requestId" to requestId.take(8),
-                "success" to success
-            ),
-            "🔍 extract $compactPrompt"
-        )
-    }
-
-    private fun addHistoryObserve(instruction: String, requestId: String, size: Int, success: Boolean) {
-        stateManager.trace(
-            stateHistory.lastOrNull(),
-            mapOf(
-                "event" to "observe",
-                "requestId" to requestId.take(8),
-                "success" to success,
-                "size" to size,
-                "instruction" to PromptBuilder.compactPrompt(instruction, 200)
-            ),
-            "👀 observe"
-        )
-    }
-
     /**
      * Enhanced execution with comprehensive error handling and retry mechanisms
      * Returns the final summary with enhanced error handling.
@@ -694,8 +419,7 @@ open class BrowserPerceptiveAgent constructor(
             stateManager.trace(
                 currentContext.agentState,
                 mapOf(
-                    "event" to "resolveAttempt", "attemptNo" to attemptNo,
-                    "attemptsTotal" to (config.maxRetries + 1)
+                    "event" to "resolveAttempt", "attemptNo" to attemptNo, "attemptsTotal" to (config.maxRetries + 1)
                 ),
                 "🔁 resolve ATTEMPT"
             )
@@ -889,7 +613,7 @@ open class BrowserPerceptiveAgent constructor(
         val detailedActResult = actInternal(actionDescription, context)
         if (detailedActResult != null) {
             stateManager.updateAgentState(context.agentState, detailedActResult)
-            updateTodo(context, detailedActResult)
+            updateTodo(context, detailedActResult.actionDescription)
             updatePerformanceMetrics(step, context.timestamp, true)
             val preview = detailedActResult.toolCallResult?.evaluate?.preview
             logger.info("🏁 step.done sid={} step={} tcResult={}", sid, step, preview)
@@ -905,19 +629,19 @@ open class BrowserPerceptiveAgent constructor(
 
     // ===== Helper methods appended for modularization =====
 
-    private fun classifyError(e: Exception, step: Int): PerceptiveAgentError {
+    protected fun classifyError(e: Exception, step: Int): PerceptiveAgentError {
         return retryStrategy.classifyError(e, "step $step")
     }
 
-    private fun shouldRetryError(e: Exception): Boolean {
+    protected fun shouldRetryError(e: Exception): Boolean {
         return retryStrategy.shouldRetry(e)
     }
 
-    private fun calculateRetryDelay(attempt: Int): Long {
+    protected fun calculateRetryDelay(attempt: Int): Long {
         return retryStrategy.calculateDelay(attempt)
     }
 
-    private suspend fun cleanupPartialState(context: ExecutionContext) {
+    protected suspend fun cleanupPartialState(context: ExecutionContext) {
         try {
             logger.info("🧹 cleanup.partial sid={} step={}", context.sid, context.step)
             circuitBreaker.reset()
@@ -1001,18 +725,24 @@ open class BrowserPerceptiveAgent constructor(
         }
     }
 
-    private suspend fun updateTodo(context: ExecutionContext, detailedActResult: DetailedActResult) {
+    protected suspend fun updateTodo(context: ExecutionContext, actResult: ActResult) {
+        val actionDescription = actResult.detail?.actionDescription
+        requireNotNull(actionDescription) { "actionDescription should be set in actResult.additionalVariables" }
+        updateTodo(context, actionDescription)
+    }
+
+    protected suspend fun updateTodo(context: ExecutionContext, actionDescription: ActionDescription) {
         if (!config.enableTodoWrites) return
         val sid = context.sessionId
         val step = context.step
-        val toolCall = detailedActResult.actionDescription.toolCall
-        val observeElement = detailedActResult.actionDescription.observeElement
+        val toolCall = actionDescription.toolCall
+        val observeElement = actionDescription.observeElement
         val shouldWrite = config.todoWriteProgressEveryStep ||
                 (config.todoProgressWriteEveryNSteps > 1 && step % config.todoProgressWriteEveryNSteps == 0)
         if (!shouldWrite) return
         val urlNow0 = activeDriver.currentUrl()
         runCatching {
-            todo.appendProgress(step, toolCall, observeElement, urlNow0, detailedActResult.summary)
+            todo.appendProgress(step, toolCall, observeElement, urlNow0, actionDescription.summary)
             todo.updateProgressCounter()
             if (config.todoEnableAutoCheck) {
                 val tags = todo.buildTags(toolCall, urlNow0)
@@ -1099,7 +829,7 @@ open class BrowserPerceptiveAgent constructor(
         }.onFailure { e -> slogger.logError("🧾❌ Failed to persist transcript", e, context.sessionId) }
     }
 
-    private suspend fun handleConsecutiveNoOps(consecutiveNoOps: Int, context: ExecutionContext): Boolean {
+    protected suspend fun handleConsecutiveNoOps(consecutiveNoOps: Int, context: ExecutionContext): Boolean {
         val step = context.step
         stateManager.trace(
             context.agentState,
@@ -1122,20 +852,20 @@ open class BrowserPerceptiveAgent constructor(
         return false
     }
 
-    private fun calculateConsecutiveNoOpDelay(consecutiveNoOps: Int): Long {
+    protected fun calculateConsecutiveNoOpDelay(consecutiveNoOps: Int): Long {
         val baseDelay = 250L
         val exponentialDelay = baseDelay * consecutiveNoOps
         return min(exponentialDelay, 5000L)
     }
 
-    private fun updatePerformanceMetrics(step: Int, stepStartTime: Instant, success: Boolean) {
+    protected fun updatePerformanceMetrics(step: Int, stepStartTime: Instant, success: Boolean) {
         val stepTime = Duration.between(stepStartTime, Instant.now()).toMillis()
         stepExecutionTimes[step] = stepTime
         performanceMetrics.totalSteps += 1
         if (success) performanceMetrics.successfulActions += 1 else performanceMetrics.failedActions += 1
     }
 
-    private fun calculateAdaptiveDelay(): Long {
+    protected fun calculateAdaptiveDelay(): Long {
         if (!config.enableAdaptiveDelays) return 100L
         val avgStepTime = stepExecutionTimes.values.takeIf { it.isNotEmpty() }?.average() ?: 0.0
         return when {
@@ -1145,7 +875,7 @@ open class BrowserPerceptiveAgent constructor(
         }
     }
 
-    private fun saveCheckpoint(context: ExecutionContext) {
+    protected fun saveCheckpoint(context: ExecutionContext) {
         if (!config.enableCheckpointing) return
         val checkpoint = AgentCheckpoint(
             sessionId = context.sessionId,
@@ -1225,29 +955,15 @@ open class BrowserPerceptiveAgent constructor(
     }
 
     private fun handleResolutionFailure(
-        e: Exception,
-        context: ExecutionContext,
-        startTime: Instant
+        e: Exception, context: ExecutionContext, startTime: Instant
     ): PerceptiveAgentError {
         val executionTime = Duration.between(startTime, Instant.now())
         logger.error(
             "💥 agent.fail sid={} steps={} dur={} err={}",
-            context.sid,
-            context.step,
-            executionTime,
-            e.message,
-            e
+            context.sid, context.step, executionTime, e.message, e
         )
         runCatching { stateManager.removeLastIfStep(context.step) }
-            .onFailure { re ->
-                logger.warn(
-                    "⚠️ rollback failed sid={} step={} msg={}",
-                    context.sid,
-                    context.step,
-                    re.message
-                )
-            }
+            .onFailure { logger.warn("⚠️ rollback failed sid={} step={} msg={}", context.sid, context.step, e.message) }
         return classifyError(e, context.step)
     }
-    // ===== end helper methods =====
 }

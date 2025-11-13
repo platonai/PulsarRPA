@@ -22,12 +22,31 @@ data class ActionOptions(
     val agentState: AgentState? = null,
 )
 
-data class ActResult(
+data class DetailedActResult(
+    val actionDescription: ActionDescription,
+    val toolCallResult: ToolCallResult? = null,
+    val success: Boolean = false,
+    val summary: String? = null,
+) {
+    fun toActResult(): ActResult {
+        return ActResult(
+            action = actionDescription.instruction,
+            success = success,
+            message = summary ?: "",
+            result = toolCallResult,
+            detail = this
+        )
+    }
+}
+
+data class ActResult constructor(
     val success: Boolean,
     val message: String,
 
     val action: String? = null,
-    val result: ToolCallResult? = null
+    val result: ToolCallResult? = null,
+
+    val detail: DetailedActResult? = null
 ) {
     @get:JsonIgnore
     val expression get() = result?.expression
@@ -41,6 +60,10 @@ data class ActResult(
 
     companion object {
         fun failed(message: String, action: String? = null) = ActResult(false, message, action)
+        fun failed(message: String, detail: DetailedActResult) = ActResult(false,
+            message,
+            detail = detail,
+        )
     }
 }
 

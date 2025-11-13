@@ -8,8 +8,9 @@ import ai.platon.pulsar.agentic.ai.agent.detail.AgentStateManager
 import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
 import ai.platon.pulsar.agentic.ai.agent.detail.PageStateTracker
 import ai.platon.pulsar.agentic.ai.tta.ContextToAction
-import ai.platon.pulsar.agentic.ai.tta.DetailedActResult
 import ai.platon.pulsar.agentic.tools.AgentToolManager
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.NotSupportedException
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.ModelResponse
@@ -20,36 +21,44 @@ import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
 import org.slf4j.helpers.MessageFormatter
+import java.nio.file.Files
+import java.nio.file.Path
 import java.time.Instant
 import java.util.*
-import java.util.concurrent.atomic.AtomicBoolean
 
 open class BrowserAgentActor(
     val session: AgenticSession,
     val config: AgentConfig
 ) : PerceptiveAgent {
     private val logger = getLogger(BrowserAgentActor::class)
-    private val closed = AtomicBoolean(false)
+    private val _startTime: Instant = Instant.now()
+    private val _uuid: UUID = UUID.randomUUID()
+    private val _baseDir: Path = AppPaths.get("agent")
+        .resolve(DateTimes.PATH_SAFE_FORMAT_101.format(_startTime))
+        .resolve(_uuid.toString())
 
-    internal val cta by lazy { ContextToAction(session.sessionConfig) }
-    internal val inference by lazy { InferenceEngine(session, cta.chatModel) }
-    internal val domService get() = inference.domService
-    internal val promptBuilder = PromptBuilder()
+    protected val cta by lazy { ContextToAction(session.sessionConfig) }
+    protected val inference by lazy { InferenceEngine(session, cta.chatModel) }
+    protected val domService get() = inference.domService
+    protected val promptBuilder = PromptBuilder()
 
-    internal val toolExecutor by lazy { AgentToolManager(this) }
-
-    internal val activeDriver get() = session.getOrCreateBoundDriver()
+    protected val toolExecutor by lazy { AgentToolManager(_baseDir, this) }
 
     // Helper classes for better code organization
-    internal val pageStateTracker = PageStateTracker(session, config)
-    internal val stateManager by lazy { AgentStateManager(this, pageStateTracker) }
+    protected val pageStateTracker = PageStateTracker(session, config)
+    protected val stateManager by lazy { AgentStateManager(this, domService, pageStateTracker) }
 
-    val startTime = Instant.now()
-    // val isClosed get() = closed.get()
-
-    override val uuid = UUID.randomUUID()
+    override val uuid get() = _uuid
     override val stateHistory: List<AgentState> get() = stateManager.stateHistory
     override val processTrace: List<ProcessTrace> get() = stateManager.processTrace
+
+    val activeDriver get() = session.getOrCreateBoundDriver()
+    val startTime get() = _startTime
+    val baseDir: Path get() = _baseDir
+
+    init {
+        Files.createDirectories(baseDir)
+    }
 
     override suspend fun resolve(action: ActionOptions): ActResult {
         throw NotSupportedException("Not supported, use stateful agents instead, such as BrowserPerceptiveAgent, DelegatingPerceptiveAgent, etc.")
@@ -102,10 +111,10 @@ open class BrowserAgentActor(
         val instruction = observe.agentState.instruction
         val agentState = observe.agentState
         val observeElement = observe.observeElement
-        observeElement ?: return ActResult.Companion.failed("No observation", instruction)
+        observeElement ?: return ActResult.failed("No observation", instruction)
         val actionDescription =
-            observe.actionDescription ?: return ActResult.Companion.failed("No action description", instruction)
-        val toolCall = observeElement.toolCall ?: return ActResult.Companion.failed("No tool call", instruction)
+            observe.actionDescription ?: return ActResult.failed("No action description", instruction)
+        val toolCall = observeElement.toolCall ?: return ActResult.failed("No tool call", instruction)
         val method = toolCall.method
 
         return try {
@@ -125,14 +134,15 @@ open class BrowserAgentActor(
 
             stateManager.updateAgentState(agentState, observeElement, toolCall, toolCallResult, msg.message)
 
-            ActResult(success = true, action = toolCall.method, message = msg.message, result = toolCallResult)
+            // ActResult(success = true, action = toolCall.method, message = msg.message, result = toolCallResult, actionDescription = actionDescription)
+            detailedActResult?.toActResult() ?: ActResult.failed("No detailed act result", instruction)
         } catch (e: Exception) {
             logger.error("❌ observe.act execution failed sid={} msg={}", uuid.toString().take(8), e.message, e)
             val msg = e.message ?: "Execution failed"
 
             stateManager.updateAgentState(agentState, observeElement, toolCall, null, msg, success = false)
 
-            ActResult(success = false, message = msg, action = toolCall.method)
+            ActResult.failed(msg, toolCall.method)
         }
     }
 

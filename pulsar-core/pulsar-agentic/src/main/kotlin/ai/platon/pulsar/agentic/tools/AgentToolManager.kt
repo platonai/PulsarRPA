@@ -4,8 +4,6 @@ import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.BrowserAgentActor
 import ai.platon.pulsar.agentic.common.AgentFileSystem
 import ai.platon.pulsar.agentic.tools.executors.*
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.TcEvaluate
@@ -15,25 +13,16 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
-import java.nio.file.Files
 import java.nio.file.Path
 
 class AgentToolManager(
+    val baseDir: Path,
     val agent: BrowserAgentActor,
 ) {
     private val logger = getLogger(AgentToolManager::class)
 
-    val baseDir: Path = AppPaths.get("agent")
-        .resolve(DateTimes.PATH_SAFE_FORMAT_101.format(agent.startTime))
-        .resolve(agent.uuid.toString())
-    val fs: AgentFileSystem
-    val system: SystemToolExecutor
-
-    init {
-        Files.createDirectories(baseDir)
-        fs = AgentFileSystem(baseDir)
-        system = SystemToolExecutor(this)
-    }
+    val fs: AgentFileSystem = AgentFileSystem(baseDir)
+    val system: SystemToolExecutor = SystemToolExecutor(this)
 
     val session: AgenticSession get() = agent.session
     val driver: WebDriver get() = session.getOrCreateBoundDriver()

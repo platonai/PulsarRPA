@@ -2,10 +2,9 @@ package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
-import ai.platon.pulsar.skeleton.ai.ActResult
 import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.AgentState
-import ai.platon.pulsar.skeleton.ai.ToolCallResult
+import ai.platon.pulsar.skeleton.ai.DetailedActResult
 
 data class AgentResponseAction(
     val domain: String? = null,
@@ -57,22 +56,6 @@ data class ObserveResponseElement(
     val nextGoal: String? = null,
 )
 
-data class DetailedActResult(
-    val actionDescription: ActionDescription,
-    val toolCallResult: ToolCallResult? = null,
-    val success: Boolean = false,
-    val summary: String? = null,
-) {
-    fun toActResult(): ActResult {
-        return ActResult(
-            action = actionDescription.instruction,
-            success = success,
-            message = summary ?: "",
-            result = toolCallResult
-        )
-    }
-}
-
 data class AgentAction(
     val step: Int,
     val userInstruction: String,
@@ -81,7 +64,7 @@ data class AgentAction(
     val agentState: AgentState,
     val browserUseState: BrowserUseState? = null,
     val actionDescription: ActionDescription? = null,
-    val actDetailedResult: DetailedActResult? = null,
+    val detailedActResult: DetailedActResult? = null,
 
     val prevAction: AgentAction? = null,
     val nextAction: AgentAction? = null,

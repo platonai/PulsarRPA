@@ -1,45 +1,37 @@
 package ai.platon.pulsar.agentic
 
-import ai.platon.pulsar.agentic.ai.agent.detail.*
-import ai.platon.pulsar.agentic.ai.todo.ToDoManager
+import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
+import ai.platon.pulsar.agentic.ai.agent.detail.PerceptiveAgentError
+import ai.platon.pulsar.agentic.ai.agent.detail.StructuredAgentLogger
 import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.external.ChatModelException
 import ai.platon.pulsar.external.ResponseState
-import ai.platon.pulsar.skeleton.ai.*
+import ai.platon.pulsar.skeleton.ai.ActResult
+import ai.platon.pulsar.skeleton.ai.ActionOptions
+import ai.platon.pulsar.skeleton.ai.AgentState
+import ai.platon.pulsar.skeleton.ai.ProcessTrace
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
-import java.io.IOException
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.time.Duration
 import java.time.Instant
-import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.TimeoutException
-import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
 import kotlin.math.pow
 
 /**
  * A reasoning agent that uses [observe -> act -> observe -> act -> ...] pattern to resolve browser use problems.
  * */
-class BrowserReasoningAgent constructor(
+class ObservingBrowserAgent constructor(
     session: AgenticSession,
     maxSteps: Int = 100,
     config: AgentConfig = AgentConfig(maxSteps = maxSteps)
 ) : BrowserPerceptiveAgent(session, maxSteps, config) {
     private val logger = getLogger(this)
     private val slogger = StructuredAgentLogger(logger, config)
-
-    private val todo: ToDoManager = ToDoManager(toolExecutor.fs, config, uuid, slogger)
-
-    private val performanceMetrics = PerformanceMetrics()
-    private val retryCounter = AtomicInteger(0)
-    private val consecutiveFailureCounter = AtomicInteger(0)
-    private val stepExecutionTimes = ConcurrentHashMap<Int, Long>()
 
     override val stateHistory: List<AgentState> get() = stateManager.stateHistory
     override val processTrace: List<ProcessTrace> get() = stateManager.processTrace
@@ -274,7 +266,13 @@ class BrowserReasoningAgent constructor(
                     consecutiveNoOps++
                 }
 
-                logger.info("▶️ step.exec sid={} step={}/{} noOps={}", sid, context.step, config.maxSteps, consecutiveNoOps)
+                logger.info(
+                    "▶️ step.exec sid={} step={}/{} noOps={}",
+                    sid,
+                    context.step,
+                    config.maxSteps,
+                    consecutiveNoOps
+                )
                 if (logger.isDebugEnabled) {
                     logger.debug("🧩 dom={}", DomDebug.summarizeStr(context.agentState.browserUseState.domState, 5))
                 }
@@ -289,7 +287,7 @@ class BrowserReasoningAgent constructor(
                 //**
 
                 // Generate the action for this step
-                val observeResults = observe(context.createObserveOptions())
+                val observeResults = observe(context.createObserveActOptions())
 
                 observeResults.forEach { result ->
                     val actionDescription = result.actionDescription
@@ -319,6 +317,7 @@ class BrowserReasoningAgent constructor(
 
                     if (actResult.success) {
                         // updateAgentState(context.agentState, actResult)
+                        stateManager.updateAgentState(context.agentState, actResult.detail!!)
 
                         updateTodo(context, actResult)
 
@@ -349,82 +348,8 @@ class BrowserReasoningAgent constructor(
         } catch (e: Exception) {
             val executionTime = Duration.between(startTime, Instant.now())
             logger.error("💥 agent.fail sid={} steps={} dur={} err={}", sid, context.step, executionTime, e.message, e)
-            throw classifyError(e, context.step)
+            throw retryStrategy.classifyError(e, "step ${context.step}")
         }
-    }
-
-    private suspend fun updateTodo(context: ExecutionContext, actResult: ActResult) {
-        val sid = context.sessionId
-        val step = context.step
-    }
-
-    /**
-     * Classifies errors for appropriate retry strategies
-     */
-    private fun classifyError(e: Exception, step: Int): PerceptiveAgentError {
-        return when (e) {
-            is PerceptiveAgentError -> e
-            is TimeoutException -> PerceptiveAgentError.TimeoutError("⏳ Step $step timed out", e)
-            is SocketTimeoutException -> PerceptiveAgentError.TimeoutError("⏳ Network timeout at step $step", e)
-            is ConnectException -> PerceptiveAgentError.TransientError("🔄 Connection failed at step $step", e)
-            is ChatModelException -> PerceptiveAgentError.TimeoutError("⏳ Chat model timeout at step $step", e)
-            is UnknownHostException -> PerceptiveAgentError.TransientError(
-                "🔄 DNS resolution failed at step $step", e
-            )
-
-            is IOException -> {
-                when {
-                    e.message?.contains("connection") == true -> PerceptiveAgentError.TransientError(
-                        "🔄 Connection issue at step $step", e
-                    )
-
-                    e.message?.contains("timeout") == true -> PerceptiveAgentError.TimeoutError(
-                        "⏳ Network timeout at step $step", e
-                    )
-
-                    else -> PerceptiveAgentError.TransientError("🔄 IO error at step $step: ${e.message}", e)
-                }
-            }
-
-            is IllegalArgumentException -> PerceptiveAgentError.ValidationError(
-                "🚫 Validation error at step $step: ${e.message}", e
-            )
-
-            is IllegalStateException -> PerceptiveAgentError.PermanentError(
-                "🛑 Invalid state at step $step: ${e.message}", e
-            )
-
-            else -> PerceptiveAgentError.TransientError("💥 Unexpected error at step $step: ${e.message}", e)
-        }
-    }
-
-    /**
-     * Determines if an error should trigger a retry
-     */
-    private fun shouldRetryError(e: Exception): Boolean {
-        return when (e) {
-            is PerceptiveAgentError.TransientError, is PerceptiveAgentError.TimeoutError -> true
-            is SocketTimeoutException, is ConnectException, is UnknownHostException -> true
-
-            else -> false
-        }
-    }
-
-    /**
-     * Calculates retry delay with exponential backoff and jitter
-     */
-    private fun calculateRetryDelay(attempt: Int): Long {
-        // Use multiplicative jitter so delay is monotonic w.r.t attempt
-        val baseExp = config.baseRetryDelayMs * (2.0.pow(attempt.toDouble()))
-        val jitterPercent = (0..30).random() / 100.0 // 0%..30% multiplicative jitter
-        val withJitter = baseExp * (1.0 + jitterPercent)
-        return min(withJitter.toLong(), config.maxRetryDelayMs)
-    }
-
-    private fun calculateConsecutiveNoOpDelay(consecutiveNoOps: Int): Long {
-        val baseDelay = 250L
-        val exponentialDelay = baseDelay * consecutiveNoOps
-        return min(exponentialDelay, 5000L)
     }
 
     private fun performMemoryCleanup(context: ExecutionContext) {
@@ -458,22 +383,5 @@ class BrowserReasoningAgent constructor(
         val delayMs = calculateConsecutiveNoOpDelay(consecutiveNoOps)
         delay(delayMs)
         return false
-    }
-
-    private fun updatePerformanceMetrics(step: Int, stepStartTime: Instant, success: Boolean) {
-        val stepTime = Duration.between(stepStartTime, Instant.now()).toMillis()
-        stepExecutionTimes[step] = stepTime
-        performanceMetrics.totalSteps += 1
-        if (success) performanceMetrics.successfulActions += 1 else performanceMetrics.failedActions += 1
-    }
-
-    private fun calculateAdaptiveDelay(): Long {
-        if (!config.enableAdaptiveDelays) return 100L
-        val avgStepTime = stepExecutionTimes.values.takeIf { it.isNotEmpty() }?.average() ?: 0.0
-        return when {
-            avgStepTime < 500 -> 50L
-            avgStepTime < 2000 -> 100L
-            else -> 200L
-        }
     }
 }

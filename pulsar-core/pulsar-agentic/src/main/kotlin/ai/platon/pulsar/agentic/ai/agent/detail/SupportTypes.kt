@@ -67,6 +67,12 @@ data class ExecutionContext(
         return options
     }
 
+    fun createObserveActOptions(): ObserveOptions {
+        val options = ObserveOptions(instruction = this.instruction, returnAction = true)
+        options.additionalContext["context"] = WeakReference(this)
+        return options
+    }
+
     fun createObserveParams(options: ObserveOptions, fromAct: Boolean, screenshotB64: String? = null): ObserveParams {
         return ObserveParams(
             instruction = instruction,
