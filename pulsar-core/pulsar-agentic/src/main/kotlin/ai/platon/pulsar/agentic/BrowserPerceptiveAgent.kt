@@ -414,7 +414,7 @@ open class BrowserPerceptiveAgent constructor(
         try {
             val action = initActionOptions.copy(resolve = true)
             while (!isClosed && context.step < config.maxSteps) {
-                val stepResult = processSingleStep(action, context, consecutiveNoOps)
+                val stepResult = step(action, context, consecutiveNoOps)
                 context = stepResult.context
                 consecutiveNoOps = stepResult.consecutiveNoOps
                 if (stepResult.shouldStop) break
@@ -586,7 +586,7 @@ open class BrowserPerceptiveAgent constructor(
         val shouldStop: Boolean
     )
 
-    protected open suspend fun processSingleStep(
+    protected open suspend fun step(
         action: ActionOptions,
         ctxIn: ExecutionContext,
         noOpsIn: Int
@@ -619,7 +619,7 @@ open class BrowserPerceptiveAgent constructor(
         }
 
         consecutiveNoOps = 0
-        val detailedActResult = actInternal(actionDescription, context)
+        val detailedActResult = executeToolCall(actionDescription, context)
         if (detailedActResult != null) {
             stateManager.updateAgentState(context.agentState, detailedActResult)
             updateTodo(context, detailedActResult.actionDescription)
@@ -637,21 +637,13 @@ open class BrowserPerceptiveAgent constructor(
         return StepProcessingResult(context, consecutiveNoOps, false)
     }
 
-    // ===== Helper methods appended for modularization =====
+    protected fun classifyError(e: Exception, step: Int) = retryStrategy.classifyError(e, "step $step")
 
-    protected fun classifyError(e: Exception, step: Int): PerceptiveAgentError {
-        return retryStrategy.classifyError(e, "step $step")
-    }
+    protected fun shouldRetryError(e: Exception) = retryStrategy.shouldRetry(e)
 
-    protected fun shouldRetryError(e: Exception): Boolean {
-        return retryStrategy.shouldRetry(e)
-    }
+    protected fun calculateRetryDelay(attempt: Int) = retryStrategy.calculateDelay(attempt)
 
-    protected fun calculateRetryDelay(attempt: Int): Long {
-        return retryStrategy.calculateDelay(attempt)
-    }
-
-    protected suspend fun cleanupPartialState(context: ExecutionContext) {
+    protected fun cleanupPartialState(context: ExecutionContext) {
         try {
             logger.info("🧹 cleanup.partial sid={} step={}", context.sid, context.step)
             circuitBreaker.reset()
@@ -665,7 +657,7 @@ open class BrowserPerceptiveAgent constructor(
         }
     }
 
-    private suspend fun actInternal(
+    private suspend fun executeToolCall(
         actionDescription: ActionDescription,
         context: ExecutionContext
     ): DetailedActResult? {

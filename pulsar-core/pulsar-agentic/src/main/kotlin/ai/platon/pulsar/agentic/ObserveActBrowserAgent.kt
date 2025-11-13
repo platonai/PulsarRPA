@@ -13,15 +13,7 @@ class ObserveActBrowserAgent constructor(
 ) : BrowserPerceptiveAgent(session, maxSteps, config) {
     private val logger = getLogger(this)
 
-    override suspend fun processSingleStep(
-        action: ActionOptions,
-        ctxIn: ExecutionContext,
-        noOpsIn: Int
-    ): StepProcessingResult {
-        return processSingleStep1(action, ctxIn, noOpsIn)
-    }
-
-    private suspend fun processSingleStep1(
+    override suspend fun step(
         action: ActionOptions,
         ctxIn: ExecutionContext,
         noOpsIn: Int
