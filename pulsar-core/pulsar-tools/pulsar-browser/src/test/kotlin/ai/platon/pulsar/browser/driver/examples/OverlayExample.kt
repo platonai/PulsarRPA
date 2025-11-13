@@ -7,9 +7,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -26,7 +26,7 @@ import com.google.gson.GsonBuilder
 
 class OverlayExample : BrowserExampleBase() {
 
-    override val testUrl: String = "https://www.amazon.com/"
+    override val testUrl: String = "https://www.amazon.com/dp/B08PP5MSVB"
 
     override suspend fun run() {
         page.enable()
@@ -45,9 +45,9 @@ class OverlayExample : BrowserExampleBase() {
 //            overlay.highlightRect(rect.x.toInt(), rect.y.toInt(), rect.width.toInt(), rect.height.toInt(), highlightConfig)
 //        }
         page.navigate(testUrl)
-        page.onDocumentOpened {
+        page.onFrameAttached {
             page.captureScreenshot()
-            highlight("#nav-global-location-slot")
+            highlight("#productTitle")
         }
     }
 
