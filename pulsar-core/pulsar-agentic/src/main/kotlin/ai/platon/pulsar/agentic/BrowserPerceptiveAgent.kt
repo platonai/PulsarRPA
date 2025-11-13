@@ -27,6 +27,7 @@ import java.time.Duration
 import java.time.Instant
 import java.util.*
 import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.min
 import kotlin.time.Duration.Companion.hours
@@ -105,6 +106,13 @@ open class BrowserPerceptiveAgent constructor(
     private val logger = getLogger(this)
     private val slogger = StructuredAgentLogger(logger, config)
 
+    private val closed = AtomicBoolean(false)
+    val isClosed: Boolean get() = closed.get()
+
+    // A dedicated scope for all agent work so close() can cancel promptly
+    private val agentJob = SupervisorJob()
+    private val agentScope = CoroutineScope(Dispatchers.Default + agentJob)
+
     private val conf get() = session.sessionConfig
 
     private val cta by lazy { ContextToAction(conf) }
@@ -182,9 +190,17 @@ open class BrowserPerceptiveAgent constructor(
      * stateHistory focused on executed tool actions only.
      */
     override suspend fun resolve(action: ActionOptions): ActResult {
+        if (isClosed) return ActResult(false, "USER interrupted", action = action.action)
+        return try {
+            withContext(agentScope.coroutineContext) { resolveInCoroutine(action) }
+        } catch (_: CancellationException) {
+            ActResult(false, "USER interrupted", action = action.action)
+        }
+    }
+
+    private suspend fun resolveInCoroutine(action: ActionOptions): ActResult {
         val instruction = action.action
         val context = stateManager.buildInitExecutionContext(action)
-        val sessionId = context.sessionId
         val sessionStartTime = context.timestamp
 
         // Add start history for better traceability (meta record only)
@@ -249,9 +265,17 @@ open class BrowserPerceptiveAgent constructor(
      * one successful execution is recorded in stateHistory.
      */
     override suspend fun act(action: ActionOptions): ActResult {
+        if (isClosed) return ActResult(false, "USER interrupted", action = action.action)
+        return try {
+            withContext(agentScope.coroutineContext) { actInCoroutine(action) }
+        } catch (_: CancellationException) {
+            ActResult(false, "USER interrupted", action = action.action)
+        }
+    }
+
+    private suspend fun actInCoroutine(action: ActionOptions): ActResult {
         val context = stateManager.buildInitExecutionContext(action)
         val action = if (action.agentState == null) {
-            // action.agentState = context.agentState
             action.copy(agentState = context.agentState)
         } else action
 
@@ -280,6 +304,15 @@ open class BrowserPerceptiveAgent constructor(
      * validation, and updates AgentState history on success or failure.
      */
     override suspend fun act(observe: ObserveResult): ActResult {
+        if (isClosed) return ActResult(false, "USER interrupted", action = observe.agentState.instruction)
+        return try {
+            withContext(agentScope.coroutineContext) { actInCoroutine(observe) }
+        } catch (_: CancellationException) {
+            ActResult(false, "USER interrupted", action = observe.agentState.instruction)
+        }
+    }
+
+    private suspend fun actInCoroutine(observe: ObserveResult): ActResult {
         val instruction = observe.agentState.instruction
         val agentState = observe.agentState
         val observeElement = observe.observeElement
@@ -290,17 +323,8 @@ open class BrowserPerceptiveAgent constructor(
         val method = toolCall.method
 
         return try {
-            // Reuse act(ActionDescription, ExecutionContext)
-
             val context = stateManager.buildExecutionContext(instruction, "step")
-
-            ///////////////
-            // act
-
             val detailedActResult = actInternal(actionDescription, context)
-            // TODO: handle multiple actions
-            // actionDescription.toActionDescriptions().map { actInternal(it, context) }
-
             val toolCallResult = detailedActResult?.toolCallResult
 
             logger.info(
@@ -313,9 +337,6 @@ open class BrowserPerceptiveAgent constructor(
                 arrayOf(method, observe.locator, observeElement.cssSelector, observeElement.cssFriendlyExpression)
             )
 
-            // Record exactly once for this executed action
-
-            // Keep reference to previous AgentState for next loop
             stateManager.updateAgentState(agentState, observeElement, toolCall, toolCallResult, msg.message)
 
             ActResult(success = true, action = toolCall.method, message = msg.message, result = toolCallResult)
@@ -323,7 +344,6 @@ open class BrowserPerceptiveAgent constructor(
             logger.error("❌ observe.act execution failed sid={} msg={}", uuid.toString().take(8), e.message, e)
             val msg = e.message ?: "Execution failed"
 
-            // Record failed action attempt once
             stateManager.updateAgentState(agentState, observeElement, toolCall, null, msg, success = false)
 
             ActResult(success = false, message = msg, action = toolCall.method)
@@ -335,6 +355,15 @@ open class BrowserPerceptiveAgent constructor(
      * two-stage LLM calls (extract + metadata) and merges results with token/time metrics.
      */
     override suspend fun extract(options: ExtractOptions): ExtractResult {
+        if (isClosed) return ExtractResult(success = false, message = "USER interrupted", data = JsonNodeFactory.instance.objectNode())
+        return try {
+            withContext(agentScope.coroutineContext) { extractInCoroutine(options) }
+        } catch (_: CancellationException) {
+            ExtractResult(success = false, message = "USER interrupted", data = JsonNodeFactory.instance.objectNode())
+        }
+    }
+
+    private suspend fun extractInCoroutine(options: ExtractOptions): ExtractResult {
         val instruction = promptBuilder.initExtractUserInstruction(options.instruction)
         val context = stateManager.buildExecutionContext(instruction, "extract")
         logExtractStart(context)
@@ -382,9 +411,17 @@ open class BrowserPerceptiveAgent constructor(
      * candidate elements and potential actions (if returnAction=true).
      */
     override suspend fun observe(options: ObserveOptions): List<ObserveResult> {
-        val messages = AgentMessageList()
+        if (isClosed) return emptyList()
+        return withContext(agentScope.coroutineContext) { observeInCoroutine(options) }
+    }
 
-        // returns options.instruction if it's not empty, or the default
+    override suspend fun observe(instruction: String): List<ObserveResult> {
+        val opts = ObserveOptions(instruction = instruction, returnAction = null)
+        return observe(opts)
+    }
+
+    private suspend fun observeInCoroutine(options: ObserveOptions): List<ObserveResult> {
+        val messages = AgentMessageList()
         val instruction = promptBuilder.initObserveUserInstruction(options.instruction)
         messages.addUser(instruction, name = "user_request")
 
@@ -396,16 +433,17 @@ open class BrowserPerceptiveAgent constructor(
         return actionDescription.toObserveResults(context.agentState)
     }
 
-    // Wrapper override to satisfy interface (observe by instruction string)
-    override suspend fun observe(instruction: String): List<ObserveResult> {
-        val opts = ObserveOptions(instruction = instruction, returnAction = null)
-        return observe(opts)
-    }
-
     fun stop() = close()
 
     override fun close() {
-
+        if (closed.compareAndSet(false, true)) {
+            runCatching { agentJob.cancel(CancellationException("USER interrupted via close()")) }
+            // Best-effort trace for visibility; avoid throwing
+            runCatching {
+                val last = stateHistory.lastOrNull()
+                stateManager.trace(last, mapOf("event" to "userClose"), "🛑 USER CLOSE")
+            }
+        }
     }
 
     /**
@@ -416,8 +454,8 @@ open class BrowserPerceptiveAgent constructor(
     }
 
     protected suspend fun generateActions(context: ExecutionContext): ActionDescription {
-        // Optional screenshot
         val screenshotB64 = if (context.step % config.screenshotEveryNSteps == 0) {
+            if (isClosed) return ActionDescription(context.instruction, exception = CancellationException("closed"))
             captureScreenshotWithRetry(context)
         } else null
         context.screenshotB64 = screenshotB64
@@ -426,6 +464,7 @@ open class BrowserPerceptiveAgent constructor(
         val messages = promptBuilder.buildResolveObserveMessageList(context, stateHistory)
 
         return try {
+            if (isClosed) throw CancellationException("closed")
             val action = cta.generate(messages, context)
             circuitBreaker.recordSuccess(CircuitBreaker.FailureType.LLM_FAILURE)
             consecutiveLLMFailureCounter.set(0) // Keep for backward compatibility
@@ -434,7 +473,6 @@ open class BrowserPerceptiveAgent constructor(
             val failures = try {
                 circuitBreaker.recordFailure(CircuitBreaker.FailureType.LLM_FAILURE)
             } catch (cbError: CircuitBreakerTrippedException) {
-                // Re-throw as permanent error
                 throw PerceptiveAgentError.PermanentError(cbError.message ?: "Circuit breaker tripped", cbError)
             }
 
@@ -470,13 +508,17 @@ open class BrowserPerceptiveAgent constructor(
         var context = initContext
         val startTime = Instant.now()
         try {
-            while (context.step < config.maxSteps) {
+            while (!isClosed && context.step < config.maxSteps) {
                 val stepResult = processSingleStep(action, context, consecutiveNoOps)
                 context = stepResult.context
                 consecutiveNoOps = stepResult.consecutiveNoOps
                 if (stepResult.shouldStop) break
             }
+
             return buildFinalActResult(initContext.instruction, context, startTime)
+        } catch (_: CancellationException) {
+            logger.info("""🛑 [USER interrupted] sid={} steps={}""", context.sid, context.step)
+            return ActResult(success = false, message = "USER interrupted", action = initContext.instruction)
         } catch (e: Exception) {
             throw handleResolutionFailure(e, context, startTime)
         }
@@ -487,25 +529,6 @@ open class BrowserPerceptiveAgent constructor(
         messages.addUser(instruction, "user_request")
 
         val context = stateManager.buildExecutionContext(instruction, "observeAct", agentState = options.agentState)
-
-        /////////////////////
-        // I - Observe
-//        val interactiveElements = context.agentState.browserUseState.getInteractiveElements()
-//
-//        val actionDescription = try {
-//            domService.addHighlights(interactiveElements)
-//
-//            // Optional screenshot
-//            val screenshotB64 = captureScreenshotWithRetry(context)
-//
-//            // Run observe with returnAction=true and fromAct=true so LLM returns an actionable method/args
-//            val params = context.createObserveActParams(screenshotB64)
-//            doObserve(params, messages)
-//        } finally {
-//            // Ensure highlights are always removed even on exception
-//            runCatching { domService.removeHighlights(interactiveElements) }
-//                .onFailure { e -> logger.warn("⚠️ Failed to remove highlights: ${e.message}") }
-//        }
 
         val actionDescription = takeScreenshotAndObserve(options, context, messages)
 
@@ -521,14 +544,12 @@ open class BrowserPerceptiveAgent constructor(
         var lastError: String? = null
         val actResults = mutableListOf<ActResult>()
         for ((index, chosen) in resultsToTry.withIndex()) {
+            if (isClosed) return ActResult(false, "USER interrupted", action = instruction)
             val method = chosen.method?.trim().orEmpty()
             if (method.isBlank()) {
                 lastError = "LLM returned no method for candidate ${index + 1}"
                 continue
             }
-
-            /////////////////////
-            // II - Act
 
             val actResult = try {
                 act(chosen).also { actResults.add(it) }
@@ -543,7 +564,6 @@ open class BrowserPerceptiveAgent constructor(
                 continue
             }
 
-            // Success! Return with original action text (act(chosen) already recorded one history entry)
             stateManager.trace(
                 context.agentState,
                 mapOf(
@@ -556,7 +576,6 @@ open class BrowserPerceptiveAgent constructor(
             return actResult
         }
 
-        // All candidates failed
         val msg = "❌ All ${resultsToTry.size} candidates failed. Last error: $lastError"
         stateManager.trace(context.agentState, mapOf("event" to "actAllFailed", "candidates" to resultsToTry.size), msg)
         return ActResult.failed(msg, instruction)
@@ -572,10 +591,9 @@ open class BrowserPerceptiveAgent constructor(
         val actionDescription = try {
             domService.addHighlights(interactiveElements)
 
-            // Optional screenshot
+            if (isClosed) return ActionDescription(context.instruction, exception = CancellationException("closed"))
             val screenshotB64 = captureScreenshotWithRetry(context)
 
-            // Do OBSERVE
             val params = when (options) {
                 is ObserveOptions -> context.createObserveParams(options, false, screenshotB64)
                 is ActionOptions -> context.createObserveActParams(screenshotB64)
@@ -584,7 +602,6 @@ open class BrowserPerceptiveAgent constructor(
 
             observeAndInference(params, messages)
         } finally {
-            // Ensure highlights are always removed even on exception
             runCatching { domService.removeHighlights(interactiveElements) }
                 .onFailure { e -> logger.warn("⚠️ Failed to remove highlights: ${e.message}") }
         }
@@ -1002,6 +1019,7 @@ open class BrowserPerceptiveAgent constructor(
         val attempts = 2
         var lastEx: Exception? = null
         for (i in 1..attempts) {
+            if (isClosed) return null
             try {
                 val screenshot = activeDriver.captureScreenshot()
                 if (screenshot != null) {
@@ -1019,6 +1037,7 @@ open class BrowserPerceptiveAgent constructor(
             } catch (e: Exception) {
                 lastEx = e
                 logger.warn("📸⚠️ screenshot attempt {} failed: {}", i, e.message)
+                if (isClosed) return null
                 delay(200)
             }
         }
@@ -1120,6 +1139,7 @@ open class BrowserPerceptiveAgent constructor(
             logger.info("⛔ noop.stop sid={} step={} limit={}", context.sid, step, config.consecutiveNoOpLimit)
             return true
         }
+        if (isClosed) return true
         val delayMs = calculateConsecutiveNoOpDelay(consecutiveNoOps)
         delay(delayMs)
         val job = currentCoroutineContext()[Job]
@@ -1211,6 +1231,16 @@ open class BrowserPerceptiveAgent constructor(
         startTime: Instant
     ): ActResult {
         val executionTime = Duration.between(startTime, Instant.now())
+
+        if (closed.get()) {
+            logger.info("""🛑 [USER interrupted] sid={} steps={} dur={}""", context.sid, context.step, executionTime)
+            return ActResult(
+                success = false,
+                message = "USER interrupted",
+                action = instruction
+            )
+        }
+
         logger.info("✅ agent.done sid={} steps={} dur={}", context.sid, context.step, executionTime)
         val summary = generateFinalSummary(instruction, context)
         val ok = summary.state != ResponseState.OTHER
@@ -1249,4 +1279,3 @@ open class BrowserPerceptiveAgent constructor(
     }
     // ===== end helper methods =====
 }
-

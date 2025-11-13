@@ -69,5 +69,6 @@ class DelegatingPerceptiveAgent(
     }
 
     override fun close() {
+        runCatching { agent.close() }
     }
 }

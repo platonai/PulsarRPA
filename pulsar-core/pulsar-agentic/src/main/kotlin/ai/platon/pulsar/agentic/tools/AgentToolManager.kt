@@ -12,7 +12,9 @@ import ai.platon.pulsar.skeleton.ai.TcEvaluate
 import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.ai.ToolCallResult
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -52,6 +54,18 @@ class AgentToolManager(
 
     @Throws(UnsupportedOperationException::class)
     suspend fun execute(actionDescription: ActionDescription, message: String? = null): ToolCallResult {
+        // Fast path: respect user interruption immediately
+        val cancelled = runCatching { !currentCoroutineContext().isActive }.getOrDefault(false)
+        if (cancelled || agent.isClosed) {
+            return ToolCallResult(
+                success = false,
+                evaluate = null,
+                message = "USER interrupted",
+                expression = actionDescription.cssFriendlyExpression,
+                modelResponse = actionDescription.modelResponse?.content
+            )
+        }
+
         try {
             val tc = requireNotNull(actionDescription.toolCall) { "Tool call is required" }
 
@@ -78,14 +92,11 @@ class AgentToolManager(
                 "navigateTo" -> onDidNavigateTo(driver, tc, evaluate)
             }
 
-            // If a timeout is provided and the action likely triggers navigation, wait for navigation
-            // val timeoutMs = action.timeoutMs?.toLong()?.takeIf { it > 0 }
             val timeoutMs = 3_000L
             val oldUrl = actionDescription.agentState?.browserUseState?.browserState?.url
             val expression = actionDescription.cssFriendlyExpression
             val maybeNavMethod = method in ToolSpecification.MAY_NAVIGATE_ACTIONS
             if (oldUrl != null && maybeNavMethod) {
-                // High Priority #4: Fail explicitly on navigation timeout
                 val remainingTime = driver.waitForNavigation(oldUrl, timeoutMs)
                 if (remainingTime <= 0) {
                     val navError = "⏳ Navigation timeout after ${timeoutMs}ms for expression: $expression"
