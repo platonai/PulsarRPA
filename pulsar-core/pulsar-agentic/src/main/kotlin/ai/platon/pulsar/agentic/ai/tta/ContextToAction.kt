@@ -54,7 +54,7 @@ open class ContextToAction(
             return tta.reviseActionDescription(actionDescription)
         } catch (e: Exception) {
             val errorResponse = ModelResponse("Unknown exception" + e.brief(), ResponseState.OTHER)
-            return ActionDescription(agentState.instruction, modelResponse = errorResponse, exception = e)
+            return ActionDescription(agentState.instruction, exception = e, modelResponse = errorResponse)
         }
     }
 
@@ -73,9 +73,7 @@ open class ContextToAction(
             return generateWithToolCallSpecs(instruction, agentState, screenshotB64, 1)
         } catch (e: Exception) {
             e.printStackTrace()
-            val errorResponse = ModelResponse(
-                "Unknown exception" + e.brief(), ResponseState.OTHER
-            )
+            val errorResponse = ModelResponse(e.brief(), ResponseState.OTHER)
             return ActionDescription(agentState.instruction, modelResponse = errorResponse)
         }
     }

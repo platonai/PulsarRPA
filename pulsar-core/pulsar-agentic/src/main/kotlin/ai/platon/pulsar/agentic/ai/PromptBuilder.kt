@@ -1010,7 +1010,8 @@ $newTabsJson
         val delta = viewportHeight * 0.5
         val startY = (scrollState.y - delta).coerceAtLeast(0.0)
         val endY = (scrollState.y + viewportHeight + delta).coerceAtLeast(0.0)
-        val nanoTree = domState.microTree.toNanoTreeInRange(startY, endY)
+        val nanoTree = domState.microTree.
+        toNanoTreeInRange(startY, endY)
 
         fun contentCN() = """
 ## 浏览器状态

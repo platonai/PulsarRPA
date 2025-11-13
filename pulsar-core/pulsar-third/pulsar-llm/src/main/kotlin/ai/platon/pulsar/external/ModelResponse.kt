@@ -12,6 +12,7 @@ data class ModelResponse constructor(
 
     companion object {
         val EMPTY = ModelResponse("", ResponseState.OTHER)
+        val INTERNAL_ERROR = ModelResponse("(InternalError)", ResponseState.OTHER)
         val LLM_NOT_AVAILABLE = ModelResponse("LLM not available", ResponseState.OTHER)
     }
 }

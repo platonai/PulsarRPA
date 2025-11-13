@@ -275,8 +275,7 @@ class InferenceEngine(
         // val responseContent = resp.aiMessage().text().trim()
         val responseContent = modelResponse.content
 
-        val modeResponse = ModelResponse(content = responseContent, tokenUsage = tokenUsage)
-        var actionDescription = cta.tta.modelResponseToActionDescription(instruction, params.agentState, modeResponse)
+        var actionDescription = cta.tta.modelResponseToActionDescription(instruction, params.agentState, modelResponse)
         actionDescription = cta.tta.reviseActionDescription(actionDescription)
 
         var respFile = ""

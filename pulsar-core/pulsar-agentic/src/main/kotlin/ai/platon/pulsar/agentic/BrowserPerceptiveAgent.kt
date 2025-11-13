@@ -14,6 +14,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.*
@@ -115,17 +116,16 @@ open class BrowserPerceptiveAgent constructor(
 
     private val todo: ToDoManager
 
+    internal val activeDriver get() = session.getOrCreateBoundDriver()
+
     // Helper classes for better code organization
     internal val pageStateTracker = PageStateTracker(session, config)
     private val actionValidator = ActionValidator()
 
     // Enhanced state management
 
-    internal val activeDriver get() = session.getOrCreateBoundDriver()
-
     internal val stateManager by lazy { AgentStateManager(this, pageStateTracker) }
     private val performanceMetrics = PerformanceMetrics()
-    private val retryCounter = AtomicInteger(0)
     private val consecutiveFailureCounter = AtomicInteger(0)
     private val consecutiveLLMFailureCounter = AtomicInteger(0)
     private val consecutiveValidationFailureCounter = AtomicInteger(0)
@@ -146,6 +146,7 @@ open class BrowserPerceptiveAgent constructor(
             maxDelayMs = config.maxRetryDelayMs
         )
     }
+    private val retryCounter = AtomicInteger(0)
     private val checkpointManager by lazy {
         CheckpointManager(baseDir.resolve("checkpoints"))
     }
@@ -193,10 +194,10 @@ open class BrowserPerceptiveAgent constructor(
             context.agentState,
             mapOf(
                 "event" to "resolveStart",
-                "session" to sessionId.take(8),
+                "session" to context.sid,
                 "goal" to goal,
-                "maxSteps" to config.maxSteps.toString(),
-                "maxRetries" to config.maxRetries.toString()
+                "maxSteps" to config.maxSteps,
+                "maxRetries" to config.maxRetries
             ),
             "🚀 resolve START"
         )
@@ -213,30 +214,16 @@ open class BrowserPerceptiveAgent constructor(
 
             val dur = Duration.between(sessionStartTime, Instant.now()).toMillis()
             // Not a single-step action, keep it out of AgentState history
-            stateManager.trace(
-                context.agentState,
-                mapOf(
-                    "event" to "resolveDone",
-                    "session" to sessionId.take(8),
-                    "success" to result.success.toString(),
-                    "durationMs" to dur.toString()
-                ),
-                "✅ resolve DONE"
-            )
+            stateManager.trace(context.agentState, mapOf("event" to "resolveDone", "session" to context.sid,
+                "success" to result.success, "durationMs" to dur), "✅ resolve DONE")
 
             result
         } catch (_: TimeoutCancellationException) {
-            val msg =
-                "⏳ Resolve timed out after ${effectiveTimeout}ms (base: ${config.resolveTimeoutMs}ms + retries: ${maxPossibleDelays}ms): ${instruction}"
-            stateManager.trace(
-                context.agentState,
-                mapOf(
-                    "event" to "resolveTimeout",
-                    "timeoutMs" to effectiveTimeout.toString(),
-                    "instruction" to Strings.compactLog(instruction, 160)
-                ),
-                "⏳ resolve TIMEOUT"
-            )
+            val msg = "⏳ Resolve timed out after ${effectiveTimeout}ms (base: ${config.resolveTimeoutMs}ms + " +
+                        "retries: ${maxPossibleDelays}ms): $instruction"
+            stateManager.trace(context.agentState, mapOf("event" to "resolveTimeout",
+                "timeoutMs" to effectiveTimeout, "instruction" to Strings.compactLog(instruction, 160)),
+                "⏳ resolve TIMEOUT")
             ActResult(success = false, message = msg, action = instruction)
         }
     }
@@ -272,7 +259,7 @@ open class BrowserPerceptiveAgent constructor(
                 context.agentState,
                 mapOf(
                     "event" to "actTimeout",
-                    "timeoutMs" to config.actTimeoutMs.toString(),
+                    "timeoutMs" to config.actTimeoutMs,
                     "instruction" to action.action
                 ),
                 "⏳ act TIMEOUT"
@@ -441,7 +428,7 @@ open class BrowserPerceptiveAgent constructor(
             logger.error("🤖❌ action.gen.fail sid={} failures={} msg={}", context.sid, failures, e.message, e)
             consecutiveFailureCounter.incrementAndGet()
 
-            ActionDescription(context.instruction, exception = e)
+            ActionDescription(context.instruction, exception = e, modelResponse = ModelResponse.INTERNAL_ERROR)
         }
     }
 
@@ -547,8 +534,8 @@ open class BrowserPerceptiveAgent constructor(
                 context.agentState,
                 mapOf(
                     "event" to "actSuccess",
-                    "candidateIndex" to (index + 1).toString(),
-                    "candidateTotal" to resultsToTry.size.toString()
+                    "candidateIndex" to (index + 1),
+                    "candidateTotal" to resultsToTry.size
                 ),
                 "✅ act SUCCESS"
             )
@@ -557,7 +544,7 @@ open class BrowserPerceptiveAgent constructor(
 
         // All candidates failed
         val msg = "❌ All ${resultsToTry.size} candidates failed. Last error: $lastError"
-        stateManager.trace(context.agentState, mapOf("event" to "actAllFailed", "candidates" to resultsToTry.size.toString()), msg)
+        stateManager.trace(context.agentState, mapOf("event" to "actAllFailed", "candidates" to resultsToTry.size), msg)
         return ActResult.failed(msg, instruction)
     }
 
@@ -606,7 +593,7 @@ open class BrowserPerceptiveAgent constructor(
         } catch (e: Exception) {
             logger.error("❌ observeAct.observe.error requestId={} msg={}", requestId.take(8), e.message, e)
             addHistoryObserve(instruction, requestId, 0, false)
-            ActionDescription(instruction, exception = e)
+            ActionDescription(instruction, exception = e, modelResponse = ModelResponse.INTERNAL_ERROR)
         }
     }
 
@@ -633,7 +620,7 @@ open class BrowserPerceptiveAgent constructor(
             mapOf(
                 "event" to "extract",
                 "requestId" to requestId.take(8),
-                "success" to success.toString()
+                "success" to success
             ),
             "🔍 extract $compactPrompt"
         )
@@ -645,8 +632,8 @@ open class BrowserPerceptiveAgent constructor(
             mapOf(
                 "event" to "observe",
                 "requestId" to requestId.take(8),
-                "success" to success.toString(),
-                "size" to size.toString(),
+                "success" to success,
+                "size" to size,
                 "instruction" to PromptBuilder.compactPrompt(instruction, 200)
             ),
             "👀 observe"
@@ -695,8 +682,8 @@ open class BrowserPerceptiveAgent constructor(
                         mapOf(
                             "event" to "resolveRetry",
                             "cause" to "Transient",
-                            "attemptNo" to attemptNo.toString(),
-                            "delayMs" to backoffMs.toString(),
+                            "attemptNo" to attemptNo,
+                            "delayMs" to backoffMs,
                             "msg" to (e.message ?: "")
                         ),
                         "🔁 resolve RETRY"
@@ -724,8 +711,8 @@ open class BrowserPerceptiveAgent constructor(
                         mapOf(
                             "event" to "resolveRetry",
                             "cause" to "Timeout",
-                            "attemptNo" to attemptNo.toString(),
-                            "delayMs" to baseBackoffMs.toString(),
+                            "attemptNo" to attemptNo,
+                            "delayMs" to baseBackoffMs,
                             "msg" to (e.message ?: "")
                         ),
                         "🔁 resolve RETRY"
@@ -752,8 +739,8 @@ open class BrowserPerceptiveAgent constructor(
                         mapOf(
                             "event" to "resolveRetry",
                             "cause" to "Unexpected",
-                            "attemptNo" to attemptNo.toString(),
-                            "delayMs" to backoffMs.toString(),
+                            "attemptNo" to attemptNo,
+                            "delayMs" to backoffMs,
                             "msg" to (e.message ?: "")
                         ),
                         "🔁 resolve RETRY"
@@ -809,20 +796,47 @@ open class BrowserPerceptiveAgent constructor(
         var context = ctxIn
         var consecutiveNoOps = noOpsIn
         val nextStep = context.step + 1
+
         ensureReadyForStep(action)
+
         context = stateManager.buildExecutionContext(action.action, "step", nextStep, baseContext = context)
         val agentState = context.agentState
         val browserUseState = agentState.browserUseState
         val step = context.step
         val sid = context.sid
+
         val unchangedCount = pageStateTracker.checkStateChange(browserUseState)
-        if (unchangedCount >= 3) { logger.info("⚠️ loop.warn sid={} step={} unchangedSteps={}", sid, step, unchangedCount); consecutiveNoOps++ }
+        if (unchangedCount >= 3) {
+            logger.info("⚠️ loop.warn sid={} step={} unchangedSteps={}", sid, step, unchangedCount); consecutiveNoOps++
+        }
+
         logger.info("▶️ step.exec sid={} step={}/{} noOps={}", sid, step, config.maxSteps, consecutiveNoOps)
         if (logger.isDebugEnabled) logger.debug("🧩 dom={}", DomDebug.summarizeStr(browserUseState.domState, 5))
         if (step % config.memoryCleanupIntervalSteps == 0) performMemoryCleanup(context)
-        if (config.enableCheckpointing && step % config.checkpointIntervalSteps == 0) { runCatching { saveCheckpoint(context) }.onFailure { e -> logger.warn("💾❌ checkpoint.save.fail sid={} step={} msg={}", sid, step, e.message) } }
+        if (config.enableCheckpointing && step % config.checkpointIntervalSteps == 0) {
+            runCatching { saveCheckpoint(context) }
+                .onFailure { e -> logger.warn("💾❌ checkpoint.save.fail sid={} step={} msg={}", sid, step, e.message) }
+        }
+
         val actionDescription = generateActions(context)
-        if (shouldTerminate(actionDescription)) { onTaskCompletion(actionDescription, context); return StepProcessingResult(context, consecutiveNoOps, true) }
+
+        printlnPro("-------------------------")
+        printlnPro(actionDescription)
+
+        if (actionDescription.modelResponse?.content?.contains("taskComplete") == true) {
+            printlnPro("888888888888888888888888888888888")
+
+            if (shouldTerminate(actionDescription)) {
+                onTaskCompletion(actionDescription, context);
+                return StepProcessingResult(context, consecutiveNoOps, true)
+            }
+        }
+
+        if (shouldTerminate(actionDescription)) {
+            onTaskCompletion(actionDescription, context);
+            return StepProcessingResult(context, consecutiveNoOps, true)
+        }
+
         if (actionDescription.toolCall == null) {
             consecutiveNoOps++
             val stop = handleConsecutiveNoOps(consecutiveNoOps, context)
@@ -831,6 +845,7 @@ open class BrowserPerceptiveAgent constructor(
             delay(calculateAdaptiveDelay())
             return StepProcessingResult(context, consecutiveNoOps, false)
         }
+
         consecutiveNoOps = 0
         val detailedActResult = actInternal(actionDescription, context)
         if (detailedActResult != null) {
@@ -895,7 +910,7 @@ open class BrowserPerceptiveAgent constructor(
                 context.sid, context.step, failures, actionDescription.locator, toolCall.method, toolCall.arguments,
                 actionDescription.cssFriendlyExpression
             )
-            stateManager.trace(context.agentState, mapOf("event" to "validationFailed", "step" to step.toString(), "tool" to toolCall.method), "🛑 validation-failed")
+            stateManager.trace(context.agentState, mapOf("event" to "validationFailed", "step" to step, "tool" to toolCall.method), "🛑 validation-failed")
             return null
         }
 
@@ -1026,7 +1041,7 @@ open class BrowserPerceptiveAgent constructor(
         runCatching {
             val ts = Instant.now().toEpochMilli()
             val log = baseDir.resolve("session-${uuid}-${ts}.log")
-            slogger.info("🧾💾 Persisting execution transcript", context, mapOf("path" to log.toString()))
+            slogger.info("🧾💾 Persisting execution transcript", context, mapOf("path" to log))
             val sb = StringBuilder()
             sb.appendLine("SESSION_ID: ${uuid}")
             sb.appendLine("TIMESTAMP: ${Instant.now()}")
@@ -1044,8 +1059,8 @@ open class BrowserPerceptiveAgent constructor(
             sb.appendLine("Failed actions: ${performanceMetrics.failedActions}")
             sb.appendLine("Retry count: ${retryCounter.get()}")
             sb.appendLine("Consecutive failures: ${consecutiveFailureCounter.get()}")
-            Files.writeString(log, sb.toString())
-            slogger.info("🧾✅ Transcript persisted successfully", context, mapOf("lines" to stateHistory.size + 10, "path" to log.toString()))
+            Files.writeString(log, sb)
+            slogger.info("🧾✅ Transcript persisted successfully", context, mapOf("lines" to stateHistory.size + 10, "path" to log))
         }.onFailure { e -> slogger.logError("🧾❌ Failed to persist transcript", e, context.sessionId) }
     }
 
@@ -1053,7 +1068,7 @@ open class BrowserPerceptiveAgent constructor(
         val step = context.step
         stateManager.trace(
             context.agentState,
-            mapOf("event" to "noop", "step" to step.toString(), "consecutive" to consecutiveNoOps.toString()),
+            mapOf("event" to "noop", "step" to step, "consecutive" to consecutiveNoOps),
             "🕒 no-op"
         )
         logger.info("🕒 noop sid={} step={} consecutive={}", context.sid, step, consecutiveNoOps)
@@ -1112,8 +1127,8 @@ open class BrowserPerceptiveAgent constructor(
                 "consecutiveNoOpLimit" to config.consecutiveNoOpLimit
             ),
             metadata = mapOf(
-                "agentUuid" to uuid.toString(),
-                "startTime" to startTime.toString()
+                "agentUuid" to uuid,
+                "startTime" to startTime
             )
         )
         val path = checkpointManager.save(checkpoint)
@@ -1148,7 +1163,7 @@ open class BrowserPerceptiveAgent constructor(
 
     private suspend fun buildFinalActResult(instruction: String, context: ExecutionContext, startTime: Instant): ActResult {
         val executionTime = Duration.between(startTime, Instant.now())
-        logger.info("✅ agent.done sid={} steps={} dur={}", context.sid, context.step, executionTime.toString())
+        logger.info("✅ agent.done sid={} steps={} dur={}", context.sid, context.step, executionTime)
         val summary = generateFinalSummary(instruction, context)
         val ok = summary.state != ResponseState.OTHER
         return ActResult(success = ok, message = summary.content, action = instruction, result = context.agentState.toolCallResult)

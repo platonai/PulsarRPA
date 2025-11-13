@@ -97,9 +97,9 @@ open class TextToAction(
     private fun modelResponseToActionDescription0(
         instruction: String,
         agentState: AgentState,
-        response: ModelResponse
+        modelResponse: ModelResponse
     ): ActionDescription {
-        val content = response.content
+        val content = modelResponse.content
         val contentStart = Strings.compactWhitespaces(content.take(30))
 
         val mapper = pulsarObjectMapper()
@@ -111,35 +111,43 @@ open class TextToAction(
                     isComplete = true,
                     errorCause = complete.errorCause,
                     summary = complete.summary,
-                    nextSuggestions = complete.nextSuggestions ?: emptyList()
+                    nextSuggestions = complete.nextSuggestions ?: emptyList(),
+                    modelResponse = modelResponse
                 )
             }
 
             contentStart.contains("\"elements\"") -> {
                 val elements: ObserveResponseElements = mapper.readValue(content)
-                toActionDescription(instruction, elements, agentState, response)
+                toActionDescription(instruction, elements, agentState, modelResponse)
             }
 
-            else -> ActionDescription(instruction, modelResponse = response)
+            else -> ActionDescription(instruction, modelResponse = modelResponse)
         }
     }
 
     fun reviseActionDescription(action: ActionDescription): ActionDescription {
+        requireNotNull(action.modelResponse) { "ModelResponse is required to reviseActionDescription" }
+
         if (action.exception != null) {
             return action
         }
 
-        val agentState = requireNotNull(action.agentState) { "Agent state has to be available" }
+        if (action.isComplete) {
+            return action
+        }
+
+        // requireNotNull(action.agentState) { "Agent state has to be available" }
         val observeElements = action.observeElements?.map { reviseObserveElement(it, action) }
         return action.copy(observeElements = observeElements)
     }
 
-    fun reviseObserveElement(observeElement: ObserveElement, action: ActionDescription): ObserveElement {
+    private fun reviseObserveElement(observeElement: ObserveElement, action: ActionDescription): ObserveElement {
+        requireNotNull(action.modelResponse) { "ModelResponse is required to reviseObserveElement" }
         if (action.exception != null) {
             return observeElement
         }
 
-        val agentState = requireNotNull(action.agentState) { "Agent state has to be available" }
+        val agentState = requireNotNull(action.agentState) { "Agent state has to be available to reviseObserveElement" }
         val toolCall = observeElement.toolCall ?: return observeElement
 
         // 2. revise selector

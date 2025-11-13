@@ -40,7 +40,7 @@ data class AgentCheckpoint(
     val configSnapshot: Map<String, Any>,
 
     // Additional metadata
-    val metadata: Map<String, String> = emptyMap()
+    val metadata: Map<String, Any> = emptyMap()
 ) {
     val age: Long get() = System.currentTimeMillis() - timestamp.toEpochMilli()
 }

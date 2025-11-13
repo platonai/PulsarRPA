@@ -7,6 +7,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.LocatorMap
 import ai.platon.pulsar.browser.driver.chrome.dom.model.MicroDOMTreeNodeHelper.Companion.estimatedSize
 import ai.platon.pulsar.browser.driver.chrome.dom.util.CSSSelectorUtils
 import ai.platon.pulsar.common.math.roundTo
+import ai.platon.pulsar.common.serialize.json.Pson
 import com.fasterxml.jackson.annotation.JsonIgnore
 import org.apache.commons.lang3.StringUtils
 import java.awt.Dimension
@@ -363,7 +364,22 @@ data class CleanedDOMTreeNode constructor(
     val stackingContexts: Int? = null,
     val contentDocument: CleanedDOMTreeNode?
     // Note: children_nodes and shadow_roots are intentionally omitted
-)
+) {
+    fun toJson() = Pson.toJson(this)
+
+    override fun hashCode(): Int {
+        return toJson().hashCode()
+    }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as CleanedDOMTreeNode
+
+        return toJson() == other.toJson()
+    }
+}
 
 data class InteractiveDOMTreeNode(
     /**
@@ -458,6 +474,8 @@ data class MicroDOMTreeNode(
 
     private val seenChunks = mutableListOf<Pair<Double, Double>>()
 
+    fun toJson() = Pson.toJson(this)
+
     fun hasSeen(startY: Double, endY: Double): Boolean {
         // check if the point has been seen
         val (s, e) = if (startY <= endY) startY to endY else endY to startY
@@ -503,6 +521,17 @@ data class MicroDOMTreeNode(
 //        return nanoTreeCache.computeIfAbsent(key) { helper.toNanoTreeInRange0(this, startY, endY) }
         return helper.toNanoTreeInRange(startY, endY)
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as MicroDOMTreeNode
+
+        return toJson() == other.toJson()
+    }
+
+    override fun hashCode(): Int = toJson().hashCode()
 }
 
 typealias MicroDOMTree = MicroDOMTreeNode
