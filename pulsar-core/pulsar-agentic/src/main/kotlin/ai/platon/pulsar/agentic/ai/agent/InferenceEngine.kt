@@ -57,12 +57,13 @@ data class ObserveParams constructor(
     val resolve: Boolean = false,
     val logInferenceToFile: Boolean = false,
     val fromAct: Boolean = false,
-    val screenshotB64: String? = null
 ) {
     /**
      * The user's instruction/request
      * */
     val instruction: String get() = context.instruction
+
+    val screenshotB64: String? get() = context.screenshotB64
 }
 
 class InferenceEngine(
@@ -234,7 +235,6 @@ class InferenceEngine(
     }
 
     suspend fun observe(params: ObserveParams, context: ExecutionContext): ActionDescription {
-        val instruction = params.instruction
         val messages = if (params.resolve) {
             promptBuilder.buildResolveMessageListAll(context)
         } else {

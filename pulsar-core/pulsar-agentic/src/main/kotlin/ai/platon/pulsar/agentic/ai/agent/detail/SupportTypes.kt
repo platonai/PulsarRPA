@@ -63,44 +63,27 @@ data class ExecutionContext(
 
     val requestId = UUID.randomUUID().toString()
 
-    fun createObserveOptions(): ObserveOptions {
-        val options = ObserveOptions(instruction = this.instruction)
-        options.additionalContext["context"] = WeakReference(this)
-        return options
-    }
-
-    fun createObserveActOptions(resolve: Boolean): ObserveOptions {
-        val options = ObserveOptions(
-            instruction = this.instruction, returnAction = true, resolve = resolve
-        )
-        options.additionalContext["context"] = WeakReference(this)
-        return options
-    }
-
     fun createObserveParams(
         options: ObserveOptions,
         fromAct: Boolean,
-        resolve: Boolean,
-        screenshotB64: String? = null
+        resolve: Boolean
     ): ObserveParams {
         return ObserveParams(
             context = this,
             returnAction = options.returnAction ?: false,
             logInferenceToFile = config.enableStructuredLogging,
             fromAct = fromAct,
-            resolve = resolve,
-            screenshotB64 = screenshotB64
+            resolve = resolve
         )
     }
 
-    fun createObserveActParams(resolve: Boolean, screenshotB64: String? = null): ObserveParams {
+    fun createObserveActParams(resolve: Boolean): ObserveParams {
         return ObserveParams(
             context = this,
             fromAct = true,
             returnAction = true,
             resolve = resolve,
             logInferenceToFile = config.enableStructuredLogging,
-            screenshotB64 = screenshotB64,
         )
     }
 

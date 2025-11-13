@@ -2,7 +2,6 @@ package ai.platon.pulsar.agentic
 
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.agent.InferenceEngine
-import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.agent.detail.AgentStateManager
 import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
 import ai.platon.pulsar.agentic.ai.agent.detail.PageStateTracker
@@ -13,7 +12,6 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.NotSupportedException
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
@@ -228,7 +226,7 @@ open class BrowserAgentActor(
         val observeResults = actionDescription.toObserveResults(context.agentState, context)
 
         if (observeResults.isEmpty()) {
-            val msg = "⚠️ doObserveAct: No observe result found"
+            val msg = "⚠️ doObserveAct: No observe result"
             stateManager.addTrace(context.agentState, mapOf("event" to "observeActNoAction"), msg)
             return ActResult.failed(msg, action = options.action)
         }
@@ -314,30 +312,36 @@ open class BrowserAgentActor(
         context: ExecutionContext,
         resolve: Boolean,
     ): ActionDescription {
+        val observeOptions = options as? ObserveOptions
+        val drawOverlay = observeOptions?.drawOverlay ?: false
+
+        val params = when (options) {
+            is ObserveOptions -> context.createObserveParams(
+                options,
+                fromAct = false,
+                resolve = resolve
+            )
+
+            is ActionOptions -> context.createObserveActParams(resolve)
+            else -> throw IllegalArgumentException("Not supported option")
+        }
+
         val interactiveElements = context.agentState.browserUseState.getInteractiveElements()
-
         val actionDescription = try {
-            domService.addHighlights(interactiveElements)
-
-            val screenshotB64 = captureScreenshotWithRetry(context)
-            context.screenshotB64 = screenshotB64
-
-            val params = when (options) {
-                is ObserveOptions -> context.createObserveParams(
-                    options,
-                    fromAct = false,
-                    resolve = resolve,
-                    screenshotB64
-                )
-
-                is ActionOptions -> context.createObserveActParams(resolve, screenshotB64)
-                else -> throw IllegalArgumentException("Not supported option")
+            if (drawOverlay) {
+                domService.addHighlights(interactiveElements)
             }
 
-            observeAndInference(params, context)
+            context.screenshotB64 = captureScreenshotWithRetry(context)
+
+            withTimeout(config.llmInferenceTimeoutMs) {
+                inference.observe(params, context)
+            }
         } finally {
-            runCatching { domService.removeHighlights(interactiveElements) }
-                .onFailure { e -> logger.warn("⚠️ Failed to remove highlights: ${e.message}") }
+            if (drawOverlay) {
+                runCatching { domService.removeHighlights(interactiveElements) }
+                    .onFailure { e -> logger.warn("⚠️ Failed to remove highlights: ${e.message}") }
+            }
         }
 
         return actionDescription
@@ -350,13 +354,8 @@ open class BrowserAgentActor(
             try {
                 val screenshot = activeDriver.captureScreenshot()
                 if (screenshot != null) {
-                    logger.info(
-                        "📸✅ screenshot.ok sid={} step={} size={} attempt={} ",
-                        context.sid,
-                        context.step,
-                        screenshot.length,
-                        i
-                    )
+                    logger.info("📸✅ screenshot.ok sid={} step={} size={} attempt={} ",
+                        context.sid, context.step, screenshot.length, i)
                     return screenshot
                 } else {
                     logger.info("📸⚪ screenshot.null sid={} step={} attempt={}", context.sid, context.step, i)
@@ -373,22 +372,6 @@ open class BrowserAgentActor(
         }
 
         return null
-    }
-
-    private suspend fun observeAndInference(params: ObserveParams, context: ExecutionContext): ActionDescription {
-        val instruction = context.instruction
-        val requestId: String = context.requestId
-
-        return try {
-            val actionDescription = withTimeout(config.llmInferenceTimeoutMs) {
-                inference.observe(params, context)
-            }
-
-            return actionDescription
-        } catch (e: Exception) {
-            logger.error("❌ observeAct.observe.error requestId={} msg={}", requestId.take(8), e.message, e)
-            ActionDescription(instruction, exception = e, modelResponse = ModelResponse.INTERNAL_ERROR)
-        }
     }
 
     override fun close() {
