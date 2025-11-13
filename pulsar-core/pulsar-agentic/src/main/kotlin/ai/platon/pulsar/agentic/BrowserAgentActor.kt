@@ -117,6 +117,7 @@ open class BrowserAgentActor(
 
         return try {
             val detailedActResult = executeToolCall(actionDescription, context)
+
             val toolCallResult = detailedActResult?.toolCallResult
 
             logger.info(

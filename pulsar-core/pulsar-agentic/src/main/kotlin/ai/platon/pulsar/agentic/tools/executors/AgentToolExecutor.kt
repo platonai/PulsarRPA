@@ -91,9 +91,6 @@ class AgentToolExecutor : AbstractToolExecutor() {
 
     // Helper: coerce schema parameter to Map<String,String>, only accept Map or JSON object string
     private fun coerceSchema0(raw: Any?, functionName: String): ExtractionSchema {
-        printlnPro("-----------")
-        printlnPro(raw)
-
         if (raw == null) throw IllegalArgumentException("Missing parameter 'schema' for $functionName")
         return when (raw) {
             is ExtractionSchema -> raw
