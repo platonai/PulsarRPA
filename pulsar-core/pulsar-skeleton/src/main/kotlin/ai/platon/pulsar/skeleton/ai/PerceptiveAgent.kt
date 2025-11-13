@@ -349,7 +349,7 @@ data class ProcessTrace(
     }
 }
 
-interface PerceptiveAgent {
+interface PerceptiveAgent: AutoCloseable {
     val uuid: UUID
 
     /**
