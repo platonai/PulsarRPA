@@ -237,7 +237,6 @@ class InferenceEngine(
         val instruction = params.instruction
         val messages = if (params.resolve) {
             promptBuilder.buildResolveMessageListAll(context)
-            // promptBuilder.buildResolveObserveMessageListStart(params.context!!, params.stateHistory!!, messages)
         } else {
             promptBuilder.buildObserveMessageListAll(params, context)
         }
@@ -264,14 +263,16 @@ class InferenceEngine(
 
         val startTime = Instant.now()
 
-        val modelResponse = cta.generateResponseRaw(messages, params.screenshotB64)
+        val actionDescription = cta.generate(messages, context)
+        // val modelResponse = cta.generateResponseRaw(messages, params.screenshotB64)
+        val modelResponse = actionDescription.modelResponse!!
 
         val tokenUsage = modelResponse.tokenUsage
         // val responseContent = resp.aiMessage().text().trim()
         val responseContent = modelResponse.content
 
-        var actionDescription = cta.tta.modelResponseToActionDescription(instruction, context.agentState, modelResponse)
-        actionDescription = cta.tta.reviseActionDescription(actionDescription)
+//        var actionDescription = cta.tta.modelResponseToActionDescription(instruction, context.agentState, modelResponse)
+//        actionDescription = cta.tta.reviseActionDescription(actionDescription)
 
         var respFile = ""
         if (params.logInferenceToFile) {

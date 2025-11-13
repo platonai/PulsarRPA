@@ -200,18 +200,13 @@ open class BrowserAgentActor(
     }
 
     override suspend fun observe(options: ObserveOptions): List<ObserveResult> {
-        val context = options.getContext() ?: stateManager.buildInitExecutionContext(options)
+        val ctx = options.getContext()
+        val context = if (ctx == null) {
+            val instruction = promptBuilder.initObserveUserInstruction(options.instruction).instruction?.content
+            stateManager.buildInitExecutionContext(options.copy(instruction = instruction))
+        } else ctx
 
-//        val messages = if (options.returnAction == true) {
-//            promptBuilder.buildResolveObserveMessageList(context, stateHistory)
-//        }
-//        else promptBuilder.initObserveUserInstruction(options.instruction)
-
-//        val instruction = promptBuilder.buildObserveActToolUsePrompt(options.action)
-//        messages.addUser(instruction, "user_request")
-
-        val resolve = options.resolve ?: false
-        val actionDescription = captureScreenshotAndObserve(options, context, resolve)
+        val actionDescription = captureScreenshotAndObserve(options, context, options.resolve)
 
         return actionDescription.toObserveResults(context.agentState, context)
     }

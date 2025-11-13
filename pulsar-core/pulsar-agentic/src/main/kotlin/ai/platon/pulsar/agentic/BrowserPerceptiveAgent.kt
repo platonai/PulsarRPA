@@ -233,7 +233,6 @@ open class BrowserPerceptiveAgent constructor(
         return try {
             withContext(agentScope.coroutineContext) {
                 super.act(observe)
-                // actInCoroutine(observe)
             }
         } catch (_: CancellationException) {
             ActResult(false, "USER interrupted", action = observe.agentState.instruction)
@@ -253,7 +252,6 @@ open class BrowserPerceptiveAgent constructor(
         return try {
             withContext(agentScope.coroutineContext) {
                 super.extract(options)
-                // extractInCoroutine(options)
             }
         } catch (_: CancellationException) {
             ExtractResult(success = false, message = "USER interrupted", data = JsonNodeFactory.instance.objectNode())

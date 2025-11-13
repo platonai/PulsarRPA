@@ -12,7 +12,6 @@ import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.ActionDescription
-import ai.platon.pulsar.skeleton.ai.AgentState
 import java.nio.file.Files
 
 open class ContextToAction(
@@ -42,22 +41,13 @@ open class ContextToAction(
             return tta.reviseActionDescription(actionDescription)
         } catch (e: Exception) {
             val errorResponse = ModelResponse("Unknown exception" + e.brief(), ResponseState.OTHER)
-            return ActionDescription(context.instruction, exception = e, modelResponse = errorResponse, context = context)
+            return ActionDescription(
+                context.instruction,
+                exception = e,
+                modelResponse = errorResponse,
+                context = context
+            )
         }
-    }
-
-    @ExperimentalApi
-    @Deprecated(
-        "Use generateResponseRaw(messages, screenshotB64) instead",
-        ReplaceWith("generateResponseRaw(messages, screenshotB64)")
-    )
-    open suspend fun generateObserveResponse(
-        messages: AgentMessageList,
-        agentState: AgentState,
-        screenshotB64: String? = null,
-        toolCallLimit: Int = 100,
-    ): ModelResponse {
-        return generateResponseRaw(messages, screenshotB64)
     }
 
     @ExperimentalApi
