@@ -14,6 +14,8 @@ import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.printlnPro
+import ai.platon.pulsar.common.serialize.json.Pson
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.*
@@ -865,6 +867,9 @@ open class BrowserPerceptiveAgent constructor(
 
         val actionDescription = generateActions(context)
 
+        printlnPro(".........................")
+        printlnPro(actionDescription.modelResponse)
+
         if (shouldTerminate(actionDescription)) {
             onTaskCompletion(actionDescription, context)
             return StepProcessingResult(context, consecutiveNoOps, true)
@@ -1212,7 +1217,7 @@ open class BrowserPerceptiveAgent constructor(
     protected suspend fun onTaskCompletion(action: ActionDescription, context: ExecutionContext) {
         val step = context.step
         val sid = context.sessionId
-        stateManager.complete()
+
         logger.info("✅ task.complete sid={} step={} complete={}", sid.take(8), step, action.isComplete)
         stateManager.trace(
             context.agentState,

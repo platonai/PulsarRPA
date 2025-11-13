@@ -432,7 +432,7 @@ data class InteractiveDOMTreeNode(
             append(bs)
             append(")")
             append(slimHTML)
-            append(textBefore)
+            textBefore?.let { append(it) }
         }
     }
 }

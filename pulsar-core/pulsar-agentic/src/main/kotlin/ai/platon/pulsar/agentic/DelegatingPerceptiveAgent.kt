@@ -15,11 +15,10 @@ class DelegatingPerceptiveAgent(
     override val stateHistory: List<AgentState> get() = agent.stateHistory
     override val processTrace: List<ProcessTrace> get() = agent.processTrace
 
-    fun newContext(): DelegatingPerceptiveAgent {
+    fun newContext() {
         agent.close()
         historyAgents.add(agent)
         agent = BrowserPerceptiveAgent(session)
-        return this
     }
 
     override suspend fun resolve(problem: String): ActResult {
