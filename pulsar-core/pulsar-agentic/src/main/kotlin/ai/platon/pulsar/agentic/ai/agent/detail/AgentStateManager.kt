@@ -1,6 +1,6 @@
 package ai.platon.pulsar.agentic.ai.agent.detail
 
-import ai.platon.pulsar.agentic.BrowserPerceptiveAgent
+import ai.platon.pulsar.agentic.BrowserAgentActor
 import ai.platon.pulsar.agentic.ai.tta.DetailedActResult
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
@@ -19,7 +19,7 @@ import kotlin.collections.component1
 import kotlin.collections.component2
 
 class AgentStateManager(
-    val agent: BrowserPerceptiveAgent,
+    val agent: BrowserAgentActor,
     val pageStateTracker: PageStateTracker,
 ) {
     private val _stateHistory = mutableListOf<AgentState>()

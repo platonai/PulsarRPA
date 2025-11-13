@@ -1,7 +1,7 @@
 package ai.platon.pulsar.agentic.tools
 
 import ai.platon.pulsar.agentic.AgenticSession
-import ai.platon.pulsar.agentic.BrowserPerceptiveAgent
+import ai.platon.pulsar.agentic.BrowserAgentActor
 import ai.platon.pulsar.agentic.common.AgentFileSystem
 import ai.platon.pulsar.agentic.tools.executors.*
 import ai.platon.pulsar.common.AppPaths
@@ -19,7 +19,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 
 class AgentToolManager(
-    val agent: BrowserPerceptiveAgent,
+    val agent: BrowserAgentActor,
 ) {
     private val logger = getLogger(AgentToolManager::class)
 
@@ -56,7 +56,7 @@ class AgentToolManager(
     suspend fun execute(actionDescription: ActionDescription, message: String? = null): ToolCallResult {
         // Fast path: respect user interruption immediately
         val cancelled = runCatching { !currentCoroutineContext().isActive }.getOrDefault(false)
-        if (cancelled || agent.isClosed) {
+        if (cancelled) {
             return ToolCallResult(
                 success = false,
                 evaluate = null,

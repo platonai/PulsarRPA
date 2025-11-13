@@ -2,20 +2,15 @@ package ai.platon.pulsar.agentic
 
 import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.agentic.ai.PromptBuilder
-import ai.platon.pulsar.agentic.ai.agent.InferenceEngine
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.agent.detail.*
 import ai.platon.pulsar.agentic.ai.todo.ToDoManager
-import ai.platon.pulsar.agentic.ai.tta.ContextToAction
 import ai.platon.pulsar.agentic.ai.tta.DetailedActResult
 import ai.platon.pulsar.agentic.tools.ActionValidator
-import ai.platon.pulsar.agentic.tools.AgentToolManager
 import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.printlnPro
-import ai.platon.pulsar.common.serialize.json.Pson
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.*
@@ -101,10 +96,10 @@ data class AgentConfig(
 )
 
 open class BrowserPerceptiveAgent constructor(
-    val session: AgenticSession,
+    session: AgenticSession,
     val maxSteps: Int = 100,
-    val config: AgentConfig = AgentConfig(maxSteps = maxSteps)
-) : PerceptiveAgent {
+    config: AgentConfig = AgentConfig(maxSteps = maxSteps)
+) : BrowserAgentActor(session, config) {
     private val logger = getLogger(this)
     private val slogger = StructuredAgentLogger(logger, config)
 
@@ -117,23 +112,23 @@ open class BrowserPerceptiveAgent constructor(
 
     private val conf get() = session.sessionConfig
 
-    private val cta by lazy { ContextToAction(conf) }
-    internal val inference by lazy { InferenceEngine(session, cta.chatModel) }
-    internal val domService get() = inference.domService
-    internal val promptBuilder = PromptBuilder()
-    internal val toolExecutor by lazy { AgentToolManager(this) }
+//    private val cta by lazy { ContextToAction(conf) }
+//    internal val inference by lazy { InferenceEngine(session, cta.chatModel) }
+//    internal val domService get() = inference.domService
+//    internal val promptBuilder = PromptBuilder()
+//    internal val toolExecutor by lazy { AgentToolManager(this) }
 
     private val todo: ToDoManager
 
-    internal val activeDriver get() = session.getOrCreateBoundDriver()
+//    internal val activeDriver get() = session.getOrCreateBoundDriver()
 
     // Helper classes for better code organization
-    internal val pageStateTracker = PageStateTracker(session, config)
+//    internal val pageStateTracker = PageStateTracker(session, config)
     private val actionValidator = ActionValidator()
 
     // Enhanced state management
 
-    internal val stateManager by lazy { AgentStateManager(this, pageStateTracker) }
+//    internal val stateManager by lazy { AgentStateManager(this, pageStateTracker) }
     private val performanceMetrics = PerformanceMetrics()
     private val consecutiveFailureCounter = AtomicInteger(0)
     private val consecutiveLLMFailureCounter = AtomicInteger(0)
@@ -161,7 +156,6 @@ open class BrowserPerceptiveAgent constructor(
     }
 
     val baseDir get() = toolExecutor.baseDir
-    val startTime = Instant.now()
 
     override val uuid = UUID.randomUUID()
     override val stateHistory: List<AgentState> get() = stateManager.stateHistory
@@ -269,7 +263,10 @@ open class BrowserPerceptiveAgent constructor(
     override suspend fun act(action: ActionOptions): ActResult {
         if (isClosed) return ActResult(false, "USER interrupted", action = action.action)
         return try {
-            withContext(agentScope.coroutineContext) { actInCoroutine(action) }
+            withContext(agentScope.coroutineContext) {
+                super.act(action)
+                // actInCoroutine(action)
+            }
         } catch (_: CancellationException) {
             ActResult(false, "USER interrupted", action = action.action)
         }
@@ -308,7 +305,10 @@ open class BrowserPerceptiveAgent constructor(
     override suspend fun act(observe: ObserveResult): ActResult {
         if (isClosed) return ActResult(false, "USER interrupted", action = observe.agentState.instruction)
         return try {
-            withContext(agentScope.coroutineContext) { actInCoroutine(observe) }
+            withContext(agentScope.coroutineContext) {
+                super.act(observe)
+                // actInCoroutine(observe)
+            }
         } catch (_: CancellationException) {
             ActResult(false, "USER interrupted", action = observe.agentState.instruction)
         }
@@ -357,9 +357,16 @@ open class BrowserPerceptiveAgent constructor(
      * two-stage LLM calls (extract + metadata) and merges results with token/time metrics.
      */
     override suspend fun extract(options: ExtractOptions): ExtractResult {
-        if (isClosed) return ExtractResult(success = false, message = "USER interrupted", data = JsonNodeFactory.instance.objectNode())
+        if (isClosed) return ExtractResult(
+            success = false,
+            message = "USER interrupted",
+            data = JsonNodeFactory.instance.objectNode()
+        )
         return try {
-            withContext(agentScope.coroutineContext) { extractInCoroutine(options) }
+            withContext(agentScope.coroutineContext) {
+                super.extract(options)
+                // extractInCoroutine(options)
+            }
         } catch (_: CancellationException) {
             ExtractResult(success = false, message = "USER interrupted", data = JsonNodeFactory.instance.objectNode())
         }
@@ -414,7 +421,10 @@ open class BrowserPerceptiveAgent constructor(
      */
     override suspend fun observe(options: ObserveOptions): List<ObserveResult> {
         if (isClosed) return emptyList()
-        return withContext(agentScope.coroutineContext) { observeInCoroutine(options) }
+        return withContext(agentScope.coroutineContext) {
+            super.observe(options)
+            // observeInCoroutine(options)
+        }
     }
 
     override suspend fun observe(instruction: String): List<ObserveResult> {
@@ -867,8 +877,9 @@ open class BrowserPerceptiveAgent constructor(
 
         val actionDescription = generateActions(context)
 
-        printlnPro(".........................")
-        printlnPro(actionDescription.modelResponse)
+        if (logger.isDebugEnabled) {
+            logger.debug("Let's make a final step decision | {}", actionDescription.modelResponse)
+        }
 
         if (shouldTerminate(actionDescription)) {
             onTaskCompletion(actionDescription, context)
@@ -1018,40 +1029,6 @@ open class BrowserPerceptiveAgent constructor(
                 if (tags.isNotEmpty()) todo.markPlanItemDoneByTags(tags)
             }
         }.onFailure { e -> slogger.logError("📝❌ todo.progress.fail", e, sid) }
-    }
-
-    protected suspend fun captureScreenshotWithRetry(context: ExecutionContext): String? {
-        val attempts = 2
-        var lastEx: Exception? = null
-        for (i in 1..attempts) {
-            if (isClosed) return null
-            try {
-                val screenshot = activeDriver.captureScreenshot()
-                if (screenshot != null) {
-                    logger.info(
-                        "📸✅ screenshot.ok sid={} step={} size={} attempt={} ",
-                        context.sid,
-                        context.step,
-                        screenshot.length,
-                        i
-                    )
-                    return screenshot
-                } else {
-                    logger.info("📸⚪ screenshot.null sid={} step={} attempt={}", context.sid, context.step, i)
-                }
-            } catch (e: Exception) {
-                lastEx = e
-                logger.warn("📸⚠️ screenshot attempt {} failed: {}", i, e.message)
-                if (isClosed) return null
-                delay(200)
-            }
-        }
-
-        if (lastEx != null) {
-            logger.error("📸❌ screenshot.fail sid={} msg={}", context.sid, lastEx.message, lastEx)
-        }
-
-        return null
     }
 
     private fun performMemoryCleanup(context: ExecutionContext) {
