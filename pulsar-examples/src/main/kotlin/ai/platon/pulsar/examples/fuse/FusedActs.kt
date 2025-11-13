@@ -144,7 +144,7 @@ class FusedActs {
         logger.info("Sample page content snippet: ${content?.take(120)}")
         logger.info("Last action result: $agent")
 
-        logger.info("Agent trace: {}", agent.processTrace.joinToString("\n"))
+        agent.processTrace.forEach { println("""🚩$it""") }
 
         session.context.close()
     }

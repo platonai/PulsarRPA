@@ -26,6 +26,8 @@ class Acts {
         // 1) Use the page's search box (enter text and submit)
         val result2 = agent.resolve("goto https://news.ycombinator.com/news , find the search box, type 'web scraping' and submit the form")
         result("action result2", result2)
+
+        agent.processTrace.forEach { println("""🚩$it""") }
     }
 
     private fun result(label: String, value: Any?) {
