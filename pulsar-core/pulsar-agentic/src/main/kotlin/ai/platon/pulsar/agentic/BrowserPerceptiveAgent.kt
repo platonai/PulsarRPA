@@ -701,7 +701,11 @@ open class BrowserPerceptiveAgent constructor(
             circuitBreaker.recordSuccess(CircuitBreaker.FailureType.EXECUTION_FAILURE)
             consecutiveFailureCounter.set(0)
             val summary = "✅ ${toolCall.method} executed successfully"
-            stateManager.addTrace(context.agentState, mapOf("event" to "toolExecOk", "tool" to toolCall.method), summary)
+            stateManager.addTrace(
+                context.agentState,
+                mapOf("event" to "toolExecOk", "tool" to toolCall.method),
+                summary
+            )
             DetailedActResult(actionDescription, toolCallResult, success = true, summary)
         } catch (e: Exception) {
             val failures = try {
@@ -904,6 +908,10 @@ open class BrowserPerceptiveAgent constructor(
         checkpointManager.pruneOldCheckpoints(context.sessionId, config.maxCheckpointsPerSession)
     }
 
+    protected fun shouldTerminate(actResult: ActResult? = null): Boolean {
+        return shouldTerminate(actResult?.detail?.actionDescription)
+    }
+
     protected fun shouldTerminate(actionDescription: ActionDescription? = null): Boolean {
         return when {
             actionDescription == null -> false
@@ -911,6 +919,11 @@ open class BrowserPerceptiveAgent constructor(
             actionDescription.expression?.contains("agent.done") == true -> true
             else -> false
         }
+    }
+
+    protected suspend fun onTaskCompletion(actResult: ActResult, context: ExecutionContext) {
+        val actionDescription = actResult.detail?.actionDescription ?: return
+        onTaskCompletion(actionDescription, context)
     }
 
     protected suspend fun onTaskCompletion(action: ActionDescription, context: ExecutionContext) {

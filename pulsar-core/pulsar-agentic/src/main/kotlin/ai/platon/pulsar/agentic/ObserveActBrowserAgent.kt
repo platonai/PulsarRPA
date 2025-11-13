@@ -28,9 +28,8 @@ class ObserveActBrowserAgent constructor(
         // Execute the tool call with enhanced error handling
         val actResult = act(action)
 
-        val actionDescription = actResult.detail?.actionDescription
-        if (shouldTerminate(actionDescription)) {
-            onTaskCompletion(actionDescription!!, context)
+        if (shouldTerminate(actResult)) {
+            onTaskCompletion(actResult, context)
             return StepProcessingResult(context, consecutiveNoOps, true)
         }
 
