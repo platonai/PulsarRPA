@@ -451,10 +451,12 @@ open class BrowserPerceptiveAgent constructor(
         if (url.isBlank() || url == "about:blank") {
             driver.navigateTo(AppConstants.SEARCH_ENGINE_URL)
         }
-        val settleMs = action.domSettleTimeoutMs?.toLong()?.coerceAtLeast(0L) ?: config.domSettleTimeoutMs
-        if (settleMs > 0) {
-            pageStateTracker.waitForDOMSettle(settleMs, config.domSettleCheckIntervalMs)
-        }
+
+        // Only wait for DOM settle just before collection DOM tree data
+//        val settleMs = action.domSettleTimeoutMs?.toLong()?.coerceAtLeast(0L) ?: config.domSettleTimeoutMs
+//        if (settleMs > 0) {
+//            pageStateTracker.waitForDOMSettle(settleMs, config.domSettleCheckIntervalMs)
+//        }
     }
 
     private suspend fun doResolveProblem(
@@ -869,7 +871,7 @@ open class BrowserPerceptiveAgent constructor(
             consecutiveLLMFailureCounter.set(0)
             consecutiveValidationFailureCounter.set(0)
             actionValidator.clearCache()
-            pageStateTracker.waitForDOMSettle(1000, 100)
+            // pageStateTracker.waitForDOMSettle(1000, 100)
         } catch (e: Exception) {
             logger.warn("⚠️ cleanup.partial.fail sid={} msg={}", context.sid, e.message)
         }

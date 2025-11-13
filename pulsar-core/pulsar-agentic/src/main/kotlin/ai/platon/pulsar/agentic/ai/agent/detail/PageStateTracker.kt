@@ -170,9 +170,11 @@ class PageStateTracker(
                     """.trimIndent()
                 ) as? Number)?.toLong()
 
-                if (driver.currentUrl().contains("?q=")) {
-                    logger.info("signatureNum: $signatureNum")
-                    delay(3000)
+                // For debug purpose only
+                if (logger.isDebugEnabled) {
+                    if (driver.currentUrl().contains("?q=")) {
+                        logger.debug("signatureNum: $signatureNum")
+                    }
                 }
 
                 if (signatureNum != null && signatureNum >= 0) {
