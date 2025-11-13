@@ -655,14 +655,42 @@ $AGENT_GUIDE_SYSTEM_PROMPT
         }
     }
 
-    fun buildResolveObserveMessageList(context: ExecutionContext, stateHistory: List<AgentState>): AgentMessageList {
-        val instruction = context.instruction
+    fun buildResolveMessageListAll(context: ExecutionContext): AgentMessageList {
+        // Prepare messages for model
         val messages = AgentMessageList()
+
+        initObserveUserInstruction(context.instruction, messages)
+
+        buildResolveMessageListStart(context, context.stateHistory, messages)
+
+        // browser state, viewport info, interactive elements, DOM
+        buildObserveUserMessageLast(messages, context)
+
+        return messages
+    }
+
+    fun buildObserveMessageListAll(params: ObserveParams, context: ExecutionContext): AgentMessageList {
+        // Prepare messages for model
+        val messages = AgentMessageList()
+
+        // observe guide
+        buildObserveGuideSystemPrompt(messages, params)
+        // browser state, viewport info, interactive elements, DOM
+        buildObserveUserMessageLast(messages, context)
+
+        return messages
+    }
+
+    fun buildResolveMessageListStart(
+        context: ExecutionContext, stateHistory: List<AgentState>,
+        messages: AgentMessageList,
+    ): AgentMessageList {
+        val instruction = context.instruction
 
         val systemMsg = buildOperatorSystemPrompt()
 
         messages.addSystem(systemMsg)
-        messages.addLast("user", buildUserRequestMessage(instruction), name = "user_request")
+        messages.addLastIfAbsent("user", buildUserRequestMessage(instruction), name = "user_request")
         messages.addUser(buildAgentStateHistoryMessage(stateHistory))
         if (context.screenshotB64 != null) {
             messages.addUser(buildBrowserVisionInfo())
@@ -944,8 +972,9 @@ $extractedJson
         return SimpleMessage(role = "user", content = content)
     }
 
-    fun buildObserveGuideSystemPrompt(messages: AgentMessageList, params: ObserveParams) {
-        val schema = if (params.returnAction) OBSERVE_GUIDE_OUTPUT_SCHEMA_RETURN_ACTIONS else OBSERVE_GUIDE_OUTPUT_SCHEMA
+    private fun buildObserveGuideSystemPrompt(messages: AgentMessageList, params: ObserveParams) {
+        val schema =
+            if (params.returnAction) OBSERVE_GUIDE_OUTPUT_SCHEMA_RETURN_ACTIONS else OBSERVE_GUIDE_OUTPUT_SCHEMA
 
         val observeSystemPrompt = PromptTemplate(OBSERVE_GUIDE_SYSTEM_MESSAGE).render(
             mapOf("OUTPUT_SCHEMA_PLACEHOLDER" to schema)
@@ -959,8 +988,8 @@ $extractedJson
         }
     }
 
-    fun initObserveUserInstruction(instruction: String?): String {
-        return when {
+    fun initObserveUserInstruction(instruction: String?, messages: AgentMessageList = AgentMessageList()): AgentMessageList {
+        val instruction2 = when {
             !instruction.isNullOrBlank() -> instruction
             isZH -> """
 查找页面中可用于后续任何操作的元素，包括导航链接、相关页面链接、章节/子章节链接、按钮或其他交互元素。
@@ -973,11 +1002,14 @@ related pages, section/subsection links, buttons, or other interactive elements.
 Be comprehensive: if there are multiple elements that may be relevant for future actions, return all of them.
                 """.trimIndent()
         }
+
+        messages.addUser(instruction2, name = "user_request")
+        return messages
     }
 
-    fun buildObserveUserMessage(messages: AgentMessageList, params: ObserveParams) {
-        val prevBrowserState = params.agentState.prevState?.browserUseState?.browserState
-        val browserState = params.browserUseState.browserState
+    private fun buildObserveUserMessageLast(messages: AgentMessageList, context: ExecutionContext) {
+        val prevBrowserState = context.agentState.prevState?.browserUseState?.browserState
+        val browserState = context.agentState.browserUseState.browserState
 
         val prevTabs = prevBrowserState?.tabs ?: emptyList()
         val currentTabs = browserState.tabs
@@ -999,19 +1031,18 @@ $newTabsJson
         val hiddenTopHeight = scrollState.hiddenTopHeight
         val hiddenBottomHeight = scrollState.hiddenBottomHeight
         val viewportHeight = scrollState.viewportHeight
-        val domState = params.browserUseState.domState
+        val domState = context.agentState.browserUseState.domState
 
         // The 1-based viewport to see.
         val processingViewport = scrollState.processingViewport
         val viewportsTotal = scrollState.viewportsTotal
 
-        val interactiveElements = params.browserUseState.getInteractiveElements()
+        val interactiveElements = context.agentState.browserUseState.getInteractiveElements()
 
         val delta = viewportHeight * 0.5
         val startY = (scrollState.y - delta).coerceAtLeast(0.0)
         val endY = (scrollState.y + viewportHeight + delta).coerceAtLeast(0.0)
-        val nanoTree = domState.microTree.
-        toNanoTreeInRange(startY, endY)
+        val nanoTree = domState.microTree.toNanoTreeInRange(startY, endY)
 
         fun contentCN() = """
 ## 浏览器状态

@@ -11,7 +11,6 @@ import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.BrowserChatModel
-import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
@@ -49,23 +48,21 @@ data class ExtractParams(
 )
 
 data class ObserveParams constructor(
-    /**
-     * The user's instruction/request
-     * */
-    val instruction: String,
-    val agentState: AgentState,
-    val requestId: String = UUID.randomUUID().toString(),
+    val context: ExecutionContext,
     /**
      * User provided additional system instructions
      * */
     val userProvidedInstructions: String? = null,
     val returnAction: Boolean = false,
+    val resolve: Boolean = false,
     val logInferenceToFile: Boolean = false,
     val fromAct: Boolean = false,
-    val screenshotB64: String? = null,
-    val context: ExecutionContext? = null
+    val screenshotB64: String? = null
 ) {
-    val browserUseState get() = agentState.browserUseState
+    /**
+     * The user's instruction/request
+     * */
+    val instruction: String get() = context.instruction
 }
 
 class InferenceEngine(
@@ -236,16 +233,14 @@ class InferenceEngine(
         return result
     }
 
-    suspend fun observe(params: ObserveParams, messages: AgentMessageList): ActionDescription {
-        requireNotNull(messages.instruction) { "User instruction is required | $messages" }
-        require(params.instruction == messages.instruction?.content)
-        requireNotNull(params.agentState.browserUseState) { "Agent state has to be available" }
-
+    suspend fun observe(params: ObserveParams, context: ExecutionContext): ActionDescription {
         val instruction = params.instruction
-        // observe guide
-        promptBuilder.buildObserveGuideSystemPrompt(messages, params)
-        // browser state, viewport info, interactive elements, DOM
-        promptBuilder.buildObserveUserMessage(messages, params)
+        val messages = if (params.resolve) {
+            promptBuilder.buildResolveMessageListAll(context)
+            // promptBuilder.buildResolveObserveMessageListStart(params.context!!, params.stateHistory!!, messages)
+        } else {
+            promptBuilder.buildObserveMessageListAll(params, context)
+        }
 
         val prefix = if (params.fromAct) "act" else "observe"
         var callFile = ""
@@ -254,7 +249,7 @@ class InferenceEngine(
             val (f, ts) = logCallIfEnabled(
                 dirPrefix = "${prefix}_summary",
                 kind = "${prefix}_call",
-                requestId = params.requestId,
+                requestId = context.requestId,
                 modelCall = prefix,
                 messages = messages.messages,
                 enabled = true
@@ -268,14 +263,14 @@ class InferenceEngine(
         // val (resp, elapsedMs) = doLangChainChat(systemMessages, userMessages)
 
         val startTime = Instant.now()
-        val modelResponse = cta.generateObserveResponse(messages, params.agentState, screenshotB64 = params.screenshotB64)
+
+        val modelResponse = cta.generateResponseRaw(messages, params.screenshotB64)
 
         val tokenUsage = modelResponse.tokenUsage
-
         // val responseContent = resp.aiMessage().text().trim()
         val responseContent = modelResponse.content
 
-        var actionDescription = cta.tta.modelResponseToActionDescription(instruction, params.agentState, modelResponse)
+        var actionDescription = cta.tta.modelResponseToActionDescription(instruction, context.agentState, modelResponse)
         actionDescription = cta.tta.reviseActionDescription(actionDescription)
 
         var respFile = ""
@@ -284,7 +279,7 @@ class InferenceEngine(
                 prefix = "${prefix}_summary",
                 kind = "${prefix}_response",
                 payload = mapOf(
-                    "requestId" to params.requestId,
+                    "requestId" to context.requestId,
                     "modelResponse" to prefix,
                     "rawResponse" to safeJsonPreview(responseContent)
                 )

@@ -1,8 +1,6 @@
 package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.agentic.ai.AgentMessageList
-import ai.platon.pulsar.agentic.ai.PromptBuilder
-import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.ExperimentalApi
@@ -15,7 +13,6 @@ import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.AgentState
-import org.apache.commons.lang3.StringUtils
 import java.nio.file.Files
 
 open class ContextToAction(
@@ -29,86 +26,37 @@ open class ContextToAction(
 
     val tta = TextToAction(conf)
 
-    val promptBuilder = PromptBuilder()
-
     init {
         Files.createDirectories(baseDir)
     }
 
     @ExperimentalApi
     open suspend fun generate(messages: AgentMessageList, context: ExecutionContext): ActionDescription {
-        return generate(messages, context.agentState, context.screenshotB64)
-    }
-
-    @ExperimentalApi
-    open suspend fun generate(
-        messages: AgentMessageList, agentState: AgentState, screenshotB64: String? = null
-    ): ActionDescription {
         try {
-            val instruction = agentState.instruction
+            val instruction = context.instruction
 
-            val response = generateObserveResponse(messages, agentState, screenshotB64, 1)
+            val response = generateResponseRaw(messages, context.screenshotB64)
 
-            val actionDescription = tta.modelResponseToActionDescription(instruction, agentState, response)
+            val actionDescription = tta.modelResponseToActionDescription(instruction, context.agentState, response)
 
             return tta.reviseActionDescription(actionDescription)
         } catch (e: Exception) {
             val errorResponse = ModelResponse("Unknown exception" + e.brief(), ResponseState.OTHER)
-            return ActionDescription(agentState.instruction, exception = e, modelResponse = errorResponse)
-        }
-    }
-
-    /**
-     * Generate EXACT ONE WebDriver action with interactive elements.
-     *
-     * @param instruction The action description with plain text
-     * @param driver The driver to use to collect the context, such as interactive elements
-     * @return The action description
-     * */
-    @ExperimentalApi
-    open suspend fun generate(
-        instruction: String, agentState: AgentState, screenshotB64: String? = null
-    ): ActionDescription {
-        try {
-            return generateWithToolCallSpecs(instruction, agentState, screenshotB64, 1)
-        } catch (e: Exception) {
-            e.printStackTrace()
-            val errorResponse = ModelResponse(e.brief(), ResponseState.OTHER)
-            return ActionDescription(agentState.instruction, modelResponse = errorResponse)
+            return ActionDescription(context.instruction, exception = e, modelResponse = errorResponse, context = context)
         }
     }
 
     @ExperimentalApi
-    open suspend fun generateObserveResponse(
-        instruction: String, agentState: AgentState, screenshotB64: String? = null, toolCallLimit: Int = 100,
-    ): ModelResponse {
-        val messages = AgentMessageList()
-        messages.addLast("user", instruction, "user_request")
-        return generateObserveResponse(messages, agentState, screenshotB64, toolCallLimit)
-    }
-
-    @ExperimentalApi
+    @Deprecated(
+        "Use generateResponseRaw(messages, screenshotB64) instead",
+        ReplaceWith("generateResponseRaw(messages, screenshotB64)")
+    )
     open suspend fun generateObserveResponse(
         messages: AgentMessageList,
         agentState: AgentState,
         screenshotB64: String? = null,
         toolCallLimit: Int = 100,
     ): ModelResponse {
-        var userRequest: String? = messages.find("user_request")?.content
-        requireNotNull(userRequest) { "user_request not found in message list: $messages" }
-        if (userRequest.contains("<user_request>")) {
-            userRequest = StringUtils.substringBetween(userRequest, "<user_request>", "</user_request>")
-        }
-
-        val params = ObserveParams(
-            userRequest ?: "",
-            agentState = agentState,
-            returnAction = true,
-            logInferenceToFile = true
-        )
-
-        promptBuilder.buildObserveUserMessage(messages, params)
-
         return generateResponseRaw(messages, screenshotB64)
     }
 
@@ -124,17 +72,5 @@ open class ContextToAction(
         }
 
         return response
-    }
-
-    @ExperimentalApi
-    private suspend fun generateWithToolCallSpecs(
-        instruction: String,
-        agentState: AgentState,
-        screenshotB64: String? = null,
-        toolCallLimit: Int = 100,
-    ): ActionDescription {
-        val response = generateObserveResponse(instruction, agentState, screenshotB64, toolCallLimit)
-        val actionDescription = tta.modelResponseToActionDescription(instruction, agentState, response)
-        return tta.reviseActionDescription(actionDescription)
     }
 }

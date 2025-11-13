@@ -40,6 +40,13 @@ class AgentMessageList(
         messages.add(msg)
     }
 
+    fun addLastIfAbsent(role: String, content: String, name: String) {
+        if (find(name) == null) {
+            val msg = SimpleMessage(role, content, name)
+            messages.add(msg)
+        }
+    }
+
     fun addLast(message: SimpleMessage) {
         val msg = SimpleMessage(message.role, message.content, message.name)
         messages.add(msg)

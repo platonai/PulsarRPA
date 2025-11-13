@@ -25,8 +25,16 @@ class AgentStateManager(
     val stateHistory: List<AgentState> get() = _stateHistory
     val processTrace: List<ProcessTrace> get() = _processTrace
 
-    suspend fun buildInitExecutionContext(options: ActionOptions): ExecutionContext {
-        return buildExecutionContext(options.action, agentState = options.agentState)
+    suspend fun buildInitExecutionContext(action: ActionOptions, baseContext: ExecutionContext? = null): ExecutionContext {
+        val context = buildExecutionContext(action.action, baseContext = baseContext)
+        action.setContext(context)
+        return context
+    }
+
+    suspend fun buildInitExecutionContext(options: ObserveOptions, baseContext: ExecutionContext? = null): ExecutionContext {
+        val context = buildExecutionContext(options.instruction ?: "", baseContext = baseContext)
+        options.setContext(context)
+        return context
     }
 
     suspend fun buildExecutionContext(
@@ -56,6 +64,7 @@ class AgentStateManager(
             sessionId = sessionId,
             agentState = currentAgentState,
             config = config,
+            stateHistory = _stateHistory,
         )
 
         return ExecutionContext(
@@ -68,6 +77,7 @@ class AgentStateManager(
             prevAgentState = bc.agentState,
             agentState = currentAgentState,
             config = bc.config,
+            stateHistory = _stateHistory,
         )
     }
 
@@ -148,16 +158,16 @@ class AgentStateManager(
         addToHistory(agentState)
     }
 
-    fun addToHistory(h: AgentState) {
+    fun addToHistory(state: AgentState) {
         val items = mapOf(
-            "action" to h.method,
-            "expression" to h.toolCallResult?.expression,
-            "tcEvalResult" to h.toolCallResult?.evaluate?.value
+            "action" to state.method,
+            "expression" to state.toolCallResult?.expression,
+            "tcEvalResult" to state.toolCallResult?.evaluate?.value
         ).filterValues { it != null }
-        val trace = ProcessTrace(step = h.step, items = items, message = h.toString())
+        val trace = ProcessTrace(state.step, state.toString(), items = items)
 
         synchronized(this) {
-            _stateHistory.add(h)
+            _stateHistory.add(state)
             if (_stateHistory.size > config.maxHistorySize * 2) {
                 // Keep the latest maxHistorySize entries
                 val remaining = _stateHistory.takeLast(config.maxHistorySize)

@@ -10,7 +10,6 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
 import ai.platon.pulsar.skeleton.ai.*
-import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import kotlinx.coroutines.*
@@ -210,14 +209,6 @@ open class BrowserPerceptiveAgent constructor(
     }
 
     /**
-     * Convenience wrapper building ActionOptions from a raw action string.
-     */
-    override suspend fun act(action: String): ActResult {
-        val opts = ActionOptions(action = action)
-        return act(opts)
-    }
-
-    /**
      * Executes a single observe->act cycle for a supplied ActionOptions. Times out after actTimeoutMs
      * to prevent indefinite hangs. Model may produce multiple candidate tool calls internally; only
      * one successful execution is recorded in stateHistory.
@@ -227,7 +218,6 @@ open class BrowserPerceptiveAgent constructor(
         return try {
             withContext(agentScope.coroutineContext) {
                 super.act(action)
-                // actInCoroutine(action)
             }
         } catch (_: CancellationException) {
             ActResult(false, "USER interrupted", action = action.action)
@@ -271,44 +261,36 @@ open class BrowserPerceptiveAgent constructor(
     }
 
     /**
-     * Convenience overload for structured extraction. When only an instruction string is provided,
-     * it uses the built-in ExtractionSchema.DEFAULT.
-     *
-     * @param instruction The extraction instruction from the user.
-     * @return The extraction result produced by the model.
-     */
-    override suspend fun extract(instruction: String): ExtractResult {
-        val opts = ExtractOptions(instruction = instruction, ExtractionSchema.DEFAULT)
-        return extract(opts)
-    }
-
-    /**
-     * Convenience overload for structured extraction that constrains the result with a JSON schema.
-     *
-     * @param instruction The extraction instruction from the user.
-     * @param schema The JSON schema used to constrain the returned data structure.
-     * @return The extraction result produced by the model.
-     */
-    override suspend fun extract(instruction: String, schema: ExtractionSchema): ExtractResult {
-        val opts = ExtractOptions(instruction = instruction, schema = schema)
-        return extract(opts)
-    }
-
-    /**
      * Observes the page given an instruction, returning zero or more ObserveResult objects describing
      * candidate elements and potential actions (if returnAction=true).
      */
     override suspend fun observe(options: ObserveOptions): List<ObserveResult> {
         if (isClosed) return emptyList()
-        return withContext(agentScope.coroutineContext) {
-            super.observe(options)
-            // observeInCoroutine(options)
-        }
-    }
 
-    override suspend fun observe(instruction: String): List<ObserveResult> {
-        val opts = ObserveOptions(instruction = instruction, returnAction = null)
-        return observe(opts)
+        val context = options.getContext() ?: stateManager.buildInitExecutionContext(options)
+        options.setContext(context)
+
+        if (!options.resolve) {
+            return withContext(agentScope.coroutineContext) {
+                if (isClosed) throw CancellationException("closed")
+                super.observe(options)
+            }
+        }
+
+        try {
+            val results = withContext(agentScope.coroutineContext) {
+                if (isClosed) throw CancellationException("closed")
+                super.observe(options)
+            }
+
+            circuitBreaker.recordSuccess(CircuitBreaker.FailureType.LLM_FAILURE)
+            consecutiveLLMFailureCounter.set(0) // Keep for backward compatibility
+
+            return results
+        } catch (e: Exception) {
+            handleObserveException(e, context)
+            return emptyList()
+        }
     }
 
     fun stop() = close()
@@ -332,14 +314,17 @@ open class BrowserPerceptiveAgent constructor(
     }
 
     protected suspend fun generateActions(context: ExecutionContext): ActionDescription {
-        val screenshotB64 = if (context.step % config.screenshotEveryNSteps == 0) {
-            if (isClosed) return ActionDescription(context.instruction, exception = CancellationException("closed"))
+        context.screenshotB64 = if (context.step % config.screenshotEveryNSteps == 0) {
+            if (isClosed) return ActionDescription(
+                context.instruction,
+                context = context,
+                exception = CancellationException("closed")
+            )
             captureScreenshotWithRetry(context)
         } else null
-        context.screenshotB64 = screenshotB64
 
         // Prepare messages for model
-        val messages = promptBuilder.buildResolveObserveMessageList(context, stateHistory)
+        val messages = promptBuilder.buildResolveMessageListAll(context)
 
         return try {
             if (isClosed) throw CancellationException("closed")
@@ -348,17 +333,58 @@ open class BrowserPerceptiveAgent constructor(
             consecutiveLLMFailureCounter.set(0) // Keep for backward compatibility
             action
         } catch (e: Exception) {
-            val failures = try {
-                circuitBreaker.recordFailure(CircuitBreaker.FailureType.LLM_FAILURE)
-            } catch (cbError: CircuitBreakerTrippedException) {
-                throw PerceptiveAgentError.PermanentError(cbError.message ?: "Circuit breaker tripped", cbError)
-            }
+            handleObserveException(e, context)
 
-            consecutiveLLMFailureCounter.set(failures) // Keep for backward compatibility
-            logger.error("🤖❌ action.gen.fail sid={} failures={} msg={}", context.sid, failures, e.message, e)
-            consecutiveFailureCounter.incrementAndGet()
+            ActionDescription(
+                context.instruction,
+                context = context,
+                exception = e,
+                modelResponse = ModelResponse.INTERNAL_ERROR
+            )
+        }
+    }
 
-            ActionDescription(context.instruction, exception = e, modelResponse = ModelResponse.INTERNAL_ERROR)
+    private fun handleObserveException(e: Exception, context: ExecutionContext) {
+        val failures = try {
+            circuitBreaker.recordFailure(CircuitBreaker.FailureType.LLM_FAILURE)
+        } catch (cbError: CircuitBreakerTrippedException) {
+            throw PerceptiveAgentError.PermanentError(cbError.message ?: "Circuit breaker tripped", cbError)
+        }
+
+        consecutiveLLMFailureCounter.set(failures) // Keep for backward compatibility
+        logger.error("🤖❌ action.gen.fail sid={} failures={} msg={}", context.sid, failures, e.message, e)
+        consecutiveFailureCounter.incrementAndGet()
+    }
+
+    protected suspend fun prepareStep(
+        action: ActionOptions,
+        ctxIn: ExecutionContext,
+        noOpsIn: Int
+    ) {
+        var context = ctxIn
+        var consecutiveNoOps = noOpsIn
+        val nextStep = context.step + 1
+
+        ensureReadyForStep(action)
+
+        context = stateManager.buildExecutionContext(action.action, "step", nextStep, baseContext = context)
+        action.setContext(context)
+        val agentState = context.agentState
+        val browserUseState = agentState.browserUseState
+        val step = context.step
+        val sid = context.sid
+
+        val unchangedCount = pageStateTracker.checkStateChange(browserUseState)
+        if (unchangedCount >= 3) {
+            logger.info("⚠️ loop.warn sid={} step={} unchangedSteps={}", sid, step, unchangedCount); consecutiveNoOps++
+        }
+
+        logger.info("▶️ step.exec sid={} step={}/{} noOps={}", sid, step, config.maxSteps, consecutiveNoOps)
+        if (logger.isDebugEnabled) logger.debug("🧩 dom={}", DomDebug.summarizeStr(browserUseState.domState, 5))
+        if (step % config.memoryCleanupIntervalSteps == 0) performMemoryCleanup(context)
+        if (config.enableCheckpointing && step % config.checkpointIntervalSteps == 0) {
+            runCatching { saveCheckpoint(context) }
+                .onFailure { e -> logger.warn("💾❌ checkpoint.save.fail sid={} step={} msg={}", sid, step, e.message) }
         }
     }
 
@@ -377,7 +403,7 @@ open class BrowserPerceptiveAgent constructor(
     }
 
     private suspend fun doResolveProblem(
-        action: ActionOptions,
+        initActionOptions: ActionOptions,
         initContext: ExecutionContext,
         attempt: Int
     ): ActResult {
@@ -386,6 +412,7 @@ open class BrowserPerceptiveAgent constructor(
         var context = initContext
         val startTime = Instant.now()
         try {
+            val action = initActionOptions.copy(resolve = true)
             while (!isClosed && context.step < config.maxSteps) {
                 val stepResult = processSingleStep(action, context, consecutiveNoOps)
                 context = stepResult.context
@@ -540,7 +567,7 @@ open class BrowserPerceptiveAgent constructor(
         )
     }
 
-    private suspend fun initializeResolution(initContext: ExecutionContext, attempt: Int) {
+    protected suspend fun initializeResolution(initContext: ExecutionContext, attempt: Int) {
         val sid = initContext.sid
         logger.info(
             "🚀 agent.start sid={} step={} url={} instr='{}' attempt={} maxSteps={} maxRetries={}",
@@ -553,41 +580,23 @@ open class BrowserPerceptiveAgent constructor(
         }
     }
 
-    private data class StepProcessingResult(
+    data class StepProcessingResult(
         val context: ExecutionContext,
         val consecutiveNoOps: Int,
         val shouldStop: Boolean
     )
 
-    private suspend fun processSingleStep(
+    protected open suspend fun processSingleStep(
         action: ActionOptions,
         ctxIn: ExecutionContext,
         noOpsIn: Int
     ): StepProcessingResult {
-        var context = ctxIn
+        val context = ctxIn
         var consecutiveNoOps = noOpsIn
+        val step = context.step
         val nextStep = context.step + 1
 
-        ensureReadyForStep(action)
-
-        context = stateManager.buildExecutionContext(action.action, "step", nextStep, baseContext = context)
-        val agentState = context.agentState
-        val browserUseState = agentState.browserUseState
-        val step = context.step
-        val sid = context.sid
-
-        val unchangedCount = pageStateTracker.checkStateChange(browserUseState)
-        if (unchangedCount >= 3) {
-            logger.info("⚠️ loop.warn sid={} step={} unchangedSteps={}", sid, step, unchangedCount); consecutiveNoOps++
-        }
-
-        logger.info("▶️ step.exec sid={} step={}/{} noOps={}", sid, step, config.maxSteps, consecutiveNoOps)
-        if (logger.isDebugEnabled) logger.debug("🧩 dom={}", DomDebug.summarizeStr(browserUseState.domState, 5))
-        if (step % config.memoryCleanupIntervalSteps == 0) performMemoryCleanup(context)
-        if (config.enableCheckpointing && step % config.checkpointIntervalSteps == 0) {
-            runCatching { saveCheckpoint(context) }
-                .onFailure { e -> logger.warn("💾❌ checkpoint.save.fail sid={} step={} msg={}", sid, step, e.message) }
-        }
+        prepareStep(action, ctxIn, nextStep)
 
         val actionDescription = generateActions(context)
 
@@ -616,13 +625,14 @@ open class BrowserPerceptiveAgent constructor(
             updateTodo(context, detailedActResult.actionDescription)
             updatePerformanceMetrics(step, context.timestamp, true)
             val preview = detailedActResult.toolCallResult?.evaluate?.preview
-            logger.info("🏁 step.done sid={} step={} tcResult={}", sid, step, preview)
+            logger.info("🏁 step.done sid={} step={} tcResult={}", context.sid, step, preview)
         } else {
             consecutiveNoOps++
             val stop = handleConsecutiveNoOps(consecutiveNoOps, context)
             updatePerformanceMetrics(step, context.timestamp, false)
             if (stop) return StepProcessingResult(context, consecutiveNoOps, true)
         }
+
         delay(calculateAdaptiveDelay())
         return StepProcessingResult(context, consecutiveNoOps, false)
     }
@@ -751,7 +761,7 @@ open class BrowserPerceptiveAgent constructor(
         }.onFailure { e -> slogger.logError("📝❌ todo.progress.fail", e, sid) }
     }
 
-    private fun performMemoryCleanup(context: ExecutionContext) {
+    protected fun performMemoryCleanup(context: ExecutionContext) {
         try {
             synchronized(stateManager) {
                 if (stateHistory.size > config.maxHistorySize) {

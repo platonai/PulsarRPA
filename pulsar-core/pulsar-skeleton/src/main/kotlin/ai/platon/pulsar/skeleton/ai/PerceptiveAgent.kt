@@ -19,7 +19,8 @@ data class ActionOptions(
     val domSettleTimeoutMs: Int? = null,
     val timeoutMs: Int? = null,
     val iframes: Boolean? = null,
-    val agentState: AgentState? = null,
+    val resolve: Boolean = false,
+    val additionalContext: MutableMap<String, Any> = mutableMapOf(),
 )
 
 data class DetailedActResult(
@@ -64,6 +65,11 @@ data class ActResult constructor(
             message,
             detail = detail,
         )
+        fun complete(actionDescription: ActionDescription): ActResult {
+            val detailedActResult = DetailedActResult(actionDescription, null, true, actionDescription.summary)
+            return ActResult(
+                true, "completed", actionDescription.instruction, null, detailedActResult)
+        }
     }
 }
 
@@ -96,7 +102,9 @@ data class ObserveOptions(
     val iframes: Boolean? = null,
     val frameId: String? = null,
 
-    val additionalContext: MutableMap<String, WeakReference<Any>> = mutableMapOf(),
+    val resolve: Boolean = false,
+    val agentState: AgentState? = null,
+    val additionalContext: MutableMap<String, Any> = mutableMapOf(),
 )
 
 data class ToolCallSpec constructor(
@@ -228,6 +236,8 @@ data class ObserveResult constructor(
     val observeElement: ObserveElement? = null,
 
     val actionDescription: ActionDescription? = null,
+
+    val additionalContext: MutableMap<String, Any> = mutableMapOf(),
 ) {
     @Deprecated("Use observeElement instead", ReplaceWith("observeElement"))
     val observeElements: List<ObserveElement>? get() = actionDescription?.observeElements
@@ -285,6 +295,7 @@ data class ActionDescription constructor(
      * The original instruction.
      * */
     val instruction: String,
+
     /**
      * AI: observe elements
      * */
@@ -315,6 +326,10 @@ data class ActionDescription constructor(
      * */
     val exception: Exception? = null,
     /**
+     * The execution context
+     * */
+    val context: Any? = null,
+    /**
      * The agent state
      * */
     val agentState: AgentState? = null,
@@ -331,7 +346,7 @@ data class ActionDescription constructor(
         return elements.map { this.copy(observeElements = listOf(it)) }
     }
 
-    fun toObserveResults(agentState: AgentState): List<ObserveResult> {
+    fun toObserveResults(agentState: AgentState, context: Any): List<ObserveResult> {
         val results = observeElements?.map { ele ->
             ObserveResult(
                 agentState = agentState,
@@ -347,7 +362,7 @@ data class ActionDescription constructor(
                 backendNodeId = ele.backendNodeId,
                 observeElement = ele,
                 actionDescription = this,
-            )
+            ).also { it.additionalContext["context"] = WeakReference(context) }
         }
 
         return results ?: emptyList()
@@ -361,8 +376,8 @@ data class ActionDescription constructor(
 
 data class ProcessTrace(
     val step: Int,
-    val items: Map<String, Any?> = emptyMap(),
     val message: String? = null,
+    val items: Map<String, Any?> = emptyMap(),
     val timestamp: Instant = Instant.now(),
 ) {
     override fun toString(): String {

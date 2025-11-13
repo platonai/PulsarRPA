@@ -6,6 +6,7 @@ import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.ai.ObserveOptions
+import ai.platon.pulsar.skeleton.ai.ObserveResult
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import java.lang.ref.WeakReference
 import java.time.Instant
@@ -50,6 +51,7 @@ data class ExecutionContext(
 
     var prevAgentState: AgentState? = null,
     val agentState: AgentState,
+    val stateHistory: List<AgentState>,
 
     val config: AgentConfig,
 
@@ -67,33 +69,38 @@ data class ExecutionContext(
         return options
     }
 
-    fun createObserveActOptions(): ObserveOptions {
-        val options = ObserveOptions(instruction = this.instruction, returnAction = true)
+    fun createObserveActOptions(resolve: Boolean): ObserveOptions {
+        val options = ObserveOptions(
+            instruction = this.instruction, returnAction = true, resolve = resolve
+        )
         options.additionalContext["context"] = WeakReference(this)
         return options
     }
 
-    fun createObserveParams(options: ObserveOptions, fromAct: Boolean, screenshotB64: String? = null): ObserveParams {
+    fun createObserveParams(
+        options: ObserveOptions,
+        fromAct: Boolean,
+        resolve: Boolean,
+        screenshotB64: String? = null
+    ): ObserveParams {
         return ObserveParams(
-            instruction = instruction,
-            agentState = agentState,
-            requestId = requestId,
+            context = this,
             returnAction = options.returnAction ?: false,
             logInferenceToFile = config.enableStructuredLogging,
             fromAct = fromAct,
-            screenshotB64 = screenshotB64,
+            resolve = resolve,
+            screenshotB64 = screenshotB64
         )
     }
 
-    fun createObserveActParams(screenshotB64: String? = null): ObserveParams {
+    fun createObserveActParams(resolve: Boolean, screenshotB64: String? = null): ObserveParams {
         return ObserveParams(
-            instruction = instruction,
-            agentState = agentState,
-            requestId = requestId,
+            context = this,
             fromAct = true,
             returnAction = true,
+            resolve = resolve,
             logInferenceToFile = config.enableStructuredLogging,
-            screenshotB64 = screenshotB64
+            screenshotB64 = screenshotB64,
         )
     }
 
@@ -106,4 +113,28 @@ data class ExecutionContext(
             logInferenceToFile = config.enableStructuredLogging,
         )
     }
+}
+
+fun ActionOptions.setContext(context: ExecutionContext) {
+    additionalContext["context"] = WeakReference(context)
+}
+
+fun ActionOptions.getContext(): ExecutionContext? {
+    return (additionalContext["context"] as? WeakReference<*>)?.get() as? ExecutionContext
+}
+
+fun ObserveResult.setContext(context: ExecutionContext) {
+    additionalContext["context"] = WeakReference(context)
+}
+
+fun ObserveResult.getContext(): ExecutionContext? {
+    return (additionalContext["context"] as? WeakReference<*>)?.get() as? ExecutionContext
+}
+
+fun ObserveOptions.setContext(context: ExecutionContext) {
+    additionalContext["context"] = WeakReference(context)
+}
+
+fun ObserveOptions.getContext(): ExecutionContext? {
+    return (additionalContext["context"] as? WeakReference<*>)?.get() as? ExecutionContext
 }

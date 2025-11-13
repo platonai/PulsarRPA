@@ -7,6 +7,8 @@ import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.agent.detail.AgentStateManager
 import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
 import ai.platon.pulsar.agentic.ai.agent.detail.PageStateTracker
+import ai.platon.pulsar.agentic.ai.agent.detail.getContext
+import ai.platon.pulsar.agentic.ai.agent.detail.setContext
 import ai.platon.pulsar.agentic.ai.tta.ContextToAction
 import ai.platon.pulsar.agentic.tools.AgentToolManager
 import ai.platon.pulsar.common.AppPaths
@@ -82,15 +84,11 @@ open class BrowserAgentActor(
      * one successful execution is recorded in stateHistory.
      */
     override suspend fun act(action: ActionOptions): ActResult {
-        val context = stateManager.buildInitExecutionContext(action)
-        val action = if (action.agentState == null) {
-            action.copy(agentState = context.agentState)
-        } else action
+        val context = action.getContext() ?: stateManager.buildInitExecutionContext(action)
 
         return try {
             withTimeout(config.actTimeoutMs) {
-                val messages = AgentMessageList()
-                doObserveAct(action, messages)
+                doObserveAct(action)
             }
         } catch (_: TimeoutCancellationException) {
             val msg = "⏳ Action timed out after ${config.actTimeoutMs}ms: ${action.action}"
@@ -109,17 +107,18 @@ open class BrowserAgentActor(
 
     override suspend fun act(observe: ObserveResult): ActResult {
         val instruction = observe.agentState.instruction
+        val context = observe.getContext()
         val agentState = observe.agentState
         val observeElement = observe.observeElement
-        observeElement ?: return ActResult.failed("No observation", instruction)
+        context ?: return ActResult.failed("No context to act", instruction)
+        observeElement ?: return ActResult.failed("No observation to act", instruction)
         val actionDescription =
-            observe.actionDescription ?: return ActResult.failed("No action description", instruction)
-        val toolCall = observeElement.toolCall ?: return ActResult.failed("No tool call", instruction)
+            observe.actionDescription ?: return ActResult.failed("No action description to act", instruction)
+        val toolCall = observeElement.toolCall ?: return ActResult.failed("No tool call to act", instruction)
         val method = toolCall.method
 
         return try {
-            val context = stateManager.buildExecutionContext(instruction, "step")
-            val detailedActResult = actInternal(actionDescription, context)
+            val detailedActResult = executeToolCall(actionDescription, context)
             val toolCallResult = detailedActResult?.toolCallResult
 
             logger.info(
@@ -202,27 +201,34 @@ open class BrowserAgentActor(
     }
 
     override suspend fun observe(options: ObserveOptions): List<ObserveResult> {
-        val messages = AgentMessageList()
-        val instruction = promptBuilder.initObserveUserInstruction(options.instruction)
-        messages.addUser(instruction, name = "user_request")
+        val context = options.getContext() ?: stateManager.buildInitExecutionContext(options)
 
-        val context = (options.additionalContext["context"]?.get() as? ExecutionContext)
-            ?: throw IllegalStateException("Illegal context")
+//        val messages = if (options.returnAction == true) {
+//            promptBuilder.buildResolveObserveMessageList(context, stateHistory)
+//        }
+//        else promptBuilder.initObserveUserInstruction(options.instruction)
 
-        val actionDescription = takeScreenshotAndObserve(options, context, messages)
+//        val instruction = promptBuilder.buildObserveActToolUsePrompt(options.action)
+//        messages.addUser(instruction, "user_request")
 
-        return actionDescription.toObserveResults(context.agentState)
+        val resolve = options.resolve ?: false
+        val actionDescription = captureScreenshotAndObserve(options, context, resolve)
+
+        return actionDescription.toObserveResults(context.agentState, context)
     }
 
-    private suspend fun doObserveAct(options: ActionOptions, messages: AgentMessageList): ActResult {
+    private suspend fun doObserveAct(options: ActionOptions): ActResult {
         val instruction = promptBuilder.buildObserveActToolUsePrompt(options.action)
-        messages.addUser(instruction, "user_request")
 
-        val context = stateManager.buildExecutionContext(instruction, "observeAct", agentState = options.agentState)
+        val context = requireNotNull(options.getContext()) { "Context is required to doObserveAct" }
 
-        val actionDescription = takeScreenshotAndObserve(options, context, messages)
+        val actionDescription = captureScreenshotAndObserve(options, context, options.resolve)
 
-        val observeResults = actionDescription.toObserveResults(context.agentState)
+        if (actionDescription.isComplete) {
+            return ActResult.complete(actionDescription)
+        }
+
+        val observeResults = actionDescription.toObserveResults(context.agentState, context)
 
         if (observeResults.isEmpty()) {
             val msg = "⚠️ doObserveAct: No actionable element found"
@@ -267,10 +273,10 @@ open class BrowserAgentActor(
 
         val msg = "❌ All ${resultsToTry.size} candidates failed. Last error: $lastError"
         stateManager.trace(context.agentState, mapOf("event" to "actAllFailed", "candidates" to resultsToTry.size), msg)
-        return ActResult.Companion.failed(msg, instruction)
+        return ActResult.failed(msg, instruction)
     }
 
-    private suspend fun actInternal(
+    private suspend fun executeToolCall(
         actionDescription: ActionDescription,
         context: ExecutionContext
     ): DetailedActResult? {
@@ -287,7 +293,6 @@ open class BrowserAgentActor(
             )
 
             val toolCallResult = toolExecutor.execute(actionDescription, "resolve, #$step")
-
 
             val summary = "✅ ${toolCall.method} executed successfully"
             stateManager.trace(context.agentState, mapOf("event" to "toolExecOk", "tool" to toolCall.method), summary)
@@ -309,10 +314,10 @@ open class BrowserAgentActor(
         }
     }
 
-    private suspend fun takeScreenshotAndObserve(
+    private suspend fun captureScreenshotAndObserve(
         options: Any,
         context: ExecutionContext,
-        messages: AgentMessageList
+        resolve: Boolean,
     ): ActionDescription {
         val interactiveElements = context.agentState.browserUseState.getInteractiveElements()
 
@@ -320,14 +325,21 @@ open class BrowserAgentActor(
             domService.addHighlights(interactiveElements)
 
             val screenshotB64 = captureScreenshotWithRetry(context)
+            context.screenshotB64 = screenshotB64
 
             val params = when (options) {
-                is ObserveOptions -> context.createObserveParams(options, false, screenshotB64)
-                is ActionOptions -> context.createObserveActParams(screenshotB64)
+                is ObserveOptions -> context.createObserveParams(
+                    options,
+                    fromAct = false,
+                    resolve = resolve,
+                    screenshotB64
+                )
+
+                is ActionOptions -> context.createObserveActParams(resolve, screenshotB64)
                 else -> throw IllegalArgumentException("Not supported option")
             }
 
-            observeAndInference(params, messages)
+            observeAndInference(params, context)
         } finally {
             runCatching { domService.removeHighlights(interactiveElements) }
                 .onFailure { e -> logger.warn("⚠️ Failed to remove highlights: ${e.message}") }
@@ -368,23 +380,19 @@ open class BrowserAgentActor(
         return null
     }
 
-    private suspend fun observeAndInference(params: ObserveParams, messages: AgentMessageList): ActionDescription {
-        requireNotNull(messages.instruction) { "User instruction is required | $messages" }
-        requireNotNull(params.agentState) { "Agent state has to be available" }
-        require(params.instruction == messages.instruction?.content)
-
-        val instruction = params.instruction
-        val requestId: String = params.requestId
+    private suspend fun observeAndInference(params: ObserveParams, context: ExecutionContext): ActionDescription {
+        val instruction = context.instruction
+        val requestId: String = context.requestId
 
         return try {
             val actionDescription = withTimeout(config.llmInferenceTimeoutMs) {
-                inference.observe(params, messages)
+                inference.observe(params, context)
             }
 
             return actionDescription
         } catch (e: Exception) {
             logger.error("❌ observeAct.observe.error requestId={} msg={}", requestId.take(8), e.message, e)
-            ActionDescription(instruction, exception = e, modelResponse = ModelResponse.Companion.INTERNAL_ERROR)
+            ActionDescription(instruction, exception = e, modelResponse = ModelResponse.INTERNAL_ERROR)
         }
     }
 
