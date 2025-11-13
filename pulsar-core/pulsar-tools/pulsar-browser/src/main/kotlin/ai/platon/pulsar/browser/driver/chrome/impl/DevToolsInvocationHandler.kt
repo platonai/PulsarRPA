@@ -13,11 +13,15 @@ import ai.platon.pulsar.browser.driver.chrome.util.ChromeIOException
 import ai.platon.pulsar.browser.driver.chrome.util.ChromeRPCException
 import ai.platon.pulsar.browser.driver.chrome.util.ReflectUtils
 import ai.platon.pulsar.browser.driver.chrome.util.SuspendAwareHandler
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import java.lang.reflect.Method
-import java.lang.reflect.ParameterizedType
-import java.lang.reflect.Type
 import java.util.concurrent.atomic.AtomicLong
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 class DevToolsInvocationHandler(impl: Any) : SuspendAwareHandler(impl) {
     companion object {
@@ -34,7 +38,9 @@ class DevToolsInvocationHandler(impl: Any) : SuspendAwareHandler(impl) {
             val methodId = params0[ID_PROPERTY]?.toString()?.toLongOrNull() ?: nextId()
             params0[ID_PROPERTY] = methodId.toString()
 
-            val params1 = params0.filterValues { it != null } as Map<String, Any>
+            val params1: Map<String, Any> = params0.entries
+                .filter { it.value != null }
+                .associate { it.key to it.value as Any }
             return MethodInvocation(methodId, method, params1)
         }
 
@@ -55,7 +61,6 @@ class DevToolsInvocationHandler(impl: Any) : SuspendAwareHandler(impl) {
                         params[javaAnnotation.value] = args[i]
                     }
                     // the last parameter might be `kotlin.coroutines.Continuation`
-                    // params[parameters[i].getAnnotation(ParamName::class.java).value] = args[i]
                 }
             }
             return params
@@ -64,15 +69,18 @@ class DevToolsInvocationHandler(impl: Any) : SuspendAwareHandler(impl) {
 
     lateinit var devTools: RemoteDevTools
 
+    // Use a dedicated scope for bridging suspend invocations without blocking
+    private val invocationScope = CoroutineScope(Dispatchers.Default)
+
     @Throws(ChromeIOException::class, ChromeRPCException::class)
-    override fun invoke(target: Any, method: Method, args: Array<out Any>?): Any? {
+    override fun invoke(proxy: Any, method: Method, args: Array<out Any>?): Any? {
         // Handle built-in Object methods locally and do NOT call devTools
         if (isJavaLangObjectMethod(method)) {
-            return handleJavaLangObjectMethod(target, method, args)
+            return handleJavaLangObjectMethod(proxy, method, args)
         }
 
         if (isEventSubscription(method)) {
-            return handleEventSubscription(target, method, args)
+            return handleEventSubscription(method, args)
         }
 
         // Resolve accurate return type, especially for suspend functions whose JVM return type is Object
@@ -84,14 +92,29 @@ class DevToolsInvocationHandler(impl: Any) : SuspendAwareHandler(impl) {
 
         val methodInvocation = createMethodInvocation(method, args)
 
-        // TODO: avoid runBlocking, wrapper the function to use super.invoke()
-        return runBlocking {
-            // Invokes a remote method and returns the result.
-            devTools.invoke(resolvedReturnType, returnProperty, returnTypeClasses, methodInvocation)
+        // Bridge suspend functions via Continuation without blocking
+        val isSuspend = method.parameterTypes.lastOrNull()
+            ?.let { Continuation::class.java.isAssignableFrom(it) } == true
+        if (isSuspend) {
+            require(args != null && args.isNotEmpty()) { "args must not be null or empty for suspend method" }
+            @Suppress("UNCHECKED_CAST")
+            val cont = args.last() as Continuation<Any?>
+            invocationScope.launch(cont.context) {
+                try {
+                    val result = devTools.invoke(resolvedReturnType, returnProperty, returnTypeClasses, methodInvocation)
+                    cont.resume(result)
+                } catch (t: Throwable) {
+                    cont.resumeWithException(t)
+                }
+            }
+            return COROUTINE_SUSPENDED
         }
+
+        // Non-suspend path should be rare (events/Object handled above). For safety, throw to avoid blocking.
+        throw IllegalStateException("Non-suspend command methods are not supported by DevToolsInvocationHandler: ${'$'}{method.name}")
     }
 
-    private fun handleEventSubscription(target: Any, method: Method, args: Array<out Any>?): EventListener {
+    private fun handleEventSubscription(method: Method, args: Array<out Any>?): EventListener {
         require(args != null) { "args must not be null" }
         require(args.isNotEmpty()) { "Args must not be empty" }
 
@@ -122,16 +145,6 @@ class DevToolsInvocationHandler(impl: Any) : SuspendAwareHandler(impl) {
 
     private fun getEventName(method: Method): String {
         return method.getAnnotation(EventName::class.java).value
-    }
-
-    private fun getEventHandlerType1(method: Method): Type {
-        // Typical actualTypeArguments:
-        // 0: `? super ai.platon.cdt.kt.protocol.events.network.RequestWillBeSent`
-        // 1: `? super kotlin.coroutines.Continuation<? super kotlin.Unit>`
-        // 2: `?`
-        val actualTypeArguments = (method.genericParameterTypes[0] as ParameterizedType).actualTypeArguments
-        val actualTypeArgument = actualTypeArguments[0]
-        return actualTypeArgument
     }
 
     /**
@@ -173,7 +186,7 @@ class DevToolsInvocationHandler(impl: Any) : SuspendAwareHandler(impl) {
      */
     private fun isJavaLangObjectMethod(method: Method): Boolean {
         val dc = method.declaringClass
-        return dc == Any::class.java || dc == java.lang.Object::class.java
+        return dc == Any::class.java || dc == Object::class.java
     }
 
     /**

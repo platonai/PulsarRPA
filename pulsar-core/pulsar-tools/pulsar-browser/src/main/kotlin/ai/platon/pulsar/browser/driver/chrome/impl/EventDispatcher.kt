@@ -86,18 +86,39 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
     @Throws(IOException::class)
     fun <T> deserialize(classParameters: Array<Class<*>>, parameterizedClazz: Class<T>, jsonNode: JsonNode): T {
         val typeFactory: TypeFactory = OBJECT_MAPPER.typeFactory
-        var javaType: JavaType? = null
-        if (classParameters.size > 1) {
-            for (i in classParameters.size - 2 downTo 0) {
-                javaType = if (javaType == null) {
-                    typeFactory.constructParametricType(classParameters[i], classParameters[i + 1])
+
+        val typeParamCount = parameterizedClazz.typeParameters.size
+        val javaType: JavaType = when {
+            // No parameters -> plain type
+            classParameters.isEmpty() -> typeFactory.constructType(parameterizedClazz)
+
+            // Single-parameter generics (List-like). Support nesting via right fold, e.g.,
+            // classParameters [List, Double] with parameterizedClazz List -> List<List<Double>>
+            typeParamCount <= 1 -> {
+                var inner: JavaType = typeFactory.constructType(classParameters.last())
+                for (i in classParameters.size - 2 downTo 0) {
+                    inner = typeFactory.constructParametricType(classParameters[i], inner)
+                }
+                typeFactory.constructParametricType(parameterizedClazz, inner)
+            }
+
+            // Two-parameter generics (Map-like). Common case: K, V
+            typeParamCount == 2 -> {
+                if (classParameters.size == 2) {
+                    typeFactory.constructParametricType(parameterizedClazz, classParameters[0], classParameters[1])
                 } else {
-                    typeFactory.constructParametricType(classParameters[i], javaType)
+                    // Interpret first as key, the rest as nested value: Map<K, VNested>
+                    var valueType: JavaType = typeFactory.constructType(classParameters.last())
+                    for (i in classParameters.size - 2 downTo 1) {
+                        valueType = typeFactory.constructParametricType(classParameters[i], valueType)
+                    }
+                    val keyType: JavaType = typeFactory.constructType(classParameters[0])
+                    typeFactory.constructParametricType(parameterizedClazz, keyType, valueType)
                 }
             }
-            javaType = typeFactory.constructParametricType(parameterizedClazz, javaType)
-        } else {
-            javaType = typeFactory.constructParametricType(parameterizedClazz, classParameters[0])
+
+            // 3+ parameters: best-effort (no nesting). If nesting is needed, pass nested via classParameters accordingly.
+            else -> typeFactory.constructParametricType(parameterizedClazz, *classParameters)
         }
 
         return OBJECT_MAPPER.readerFor(javaType).readValue(jsonNode)
@@ -269,7 +290,7 @@ class EventDispatcher : Consumer<String>, AutoCloseable {
             }
 
             try {
-                listener.handler.onEvent(event!!)
+                listener.handler.onEvent(event)
             } catch (e: Exception) {
                 logger.warn("Failed to handle event, rethrow ChromeRPCException. Enable debug logging to see the stack trace | {}", e.message)
                 logger.debug("Failed to handle event", e)
