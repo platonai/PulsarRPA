@@ -118,7 +118,7 @@ open class BrowserPerceptiveAgent constructor(
 //    internal val promptBuilder = PromptBuilder()
 //    internal val toolExecutor by lazy { AgentToolManager(this) }
 
-    private val todo: ToDoManager
+    private val todo: ToDoManager by lazy { ToDoManager(toolExecutor.fs, config, uuid, slogger) }
 
 //    internal val activeDriver get() = session.getOrCreateBoundDriver()
 
@@ -136,24 +136,18 @@ open class BrowserPerceptiveAgent constructor(
     private val stepExecutionTimes = ConcurrentHashMap<Int, Long>()
 
     // New components for better separation of concerns
-    private val circuitBreaker by lazy {
-        CircuitBreaker(
-            maxLLMFailures = config.maxConsecutiveLLMFailures,
-            maxValidationFailures = config.maxConsecutiveValidationFailures,
-            maxExecutionFailures = 3
-        )
-    }
-    private val retryStrategy by lazy {
-        RetryStrategy(
-            maxRetries = config.maxRetries,
-            baseDelayMs = config.baseRetryDelayMs,
-            maxDelayMs = config.maxRetryDelayMs
-        )
-    }
+    private val circuitBreaker = CircuitBreaker(
+        maxLLMFailures = config.maxConsecutiveLLMFailures,
+        maxValidationFailures = config.maxConsecutiveValidationFailures,
+        maxExecutionFailures = 3
+    )
+    private val retryStrategy = RetryStrategy(
+        maxRetries = config.maxRetries,
+        baseDelayMs = config.baseRetryDelayMs,
+        maxDelayMs = config.maxRetryDelayMs
+    )
     private val retryCounter = AtomicInteger(0)
-    private val checkpointManager by lazy {
-        CheckpointManager(baseDir.resolve("checkpoints"))
-    }
+    private val checkpointManager = CheckpointManager(baseDir.resolve("checkpoints"))
 
     val baseDir get() = toolExecutor.baseDir
 
@@ -166,10 +160,6 @@ open class BrowserPerceptiveAgent constructor(
         config: AgentConfig = AgentConfig(maxSteps = maxSteps)
     ) : this(session, maxSteps = maxSteps, config = config) {
         session.bindDriver(driver)
-    }
-
-    init {
-        todo = ToDoManager(toolExecutor.fs, config, uuid, slogger)
     }
 
     /**

@@ -4,7 +4,7 @@ import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import java.util.*
 
-class DelegatingPerceptiveAgent(
+class TaskScopedBrowserPerceptiveAgent(
     val session: AgenticSession
 ) : PerceptiveAgent {
     private val historyAgents = mutableListOf<PerceptiveAgent>()
@@ -14,12 +14,6 @@ class DelegatingPerceptiveAgent(
     override val uuid: UUID = UUID.randomUUID()
     override val stateHistory: List<AgentState> get() = agent.stateHistory
     override val processTrace: List<ProcessTrace> get() = agent.processTrace
-
-    fun newContext() {
-        agent.close()
-        historyAgents.add(agent)
-        agent = BrowserPerceptiveAgent(session)
-    }
 
     override suspend fun resolve(problem: String): ActResult {
         newContext()
@@ -69,5 +63,11 @@ class DelegatingPerceptiveAgent(
 
     override fun close() {
         runCatching { agent.close() }
+    }
+
+    private fun newContext() {
+        agent.close()
+        historyAgents.add(agent)
+        agent = BrowserPerceptiveAgent(session)
     }
 }

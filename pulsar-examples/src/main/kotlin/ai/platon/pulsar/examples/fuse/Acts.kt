@@ -20,11 +20,11 @@ class Acts {
         driver.open(url)
 
         // 1) Use the page's search box (enter text and submit)
-        val result = agent.resolve("find the search box, type 'web scraping' and submit the form")
+        val result = agent.resolve("goto https://news.ycombinator.com/news , find the search box, type 'web scraping' and submit the form")
         result("action result", result)
 
         // 1) Use the page's search box (enter text and submit)
-        val result2 = agent.resolve("TRY AGAIN - find the search box, type 'web scraping' and submit the form")
+        val result2 = agent.resolve("goto https://news.ycombinator.com/news , find the search box, type 'web scraping' and submit the form")
         result("action result2", result2)
     }
 
