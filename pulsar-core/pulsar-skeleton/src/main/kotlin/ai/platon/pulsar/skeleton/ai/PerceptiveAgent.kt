@@ -272,6 +272,10 @@ data class ActionDescription constructor(
      * */
     val isComplete: Boolean = false,
     /**
+     * AI: the error cause for the task
+     * */
+    val errorCause: String? = null,
+    /**
      * AI: a summary about this task
      * */
     val summary: String? = null,

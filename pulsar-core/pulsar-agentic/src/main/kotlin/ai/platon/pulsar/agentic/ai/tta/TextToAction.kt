@@ -109,6 +109,7 @@ open class TextToAction(
                 ActionDescription(
                     instruction = instruction,
                     isComplete = true,
+                    errorCause = complete.errorCause,
                     summary = complete.summary,
                     nextSuggestions = complete.nextSuggestions ?: emptyList()
                 )

@@ -101,7 +101,7 @@ class FusedActs {
 
         // 4) Open the first comment thread
         log.info("[STEP ${++step}] Action: open the first comment thread on the page")
-        result = agent.act("open the first comment thread on the page")
+        result = agent.resolve("goto https://animationobsessive.substack.com/p/the-toy-story-you-remember open the first comment thread on the page")
         result("action result", result)
 
         // 5) Navigate back
@@ -116,7 +116,12 @@ class FusedActs {
 
         // 7) Extract specific data after interactions
         log.info("[STEP ${++step}] Action: extract article titles and their hrefs from the main list")
-        result = agent.resolve("extract article titles and their hrefs from the main list")
+        result = agent.resolve("goto https://news.ycombinator.com/, extract article titles and their hrefs from the main list")
+        result("action result", result)
+
+        // 5) Navigate back
+        log.info("[STEP ${++step}] Action: navigate back")
+        result = agent.act("navigate back")
         result("action result", result)
 
         log.info("[STEP ${++step}] Captures the live page as a local copy and parse for titles")

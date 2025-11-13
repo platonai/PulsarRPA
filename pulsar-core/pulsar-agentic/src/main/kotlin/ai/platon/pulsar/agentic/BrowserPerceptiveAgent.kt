@@ -203,13 +203,14 @@ open class BrowserPerceptiveAgent constructor(
 
         // Overall timeout to prevent indefinite hangs for a full resolve session
         // Calculate effective timeout accounting for potential retry delays
-        val maxPossibleDelays = (0 until config.maxRetries).sumOf { calculateRetryDelay(it) }
+        val maxPossibleDelays = (0 until config.maxRetries).fold(0L) { acc, i -> acc + calculateRetryDelay(i) }
         val effectiveTimeout = config.resolveTimeoutMs + maxPossibleDelays
 
         return try {
             val result = withTimeout(effectiveTimeout) {
                 resolveProblemWithRetry(action, context)
             }
+
             val dur = Duration.between(sessionStartTime, Instant.now()).toMillis()
             // Not a single-step action, keep it out of AgentState history
             stateManager.trace(
@@ -222,6 +223,7 @@ open class BrowserPerceptiveAgent constructor(
                 ),
                 "✅ resolve DONE"
             )
+
             result
         } catch (_: TimeoutCancellationException) {
             val msg =
@@ -455,6 +457,28 @@ open class BrowserPerceptiveAgent constructor(
         }
     }
 
+    private suspend fun doResolveProblem(
+        action: ActionOptions,
+        initContext: ExecutionContext,
+        attempt: Int
+    ): ActResult {
+        initializeResolution(initContext, attempt)
+        var consecutiveNoOps = 0
+        var context = initContext
+        val startTime = Instant.now()
+        try {
+            while (context.step < config.maxSteps) {
+                val stepResult = processSingleStep(action, context, consecutiveNoOps)
+                context = stepResult.context
+                consecutiveNoOps = stepResult.consecutiveNoOps
+                if (stepResult.shouldStop) break
+            }
+            return buildFinalActResult(initContext.instruction, context, startTime)
+        } catch (e: Exception) {
+            throw handleResolutionFailure(e, context, startTime)
+        }
+    }
+
     private suspend fun doObserveAct(options: ActionOptions, messages: AgentMessageList): ActResult {
         val instruction = promptBuilder.buildObserveActToolUsePrompt(options.action)
         messages.addUser(instruction, "user_request")
@@ -643,11 +667,8 @@ open class BrowserPerceptiveAgent constructor(
 
             stateManager.trace(
                 currentContext.agentState,
-                mapOf(
-                    "event" to "resolveAttempt",
-                    "attemptNo" to attemptNo.toString(),
-                    "attemptsTotal" to (config.maxRetries + 1).toString()
-                ),
+                mapOf("event" to "resolveAttempt", "attemptNo" to attemptNo,
+                    "attemptsTotal" to (config.maxRetries + 1)),
                 "🔁 resolve ATTEMPT"
             )
 
@@ -656,10 +677,7 @@ open class BrowserPerceptiveAgent constructor(
 
                 stateManager.trace(
                     currentContext.agentState,
-                    mapOf(
-                        "event" to "resolveAttemptOk",
-                        "attemptNo" to attemptNo.toString()
-                    ),
+                    mapOf("event" to "resolveAttemptOk", "attemptNo" to attemptNo),
                     "✅ resolve ATTEMPT OK"
                 )
 
@@ -758,12 +776,11 @@ open class BrowserPerceptiveAgent constructor(
         stateManager.trace(
             currentContext.agentState,
             mapOf(
-                "event" to "resolveFail",
-                "attemptsTotal" to (config.maxRetries + 1).toString(),
-                "msg" to (lastError?.message ?: "")
+                "event" to "resolveFail", "attemptsTotal" to (config.maxRetries + 1), "msg" to lastError?.message
             ),
             "❌ resolve FAIL"
         )
+
         return ActResult(
             success = false,
             message = "Failed after ${config.maxRetries + 1} attempts. Last error: ${lastError?.message}",
@@ -771,147 +788,90 @@ open class BrowserPerceptiveAgent constructor(
         )
     }
 
-    /**
-     * Main execution logic with enhanced error handling and monitoring.
-     * Returns the final summary with enhanced error handling.
-     */
-    private suspend fun doResolveProblem(
-        action: ActionOptions,
-        initContext: ExecutionContext,
-        attempt: Int
-    ): ActResult {
+    private suspend fun initializeResolution(initContext: ExecutionContext, attempt: Int) {
         val sid = initContext.sid
         logger.info(
             "🚀 agent.start sid={} step={} url={} instr='{}' attempt={} maxSteps={} maxRetries={}",
             sid, initContext.step, initContext.targetUrl, Strings.compactLog(initContext.instruction, 100),
             attempt + 1, config.maxSteps, config.maxRetries
         )
-
-        // Initialize todolist.md if enabled and empty
         if (config.enableTodoWrites) {
-            try {
-                todo.primeIfEmpty(initContext.instruction, initContext.targetUrl)
-            } catch (e: Exception) {
-                slogger.logError("📝❌ todo.prime.fail", e, sid)
-            }
+            runCatching { todo.primeIfEmpty(initContext.instruction, initContext.targetUrl) }
+                .onFailure { e -> slogger.logError("📝❌ todo.prime.fail", e, sid) }
         }
+    }
 
-        // agent general guide
-        var consecutiveNoOps = 0
+    private data class StepProcessingResult(val context: ExecutionContext, val consecutiveNoOps: Int, val shouldStop: Boolean)
 
-        var context = initContext
+    private suspend fun processSingleStep(action: ActionOptions, ctxIn: ExecutionContext, noOpsIn: Int): StepProcessingResult {
+        var context = ctxIn
+        var consecutiveNoOps = noOpsIn
+        val nextStep = context.step + 1
+        ensureReadyForStep(action)
+        context = stateManager.buildExecutionContext(action.action, "step", nextStep, baseContext = context)
+        val agentState = context.agentState
+        val browserUseState = agentState.browserUseState
+        val step = context.step
+        val sid = context.sid
+        val unchangedCount = pageStateTracker.checkStateChange(browserUseState)
+        if (unchangedCount >= 3) { logger.info("⚠️ loop.warn sid={} step={} unchangedSteps={}", sid, step, unchangedCount); consecutiveNoOps++ }
+        logger.info("▶️ step.exec sid={} step={}/{} noOps={}", sid, step, config.maxSteps, consecutiveNoOps)
+        if (logger.isDebugEnabled) logger.debug("🧩 dom={}", DomDebug.summarizeStr(browserUseState.domState, 5))
+        if (step % config.memoryCleanupIntervalSteps == 0) performMemoryCleanup(context)
+        if (config.enableCheckpointing && step % config.checkpointIntervalSteps == 0) { runCatching { saveCheckpoint(context) }.onFailure { e -> logger.warn("💾❌ checkpoint.save.fail sid={} step={} msg={}", sid, step, e.message) } }
+        val actionDescription = generateActions(context)
+        if (shouldTerminate(actionDescription)) { onTaskCompletion(actionDescription, context); return StepProcessingResult(context, consecutiveNoOps, true) }
+        if (actionDescription.toolCall == null) {
+            consecutiveNoOps++
+            val stop = handleConsecutiveNoOps(consecutiveNoOps, context)
+            updatePerformanceMetrics(step, context.timestamp, false)
+            if (stop) return StepProcessingResult(context, consecutiveNoOps, true)
+            delay(calculateAdaptiveDelay())
+            return StepProcessingResult(context, consecutiveNoOps, false)
+        }
+        consecutiveNoOps = 0
+        val detailedActResult = actInternal(actionDescription, context)
+        if (detailedActResult != null) {
+            stateManager.updateAgentState(context.agentState, detailedActResult)
+            updateTodo(context, detailedActResult)
+            updatePerformanceMetrics(step, context.timestamp, true)
+            val preview = detailedActResult.toolCallResult?.evaluate?.preview
+            logger.info("🏁 step.done sid={} step={} tcResult={}", sid, step, preview)
+        } else {
+            consecutiveNoOps++
+            val stop = handleConsecutiveNoOps(consecutiveNoOps, context)
+            updatePerformanceMetrics(step, context.timestamp, false)
+            if (stop) return StepProcessingResult(context, consecutiveNoOps, true)
+        }
+        delay(calculateAdaptiveDelay())
+        return StepProcessingResult(context, consecutiveNoOps, false)
+    }
 
+    // ===== Helper methods appended for modularization =====
+
+    private fun classifyError(e: Exception, step: Int): PerceptiveAgentError {
+        return retryStrategy.classifyError(e, "step $step")
+    }
+
+    private fun shouldRetryError(e: Exception): Boolean {
+        return retryStrategy.shouldRetry(e)
+    }
+
+    private fun calculateRetryDelay(attempt: Int): Long {
+        return retryStrategy.calculateDelay(attempt)
+    }
+
+    private suspend fun cleanupPartialState(context: ExecutionContext) {
         try {
-            while (context.step < config.maxSteps) {
-                val nextStep = context.step + 1
-
-                // Step setup: ensure URL and settle DOM
-                ensureReadyForStep(action)
-
-                // Build AgentState and snapshot after settling
-                context = stateManager.buildExecutionContext(action.action, "step", nextStep, baseContext = context)
-                val agentState = context.agentState
-                val browserUseState = agentState.browserUseState
-                val step = context.step
-
-                // Detect unchanged state for heuristics
-                val unchangedCount = pageStateTracker.checkStateChange(browserUseState)
-                if (unchangedCount >= 3) {
-                    logger.info("⚠️ loop.warn sid={} step={} unchangedSteps={}", sid, step, unchangedCount)
-                    consecutiveNoOps++
-                }
-
-                logger.info("▶️ step.exec sid={} step={}/{} noOps={}", sid, step, config.maxSteps, consecutiveNoOps)
-                if (logger.isDebugEnabled) {
-                    logger.debug("🧩 dom={}", DomDebug.summarizeStr(browserUseState.domState, 5))
-                }
-
-                // Memory cleanup at intervals
-                if (step % config.memoryCleanupIntervalSteps == 0) {
-                    performMemoryCleanup(context)
-                }
-
-                // Checkpointing at intervals
-                if (config.enableCheckpointing && step % config.checkpointIntervalSteps == 0) {
-                    try {
-                        saveCheckpoint(context)
-                    } catch (e: Exception) {
-                        logger.warn("💾❌ checkpoint.save.fail sid={} step={} msg={}", sid, step, e.message)
-                    }
-                }
-
-                //**
-                // I - Observe and Generate Action
-                //**
-
-                // Generate the action for this step
-                val actionDescription = generateActions(context)
-
-                // Check for task completion
-                if (shouldTerminate(actionDescription)) {
-                    onTaskCompletion(actionDescription, context)
-                    break
-                }
-
-                if (actionDescription.toolCall == null) {
-                    consecutiveNoOps++
-                    val stop = handleConsecutiveNoOps(consecutiveNoOps, context)
-                    if (stop) break
-                    continue
-                }
-
-                // Reset consecutive no-ops counter when we have a valid action
-                consecutiveNoOps = 0
-
-                //**
-                // II - Execute Tool Call
-                //**
-
-                // Execute the tool call with enhanced error handling
-                val detailedActResult = actInternal(actionDescription, context)
-
-                if (detailedActResult != null) {
-                    stateManager.updateAgentState(context.agentState, detailedActResult)
-
-                    updateTodo(context, detailedActResult)
-
-                    updatePerformanceMetrics(step, context.timestamp, true)
-
-                    val preview = detailedActResult.toolCallResult?.evaluate?.preview
-                    logger.info("🏁 step.done sid={} step={} tcResult={}", sid, step, preview)
-                } else {
-                    // Treat validation failures or execution skips as no-ops; no AgentState record
-                    consecutiveNoOps++
-                    val stop = handleConsecutiveNoOps(consecutiveNoOps, context)
-                    if (stop) break
-                    updatePerformanceMetrics(step, context.timestamp, false)
-                }
-
-                // Adaptive delay based on performance metrics
-                delay(calculateAdaptiveDelay())
-            }
-
-            val executionTime = Duration.between(startTime, Instant.now())
-            logger.info("✅ agent.done sid={} steps={} dur={}", sid, context.step, executionTime.toString())
-
-            val summary = generateFinalSummary(context.instruction, context)
-            val ok = summary.state != ResponseState.OTHER
-            return ActResult(
-                success = ok,
-                message = summary.content,
-                action = context.instruction,
-                result = context.agentState.toolCallResult
-            )
+            logger.info("🧹 cleanup.partial sid={} step={}", context.sid, context.step)
+            circuitBreaker.reset()
+            consecutiveFailureCounter.set(0)
+            consecutiveLLMFailureCounter.set(0)
+            consecutiveValidationFailureCounter.set(0)
+            actionValidator.clearCache()
+            pageStateTracker.waitForDOMSettle(1000, 100)
         } catch (e: Exception) {
-            val executionTime = Duration.between(startTime, Instant.now())
-            logger.error("💥 agent.fail sid={} steps={} dur={} err={}", sid, context.step, executionTime, e.message, e)
-            // Attempt to rollback last history entry which may be partially written for this step
-            try {
-                stateManager.removeLastIfStep(context.step)
-            } catch (re: Exception) {
-                logger.warn("⚠️ rollback failed sid={} step={} msg={}", sid, context.step, re.message)
-            }
-            throw classifyError(e, context.step)
+            logger.warn("⚠️ cleanup.partial.fail sid={} msg={}", context.sid, e.message)
         }
     }
 
@@ -919,127 +879,75 @@ open class BrowserPerceptiveAgent constructor(
         actionDescription: ActionDescription,
         context: ExecutionContext
     ): DetailedActResult? {
-        val instruction = actionDescription.instruction
         val step = context.step
         val toolCall = actionDescription.toolCall ?: return null
 
         if (config.enablePreActionValidation && !actionValidator.validateToolCall(toolCall)) {
-            val failures = try {
-                circuitBreaker.recordFailure(CircuitBreaker.FailureType.VALIDATION_FAILURE)
-            } catch (cbError: CircuitBreakerTrippedException) {
+            val failures = try { circuitBreaker.recordFailure(CircuitBreaker.FailureType.VALIDATION_FAILURE) }
+            catch (cbError: CircuitBreakerTrippedException) {
                 throw PerceptiveAgentError.PermanentError(cbError.message ?: "Circuit breaker tripped", cbError)
             }
-
-            consecutiveValidationFailureCounter.set(failures) // Keep for backward compatibility
+            consecutiveValidationFailureCounter.set(failures)
             logger.info(
                 "🛑 tool.validate.fail sid={} step={} failures={} locator={} | {}({}) | {}",
                 context.sid, context.step, failures, actionDescription.locator, toolCall.method, toolCall.arguments,
                 actionDescription.cssFriendlyExpression
             )
-            // Validation failure is meta info
             stateManager.trace(context.agentState, mapOf("event" to "validationFailed", "step" to step.toString(), "tool" to toolCall.method), "🛑 validation-failed")
-
             return null
         }
 
-        // Reset validation failure counter on successful validation
         circuitBreaker.recordSuccess(CircuitBreaker.FailureType.VALIDATION_FAILURE)
         consecutiveValidationFailureCounter.set(0)
 
         return try {
-            logger.info(
-                "🛠️ tool.exec sid={} step={} tool={} args={}",
-                context.sid, context.step, toolCall.method, toolCall.arguments
-            )
-
+            logger.info("🛠️ tool.exec sid={} step={} tool={} args={}", context.sid, context.step, toolCall.method, toolCall.arguments)
             val toolCallResult = toolExecutor.execute(actionDescription, "resolve, #$step")
             circuitBreaker.recordSuccess(CircuitBreaker.FailureType.EXECUTION_FAILURE)
-            consecutiveFailureCounter.set(0) // Reset on success
-
+            consecutiveFailureCounter.set(0)
             val summary = "✅ ${toolCall.method} executed successfully"
             stateManager.trace(context.agentState, mapOf("event" to "toolExecOk", "tool" to toolCall.method), summary)
             DetailedActResult(actionDescription, toolCallResult, success = true, summary)
         } catch (e: Exception) {
-            val failures = try {
-                circuitBreaker.recordFailure(CircuitBreaker.FailureType.EXECUTION_FAILURE)
-            } catch (cbError: CircuitBreakerTrippedException) {
+            val failures = try { circuitBreaker.recordFailure(CircuitBreaker.FailureType.EXECUTION_FAILURE) }
+            catch (cbError: CircuitBreakerTrippedException) {
                 throw PerceptiveAgentError.PermanentError(cbError.message ?: "Circuit breaker tripped", cbError)
             }
-
-            consecutiveFailureCounter.set(failures) // Keep for backward compatibility
-            logger.error(
-                "🛠️❌ tool.exec.fail sid={} step={} failures={} msg={}",
-                context.sid, context.step, failures, e.message, e
-            )
-
+            consecutiveFailureCounter.set(failures)
+            logger.error("🛠️❌ tool.exec.fail sid={} step={} failures={} msg={}", context.sid, context.step, failures, e.message, e)
             stateManager.trace(context.agentState, mapOf("event" to "toolExecUnexpectedFail", "tool" to toolCall.method), "💥 unexpected failure")
-
             null
         }
     }
 
     private suspend fun updateTodo(context: ExecutionContext, detailedActResult: DetailedActResult) {
+        if (!config.enableTodoWrites) return
         val sid = context.sessionId
         val step = context.step
         val toolCall = detailedActResult.actionDescription.toolCall
         val observeElement = detailedActResult.actionDescription.observeElement
-
-        // todolist.md progress hook
-        if (config.enableTodoWrites) {
-            val shouldWrite = config.todoWriteProgressEveryStep ||
-                    (config.todoProgressWriteEveryNSteps > 1 && step % config.todoProgressWriteEveryNSteps == 0)
-            if (shouldWrite) {
-                val urlNow0 = activeDriver.currentUrl()
-                try {
-                    todo.appendProgress(step, toolCall, observeElement, urlNow0, detailedActResult.summary)
-                    todo.updateProgressCounter()
-                    if (config.todoEnableAutoCheck) {
-                        val tags = todo.buildTags(toolCall, urlNow0)
-                        if (tags.isNotEmpty()) todo.markPlanItemDoneByTags(tags)
-                    }
-                } catch (e: Exception) {
-                    slogger.logError("📝❌ todo.progress.fail", e, sid)
-                }
+        val shouldWrite = config.todoWriteProgressEveryStep ||
+                (config.todoProgressWriteEveryNSteps > 1 && step % config.todoProgressWriteEveryNSteps == 0)
+        if (!shouldWrite) return
+        val urlNow0 = activeDriver.currentUrl()
+        runCatching {
+            todo.appendProgress(step, toolCall, observeElement, urlNow0, detailedActResult.summary)
+            todo.updateProgressCounter()
+            if (config.todoEnableAutoCheck) {
+                val tags = todo.buildTags(toolCall, urlNow0)
+                if (tags.isNotEmpty()) todo.markPlanItemDoneByTags(tags)
             }
-        }
+        }.onFailure { e -> slogger.logError("📝❌ todo.progress.fail", e, sid) }
     }
 
-    /**
-     * Classifies errors for appropriate retry strategies
-     */
-    private fun classifyError(e: Exception, step: Int): PerceptiveAgentError {
-        return retryStrategy.classifyError(e, "step $step")
-    }
-
-    /**
-     * Determines if an error should trigger a retry
-     */
-    private fun shouldRetryError(e: Exception): Boolean {
-        return retryStrategy.shouldRetry(e)
-    }
-
-    /**
-     * Calculates retry delay with exponential backoff and jitter
-     */
-    private fun calculateRetryDelay(attempt: Int): Long {
-        return retryStrategy.calculateDelay(attempt)
-    }
-
-    /**
-     * Captures screenshot with retry mechanism
-     */
     protected suspend fun captureScreenshotWithRetry(context: ExecutionContext): String? {
-        // Simple retry: try twice with a short backoff
         val attempts = 2
         var lastEx: Exception? = null
         for (i in 1..attempts) {
             try {
                 val screenshot = safeScreenshot(context)
                 if (screenshot != null) {
-                    logger.info(
-                        "📸✅ screenshot.ok sid={} step={} size={} attempt={} ",
-                        context.sid, context.step, screenshot.length, i
-                    )
+                    logger.info("📸✅ screenshot.ok sid={} step={} size={} attempt={} ", context.sid, context.step, screenshot.length, i)
                     return screenshot
                 } else {
                     logger.info("📸⚪ screenshot.null sid={} step={} attempt={}", context.sid, context.step, i)
@@ -1047,7 +955,6 @@ open class BrowserPerceptiveAgent constructor(
             } catch (e: Exception) {
                 lastEx = e
                 logger.warn("📸⚠️ screenshot attempt {} failed: {}", i, e.message)
-                // small backoff
                 delay(200)
             }
         }
@@ -1055,16 +962,69 @@ open class BrowserPerceptiveAgent constructor(
         return null
     }
 
+    protected suspend fun safeScreenshot(context: ExecutionContext): String? {
+        return runCatching {
+            slogger.debug("📸⏳ Attempting to capture screenshot", context)
+            val driver = activeDriver
+            val screenshot = driver.captureScreenshot()
+            if (screenshot != null) {
+                slogger.debug("📸✅ Screenshot captured successfully", context, mapOf("size" to screenshot.length))
+            } else {
+                slogger.debug("📸⚪ Screenshot capture returned null", context)
+            }
+            screenshot
+        }.onFailure { e -> slogger.logError("📸❌ Screenshot capture failed", e, context.sessionId) }.getOrNull()
+    }
 
-    /**
-     * Enhanced transcript persistence with comprehensive logging
-     */
+    private fun performMemoryCleanup(context: ExecutionContext) {
+        try {
+            synchronized(stateManager) {
+                if (stateHistory.size > config.maxHistorySize) {
+                    val toRemove = stateHistory.size - config.maxHistorySize + 10
+                    stateManager.clearUpHistory(toRemove)
+                }
+            }
+            actionValidator.clearCache()
+            logger.info("🧹 mem.cleanup sid={} step={} historySize={}", context.sid, context.step, stateHistory.size)
+        } catch (e: Exception) {
+            logger.error("🧹❌ mem.cleanup.fail sid={} msg={}", context.sid, e.message, e)
+        }
+    }
+
+    protected suspend fun summarize(goal: String, context: ExecutionContext): ModelResponse {
+        return try {
+            val (system, user) = promptBuilder.buildSummaryPrompt(goal, stateHistory)
+            slogger.info("📝⏳ Generating final summary", context)
+            val response = cta.chatModel.callUmSm(user, system)
+            slogger.info("📝✅ Summary generated successfully", context, mapOf("responseLength" to response.content.length, "responseState" to response.state))
+            response
+        } catch (e: Exception) {
+            slogger.logError("📝❌ Summary generation failed", e, context.sessionId)
+            ModelResponse("Failed to generate summary: ${e.message}", ResponseState.OTHER)
+        }
+    }
+
+    protected suspend fun generateFinalSummary(instruction: String, context: ExecutionContext): ModelResponse {
+        return try {
+            val summary = summarize(instruction, context)
+            stateManager.trace(
+                context.agentState,
+                mapOf("event" to "final", "preview" to summary.content.take(200)),
+                "🧾 FINAL"
+            )
+            persistTranscript(instruction, summary, context)
+            summary
+        } catch (e: Exception) {
+            logger.error("📝❌ agent.summary.fail sid={} msg={}", context.sid, e.message, e)
+            ModelResponse("Failed to generate summary: ${e.message}", ResponseState.OTHER)
+        }
+    }
+
     protected fun persistTranscript(instruction: String, finalResp: ModelResponse, context: ExecutionContext) {
         runCatching {
             val ts = Instant.now().toEpochMilli()
             val log = baseDir.resolve("session-${uuid}-${ts}.log")
             slogger.info("🧾💾 Persisting execution transcript", context, mapOf("path" to log.toString()))
-
             val sb = StringBuilder()
             sb.appendLine("SESSION_ID: ${uuid}")
             sb.appendLine("TIMESTAMP: ${Instant.now()}")
@@ -1082,134 +1042,16 @@ open class BrowserPerceptiveAgent constructor(
             sb.appendLine("Failed actions: ${performanceMetrics.failedActions}")
             sb.appendLine("Retry count: ${retryCounter.get()}")
             sb.appendLine("Consecutive failures: ${consecutiveFailureCounter.get()}")
-
             Files.writeString(log, sb.toString())
-            slogger.info(
-                "🧾✅ Transcript persisted successfully",
-                context,
-                mapOf("lines" to stateHistory.size + 10, "path" to log.toString())
-            )
-        }.onFailure { e ->
-            slogger.logError("🧾❌ Failed to persist transcript", e, context.sessionId)
-        }
-    }
-
-    /**
-     * Enhanced summary generation with error handling
-     */
-    protected suspend fun summarize(goal: String, context: ExecutionContext): ModelResponse {
-        return try {
-            val (system, user) = promptBuilder.buildSummaryPrompt(goal, stateHistory)
-            slogger.info("📝⏳ Generating final summary", context)
-
-            val response = cta.chatModel.callUmSm(user, system)
-
-            slogger.info(
-                "📝✅ Summary generated successfully", context, mapOf(
-                    "responseLength" to response.content.length, "responseState" to response.state
-                )
-            )
-
-            response
-        } catch (e: Exception) {
-            slogger.logError("📝❌ Summary generation failed", e, context.sessionId)
-            ModelResponse(
-                "Failed to generate summary: ${e.message}", ResponseState.OTHER
-            )
-        }
-    }
-
-    private fun calculateConsecutiveNoOpDelay(consecutiveNoOps: Int): Long {
-        val baseDelay = 250L
-        val exponentialDelay = baseDelay * consecutiveNoOps
-        return min(exponentialDelay, 5000L)
-    }
-
-    /**
-     * Clean up partial state before retry to avoid corruption.
-     */
-    private suspend fun cleanupPartialState(context: ExecutionContext) {
-        try {
-            logger.info("🧹 cleanup.partial sid={} step={}", context.sid, context.step)
-
-            // Reset circuit breaker
-            circuitBreaker.reset()
-
-            // Reset failure counters (kept for backward compatibility)
-            consecutiveFailureCounter.set(0)
-            consecutiveLLMFailureCounter.set(0)
-            consecutiveValidationFailureCounter.set(0)
-
-            // Clear validation cache
-            actionValidator.clearCache()
-
-            // Allow page to stabilize
-            pageStateTracker.waitForDOMSettle(1000, 100)
-        } catch (e: Exception) {
-            logger.warn("⚠️ cleanup.partial.fail sid={} msg={}", context.sid, e.message)
-        }
-    }
-
-    protected suspend fun safeScreenshot(context: ExecutionContext): String? {
-        return runCatching {
-            slogger.info("📸⏳ Attempting to capture screenshot", context)
-            val driver = activeDriver
-            val screenshot = driver.captureScreenshot()
-            if (screenshot != null) {
-                slogger.info("📸✅ Screenshot captured successfully", context, mapOf("size" to screenshot.length))
-            } else {
-                slogger.info("📸⚪ Screenshot capture returned null", context)
-            }
-            screenshot
-        }.onFailure { e ->
-            slogger.logError("📸❌ Screenshot capture failed", e, context.sessionId)
-        }.getOrNull()
-    }
-
-    private fun performMemoryCleanup(context: ExecutionContext) {
-        try {
-            // Use synchronized removal to avoid ConcurrentModificationException
-            synchronized(stateManager) {
-                if (stateHistory.size > config.maxHistorySize) {
-                    val toRemove = stateHistory.size - config.maxHistorySize + 10
-                    stateManager.clearUpHistory(toRemove)
-                }
-            }
-            actionValidator.clearCache()
-            logger.info("🧹 mem.cleanup sid={} step={} historySize={}", context.sid, context.step, stateHistory.size)
-        } catch (e: Exception) {
-            logger.error("🧹❌ mem.cleanup.fail sid={} msg={}", context.sid, e.message, e)
-        }
-    }
-
-    protected suspend fun generateFinalSummary(instruction: String, context: ExecutionContext): ModelResponse {
-        return try {
-            val summary = summarize(instruction, context)
-            stateManager.trace(
-                context.agentState,
-                mapOf(
-                    "event" to "final",
-                    "preview" to summary.content.take(200)
-                ),
-                "🧾 FINAL"
-            )
-            persistTranscript(instruction, summary, context)
-            summary
-        } catch (e: Exception) {
-            logger.error("📝❌ agent.summary.fail sid={} msg={}", context.sid, e.message, e)
-            ModelResponse("Failed to generate summary: ${e.message}", ResponseState.OTHER)
-        }
+            slogger.info("🧾✅ Transcript persisted successfully", context, mapOf("lines" to stateHistory.size + 10, "path" to log.toString()))
+        }.onFailure { e -> slogger.logError("🧾❌ Failed to persist transcript", e, context.sessionId) }
     }
 
     private suspend fun handleConsecutiveNoOps(consecutiveNoOps: Int, context: ExecutionContext): Boolean {
         val step = context.step
         stateManager.trace(
             context.agentState,
-            mapOf(
-                "event" to "noop",
-                "step" to step.toString(),
-                "consecutive" to consecutiveNoOps.toString()
-            ),
+            mapOf("event" to "noop", "step" to step.toString(), "consecutive" to consecutiveNoOps.toString()),
             "🕒 no-op"
         )
         logger.info("🕒 noop sid={} step={} consecutive={}", context.sid, step, consecutiveNoOps)
@@ -1218,53 +1060,19 @@ open class BrowserPerceptiveAgent constructor(
             return true
         }
         val delayMs = calculateConsecutiveNoOpDelay(consecutiveNoOps)
-        // Use kotlinx.coroutines.delay which is cancellation-aware
         delay(delayMs)
-
-        // Check coroutine cancellation and abort if cancelled
         val job = currentCoroutineContext()[Job]
         if (job == null || !job.isActive) {
             logger.info("🕒 noop cancelled sid={} step={}", context.sid, step)
             return true
         }
-
         return false
     }
 
-    protected fun shouldTerminate(actionDescription: ActionDescription? = null): Boolean {
-        return when {
-            actionDescription == null -> false
-            actionDescription.isComplete -> true
-            actionDescription.expression?.contains("agent.done") == true -> true
-            else -> false
-        }
-    }
-
-    protected suspend fun onTaskCompletion(action: ActionDescription, context: ExecutionContext) {
-        val step = context.step
-        val sid = context.sessionId
-
-        stateManager.complete()
-
-        logger.info("✅ task.complete sid={} step={} complete={}", sid.take(8), step, action.isComplete)
-        stateManager.trace(
-            context.agentState,
-            mapOf(
-                "event" to "complete",
-                "step" to step.toString(),
-                "taskComplete" to action.isComplete.toString()
-            ),
-            "#${step} complete"
-        )
-
-        // todolist.md completion hook
-        if (config.enableTodoWrites) {
-            try {
-                todo.onTaskCompletion(context.instruction)
-            } catch (e: Exception) {
-                slogger.logError("📝❌ todo.complete.fail", e, sid)
-            }
-        }
+    private fun calculateConsecutiveNoOpDelay(consecutiveNoOps: Int): Long {
+        val baseDelay = 250L
+        val exponentialDelay = baseDelay * consecutiveNoOps
+        return min(exponentialDelay, 5000L)
     }
 
     private fun updatePerformanceMetrics(step: Int, stepStartTime: Instant, success: Boolean) {
@@ -1284,12 +1092,8 @@ open class BrowserPerceptiveAgent constructor(
         }
     }
 
-    /**
-     * Save a checkpoint of the current session state.
-     */
     private fun saveCheckpoint(context: ExecutionContext) {
         if (!config.enableCheckpointing) return
-
         val checkpoint = AgentCheckpoint(
             sessionId = context.sessionId,
             currentStep = context.step,
@@ -1310,41 +1114,51 @@ open class BrowserPerceptiveAgent constructor(
                 "startTime" to startTime.toString()
             )
         )
-
         val path = checkpointManager.save(checkpoint)
         logger.info("💾 checkpoint.saved sid={} step={} path={}", context.sid, context.step, path)
-
-        // Prune old checkpoints
         checkpointManager.pruneOldCheckpoints(context.sessionId, config.maxCheckpointsPerSession)
     }
 
-    /**
-     * Attempt to restore from the latest checkpoint for a session.
-     *
-     * @param sessionId The session ID to restore
-     * @return The restored checkpoint, or null if not found or restoration failed
-     */
-    fun restoreFromCheckpoint(sessionId: String): AgentCheckpoint? {
-        if (!config.enableCheckpointing) return null
-
-        return try {
-            val checkpoint = checkpointManager.load(sessionId)
-            if (checkpoint != null) {
-                logger.info(
-                    "💾 checkpoint.restored sid={} step={} age={}ms",
-                    sessionId.take(8), checkpoint.currentStep, checkpoint.age
-                )
-                // TODO: Restore state from checkpoint (implementation depends on requirements)
-                // This would involve:
-                // - Restoring performance metrics
-                // - Restoring circuit breaker state
-                // - Potentially navigating to targetUrl
-                // - Rebuilding execution context
-            }
-            checkpoint
-        } catch (e: Exception) {
-            logger.error("💾❌ checkpoint.restore.fail sid={} msg={}", sessionId.take(8), e.message, e)
-            null
+    protected fun shouldTerminate(actionDescription: ActionDescription? = null): Boolean {
+        return when {
+            actionDescription == null -> false
+            actionDescription.isComplete -> true
+            actionDescription.expression?.contains("agent.done") == true -> true
+            else -> false
         }
     }
+
+    protected suspend fun onTaskCompletion(action: ActionDescription, context: ExecutionContext) {
+        val step = context.step
+        val sid = context.sessionId
+        stateManager.complete()
+        logger.info("✅ task.complete sid={} step={} complete={}", sid.take(8), step, action.isComplete)
+        stateManager.trace(
+            context.agentState,
+            mapOf("event" to "complete", "step" to step, "taskComplete" to action.isComplete),
+            "#${step} complete"
+        )
+        if (config.enableTodoWrites) {
+            runCatching { todo.onTaskCompletion(context.instruction) }
+                .onFailure { e -> slogger.logError("📝❌ todo.complete.fail", e, sid) }
+        }
+    }
+
+    private suspend fun buildFinalActResult(instruction: String, context: ExecutionContext, startTime: Instant): ActResult {
+        val executionTime = Duration.between(startTime, Instant.now())
+        logger.info("✅ agent.done sid={} steps={} dur={}", context.sid, context.step, executionTime.toString())
+        val summary = generateFinalSummary(instruction, context)
+        val ok = summary.state != ResponseState.OTHER
+        return ActResult(success = ok, message = summary.content, action = instruction, result = context.agentState.toolCallResult)
+    }
+
+    private fun handleResolutionFailure(e: Exception, context: ExecutionContext, startTime: Instant): PerceptiveAgentError {
+        val executionTime = Duration.between(startTime, Instant.now())
+        logger.error("💥 agent.fail sid={} steps={} dur={} err={}", context.sid, context.step, executionTime, e.message, e)
+        runCatching { stateManager.removeLastIfStep(context.step) }
+            .onFailure { re -> logger.warn("⚠️ rollback failed sid={} step={} msg={}", context.sid, context.step, re.message) }
+        return classifyError(e, context.step)
+    }
+    // ===== end helper methods =====
+
 }

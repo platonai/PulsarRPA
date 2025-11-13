@@ -30,6 +30,7 @@ data class AgentResponse(
 data class ObserveResponseComplete(
     val taskComplete: Boolean = false,
     val success: Boolean = false,
+    val errorCause: String? = null,
     val summary: String? = null,
     val keyFindings: List<String>? = null,
     val nextSuggestions: List<String>? = null,

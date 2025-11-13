@@ -173,7 +173,7 @@ class AgentStateManager(
         }
     }
 
-    fun trace(state: AgentState?, items: Map<String, String>, message: String? = null) {
+    fun trace(state: AgentState?, items: Map<String, Any?>, message: String? = null) {
         val items2 = if (state != null) {
             mapOf(
                 "action" to state.method,
