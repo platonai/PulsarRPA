@@ -1,7 +1,6 @@
 package ai.platon.pulsar.agentic.ai.agent.detail
 
 import ai.platon.pulsar.agentic.BrowserAgentActor
-import ai.platon.pulsar.agentic.ai.tta.DetailedActResult
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
