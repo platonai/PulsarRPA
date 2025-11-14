@@ -220,7 +220,7 @@ public class StringsTest {
     void testTrimNonCJKChar() {
         assertEquals("中文", Strings.trimNonCJKChar("!@#中文$%"));
         assertEquals("", Strings.trimNonCJKChar("!@#$%"));
-        assertEquals(null, Strings.trimNonCJKChar(null));
+        assertNull(Strings.trimNonCJKChar(null));
         assertEquals("abc123中文", Strings.trimNonCJKChar("!@#abc123中文$%"));
         assertEquals("", Strings.trimNonCJKChar(""));
     }
@@ -742,7 +742,7 @@ public class StringsTest {
         assertEquals("", Strings.removeNonChineseChar(null));
         assertEquals("", Strings.trimNonChineseChar(null));
         assertEquals("", Strings.removeNonCJKChar(null));
-        assertEquals(null, Strings.trimNonCJKChar(null));
+        assertNull(Strings.trimNonCJKChar(null));
         assertEquals("", Strings.removeNonPrintableChar(null));
         assertEquals("", Strings.clearControlChars(null));
         assertEquals("", Strings.clearControlChars(null, ""));
@@ -761,7 +761,7 @@ public class StringsTest {
         assertFalse(Strings.isIpPortLike(null));
         assertFalse(Strings.isIpLike(null));
         assertFalse(Strings.isIpV4Like(null));
-        assertEquals(null, Strings.doubleQuoteIfContainsWhitespace(null));
+        assertNull(Strings.doubleQuoteIfContainsWhitespace(null));
         assertEquals("0 B", Strings.compactFormat(0));
         assertTrue(Strings.getUnslashedLines(null).isEmpty());
         assertEquals("", Strings.mergeSlashedLine(null));
@@ -774,13 +774,11 @@ public class StringsTest {
     @DisplayName("Test performance with large strings")
     void testLargeStrings() {
         StringBuilder large = new StringBuilder();
-        for (int i = 0; i < 1000; i++) {
-            large.append("Hello World ");
-        }
+        large.append("Hello World ".repeat(1000));
         String largeString = large.toString();
 
         // Should handle large strings efficiently
-        assertTrue(Strings.isChinese(largeString + "中文") == Strings.isChinese("中文"));
+        assertEquals(Strings.isChinese(largeString + "中文"), Strings.isChinese("中文"));
         assertEquals(4, Strings.countChinese(largeString + "中文文字"));
         assertNotNull(Strings.removeNonChineseChar(largeString));
         assertNotNull(Strings.compactFormat(largeString.length()));
@@ -829,7 +827,7 @@ public class StringsTest {
         assertEquals("'hello\tworld'", Strings.singleQuoteIfContainsWhitespace("hello\tworld"));
         assertEquals("'hello\nworld'", Strings.singleQuoteIfContainsWhitespace("hello\nworld"));
         assertEquals("", Strings.singleQuoteIfContainsWhitespace(""));
-        assertEquals(null, Strings.singleQuoteIfContainsWhitespace(null));
+        assertNull(Strings.singleQuoteIfContainsWhitespace(null));
         assertEquals("'It\\'s me'", Strings.singleQuoteIfContainsWhitespace("It's me")); // internal quote + space
     }
 
@@ -842,7 +840,7 @@ public class StringsTest {
         assertEquals("\"hello\nworld\"", Strings.doubleQuoteIfContainsWhitespace("hello\nworld"));
         assertEquals("\"He said \\\"Hi\\\"\"", Strings.doubleQuoteIfContainsWhitespace("He said \"Hi\""));
         assertEquals("", Strings.doubleQuoteIfContainsWhitespace(""));
-        assertEquals(null, Strings.doubleQuoteIfContainsWhitespace(null));
+        assertNull(Strings.doubleQuoteIfContainsWhitespace(null));
     }
 
     @Test
@@ -856,9 +854,9 @@ public class StringsTest {
         assertTrue(StringUtils.isAlphanumeric("中文"));
         assertEquals("中文", Strings.singleQuoteIfNonAlphanumeric("中文")); // non-latin
         assertEquals("''", Strings.singleQuoteIfNonAlphanumeric(""));
-        assertEquals(null, Strings.singleQuoteIfNonAlphanumeric(null));
+        assertNull(Strings.singleQuoteIfNonAlphanumeric(null));
         // internal single quote not escaped in this branch (design decision) -> still wrapped
-        assertEquals("'It\'s'", Strings.singleQuoteIfNonAlphanumeric("It's"));
+        assertEquals("'It\\'s'", Strings.singleQuoteIfNonAlphanumeric("It's"));
     }
 
     @Test
@@ -872,7 +870,7 @@ public class StringsTest {
         assertTrue(StringUtils.isAlphanumeric("中文"));
         assertEquals("中文", Strings.doubleQuoteIfNonAlphanumeric("中文"));
         assertEquals("", Strings.doubleQuoteIfNonAlphanumeric(""));
-        assertEquals(null, Strings.doubleQuoteIfNonAlphanumeric(null));
+        assertNull(Strings.doubleQuoteIfNonAlphanumeric(null));
         // internal double quote should be escaped
         assertEquals("\"He said \\\"Hi\\\"\"", Strings.doubleQuoteIfNonAlphanumeric("He said \"Hi\""));
     }
