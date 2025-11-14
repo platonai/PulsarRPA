@@ -732,14 +732,21 @@ open class InteractiveBrowserEmulator(
      * Scroll on page to ensure all the content is loaded, including lazy content.
      * */
     open suspend fun scrollOnPage(interactTask: InteractTask, result: InteractResult) {
-        val expressions = buildScrollExpressions(interactTask)
-
         val interactSettings = interactTask.interactSettings
         if (interactSettings.autoScrollCount > 0) {
+            val positions = interactTask.interactSettings.buildScrollPositions()
             // some website shows lazy content only when the page is in the front.
+            val driver = interactTask.driver
             val bringToFront = interactTask.interactSettings.bringToFront
+            if (bringToFront) {
+                driver.bringToFront()
+            }
             val scrollInterval = interactSettings.scrollInterval.toMillis()
-            evaluate(interactTask, expressions, scrollInterval, bringToFront = bringToFront)
+            // evaluate(interactTask, positions, scrollInterval, bringToFront = bringToFront)
+            positions.forEach {
+                driver.scrollToMiddle(it)
+                delay(scrollInterval)
+            }
         }
     }
 
@@ -761,32 +768,6 @@ open class InteractiveBrowserEmulator(
                 logger.warn("Failed to update meta info | $rel: $href | ${result.exception}")
             }
         }
-    }
-
-    /**
-     * Build scroll expressions
-     * TODO: use InteractSettings.buildScrollPositions
-     * */
-    private fun buildScrollExpressions(interactTask: InteractTask): List<String> {
-        val interactSettings = interactTask.interactSettings
-        val expressions = interactSettings.buildInitScrollPositions()
-            .map { "__pulsar_utils__.scrollToMiddle($it)" }
-            .toMutableList()
-
-        val scrollCount = interactSettings.autoScrollCount
-
-        if (scrollCount <= 0) {
-            return expressions
-        }
-
-        val random = Random.nextInt(3)
-        val enhancedScrollCount = (scrollCount + random - 1).coerceAtLeast(1)
-        repeat(enhancedScrollCount) { i ->
-            val ratio = (0.6 + 0.1 * i).coerceAtMost(0.8)
-            expressions.add("__pulsar_utils__.scrollToMiddle($ratio)")
-        }
-
-        return expressions
     }
 
     protected open suspend fun waitForElementUntilNonBlank(

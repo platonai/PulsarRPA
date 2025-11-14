@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import com.fasterxml.jackson.core.JacksonException
 import java.time.Duration
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.random.Random
 
 enum class DomSettlePolicy {
     READY_STATE_INTERACTIVE,
@@ -85,8 +86,8 @@ data class InteractSettings constructor(
         "waitForNavigation" to 1000..1500,
         "waitForSelector" to 1000..1500,
         "waitUntil" to 500..1000,
-        "default" to 1000..2000,
-        "" to 1000..2000
+        "default" to 500..1000,
+        "" to 500..1000
     )
 
     /**
@@ -177,6 +178,28 @@ data class InteractSettings constructor(
         timeoutPolicy[""] = timeoutPolicy["default"] ?: fallback
 
         return timeoutPolicy
+    }
+
+    /**
+     * Build scroll positions
+     * */
+    fun buildScrollPositions(): List<Double> {
+        val positions = buildInitScrollPositions().toMutableList()
+
+        if (autoScrollCount <= 0) {
+            return positions
+        }
+
+        val scrollCount = autoScrollCount
+        val random = Random.nextInt(3)
+        val enhancedScrollCount = (scrollCount + random - 1).coerceAtLeast(1)
+        repeat(enhancedScrollCount) { i ->
+            val ratio = (0.6 + 0.1 * i).coerceAtMost(0.8)
+            positions.add(ratio)
+        }
+        positions.add(0.0)
+
+        return positions
     }
 
     fun overrideSystemProperties(): InteractSettings {
