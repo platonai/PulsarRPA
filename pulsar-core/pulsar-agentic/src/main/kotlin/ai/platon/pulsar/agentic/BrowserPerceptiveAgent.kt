@@ -253,6 +253,7 @@ open class BrowserPerceptiveAgent constructor(
             message = "USER interrupted",
             data = JsonNodeFactory.instance.objectNode()
         )
+
         return try {
             withContext(agentScope.coroutineContext) {
                 super.extract(options)
@@ -775,7 +776,11 @@ open class BrowserPerceptiveAgent constructor(
         }
     }
 
-    protected suspend fun summarize(goal: String, context: ExecutionContext): ModelResponse {
+    protected suspend fun summarize(goal: String, cxtIn: ExecutionContext): ModelResponse {
+        val context = stateManager.buildExecutionContext(
+            goal, actionType = "summarize", step = cxtIn.step, baseContext = cxtIn
+        )
+
         return try {
             val (system, user) = promptBuilder.buildSummaryPrompt(goal, stateHistory)
             slogger.info("📝⏳ Generating final summary", context)

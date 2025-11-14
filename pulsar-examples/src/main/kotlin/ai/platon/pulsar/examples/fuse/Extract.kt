@@ -20,7 +20,7 @@ class Extract {
 
         driver.open(url)
 
-        var action = "提取列表页数据：文章标题，评论信息"
+        var action = "提取列表页文章数据：文章标题，评论信息"
         var schema = """
 {"fields": [{"name": "articles", "type": "array", "description": "文章列表", "arrayElements": {"name": "article", "type": "object", "objectMemberProperties": [{"name": "title", "type": "string", "description": "文章标题", "required": true}, {"name": "comments", "type": "string", "description": "评论数", "required": true}]}}]}
         """.trimIndent()
@@ -28,7 +28,7 @@ class Extract {
         var extractResult = agent.extract(action, ExtractionSchema.parse(schema))
         result("extract result", extractResult)
 
-        action = "提取前三页列表页数据：文章标题，评论信息"
+        action = "提取列表页文章数据：文章标题，评论信息"
         val result = agent.resolve(action)
         result("action result", result)
     }

@@ -866,11 +866,14 @@ $userRequest
 
     fun initExtractUserInstruction(instruction: String? = null): String {
         if (instruction.isNullOrBlank()) {
-            return if (isZH) {
-                "从网页中提取关键数据结构"
-            } else {
-                "Extract key structured data from the page"
-            }
+            return """
+从网页中提取关键数据结构。
+
+- 每次提供一个视口高度(viewport height)内的所有无障碍树 DOM 节点，你将的数据来源是无障碍树。
+- 视口之上像素高度: 当前视口上方、已滚动出可视范围的网页内容高度
+- 视口之下像素高度: 当前视口下方、不在可视范围内的网页内容高度
+
+""".trimIndent()
         }
 
         return instruction
@@ -887,15 +890,46 @@ ${params.instruction}
 
     fun buildExtractUserPrompt(params: ExtractParams): SimpleMessage {
         val browserState = params.agentState.browserUseState.browserState
-        val nanoTree = params.agentState.browserUseState.domState.microTree.toNanoTreeInRange()
+
+        val scrollState = browserState.scrollState
+        // Height in pixels of the page area above the current viewport. (被隐藏在视口上方的部分的高度)
+        val hiddenTopHeight = scrollState.hiddenTopHeight
+        val hiddenBottomHeight = scrollState.hiddenBottomHeight
+        val viewportHeight = scrollState.viewportHeight
+        val domState = params.agentState.browserUseState.domState
+
+        // The 1-based viewport to see.
+        val processingViewport = scrollState.processingViewport
+        val viewportsTotal = scrollState.viewportsTotal
+
+        val startY = scrollState.y.coerceAtLeast(0.0)
+        val endY = (scrollState.y + viewportHeight).coerceAtLeast(0.0)
+        val nanoTree = domState.microTree.toNanoTreeInRange(startY, endY)
+
         val schema = params.schema
 
         val content = """
+
 ## 浏览器状态
 ${browserState.lazyJson}
 
+---
+
+## 视口信息
+
+本次焦点视口序号: $processingViewport
+视口高度：$viewportHeight
+估算视口总数: $viewportsTotal
+视口之上像素高度: $hiddenTopHeight
+视口之下像素高度: $hiddenBottomHeight
+
+---
+
 ## 无障碍树
+
 ${nanoTree.lazyJson}
+
+---
 
 ## 输出
 你必须返回一个严格符合以下JSON Schema的有效JSON对象。不要包含任何额外说明。
@@ -911,10 +945,10 @@ ${schema.toJsonSchema()}
 你是一名 AI 助手，负责评估一次抽取任务的进展和完成状态。
 请分析抽取响应，判断任务是否已经完成或是否需要更多信息。
 严格遵循以下标准：
-1. 一旦当前抽取响应已经满足了指令，必须将完成状态设为 true 并停止处理，不论是否还有剩余分片。
+1. 一旦当前抽取响应已经满足了指令，必须将完成状态设为 true 并停止处理，不论是否还有未处理视口。
 2. 只有在以下两个条件同时成立时，才将完成状态设为 false：
    - 指令尚未被满足
-   - 仍然有剩余视口需要处理（viewportsTotal > processingViewport）
+   - 仍然有剩余视口数据未提取（viewportsTotal > processingViewport）
 
 """.trimIndent()
 
@@ -952,10 +986,6 @@ ${schema.toJsonSchema()}
 
         val content =
             """
-## 用户指令
-
-指令: $instruction
-
 ## 视口信息
 
 本次焦点视口序号: $processingViewport
@@ -966,7 +996,7 @@ ${schema.toJsonSchema()}
 
 - 默认每次查看一个视口高度(viewport height)内的所有 DOM 节点
 - 视口之上像素高度: 当前视口上方、已滚动出可视范围的网页内容高度
-- 视口之下像素高度: 当前视口下方、已滚动出可视范围的网页内容高度
+- 视口之下像素高度: 当前视口下方、不在可视范围内的网页内容高度
 - 注意：网页内容变化可能导致视口位置和视口序号随时发生变化
 - 默认提供的无障碍树仅包含第`i`个视口内的 DOM 节点，并包含少量视口外邻近节点，以保证信息完整
 - 如需查看下一视口，调用 `scrollBy(viewportHeight)` 向下滚动一屏获取更多信息
@@ -1075,7 +1105,7 @@ $newTabsMessage
 
 - 默认每次查看一个视口高度(viewport height)内的所有 DOM 节点
 - 视口之上像素高度: 当前视口上方、已滚动出可视范围的网页内容高度。
-- 视口之下像素高度: 当前视口下方、已滚动出可视范围的网页内容高度。
+- 视口之下像素高度: 当前视口下方、不在可视范围内的网页内容高度。
 - 注意：网页内容变化可能导致视口位置和视口序号随时发生变化。
 - 默认提供的无障碍树仅包含第`i`个视口内的 DOM 节点，并包含少量视口外邻近节点，以保证信息完整
 - 如需查看下一视口，调用 `scrollBy(viewportHeight)` 向下滚动一屏获取更多信息
