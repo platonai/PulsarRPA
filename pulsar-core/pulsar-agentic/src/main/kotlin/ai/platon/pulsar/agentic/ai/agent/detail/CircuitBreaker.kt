@@ -109,9 +109,9 @@ class CircuitBreaker(
      * Check if circuit is healthy (no counters near threshold).
      */
     fun isHealthy(): Boolean {
-        return llmFailureCounter.get() < maxLLMFailures / 2 &&
-               validationFailureCounter.get() < maxValidationFailures / 2 &&
-               executionFailureCounter.get() < maxExecutionFailures / 2
+        return llmFailureCounter.get() <= maxLLMFailures / 2 &&
+               validationFailureCounter.get() <= maxValidationFailures / 2 &&
+               executionFailureCounter.get() <= maxExecutionFailures / 2
     }
 }
 

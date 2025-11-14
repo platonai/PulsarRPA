@@ -42,6 +42,7 @@ data class AgentCheckpoint(
     // Additional metadata
     val metadata: Map<String, Any> = emptyMap()
 ) {
+    @get:JsonIgnore
     val age: Long get() = System.currentTimeMillis() - timestamp.toEpochMilli()
 }
 
