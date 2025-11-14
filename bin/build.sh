@@ -77,7 +77,6 @@ function invokeMavenBuild {
 
 # Execute Maven package in the application home directory
 MvnOptions+=("install")
-AdditionalMvnArgs+=("-Pall-modules")
 
 MvnOptions+=("${AdditionalMvnArgs[@]}")
 invokeMavenBuild "$APP_HOME" "${MvnOptions[@]}"
