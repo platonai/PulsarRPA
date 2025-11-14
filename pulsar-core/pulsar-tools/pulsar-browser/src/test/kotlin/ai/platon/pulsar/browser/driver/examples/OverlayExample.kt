@@ -37,18 +37,13 @@ class OverlayExample : BrowserExampleBase() {
             val v = screenshot.viewport
             overlay.highlightRect(v.x.toInt(), v.y.toInt(), v.width.toInt(), v.height.toInt())
         }
-//        dom.onGetDocument {
-//            val document = it.root
-//            val body = document.body
-//            val rect = body.boundingBox
-//            val highlightConfig = HighlightConfig(RGBA(255, 0, 0, 0.5), RGBA(255, 0, 0, 0.5))
-//            overlay.highlightRect(rect.x.toInt(), rect.y.toInt(), rect.width.toInt(), rect.height.toInt(), highlightConfig)
-//        }
-        page.navigate(testUrl)
+
         page.onFrameAttached {
             page.captureScreenshot()
             highlight("#productTitle")
         }
+
+        page.navigate(testUrl)
     }
 
     private suspend fun highlight(selector: String) {

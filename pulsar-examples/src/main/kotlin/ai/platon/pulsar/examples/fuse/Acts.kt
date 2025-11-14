@@ -12,7 +12,7 @@ class Acts {
     private val session = AgenticContexts.getOrCreateSession()
 
     suspend fun run() {
-        val url = "https://news.ycombinator.com/news"
+        val url = "https://www.amazon.com/dp/B08PP5MSVB"
 
         val driver = session.getOrCreateBoundDriver()
         val agent = session.companionAgent
@@ -20,11 +20,11 @@ class Acts {
         driver.open(url)
 
         // 1) Use the page's search box (enter text and submit)
-        val result = agent.resolve("goto https://news.ycombinator.com/news , find the search box, type 'web scraping' and submit the form")
+        val result = agent.resolve("goto https://www.amazon.com/dp/B08PP5MSVB , search for 'calabi-yau' and submit the form")
         result("action result", result)
 
         // 1) Use the page's search box (enter text and submit)
-        val result2 = agent.resolve("goto https://news.ycombinator.com/news , find the search box, type 'web scraping' and submit the form")
+        val result2 = agent.resolve("goto https://www.amazon.com/dp/B08PP5MSVB , search for 'calabi-yau' and submit the form")
         result("action result2", result2)
 
         agent.processTrace.forEach { println("""🚩$it""") }

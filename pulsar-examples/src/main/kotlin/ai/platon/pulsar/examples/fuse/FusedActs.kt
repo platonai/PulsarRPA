@@ -100,8 +100,8 @@ class FusedActs {
         result("action result", result)
 
         // 4) Open the first comment thread
-        log.info("[STEP ${++step}] Action: open the first comment thread on the page")
-        result = agent.resolve("goto https://animationobsessive.substack.com/p/the-toy-story-you-remember open the first comment thread on the page")
+        log.info("[STEP ${++step}] Action: search for 'calabi-yau' on amazon")
+        result = agent.resolve("goto https://www.amazon.com/dp/B08PP5MSVB , search for 'calabi-yau' and submit the form")
         result("action result", result)
 
         // 5) Navigate back
@@ -116,7 +116,7 @@ class FusedActs {
 
         // 7) Extract specific data after interactions
         log.info("[STEP ${++step}] Action: extract article titles and their hrefs from the main list")
-        result = agent.resolve("goto https://news.ycombinator.com/, extract article titles and their hrefs from the main list")
+        result = agent.resolve("goto https://en.cppreference.com/index.html , extract article titles and their hrefs from the main list")
         result("action result", result)
 
         // 5) Navigate back
