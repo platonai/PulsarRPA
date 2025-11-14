@@ -819,6 +819,15 @@ $historyJson
         }.let { Strings.compactLog(it, 5000) }
         val help = evaluate?.exception?.help?.takeIf { it.isNotBlank() }
         val helpMessage = help?.let { "帮助信息：\n```\n$it\n```" } ?: ""
+        val lastModelError = agentState.actionDescription?.modelResponse?.modelError
+        val lastModelMessage = if (lastModelError != null) {
+            """
+上步模型错误：
+
+$lastModelError
+
+        """
+        } else ""
 
         return """
 ## 上步输出
@@ -833,8 +842,9 @@ $evalMessage
 
 $helpMessage
 
----
+$lastModelMessage
 
+---
         """.trimIndent()
     }
 

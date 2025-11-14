@@ -84,13 +84,13 @@ open class TextToAction(
     fun modelResponseToActionDescription(
         instruction: String,
         agentState: AgentState,
-        response: ModelResponse
+        modelResponse: ModelResponse
     ): ActionDescription {
         try {
-            return modelResponseToActionDescription0(instruction, agentState, response)
+            return modelResponseToActionDescription0(instruction, agentState, modelResponse)
         } catch (e: Exception) {
             logger.warn("Exception while parsing model response", e)
-            return ActionDescription(instruction, modelResponse = response, exception = e)
+            return ActionDescription(instruction, modelResponse = modelResponse, exception = e)
         }
     }
 
@@ -99,7 +99,9 @@ open class TextToAction(
         agentState: AgentState,
         modelResponse: ModelResponse
     ): ActionDescription {
-        val content = modelResponse.content
+        val modelResponse = reviseModelResponse(modelResponse)
+        val content = modelResponse.content.trim()
+
         val contentStart = Strings.compactWhitespaces(content.take(30))
 
         val mapper = pulsarObjectMapper()
@@ -123,6 +125,29 @@ open class TextToAction(
 
             else -> ActionDescription(instruction, modelResponse = modelResponse)
         }
+    }
+
+    private fun reviseModelResponse(modelResponse: ModelResponse): ModelResponse {
+        var content = modelResponse.content.trim()
+        val errorMessage = "非法响应，必须是合法 JSON 格式。客户端已经修正，未来需严格遵循格式。"
+        var modelError: String? = null
+        val tailing20 = content.takeLast(20)
+        if (content.take(20).contains("<output_act>")) {
+            content = content.replace("<output_act>", "")
+            modelError = errorMessage
+        }
+        if (tailing20.contains("</output_act>")) {
+            content = content.replace("</output_act>", "")
+            modelError = errorMessage
+        }
+        if (tailing20.contains("<output_act>")) {
+            content = content.replace("<output_act>", "")
+            modelError = errorMessage
+        }
+
+        return if (modelError != null) {
+            modelResponse.copy(content = content, modelError = modelError)
+        } else modelResponse
     }
 
     fun reviseActionDescription(action: ActionDescription): ActionDescription {

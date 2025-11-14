@@ -264,6 +264,7 @@ class InferenceEngine(
         val startTime = Instant.now()
 
         val actionDescription = cta.generate(messages, context)
+        requireNotNull(context.agentState.actionDescription) { "Filed should be set: context.agentState.actionDescription" }
         // val modelResponse = cta.generateResponseRaw(messages, params.screenshotB64)
         val modelResponse = actionDescription.modelResponse!!
 

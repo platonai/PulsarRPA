@@ -38,7 +38,11 @@ open class ContextToAction(
 
             val actionDescription = tta.modelResponseToActionDescription(instruction, context.agentState, response)
 
-            return tta.reviseActionDescription(actionDescription)
+            val revised = tta.reviseActionDescription(actionDescription)
+
+            context.agentState.actionDescription = revised
+
+            return revised
         } catch (e: Exception) {
             val errorResponse = ModelResponse("Unknown exception" + e.brief(), ResponseState.OTHER)
             return ActionDescription(

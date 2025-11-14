@@ -20,7 +20,7 @@ data class ActionOptions(
     val timeoutMs: Int? = null,
     val iframes: Boolean? = null,
     @get:JsonIgnore
-    val resolve: Boolean = false,
+    val resolve: Boolean = true,
     @get:JsonIgnore
     val additionalContext: MutableMap<String, Any> = mutableMapOf(),
 )
@@ -270,6 +270,8 @@ data class AgentState constructor(
     var nextGoal: String? = null,
     // timestamp
     var timestamp: Instant = Instant.now(),
+    @JsonIgnore
+    var actionDescription: ActionDescription? = null,
     @JsonIgnore
     var toolCallResult: ToolCallResult? = null,
     @JsonIgnore

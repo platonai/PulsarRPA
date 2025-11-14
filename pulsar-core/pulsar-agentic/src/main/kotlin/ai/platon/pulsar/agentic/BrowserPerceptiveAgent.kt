@@ -326,10 +326,11 @@ open class BrowserPerceptiveAgent constructor(
 
         return try {
             if (isClosed) throw CancellationException("closed")
-            val action = cta.generate(messages, context)
+            val actionDescription = cta.generate(messages, context)
+            requireNotNull(context.agentState.actionDescription) { "Filed should be set: context.agentState.actionDescription" }
             circuitBreaker.recordSuccess(CircuitBreaker.FailureType.LLM_FAILURE)
             consecutiveLLMFailureCounter.set(0) // Keep for backward compatibility
-            action
+            actionDescription
         } catch (e: Exception) {
             handleObserveException(e, context)
 

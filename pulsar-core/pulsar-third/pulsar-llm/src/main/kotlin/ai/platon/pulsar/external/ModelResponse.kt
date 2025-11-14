@@ -7,6 +7,10 @@ data class ModelResponse constructor(
     var state: ResponseState = ResponseState.STOP,
     var tokenUsage: TokenUsage = TokenUsage(),
     var startTime: Instant? = null,
+    /**
+     * An error message to passed back to the model
+     * */
+    var modelError: String? = null,
 ) {
     override fun toString() = content
 

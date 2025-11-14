@@ -4,12 +4,13 @@ import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.context.QLAgenticContext
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.ResourceStatus.SC_INTERNAL_SERVER_ERROR
+import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.common.warnUnexpected
 import ai.platon.pulsar.rest.api.entities.CommandStatus
 import ai.platon.pulsar.rest.api.entities.NavigateRequest
 import ai.platon.pulsar.rest.api.entities.ScreenshotRequest
-import ai.platon.pulsar.rest.api.service.CommandService
 import ai.platon.pulsar.skeleton.ai.ActResult
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.ExtractOptions
@@ -40,7 +41,6 @@ import kotlin.concurrent.withLock
 )
 class SinglePageApplicationController(
     val session: AgenticSession,
-    val commandService: CommandService,
 ) {
     private val logger = getLogger(SinglePageApplicationController::class)
     private var browser: Browser? = null
@@ -78,13 +78,13 @@ class SinglePageApplicationController(
                 if (!isInitialized) {
                     val options = session.options("-refresh")
 
-                    val url = "https://cn.bing.com/"
+                    val url = AppConstants.SEARCH_ENGINE_URL
                     logger.info("Verify $url to initialize ...")
                     val page = session.load(url, options)
                     val document = session.parse(page)
                     val html = document.html
 
-                    if (html.length > 1_000 && html.contains("<input .+百度一下.+>".toRegex())) {
+                    if (html.length > 1_000) {
                         isInitialized = true
                         return mapOf(
                             "status" to "initialized",
@@ -115,19 +115,33 @@ class SinglePageApplicationController(
      */
     @PostMapping("/navigate")
     suspend fun navigate(@RequestBody request: NavigateRequest): ResponseEntity<Any> {
+        val url = request.url
         val driver = activeDriver
 
-        driver.bringToFront()
-        driver.navigateTo(request.url)
+        return try {
+            require(URLUtils.isStandard(url)) { "URL is not valid | $url" }
 
-        return ResponseEntity.ok("success")
+            val oldUrl = driver.currentUrl()
+
+            driver.bringToFront()
+            driver.navigateTo(url)
+            driver.waitForNavigation(oldUrl)
+            driver.waitForSelector("body")
+
+            ResponseEntity.ok("success")
+        } catch (e: Exception) {
+            warnUnexpected(this, e, "Failed to navigate to ${request.url}")
+            val message = e.message ?: "Failed to navigate | ${request.url}"
+            val statusCode = SC_INTERNAL_SERVER_ERROR
+            val result = ResourceStatus.getStatusText(statusCode) + " | " + message
+            ResponseEntity.status(statusCode).body(result)
+        }
     }
 
     /**
      * Execute an interaction instruction on the current page via the active driver.
-     *
-     * @param request The action request including the instruction text.
-     * @return 200 OK with empty body on success; 500 if no active driver is present.
+     * Supports a per-endpoint timeout via property `browser4.spa.act.timeout.ms` (milliseconds).
+     * Set to a positive value to enable, or <=0 to disable custom timeout.
      */
     @PostMapping("/act")
     suspend fun act(@RequestBody request: ActionOptions): ResponseEntity<ActResult> {

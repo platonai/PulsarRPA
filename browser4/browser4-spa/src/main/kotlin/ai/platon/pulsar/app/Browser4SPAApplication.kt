@@ -1,19 +1,21 @@
 package ai.platon.pulsar.app
 
 import ai.platon.pulsar.agentic.AgenticSession
-import ai.platon.pulsar.boot.autoconfigure.PulsarContextInitializer
+import ai.platon.pulsar.agentic.context.AgenticContexts
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.skeleton.PulsarSettings
-import ai.platon.pulsar.skeleton.session.PulsarSession
 import jakarta.annotation.PostConstruct
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
+import org.springframework.context.ApplicationContext
+import org.springframework.context.ApplicationContextInitializer
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.context.annotation.ImportResource
+import org.springframework.context.support.AbstractApplicationContext
 
 @SpringBootApplication
 @ImportResource("classpath:pulsar-beans/app-context.xml")
@@ -22,7 +24,9 @@ import org.springframework.context.annotation.ImportResource
     "ai.platon.pulsar.rest.api",
     "ai.platon.pulsar.app.api",
 )
-class Browser4Application {
+class Browser4Application(
+    val applicationContext: ApplicationContext
+) {
     private val logger = getLogger(Browser4Application::class)
 
     @Value("\${server.port:8182}")
@@ -39,6 +43,7 @@ class Browser4Application {
 
     @PostConstruct
     fun initialize() {
+
     }
 
     @PostConstruct
@@ -101,9 +106,16 @@ class Browser4Application {
     )
 }
 
+class Browser4SPAContextInitializer : ApplicationContextInitializer<AbstractApplicationContext> {
+    override fun initialize(applicationContext: AbstractApplicationContext) {
+        PulsarSettings.withDefaultBrowser()
+        AgenticContexts.create(applicationContext)
+    }
+}
+
 fun main(args: Array<String>) {
     runApplication<Browser4Application>(*args) {
-        addInitializers(PulsarContextInitializer())
+        addInitializers(Browser4SPAContextInitializer())
         setAdditionalProfiles("spa")
         setLogStartupInfo(true)
     }
