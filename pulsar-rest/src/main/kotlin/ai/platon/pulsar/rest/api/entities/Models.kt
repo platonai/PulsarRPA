@@ -340,17 +340,6 @@ data class NavigateRequest(
     var url: String,
 )
 
-data class ActRequest(
-    var id: String,
-    var act: String,
-)
-
-data class ExtractRequest(
-    var id: String,
-    var prompt: String,
-    val xsql: String? = null,
-)
-
 data class ScreenshotRequest(
     var id: String
 )

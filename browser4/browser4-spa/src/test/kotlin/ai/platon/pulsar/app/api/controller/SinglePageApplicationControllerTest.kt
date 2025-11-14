@@ -4,6 +4,11 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.rest.api.entities.*
+import ai.platon.pulsar.skeleton.ai.ActResult
+import ai.platon.pulsar.skeleton.ai.ActionOptions
+import ai.platon.pulsar.skeleton.ai.ExtractOptions
+import ai.platon.pulsar.skeleton.ai.ExtractResult
+import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import ai.platon.pulsar.test.TestResourceUtil.Companion.PRODUCT_DETAIL_URL
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
@@ -55,14 +60,19 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
     @Order(20)
     @Test
     fun `act with clicking`() {
-        val request = ActRequest(id = "test", act = "click search box")
+        val request = ActionOptions(action = "click search box")
         val response = restTemplate.postForEntity(
-            "$baseUri/api/spa/act", request, CommandStatus::class.java
+            "$baseUri/api/spa/act", request, ActResult::class.java
         )
 
         assertThat(response.statusCode.value()).isEqualTo(200)
-        // assertThat(response.body).isNotNull
-        printlnPro(response.body)
+        assertThat(response.body).isNotNull
+        val result = response.body
+        assertNotNull(result)
+        printlnPro(result.action)
+        printlnPro(result.message)
+        printlnPro(result.result?.modelResponse)
+        printlnPro(result)
     }
 
     @Order(30)
@@ -95,12 +105,13 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
     fun `extract with prompt`() {
         val headers = HttpHeaders()
         headers.contentType = MediaType.APPLICATION_JSON
-        val request = HttpEntity(ExtractRequest(id = "test", prompt = "name, price"), headers)
+        val schema = mapOf("name" to "string - product name", "price" to "double - product price")
+        val options = ExtractOptions(instruction = "name, price", ExtractionSchema.fromMap(schema))
+        val request = HttpEntity(options, headers)
         val response = restTemplate.exchange(
-            "$baseUri/api/spa/extract", HttpMethod.GET, request, Any::class.java
+            "$baseUri/api/spa/extract", HttpMethod.GET, request, ExtractResult::class.java
         )
         printlnPro(response.body)
         assertThat(response.statusCode.value()).isEqualTo(200)
     }
 }
-

@@ -2,15 +2,15 @@ package ai.platon.pulsar.app.api.controller
 
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.context.QLAgenticContext
-import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.ResourceStatus
+import ai.platon.pulsar.common.ResourceStatus.SC_INTERNAL_SERVER_ERROR
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warnUnexpected
 import ai.platon.pulsar.rest.api.entities.CommandStatus
 import ai.platon.pulsar.rest.api.entities.NavigateRequest
 import ai.platon.pulsar.rest.api.entities.ScreenshotRequest
 import ai.platon.pulsar.rest.api.service.CommandService
-import ai.platon.pulsar.skeleton.PulsarSettings
+import ai.platon.pulsar.skeleton.ai.ActResult
 import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.ExtractOptions
 import ai.platon.pulsar.skeleton.ai.ExtractResult
@@ -130,16 +130,17 @@ class SinglePageApplicationController(
      * @return 200 OK with empty body on success; 500 if no active driver is present.
      */
     @PostMapping("/act")
-    suspend fun act(@RequestBody request: ActionOptions): ResponseEntity<Any> {
+    suspend fun act(@RequestBody request: ActionOptions): ResponseEntity<ActResult> {
         return try {
             val result = agent.act(request)
 
             ResponseEntity.ok(result)
         } catch (e: Throwable) {
             warnUnexpected(this, e, "Failed to execute act on current page")
-            val status = CommandStatus.failed(ResourceStatus.SC_INTERNAL_SERVER_ERROR)
-            status.message = e.message ?: "Failed to act | ${request.action}"
-            ResponseEntity.status(status.statusCode).body(status)
+            val message = e.message ?: "Failed to act | ${request.action}"
+            val statusCode = SC_INTERNAL_SERVER_ERROR
+            val actResult = ActResult.failed(ResourceStatus.getStatusText(statusCode) + " | " + message)
+            ResponseEntity.status(statusCode).body(actResult)
         }
     }
 
@@ -156,7 +157,7 @@ class SinglePageApplicationController(
         return try {
             driver.bringToFront()
             val screenshotBase64 = driver.captureScreenshot()
-                    ?: return ResponseEntity.status(ResourceStatus.SC_INTERNAL_SERVER_ERROR)
+                ?: return ResponseEntity.status(SC_INTERNAL_SERVER_ERROR)
                     .body("Failed to capture screenshot.")
 
             // Decode base64 to bytes and return raw JPEG data
@@ -164,7 +165,7 @@ class SinglePageApplicationController(
             ResponseEntity.ok(jpegBytes)
         } catch (e: Throwable) {
             warnUnexpected(this, e, "Failed to capture screenshot from current page")
-            val status = CommandStatus.failed(ResourceStatus.SC_INTERNAL_SERVER_ERROR)
+            val status = CommandStatus.failed(SC_INTERNAL_SERVER_ERROR)
             status.message = e.message ?: "Failed to capture screenshot"
             ResponseEntity.status(status.statusCode).body(status)
         }
@@ -181,7 +182,7 @@ class SinglePageApplicationController(
      * @return 200 OK with the aggregated [ExtractResult]; 500 if no active driver is present.
      */
     @GetMapping("/extract")
-    suspend fun extract(@RequestBody options: ExtractOptions): ResponseEntity<Any> {
+    suspend fun extract(@RequestBody options: ExtractOptions): ResponseEntity<ExtractResult> {
         val result = agent.extract(options)
         return ResponseEntity.ok(result)
     }

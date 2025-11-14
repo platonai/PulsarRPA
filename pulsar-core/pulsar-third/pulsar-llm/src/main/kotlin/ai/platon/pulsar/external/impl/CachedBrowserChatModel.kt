@@ -206,7 +206,7 @@ open class CachedBrowserChatModel(
         }
 
         if (logger.isInfoEnabled) {
-            val log = StringUtils.abbreviate(trimmedUserMessage, 100).replace("\n", " ")
+            val log = StringUtils.abbreviate(trimmedUserMessage, 200).replace("\n", " ")
             logger.info("▶ Chat - [len: {}] {}", trimmedUserMessage.length, log)
         }
 

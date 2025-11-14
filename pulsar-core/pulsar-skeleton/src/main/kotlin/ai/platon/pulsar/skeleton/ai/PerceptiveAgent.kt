@@ -19,7 +19,9 @@ data class ActionOptions(
     val domSettleTimeoutMs: Int? = null,
     val timeoutMs: Int? = null,
     val iframes: Boolean? = null,
+    @get:JsonIgnore
     val resolve: Boolean = false,
+    @get:JsonIgnore
     val additionalContext: MutableMap<String, Any> = mutableMapOf(),
 )
 
@@ -45,8 +47,9 @@ data class ActResult constructor(
     val message: String,
 
     val action: String? = null,
+    @get:JsonIgnore
     val result: ToolCallResult? = null,
-
+    @get:JsonIgnore
     val detail: DetailedActResult? = null
 ) {
     @get:JsonIgnore
@@ -103,7 +106,9 @@ data class ObserveOptions(
     val frameId: String? = null,
 
     val resolve: Boolean = false,
+    @get:JsonIgnore
     val agentState: AgentState? = null,
+    @get:JsonIgnore
     val additionalContext: MutableMap<String, Any> = mutableMapOf(),
 )
 

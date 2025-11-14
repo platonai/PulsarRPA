@@ -1,11 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<configuration scan="false" scanPeriod="30 seconds" debug="false">
-    <property name="logging.dir" value="${logging.dir:-logs}" />
-    <property name="logging.file" value="${logging.file:-pulsar.log}" />
-    <property name="logging.m.file" value="${logging.m.file:-pulsar.m.log}" />
-    <property name="logging.dc.file" value="${logging.dc.file:-pulsar.dc.log}" />
-    <property name="logging.sql.file" value="${logging.sql.file:-pulsar.sql.log}" />
+<configuration scan="true" scanPeriod="30 seconds" debug="false">
 
     <!--0. 日志格式和颜色渲染 -->
     <!-- 彩色日志依赖的渲染类 -->
@@ -14,86 +9,46 @@
     <conversionRule conversionWord="wEx" converterClass="org.springframework.boot.logging.logback.ExtendedWhitespaceThrowableProxyConverter" />
     <!-- 彩色日志格式 -->
     <property name="CONSOLE_LOG_PATTERN" value="${CONSOLE_LOG_PATTERN:-%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%.10t]){faint} %clr(%c{2}){cyan} %clr(-){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}}"/>
-
-    <appender name="DRFA" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>${logging.dir}/${logging.file}</File>
-        <encoder>
-            <pattern>%d{HH:mm:ss.SSS} [%.10thread] %-5level %logger{36} - %msg%n</pattern>
-        </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${logging.dir}/${logging.file}.%d{.yyyy-MM-dd}</fileNamePattern>
-        </rollingPolicy>
-    </appender>
-    <appender name="METRICS" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>${logging.dir}/${logging.m.file}</File>
-        <encoder>
-            <pattern>%d{ISO8601} - %m%n</pattern>
-        </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${logging.dir}/${logging.m.file}.%d{.yyyy-MM-dd}</fileNamePattern>
-        </rollingPolicy>
-    </appender>
-    <appender name="DC" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>${logging.dir}/${logging.dc.file}</File>
-        <encoder>
-            <pattern>%d{ISO8601} - %m%n</pattern>
-        </encoder>
-        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <fileNamePattern>${logging.dir}/${logging.dc.file}.%d{.yyyy-MM-dd}</fileNamePattern>
-        </rollingPolicy>
-    </appender>
-    <appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
-        <encoder>
-            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
-        </encoder>
-    </appender>
-    <appender name="SQL" class="ch.qos.logback.core.FileAppender">
-        <File>${logging.dir}/${logging.sql.file}</File>
-        <encoder>
-            <pattern>%m%n</pattern>
-        </encoder>
-    </appender>
-
-    <root level="${log.level:-INFO}">
-        <appender-ref ref="DRFA"/>
-        <appender-ref ref="stdout"/>
-    </root>
+    <property name="RFA_LOG_PATTERN" value="%d{HH:mm:ss.SSS} [%.10thread] %-5level %logger{26} - %msg%n"/>
 
     <!-- Stop logback status INFO at the start -->
     <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
 
+    <appender name="Console" class="ch.qos.logback.core.ConsoleAppender">
+        <layout class="ch.qos.logback.classic.PatternLayout">
+            <pattern>${CONSOLE_LOG_PATTERN}</pattern>
+        </layout>
+    </appender>
+
+    <appender name="RFA" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <File>logs/pulsar.exam.log</File>
+        <encoder>
+            <pattern>${RFA_LOG_PATTERN}</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>logs/pulsar.exam.log.%d{.yyyy-MM-dd}</fileNamePattern>
+        </rollingPolicy>
+    </appender>
+
+    <root level="${log.level:-INFO}">
+        <appender-ref ref="RFA"/>
+        <appender-ref ref="Console"/>
+    </root>
+
     <logger name="ai.platon.pulsar" level="INFO"/>
-    <logger name="ai.platon.pulsar.skeleton.crawl.fetch.privacy" level="INFO"/>
-    <logger name="ai.platon.pulsar.protocol.browser.driver" level="INFO"/>
-    <logger name="ai.platon.pulsar.rest" level="DEBUG"/>
+    <logger name="ai.platon.pulsar.common" level="INFO"/>
 
-    <logger name="ai.platon.pulsar.common.collect.collector" level="INFO" additivity="false">
-        <appender-ref ref="DC"/>
-    </logger>
-    <logger name="ai.platon.pulsar.skeleton.common.metrics.MetricsSystem" level="INFO" additivity="false">
-        <appender-ref ref="METRICS"/>
-    </logger>
-    <logger name="ai.platon.pulsar.skeleton.common.metrics.AppMetrics" level="INFO" additivity="false">
-        <appender-ref ref="METRICS"/>
-    </logger>
-    <logger name="ai.platon.pulsar.common.sql.log" level="INFO" additivity="false">
-        <appender-ref ref="SQL"/>
-    </logger>
+    <logger name="ai.platon.pulsar.agentic" level="INFO"/>
 
-    <logger name="org.mongo" level="INFO"/>
-    <logger name="org.mongodb" level="INFO"/>
-
-    <logger name="org.springframework" level="INFO"/>
     <logger name="org.springframework.core" level="INFO"/>
     <logger name="org.springframework.core.env" level="INFO"/>
-    <logger name="org.springframework.boot" level="INFO"/>
-    <logger name="org.springframework.http" level="INFO"/>
+
+    <logger name="org.springframework.orm.jpa" level="INFO"/>
+    <logger name="org.springframework.transaction" level="INFO"/>
 
     <logger name="org.apache.gora" level="ERROR"/>
-    <logger name="org.apache.zookeeper" level="ERROR"/>
-    <logger name="org.apache.solr" level="ERROR"/>
+    <logger name="org.apache.hadoop" level="WARN"/>
 
-    <logger name="io.netty" level="INFO"/>
-    <logger name="io.netty.handler.logging" level="INFO"/>
+    <logger name="dev.langchain4j.http.client.log" level="WARN" />
 
 </configuration>
