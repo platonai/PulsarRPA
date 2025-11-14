@@ -717,12 +717,14 @@ open class InteractiveBrowserEmulator(
         val driver = interactTask.driver
         require(driver is PulsarWebDriver)
 
-        val maxRound = 60
+        val pollMillis = 200L
+        val maxRound = 60_000 / pollMillis
         var i = 0
         while (i++ < maxRound) {
             if (driver.isNetworkIdle) {
                 break
             }
+            delay(pollMillis)
         }
 
         result.protocolStatus = ProtocolStatus.STATUS_SUCCESS
