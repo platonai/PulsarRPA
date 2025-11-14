@@ -46,7 +46,6 @@ import kotlinx.coroutines.delay
 import java.nio.charset.StandardCharsets
 import java.time.Duration
 import java.time.Instant
-import kotlin.random.Random
 
 /**
  * Created by vincent on 18-1-1.
@@ -559,7 +558,7 @@ open class InteractiveBrowserEmulator(
         if (hasScript) {
             // Wait until the document is actually ready, or timeout.
             // wait for document be fully loaded, in another word, the DOM becomes settle
-            waitForDocumentFullyLoaded(task, result)
+            waitForDocumentSettle(task, result)
         }
 
         if (result.protocolStatus.isSuccess) {
@@ -611,13 +610,13 @@ open class InteractiveBrowserEmulator(
      * Wait until the document is actually ready, or timeout.
      * */
     @Throws(NavigateTaskCancellationException::class)
-    protected open suspend fun waitForDocumentFullyLoaded(interactTask: InteractTask, result: InteractResult) {
+    protected open suspend fun waitForDocumentSettle(interactTask: InteractTask, result: InteractResult) {
         val page = interactTask.page
         val driver = interactTask.driver
         require(driver is AbstractWebDriver)
 
         when (interactTask.interactSettings.domSettlePolicy) {
-            DomSettlePolicy.FIELDS_SETTLE -> waitForDocumentFullyLoaded1(interactTask, result)
+            DomSettlePolicy.FIELDS_SETTLE -> waitForDocumentSettle1(interactTask, result)
             else -> waitForNetworkIdle(interactTask, result)
         }
     }
@@ -655,7 +654,7 @@ open class InteractiveBrowserEmulator(
      * Wait until the document is actually ready, or timeout.
      * */
     @Throws(NavigateTaskCancellationException::class)
-    protected open suspend fun waitForDocumentFullyLoaded1(interactTask: InteractTask, result: InteractResult) {
+    protected open suspend fun waitForDocumentSettle1(interactTask: InteractTask, result: InteractResult) {
         val driver = interactTask.driver
         require(driver is AbstractWebDriver)
 

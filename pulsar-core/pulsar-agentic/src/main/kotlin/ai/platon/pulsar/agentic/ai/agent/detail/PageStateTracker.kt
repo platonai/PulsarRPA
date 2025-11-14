@@ -1,7 +1,7 @@
 package ai.platon.pulsar.agentic.ai.agent.detail
 
-import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.AgentConfig
+import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.getLogger
@@ -128,7 +128,7 @@ class PageStateTracker(
 
     // Install the lightweight DOM stability probe once per page to avoid re-parsing JS in the loop
     private suspend fun ensureDomStabilityProbeInstalled() {
-        val driver = requireNotNull(activeDriver)
+        val driver = activeDriver
 
         if (domSettleJsLoaded.compareAndSet(false, true)) {
             domSettleJs = ResourceLoader.readString("js/dom_settle.js")
