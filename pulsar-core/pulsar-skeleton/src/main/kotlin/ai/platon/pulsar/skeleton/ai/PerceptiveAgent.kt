@@ -43,11 +43,10 @@ data class DetailedActResult(
 }
 
 data class ActResult constructor(
-    val success: Boolean,
-    val message: String,
+    val success: Boolean = false,
+    val message: String = "",
 
     val action: String? = null,
-    @get:JsonIgnore
     val result: ToolCallResult? = null,
     @get:JsonIgnore
     val detail: DetailedActResult? = null
@@ -90,7 +89,7 @@ data class ExtractOptions(
 
 data class ExtractResult(
     val success: Boolean,
-    val message: String,
+    val message: String = "",
     val data: JsonNode
 )
 
@@ -152,8 +151,8 @@ data class ToolCall constructor(
 }
 
 data class TcException(
-    val expression: String,
-    val cause: Exception,
+    val expression: String = "",
+    val cause: Exception? = null,
     var help: String? = null,
 ) {
     val domain: String get() = expression.substringBefore('.')
@@ -182,7 +181,7 @@ data class TcEvaluate constructor(
 }
 
 data class ToolCallResult constructor(
-    val success: Boolean,
+    val success: Boolean = false,
     val evaluate: TcEvaluate? = null,
     val message: String? = null,
     val expression: String? = null,

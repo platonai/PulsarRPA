@@ -180,18 +180,18 @@ fun warnForClose(target: Any, t: Throwable, message: String, vararg args: Any?) 
         Thread.currentThread().interrupt()
 
         val message2 = """
-                 * <p><em>Implementers of AutoClosable interface are strongly advised
-                 * to not have the {@code close} method throw {@link
-                 * InterruptedException}.</em>
-                 *
-                 * This exception interacts with a thread's interrupted status,
-                 * and runtime misbehavior is likely to occur if an {@code
-                 * InterruptedException} is {@linkplain Throwable#addSuppressed
-                 * suppressed}.
-                 *
-                 * More generally, if it would cause problems for an
-                 * exception to be suppressed, the {@code AutoCloseable.close}
-                 * method should not throw it.
+             * <p><em>Implementers of AutoClosable interface are strongly advised
+             * to not have the {@code close} method throw {@link
+             * InterruptedException}.</em>
+             *
+             * This exception interacts with a thread's interrupted status,
+             * and runtime misbehavior is likely to occur if an {@code
+             * InterruptedException} is {@linkplain Throwable#addSuppressed
+             * suppressed}.
+             *
+             * More generally, if it would cause problems for an
+             * exception to be suppressed, the {@code AutoCloseable.close}
+             * method should not throw it.
         """
 
         logger?.warn(message2)
@@ -226,9 +226,10 @@ fun printlnPro(ownerObj: Any?, o: Any?) {
         readableClassName(ownerObj) + " - "
     } else null
 
-    if (prefix != null) {
-        println(prefix + o?.toString())
+    val p = prefix ?: ""
+    if (o is String?) {
+        println("$p$o")
     } else {
-        println(o?.toString())
+        println("$p```\n$o\n```")
     }
 }
