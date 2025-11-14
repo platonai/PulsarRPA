@@ -1,19 +1,25 @@
 #!/bin/bash
 
 # Find the first parent directory that contains a VERSION file
-APP_HOME=$(cd "$(dirname "$0")">/dev/null || exit; pwd)
+APP_HOME=$(cd "$(dirname "$0")">/dev/null || exit 1; pwd)
 while [[ ! -f "$APP_HOME/VERSION" && "$APP_HOME" != "/" ]]; do
   APP_HOME=$(dirname "$APP_HOME")
 done
-[[ -f "$APP_HOME/VERSION" ]] && cd "$APP_HOME" || exit
+[[ -f "$APP_HOME/VERSION" ]] && cd "$APP_HOME" || exit 1
 
-function printUsage {
+function print_usage {
   echo "Usage: build.sh [-clean|-test]"
   exit 1
 }
 
 # Maven command and options
 MvnCmd="./mvnw"
+
+# Validate Maven wrapper exists and is executable
+if [[ ! -x "$APP_HOME/mvnw" ]]; then
+    echo "Error: Maven wrapper not found or not executable at $APP_HOME/mvnw"
+    exit 1
+fi
 
 # Initialize flags and additional arguments
 PerformClean=false
@@ -32,10 +38,10 @@ for Arg in "$@"; do
       SkipTests=false
       ;;
     -h|-help|--help)
-      printUsage
+      print_usage
       ;;
     -*|--*)
-      printUsage
+      print_usage
       ;;
     *)
       AdditionalMvnArgs+=("$Arg")
@@ -58,7 +64,7 @@ function invokeMavenBuild {
   shift
   local MvnOptions=("$@")
 
-  pushd "$Directory" > /dev/null || return
+  pushd "$Directory" > /dev/null || exit 1
 
   $MvnCmd "${MvnOptions[@]}"
 
@@ -66,7 +72,7 @@ function invokeMavenBuild {
     echo "Warning: Maven command failed in $Directory"
   fi
 
-  popd > /dev/null || return
+  popd > /dev/null || exit 1
 }
 
 # Execute Maven package in the application home directory
@@ -74,4 +80,4 @@ MvnOptions+=("install")
 AdditionalMvnArgs+=("-Pall-modules")
 
 MvnOptions+=("${AdditionalMvnArgs[@]}")
-invokeMavenBuild "$AppHome" "${MvnOptions[@]}"
+invokeMavenBuild "$APP_HOME" "${MvnOptions[@]}"
