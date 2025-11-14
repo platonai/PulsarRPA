@@ -6,13 +6,16 @@ import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warnUnexpected
-import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.rest.api.entities.*
+import ai.platon.pulsar.rest.api.entities.CommandStatus
+import ai.platon.pulsar.rest.api.entities.NavigateRequest
+import ai.platon.pulsar.rest.api.entities.ScreenshotRequest
 import ai.platon.pulsar.rest.api.service.CommandService
 import ai.platon.pulsar.skeleton.PulsarSettings
+import ai.platon.pulsar.skeleton.ai.ActionOptions
+import ai.platon.pulsar.skeleton.ai.ExtractOptions
+import ai.platon.pulsar.skeleton.ai.ExtractResult
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import kotlinx.coroutines.runBlocking
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -41,9 +44,10 @@ class SinglePageApplicationController(
 ) {
     private val logger = getLogger(SinglePageApplicationController::class)
     private var browser: Browser? = null
+    private val agent get() = session.companionAgent
     private val activeDriver: WebDriver get() = session.getOrCreateBoundDriver()
     private val browserLock = ReentrantLock()
-    private var isInitialized = false // 添加初始化标志
+    private var isInitialized = false
 
     /**
      * Initialize Browser4 for SPA rendering and perform a simple health check.
@@ -71,11 +75,8 @@ class SinglePageApplicationController(
                     )
                 }
 
-                // 只有在未初始化时才进行初始化
                 if (!isInitialized) {
                     val options = session.options("-refresh")
-                    options.eventHandlers.browseEventHandlers.onWillNavigate.addLast { _, driver ->
-                    }
 
                     val url = "https://cn.bing.com/"
                     logger.info("Verify $url to initialize ...")
@@ -84,7 +85,7 @@ class SinglePageApplicationController(
                     val html = document.html
 
                     if (html.length > 1_000 && html.contains("<input .+百度一下.+>".toRegex())) {
-                        isInitialized = true // 标记为已初始化
+                        isInitialized = true
                         return mapOf(
                             "status" to "initialized",
                             "message" to "Browser4 initialized successfully"
@@ -113,17 +114,11 @@ class SinglePageApplicationController(
      * @return 200 OK with the command execution result as body.
      */
     @PostMapping("/navigate")
-    fun navigate(@RequestBody request: NavigateRequest): ResponseEntity<Any> {
+    suspend fun navigate(@RequestBody request: NavigateRequest): ResponseEntity<Any> {
         val driver = activeDriver
 
-        // Use a real browser for SPA rendering
-        PulsarSettings.withDefaultBrowser()
-            .withInteractSettings(InteractSettings.Builder.DEFAULT.noScroll())
-
-        runBlocking {
-            driver.bringToFront()
-            driver.navigateTo(request.url)
-        }
+        driver.bringToFront()
+        driver.navigateTo(request.url)
 
         return ResponseEntity.ok("success")
     }
@@ -135,25 +130,15 @@ class SinglePageApplicationController(
      * @return 200 OK with empty body on success; 500 if no active driver is present.
      */
     @PostMapping("/act")
-    suspend fun act(@RequestBody request: ActRequest): ResponseEntity<Any> {
-        val driver = activeDriver
-
+    suspend fun act(@RequestBody request: ActionOptions): ResponseEntity<Any> {
         return try {
-            val result = session.companionAgent.act(request.act)
+            val result = agent.act(request)
 
-            val status = CommandStatus(
-                "",
-                event = "act",
-                isDone = true,
-                message = request.act,
-                statusCode = ResourceStatus.SC_OK,
-                pageStatusCode = ResourceStatus.SC_OK
-            )
-            ResponseEntity.ok(status)
+            ResponseEntity.ok(result)
         } catch (e: Throwable) {
             warnUnexpected(this, e, "Failed to execute act on current page")
             val status = CommandStatus.failed(ResourceStatus.SC_INTERNAL_SERVER_ERROR)
-            status.message = e.message ?: "Failed to act | ${request.act}"
+            status.message = e.message ?: "Failed to act | ${request.action}"
             ResponseEntity.status(status.statusCode).body(status)
         }
     }
@@ -165,18 +150,14 @@ class SinglePageApplicationController(
      * @return 200 OK with JPEG image data in binary format; 500 if no active driver is present.
      */
     @GetMapping("/screenshot", produces = [MediaType.IMAGE_JPEG_VALUE])
-    fun screenshot(@RequestBody request: ScreenshotRequest): ResponseEntity<Any> {
+    suspend fun screenshot(@RequestBody request: ScreenshotRequest): ResponseEntity<Any> {
         val driver = activeDriver
 
         return try {
-            val screenshotBase64 = runBlocking {
-                driver.bringToFront()
-                driver.captureScreenshot()
-            }
-
-            if (screenshotBase64 == null) {
-                return ResponseEntity.status(ResourceStatus.SC_INTERNAL_SERVER_ERROR).body("Failed to capture screenshot.")
-            }
+            driver.bringToFront()
+            val screenshotBase64 = driver.captureScreenshot()
+                    ?: return ResponseEntity.status(ResourceStatus.SC_INTERNAL_SERVER_ERROR)
+                    .body("Failed to capture screenshot.")
 
             // Decode base64 to bytes and return raw JPEG data
             val jpegBytes = Base64.getDecoder().decode(screenshotBase64)
@@ -196,24 +177,12 @@ class SinglePageApplicationController(
      * - Open the current URL with the active driver to obtain a [ai.platon.pulsar.persist.WebPage].
      * - Parse the page, then execute a step-by-step command with dataExtractionRules.
      *
-     * @param request The extraction request including the prompt/rules.
-     * @return 200 OK with the aggregated [CommandStatus]; 500 if no active driver is present.
+     * @param options The extraction options including the prompt/rules.
+     * @return 200 OK with the aggregated [ExtractResult]; 500 if no active driver is present.
      */
     @GetMapping("/extract")
-    fun extract(@RequestBody request: ExtractRequest): ResponseEntity<Any> {
-        val status = CommandStatus()
-
-        runBlocking {
-            val page: WebPage = session.capture(activeDriver)
-            val document = session.parse(page)
-            val command = CommandRequest(
-                url = page.url,
-                dataExtractionRules = request.prompt,
-                xsql = request.xsql,
-            )
-            commandService.executeCommand(page, document,command, status)
-        }
-
-        return ResponseEntity.ok(status)
+    suspend fun extract(@RequestBody options: ExtractOptions): ResponseEntity<Any> {
+        val result = agent.extract(options)
+        return ResponseEntity.ok(result)
     }
 }

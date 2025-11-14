@@ -18,10 +18,7 @@ import org.springframework.context.annotation.Scope
 @Configuration
 @ImportResource("classpath:pulsar-beans/app-context.xml")
 class PulsarContextConfiguration(
-    val applicationContext: ApplicationContext,
-    val globalCache: GlobalCache,
-    val globalCacheFactory: GlobalCacheFactory,
-    val crawlLoops: CrawlLoops
+    val applicationContext: ApplicationContext
 ) {
     @Bean
     @Scope("prototype")

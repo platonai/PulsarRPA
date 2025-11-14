@@ -1,5 +1,6 @@
 package ai.platon.pulsar.app
 
+import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.boot.autoconfigure.PulsarContextInitializer
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.URLUtils
@@ -34,13 +35,10 @@ class Browser4Application {
     lateinit var hostname: String
 
     @Autowired
-    lateinit var session: PulsarSession
+    lateinit var session: AgenticSession
 
     @PostConstruct
     fun initialize() {
-        // Use a real browser for SPA rendering
-        PulsarSettings.withDefaultBrowser().withSPA()
-        session.getOrCreateBoundDriver()
     }
 
     @PostConstruct
