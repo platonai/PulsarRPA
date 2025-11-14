@@ -10,7 +10,7 @@ class StaticPulsarContext(
     /**
      * The unmodified config
      * */
-    override val unmodifiedConfig get() = getBeanOrNull() ?: defaults.unmodifiedConfig
+    override val configuration get() = getBeanOrNull() ?: defaults.configuration
 
     /**
      * Url normalizer

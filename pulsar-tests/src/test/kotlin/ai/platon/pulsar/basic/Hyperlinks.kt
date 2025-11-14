@@ -10,6 +10,7 @@ import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.event.AbstractCrawlEventHandlers
 import ai.platon.pulsar.skeleton.crawl.event.AbstractLoadEventHandlers
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.crawl.event.impl.DefaultPageEventHandlers
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.atomic.AtomicInteger
@@ -47,9 +48,9 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url, "") {
                     return@addFirst null
                 }
 
-                println("............onLoaded " + page.id)
+                printlnPro("............onLoaded " + page.id)
                 require(page is AbstractWebPage)
-                page.variables.variables.forEach { (t, u) -> println("$t $u") }
+                page.variables.variables.forEach { (t, u) -> printlnPro("$t $u") }
 
                 if (page.protocolStatus.isSuccess) {
                     assertTrue(page.isLoaded || page.isContentUpdated)
@@ -70,13 +71,13 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url, "") {
         init {
             onWillLoad.addFirst {
                 hyperlink.triggeredEvents.add("$seq. LoadEvent.onWillLoad")
-                println("............onWillLoad")
+                printlnPro("............onWillLoad")
                 it
             }
             onWillParseHTMLDocument.addFirst { page ->
                 hyperlink.triggeredEvents.add("$seq. LoadEvent.onWillParseHTMLDocument")
-                println("............onWillParseHTMLDocument " + page.id)
-                println("$this " + page.loadEventHandlers)
+                printlnPro("............onWillParseHTMLDocument " + page.id)
+                printlnPro("$this " + page.loadEventHandlers)
                 require(page is AbstractWebPage)
                 page.variables[VAR_IS_SCRAPE] = true
                 null
@@ -84,19 +85,19 @@ open class MockListenableHyperlink(url: String): ListenableHyperlink(url, "") {
             onWillParseHTMLDocument.addFirst { page ->
                 hyperlink.triggeredEvents.add("$seq. LoadEvent.onWillParseHTMLDocument 2")
 //                assertSame(thisHandler, page.loadEvent)
-                println("............onWillParseHTMLDocument " + page.id)
+                printlnPro("............onWillParseHTMLDocument " + page.id)
             }
             onHTMLDocumentParsed.addFirst { page, document ->
                 hyperlink.triggeredEvents.add("$seq. LoadEvent.onHTMLDocumentParsed")
-                println("............onHTMLDocumentParsed " + page.id)
+                printlnPro("............onHTMLDocumentParsed " + page.id)
 //                assertSame(thisHandler, page.loadEvent)
                 require(page is AbstractWebPage)
                 assertTrue(page.hasVar(VAR_IS_SCRAPE))
             }
             onParsed.addFirst { page ->
                 hyperlink.triggeredEvents.add("$seq. LoadEvent.onParsed")
-                println("............onParsed " + page.id)
-                println("$thisHandler " + page.loadEventHandlers)
+                printlnPro("............onParsed " + page.id)
+                printlnPro("$thisHandler " + page.loadEventHandlers)
 //                assertSame(thisHandler, page.loadEvent)
             }
             onLoaded.addFirst { page ->
@@ -142,7 +143,7 @@ open class MockDegeneratedListenableHyperlink : ListenableHyperlink("", ""), Deg
             }
 //            onLoad.addFirst {
 //                hyperlink.triggeredEvents.add("$seq. CrawlEvent.onLoad")
-//                println("Hello! I'm here!")
+//                logPrintln("Hello! I'm here!")
 //                it
 //            }
             onLoaded.addFirst { url: UrlAware, page: WebPage? ->
@@ -160,3 +161,4 @@ open class MockDegeneratedListenableHyperlink : ListenableHyperlink("", ""), Deg
     private val isDone = CountDownLatch(1)
     fun await() = isDone.await()
 }
+

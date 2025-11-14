@@ -1,7 +1,10 @@
 package ai.platon.pulsar.browser
 
+import ai.platon.pulsar.WebDriverTestBase
+import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ch.qos.logback.classic.Level
 import ch.qos.logback.classic.Logger
@@ -13,7 +16,6 @@ import java.text.MessageFormat
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
-import kotlin.test.assertTrue
 
 class PulsarWebDriverCDPTests : WebDriverTestBase() {
     fun setLogLevel(loggerName: String?, level: Level?) {
@@ -49,7 +51,7 @@ class PulsarWebDriverCDPTests : WebDriverTestBase() {
     }
 
     @Test
-    fun `test evaluate`() = runWebDriverTest(testURL, browser) { driver ->
+    fun `test evaluate`() = runEnhancedWebDriverTest(testURL, browser) { driver ->
         val code = """1+1"""
 
         val result = driver.evaluate(code)
@@ -70,21 +72,22 @@ class PulsarWebDriverCDPTests : WebDriverTestBase() {
             browser.newDriver().use { driver ->
                 assertIs<PulsarWebDriver>(driver)
 
-                val devTools = driver.implementation
+                val devTools = driver.implementation as RemoteDevTools
 
                 devTools.dom.onAttributeModified { e ->
                     val message = MessageFormat.format("> {0}. node changed | {1} := {2}", e.nodeId, e.name, e.value)
-                    println(message)
+                    printlnPro(message)
                 }
 
                 devTools.console.enable()
                 devTools.console.onMessageAdded { e ->
-                    println(e.message)
+                    printlnPro(e.message)
                 }
 
-                open(url, driver)
+                openEnhanced(url, driver)
                 block(driver)
             }
         }
     }
 }
+

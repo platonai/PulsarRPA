@@ -4,9 +4,11 @@ import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
+@Tag("ExternalServiceTest")
 class UniversalProxyParserTest {
     private val session = PulsarContexts.getOrCreateSession()
     private val conf = session.sessionConfig
@@ -46,7 +48,7 @@ proxy89.myvpn.network:443
         )
 
         proxies.forEach {
-            println(it)
+            // logPrintln(it)
             assertTrue { it.host.isNotBlank() }
         }
     }
@@ -69,12 +71,12 @@ proxy89.myvpn.network:443
         proxy-node4.intra8001
         de-frankfurt.proxy:3128:extra
         proxy07.datacenter.local:1081#comment
-        nl.proxy.region.cloud:1085 
+        nl.proxy.region.cloud:1085
         203.0.113.55 :8000b
         proxy-lon03.isp.com : 8090a
-        sg.proxy.service:1080 
-        external.proxy42.net:3127 
-        proxy.custom.subnet:9999 
+        sg.proxy.service:1080
+        external.proxy42.net:3127
+        proxy.custom.subnet:9999
         proxy89.myvpn.network:443
 
         """
@@ -82,7 +84,9 @@ proxy89.myvpn.network:443
 
         // assertTrue { proxies.isEmpty() }
         proxies.forEach {
-            println(it)
+            // logPrintln(it)
+            assertTrue { it.host.isNotBlank() }
         }
     }
 }
+

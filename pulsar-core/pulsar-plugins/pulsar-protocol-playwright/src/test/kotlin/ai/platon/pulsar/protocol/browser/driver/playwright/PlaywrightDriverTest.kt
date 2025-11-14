@@ -5,6 +5,7 @@ import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.Runtimes
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
@@ -36,7 +37,7 @@ class PlaywrightDriverTest {
 
         assertEquals("PLAYWRIGHT_CHROME", browserId.browserType.name)
 
-        launcherOptions.browserSettings.confuser.reset()
+        launcherOptions.settings.confuser.reset()
         browser = PlaywrightBrowserLauncher().launch(browserId, launcherOptions, chromeOptions)
         driver = browser.newDriver()
     }
@@ -58,7 +59,7 @@ class PlaywrightDriverTest {
             driver.navigateTo(url)
             val text = driver.selectFirstTextOrNull("body")
             assertNotNull(text)
-            println(">>>\n" + text?.substring(0, 100) + "\n<<<")
+            printlnPro(">>>\n" + text?.substring(0, 100) + "\n<<<")
         }
     }
 
@@ -71,7 +72,7 @@ class PlaywrightDriverTest {
             driver.waitForNavigation()
             val text = driver.selectFirstTextOrNull("body")
             assertNotNull(text)
-            println(">>>\n" + text.substring(0, 100) + "\n<<<")
+            printlnPro(">>>\n" + text.substring(0, 100) + "\n<<<")
         }
     }
 
@@ -118,21 +119,21 @@ class PlaywrightDriverTest {
             assertEquals(2, result)
 
             result = driver.evaluate("typeof(window)")
-            println("typeof(window) -> $result")
+            printlnPro("typeof(window) -> $result")
             assertEquals("object", result)
 
 
             result = driver.evaluate("typeof(__test_utils__)")
-            println("typeof(__test_utils__) -> $result")
+            printlnPro("typeof(__test_utils__) -> $result")
             assertEquals("object", result)
 
 
             result = driver.evaluate("typeof(__pulsar_)")
-            println("typeof(__pulsar_) -> $result")
+            printlnPro("typeof(__pulsar_) -> $result")
             assertEquals("function", result)
 
             result = driver.evaluate("__pulsar_utils__.add(1, 2)")
-            println(result)
+            printlnPro(result)
             assertEquals(3, result)
         }
     }
@@ -147,7 +148,7 @@ class PlaywrightDriverTest {
             driver.navigateTo("https://www.hua.com/")
             driver.waitForSelector("body")
             val result = driver.evaluate(expression)
-            println(result)
+            printlnPro(result)
         }
     }
 
@@ -171,14 +172,15 @@ class PlaywrightDriverTest {
 
     private fun navigateTo(url: String, driver: PlaywrightDriver) {
         runBlocking {
-            println("Navigating - $url")
+            printlnPro("Navigating - $url")
             driver.navigateTo(url)
             driver.waitForSelector("body")
             val text = driver.selectFirstTextOrNull("body")?.trim()
                 ?.replace("\\s+".toRegex(), " ")
             assertNotNull(text)
             val start = text.length / 2
-            println(">>>\n" + text.substring(start, start + 100) + "\n<<<")
+            printlnPro(">>>\n" + text.substring(start, start + 100) + "\n<<<")
         }
     }
 }
+

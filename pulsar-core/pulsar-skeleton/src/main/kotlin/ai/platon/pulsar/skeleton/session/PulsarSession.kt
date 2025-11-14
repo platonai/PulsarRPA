@@ -8,7 +8,6 @@ import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.context.PulsarContext
@@ -157,29 +156,44 @@ import java.util.concurrent.CompletableFuture
  * */
 interface PulsarSession : AutoCloseable {
     /**
-     * The session id.
+     * The in-process unique id.
      * */
-    val id: Int
+    val id: Long
+    /**
+     * The universally unique identifier (UUID). A UUID represents a 128-bit value.
+     * */
+    val uuid: String
+    /**
+     * A short descriptive display text.
+     * */
+    val display: String
+    /**
+     * Check if the session is active.
+     * */
+    val isActive: Boolean
     /**
      * The pulsar context which is used to create this session.
      * */
     val context: PulsarContext
     /**
-     * This is an immutable configuration, loaded from the configuration file during process startup.
-     * Once the process has started, this configuration remains unchangeable.
+     * The main configuration.
+     *
+     * Browser4 supports multiple configuration sources in order of precedence:
+     *
+     * 1. 🔧 **Environment Variables**
+     * 2. ⚙️ **JVM System Properties**
+     * 3. 📝 **Spring Boot `application.properties` or `application.yml`**
+     *
+     * @see `docs/config.md` for detail.
      * */
-    val unmodifiedConfig: ImmutableConfig
+    val configuration: ImmutableConfig
 
     /**
      * The session-specific volatile configuration, which allows dynamic adjustments to settings at any point during the session.
-     * Unlike the immutable configuration loaded at startup, this configuration is designed to be modified on-the-fly to adapt to runtime requirements.
+     * Unlike the main configuration, this configuration is designed to be modified on-the-fly to adapt to runtime requirements.
      * */
     val sessionConfig: VolatileConfig
 
-    /**
-     * A short descriptive display text.
-     * */
-    val display: String
     /**
      * The global page cache.
      * */
@@ -193,10 +207,25 @@ interface PulsarSession : AutoCloseable {
      * */
     val globalCache: GlobalCache
     /**
+     * The bound driver. If there is a bound driver, all subsequential actions that needed a driver use the bound one.
+     * */
+    val boundDriver: WebDriver?
+    /**
+     * The bound browser. If there is a bound browser, all subsequential actions that needed a browser use the bound one.
+     * */
+    val boundBrowser: Browser?
+    /**
      * Disable page cache and document cache
      * */
     fun disablePDCache()
-
+    /**
+     * Register a closable object to the session.
+     *
+     * @param closable the closable object
+     * @see AutoCloseable
+     * @see PulsarContext.registerClosable
+     */
+    fun registerClosable(closable: AutoCloseable)
     /**
      * Get a variable which is stored in this session
      *
@@ -224,9 +253,9 @@ interface PulsarSession : AutoCloseable {
      * */
     fun options(args: String = ""): LoadOptions
     /**
-     * Create a new [LoadOptions] object with [args] and [event].
+     * Create a new [LoadOptions] object with [args] and [eventHandlers].
      * */
-    fun options(args: String = "", event: PageEventHandlers?): LoadOptions
+    fun options(args: String = "", eventHandlers: PageEventHandlers?): LoadOptions
     /**
      * Create a new [LoadOptions] object with [options].
      * */
@@ -518,23 +547,58 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     suspend fun open(url: String, driver: WebDriver, eventHandlers: PageEventHandlers): WebPage
+
     /**
-     * Connect a webpage to a webdriver.
+     * Captures the live page currently controlled by the given [WebDriver] and
+     * produces a local static [WebPage] instance representing its current state.
      *
      * ```kotlin
-     * val page = session.connect(driver)
+     * val url = driver.currentUrl()
+     * val page = session.capture(url, driver)
      * ```
      *
-     * @return The webpage connected to the webdriver or NIL
+     * An optional URL can be provided to identify the webpage, If [url] is not provided, set [WebPage]'s url to
+     * `driver.currentUrl()`. The url will be normalized to identify the webpage and can differ from the active
+     * page's URI since the active page may goto or redirect to another page.
+     *
+     * @param driver The [WebDriver] instance controlling the live browser page.
+     * @param url Optional URL to identify the webpage. If null, set [WebPage]'s url to `driver.currentUrl()`.
+     * @return A [WebPage] object containing the static representation of the live page,
+     *         including DOM structure and referenced resources.
      */
-    @Beta
-    fun connect(driver: WebDriver)
-
-    @Beta
-    fun connect(browser: Browser)
+    suspend fun capture(driver: WebDriver, url: String? = null, eventHandlers: PageEventHandlers? = null): WebPage
 
     /**
-     * Load an url.
+     * Create the default driver and bind it to the session.
+     */
+    fun createBoundDriver(): WebDriver
+    /**
+     * Create the default driver and bind it to the session.
+     */
+    fun getOrCreateBoundDriver(): WebDriver
+    /**
+     * Bind a webdriver to the session.
+     *
+     * ```kotlin
+     * session.bindDriver(driver)
+     * ```
+     */
+    fun bindDriver(driver: WebDriver)
+    /**
+     * Bind a browser to the session.
+     *
+     * ```kotlin
+     * session.bindBrowser(driver)
+     * ```
+     */
+    fun bindBrowser(browser: Browser)
+
+    fun unbindDriver(driver: WebDriver)
+
+    fun unbindBrowser(browser: Browser)
+
+    /**
+     * Load a url.
      *
      * This method initially verifies the presence of the page in the local store. If the page exists and meets the
      * specified requirements, it returns the local version. Otherwise, it fetches the page from the Internet.
@@ -1062,6 +1126,7 @@ interface PulsarSession : AutoCloseable {
      * ```
      *
      * @param urls The normal urls to load
+     * @param args The load arguments
      * @return The completable futures of webpages
      */
     fun loadAllAsync(urls: Collection<UrlAware>, args: String): List<CompletableFuture<WebPage>>
@@ -1079,6 +1144,7 @@ interface PulsarSession : AutoCloseable {
      * ```
      *
      * @param urls The normal urls to load
+     * @param options The load options
      * @return The completable futures of webpages
      */
     fun loadAllAsync(urls: Collection<UrlAware>, options: LoadOptions): List<CompletableFuture<WebPage>>
@@ -1267,7 +1333,7 @@ interface PulsarSession : AutoCloseable {
      * */
     fun submit(url: UrlAware, options: LoadOptions): PulsarSession = throw NotImplementedError(
         "The signature submit(UrlAware, LoadOptions) is a confusing version, " +
-            "it's too complicated to handle events and should not be implemented.")
+                "it's too complicated to handle events and should not be implemented.")
 
     /**
      * Submit urls to the URL pool, and they will be subsequently processed in the crawl loop.
@@ -1353,6 +1419,7 @@ interface PulsarSession : AutoCloseable {
      * ```
      *
      * @param urls The urls to submit
+     * @param args The load arguments
      * @return The [PulsarSession] itself to enabled chained operations
      *
      * @see submit(UrlAware) to learn more.
@@ -1364,14 +1431,14 @@ interface PulsarSession : AutoCloseable {
      * */
     fun submitAll(urls: Collection<UrlAware>, options: LoadOptions): PulsarSession =
         throw NotImplementedError("The signature submitAll(Collection<UrlAware>, LoadOptions) is a confusing version, " +
-            "it's too complicated to handle events and should not be implemented.")
+                "it's too complicated to handle events and should not be implemented.")
 
     /**
      * No such confusing version
      * */
     fun loadOutPages(portalUrl: String): List<WebPage> =
         throw NotImplementedError("The signature loadOutPages(String) is a confusing version and should not be " +
-            "implemented.")
+                "implemented.")
 
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
@@ -1410,7 +1477,7 @@ interface PulsarSession : AutoCloseable {
      */
     fun loadOutPages(portalUrl: UrlAware): List<WebPage> =
         throw NotImplementedError("The signature loadOutPages(UrlAware) is a confusing version, it's too complicated to " +
-            "handle events and should not be implemented.")
+                "handle events and should not be implemented.")
 
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
@@ -1449,7 +1516,7 @@ interface PulsarSession : AutoCloseable {
      */
     fun loadOutPages(portalUrl: NormURL): List<WebPage> =
         throw NotImplementedError("The signature loadOutPages(NormURL) is " +
-            "a confusing version, it's too complicated to handle events and should not be implemented.")
+                "a confusing version, it's too complicated to handle events and should not be implemented.")
 
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option asynchronously.
@@ -1679,8 +1746,14 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage containing the resource
      */
     suspend fun loadResourceDeferred(url: String, referrer: String, options: LoadOptions): WebPage
+
     /**
-     * Parse a webpage into an HTML document.
+     * Parses the given [page] into an in-memory HTML document.
+     *
+     * The [parse] method operates within the Kotlin process, not inside a real browser.
+     * It parses the page content into an in-memory lightweight Document Object Model (DOM),
+     * making it very fast to analyze within the Kotlin process.
+     * To interact with a live DOM in a real browser, use [WebDriver].
      *
      * ```kotlin
      * val page = session.load("http://example.com")
@@ -1691,8 +1764,14 @@ interface PulsarSession : AutoCloseable {
      * @return The parsed HTML document
      */
     fun parse(page: WebPage): FeaturedDocument
+
     /**
-     * Parse a webpage into an HTML document.
+     * Parses the given [page] into an in-memory HTML document.
+     *
+     * The [parse] method operates within the Kotlin process, not inside a real browser.
+     * It parses the page content into an in-memory lightweight Document Object Model (DOM),
+     * making it very fast to analyze within the Kotlin process.
+     * To interact with a live DOM in a real browser, use [WebDriver].
      *
      * ```kotlin
      * val page = session.load("http://example.com")
@@ -1704,6 +1783,7 @@ interface PulsarSession : AutoCloseable {
      * @return The parsed HTML document
      */
     fun parse(page: WebPage, noCache: Boolean): FeaturedDocument
+
     /**
      * Load or fetch a webpage and parse it into an HTML document
      *
@@ -1790,6 +1870,65 @@ interface PulsarSession : AutoCloseable {
      * field selectors.
      *
      * ```kotlin
+     * val document = session.loadDocument("http://example.com", "-expire 1d")
+     * val fields = session.extract(document, listOf(".title", ".content"))
+     * ```
+     *
+     * @param document The document to extract
+     * @param fieldSelectors The selectors to extract fields
+     * @return All the extracted fields and their selectors
+     * */
+    fun extract(document: FeaturedDocument, fieldSelectors: Iterable<String>): Map<String, String?>
+    /**
+     * Load or fetch a webpage located by the given url, and then extract fields specified by
+     * field selectors.
+     *
+     * ```kotlin
+     * val document = session.loadDocument("http://example.com", "-expire 1d")
+     * val fields = session.extract(document, "#main-content", listOf(".title", ".content"))
+     * ```
+     *
+     * @param document The document to extract
+     * @param fieldSelectors The selectors to extract fields
+     * @param restrictSelector A CSS selector to locate a DOM where all fields are restricted to
+     * @return All the extracted fields and their selectors
+     * */
+    fun extract(document: FeaturedDocument, restrictSelector: String, fieldSelectors: Iterable<String>): List<Map<String, String?>>
+    /**
+     * Load or fetch a webpage located by the given url, and then extract fields specified by
+     * field selectors.
+     *
+     * ```kotlin
+     * val document = session.loadDocument("http://example.com", "-expire 1d")
+     * val fields = session.extract(document, mapOf("title" to ".title", "content" to ".content"))
+     * ```
+     *
+     * @param document The document to extract
+     * @param fieldSelectors The selectors to extract fields
+     * @return All the extracted fields and their selectors
+     * */
+    fun extract(document: FeaturedDocument, fieldSelectors: Map<String, String>): Map<String, String?>
+    /**
+     * Load or fetch a webpage located by the given url, and then extract fields specified by
+     * field selectors.
+     *
+     * ```kotlin
+     * val document = session.loadDocument("http://example.com", "-expire 1d")
+     * val fields = session.extract(document, "#main-content", mapOf("title" to ".title", "content" to ".content"))
+     * ```
+     *
+     * @param document The document to extract
+     * @param restrictSelector A CSS selector to locate a DOM where all fields are restricted to
+     * @param fieldSelectors The selectors to extract fields
+     * @return All the extracted fields and their selectors
+     * */
+    fun extract(document: FeaturedDocument, restrictSelector: String, fieldSelectors: Map<String, String>): List<Map<String, String?>>
+
+    /**
+     * Load or fetch a webpage located by the given url, and then extract fields specified by
+     * field selectors.
+     *
+     * ```kotlin
      * val fields = session.scrape("http://example.com", "-expire 1d", listOf(".title", ".content"))
      * ```
      *
@@ -1799,6 +1938,7 @@ interface PulsarSession : AutoCloseable {
      * @return All the extracted fields and their selectors
      * */
     fun scrape(url: String, args: String, fieldSelectors: Iterable<String>): Map<String, String?>
+
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
@@ -2071,6 +2211,7 @@ interface PulsarSession : AutoCloseable {
      * @see [boilerpipe ](https://github.com/kohlschutter/boilerpipe)
      * @see [boilerpipe-web](https://boilerpipe-web.appspot.com/)
      * */
+    @Deprecated("Will be removed in a future release.")
     fun harvest(url: String, args: String = "", engine: String = "boilerpipe"): TextDocument
     /**
      * Harvest the content of a webpage using a web content extractor engine.
@@ -2090,164 +2231,145 @@ interface PulsarSession : AutoCloseable {
      * @see [boilerpipe ](https://github.com/kohlschutter/boilerpipe)
      * @see [boilerpipe-web](https://boilerpipe-web.appspot.com/)
      * */
+    @Deprecated("Will be removed in a future release.")
     fun harvest(page: WebPage, engine: String = "boilerpipe"): TextDocument
-    
     /**
-     * Chat with the AI model.
-     *
-     * @param prompt The prompt to chat with
-     * @return The response from the model
-     */
-    fun chat(prompt: String): ModelResponse
+      * Initiates a chat with the AI model using a general prompt.
+      * This method sends the provided prompt to the AI model without any additional context.
+      *
+      * @param prompt The prompt or query to be sent to the AI model.
+      * @return The response from the AI model encapsulated in a [ModelResponse] object.
+      */
+    suspend fun chat(prompt: String): ModelResponse
+
+     /**
+      * Initiates a chat with the AI model about a specific webpage.
+      * The method sends the provided prompt along with the HTML source code of the specified webpage to the AI model.
+      *
+      * @param prompt The prompt or query to be sent to the AI model.
+      * @param page The [WebPage] object containing the webpage's content to provide context for the chat.
+      * @return The response from the AI model encapsulated in a [ModelResponse] object.
+      */
+     suspend fun chat(prompt: String, page: WebPage): ModelResponse
+
+     /**
+      * Initiates a chat with the AI model about a specific document.
+      * The method sends the provided prompt along with the text content of the specified document to the AI model.
+      *
+      * @param prompt The prompt or query to be sent to the AI model.
+      * @param document The [FeaturedDocument] object containing the document's text content to provide context for the chat.
+      * @return The response from the AI model encapsulated in a [ModelResponse] object.
+      */
+     suspend fun chat(prompt: String, document: FeaturedDocument): ModelResponse
+
+     /**
+      * Initiates a chat with the AI model about a specific HTML element.
+      * The method sends the provided prompt along with the text content of the specified HTML element to the AI model.
+      *
+      * @param prompt The prompt or query to be sent to the AI model.
+      * @param element The [Element] object containing the HTML element's text content to provide context for the chat.
+      * @return The response from the AI model encapsulated in a [ModelResponse] object.
+      */
+     suspend fun chat(prompt: String, element: Element): ModelResponse
 
     /**
-     * Chat with the AI model.
+     * Exports the content of a webpage to a file.
      *
-     * @param userMessage Represents a message from a user, typically an end user of the application.
-     * @param systemMessage Represents a system message, typically defined by a developer. This type of message usually
-     *  provides instructions regarding the AI's actions, such as its behavior or response style.
-     * @return The response from the model.
-     */
-    fun chat(userMessage: String, systemMessage: String): ModelResponse
-
-    /**
-     * Chat with the AI model about the specified webpage.
+     * This method saves the content of the given webpage to a file and returns the path
+     * where the file is stored.
      *
-     * @param prompt The prompt to chat with
-     * @param page The page to chat with
-     * @return The response from the model
-     */
-    fun chat(page: WebPage, prompt: String): ModelResponse
-
-    /**
-     * Chat with the AI model about the specified webpage.
-     *
-     * @param prompt The prompt to chat with
-     * @param page The page to chat with
-     * @return The response from the model
-     */
-    fun chat(prompt: String, page: WebPage): ModelResponse
-
-    /**
-     * Chat with the AI model about the specified document.
-     *
-     * @param document The document to chat with
-     * @param prompt The prompt to chat with
-     * @return The response from the model
-     */
-    fun chat(document: FeaturedDocument, prompt: String): ModelResponse
-
-    /**
-     * Chat with the AI model about the specified document.
-     *
-     * @param document The document to chat with
-     * @param prompt The prompt to chat with
-     * @return The response from the model
-     */
-    fun chat(prompt: String, document: FeaturedDocument): ModelResponse
-
-    /**
-     * Chat with the AI model about the specified element.
-     *
-     * @param element The element to chat with
-     * @param prompt The prompt to chat with
-     * @return The response from the model
-     */
-    fun chat(element: Element, prompt: String): ModelResponse
-
-    /**
-     * Chat with the AI model about the specified element.
-     *
-     * @param prompt The prompt to chat with
-     * @param element The element to chat with
-     * @return The response from the model
-     */
-    fun chat(prompt: String, element: Element): ModelResponse
-    /**
-     * Instructs the webdriver to perform a series of actions based on the given prompt.
-     * This function converts the prompt into a sequence of webdriver actions, which are then executed.
-     *
-     * @param prompt The textual prompt that describes the actions to be performed by the webdriver.
-     * @param driver The webdriver instance that will execute the actions.
-     * @return The response from the model, though in this implementation, the return value is not explicitly used.
-     */
-    suspend fun instruct(prompt: String, driver: WebDriver): InstructionResult
-
-    /**
-     * Export the content of a webpage.
-     *
+     * Example usage:
      * ```kotlin
      * val page = session.load("http://example.com")
      * val path = session.export(page)
      * ```
      *
-     * @param page Page to export
-     * @return The path of the exported page
-     * */
+     * @param page The webpage to export.
+     * @return The path of the exported file.
+     */
     fun export(page: WebPage): Path
 
     /**
-     * Export the content of a webpage.
+     * Exports the content of a webpage to a file with a specified identifier.
      *
+     * This method saves the content of the given webpage to a file, using the provided
+     * identifier to distinguish the file from others, and returns the path where the file is stored.
+     *
+     * Example usage:
      * ```kotlin
      * val page = session.load("http://example.com")
      * val path = session.export(page, "example")
      * ```
      *
-     * @param page Page to export
-     * @param ident File name identifier used to distinguish from other files
-     * @return The path of the exported page
-     * */
+     * @param page The webpage to export.
+     * @param ident A file name identifier used to distinguish the exported file.
+     * @return The path of the exported file.
+     */
     fun export(page: WebPage, ident: String = ""): Path
 
     /**
-     * Export the content of a webpage.
+     * Exports the content of a webpage to a specified file path.
      *
+     * This method saves the content of the given webpage to the specified file path
+     * and returns the path where the file is stored.
+     *
+     * Example usage:
      * ```kotlin
      * val page = session.load("http://example.com")
      * val path = session.exportTo(page, Paths.get("/tmp/example.html"))
      * ```
      *
-     * @param page Webpage to export
-     * @param path Path to save the exported content
-     * @return The path of the exported document
-     * */
+     * @param page The webpage to export.
+     * @param path The file path where the content will be saved.
+     * @return The path of the exported file.
+     */
     fun exportTo(page: WebPage, path: Path): Path
 
     /**
-     * Export the outer HTML of the document.
+     * Exports the outer HTML of a document to a file.
      *
-     * @param doc Document to export
-     * @return The path of the exported document
-     * */
+     * This method saves the outer HTML of the given document to a file and returns
+     * the path where the file is stored.
+     *
+     * @param doc The document to export.
+     * @return The path of the exported file.
+     */
     fun export(doc: FeaturedDocument): Path
 
     /**
-     * Export the outer HTML of the document.
+     * Exports the outer HTML of a document to a file with a specified identifier.
      *
+     * This method saves the outer HTML of the given document to a file, using the provided
+     * identifier to distinguish the file from others, and returns the path where the file is stored.
+     *
+     * Example usage:
      * ```kotlin
      * val document = session.loadDocument("http://example.com")
      * val path = session.export(document, "example")
      * ```
      *
-     * @param doc Document to export
-     * @param ident File name identifier used to distinguish from other files
-     * @return The path of the exported document
-     * */
+     * @param doc The document to export.
+     * @param ident A file name identifier used to distinguish the exported file.
+     * @return The path of the exported file.
+     */
     fun export(doc: FeaturedDocument, ident: String = ""): Path
 
     /**
-     * Export the outer HTML of the document.
+     * Exports the outer HTML of a document to a specified file path.
      *
+     * This method saves the outer HTML of the given document to the specified file path
+     * and returns the path where the file is stored.
+     *
+     * Example usage:
      * ```kotlin
      * val document = session.loadDocument("http://example.com")
      * val path = session.exportTo(document, Paths.get("/tmp/example.html"))
      * ```
      *
-     * @param doc Document to export
-     * @param path Path to save the exported content
-     * @return The path of the exported document
-     * */
+     * @param doc The document to export.
+     * @param path The file path where the content will be saved.
+     * @return The path of the exported file.
+     */
     fun exportTo(doc: FeaturedDocument, path: Path): Path
 
     /**

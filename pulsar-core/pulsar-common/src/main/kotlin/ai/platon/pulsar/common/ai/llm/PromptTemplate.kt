@@ -33,7 +33,7 @@ open class PromptTemplate(
             val unresolvedPlaceholders = findPlaceholders(result)
             if (unresolvedPlaceholders.isNotEmpty()) {
                 throw IllegalArgumentException("The template contains unresolved placeholders: $unresolvedPlaceholders | " +
-                        "Template: ${template.substring(0, 200)}")
+                        "Template: ${template.take(200)}")
             }
         }
 

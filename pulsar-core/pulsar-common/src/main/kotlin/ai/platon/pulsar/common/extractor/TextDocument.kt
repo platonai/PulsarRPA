@@ -3,6 +3,7 @@ package ai.platon.pulsar.common.extractor
 /**
  * Represents a text document extracted from a text page, such as a news article.
  * */
+@Deprecated("Will be removed in a future release.")
 data class TextDocument(
     /**
      * The url of the document.

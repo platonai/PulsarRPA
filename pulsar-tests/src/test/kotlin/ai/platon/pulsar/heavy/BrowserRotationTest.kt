@@ -8,10 +8,12 @@ import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.crawl.CrawlLoop
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import kotlinx.coroutines.delay
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Tag
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.deleteRecursively
 import kotlin.test.Test
@@ -25,14 +27,15 @@ import kotlin.time.toJavaDuration
  *
  * Notice: before we load the local files using Browser4, we have to transform the paths using [URLUtils.pathToLocalURL].
  * */
+@Tag("HeavyTest")
 class BrowserRotationTest : MassiveTestBase() {
 
     companion object {
         @JvmStatic
         @BeforeAll
         fun initPulsarSettings() {
-            PulsarSettings().maxBrowserContexts(4).maxOpenTabs(8)
-            // PulsarSettings().withTemporaryBrowser()
+            PulsarSettings.maxBrowserContexts(4).maxOpenTabs(8)
+            // PulsarSettings.withTemporaryBrowser()
         }
     }
 
@@ -44,13 +47,13 @@ class BrowserRotationTest : MassiveTestBase() {
 
     @Test
     fun testWithSequentialBrowser() {
-        PulsarSettings().withSequentialBrowsers()
+        PulsarSettings.withSequentialBrowsers()
         runAndAwait()
     }
 
     @Test
     fun testWithTemporaryBrowser() {
-        PulsarSettings().withTemporaryBrowser()
+        PulsarSettings.withTemporaryBrowser()
         runAndAwait()
     }
 
@@ -104,7 +107,7 @@ class BrowserRotationTest : MassiveTestBase() {
             val readableState = browser.readableState
             val display = browser.id.display
             if (size >= 30) {
-                println("Closing browser #$display, served $size pages | $readableState | ${browser.id.contextDir}")
+                printlnPro("Closing browser #$display, served $size pages | $readableState | ${browser.id.contextDir}")
                 browser.close()
             }
         }
@@ -112,3 +115,4 @@ class BrowserRotationTest : MassiveTestBase() {
         return link
     }
 }
+

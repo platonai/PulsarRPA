@@ -18,13 +18,13 @@ open class StreamingCrawlLoop(
     /**
      * The unmodified configuration load from file
      * */
-    unmodifiedConfig: ImmutableConfig,
+    configuration: ImmutableConfig,
     /**
      * The loop name
      * */
     name: String = "StreamingCrawlLoop"
 
-) : AbstractCrawlLoop(name, unmodifiedConfig) {
+) : AbstractCrawlLoop(name, configuration) {
     private val logger = LoggerFactory.getLogger(StreamingCrawlLoop::class.java)
 
     private val scope = CoroutineScope(Dispatchers.Default) + CoroutineName("sc")

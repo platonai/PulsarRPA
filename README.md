@@ -6,6 +6,8 @@
 
 ---
 
+> **⚠️ License Notice: This project uses dual licensing. The main project is licensed under Apache License 2.0. The `browser4` module is licensed under GNU AGPL v3. See LICENSE and browser4/LICENSE for details.**
+
 English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platonai_galaxyeye/Browser4)
 
 ## 🌟 Introduction
@@ -105,6 +107,18 @@ docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/b
 
 ---
 
+## ✨ Browser Use
+
+```kotlin
+val problems = """
+    go to amazon.com, search for pens to draw on whiteboards, compare the first 4 ones, write the result to a markdown file.
+    打开百度查找厦门岛旅游景点，给出一个总结
+    go to https://news.ycombinator.com/news , read top 3 articles and give me a summary
+    """.split("\n").filter { it.isNotBlank() }
+
+problems.forEach { agent.resolve(it) }
+```
+
 ## 🌟 For Beginners – Just Text, No Code!
 
 Use the `commands` API to perform browser operations, extract web data, analyze websites, and more.
@@ -122,10 +136,10 @@ WebUI: http://localhost:8182/command.html
 ```shell
 curl -X POST "http://localhost:8182/api/commands/plain" -H "Content-Type: text/plain" -d '
     Go to https://www.amazon.com/dp/B08PP5MSVB
-    
+
     After browser launch: clear browser cookies.
     After page load: scroll to the middle.
-    
+
     Summarize the product.
     Extract: product name, price, ratings.
     Find all links containing /dp/.

@@ -1,6 +1,6 @@
 package ai.platon.pulsar.persist.model
 
-import ai.platon.pulsar.common.config.AppConstants.DEFAULT_VIEW_PORT
+import ai.platon.pulsar.common.config.AppConstants.DEFAULT_VIEWPORT
 import ai.platon.pulsar.persist.gora.generated.GActiveDOMStat
 import ai.platon.pulsar.persist.gora.generated.GActiveDOMStatus
 import com.google.gson.Gson
@@ -192,14 +192,14 @@ data class ActiveDOMStatTrace(
 }
 
 data class ActiveDOMMetadata(
-    val viewPortWidth: Int = DEFAULT_VIEW_PORT.width,
-    val viewPortHeight: Int = DEFAULT_VIEW_PORT.height,
+    val viewPortWidth: Int = DEFAULT_VIEWPORT.width,
+    val viewPortHeight: Int = DEFAULT_VIEWPORT.height,
 
     val scrollTop: Float = 0f,
     val scrollLeft: Float = 0f,
 
-    val clientWidth: Float = DEFAULT_VIEW_PORT.width.toFloat(),
-    val clientHeight: Float = DEFAULT_VIEW_PORT.height.toFloat(),
+    val clientWidth: Float = DEFAULT_VIEWPORT.width.toFloat(),
+    val clientHeight: Float = DEFAULT_VIEWPORT.height.toFloat(),
 
     // The screen number of the current scroll position, 0-based.
     // 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.

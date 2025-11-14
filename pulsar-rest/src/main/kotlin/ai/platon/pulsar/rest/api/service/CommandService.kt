@@ -17,6 +17,8 @@ import ai.platon.pulsar.rest.api.common.PLACEHOLDER_PAGE_CONTENT
 import ai.platon.pulsar.rest.api.common.RestAPIPromptUtils
 import ai.platon.pulsar.rest.api.common.ScrapeAPIUtils
 import ai.platon.pulsar.rest.api.entities.*
+import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
+import ai.platon.pulsar.skeleton.crawl.event.impl.PageEventHandlersFactory
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -53,15 +55,15 @@ class CommandService(
 
     private val logger = getLogger(CommandService::class)
 
-    fun executeSync(request: CommandRequest): CommandStatus {
+    suspend fun executeSync(request: CommandRequest, eventHandlers: PageEventHandlers): CommandStatus {
         val status = createCachedCommandStatus(request)
-        executeCommand(request, status)
+        executeCommand(request, status, eventHandlers)
         return status
     }
 
-    fun submitAsync(request: CommandRequest): String {
+    fun submitAsync(request: CommandRequest, eventHandlers: PageEventHandlers): String {
         val status = createCachedCommandStatus(request)
-        commanderScope.launch { executeCommand(request, status) }
+        commanderScope.launch { executeCommand(request, status, eventHandlers) }
         return status.id
     }
 
@@ -129,7 +131,7 @@ class CommandService(
      * @param request The request string containing a URL and other parameters.
      * @return A PromptResponseL2 object containing the result of the command execution.
      * */
-    fun executeCommand(request: String): CommandStatus {
+    suspend fun executeCommand(request: String): CommandStatus {
         if (request.isBlank()) {
             return CommandStatus.failed(ResourceStatus.SC_BAD_REQUEST)
         }
@@ -141,12 +143,15 @@ class CommandService(
             return status
         }
 
-        return executeCommand(request2, status)
+        val eventHandlers = PageEventHandlersFactory.create()
+        return executeCommand(request2, status, eventHandlers)
     }
 
-    fun executeCommand(request: CommandRequest): CommandStatus {
+    suspend fun executeCommand(request: CommandRequest): CommandStatus {
         val status = createCachedCommandStatus(request)
-        executeCommand(request, status)
+
+        val eventHandlers = PageEventHandlersFactory.create()
+        executeCommand(request, status, eventHandlers)
         return status
     }
 
@@ -159,10 +164,14 @@ class CommandService(
      * @param request The PromptRequestL2 object containing the URL and other parameters.
      * @return A PromptResponseL2 object containing the result of the command execution.
      * */
-    fun executeCommand(request: CommandRequest, status: CommandStatus): CommandStatus {
+    suspend fun executeCommand(
+        request: CommandRequest,
+        status: CommandStatus,
+        eventHandlers: PageEventHandlers
+    ): CommandStatus {
         try {
             status.refresh(ResourceStatus.SC_PROCESSING)
-            executeCommandStepByStep(request, status)
+            executeCommandStepByStep(request, status, eventHandlers)
         } catch (e: Exception) {
             status.failed(ResourceStatus.SC_EXPECTATION_FAILED)
         } finally {
@@ -170,6 +179,10 @@ class CommandService(
         }
 
         return status
+    }
+
+    suspend fun executeCommand(page: WebPage, document: FeaturedDocument, request: CommandRequest, status: CommandStatus) {
+        return executeCommandStepByStep(page, document, request, status)
     }
 
     private fun createCachedCommandStatus(request: CommandRequest? = null): CommandStatus {
@@ -180,17 +193,24 @@ class CommandService(
         return status
     }
 
-    internal fun executeCommandStepByStep(request: CommandRequest, status: CommandStatus) {
+    internal suspend fun executeCommandStepByStep(request: CommandRequest, status: CommandStatus, eventHandlers: PageEventHandlers) {
         val url = request.url
         require(URLUtils.isStandard(url)) { "Invalid URL: $url" }
 
         request.enhanceArgs()
-        val (page, document) = loadService.loadDocument(request)
+        val (page, document) = loadService.loadDocument(request, eventHandlers)
 
         if (page.isNil) {
             status.failed(ResourceStatus.SC_EXPECTATION_FAILED)
             return
         }
+
+        executeCommandStepByStep(page, document, request, status)
+    }
+
+    internal suspend fun executeCommandStepByStep(page: WebPage, document: FeaturedDocument, request: CommandRequest, status: CommandStatus) {
+        val url = request.url
+        require(URLUtils.isStandard(url)) { "Invalid URL: $url" }
 
         status.pageStatusCode = page.protocolStatus.minorCode
         status.pageContentBytes = page.originalContentLength.toInt()
@@ -198,7 +218,8 @@ class CommandService(
             return
         }
 
-        executeCommandStepByStep(page, document, request, status)
+        doExecuteCommandStepByStep(page, document, request, status)
+
         logger.info("Finished executeCommandStepByStep | status: {} | {}", status.status, document.baseURI)
 
         val sqlTemplate = request.xsql
@@ -211,17 +232,17 @@ class CommandService(
         status.refresh(ResourceStatus.SC_OK)
     }
 
-    private fun executeCommandStepByStep(
+    private suspend fun doExecuteCommandStepByStep(
         page: WebPage, document: FeaturedDocument, request: CommandRequest, status: CommandStatus
     ) {
         try {
-            doExecuteCommandStepByStep(page, document, request, status)
+            doExecuteCommandStepByStep2(page, document, request, status)
         } catch (e: Exception) {
             status.failed(ResourceStatus.SC_EXPECTATION_FAILED)
         }
     }
 
-    private fun doExecuteCommandStepByStep(
+    private suspend fun doExecuteCommandStepByStep2(
         page: WebPage, document: FeaturedDocument, request: CommandRequest, status: CommandStatus
     ) {
         // the 0-based screen number, 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.
@@ -265,7 +286,7 @@ class CommandService(
             }
         }
 
-        var uriExtractionRules = request.uriExtractionRules ?: request.linkExtractionRules
+        var uriExtractionRules = request.uriExtractionRules
         uriExtractionRules = RestAPIPromptUtils.normalizeURIExtractionRules(uriExtractionRules)
         if (uriExtractionRules != null) {
             if (!uriExtractionRules.startsWith("Regex:")) {
@@ -298,7 +319,7 @@ class CommandService(
         }
     }
 
-    private fun performInstruct(
+    private suspend fun performInstruct(
         name: String, instruct: String, status: CommandStatus,
         resultType: String = "string",
         mappingFunction: (String) -> Any = { it.trim() }
@@ -308,7 +329,7 @@ class CommandService(
         status.addInstructResult(result)
     }
 
-    private fun chatWithLLM(instruct: String): String {
+    private suspend fun chatWithLLM(instruct: String): String {
         try {
             return session.chat(instruct).content
         } catch (e: Exception) {

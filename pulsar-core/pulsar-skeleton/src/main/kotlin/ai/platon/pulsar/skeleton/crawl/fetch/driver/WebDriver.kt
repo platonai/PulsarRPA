@@ -2,13 +2,14 @@ package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.NetworkResourceResponse
+import ai.platon.pulsar.browser.driver.chrome.dom.model.NanoDOMTree
+import ai.platon.pulsar.common.ExperimentalApi
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.dom.nodes.GeoAnchor
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
 import com.google.common.annotations.Beta
 import org.jsoup.Connection
 import java.io.Closeable
@@ -125,10 +126,12 @@ interface WebDriver : Closeable {
      * The driver id.
      * */
     val id: Int
+
     /**
      * The parent driver id.
      * */
     val parentSid: Int
+
     /**
      * The browser of the driver.
      * The browser defines methods and events to manipulate a real browser.
@@ -231,19 +234,6 @@ interface WebDriver : Closeable {
     suspend fun addBlockedURLs(urlPatterns: List<String>)
 
     /**
-     * Block resource URL loading with a certain probability.
-     *
-     * @param urlPatterns Regular expressions of URLs to block.
-     */
-    suspend fun addProbabilityBlockedURLs(urlPatterns: List<String>)
-
-    /**
-     * TODO: NOT IMPLEMENTED
-     * */
-    @Throws(WebDriverException::class)
-    suspend fun setTimeouts(browserSettings: BrowserSettings)
-
-    /**
      * Opens the specified URL in the web driver.
      *
      * This function navigates the web driver to the provided URL and waits for the navigation to complete.
@@ -292,6 +282,31 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun navigateTo(entry: NavigateEntry)
 
+    @Throws(WebDriverException::class)
+    suspend fun reload()
+
+    /**
+     * Navigates the browser to the previous page in the navigation history.
+     *
+     * This method is expected to use the browser's navigation history to move back to the previous page.
+     * It should handle any exceptions that may occur during the navigation process.
+     *
+     * @throws WebDriverException If an error occurs while navigating back.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun goBack()
+
+    /**
+     * Navigates the browser to the next page in the navigation history.
+     *
+     * This method is expected to use the browser's navigation history to move forward to the next page.
+     * It should handle any exceptions that may occur during the navigation process.
+     *
+     * @throws WebDriverException If an error occurs while navigating forward.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun goForward()
+
     /**
      * Returns a string representing the current URL that the browser is looking at. The current url is always
      * the main frame's `document.documentURI` if the browser succeed to return it, and is displayed in the browser's
@@ -306,9 +321,10 @@ interface WebDriver : Closeable {
      * chrome://newtab
      * chrome://settings
      *
+     * see [ai.platon.cdt.kt.protocol.types.page.NavigationEntry.userTypedURL]
+     *
      * @return A string containing the URL of the document, or the passed in url to navigate.
      */
-    @Throws(WebDriverException::class)
     suspend fun currentUrl(): String
 
     /**
@@ -320,7 +336,7 @@ interface WebDriver : Closeable {
      *
      * @see [Document: URL property](https://developer.mozilla.org/en-US/docs/Web/API/Document/URL)
      *
-     * @return A string containing the URL of the document.
+     * @return A string containing the URL of the document
      */
     @Throws(WebDriverException::class)
     suspend fun url(): String
@@ -373,7 +389,10 @@ interface WebDriver : Closeable {
      * example, by Javascript) there is no guarantee that the returned text is that of the modified
      * page.
      *
-     * TODO: distinguish pageSource and outerHTML
+     * PageSource and outerHTML:
+     *
+     * - pageSource: returns document HTML markup, will support non-HTML document
+     * - outerHTML: returns document HTML markup, for HTML document only
      *
      * ```kotlin
      * val pageSource = driver.pageSource()
@@ -385,6 +404,17 @@ interface WebDriver : Closeable {
     suspend fun pageSource(): String?
 
     /**
+     * Retrieve a nano version of the DOM tree, which is based on the accessibility tree, enhanced by DOM and document snapshot.
+     *
+     * References:
+     *
+     * - [ai.platon.cdt.kt.protocol.commands.Accessibility.getFullAXTree]
+     * - [ai.platon.cdt.kt.protocol.commands.DOM.getDocument]
+     * - [ai.platon.cdt.kt.protocol.types.domsnapshot.DocumentSnapshot]
+     * */
+    suspend fun nanoDOMTree(): NanoDOMTree?
+
+    /**
      * Chat with the AI model about the specified element.
      *
      * @param prompt The prompt to chat with
@@ -392,15 +422,6 @@ interface WebDriver : Closeable {
      * @return The response from the model
      */
     suspend fun chat(prompt: String, selector: String): ModelResponse
-    /**
-     * Instructs the webdriver to perform a series of actions based on the given prompt.
-     * This function converts the prompt into a sequence of webdriver actions, which are then executed.
-     *
-     * @param prompt The textual prompt that describes the actions to be performed by the webdriver.
-     * @return The response from the model, though in this implementation, the return value is not explicitly used.
-     */
-    @Throws(WebDriverException::class)
-    suspend fun instruct(prompt: String): InstructionResult
 
     /**
      * Returns the cookies of the current page.
@@ -414,9 +435,11 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun getCookies(): List<Map<String, String>>
 
-    @Deprecated("Use deleteCookies(name, url, domain, path) instead." +
-            "[deleteCookies] (3/5) | code: -32602, At least one of the url and domain needs to be specified",
-        ReplaceWith("driver.deleteCookies(name, url, domain, path)"))
+    @Deprecated(
+        "Use deleteCookies(name, url, domain, path) instead." +
+                "[deleteCookies] (3/5) | code: -32602, At least one of the url and domain needs to be specified",
+        ReplaceWith("driver.deleteCookies(name, url, domain, path)")
+    )
     @Throws(WebDriverException::class)
     suspend fun deleteCookies(name: String)
 
@@ -445,7 +468,6 @@ interface WebDriver : Closeable {
      * driver.clearBrowserCookies()
      * ```
      *
-     * TODO: consider only use driver.browser.clearCookies()
      * @see Browser.clearCookies
      * */
     @Throws(WebDriverException::class)
@@ -712,6 +734,7 @@ interface WebDriver : Closeable {
      * @param selector - The selector of the element to check.
      * @return Whether the element is visible.
      * */
+    @Deprecated("Use isVisible instead", ReplaceWith("isVisible"))
     @Throws(WebDriverException::class)
     suspend fun visible(selector: String): Boolean = isVisible(selector)
 
@@ -740,6 +763,19 @@ interface WebDriver : Closeable {
      */
     @Throws(WebDriverException::class)
     suspend fun bringToFront()
+
+    /**
+     * This method hovers over the element.
+     *
+     * 1. Scroll the element into view if needed.
+     * 2. Move mouse to hover over a random position near the center of the element.
+     *
+     * ```kotlin
+     * driver.hover("h1")
+     * ```
+     */
+    @Throws(WebDriverException::class)
+    suspend fun hover(selector: String)
 
     /**
      * This method fetches an element with `selector` and focuses it. If there's no
@@ -807,7 +843,7 @@ interface WebDriver : Closeable {
     suspend fun press(selector: String, key: String)
 
     /**
-     * This method clicks an element with [selector] and focuses it. If there's no
+     * This method focuses an element with [selector] and clicks it. If there's no
      * element matching `selector`, nothing to do.
      *
      * ```kotlin
@@ -821,6 +857,12 @@ interface WebDriver : Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun click(selector: String, count: Int = 1)
+
+    /**
+     * focus on an element with [selector] and click it with [modifier] pressed
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun click(selector: String, modifier: String)
 
     /**
      * This method clicks an element with [selector] whose text content matches [pattern], and then focuses it.
@@ -937,6 +979,9 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun scrollUp(count: Int = 1)
 
+    @Throws(WebDriverException::class)
+    suspend fun scrollBy(pixels: Double = 200.0, smooth: Boolean = true): Double
+
     /**
      * The current page frame scrolls to the top.
      *
@@ -971,21 +1016,25 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun scrollToMiddle(ratio: Double)
 
+    @Deprecated("Inappropriate name", ReplaceWith("scrollToViewport(screenNumber)"))
+    @Throws(WebDriverException::class)
+    suspend fun scrollToScreen(screenNumber: Double) = scrollToViewport(screenNumber)
+
     /**
-     * The current page frame scrolls to the middle.
+     * Scroll to the 2.5th viewport position.
      *
      * ```kotlin
-     * driver.scrollToScreen(0.0)
-     * driver.scrollToScreen(0.5)
-     * driver.scrollToScreen(1.5)
-     * driver.scrollToScreen(3.0)
+     * driver.scrollToViewport(1.0)
+     * driver.scrollToViewport(1.5)
+     * driver.scrollToViewport(2.5)
+     * driver.scrollToViewport(3.0)
      * ```
      *
-     * @param screenNumber The screen number of the page to scroll to (0-based).
-     * 0.00 means at the top of the first screen, 1.50 means halfway through the second screen.
+     * @param n The viewport number of the page to scroll to (1-based).
+     * 1.00 means at the top of the first screen, 2.50 means halfway through the second screen.
      */
     @Throws(WebDriverException::class)
-    suspend fun scrollToScreen(screenNumber: Double)
+    suspend fun scrollToViewport(n: Double, smooth: Boolean = true): Double
 
     /**
      * The mouse wheels down for [count] times.
@@ -1081,6 +1130,21 @@ interface WebDriver : Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun outerHTML(selector: String): String?
+
+    /**
+     * Returns the document's text content.
+     *
+     * If the document does not exist, returns null.
+     *
+     * ```kotlin
+     * val text = driver.textContent()
+     * ```
+     *
+     * @return The text content of the document.
+     * */
+    suspend fun textContent(): String?
+
+    suspend fun extract(fields: Map<String, String>): Map<String, String?>
 
     /**
      * Returns the node's text content, the node is located by [selector].
@@ -1190,14 +1254,8 @@ interface WebDriver : Closeable {
     suspend fun setAttributeAll(selector: String, attrName: String, attrValue: String)
 
 
-
-
-
-
-
-
     /**
-     * Returns the node's property value, the node is located by [selector], the property is [attrName].
+     * Returns the node's property value, the node is located by [selector], the property is [propName].
      *
      * If the node does not exist, or the property does not exist, returns null.
      *
@@ -1228,7 +1286,12 @@ interface WebDriver : Closeable {
      * @return The property values of the nodes.
      * */
     @Throws(WebDriverException::class)
-    suspend fun selectPropertyValueAll(selector: String, propName: String, start: Int = 0, limit: Int = 10000): List<String>
+    suspend fun selectPropertyValueAll(
+        selector: String,
+        propName: String,
+        start: Int = 0,
+        limit: Int = 10000
+    ): List<String>
 
     /**
      * Set the property of an element located by [selector].
@@ -1257,14 +1320,6 @@ interface WebDriver : Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun setPropertyAll(selector: String, propName: String, propValue: String)
-
-
-
-
-
-
-
-
 
 
     /**
@@ -1316,6 +1371,8 @@ interface WebDriver : Closeable {
      * Executes JavaScript in the context of the currently selected frame or window. If the result is not Javascript object,
      * it is not returned.
      *
+     * If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression).
+     *
      * ```kotlin
      * val title = driver.evaluate("document.title")
      * ```
@@ -1345,133 +1402,57 @@ interface WebDriver : Closeable {
     suspend fun evaluate(expression: String): Any?
 
     /**
-     * Executes JavaScript in the context of the currently selected frame or window. If the result is not Javascript object,
-     * it is not returned.
-     *
-     * ```kotlin
-     * val title = driver.evaluate("document.title", "Untitled")
-     * ```
-     *
-     * @param expression Javascript expression to evaluate
-     * @return Remote object value in case of primitive values or null.
-     * */
+     * Executes JavaScript and returns the result or [defaultValue] if evaluation returns null or incompatible type.
+     */
     @Throws(WebDriverException::class)
     suspend fun <T> evaluate(expression: String, defaultValue: T): T
 
-    /**
-     * Executes JavaScript in the context of the currently selected frame or window. If the result is not Javascript object,
-     * it is not returned.
-     *
-     * ```kotlin
-     * val title = driver.evaluate("document.title")
-     * ```
-     *
-     * @param expression Javascript expression to evaluate
-     * @return expression result
-     * */
-    @Beta
+    /** Detailed evaluation metadata (beta). */
     @Throws(WebDriverException::class)
     suspend fun evaluateDetail(expression: String): JsEvaluation?
 
     /**
-     * Executes JavaScript in the context of the currently selected frame or window. If the result is a Javascript object,
-     * it is returned as a JSON object.
-     *
-     * ```kotlin
-     * val title = driver.evaluate("document.title")
-     * ```
-     *
-     * To execute multi-line JavaScript code:
-     *
-     * ```kotlin
-     * val code = """
-     * () => {
-     *   const a = 10;
-     *   const b = 20;
-     *   return a * b;
-     * }
-     * """.trimIndent()
-     *
-     * val result = driver.evaluate(code)
-     * ```
-     *
-     * ### 🔍 Notes:
-     * * **Wrap the code in an IIFE (Immediately Invoked Function Expression)** to return a value.
-     * * **Escape line breaks** with `\n`.
-     *
-     * @param expression Javascript expression to evaluate
-     * @return Remote object value in case of primitive values or JSON values (if it was requested).
-     * */
-    @Beta
+     * Executes JavaScript returning JSON if availiable value if possible (objects serialized), else primitive/string/null.
+     */
     @Throws(WebDriverException::class)
     suspend fun evaluateValue(expression: String): Any?
 
-    /**
-     * Executes JavaScript in the context of the currently selected frame or window. If the result is a Javascript object,
-     * it is returned as a JSON object.
-     *
-     * ```kotlin
-     * val title = driver.evaluate("document.title", "Untitled")
-     * ```
-     *
-     * @param expression Javascript expression to evaluate
-     * @return Remote object value in case of primitive values or JSON values (if it was requested).
-     * */
-    @Beta
+    /** Executes JS returning JSONifiable value or [defaultValue] if null/incompatible. */
     @Throws(WebDriverException::class)
     suspend fun <T> evaluateValue(expression: String, defaultValue: T): T
 
-    /**
-     * Executes JavaScript in the context of the currently selected frame or window. If the result is a Javascript object,
-     * it is returned as a JSON object.
-     *
-     * ```kotlin
-     * val title = driver.evaluate("document.title")
-     * ```
-     *
-     * @param expression Javascript expression to evaluate
-     * @return expression result
-     * */
-    @Beta
+    /** Detailed value evaluation metadata (beta). */
     @Throws(WebDriverException::class)
     suspend fun evaluateValueDetail(expression: String): JsEvaluation?
 
-    /**
-     * This method scrolls element into view if needed, and then ake a screenshot of the element.
-     *
-     * ```kotlin
-     * val screenshot = driver.captureScreenshot()
-     * val bytes = Base64.getDecoder().decode(screenshot)
-     * val path = AppPaths.TMP_DIR.resolve("screenshot.jpg")
-     * AppFiles.saveTo(bytes, path, true)
-     * ```
-     *
-     * @return The screenshot of the element in base64 format.
-     */
     @Throws(WebDriverException::class)
-    suspend fun captureScreenshot(): String?
+    @ExperimentalApi
+    suspend fun evaluateValue(selector: String, functionDeclaration: String): Any?
 
     /**
-     * This method scrolls element into view if needed, and then ake a screenshot of the element.
+     * Capture a screenshot of the current viewport (or primary browsing context) after ensuring any pending layout.
+     * If the backend supports element-centric capture this may represent the full page; implementation specific.
+     *
+     * The target element (if any) is scrolled into view before capture.
      *
      * ```kotlin
-     * val screenshot = driver.captureScreenshot("h2.title")
-     * val bytes = Base64.getDecoder().decode(screenshot)
-     * val path = AppPaths.TMP_DIR.resolve("screenshot.jpg")
-     * AppFiles.saveTo(bytes, path, true)
+     * val base64 = driver.captureScreenshot()
+     * val bytes = Base64.getDecoder().decode(base64)
      * ```
-     *
-     * @param selector The selector of the element to capture.
-     * @return The screenshot of the element in base64 format.
+     */
+    @Throws(WebDriverException::class)
+    suspend fun captureScreenshot(fullPage: Boolean = false): String?
+
+    /**
+     * Scroll the element matched by [selector] into view (if needed) then take a screenshot of that element's bounding box.
+     * Returns a Base64 encoded image (implementation usually PNG/JPEG), PNG by default.
      */
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(selector: String): String?
 
     /**
-     * This method scrolls element into view if needed, and then ake a screenshot of the element.
-     *
-     * @param rect The rectangle of the element to capture.
-     * @return The screenshot of the element in base64 format.
+     * Take a screenshot of the rectangle specified by [rect] in the current page coordinate space. Caller is responsible
+     * for ensuring the rectangle is visible or scrolled into view if the implementation requires it.
      */
     @Throws(WebDriverException::class)
     suspend fun captureScreenshot(rect: RectD): String?
@@ -1529,14 +1510,14 @@ interface WebDriver : Closeable {
      *
      * @param millis The amount of time to delay, in milliseconds.
      * */
-    suspend fun delay(millis: Long) = kotlinx.coroutines.delay(millis)
+    suspend fun delay(millis: Long = 1000) = kotlinx.coroutines.delay(millis)
 
     /**
      * Delay for a given amount of time.
      *
      * @param duration The amount of time to delay.
      * */
-    suspend fun delay(duration: java.time.Duration) = kotlinx.coroutines.delay(duration.toMillis())
+    suspend fun delay(duration: Duration) = kotlinx.coroutines.delay(duration.toMillis())
 
     /**
      * Delay for a given amount of time.

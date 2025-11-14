@@ -1,4 +1,4 @@
-package ai.platon.pulsar.basic
+package ai.platon.pulsar.test
 
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import ai.platon.pulsar.common.NetUtil

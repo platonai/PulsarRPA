@@ -1,0 +1,105 @@
+[ {
+  "domain" : "agent",
+  "method" : "resolve",
+  "arguments" : [ {
+    "name" : "problem",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "ActResult",
+  "description" : "High-level problem resolution entry. Implementations should construct an [ActionOptions] from the raw problem string and delegate to [resolve] with the options."
+}, {
+  "domain" : "agent",
+  "method" : "resolve",
+  "arguments" : [ {
+    "name" : "action",
+    "type" : "ActionOptions",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "ActResult",
+  "description" : "Run an autonomous loop (observe -> act -> ...) attempting to fulfill the user goal described in the provided [ActionOptions]. Implementations may apply retry and timeout strategies; they should record structured traces while keeping [stateHistory] focused on executed tool actions only."
+}, {
+  "domain" : "agent",
+  "method" : "observe",
+  "arguments" : [ {
+    "name" : "instruction",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "List<ObserveResult>",
+  "description" : "Convenience overload to observe by instruction string. Implementations typically create an [ObserveOptions] from the instruction and delegate to [observe]."
+}, {
+  "domain" : "agent",
+  "method" : "observe",
+  "arguments" : [ {
+    "name" : "options",
+    "type" : "ObserveOptions",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "List<ObserveResult>",
+  "description" : "Observe the page given an instruction and options, returning zero or more [ObserveResult] objects describing candidate elements and potential actions. When `returnAction=true`, implementations may include an actionable method/arguments in the result."
+}, {
+  "domain" : "agent",
+  "method" : "act",
+  "arguments" : [ {
+    "name" : "action",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "ActResult",
+  "description" : "Convenience wrapper building [ActionOptions] from a raw action string and delegating to [act]."
+}, {
+  "domain" : "agent",
+  "method" : "act",
+  "arguments" : [ {
+    "name" : "action",
+    "type" : "ActionOptions",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "ActResult",
+  "description" : "Execute a single observe->act cycle for the supplied [ActionOptions]. Implementations may apply a timeout to prevent indefinite hangs. Models may produce multiple candidate tool calls; only one successful execution should be recorded in [stateHistory]."
+}, {
+  "domain" : "agent",
+  "method" : "act",
+  "arguments" : [ {
+    "name" : "observe",
+    "type" : "ObserveResult",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "ActResult",
+  "description" : "Execute a tool call derived from a prior observation result. Implementations should perform any necessary validation and update [stateHistory] on success or failure."
+}, {
+  "domain" : "agent",
+  "method" : "extract",
+  "arguments" : [ {
+    "name" : "instruction",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "ExtractResult",
+  "description" : "Convenience overload for structured extraction. When only an instruction string is provided, the implementation should use [ExtractionSchema.DEFAULT]."
+}, {
+  "domain" : "agent",
+  "method" : "extract",
+  "arguments" : [ {
+    "name" : "instruction",
+    "type" : "String",
+    "defaultValue" : ""
+  }, {
+    "name" : "schema",
+    "type" : "ExtractionSchema",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "ExtractResult",
+  "description" : "Convenience overload for structured extraction that constrains the result with a JSON schema."
+}, {
+  "domain" : "agent",
+  "method" : "extract",
+  "arguments" : [ {
+    "name" : "options",
+    "type" : "ExtractOptions",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "ExtractResult",
+  "description" : "Structured extraction entry point. Implementations should build a rich prompt with the DOM snapshot and optional JSON schema to produce a structured [JsonNode] payload."
+} ]

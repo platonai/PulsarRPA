@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Interactive Single Page</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #e0e7ff;
+            --bg: #f9fafb;
+        }
+        body {
+            margin: 0;
+            font-family: sans-serif;
+            background: var(--bg);
+            color: #333;
+            line-height: 1.6;
+        }
+        header, footer {
+            background: var(--primary);
+            color: white;
+            text-align: center;
+            padding: 1rem;
+        }
+        section {
+            padding: 2rem;
+            margin: 1rem auto;
+            max-width: 800px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+        h2 {
+            border-left: 5px solid var(--primary);
+            padding-left: 0.5rem;
+        }
+        .interactive input,
+        .interactive select {
+            padding: 0.5rem;
+            margin: 0.5rem 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            width: 100%;
+        }
+        .switch {
+            display: flex;
+            align-items: center;
+            margin-top: 1rem;
+        }
+        .switch input {
+            margin-right: 0.5rem;
+        }
+        .slider-container {
+            margin: 1rem 0;
+        }
+        .slider-container input {
+            width: 100%;
+        }
+        .hover-card {
+            padding: 1rem;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .hover-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.1);
+        }
+        @media (max-width: 600px) {
+            section {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header id="pageHeader" data-testid="pageHeader" class="header-main" data-role="header" data-component="site-header">
+    <h1>Interactive Demo Page</h1>
+</header>
+
+<section id="introductionSection" data-testid="introductionSection" class="section section-introduction" data-role="section" data-component="introduction-section">
+    <h2>📘 Introduction</h2>
+    <p>This is a sample single-page website built using only HTML, CSS, and JavaScript.</p>
+    <p>It includes layout examples, interactive components, and responsive styles.</p>
+</section>
+
+<section id="userInfoSection" data-testid="userInfoSection" class="interactive section section-user-info" data-role="section" data-component="user-info-section">
+    <h2>🧠 Your Info</h2>
+    <label for="nameInput">Name:</label>
+    <input type="text" id="nameInput" data-testid="nameInput" class="input input-name" placeholder="Enter your name" data-role="input" data-component="name-input" aria-label="Enter your name" />
+    <label for="languageSelect">Favorite Language:</label>
+    <select id="languageSelect" data-testid="languageSelect" class="select select-language" data-role="select" data-component="language-select" aria-label="Favorite language">
+        <option>JavaScript</option>
+        <option>Python</option>
+        <option>Kotlin</option>
+        <option>Rust</option>
+    </select>
+    <div class="switch switch-subscribe" data-role="container" data-component="subscribe-toggle">
+        <input type="checkbox" id="subscribeToggle" data-testid="subscribeToggle" class="checkbox checkbox-subscribe" data-role="checkbox" data-component="subscribe-checkbox" aria-label="Subscribe to newsletter">
+        <label for="subscribeToggle">Subscribe to newsletter</label>
+    </div>
+    <button id="showSummaryButton" data-testid="showSummaryButton" class="btn btn-summary" onclick="showSummary()" data-role="button" data-component="summary-button" data-action="show-summary" aria-label="Show summary" aria-controls="summaryOutput">Show Summary</button>
+    <p id="summaryOutput" data-testid="summaryOutput" class="result result-summary" data-role="output" data-component="summary-output" aria-live="polite"></p>
+</section>
+
+<section id="dynamicStylingSection" data-testid="dynamicStylingSection" class="section section-dynamic-styling" data-role="section" data-component="dynamic-styling-section">
+    <h2>🎨 Dynamic Styling</h2>
+    <label for="textSizeSlider">Choose text size:</label>
+    <div class="slider-container slider-text-size" data-role="container" data-component="text-size-slider-container">
+        <input type="range" id="textSizeSlider" data-testid="textSizeSlider" class="range range-text-size" min="12" max="36" value="16" data-role="slider" data-component="text-size-slider" data-action="adjust-text-size" aria-label="Adjust text size" aria-valuemin="12" aria-valuemax="36" aria-valuenow="16" />
+    </div>
+    <p id="dynamicText" data-testid="dynamicText" class="dynamic-text" data-role="text" data-component="dynamic-text" aria-live="polite">This paragraph will resize dynamically based on your slider input.</p>
+</section>
+
+<section id="hoverEffectSection" data-testid="hoverEffectSection" class="section section-hover-card" data-role="section" data-component="hover-effect-section">
+    <h2>🪄 CSS Hover Effect</h2>
+    <div class="hover-card card-hover-demo" id="hoverDemoCard" data-testid="hoverDemoCard" data-role="card" data-component="hover-demo-card" aria-label="Hover demo card">
+        <p>This card lifts and glows on hover.</p>
+    </div>
+</section>
+
+<footer id="pageFooter" data-testid="pageFooter" class="footer-main" data-role="footer" data-component="site-footer">
+    <p>&copy; 2025 Example. All rights reserved.</p>
+</footer>
+
+<script>
+    const nameInput = document.getElementById('nameInput');
+    const languageSelect = document.getElementById('languageSelect');
+    const subscribeToggle = document.getElementById('subscribeToggle');
+    const summaryOutput = document.getElementById('summaryOutput');
+
+    function showSummary() {
+        const name = nameInput.value || "Anonymous";
+        const language = languageSelect.value;
+        const subscribed = subscribeToggle.checked ? "Yes" : "No";
+        summaryOutput.textContent = `Hello, ${name}. You selected ${language}. Subscribed: ${subscribed}.`;
+    }
+
+    const textSizeSlider = document.getElementById('textSizeSlider');
+    const dynamicText = document.getElementById('dynamicText');
+    textSizeSlider.addEventListener('input', function() {
+        dynamicText.style.fontSize = `${this.value}px`;
+        this.setAttribute('aria-valuenow', this.value);
+    });
+</script>
+
+</body>
+</html>

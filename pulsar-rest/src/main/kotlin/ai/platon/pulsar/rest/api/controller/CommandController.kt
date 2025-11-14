@@ -5,6 +5,8 @@ import ai.platon.pulsar.rest.api.entities.CommandResult
 import ai.platon.pulsar.rest.api.entities.CommandStatus
 import ai.platon.pulsar.rest.api.service.CommandService
 import ai.platon.pulsar.rest.api.service.ConversationService
+import ai.platon.pulsar.skeleton.crawl.event.impl.PageEventHandlersFactory
+import kotlinx.coroutines.runBlocking
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.http.codec.ServerSentEvent
@@ -28,29 +30,47 @@ class CommandController(
      * @param request The structured command request
      * @return Structured command response
      * */
-    @PostMapping
+    @PostMapping("/")
     fun submitCommand(@RequestBody request: CommandRequest): ResponseEntity<Any> {
-        return when (request.mode) {
-            "sync" -> ResponseEntity.ok(commandService.executeSync(request))
-            "async" -> ResponseEntity.ok(commandService.submitAsync(request))
-            else -> ResponseEntity.badRequest().body("Invalid mode: ${request.mode}")
+        val async = request.async ?: (request.mode?.lowercase() == "async")
+
+        val eventHandlers = PageEventHandlersFactory.create()
+        val response = when {
+            async -> commandService.submitAsync(request, eventHandlers)
+            else -> runBlocking { commandService.executeSync(request, eventHandlers) }
         }
+
+        return ResponseEntity.ok(response)
     }
 
+    /**
+     * Execute a command with plain text input and output.
+     *
+     * @param plainCommand The plain text command
+     * @param async Whether to execute the command asynchronously
+     * @param mode The execution mode, e.g., "sync" or "async". (Deprecated: use [async] instead)
+     * @return Command response
+     * */
     @PostMapping("/plain")
     fun submitPlainCommand(
         @RequestBody plainCommand: String,
-        @RequestParam(name = "mode", defaultValue = "sync") mode: String,
+        @RequestParam(name = "async") async: Boolean? = null,
+        @RequestParam(name = "mode") mode: String? = null,
     ): ResponseEntity<Any> {
-        val request = conversationService.normalizePlainCommand(plainCommand)
+        val request = runBlocking { conversationService.normalizePlainCommand(plainCommand) }
             ?: return ResponseEntity.badRequest().body("Invalid plain command: $plainCommand")
 
-        request.mode = mode.lowercase()
-        return when (request.mode) {
-            "sync" -> ResponseEntity.ok(commandService.executeSync(request))
-            "async" -> ResponseEntity.ok(commandService.submitAsync(request))
-            else -> ResponseEntity.badRequest().body("Invalid mode: ${request.mode}")
+        val async = async ?: (mode?.lowercase() == "async")
+        request.mode = mode?.lowercase()
+        request.async = async
+
+        val eventHandlers = PageEventHandlersFactory.create()
+        val response = when {
+            async -> commandService.submitAsync(request, eventHandlers)
+            else -> runBlocking { commandService.executeSync(request, eventHandlers) }
         }
+
+        return ResponseEntity.ok(response)
     }
 
     @GetMapping(value = ["/{id}/status"])

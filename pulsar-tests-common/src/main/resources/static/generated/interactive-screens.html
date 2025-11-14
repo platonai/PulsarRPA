@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interactive Single Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            line-height: 1.6;
+            background: #f9f9f9;
+            color: #333;
+        }
+        header, section {
+            padding: 2rem;
+            background: white;
+            margin: 1rem auto;
+            max-width: 800px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        h2 {
+            margin-top: 0;
+        }
+        label {
+            display: block;
+            margin-top: 1rem;
+        }
+        input, select, button {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            font-size: 1rem;
+        }
+        .result {
+            margin-top: 1rem;
+            font-weight: bold;
+            color: #0066cc;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<header id="pageHeader" data-testid="pageHeader" class="header-main" data-role="header" data-component="site-header">
+    <h1>Welcome to the Interactive Page</h1>
+    <p>This page demonstrates various interactive elements embedded in text across multiple sections.</p>
+</header>
+
+<section id="userInformationSection" data-testid="userInformationSection" class="section section-user-info" data-role="section" data-component="user-info-section">
+    <h2>📋 User Information</h2>
+    <p>Enter your name below and see it reflected instantly.</p>
+    <label for="name">Your Name:</label>
+    <input type="text" id="name" data-testid="nameInput" class="input input-name" placeholder="Type here..." data-role="input" data-component="name-input" aria-label="Enter your name" />
+    <p class="result result-name" id="nameOutput" data-testid="nameOutput" data-role="output" data-component="name-output" aria-live="polite"></p>
+</section>
+
+<section id="preferencesSection" data-testid="preferencesSection" class="section section-preferences" data-role="section" data-component="preferences-section">
+    <h2>📊 Preferences</h2>
+    <p>Select your favorite color from the dropdown. The background will update accordingly.</p>
+    <label for="colorSelect">Favorite Color:</label>
+    <select id="colorSelect" data-testid="colorSelect" class="select select-color" data-role="select" data-component="color-select" aria-label="Favorite color selector">
+        <option value="">-- Choose --</option>
+        <option value="lightblue">Light Blue</option>
+        <option value="lightgreen">Light Green</option>
+        <option value="lightyellow">Light Yellow</option>
+    </select>
+</section>
+
+<section id="calculatorSection" data-testid="calculatorSection" class="section section-calculator" data-role="section" data-component="calculator-section">
+    <h2>🧮 Quick Calculator</h2>
+    <p>Try entering two numbers and click "Add".</p>
+    <label for="num1">First Number:</label>
+    <input type="number" id="num1" data-testid="num1" class="input input-number input-number-first" data-role="input" data-component="first-number" aria-label="First number" />
+    <label for="num2">Second Number:</label>
+    <input type="number" id="num2" data-testid="num2" class="input input-number input-number-second" data-role="input" data-component="second-number" aria-label="Second number" />
+    <button id="addButton" data-testid="addButton" class="btn btn-add" onclick="addNumbers()" data-role="button" data-component="add-button" data-action="add-numbers" aria-label="Add the two numbers" aria-controls="sumResult">Add</button>
+    <p class="result result-sum" id="sumResult" data-testid="sumResult" data-role="output" data-component="sum-output" aria-live="polite"></p>
+</section>
+
+<section id="toggleSection" data-testid="toggleSection" class="section section-toggle" data-role="section" data-component="toggle-section">
+    <h2>🎯 Dynamic Toggle</h2>
+    <p>Click the toggle to reveal a hidden message.</p>
+    <button id="toggleMessageButton" data-testid="toggleMessageButton" class="btn btn-toggle" onclick="toggleMessage()" data-role="button" data-component="toggle-message-button" data-action="toggle-message" aria-expanded="false" aria-controls="hiddenMessage" aria-label="Toggle hidden message">Toggle Message</button>
+    <p id="hiddenMessage" data-testid="hiddenMessage" class="hidden toggle-message" data-role="message" data-component="hidden-message" aria-hidden="true" role="region">🎉 Surprise! You've discovered the hidden message.</p>
+</section>
+
+<section id="emailValidationSection" data-testid="emailValidationSection" class="section section-email-validation" data-role="section" data-component="email-validation-section">
+    <h2>✉️ Email Validation</h2>
+    <p>Enter your email address and we'll validate it.</p>
+    <label for="email">Email Address:</label>
+    <input type="email" id="email" data-testid="emailInput" class="input input-email" placeholder="Enter your email..." data-role="input" data-component="email-input" aria-label="Enter your email" />
+    <p class="result result-email" id="emailResult" data-testid="emailResult" data-role="output" data-component="email-result" aria-live="polite"></p>
+</section>
+
+<section id="customerStorySection" data-testid="customerStorySection" class="section section-customer-story" data-role="section" data-component="customer-story-section">
+    <h2>🔒 Customer Story</h2>
+    <p>Read a customer story about how they used our product and how it improved their workflow.</p>
+    <p class="result result-story" id="customerStoryText" data-testid="customerStoryText" data-role="text" data-component="customer-story-text"></p>
+    <p>
+        <a href="https://www.example.com/customer-story" id="customerStoryLink" data-testid="customerStoryLink" class="link link-customer-story" data-role="link" data-component="customer-story-link" data-action="open-customer-story">Read More</a>
+    </p>
+</section>
+
+<section id="blogsSection" data-testid="blogsSection" class="section section-blogs" data-role="section" data-component="blogs-section">
+    <h2>✉️ Blogs</h2>
+    <p>Check out our latest blog posts and stay updated with the latest industry news.</p>
+    <p class="result result-blogs">
+        <a href="https://www.example.com/blog" id="blogLinkPrimary" data-testid="blogLinkPrimary" class="link link-blog-primary" data-role="link" data-component="blog-link-primary" data-action="open-blog">Read More</a>
+    </p>
+    <p>
+        <a href="https://www.example.com/blog" id="blogLinkSecondary" data-testid="blogLinkSecondary" class="link link-blog-secondary" data-role="link" data-component="blog-link-secondary" data-action="open-blog">Read More</a>
+    </p>
+</section>
+
+<section id="contactSection" data-testid="contactSection" class="section section-contact" data-role="section" data-component="contact-section">
+    <h2>🔒 Contact Us</h2>
+    <p>If you have any questions or feedback, please feel free to contact us.</p>
+    <label for="email2">Email Address:</label>
+    <input type="email" id="email2" data-testid="contactEmailInput" class="input input-email-alt" placeholder="Enter your email..." data-role="input" data-component="contact-email-input" aria-label="Enter your contact email" />
+    <label for="message">Message:</label>
+    <textarea id="message" data-testid="messageInput" class="textarea textarea-message" rows="4" placeholder="Enter your message..." data-role="textarea" data-component="contact-message" aria-label="Enter your message"></textarea>
+    <button id="sendMessageButton" data-testid="sendMessageButton" class="btn btn-send" onclick="alert('Message sent!')" data-role="button" data-component="send-message-button" data-action="send-message" aria-label="Send the message">Send</button>
+    <p class="result result-contact-thanks" data-testid="contactThanks" data-role="text" data-component="contact-thanks" aria-live="polite">Thank you for contacting us. We'll get back to you soon.</p>
+    <p class="result result-contact-link">
+        <a href="https://www.example.com/contact-us" id="contactUsLink" data-testid="contactUsLink" class="link link-contact" data-role="link" data-component="contact-us-link" data-action="open-contact">Contact Us</a>
+    </p>
+</section>
+
+<script>
+    document.getElementById('name').addEventListener('input', function () {
+        const value = this.value.trim();
+        document.getElementById('nameOutput').textContent = value ? `Hello, ${value}!` : '';
+    });
+
+    document.getElementById('colorSelect').addEventListener('change', function () {
+        document.body.style.backgroundColor = this.value || '#f9f9f9';
+    });
+
+    function addNumbers() {
+        const a = parseFloat(document.getElementById('num1').value);
+        const b = parseFloat(document.getElementById('num2').value);
+        const sum = (!isNaN(a) && !isNaN(b)) ? a + b : 'Please enter valid numbers';
+        document.getElementById('sumResult').textContent = `Result: ${sum}`;
+    }
+
+    function toggleMessage() {
+        const btn = document.getElementById('toggleMessageButton');
+        const msg = document.getElementById('hiddenMessage');
+        const hidden = msg.classList.toggle('hidden');
+        msg.setAttribute('aria-hidden', hidden ? 'true' : 'false');
+        btn.setAttribute('aria-expanded', hidden ? 'false' : 'true');
+    }
+</script>
+
+</body>
+</html>

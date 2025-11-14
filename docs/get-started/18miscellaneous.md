@@ -39,7 +39,7 @@ The above configuration performs the following actions:
 Privacy agents
 ==
 
-A privacy agent is an identifier that ensures distinct identities for website visits. When different privacy agents are used, page visits should not be attributed to the same individual, regardless of whether they originate from the same host.
+A browser profile is an identifier that ensures distinct identities for website visits. When different privacy agents are used, page visits should not be attributed to the same individual, regardless of whether they originate from the same host.
 
 Concepts
 ==

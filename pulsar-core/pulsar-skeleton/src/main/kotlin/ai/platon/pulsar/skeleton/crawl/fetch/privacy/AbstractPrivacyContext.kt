@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
 abstract class AbstractPrivacyContext(
-    override val privacyAgent: PrivacyAgent,
+    override val profile: BrowserProfile,
     val conf: ImmutableConfig
 ) : PrivacyContext, Comparable<PrivacyContext> {
     companion object {
@@ -40,15 +40,15 @@ abstract class AbstractPrivacyContext(
 
     var webdriverFetcher: WebDriverFetcher? = null
 
-    override val id get() = privacyAgent.id
+    override val id get() = profile.id
     val seq = SEQUENCER.incrementAndGet()
-    override val display get() = privacyAgent.display
-    val baseDir get() = privacyAgent.contextDir
+    override val display get() = profile.display
+    val baseDir get() = profile.contextDir
 
     protected val numRunningTasks = AtomicInteger()
     val minimumThroughput =
-        if (privacyAgent.isPermanent) 0f else conf.getFloat(CapabilityTypes.PRIVACY_CONTEXT_MIN_THROUGHPUT, 0.3f)
-    val maximumWarnings = if (privacyAgent.isPermanent) 100000 else conf.getInt(CapabilityTypes.PRIVACY_MAX_WARNINGS, 8)
+        if (profile.isPermanent) 0f else conf.getFloat(CapabilityTypes.PRIVACY_CONTEXT_MIN_THROUGHPUT, 0.3f)
+    val maximumWarnings = if (profile.isPermanent) 100000 else conf.getInt(CapabilityTypes.PRIVACY_MAX_WARNINGS, 8)
     val minorWarningFactor = conf.getInt(CapabilityTypes.PRIVACY_MINOR_WARNING_FACTOR, 5)
     val privacyLeakWarnings = AtomicInteger()
     val privacyLeakMinorWarnings = AtomicInteger()
@@ -97,7 +97,7 @@ abstract class AbstractPrivacyContext(
     private val idleTimeout: Duration get() = privacyContextIdleTimeout.coerceAtLeast(fetchTaskTimeout)
 
     private val isLeaked0: Boolean get() {
-        return !privacyAgent.isPermanent && privacyLeakWarnings.get() >= maximumWarnings
+        return !profile.isPermanent && privacyLeakWarnings.get() >= maximumWarnings
     }
 
     private val isActive0: Boolean get() {
@@ -222,7 +222,7 @@ abstract class AbstractPrivacyContext(
      * and will be closed soon.
      * */
     fun markLeaked() {
-        if (privacyAgent.isPermanent) {
+        if (profile.isPermanent) {
             // never mark a permanent privacy context as leaked
         } else {
             require(maximumWarnings in 1..1000000) {
@@ -233,17 +233,17 @@ abstract class AbstractPrivacyContext(
     }
 
     /**
-     * Open an url in the privacy context.
+     * Open a url in the privacy context.
      * */
     abstract override suspend fun open(url: String): FetchResult
 
     /**
-     * Open an url in the privacy context, with the specified options.
+     * Open a url in the privacy context, with the specified options.
      * */
     abstract override suspend fun open(url: String, options: LoadOptions): FetchResult
 
     /**
-     * Open an url in the privacy context, with the specified fetch function.
+     * Open a url in the privacy context, with the specified fetch function.
      * */
     @Throws(ProxyVendorException::class)
     override suspend fun open(url: String, fetchFun: suspend (FetchTask, WebDriver) -> FetchResult): FetchResult {

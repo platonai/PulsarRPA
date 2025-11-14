@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amazon.com: Product Name - Electronics</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- Header -->
+<header class="amazon-header">
+    <div class="header-content">
+        <div class="logo">
+            <img src="https://images.unsplash.com/photo-1523474253046-8cd2748b5fd2?w=120&h=40&fit=crop" alt="Amazon" />
+        </div>
+        <div class="search-bar">
+            <select class="category-dropdown">
+                <option>All</option>
+                <option>Electronics</option>
+            </select>
+            <div class="autocomplete-container">
+                <input id="search-box" type="text" placeholder="Search Amazon" class="search-input" autocomplete="off" />
+                <div id="autocomplete-list" class="autocomplete-list" style="display:none;"></div>
+            </div>
+            <button class="search-btn">🔍</button>
+        </div>
+        <div class="header-nav">
+            <div class="nav-item">Account & Lists</div>
+            <div class="nav-item">Returns & Orders</div>
+            <div class="nav-item cart">Cart (0)</div>
+        </div>
+    </div>
+</header>
+
+<!-- Breadcrumb -->
+<nav class="breadcrumb">
+    <a href="#">Electronics</a> ›
+    <a href="#">Computers & Accessories</a> ›
+    <a href="#">Tablets</a>
+</nav>
+
+<!-- Main Content -->
+<main class="main-content">
+    <!-- Product Section (First Screen) -->
+    <section class="product-section">
+        <div class="product-images">
+            <div class="main-image">
+                <a href="index.html"><img src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=500&h=500&fit=crop" alt="Product Main Image" /></a>
+            </div>
+            <div class="thumbnail-images">
+                <img src="https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=60&h=60&fit=crop" alt="Thumbnail 1" class="active" />
+                <img src="https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=60&h=60&fit=crop" alt="Thumbnail 2" />
+                <img src="https://images.unsplash.com/photo-1586953208448-b95a79798f07?w=60&h=60&fit=crop" alt="Thumbnail 3" />
+                <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?w=60&h=60&fit=crop" alt="Thumbnail 4" />
+            </div>
+        </div>
+
+        <div class="product-info">
+            <h1 class="product-title"><a href="index.html" class="product-title-link" style="color:inherit;text-decoration:none;">Premium Tablet - 10.1 Inch Display, 128GB Storage, WiFi + Cellular</a></h1>
+            <div class="product-rating">
+                <div class="stars">★★★★☆</div>
+                <span class="rating-count">4.2 out of 5 stars (3,245 ratings)</span>
+            </div>
+            <div class="product-badges">
+                <span class="badge bestseller">#1 Best Seller</span>
+                <span class="badge choice">Amazon's Choice</span>
+            </div>
+
+            <!-- Price Section (Will load dynamically) -->
+            <div class="price-section" id="priceSection">
+                <div class="price-loading">
+                    <div class="loading-spinner"></div>
+                    <span>Loading price...</span>
+                </div>
+            </div>
+
+            <!-- Buying Options -->
+            <div class="buying-options">
+                <div class="delivery-info">
+                    <strong>FREE delivery</strong> <span class="delivery-date">Tomorrow, January 15</span><br>
+                    <small>Or fastest delivery Today if ordered within <span class="urgent-time">4 hrs 23 mins</span></small>
+                </div>
+                <div class="stock-info">
+                    <span class="in-stock">In Stock</span>
+                </div>
+                <div class="quantity-selector">
+                    <label>Quantity:</label>
+                    <select>
+                        <option>1</option>
+                        <option>2</option>
+                        <option>3</option>
+                    </select>
+                </div>
+                <button class="add-to-cart-btn">Add to Cart</button>
+                <button class="buy-now-btn">Buy Now</button>
+            </div>
+        </div>
+
+        <div class="seller-info">
+            <div class="info-box">
+                <h3>About this item</h3>
+                <ul>
+                    <li>10.1-inch Full HD display (1920x1200)</li>
+                    <li>Octa-core processor for smooth performance</li>
+                    <li>128GB internal storage, expandable up to 1TB</li>
+                    <li>All-day battery life up to 12 hours</li>
+                    <li>Front and rear cameras</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Details Section (Second Screen) -->
+    <section class="product-details-section">
+        <div class="details-container">
+            <h2>Product Details</h2>
+            <table class="details-table">
+                <tr><td>Brand</td><td>TechBrand</td></tr>
+                <tr><td>Model Name</td><td>Premium Tab Pro</td></tr>
+                <tr><td>Screen Size</td><td>10.1 Inches</td></tr>
+                <tr><td>Display Resolution</td><td>1920x1200</td></tr>
+                <tr><td>Operating System</td><td>Android 12</td></tr>
+                <tr><td>Memory Storage Capacity</td><td>128 GB</td></tr>
+                <tr><td>Connectivity Technology</td><td>Wi-Fi, Bluetooth, Cellular</td></tr>
+            </table>
+        </div>
+    </section>
+
+    <!-- Related Products Section (Lazy Load) -->
+    <section class="related-products-section lazy-section" data-section="related">
+        <div class="section-loading">
+            <div class="loading-placeholder">
+                <div class="placeholder-title"></div>
+                <div class="placeholder-grid">
+                    <div class="placeholder-item"></div>
+                    <div class="placeholder-item"></div>
+                    <div class="placeholder-item"></div>
+                    <div class="placeholder-item"></div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Frequently Bought Together Section (Lazy Load) -->
+    <section class="frequently-bought-section lazy-section" data-section="frequently-bought">
+        <div class="section-loading">
+            <div class="loading-placeholder">
+                <div class="placeholder-title"></div>
+                <div class="placeholder-content"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Compare Products Section (Lazy Load) -->
+    <section class="compare-section lazy-section" data-section="compare">
+        <div class="section-loading">
+            <div class="loading-placeholder">
+                <div class="placeholder-title"></div>
+                <div class="placeholder-content"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Product Description Section (Lazy Load) -->
+    <section class="description-section lazy-section" data-section="description">
+        <div class="section-loading">
+            <div class="loading-placeholder">
+                <div class="placeholder-title"></div>
+                <div class="placeholder-content"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Reviews Section (Lazy Load) - Moved to end -->
+    <section class="reviews-section lazy-section" data-section="reviews">
+        <div class="section-loading">
+            <div class="loading-placeholder">
+                <div class="placeholder-title"></div>
+                <div class="placeholder-content"></div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- Footer -->
+<footer class="amazon-footer">
+    <div class="footer-content">
+        <div class="footer-links">
+            <div class="footer-column">
+                <h4>Get to Know Us</h4>
+                <ul>
+                    <li><a href="#">About Amazon</a></li>
+                    <li><a href="#">Careers</a></li>
+                    <li><a href="#">Press Releases</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h4>Make Money with Us</h4>
+                <ul>
+                    <li><a href="#">Sell products on Amazon</a></li>
+                    <li><a href="#">Become an Affiliate</a></li>
+                    <li><a href="#">Advertise Your Products</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<script src="main.js"></script>
+</body>
+</html>

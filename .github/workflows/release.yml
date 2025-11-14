@@ -65,18 +65,18 @@ jobs:
             TAG=${GITHUB_REF#refs/tags/}
           fi
           VERSION=${TAG#v}
-          
+
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
             echo "❌ Invalid version format: $VERSION"
             exit 1
           fi
-          
+
           # Dynamic prerelease detection
           IS_PRERELEASE="false"
           if [[ "$VERSION" == *"-"* ]]; then
             IS_PRERELEASE="true"
           fi
-          
+
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "TAG=$TAG" >> $GITHUB_ENV
           echo "IS_PRERELEASE=$IS_PRERELEASE" >> $GITHUB_ENV
@@ -98,8 +98,8 @@ jobs:
           if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
             SKIP_TESTS_FLAG="-DskipTests"
           fi
-          
-          ./mvnw clean install $SKIP_TESTS_FLAG -Pall-modules --batch-mode --show-version
+
+          ./mvnw clean install $SKIP_TESTS_FLAG --batch-mode --show-version
 
       - name: Build Docker image
         run: |
@@ -115,10 +115,10 @@ jobs:
         if: success() && github.event.inputs.skip_tests != 'true'
         run: |
           echo "🧪 Starting Docker container for testing..."
-          
+
           # Create network if it doesn't exist
           docker network create ${{ env.NETWORK_NAME }} || true
-          
+
           # Start container with health check
           docker run -d --rm \
             --name ${{ env.CONTAINER_NAME }} \
@@ -134,7 +134,7 @@ jobs:
           # Wait for container to be healthy
           echo "⏳ Waiting for container to be healthy..."
           timeout 120s bash -c 'until docker inspect --format="{{.State.Health.Status}}" ${{ env.CONTAINER_NAME }} | grep -q "healthy"; do sleep 5; done'
-          
+
           echo "✅ Container is healthy and ready for testing"
         env:
           DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
@@ -206,7 +206,7 @@ jobs:
 
           JAR_SIZE=$(stat -c%s "$JAR_PATH" 2>/dev/null || echo 0)
           UBERJAR_FILE=$(basename "$JAR_PATH")
-          
+
           echo "✅ Selected JAR: $UBERJAR_FILE"
           echo "📍 Path: $JAR_PATH"
           echo "📏 Size: $JAR_SIZE bytes ($(numfmt --to=iec --suffix=B $JAR_SIZE))"
@@ -219,7 +219,7 @@ jobs:
 
           echo "uberjar_file=$UBERJAR_FILE" >> $GITHUB_OUTPUT
           echo "uberjar_path=$JAR_PATH" >> $GITHUB_OUTPUT
-          
+
           echo "::endgroup::"
 
       - name: Create Release Notes
@@ -249,9 +249,9 @@ jobs:
       - name: Verify Release
         run: |
           echo "::group::✅ Release Verification"
-          
+
           JAR_SIZE=$(stat -c%s "${{ steps.get_uberjar.outputs.uberjar_path }}" 2>/dev/null || echo 0)
-          
+
           echo "🎉 Release ${{ env.VERSION }} created successfully!"
           echo ""
           echo "📦 Release Details:"
@@ -264,7 +264,7 @@ jobs:
           echo ""
           echo "📥 Download Command:"
           echo "wget https://github.com/${{ github.repository }}/releases/download/${{ env.TAG }}/${{ steps.get_uberjar.outputs.uberjar_file }}"
-          
+
           echo "::endgroup::"
 
       - name: Push Docker Images to Docker Hub
@@ -278,11 +278,11 @@ jobs:
         if: success()
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          
+
           # Tag images for GitHub Container Registry
           docker tag ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }} ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
           docker tag ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }} ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest
-          
+
           # Push images
           docker push ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
           docker push ghcr.io/${{ github.repository_owner }}/${{ env.IMAGE_NAME }}:latest

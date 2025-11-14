@@ -1,0 +1,15 @@
+{
+  "name": "browser4",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "commitlint": "commitlint --edit $1",
+    "build-dom-scripts": "npx tsx auxiliary-ts/dom/genDomScripts.ts"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
+    "husky": "^9.0.0",
+    "tsx": "^3.12.7"
+  }
+}

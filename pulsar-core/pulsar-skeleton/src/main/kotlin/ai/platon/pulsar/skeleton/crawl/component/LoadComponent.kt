@@ -5,7 +5,9 @@ import ai.platon.pulsar.common.PulsarParams.VAR_FETCH_STATE
 import ai.platon.pulsar.common.PulsarParams.VAR_PREV_FETCH_TIME_BEFORE_UPDATE
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.config.AppConstants.VAR_CAPTURE
+import ai.platon.pulsar.common.config.AppConstants.VAR_REFRESH
+import ai.platon.pulsar.common.config.CapabilityTypes.LOAD_DEACTIVATE_FETCH_COMPONENT
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.common.urls.URLUtils
@@ -16,7 +18,8 @@ import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.skeleton.common.AppStatusTracker
 import ai.platon.pulsar.skeleton.common.message.PageLoadStatusFormatter
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
-import ai.platon.pulsar.skeleton.common.persist.ext.*
+import ai.platon.pulsar.skeleton.common.persist.ext.eventHandlers
+import ai.platon.pulsar.skeleton.common.persist.ext.loadEventHandlers
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
 import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
@@ -28,7 +31,6 @@ import ai.platon.pulsar.skeleton.crawl.common.url.ListenableUrl
 import ai.platon.pulsar.skeleton.crawl.common.url.toCompletableListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.parse.ParseResult
-import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
 import java.net.URL
 import java.time.Duration
@@ -55,8 +57,6 @@ class LoadComponent(
     val statusTracker: AppStatusTracker? = null,
 ) : AutoCloseable {
     companion object {
-        private const val VAR_REFRESH = "refresh"
-        private const val VAR_CONNECT = "connect"
         val pageCacheHits = AtomicLong()
         val dbGetCount = AtomicLong()
 
@@ -122,9 +122,6 @@ class LoadComponent(
         }
     }
 
-    /**
-     * Connect a page to a web driver.
-     * */
     suspend fun open(normURL: NormURL, driver: WebDriver): WebPage {
         val page = createPageShell(normURL)
         require(page is AbstractWebPage)
@@ -132,6 +129,16 @@ class LoadComponent(
         val state = page.getVar(VAR_REFRESH)
         require(state is CheckState)
 
+        page.putBean(driver)
+        loadNormalURLWithEventHandlersDeferred(normURL, page)
+        return page
+    }
+
+    suspend fun capture(normURL: NormURL, driver: WebDriver): WebPage {
+        val page = createPageShell(normURL)
+        require(page is AbstractWebPage)
+
+        page.setVar(VAR_CAPTURE, VAR_CAPTURE)
         page.putBean(driver)
         loadNormalURLWithEventHandlersDeferred(normURL, page)
         return page
@@ -376,7 +383,7 @@ class LoadComponent(
     private suspend fun fetchContentIfNecessaryDeferred(normURL: NormURL, page: WebPage) {
         require(page is AbstractWebPage)
         when {
-            page.hasVar(VAR_CONNECT) -> fetchContentDeferred(page, normURL)
+            page.hasVar(VAR_CAPTURE) -> fetchContentDeferred(page, normURL)
             page.removeVar(VAR_REFRESH) != null -> fetchContentDeferred(page, normURL)
         }
     }

@@ -16,7 +16,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-bom</artifactId>
     <name>Pulsar BOM</name>
-    <version>4.1.0-SNAPSHOT</version>
+    <version>4.0.0-browseruse.3+build.3</version>
 
     <packaging>pom</packaging>
 
@@ -328,14 +328,21 @@
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-protocol-playwright</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-parse</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-browser</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-llm</artifactId>
@@ -411,19 +418,40 @@
     </dependencyManagement>
 
     <properties>
+        <!-- Build properties -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+        <ktor.version>2.3.11</ktor.version>
+        <springmockk.version>4.0.2</springmockk.version>
+        <version.maven-exec-plugin>3.3.0</version.maven-exec-plugin>
+        <mockito-junit-jupiter.version>5.11.0</mockito-junit-jupiter.version>
+
+        <langchain4j.version>1.5.0</langchain4j.version>
+
         <!-- Plugin versions -->
+        <!-- Overrides ai.platon:platon -->
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
         <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
         <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
         <maven-deploy-plugin.version>3.1.1</maven-deploy-plugin.version>
         <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
         <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
-        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
         <nexus-staging-maven-plugin.version>1.7.0</nexus-staging-maven-plugin.version>
         <checksum-maven-plugin.version>1.11</checksum-maven-plugin.version>
+        <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
         <license-maven-plugin.version>4.3</license-maven-plugin.version>
         <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
-        <dokka.version>1.9.10</dokka.version>
+
+        <junit5.version>5.12.1</junit5.version>
+        <surefire.excludedGroups>
+            TimeConsumingTest,ExternalServiceTest,IntegrationTest,E2ETest,HeavyTest,
+            TestInfraCheck,SkippableLowerLevelTest
+        </surefire.excludedGroups>
+        <kotlin.version>2.2.20</kotlin.version>
+        <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>
+        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
     </properties>
 </project>

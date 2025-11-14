@@ -124,7 +124,7 @@ class FingerprintTest {
         f2 = Fingerprint(BrowserType.PULSAR_CHROME, "127.0.0.2")
         assertTrue { f1 < f2 }
 
-        println("Compare with username ...")
+        // logPrintln("Compare with username ...")
         f1 = Fingerprint(BrowserType.PULSAR_CHROME, "127.0.0.1", "sa")
         f2 = Fingerprint(BrowserType.PULSAR_CHROME, "127.0.0.1", "sb")
         assertTrue { f1 < f2 }
@@ -186,3 +186,4 @@ class FingerprintTest {
         }
     }
 }
+

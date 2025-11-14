@@ -1,16 +1,20 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.driver.chrome.NetworkResourceResponse
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.browser.driver.chrome.dom.DomService
+import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.getTracerOrNull
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.URLUtils
+import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.dom.nodes.GeoAnchor
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.ai.tta.InstructionResult
-import ai.platon.pulsar.skeleton.ai.tta.TextToAction
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.common.annotations.Beta
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
@@ -20,70 +24,52 @@ import java.io.IOException
 import java.nio.file.Files
 import java.time.Duration
 import java.time.Instant
-import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.random.Random
 import kotlin.random.nextInt
 
+@Suppress("unused")
 abstract class AbstractWebDriver(
     val guid: String,
     override val browser: AbstractBrowser,
     override val id: Int = ID_SUPPLIER.incrementAndGet()
-): Comparable<AbstractWebDriver>, AbstractJvmWebDriver(), WebDriver, JvmWebDriver {
+) : Comparable<AbstractWebDriver>, AbstractJvmWebDriver(), WebDriver, JvmWebDriver {
     companion object {
         private val ID_SUPPLIER = AtomicInteger()
     }
 
     /**
-     * The state of the driver.
-     * */
-    enum class State {
-        /**
-         * The driver is initialized.
-         * */
-        INIT,
-        /**
-         * The driver is ready to work.
-         * */
-        READY,
-        /**
-         * The driver is working.
-         * */
-        WORKING,
-        /**
-         * The driver is retired and should be quit as soon as possible.
-         * */
-        RETIRED,
-        /**
-         * The driver is quit.
-         * */
-        QUIT;
-        /**
-         * Whether the driver is initialized.
-         * */
-        val isInit get() = this == INIT
-        /**
-         * Whether the driver is ready to work.
-         * */
-        val isReady get() = this == READY
-        /**
-         * Whether the driver is working.
-         * */
-        val isWorking get() = this == WORKING
-        /**
-         * Whether the driver is quit.
-         * */
-        val isQuit get() = this == QUIT
-        /**
-         * Whether the driver is retired and should be quit as soon as possible.
-         * */
-        val isRetired get() = this == RETIRED
-    }
-
-    override val parentSid: Int = -1
-
+     * Lifecycle-aware base implementation of [WebDriver].
+     *
+     * Responsibilities:
+     * - Maintain a lightweight navigation/session state (no heavy browser objects are stored here).
+     * - Provide higher-level convenience operations (attribute/property selection, scrolling helpers, delays).
+     * - Coordinate AI-assisted action generation (Text-To-Action) and dispatch via [ai.platon.pulsar.skeleton.ai.support.ToolCallExecutor].
+     * - Bridge between low-level browser protocol implementations and higher-level crawling / task logic.
+     *
+     * Threading model:
+     * - Instances are NOT intended to be shared concurrently across multiple coroutines performing conflicting
+     *   navigation or interaction tasks. External pool managers ensure exclusive assignment while in WORKING state.
+     * - Atomic flags/refs (state, canceled, crashed) allow safe status inspection.
+     *
+     * Reuse model:
+     * - A driver may be marked recyclable; once a task completes it transitions to READY and can be reused.
+     * - Non‑recyclable drivers (isRecyclable = false) are kept until explicitly closed / retired.
+     *
+     * State transitions (expected typical flow):
+     *   INIT -> READY -> WORKING -> READY (reuse) -> RETIRED -> QUIT
+     *   INIT -> WORKING (direct fast start) -> ...
+     *   Any -> RETIRED (external decision) -> QUIT (eventual disposal)
+     *
+     * Cancellation vs retirement:
+     * - cancel(): attempt to abort current activity but keep resources for reuse.
+     * - retire(): schedule the driver for disposal; it should not accept new work.
+     *
+     * Crash semantics:
+     * - A crashed flag indicates browser level failure; pools should treat the instance as non‑reusable and close it.
+     */
     /**
      * The state of the driver.
      * * [State.INIT]: The driver is initialized.
@@ -92,6 +78,51 @@ abstract class AbstractWebDriver(
      * * [State.RETIRED]: The driver is retired and should be quit as soon as possible.
      * * [State.QUIT]: The driver is quit.
      * */
+    enum class State {
+        /**
+         * Driver object created, underlying browser context may still be initializing.
+         */
+        INIT,
+
+        /**
+         * Ready to accept a task. No navigation or interaction is currently in progress.
+         */
+        READY,
+
+        /**
+         * A task (navigation / interaction pipeline) is in progress.
+         */
+        WORKING,
+
+        /**
+         * Marked for disposal. Should not receive new tasks. Will be closed ASAP.
+         */
+        RETIRED,
+
+        /**
+         * Fully closed: resources released and no further operations are valid.
+         */
+        QUIT;
+
+        /** Whether the driver is initialized. */
+        val isInit get() = this == INIT
+
+        /** Whether the driver is ready to work. */
+        val isReady get() = this == READY
+
+        /** Whether the driver is working. */
+        val isWorking get() = this == WORKING
+
+        /** Whether the driver is quit. */
+        val isQuit get() = this == QUIT
+
+        /** Whether the driver is retired and will be closed. */
+        val isRetired get() = this == RETIRED
+    }
+
+    override val parentSid: Int = -1
+
+    /** Atomic lifecycle state */
     private val state = AtomicReference(State.INIT)
 
     private val canceled = AtomicBoolean()
@@ -99,19 +130,19 @@ abstract class AbstractWebDriver(
 
     val settings get() = browser.settings
 
-    /**
-     * The probability to block a resource request if the request url is in probabilisticBlockedURLs.
-     * The probability must be in [0, 1].
-     * */
+    /** Probability applied to entries in [probabilisticBlockedURLs]. Value range: [0,1]. */
     val resourceBlockProbability get() = settings.resourceBlockProbability
 
+    // URL pattern lists (simple wildcard / regex semantics are enforced externally in the browser layer)
     protected val _blockedURLPatterns = mutableListOf<String>()
     protected val _probabilityBlockedURLPatterns = mutableListOf<String>()
     val blockedURLs: List<String> get() = _blockedURLPatterns
     val probabilisticBlockedURLs: List<String> get() = _probabilityBlockedURLPatterns
+
+    /** Whether browser connection / session channel is still live */
     val isConnectable get() = browser.isConnected
 
-    protected val enableStartupScript get() = settings.isStartupScriptEnabled
+    /** Accumulates init scripts (preload scripts) until first navigation. */
     protected val initScriptCache = mutableListOf<String>()
 
     private val jsoupCreateDestroyMonitor = Any()
@@ -119,152 +150,143 @@ abstract class AbstractWebDriver(
 
     private val config get() = browser.settings.config
 
-    private val chatModel get() = ChatModelFactory.getOrCreateOrNull(config)
+    open val chatModel get() = ChatModelFactory.getOrCreateOrNull(config)
+    open val implementation: Any = this
 
+    // TODO: Will move to WebDriver
+    @Beta
+    open val domService: DomService? = null
+
+    /** Idle timeout before a READY driver is considered stale and eligible for recycling/retirement. */
     var idleTimeout: Duration = Duration.ofMinutes(10)
     var lastActiveTime: Instant = Instant.now()
-    /**
-     * Whether the driver is idle. The driver is idle if it is not working for a period of time.
-     * */
+
+    /** Driver considered idle if [idleTimeout] elapsed since [lastActiveTime]. */
     val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
 
     val isActive get() = AppContext.isActive
 
     val isInit get() = state.get().isInit
     val isReady get() = state.get().isReady
-
     val isWorking get() = state.get().isWorking
     val isRetired get() = state.get().isRetired
     val isQuit get() = state.get().isQuit
 
+    /** True if a cooperative cancellation has been requested for current task. */
     val isCanceled get() = canceled.get()
+
+    /** True if underlying browser / protocol crashed. */
     val isCrashed get() = crashed.get()
 
-    val status: String get() {
-        val sb = StringBuilder()
-
-        val st = state.get() ?: return ""
-        val s = when (st) {
-            State.INIT -> "INIT"
-            State.READY -> "READY"
-            State.WORKING -> "WORKING"
-            State.RETIRED -> "RETIRED"
-            State.QUIT -> "QUIT"
+    /** Human-readable composite status string (e.g. WORKING,IDLE or READY,REUSED). */
+    val status: String
+        get() {
+            val sb = StringBuilder()
+            val st = state.get() ?: return ""
+            val s = when (st) {
+                State.INIT -> "INIT"
+                State.READY -> "READY"
+                State.WORKING -> "WORKING"
+                State.RETIRED -> "RETIRED"
+                State.QUIT -> "QUIT"
+            }
+            sb.append(s)
+            if (isCrashed) sb.append(",CRASHED")
+            if (isCanceled) sb.append(",CANCELED")
+            if (isIdle) sb.append(",IDLE")
+            if (isRecovered) sb.append(",RECOVERED")
+            if (isReused) sb.append(",REUSED")
+            return sb.toString()
         }
 
-        sb.append(s)
-
-        if (isCrashed) sb.append(",CRASHED")
-        if (isCanceled) sb.append(",CANCELED")
-        if (isIdle) sb.append(",IDLE")
-        if (isRecovered) sb.append(",RECOVERED")
-        if (isReused) sb.append(",REUSED")
-
-        return sb.toString()
-    }
-
-    open val supportJavascript: Boolean = true
-
+    /** True if pageSource is a mocked/fake value (e.g. offline / synthetic content). */
     open val isMockedPageSource: Boolean = false
 
+    /** Driver participated in a recovery workflow (e.g. auto relaunch) after crash. */
     var isRecovered: Boolean = false
 
+    /** Driver reused from pool after previous task. */
     var isReused: Boolean = false
 
     /**
-     * If a driver is recyclable, it should be closed after the task is done, and add to a standby pool,
-     * so it can be reused for other tasks.
-     *
-     * If a driver is not recyclable, it should be kept open and not be closed, and not be used by any other tasks.
-     * */
+     * If recyclable the driver returns to a standby pool post-task; else it remains dedicated until retired.
+     */
     var isRecyclable: Boolean = true
-    /**
-     * Whether the driver should calculate the DOM features.
-     *
-     * If true, the DOM features should be calculated using __pulsar_utils__.compute().
-     * */
+
+    /** Skip DOM feature computation if true (performance optimization for pure interaction tasks). */
     var ignoreDOMFeatures: Boolean = false
-    /**
-     * The name of the driver.
-     * */
+
+    /** Human friendly logical name (class simple name + id). */
     open val name get() = javaClass.simpleName + "-" + id
-    /**
-     * The navigate entry of the current page.
-     * */
+
+    /** Navigate entry for the current page (URL + metadata). */
     override var navigateEntry: NavigateEntry = NavigateEntry("")
-    /**
-     * The navigate history of this driver.
-     * */
+
+    /** History of navigation entries. */
     override val navigateHistory = NavigateHistory()
-    /**
-     * The delay policy of the driver.
-     * */
+
+    /** Delay policy (per action random delay ranges) derived from browser settings. */
     override val delayPolicy by lazy { browser.settings.interactSettings.generateRestrictedDelayPolicy() }
-    /**
-     * The timeout policy of the driver.
-     * */
+
+    /** Timeout policy (per action max durations) derived from browser settings. */
     override val timeoutPolicy by lazy { browser.settings.interactSettings.generateRestrictedTimeoutPolicy() }
-    /**
-     * The frames of the current page.
-     * */
+
+    /** Child frame drivers (if any) */
     override val frames: MutableList<WebDriver> = mutableListOf()
-    /**
-     * The opener of the current page.
-     * */
+
+    /** Page opener driver (if window opened by script / click) */
     override var opener: WebDriver? = null
-    /**
-     * The outgoing opened pages from the current page.
-     * */
+
+    /** Pages opened from this page (window.open, target=_blank, etc.) */
     override val outgoingPages: MutableSet<WebDriver> = mutableSetOf()
-    /**
-     * The associated data.
-     * */
+
+    /** Arbitrary contextual data store. */
     override val data: MutableMap<String, Any?> = mutableMapOf()
+
     /**
-     * Mark the driver as free, so it can be used to fetch a new page.
-     * */
+     * Transition to READY (available for assignment). Resets cancellation/crash flags.
+     * Must only be called after INIT or WORKING states.
+     */
     fun free() {
         canceled.set(false)
         crashed.set(false)
         if (!isInit && !isWorking) {
-            // It's a bad idea to throw an exception, which lead to inconsistency within the ConcurrentStatefulDriverPool.
-            // throw IllegalWebDriverStateException("The driver is expected to be INIT or WORKING to be ready, actually $state")
+            // Intentionally left blank: avoiding exception to prevent pool inconsistency.
         }
         state.set(State.READY)
     }
 
     /**
-     * Mark the driver as working, so it can not be used to do any another tasks.
-     * */
+     * Transition to WORKING (exclusive usage). Resets cancellation/crash flags.
+     */
     fun startWork() {
         canceled.set(false)
         crashed.set(false)
         if (!isInit && !isReady) {
-            // It's a bad idea to throw an exception, which lead to inconsistency within the ConcurrentStatefulDriverPool.
-            // throw IllegalWebDriverStateException("The driver is expected to be INIT or READY to work, actually $state")
+            // Intentionally left blank: soft transition without throwing.
         }
         state.set(State.WORKING)
     }
 
-    /**
-     * Mark the driver as retired, so it can not be used to fetch any page,
-     * and should be quit as soon as possible.
-     * */
+    /** Mark for disposal after current task. */
     fun retire() = state.set(State.RETIRED)
-    /**
-     * Mark the driver as canceled, so the fetch process should return as soon as possible,
-     * and the fetch result should be dropped.
-     * */
+
+    /** Request cooperative cancellation of current task (best-effort). */
     fun cancel() {
         canceled.set(true)
     }
 
     override fun jvm(): JvmWebDriver = this
 
+
     val mainRequestHeaders: Map<String, Any> get() = navigateEntry.mainRequestHeaders
+
     val mainRequestCookies: List<Map<String, String>> get() = navigateEntry.mainRequestCookies
+
     val mainResponseStatus: Int get() = navigateEntry.mainResponseStatus
+
     val mainResponseStatusText: String get() = navigateEntry.mainResponseStatusText
+
     val mainResponseHeaders: Map<String, Any> get() = navigateEntry.mainResponseHeaders
 
     override suspend fun addInitScript(script: String) {
@@ -273,6 +295,9 @@ abstract class AbstractWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun navigateTo(url: String) = navigateTo(NavigateEntry(url))
+
+    @Throws(WebDriverException::class)
+    override suspend fun reload() { evaluate("location.reload(true)") }
 
     override suspend fun currentUrl(): String = evaluate("document.URL", navigateEntry.url)
 
@@ -292,25 +317,9 @@ abstract class AbstractWebDriver(
     override suspend fun chat(prompt: String, selector: String): ModelResponse {
         val chatModel = chatModel ?: return ModelResponse.LLM_NOT_AVAILABLE
         val textContent = selectFirstTextOrNull(selector) ?: return ModelResponse.EMPTY
-        val textContent0 = textContent.take(chatModel.settings.maximumLength)
-
+        val textContent0 = textContent.take(chatModel.settings.maximumInputTokenLength)
         val prompt2 = "$prompt\n\n\nThere is the text content of the selected element:\n\n\n$textContent0"
-
         return chatModel.call(prompt2)
-    }
-
-    @Throws(WebDriverException::class)
-    override suspend fun instruct(prompt: String): InstructionResult {
-        // Converts the prompt into a sequence of webdriver actions using TextToAction.
-        val tta = TextToAction(config)
-        val actions = tta.generateWebDriverActions(prompt)
-
-        // Dispatches and executes each action using a SimpleCommandDispatcher.
-        val dispatcher = SimpleCommandDispatcher()
-        val functionResults = actions.functionCalls.map { action ->
-            dispatcher.execute(action, this)
-        }
-        return InstructionResult(actions.functionCalls, functionResults, actions.modelResponse)
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -325,35 +334,145 @@ abstract class AbstractWebDriver(
         return evaluateValue(expression) as? T ?: defaultValue
     }
 
+    // --------------------------- Attribute helpers ---------------------------
+    // The following group relies on injected __pulsar_utils__ helper functions inside the page context.
+
     @Throws(WebDriverException::class)
     override suspend fun isVisible(selector: String): Boolean {
-        return evaluate("__pulsar_utils__.isVisible('$selector')") == "true"
+        val safeSelector = Strings.escapeJsString(selector)
+        return evaluateValue("__pulsar_utils__.isVisible('$safeSelector')") == true
     }
 
     override suspend fun isChecked(selector: String): Boolean {
-        return evaluate("__pulsar_utils__.isChecked('$selector')") == "true"
+        val safeSelector = Strings.escapeJsString(selector)
+        return evaluateValue("__pulsar_utils__.isChecked('$safeSelector')") == true
     }
 
     @Throws(WebDriverException::class)
     override suspend fun scrollDown(count: Int) {
-        repeat(count) {
-            evaluate("__pulsar_utils__.scrollDown()")
-        }
+        repeat(count) { evaluate("window.scrollBy(0, 500);") }
     }
 
     @Throws(WebDriverException::class)
     override suspend fun scrollUp(count: Int) {
-        evaluate("__pulsar_utils__.scrollUp()")
+        evaluate("window.scrollBy(0, -500);")
+    }
+
+    @Throws(WebDriverException::class)
+    override suspend fun scrollBy(pixels: Double, smooth: Boolean): Double {
+        val js = """
+(async (delta, smooth) => {
+    if (!document || !document.documentElement || !document.body) return null;
+
+    const totalHeight = Math.min(
+        Math.max(document.documentElement.scrollHeight, document.body.scrollHeight),
+        15000
+    );
+    const viewportHeight = window.innerHeight;
+    const currentY = window.scrollY;
+
+    // 计算目标位置，并限制在可滚动范围内
+    const targetY = Math.max(0, Math.min(totalHeight - viewportHeight, currentY + delta));
+
+    // 执行滚动
+    window.scrollTo({
+        top: targetY,
+        behavior: smooth ? 'smooth' : 'instant'
+    });
+
+    // 如果启用平滑滚动，则等待动画结束
+    if (smooth) {
+        const start = performance.now();
+        while (Math.abs(window.scrollY - targetY) > 1 && performance.now() - start < 2000) {
+            await new Promise(r => setTimeout(r, 50));
+        }
+    }
+
+    return window.scrollY;
+})($pixels, ${if (smooth) "true" else "false"});
+    """.trimIndent()
+
+        return (evaluate(js) as? Number)?.toDouble() ?: 0.0
     }
 
     @Throws(WebDriverException::class)
     override suspend fun scrollToTop() {
-        evaluate("__pulsar_utils__.scrollToTop()")
+        val js = """
+(async () => {
+    if (!document?.documentElement || !document?.body) return;
+
+    const docEl = document.documentElement;
+    const body = document.body;
+
+    const totalHeight = Math.min(
+        Math.max(docEl.scrollHeight, body.scrollHeight, docEl.clientHeight),
+        15000
+    );
+    const viewportHeight = window.innerHeight || docEl.clientHeight || 800;
+
+    const startY = window.scrollY || window.pageYOffset || docEl.scrollTop || body.scrollTop || 0;
+    const targetY = 0;
+
+    const distance = targetY - startY; // negative or zero
+    const stepSize = Math.max(64, Math.floor(viewportHeight * 0.8));
+    let steps = Math.ceil(Math.abs(distance) / stepSize);
+    steps = Math.max(1, Math.min(steps, 100));
+
+    for (let i = 1; i <= steps; i++) {
+        const y = startY + (distance * i) / steps;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        const start = performance.now();
+        while (Math.abs(window.scrollY - y) > 1 && performance.now() - start < 600) {
+            await new Promise(r => setTimeout(r, 20));
+        }
+        // settle a bit to allow lazy-loaders
+        await new Promise(r => setTimeout(r, 20));
+    }
+
+    window.scrollTo({ top: targetY, behavior: 'smooth' });
+})();
+        """.trimIndent()
+        evaluate(js)
     }
 
     @Throws(WebDriverException::class)
     override suspend fun scrollToBottom() {
-        evaluate("__pulsar_utils__.scrollToBottom()")
+        val js = """
+(async () => {
+    if (!document || !document.documentElement || !document.body) return;
+
+    const docEl = document.documentElement;
+    const body = document.body;
+
+    const totalHeight = Math.min(
+        Math.max(docEl.scrollHeight, body.scrollHeight, docEl.clientHeight),
+        15000
+    );
+    const viewportHeight = window.innerHeight || docEl.clientHeight || 800;
+
+    const startY = window.scrollY || window.pageYOffset || docEl.scrollTop || body.scrollTop || 0;
+    const targetY = Math.max(0, totalHeight - viewportHeight);
+
+    const distance = targetY - startY; // positive or zero
+    const stepSize = Math.max(64, Math.floor(viewportHeight * 0.8));
+    let steps = Math.ceil(Math.abs(distance) / stepSize);
+    steps = Math.max(1, Math.min(steps, 100));
+
+    for (let i = 1; i <= steps; i++) {
+        const y = startY + (distance * i) / steps;
+        window.scrollTo({ top: y, behavior: 'smooth' });
+        const start = performance.now();
+        while (Math.abs(window.scrollY - y) > 1 && performance.now() - start < 600) {
+            await new Promise(r => setTimeout(r, 20));
+        }
+        // settle a bit to allow lazy-loaders
+        await new Promise(r => setTimeout(r, 20));
+    }
+
+    window.scrollTo({ top: targetY, behavior: 'smooth' });
+})();
+        """.trimIndent()
+        evaluate(js)
     }
 
     @Throws(WebDriverException::class)
@@ -361,14 +480,51 @@ abstract class AbstractWebDriver(
         evaluate("__pulsar_utils__.scrollToMiddle($ratio)")
     }
 
-    @Throws(WebDriverException::class)
-    override suspend fun scrollToScreen(screenNumber: Double) {
-        evaluate("__pulsar_utils__.scrollToScreen($screenNumber)")
+    /**
+     * Scrolls to the position of the n-th viewport.
+     *
+     * @param n Viewport index (1 represents the first screen)
+     * @param smooth Whether to use smooth scrolling
+     * @return Actual scrollY pixel value after scrolling
+     */
+    override suspend fun scrollToViewport(n: Double, smooth: Boolean): Double {
+        val js = """
+(async (n, smooth) => {
+    if (!document?.documentElement || !document?.body) return null;
+
+    const viewportHeight = window.innerHeight;
+    const totalHeight = Math.min(
+        Math.max(document.documentElement.scrollHeight, document.body.scrollHeight),
+        15000
+    );
+
+    const targetY = Math.max(0, Math.min(totalHeight - viewportHeight, (n - 1) * viewportHeight));
+
+    // 执行滚动
+    window.scrollTo({
+        top: targetY,
+        behavior: smooth ? 'smooth' : 'instant'
+    });
+
+    // 若是平滑滚动，则等待滚动稳定
+    if (smooth) {
+        const start = performance.now();
+        while (Math.abs(window.scrollY - targetY) > 1 && performance.now() - start < 2000) {
+            await new Promise(r => setTimeout(r, 50));
+        }
+    }
+
+    return window.scrollY;
+})($n, ${if (smooth) "true" else "false"});
+    """.trimIndent()
+
+        return (evaluate(js) as? Number)?.toDouble() ?: 0.0
     }
 
     @Throws(WebDriverException::class)
     override suspend fun clickNthAnchor(n: Int, rootSelector: String): String? {
-        val result = evaluate("__pulsar_utils__.clickNthAnchor($n, '$rootSelector')")
+        val safeRootSelector = Strings.escapeJsString(rootSelector)
+        val result = evaluate("__pulsar_utils__.clickNthAnchor($n, '$safeRootSelector')")
         return result?.toString()
     }
 
@@ -377,34 +533,53 @@ abstract class AbstractWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun outerHTML(selector: String): String? {
-        val result = evaluate("__pulsar_utils__.outerHTML('$selector')")
-        return result?.toString()
+        val safeSelector = Strings.escapeJsString(selector)
+        val js = """
+(() => {
+    const element = document.querySelector(selector);
+    return element?.outerHTML ?? null;
+})($safeSelector)
+        """.trimIndent()
+        // return evaluateValue("__pulsar_utils__.outerHTML('$safeSelector')")?.toString()
+        return evaluateValue(js)?.toString()
+    }
+
+    override suspend fun textContent(): String? {
+        return evaluateValue("document.body.textContent")?.toString()
+    }
+
+    override suspend fun extract(fields: Map<String, String>): Map<String, String?> {
+        return fields.entries.associate { it.key to selectFirstTextOrNull(it.value) }
     }
 
     @Throws(WebDriverException::class)
     override suspend fun selectFirstTextOrNull(selector: String): String? {
-        val result = evaluate("__pulsar_utils__.selectFirstText('$selector')")
-        return result?.toString()
+        val safeSelector = Strings.escapeJsString(selector)
+        val js = """
+((selector) => {
+    const element = document.querySelector(selector);
+    return element?.textContent ?? null;
+})('$safeSelector')
+        """.trimIndent()
+        return evaluateValue(js)?.toString()
     }
 
     @Throws(WebDriverException::class)
     override suspend fun selectTextAll(selector: String): List<String> {
-        val json = evaluate("__pulsar_utils__.selectTextAll('$selector')")?.toString()?: "[]"
-        val result: List<String> = jacksonObjectMapper().readValue(json)
-        return result
+        val safeSelector = Strings.escapeJsString(selector)
+        val json = evaluate("__pulsar_utils__.selectTextAll('$safeSelector')")?.toString() ?: "[]"
+        return jacksonObjectMapper().readValue(json)
     }
-
-
-
 
     @Throws(WebDriverException::class)
     override suspend fun selectFirstAttributeOrNull(selector: String, attrName: String): String? {
-        val result = evaluate("__pulsar_utils__.selectFirstAttribute('$selector', '$attrName')")
-        return result?.toString()
+        val safeSelector = Strings.escapeJsString(selector)
+        return evaluateValue("__pulsar_utils__.selectFirstAttribute('$safeSelector', '$attrName')")?.toString()
     }
 
     override suspend fun selectAttributes(selector: String): Map<String, String> {
-        val json = evaluate("__pulsar_utils__.selectAttributes('$selector')")?.toString() ?: return mapOf()
+        val safeSelector = Strings.escapeJsString(selector)
+        val json = evaluate("__pulsar_utils__.selectAttributes('$safeSelector')")?.toString() ?: return mapOf()
         val attributes: List<String> = jacksonObjectMapper().readValue(json)
         return attributes.zipWithNext().associate { it }
     }
@@ -412,129 +587,101 @@ abstract class AbstractWebDriver(
     @Throws(WebDriverException::class)
     override suspend fun selectAttributeAll(selector: String, attrName: String, start: Int, limit: Int): List<String> {
         val end = start + limit
-        val expression = "__pulsar_utils__.selectAttributeAll('$selector', '$attrName', $start, $end)"
+        val safeSelector = Strings.escapeJsString(selector)
+        val expression = "__pulsar_utils__.selectAttributeAll('$safeSelector', '$attrName', $start, $end)"
         val json = evaluate(expression)?.toString() ?: return listOf()
         return jacksonObjectMapper().readValue(json)
     }
 
     @Throws(WebDriverException::class)
     override suspend fun setAttribute(selector: String, attrName: String, attrValue: String) {
-        evaluate("__pulsar_utils__.setAttribute('$selector', '$attrName', '$attrValue')")
+        val safeSelector = Strings.escapeJsString(selector)
+        evaluate("__pulsar_utils__.setAttribute('$safeSelector', '$attrName', '$attrValue')")
     }
 
     @Throws(WebDriverException::class)
     override suspend fun setAttributeAll(selector: String, attrName: String, attrValue: String) {
-        evaluate("__pulsar_utils__.setAttributeAll('$selector', '$attrName', '$attrValue')")
+        val safeSelector = Strings.escapeJsString(selector)
+        evaluate("__pulsar_utils__.setAttributeAll('$safeSelector', '$attrName', '$attrValue')")
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    // --------------------------- Property helpers ---------------------------
     @Throws(WebDriverException::class)
     override suspend fun selectFirstPropertyValueOrNull(selector: String, propName: String): String? {
-        val result = evaluate("__pulsar_utils__.selectFirstPropertyValue('$selector', '$propName')")
-        return result?.toString()
+        val safeSelector = Strings.escapeJsString(selector)
+        return evaluateValue("__pulsar_utils__.selectFirstPropertyValue('$safeSelector', '$propName')")?.toString()
+//        val safePropName = Strings.escapeForJsString(propName)
+        // return evaluateValue(selector, "function() { return this['$safePropName']; }")?.toString()
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun selectPropertyValueAll(selector: String, propName: String, start: Int, limit: Int): List<String> {
+    override suspend fun selectPropertyValueAll(
+        selector: String, propName: String, start: Int, limit: Int
+    ): List<String> {
         val end = start + limit
-        val expression = "__pulsar_utils__.selectPropertyValueAll('$selector', '$propName', $start, $end)"
+        val safeSelector = Strings.escapeJsString(selector)
+        val expression = "__pulsar_utils__.selectPropertyValueAll('$safeSelector', '$propName', $start, $end)"
         val json = evaluate(expression)?.toString() ?: return listOf()
         return jacksonObjectMapper().readValue(json)
     }
 
     @Throws(WebDriverException::class)
     override suspend fun setProperty(selector: String, propName: String, propValue: String) {
-        evaluate("__pulsar_utils__.setProperty('$selector', '$propName', '$propValue')")
+        val safeSelector = Strings.escapeJsString(selector)
+        evaluate("__pulsar_utils__.setProperty('$safeSelector', '$propName', '$propValue')")
     }
 
     @Throws(WebDriverException::class)
     override suspend fun setPropertyAll(selector: String, propName: String, propValue: String) {
-        evaluate("__pulsar_utils__.setPropertyAll('$selector', '$propName', '$propValue')")
+        val safeSelector = Strings.escapeJsString(selector)
+        evaluate("__pulsar_utils__.setPropertyAll('$safeSelector', '$propName', '$propValue')")
     }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
-     * Find hyperlinks in elements matching the CSS query.
-     * */
+     * Find hyperlinks in elements matching the selector.
+     * NOTE: Currently constructs absolute URLs by concatenating baseURI and raw href; TODO: robust resolution & abs: support.
+     */
     @Throws(WebDriverException::class)
     override suspend fun selectHyperlinks(selector: String, offset: Int, limit: Int): List<Hyperlink> {
-        // TODO: add __pulsar_utils__.selectHyperlinks()
-        // TODO: do not support abs prefix
+        // TODO: add __pulsar_utils__.selectHyperlinks() and proper relative URL resolution
         val baseURI = baseURI().trimEnd('/')
-        return selectAttributeAll(selector, "href", offset, limit)
-            .map { Hyperlink("$baseURI/$it") }
+        return selectAttributeAll(selector, "href", offset, limit).map { Hyperlink("$baseURI/$it") }
     }
 
-    /**
-     * Find image elements matching the CSS query.
-     * */
+    /** Select anchors (link + coordinates) – placeholder implementation until util binding available. */
     @Throws(WebDriverException::class)
     override suspend fun selectAnchors(selector: String, offset: Int, limit: Int): List<GeoAnchor> {
-        // TODO: add __pulsar_utils__.selectAnchors()
         return selectAttributeAll(selector, "abs:href").drop(offset).take(limit).map { GeoAnchor(it, "") }
     }
 
-    /**
-     * Find image elements matching the CSS query.
-     * */
+    /** Select image URLs (abs:src) – placeholder implementation. */
     @Throws(WebDriverException::class)
     override suspend fun selectImages(selector: String, offset: Int, limit: Int): List<String> {
-        // TODO: add __pulsar_utils__.selectImages()
         return selectAttributeAll(selector, "abs:src").drop(offset).take(limit)
     }
 
     @Throws(WebDriverException::class)
     override suspend fun clickTextMatches(selector: String, pattern: String, count: Int) {
-        evaluate("__pulsar_utils__.clickTextMatches('$selector', '$pattern')")
+        val safeSelector = Strings.escapeJsString(selector)
+        evaluate("__pulsar_utils__.clickTextMatches('$safeSelector', '$pattern')")
     }
 
     @Throws(WebDriverException::class)
     override suspend fun clickMatches(selector: String, attrName: String, pattern: String, count: Int) {
-        evaluate("__pulsar_utils__.clickMatches('$selector', '$attrName', '$pattern')")
+        val safeSelector = Strings.escapeJsString(selector)
+        evaluate("__pulsar_utils__.clickMatches('$safeSelector', '$attrName', '$pattern')")
     }
 
     @Throws(WebDriverException::class)
     override suspend fun check(selector: String) {
-        evaluate("__pulsar_utils__.check('$selector')")
+        val safeSelector = Strings.escapeJsString(selector)
+        evaluate("__pulsar_utils__.check('$safeSelector')")
     }
 
     @Throws(WebDriverException::class)
     override suspend fun uncheck(selector: String) {
-        evaluate("__pulsar_utils__.uncheck('$selector')")
+        val safeSelector = Strings.escapeJsString(selector)
+        evaluate("__pulsar_utils__.uncheck('$safeSelector')")
     }
 
     @Throws(WebDriverException::class)
@@ -554,20 +701,16 @@ abstract class AbstractWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun waitUntil(predicate: suspend () -> Boolean) = waitUntil(timeout("waitUntil"), predicate)
-
     override suspend fun waitUntil(timeout: Duration, predicate: suspend () -> Boolean) =
         waitUntil("waitUtil", timeout, predicate)
 
     protected suspend fun waitUntil(type: String, timeout: Duration, predicate: suspend () -> Boolean): Duration {
         val startTime = Instant.now()
         var elapsedTime = Duration.ZERO
-
-        // it's OK to wait using a while loop, because all the operations are coroutines
         while (elapsedTime < timeout && !predicate()) {
             gap(type)
             elapsedTime = DateTimes.elapsedTime(startTime)
         }
-
         return timeout - elapsedTime
     }
 
@@ -575,14 +718,11 @@ abstract class AbstractWebDriver(
         val startTime = Instant.now()
         var elapsedTime = Duration.ZERO
         var result: T? = supplier()
-
-        // it's OK to wait using a while loop, because all the operations are coroutines
         while (elapsedTime < timeout && result == null) {
             gap(type)
             result = supplier()
             elapsedTime = DateTimes.elapsedTime(startTime)
         }
-
         return result
     }
 
@@ -598,12 +738,7 @@ abstract class AbstractWebDriver(
      * this suspending function is waiting, this function immediately resumes with CancellationException.
      * */
     protected suspend fun gap() {
-        if (!isActive) {
-            // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
-        }
-
-        // Delays coroutine for a given time without blocking a thread and resumes it after a specified time.
-        delay(randomDelayMillis("gap"))
+        if (!isActive) return; delay(randomDelayMillis("gap"))
     }
 
     /**
@@ -614,7 +749,7 @@ abstract class AbstractWebDriver(
      * */
     protected suspend fun gap(type: String) {
         if (!isActive) {
-            // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
+            return
         }
 
         delay(randomDelayMillis(type))
@@ -627,31 +762,44 @@ abstract class AbstractWebDriver(
      * this suspending function is waiting, this function immediately resumes with CancellationException.
      * */
     protected suspend fun gap(millis: Long) {
-        if (!isActive) {
-            // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
-        }
-
-        delay(millis)
+        if (!isActive) return; delay(millis)
     }
 
-    @Throws(WebDriverException::class)
+    /**
+     * Generate a random delay in milliseconds for an action.
+     * @param action Named action bucket (fallbacks: specific -> default -> provided fallback range).
+     * @param fallback Used if policy values are missing / invalid.
+     */
+    fun randomDelayMillis(action: String, fallback: IntRange = 500..1000): Long {
+        val default = delayPolicy["default"] ?: fallback
+        var range = delayPolicy[action] ?: default
+        if (range.first <= 0 || range.last > 10000) {
+            range = fallback
+        }
+        return Random.nextInt(range).toLong()
+    }
+
+    fun timeout(action: String, fallback: Duration = Duration.ofSeconds(60)): Duration {
+        return timeoutPolicy[action] ?: timeoutPolicy["default"] ?: timeoutPolicy[""] ?: fallback
+    }
+
+    private fun getHeadersAndCookies(): Pair<Map<String, String>, List<Map<String, String>>> = runBlocking {
+        val headers = mainRequestHeaders.entries.associate { it.key to it.value.toString() }
+        val cookies = getCookies()
+        headers to cookies
+    }
+
     override suspend fun newJsoupSession(): Connection {
         val headers = mainRequestHeaders.entries.associate { it.key to it.value.toString() }
         val cookies = getCookies()
-
         return newSession(headers, cookies)
     }
 
     @Throws(IOException::class)
     override suspend fun loadJsoupResource(url: String): Connection.Response {
-        val jsession: Connection = synchronized(jsoupCreateDestroyMonitor) {
-            jsoupSession ?: createJsoupSession()
-        }
+        val jsession: Connection = synchronized(jsoupCreateDestroyMonitor) { jsoupSession ?: createJsoupSession() }
         jsoupSession = jsession
-
-        return withContext(Dispatchers.IO) {
-            jsession.newRequest().url(url).execute()
-        }
+        return withContext(Dispatchers.IO) { jsession.newRequest().url(url).execute() }
     }
 
     private fun createJsoupSession(): Connection {
@@ -664,73 +812,27 @@ abstract class AbstractWebDriver(
         return NetworkResourceHelper.fromJsoup(loadJsoupResource(url))
     }
 
+
     override fun equals(other: Any?): Boolean = this === other || (other is AbstractWebDriver && other.id == this.id)
-
     override fun hashCode(): Int = id
-
     override fun compareTo(other: AbstractWebDriver): Int = id - other.id
-
     override fun toString(): String = "#$id"
-    /**
-     * Force the page stop all navigations and RELEASES all resources.
-     * If a web driver is terminated, it should not be used any more and should be quit
-     * as soon as possible.
-     * */
-    @Throws(WebDriverException::class)
+
+
     open suspend fun terminate() {
         stop()
     }
 
-    /** Wait until the tab is terminated and closed. */
     @Throws(Exception::class)
-    open fun awaitTermination() {
-
+    open fun awaitTermination() { /* default no-op */
     }
 
     override fun close() {
-        if (isQuit) {
-            return
-        }
-
+        if (isQuit) return
         state.set(State.QUIT)
         runCatching { runBlocking { stop() } }.onFailure { warnForClose(this, it) }
     }
 
-    /**
-     * Generate a random delay in milliseconds.
-     *
-     * The generated delay time is an int random value uniformly distributed in a specified range.
-     *
-     * The delay range should be in [1, 10000], and the default range is [500, 1000].
-     * */
-    fun randomDelayMillis(action: String, fallback: IntRange = 500..1000): Long {
-        val default = delayPolicy["default"] ?: fallback
-        var range = delayPolicy[action] ?: default
-
-        if (range.first <= 0 || range.last > 10000) {
-            range = fallback
-        }
-
-        return Random.nextInt(range).toLong()
-    }
-
-    fun timeout(action: String, fallback: Duration = Duration.ofSeconds(60)): Duration {
-        return timeoutPolicy[action] ?: timeoutPolicy["default"] ?: timeoutPolicy[""] ?: fallback
-    }
-
-    private fun getHeadersAndCookies(): Pair<Map<String, String>, List<Map<String, String>>> {
-        return runBlocking {
-            val headers = mainRequestHeaders.entries.associate { it.key to it.value.toString() }
-            val cookies = getCookies()
-
-            headers to cookies
-        }
-    }
-
-    /**
-     * Create a new session with the same context of the browser: headers, cookies, proxy, etc.
-     * The browser should be initialized by opening a page before the session is created.
-     * */
     private fun newSession(headers: Map<String, String>, cookies: List<Map<String, String>>): Connection {
         val httpTimeout = Duration.ofSeconds(20)
         val session = Jsoup.newSession()
@@ -738,44 +840,31 @@ abstract class AbstractWebDriver(
             .headers(headers)
             .ignoreContentType(true)
             .ignoreHttpErrors(true)
-
         session.userAgent(browser.userAgent)
-
         if (cookies.isNotEmpty()) {
             session.cookies(cookies.first())
         }
-
-        // Since the browser uses the system proxy (by default),
-        // so the http connection should also use the system proxy
         val proxy = browser.id.fingerprint.proxyURI?.toString() ?: System.getenv("http_proxy")
         if (proxy != null && URLUtils.isStandard(proxy)) {
             val u = URLUtils.getURLOrNull(proxy)
             if (u != null) {
-                // TODO: sock proxy support
                 session.proxy(u.host, u.port)
             }
         }
-
         return session
     }
 
     fun checkState(action: String = ""): Boolean {
         if (!isActive) {
             return false
-            // throw IllegalWebDriverStateException("WebDriver is not active #$id | $navigateUrl", this)
         }
-
         if (isCanceled) {
-            // is it good to throw here?
-            // throw WebDriverCancellationException("WebDriver is canceled #$id | $navigateUrl", this)
             return false
         }
-
         if (action.isNotBlank()) {
             lastActiveTime = Instant.now()
             navigateEntry.refresh(action)
         }
-
         return isActive
     }
 
@@ -783,12 +872,9 @@ abstract class AbstractWebDriver(
         if (scripts.isBlank()) {
             return
         }
-
         val dir = browser.id.contextDir.resolve("driver.$id/js")
         Files.createDirectories(dir)
         val path = Files.writeString(dir.resolve("preload.all.js"), scripts)
-
-        val tracer = getTracerOrNull(this)
-        tracer?.trace("All injected js: {}", path.toUri())
+        getTracerOrNull(this)?.trace("All injected js: {}", path.toUri())
     }
 }

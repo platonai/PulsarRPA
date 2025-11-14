@@ -1,8 +1,9 @@
 package ai.platon.pulsar.protocol.browser.driver.playwright
 
-import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.NetworkResourceResponse
+import ai.platon.pulsar.browser.driver.chrome.dom.model.NanoDOMTree
 import ai.platon.pulsar.browser.driver.chrome.impl.ChromeImpl
+import ai.platon.pulsar.common.NotSupportedException
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.math.geometric.PointD
@@ -11,8 +12,9 @@ import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
+import com.microsoft.playwright.ElementHandle
 import com.microsoft.playwright.Page
+import com.microsoft.playwright.options.KeyboardModifier
 import com.microsoft.playwright.options.WaitUntilState
 import org.jsoup.Connection
 import java.time.Duration
@@ -42,11 +44,15 @@ class PlaywrightDriver(
 
     override val browserType: BrowserType = BrowserType.PLAYWRIGHT_CHROME
 
-    val implementation get() = page
+    override val implementation: Any get() = page
 
     private var credentials: Credentials? = null
 
     private var navigateUrl = ""
+
+    init {
+        logger.warn("**DO NOT** use this driver (PlaywrightDriver) in production, this driver is used only for test purpose")
+    }
 
     override suspend fun addBlockedURLs(urlPatterns: List<String>) {
         try {
@@ -56,14 +62,6 @@ class PlaywrightDriver(
         } catch (e: Exception) {
             rpc.handleWebDriverException(e, "addBlockedURLs")
         }
-    }
-
-    override suspend fun addProbabilityBlockedURLs(urlPatterns: List<String>) {
-        // Implement probability-based blocking logic here
-    }
-
-    override suspend fun setTimeouts(browserSettings: BrowserSettings) {
-        // Implement timeout settings logic here
     }
 
     /**
@@ -83,6 +81,18 @@ class PlaywrightDriver(
         } catch (e: Exception) {
             rpc.handleWebDriverException(e, "navigateTo", entry.url)
         }
+    }
+
+    override suspend fun reload() {
+        page.reload()
+    }
+
+    override suspend fun goBack() {
+        page.goBack()
+    }
+
+    override suspend fun goForward() {
+        page.goForward()
     }
 
     /**
@@ -245,6 +255,10 @@ class PlaywrightDriver(
         }
     }
 
+    override suspend fun nanoDOMTree(): NanoDOMTree {
+        throw NotSupportedException("Not supported by PlaywrightDriver")
+    }
+
     override suspend fun getCookies(): List<Map<String, String>> {
         return try {
             rpc.invokeDeferred("getCookies") {
@@ -394,7 +408,17 @@ class PlaywrightDriver(
                 page.bringToFront()
             }
         } catch (e: Exception) {
-            logger.warn("Failed to bring to front: ${e.message}")
+            rpc.handleWebDriverException(e, "bringToFront")
+        }
+    }
+
+    override suspend fun hover(selector: String) {
+        try {
+            rpc.invokeDeferred("hover") {
+                page.querySelector(selector).hover()
+            }
+        } catch (e: Exception) {
+            rpc.handleWebDriverException(e, "hover", selector)
         }
     }
 
@@ -459,13 +483,16 @@ class PlaywrightDriver(
     override suspend fun click(selector: String, count: Int) {
         try {
             rpc.invokeDeferred("click") {
-                repeat(count) {
-                    page.querySelector(selector).click()
-                }
+                page.querySelector(selector).click(ElementHandle.ClickOptions().setClickCount(count))
             }
         } catch (e: Exception) {
             rpc.handleWebDriverException(e, "click", "selector: $selector, count: $count")
         }
+    }
+
+    override suspend fun click(selector: String, modifier: String) {
+        val modifier = KeyboardModifier.valueOf(modifier.uppercase())
+        page.click(selector, Page.ClickOptions().setModifiers(listOf(modifier)))
     }
 
     override suspend fun clickTextMatches(selector: String, pattern: String, count: Int) {
@@ -769,15 +796,25 @@ class PlaywrightDriver(
         }
     }
 
+    @Throws(WebDriverException::class)
+    override suspend fun evaluateValue(selector: String, functionDeclaration: String): Any? {
+        return page.locator(selector).evaluate(functionDeclaration)
+    }
+
     /**
      * Captures a screenshot of the current page.
      * @return The screenshot as a base64 encoded string
      * @throws RuntimeException if screenshot capture fails
      */
-    override suspend fun captureScreenshot(): String? {
+    override suspend fun captureScreenshot(fullPage: Boolean): String? {
         return try {
             rpc.invokeDeferred("captureScreenshot") {
-                Base64.getEncoder().encodeToString(page.screenshot())
+                val options = Page.ScreenshotOptions()
+                if (fullPage) {
+                    options.setFullPage(true)
+                }
+                val src = page.screenshot(options)
+                Base64.getEncoder().encodeToString(src)
             }
         } catch (e: Exception) {
             rpc.handleWebDriverException(e, "captureScreenshot")
@@ -922,29 +959,6 @@ class PlaywrightDriver(
             page.close()
         } catch (e: Exception) {
             logger.warn("Error during close: ${e.message}")
-        }
-    }
-
-    private fun createJsEvaluate(evaluate: Evaluate?): JsEvaluation? {
-        evaluate ?: return null
-
-        val result = evaluate.result
-        val exception = evaluate.exceptionDetails
-        return if (exception != null) {
-            val jsException = JsException(
-                text = exception.text,
-                lineNumber = exception.lineNumber,
-                columnNumber = exception.columnNumber,
-                url = exception.url,
-            )
-            JsEvaluation(exception = jsException)
-        } else {
-            JsEvaluation(
-                value = result.value,
-                unserializableValue = result.unserializableValue,
-                className = result.className,
-                description = result.description
-            )
         }
     }
 

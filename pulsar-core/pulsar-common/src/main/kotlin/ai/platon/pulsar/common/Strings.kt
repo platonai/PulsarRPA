@@ -11,18 +11,18 @@ import kotlin.reflect.KClass
  *
  * @param obj The object whose class name is to be simplified.
  * @param fullNameCount The number of parts of the class name to keep as full names (default is 1).
- * @param partCount The total number of parts of the class name to include (default is 3).
+ * @param maxPartCount The max number of parts of the class name to include.
  * @return A simplified, human-readable class name.
  */
-fun readableClassName(obj: Any, fullNameCount: Int = 1, partCount: Int = 3): String {
+fun readableClassName(obj: Any, fullNameCount: Int = 1, maxPartCount: Int = 100): String {
     val names = when (obj) {
         is Class<*> -> obj.name.split(".")
         is KClass<*> -> obj.java.name.split(".")
         else -> obj::class.java.name.split(".")
-    }.takeLast(partCount)
+    }.takeLast(maxPartCount)
 
     val size = names.size
-    return names.mapIndexed { i, n -> n.takeIf { i >= size - fullNameCount } ?: n.substring(0, 1) }
+    return names.mapIndexed { i, n -> n.takeIf { i >= size - fullNameCount } ?: n.take(1) }
         .joinToString(".") {
             it.replace("Companion", "C").replace("$", "_")
         }
@@ -98,3 +98,4 @@ fun simplifyException(e: Throwable, prefix: String = "", postfix: String = ""): 
 
     return "$prefix$message$postfix"
 }
+

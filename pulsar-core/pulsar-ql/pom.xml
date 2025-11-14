@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>4.1.0-SNAPSHOT</version>
+        <version>4.0.0-browseruse.3+build.3</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
@@ -57,11 +57,13 @@
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-protocol</artifactId>
+            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-parse</artifactId>
         </dependency>
+
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-beans</artifactId>
@@ -121,6 +123,11 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-api</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-tests-common</artifactId>
             <scope>test</scope>
         </dependency>
     </dependencies>

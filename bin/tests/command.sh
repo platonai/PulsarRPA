@@ -1,7 +1,7 @@
 #!/bin/bash
 
 curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/json" -d '{
-  "url": "https://www.amazon.com/dp/B08PP5MSVB",
+  "url": ,
   "onBrowserLaunchedActions": [
   "clear browser cookies",
   "navigate to the home page",

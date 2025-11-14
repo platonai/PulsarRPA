@@ -78,7 +78,7 @@ enum class Priority13(val value: Int) {
             if (name == null) {
                 return null
             }
-            
+
             return entries.firstOrNull { it.name == name }
         }
 
@@ -132,23 +132,26 @@ enum class Priority21(val value: Int) {
     LOWEST(Int.MAX_VALUE / 10)
 }
 
-interface StartStopRunnable {
+interface StartStopRunnable: AutoCloseable {
     val isRunning: Boolean
     fun start()
     fun stop()
+    override fun close() = stop()
 
     fun restart() {
         stop()
         start()
     }
-    
+
     @Throws(InterruptedException::class)
     fun await() {}
 }
 
-class StartStopRunner(val runnable: StartStopRunnable) {
+class StartStopRunner(val runnable: StartStopRunnable): AutoCloseable {
     fun start() = runnable.start()
     fun stop() = runnable.stop()
+    fun restart() = runnable.restart()
+    override fun close() = stop()
 }
 
 /** Unsafe lazy, usually be used in single thread */
@@ -240,20 +243,20 @@ class PrioriClosable(
     override fun compareTo(other: PrioriClosable): Int {
         return priority.compareTo(other.priority)
     }
-    
+
     override fun hashCode(): Int {
         return 31 * priority + closeable.hashCode()
     }
-    
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
-        
+
         other as PrioriClosable
-        
+
         if (priority != other.priority) return false
         if (closeable != other.closeable) return false
-        
+
         return true
     }
 }

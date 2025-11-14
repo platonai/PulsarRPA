@@ -9,7 +9,7 @@ import ai.platon.pulsar.skeleton.PulsarSettings
  * */
 fun main() {
     // Use the default browser which has an isolated profile.
-    PulsarSettings().withDefaultBrowser()
+    PulsarSettings.withDefaultBrowser()
 
     val context = SQLContexts.create()
     val sql = """

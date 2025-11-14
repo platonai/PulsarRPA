@@ -7,23 +7,23 @@ import org.junit.jupiter.api.Assertions.*
 class PrivacyAgentTest {
     @org.junit.jupiter.api.Test
     fun testGetFingerprint() {
-        val privacyAgent = PrivacyAgent.createRandomTemp()
-        val fingerprint = privacyAgent.fingerprint
+        val profile = BrowserProfile.createRandomTemp()
+        val fingerprint = profile.fingerprint
         assertNotNull(fingerprint)
     }
     @org.junit.jupiter.api.Test
     fun testGetId() {
-        val privacyAgent = PrivacyAgent.createRandomTemp()
-        val id = privacyAgent.id
+        val profile = BrowserProfile.createRandomTemp()
+        val id = profile.id
         assertNotNull(id)
     }
-    
+
     @org.junit.jupiter.api.Test
     fun testToJSON() {
-        val privacyAgent = PrivacyAgent.createRandomTemp()
-        privacyAgent.fingerprint = Fingerprint.EXAMPLE
-        val json = prettyPulsarObjectMapper().writeValueAsString(privacyAgent)
-        val obj = prettyPulsarObjectMapper().readValue(json, PrivacyAgent::class.java)
-        assertEquals(privacyAgent, obj)
+        val profile = BrowserProfile.createRandomTemp()
+        profile.fingerprint = Fingerprint.EXAMPLE
+        val json = prettyPulsarObjectMapper().writeValueAsString(profile)
+        val obj = prettyPulsarObjectMapper().readValue(json, BrowserProfile::class.java)
+        assertEquals(profile, obj)
     }
 }

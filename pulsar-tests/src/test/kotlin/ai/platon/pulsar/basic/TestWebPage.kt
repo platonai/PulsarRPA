@@ -6,8 +6,9 @@ import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
 import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.skeleton.common.message.PageLoadStatusFormatter
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.common.persist.ext.options
-import org.junit.jupiter.api.Assertions
+import ai.platon.pulsar.test.TestResourceUtil
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import java.time.Instant
@@ -18,7 +19,7 @@ import kotlin.test.*
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 class TestWebPage: TestBase() {
-    private val url = "https://www.amazon.com/dp/B08PP5MSVB"
+    private val url = TestResourceUtil.PRODUCT_DETAIL_URL
     private val groupId = 43853791
 
     @BeforeEach
@@ -69,14 +70,14 @@ class TestWebPage: TestBase() {
 
 //        val fetchTime2 = page.fetchTime
 
-        println(PageLoadStatusFormatter(page, "", true, true, true, true))
-        println("prevFetchTime: " + page.prevFetchTime)
-        println("fetchTime: " + page.fetchTime)
+        printlnPro(PageLoadStatusFormatter(page, "", true, true, true, true))
+        printlnPro("prevFetchTime: " + page.prevFetchTime)
+        printlnPro("fetchTime: " + page.fetchTime)
         val responseTime = page.metadata[Name.RESPONSE_TIME]?:""
-        println(responseTime)
-        println(Instant.now())
-        println("fetchCount: " + page.fetchCount)
-        println("fetchInterval: " + page.fetchInterval)
+        printlnPro(responseTime)
+        printlnPro(Instant.now())
+        printlnPro("fetchCount: " + page.fetchCount)
+        printlnPro("fetchInterval: " + page.fetchInterval)
 
         assertTrue { prevFetchTime1 < prevFetchTime2 }
 
@@ -118,11 +119,11 @@ class TestWebPage: TestBase() {
         assertNotNull(fieldGroup21)
         pageModel2.emplace(groupId, "", mapOf("c3" to "3", "d4" to "4"))
 
-        println("fieldGroup2.flatMap: " + fieldGroups2.flatMap {
+        printlnPro("fieldGroup2.flatMap: " + fieldGroups2.flatMap {
             it.fields.entries.map { e ->
                 "${e.key}(${e.key.javaClass.simpleName})" to "${e.value}(${e.value.javaClass.simpleName})"
             } }.associate { it.first to it.second })
-        println("fieldGroup2.fieldsCopy: " + fieldGroup2?.fieldsCopy)
+        printlnPro("fieldGroup2.fieldsCopy: " + fieldGroup2?.fieldsCopy)
 
 //        assertEquals("2", fieldGroup2.fields["b"])
         assertNull(fieldGroup2?.fieldsCopy?.get("b2"), "b2 should be cleared in emplace")
@@ -136,7 +137,8 @@ class TestWebPage: TestBase() {
         val pageModel3 = page3.pageModel
         val fieldGroup3 = pageModel2.findGroup(groupId)
         assertNotNull(pageModel3)
-        println("fieldGroup3.fieldsCopy: " + fieldGroup3?.fieldsCopy)
+        printlnPro("fieldGroup3.fieldsCopy: " + fieldGroup3?.fieldsCopy)
         assertEquals("4", fieldGroup3?.get("d4"))
     }
 }
+

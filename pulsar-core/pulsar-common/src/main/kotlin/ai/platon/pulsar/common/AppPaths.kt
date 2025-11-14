@@ -141,37 +141,13 @@ object AppPaths {
      * */
     @RequiredDirectory
     val PROXY_BASE_DIR = DATA_DIR.resolve("proxy")
-    
-    @RequiredDirectory
-    val ENABLED_PROVIDER_DIR = PROXY_BASE_DIR.resolve("providers-enabled")
-    
-    @RequiredDirectory
-    val AVAILABLE_PROVIDER_DIR = PROXY_BASE_DIR.resolve("providers-available")
-    
-    @RequiredDirectory
-    val ENABLED_PROXY_DIR = PROXY_BASE_DIR.resolve("proxies-enabled")
-    
-    @RequiredDirectory
-    val AVAILABLE_PROXY_DIR = PROXY_BASE_DIR.resolve("proxies-available")
-    
+
     @RequiredDirectory
     val PROXY_ARCHIVE_DIR = PROXY_BASE_DIR.resolve("proxies-archived")
-    
-    @RequiredFile
-    val PROXY_BANNED_HOSTS_FILE = PROXY_BASE_DIR.resolve("proxies-banned-hosts.txt")
-    
-    @RequiredFile
-    val PROXY_BANNED_SEGMENTS_FILE = PROXY_BASE_DIR.resolve("proxies-banned-segments.txt")
-    
-    @RequiredFile
-    val PROXY_BAN_STRATEGY = PROXY_BASE_DIR.resolve("proxy-ban-strategy.txt")
-    
+
     @RequiredFile
     val PATH_LOCAL_COMMAND = TMP_DIR.resolve("pulsar-commands")
-    
-    @RequiredFile
-    val PATH_BANNED_URLS = REPORT_DIR.resolve("banned-urls")
-    
+
     @RequiredFile
     val PATH_UNREACHABLE_HOSTS = REPORT_DIR.resolve("unreachable-hosts.txt")
     
@@ -263,7 +239,7 @@ object AppPaths {
     fun getRandomTmpDirectory(prefix: String = "", suffix: String = ""): Path =
         getTmpDirectory(prefix, RandomStringUtils.randomAlphabetic(18), suffix)
 
-    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getRandomTmpDirectory(first, *more)" ))
+    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getRandomTmpDirectory(prefix, suffix)" ))
     fun getRandomTmp(prefix: String = "", suffix: String = "") = getRandomTmpDirectory(prefix, suffix)
 
     /**
@@ -323,11 +299,8 @@ object AppPaths {
      * @param suffix the suffix of the directory name
      * @return the path in the process's temporary directory
      * */
-    fun getRandomProcTmpTmpDirectory(prefix: String = "", suffix: String = ""): Path =
+    fun getRandomProcTmpTmpPath(prefix: String = "", suffix: String = ""): Path =
         getProcTmpTmpDirectory(prefix + RandomStringUtils.randomAlphabetic(18) + suffix)
-
-    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getRandomProcTmpTmpDirectory(prefix, suffix)" ))
-    fun getRandomProcTmpTmp(prefix: String = "", suffix: String = "") = getRandomProcTmpTmpDirectory(prefix, suffix)
 
     fun getContextGroupDir(group: String) = CONTEXT_GROUP_BASE_DIR.resolve(group)
 

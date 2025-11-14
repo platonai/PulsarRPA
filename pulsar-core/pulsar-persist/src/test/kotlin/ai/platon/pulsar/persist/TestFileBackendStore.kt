@@ -5,13 +5,14 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.persist.gora.FileBackendPageStore
 import ai.platon.pulsar.persist.model.GoraWebPage
+import ai.platon.pulsar.test.TestResourceUtil
 import org.apache.commons.io.FileUtils
 import org.apache.commons.lang3.RandomUtils
 import java.nio.file.Files
 import kotlin.test.*
 
 class TestFileBackendStore {
-    private val url = "https://www.amazon.com/dp/B08PP5MSVB"
+    private val url = TestResourceUtil.PRODUCT_DETAIL_URL
     private val persistDirectory = AppPaths.TEST_DIR.resolve("unittests/TestFileBackendStore")
     private val store = FileBackendPageStore(persistDirectory)
     private lateinit var page: WebPage
@@ -45,7 +46,7 @@ class TestFileBackendStore {
         val loadedPage = store.readAvro(key)
         assertNotNull(loadedPage)
     }
-    
+
     @Test
     fun whenUpdatePageModel_ThenSuccess() {
         val url2 = url + "/" + RandomUtils.nextInt()
@@ -61,17 +62,17 @@ class TestFileBackendStore {
         assertNotNull(loadedPage)
         var pageModel = loadedPage.pageModel
         assertNotNull(pageModel)
-        
+
         val group = pageModel.findGroup(groupId)
         assertNotNull(group)
         assertEquals("1", group["a"])
         assertEquals("2", group["b"])
         assertNull(group["c"])
-        
+
         // updating
         pageModel.put(groupId, "c", "3")
         store.writeAvro(loadedPage)
-        
+
         val key2 = URLUtils.reverseUrl(url2)
         // check the updated version
         val loadedGPage2 = store.readAvro(key2)
@@ -79,9 +80,9 @@ class TestFileBackendStore {
         val loadedPage2 = GoraWebPage.box(url2, loadedGPage2, VolatileConfig.UNSAFE)
         pageModel = loadedPage2.pageModel
         assertNotNull(pageModel)
-        
+
         assertEquals("3", loadedPage2.ensurePageModel().findValue(groupId, "c"))
-        
+
         // clear
         pageModel.findGroup(groupId)?.clear()
         store.writeAvro(loadedPage2)

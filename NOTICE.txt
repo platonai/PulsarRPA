@@ -1,0 +1,16 @@
+NOTICE: Dual License Statement / 双重授权声明
+
+English:
+This project is licensed under two different open source licenses:
+- The main project (except where noted) is licensed under the Apache License, Version 2.0.
+- The module `pulsar-rest` is licensed under the GNU Affero General Public License v3.0 (AGPL v3).
+
+Please refer to the LICENSE file in the root directory for the Apache 2.0 license, and to pulsar-rest/LICENSE for the AGPL v3 license.
+
+中文：
+本项目采用双重开源协议：
+- 主项目（除特殊说明外）遵循 Apache License 2.0。
+- `browser4` 模块采用 GNU AGPL v3 协议。
+
+详情请参见根目录下的 LICENSE 文件和 browser4 目录下的 LICENSE 文件。
+

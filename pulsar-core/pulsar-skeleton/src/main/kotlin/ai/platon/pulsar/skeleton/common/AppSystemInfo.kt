@@ -29,7 +29,13 @@ class AppSystemInfo {
         val startTime = Instant.now()
         val elapsedTime get() = Duration.between(startTime, Instant.now())
 
-        val systemInfo = if (isOSHIAvailable()) SystemInfo() else null
+        val systemInfo: SystemInfo? by lazy {
+            when {
+                !AppContext.isActive -> null
+                isOSHIAvailable() -> SystemInfo()
+                else -> null
+            }
+        }
 
         /**
          * OSHI cached the value, so it's fast and safe to be called frequently.
@@ -159,6 +165,10 @@ class AppSystemInfo {
         }
 
         fun report() {
+            if (AppContext.isActive) {
+                return
+            }
+
             val si = SystemInfo()
 
             val versionInfo = si.operatingSystem.versionInfo

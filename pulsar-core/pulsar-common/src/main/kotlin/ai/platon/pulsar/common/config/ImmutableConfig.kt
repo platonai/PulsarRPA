@@ -11,18 +11,9 @@ open class ImmutableConfig : AbstractRelaxedConfiguration {
 
     constructor(): this(false)
 
-    constructor(loadDefaults: Boolean): this(
-        System.getProperty(CapabilityTypes.PROFILE_KEY, ""),
-        loadDefaults
-    )
+    constructor(loadDefaults: Boolean = false): super(MultiSourceProperties(loadDefaults))
 
-    constructor(
-        profile: String = System.getProperty(CapabilityTypes.PROFILE_KEY, ""),
-        loadDefaults: Boolean = true,
-        resources: Iterable<String> = mutableSetOf()
-    ): super(profile, loadDefaults, resources)
-
-    constructor(conf: LocalFileConfiguration) : super(conf)
+    constructor(props: MultiSourceProperties) : super(props)
 
     constructor(conf: ImmutableConfig) : super(conf.unbox()) {
         this.environment = conf.environment

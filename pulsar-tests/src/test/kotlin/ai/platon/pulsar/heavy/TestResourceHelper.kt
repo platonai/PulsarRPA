@@ -1,5 +1,6 @@
 package ai.platon.pulsar.heavy
 
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.AppPaths
 import java.nio.file.Path
 import java.time.OffsetDateTime
@@ -11,7 +12,7 @@ object TestResourceHelper {
      * Generate [n] temporary files in the local file system before all the tests.
      * */
     fun generateTestFiles(n: Int = 10000): ConcurrentSkipListSet<Path> {
-        val baseDir = AppPaths.getProcTmpTmp("PerformanceTest")
+        val baseDir = AppPaths.getProcTmpTmpDirectory("PerformanceTest")
 
         val testPaths = ConcurrentSkipListSet<Path>()
 
@@ -37,9 +38,10 @@ object TestResourceHelper {
             }
         }
 
-        println("Generated test files, size: ${testPaths.size}")
+        printlnPro("Generated test files, size: ${testPaths.size}")
 
         return testPaths
     }
 
 }
+

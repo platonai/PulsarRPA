@@ -103,7 +103,7 @@ object URLUtils {
      */
     @JvmStatic
     fun isMappedBrowserURL(url: String): Boolean {
-        return url.startsWith(AppConstants.BROWSER_SPECIFIC_URL_PREFIX)
+        return url.startsWith(AppConstants.BROWSER_INTERNAL_BASE_URL)
     }
 
     /**
@@ -116,7 +116,7 @@ object URLUtils {
     @JvmStatic
     fun browserURLToStandardURL(url: String): String {
         val encoded = URLEncoder.encode(url, Charsets.UTF_8)
-        val prefix = AppConstants.BROWSER_SPECIFIC_URL_PREFIX
+        val prefix = AppConstants.BROWSER_INTERNAL_BASE_URL
         return "$prefix?url=$encoded"
     }
 

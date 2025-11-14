@@ -7,14 +7,6 @@ import kotlin.test.assertTrue
 class ResourceWalkerTests {
 
     @Test
-    fun testList() {
-        val resourceWalker = ResourceWalker()
-        val paths = resourceWalker.list("data")
-        paths.forEach { println(it) }
-        assertTrue("html-charsets.txt" in paths.toString())
-    }
-
-    @Test
     fun testWalk() {
         val resource = "data/html-charsets.txt".replace("/", File.separator)
         var exists = false

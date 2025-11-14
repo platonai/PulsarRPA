@@ -1,0 +1,171 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #fafafa;
+}
+
+/* 顶部导航 */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #131921;
+    color: white;
+    padding: 10px;
+}
+.navbar .nav-center {
+    display: flex;
+    gap: 5px;
+    position: relative;
+}
+.navbar input {
+    padding: 6px;
+    border: none;
+    width: 250px;
+}
+.search-btn {
+    background: #febd69;
+    border: none;
+    padding: 6px 10px;
+    cursor: pointer;
+}
+.navbar a {
+    margin-left: 15px;
+    color: white;
+    text-decoration: none;
+    font-size: 0.9rem;
+}
+
+/* 布局 */
+.container {
+    display: flex;
+    margin-top: 10px;
+}
+
+.sidebar {
+    width: 220px;
+    padding: 15px;
+    background: #fff;
+    border-right: 1px solid #ddd;
+}
+.sidebar h3 {
+    margin-top: 20px;
+    font-size: 1rem;
+}
+
+/* 主区域 */
+.main-content {
+    flex: 1;
+    padding: 15px;
+}
+
+/* 横幅 */
+.hero {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #f3f3f3;
+    padding: 20px;
+    border-radius: 8px;
+}
+.hero-text h2 {
+    margin: 0;
+    font-size: 1.6rem;
+}
+.shop-btn {
+    margin-top: 10px;
+    background: #ff9900;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.hero-img img {
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+
+/* 产品列表 */
+.products-section {
+    margin-top: 30px;
+}
+.product-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    margin-top: 15px;
+}
+.product-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    padding: 10px;
+    text-align: center;
+    min-height: 250px;
+}
+.product-card img {
+    width: 100%;
+    height: 140px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+.product-title {
+    margin: 10px 0;
+    font-size: 0.95rem;
+}
+.product-price {
+    font-weight: bold;
+    color: #B12704;
+}
+
+/* 占位符 */
+.placeholder {
+    background: #eee;
+    width: 100%;
+    height: 140px;
+    border-radius: 4px;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+.placeholder-text {
+    background: #eee;
+    height: 16px;
+    margin: 8px auto;
+    width: 80%;
+    border-radius: 4px;
+    animation: pulse 1.5s infinite ease-in-out;
+}
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
+
+/* Autocomplete */
+.autocomplete-container { position: relative; }
+.autocomplete-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-top: none;
+    max-height: 260px;
+    overflow-y: auto;
+    z-index: 20;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    font-size: 0.85rem;
+}
+.autocomplete-item {
+    padding: 6px 8px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.autocomplete-item:nth-child(odd){ background:#fafafa; }
+.autocomplete-item:hover, .autocomplete-item.active {
+    background: #ffe4b3;
+}
+.autocomplete-item small { color:#555; }

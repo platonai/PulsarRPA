@@ -4,6 +4,7 @@ import ai.platon.pulsar.ql.common.annotation.UDFGroup
 import ai.platon.pulsar.ql.common.annotation.UDFunction
 import ai.platon.pulsar.ql.common.types.ValueDom
 import ai.platon.pulsar.ql.context.SQLContexts
+import kotlinx.coroutines.runBlocking
 
 /**
  * Created by vincent on 17-11-1.
@@ -14,11 +15,11 @@ import ai.platon.pulsar.ql.context.SQLContexts
 object ChatFunctions {
 
     private val sqlContext get() = SQLContexts.create()
-    private val unmodifiedConfig get() = sqlContext.unmodifiedConfig
+    private val configuration get() = sqlContext.configuration
 
     @UDFunction(description = "Chat with the AI model")
     @JvmStatic
     fun chat(userMessage: String, systemMessage: String): String {
-        return sqlContext.chat(userMessage, systemMessage).content
+        return runBlocking { sqlContext.chat(userMessage, systemMessage).content }
     }
 }

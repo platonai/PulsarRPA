@@ -28,14 +28,14 @@ internal object CrawlCoroutines {
 
         // suspends current coroutine until all given jobs are complete.
         jobs.joinAll()
-        deferredPages.map { it.await() }.forEach { println(it.url) }
+        deferredPages.awaitAll().forEach { println(it.url) }
     }
 }
 
 fun main() {
     // Use the default browser which has an isolated profile.
     // You can also try other browsers, such as system default, prototype, sequential, temporary, etc.
-    PulsarSettings().withDefaultBrowser()
+    PulsarSettings.withDefaultBrowser()
 
     println("== loadAllInCoroutines ==")
     runBlocking { CrawlCoroutines.loadAllInCoroutines() }

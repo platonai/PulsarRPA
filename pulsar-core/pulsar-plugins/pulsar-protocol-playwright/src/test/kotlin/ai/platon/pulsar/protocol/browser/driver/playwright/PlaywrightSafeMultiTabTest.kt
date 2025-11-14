@@ -1,6 +1,7 @@
 package ai.platon.pulsar.protocol.browser.driver.playwright
 
 import ai.platon.pulsar.common.LinkExtractors
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.sleepSeconds
 import com.microsoft.playwright.BrowserType
 import com.microsoft.playwright.Page
@@ -48,7 +49,7 @@ class PlaywrightSafeMultiTabTest {
                 for (page in pages) {
                     val url = testUrls.getOrNull(pageId.get())
                     if (url == null) {
-                        println("No more URLs to visit.")
+                        printlnPro("No more URLs to visit.")
                         break
                     }
                     visit(url, page)
@@ -63,7 +64,7 @@ class PlaywrightSafeMultiTabTest {
         try {
             visit0(url, page)
         } catch (e: Exception) {
-            println("❌ Error visiting $url: ${e.message}")
+            printlnPro("❌ Error visiting $url: ${e.message}")
             e.printStackTrace()
         }
     }
@@ -78,12 +79,12 @@ class PlaywrightSafeMultiTabTest {
         page.navigate(url, navigateOptions)
         page.waitForLoadState(LoadState.LOAD)
         page.waitForSelector("div[data-asin]", Page.WaitForSelectorOptions().setTimeout(30_000.0))
-        println("$name \t ✅ Opened in tab ${page.hashCode()} | $url")
+        printlnPro("$name \t ✅ Opened in tab ${page.hashCode()} | $url")
         sleepSeconds(1)
 
         val elements = page.querySelectorAll("div[data-asin]")
         elements.mapTo(asins) { it.getAttribute("data-asin") }
-        println(asins.joinToString())
+        printlnPro(asins.joinToString())
     }
 }
 
@@ -91,3 +92,4 @@ fun main() {
     val test = PlaywrightSafeMultiTabTest()
     test.run()
 }
+

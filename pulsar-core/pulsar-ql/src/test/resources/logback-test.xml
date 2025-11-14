@@ -54,10 +54,20 @@
         </encoder>
     </appender>
 
+    <!-- Stop logback status INFO at the start -->
+    <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+
     <root level="${log.level:-INFO}">
         <appender-ref ref="DRFA"/>
         <appender-ref ref="CONSOLE"/>
     </root>
+
+    <logger name="ai.platon.pulsar.ql" level="DEBUG" additivity="true">
+    </logger>
+
+    <logger name="ai.platon.pulsar.ql.h2.log" level="INFO" additivity="true">
+        <appender-ref ref="SQL"/>
+    </logger>
 
     <logger name="ai.platon.pulsar.skeleton.common.metrics.MetricsSystem" level="INFO" additivity="false">
         <appender-ref ref="METRICS"/>
@@ -68,10 +78,6 @@
 
     <logger name="ai.platon.pulsar.skeleton.common.CounterReporter" level="INFO" additivity="false">
         <appender-ref ref="COUNTERS"/>
-    </logger>
-
-    <logger name="ai.platon.pulsar.ql.h2.log" level="INFO" additivity="false">
-        <appender-ref ref="SQL"/>
     </logger>
 
     <logger name="org.apache.gora" level="ERROR"/>

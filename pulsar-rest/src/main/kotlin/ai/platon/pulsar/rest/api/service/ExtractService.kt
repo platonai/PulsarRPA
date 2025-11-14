@@ -11,7 +11,7 @@ class ExtractService(
     val session: PulsarSession,
     val loadService: LoadService,
 ) {
-    fun extract(request: PromptRequest): String {
+    suspend fun extract(request: PromptRequest): String {
         val prompt = request.prompt
         if (prompt.isNullOrBlank()) {
             return DEFAULT_INTRODUCE

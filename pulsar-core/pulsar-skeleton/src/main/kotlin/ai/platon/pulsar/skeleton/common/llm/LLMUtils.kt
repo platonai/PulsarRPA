@@ -1,32 +1,60 @@
 package ai.platon.pulsar.skeleton.common.llm
 
+import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.code.ProjectUtils
-import java.net.URI
+import kotlinx.io.files.FileNotFoundException
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.StandardCopyOption
-import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 import kotlin.io.path.notExists
 
 object LLMUtils {
 
-    fun copyWebDriverFile(dest: Path) {
-        val file = ProjectUtils.findFile("MiniWebDriver.kt")
-        if (file != null) {
-            Files.copy(file, dest, StandardCopyOption.REPLACE_EXISTING)
+    const val CODE_MIRROR_DIR = "code-mirror"
+
+    fun copyWebDriverAsResource() {
+        copySourceFileAsResource("WebDriver.kt")
+    }
+
+    fun copySourceFileAsResource(filename: String) {
+        if (ProjectUtils.findProjectRootDir() == null) {
+            // we are not in a source code project
             return
         }
 
-        // If we can not find the file, copy it from github.com or gitee.com
-        val webDriverURL =
-            "https://raw.githubusercontent.com/platonai/browser4/refs/heads/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/crawl/fetch/driver/MiniWebDriver.kt"
-        val webDriverURL2 = "https://gitee.com/platonai_galaxyeye/browser4/raw/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/crawl/fetch/driver/MiniWebDriver.kt"
-        listOf(webDriverURL, webDriverURL2).forEach { url ->
-            if (shouldCopyFile(dest)) {
-                Files.writeString(dest, URI(url).toURL().readText())
-            }
+        val file = ProjectUtils.findFile(filename) ?: throw FileNotFoundException(filename)
+        ProjectUtils.copySourceFileAsCodeResource(file)
+    }
+
+    fun readWebDriverFromResource(): String {
+        copyWebDriverAsResource()
+        val resource = "$CODE_MIRROR_DIR/WebDriver.kt"
+        return ResourceLoader.readString(resource)
+    }
+
+    fun readSourceFileFromResource(fileName: String): String {
+        copySourceFileAsResource(fileName)
+        val resource = "$CODE_MIRROR_DIR/$fileName"
+        return ResourceLoader.readString(resource)
+    }
+
+    fun writeAsResource(fileName: String, content: String): Path? {
+        val baseDir = ProjectUtils.findFile(CODE_MIRROR_DIR) ?: return null
+        if (baseDir.notExists()) {
+            return null
+        }
+
+        val path = baseDir.resolve(fileName)
+        Files.writeString(path, content)
+        return path
+    }
+
+    fun copyWebDriverFile(dest: Path) {
+        val file = ProjectUtils.findFile("WebDriver.kt")
+        if (file != null) {
+            Files.copy(file, dest, StandardCopyOption.REPLACE_EXISTING)
         }
     }
 
@@ -35,16 +63,6 @@ object LLMUtils {
         if (file != null) {
             Files.copy(file, dest, StandardCopyOption.REPLACE_EXISTING)
             return
-        }
-
-        // If we can not find the file, copy it from github.com or gitee.com
-        val webDriverURL =
-            "https://raw.githubusercontent.com/platonai/browser4/refs/heads/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/session/PulsarSession.kt"
-        val webDriverURL2 = "https://gitee.com/platonai_galaxyeye/browser4/raw/master/pulsar-skeleton/src/main/kotlin/ai/platon/pulsar/skeleton/session/PulsarSession.kt"
-        listOf(webDriverURL, webDriverURL2).forEach { url ->
-            if (shouldCopyFile(dest)) {
-                Files.writeString(dest, URI(url).toURL().readText())
-            }
         }
     }
 

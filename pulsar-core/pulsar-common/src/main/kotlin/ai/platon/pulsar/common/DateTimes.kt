@@ -43,6 +43,17 @@ object DateTimes {
     val PATH_SAFE_FORMAT_3 = SimpleDateFormat("MMdd.HHmm")
     val PATH_SAFE_FORMAT_4 = SimpleDateFormat("MMdd.HHmmss")
 
+    val PATH_SAFE_FORMAT_10 = SimpleDateFormat("yyyyMMdd.HHmmss")
+    val PATH_SAFE_FORMAT_12 = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss")
+
+    val PATH_SAFE_FORMAT_101 = DateTimeFormatter.ofPattern("MMdd").withZone(ZoneId.systemDefault())!!
+    val PATH_SAFE_FORMAT_102 = DateTimeFormatter.ofPattern("MMdd.HH").withZone(ZoneId.systemDefault())!!
+    val PATH_SAFE_FORMAT_103 = DateTimeFormatter.ofPattern("MMdd.HHmm").withZone(ZoneId.systemDefault())!!
+    val PATH_SAFE_FORMAT_104 = DateTimeFormatter.ofPattern("MMdd.HHmmss").withZone(ZoneId.systemDefault())!!
+
+    val PATH_SAFE_FORMAT_111 = DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss").withZone(ZoneId.systemDefault())!!
+    val PATH_SAFE_FORMAT_112 = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss").withZone(ZoneId.systemDefault())!!
+
     // inaccurate date time
     const val HOURS_PER_DAY = 24L
     const val HOURS_PER_MONTH = HOURS_PER_DAY * 30

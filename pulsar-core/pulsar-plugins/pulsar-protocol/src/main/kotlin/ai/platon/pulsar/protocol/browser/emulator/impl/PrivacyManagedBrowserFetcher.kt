@@ -25,6 +25,7 @@ import ai.platon.pulsar.protocol.browser.emulator.AbstractBrowserFetcher
 import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator
 import ai.platon.pulsar.protocol.browser.emulator.IncognitoBrowserFetcher
 import ai.platon.pulsar.protocol.browser.emulator.context.BrowserPrivacyManager
+import ai.platon.pulsar.protocol.browser.impl.BrowserManager
 import ai.platon.pulsar.skeleton.common.persist.ext.browseEventHandlers
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
@@ -34,6 +35,7 @@ import ai.platon.pulsar.skeleton.crawl.protocol.ForwardingResponse
 import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import org.slf4j.LoggerFactory
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.run
 
 /**
  * Created by vincent on 18-1-1.
@@ -103,6 +105,8 @@ open class BrowserWebDriverFetcher(
  * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 open class PrivacyManagedBrowserFetcher(
+    val browserManager: BrowserManager,
+    val browserFactory: BrowserFactory,
     override val privacyManager: BrowserPrivacyManager,
     override val browserEmulator: BrowserEmulator,
     override val conf: ImmutableConfig,
@@ -133,36 +137,41 @@ open class PrivacyManagedBrowserFetcher(
         val task = FetchTask.create(page)
         return fetchDeferred(task)
     }
-    
+
     /**
-     * Fetch page content.
-     * */
+     * Fetches the content of a web page asynchronously using the provided fetch task.
+     *
+     * This method attempts to retrieve a web driver for the given page. If a specific driver is found,
+     * it is used to fetch the page content. Otherwise, the task is executed within a privacy context
+     * using the `PrivacyManager` to obtain a driver.
+     *
+     * @param task The fetch task containing the details of the page to be fetched.
+     * @return A `Response` object containing the result of the fetch operation.
+     * @throws Exception If an error occurs during the fetch process.
+     */
     @Throws(Exception::class)
     suspend fun fetchDeferred(task: FetchTask): Response {
-        // - Specified driver is always used and ignore the privacy context
-        // - Only when the browser is specified, we can get a random driver, otherwise,
-        //   we will use the PrivacyManager to get a driver
+        // Attempt to get a specified web driver for the page
         val driver = getWebDriver(task.page)
         if (driver != null) {
+            // Use the specified driver to fetch the page content
             return webdriverFetcher.fetchDeferred(task, driver).response
         }
 
-        // Run the task within a privacy context.
-        // If the driver is not specified, use privacy manager to get a driver
-        // @Throws(ProxyException::class, Exception::class)
-        return privacyManager.run(task) { _, driver2 -> webdriverFetcher.fetchDeferred(task, driver2) }.response
+        // If no driver is specified, execute the task within a privacy context
+        // The PrivacyManager will provide a driver for the task
+        return privacyManager.run(task) { _, driver2 ->
+            webdriverFetcher.fetchDeferred(task, driver2)
+        }.response
     }
 
     override fun reset() {
-        TODO("Not implemented")
     }
 
     override fun cancel(page: WebPage) {
-        TODO("Not implemented")
     }
 
     override fun cancelAll() {
-        TODO("Not implemented")
     }
 
     override fun close() {
@@ -199,7 +208,7 @@ open class PrivacyManagedBrowserFetcher(
      * You can set the web driver using the following ways:
      *
      * ```kotlin
-     * session.connect(driver)
+     * session.bindDriver(driver)
      * ```
      *
      * Or internally:
@@ -215,8 +224,7 @@ open class PrivacyManagedBrowserFetcher(
         require(page is AbstractWebPage)
         // Specified driver is always used
         val driver = page.getBeanOrNull(WebDriver::class.java)
-            ?: page.getVar("WEB_DRIVER") // Old style to retrieve the driver, will be removed in the future
-            ?: page.conf.getBeanOrNull(WebDriver::class)
+            ?: page.conf.getBeanOrNull(WebDriver::class) // page.conf data inherits from session.sessionConfig
             ?: page.conf.getBeanOrNull(WebDriver::class.java)
         return driver as? WebDriver
     }

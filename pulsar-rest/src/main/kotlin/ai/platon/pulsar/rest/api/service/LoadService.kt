@@ -1,11 +1,12 @@
 package ai.platon.pulsar.rest.api.service
 
+import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.model.GoraWebPage
-import ai.platon.pulsar.rest.api.entities.PromptRequest
 import ai.platon.pulsar.rest.api.entities.CommandRequest
-import ai.platon.pulsar.skeleton.session.PulsarSession
+import ai.platon.pulsar.rest.api.entities.PromptRequest
+import ai.platon.pulsar.skeleton.crawl.PageEventHandlers
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -16,7 +17,7 @@ class LoadService {
     private val logger = LoggerFactory.getLogger(LoadService::class.java)
 
     @Autowired
-    lateinit var session: PulsarSession
+    lateinit var session: AgenticSession
 
     fun load(url: String): WebPage {
         return session.load(url)
@@ -42,7 +43,7 @@ class LoadService {
         val actions = request.actions
         if (actions != null) {
             be.onDocumentFullyLoaded.addLast { page, driver ->
-                actions.forEach { driver.instruct(it) }
+                actions.forEach { session.plainActs(it) }
             }
         }
 
@@ -52,17 +53,18 @@ class LoadService {
         return page to document
     }
 
-    fun loadDocument(request: CommandRequest): Pair<WebPage, FeaturedDocument> {
+    fun loadDocument(request: CommandRequest, eventHandlers: PageEventHandlers): Pair<WebPage, FeaturedDocument> {
         val args = request.enhanceArgs()
-        val options = session.options(args)
+        val options = session.options(args, eventHandlers)
+
         val be = options.eventHandlers.browseEventHandlers
 
         request.onBrowserLaunchedActions?.let { actions -> be.onBrowserLaunched.addLast { page, driver ->
-            actions.forEach { driver.instruct(it) }
+            actions.forEach { session.plainActs(it) }
         } }
 
         request.onPageReadyActions?.let { actions -> be.onDocumentFullyLoaded.addLast { page, driver ->
-            actions.forEach { driver.instruct(it) }
+            actions.forEach { session.plainActs(it) }
         } }
 
 //        request.actionsOnDidInteract?.let { actions -> be.onDidInteract.addLast { page, driver ->

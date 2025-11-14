@@ -1,11 +1,17 @@
 package ai.platon.pulsar.skeleton
 
 import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.browser.common.DisplayMode
+import ai.platon.pulsar.browser.common.DomSettlePolicy
 import ai.platon.pulsar.browser.common.InteractSettings
-import ai.platon.pulsar.common.browser.BrowserContextMode
+import ai.platon.pulsar.common.browser.BrowserProfileMode
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.InteractLevel
-import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_OPEN_TABS
+import ai.platon.pulsar.common.config.CapabilityTypes.LLM_API_KEY
+import ai.platon.pulsar.common.config.CapabilityTypes.LLM_NAME
+import ai.platon.pulsar.common.config.CapabilityTypes.LLM_PROVIDER
+import ai.platon.pulsar.common.config.MutableConfig
 
 /**
  * The [PulsarSettings] class defines a convenient interface to control the behavior of Browser4.
@@ -14,7 +20,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
  * you can use the following code:
  *
  * ```kotlin
- * PulsarSettings()
+ * PulsarSettings
  *    .headless()
  *    .maxBrowsers(4)
  *    .maxOpenTabs(12)
@@ -31,7 +37,7 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
  * following code:
  *
  * ```kotlin
- * PulsarSettings().withSystemDefaultBrowser().withGUI().withSPA()
+ * PulsarSettings.withSystemDefaultBrowser().withGUI().withSPA()
  * ```
  *
  * The above code will:
@@ -39,376 +45,401 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
  * 2. Run the browser in GUI mode
  * 3. Set the system to work with single page application
  * */
-open class PulsarSettings {
-
-    fun withBrowserContextMode(contextMode: BrowserContextMode): PulsarSettings =
-        withBrowserContextMode(contextMode, BrowserType.DEFAULT)
-
-    fun withBrowserContextMode(contextMode: BrowserContextMode, browserType: BrowserType): PulsarSettings {
-        BrowserSettings.withBrowserContextMode(contextMode, browserType)
-        return this
+data class PulsarSettings(
+    val spa: Boolean? = null,
+    val displayMode: DisplayMode? = null,
+    val maxBrowsers: Int? = null,
+    val maxOpenTabs: Int? = null,
+    val interactSettings: InteractSettings? = null,
+    val profileMode: BrowserProfileMode? = null,
+) {
+    fun overrideSystemProperties() {
+        overrideConfigurationInternal(null)
     }
 
-    fun withBrowser(browserType: BrowserType): PulsarSettings {
-        BrowserSettings.withBrowser(browserType)
-        return this
+    fun overrideConfiguration(conf: MutableConfig) {
+        overrideConfigurationInternal(conf)
     }
 
-    /**
-     * Use the system's default Chrome browser, so Browser4 visits websites just like you do.
-     * Any change to the browser will be kept.
-     * */
-    fun withSystemDefaultBrowser() = withBrowserContextMode(BrowserContextMode.DEFAULT, BrowserType.DEFAULT)
-
-    /**
-     * Use the system's default browser with the given type, so Browser4 visits websites just like you do.
-     * Any change to the browser will be kept.
-     * */
-    fun withSystemDefaultBrowser(browserType: BrowserType): PulsarSettings {
-        return withBrowserContextMode(BrowserContextMode.SYSTEM_DEFAULT, browserType)
+    private fun overrideConfigurationInternal(conf: MutableConfig? = null) {
+        profileMode?.let { withBrowserContextMode(profileMode, conf) }
+        when(displayMode) {
+            DisplayMode.HEADLESS -> headless(conf)
+            DisplayMode.GUI -> headed(conf)
+            DisplayMode.SUPERVISED -> supervised(conf)
+            else -> {}
+        }
+        maxBrowsers?.let { maxBrowserContexts(maxBrowsers) }
+        maxOpenTabs?.let { maxOpenTabs(maxOpenTabs, conf) }
+        spa?.takeIf { it }?.let { withSPA(conf) }
+        interactSettings?.let { withInteractSettings(interactSettings, conf) }
     }
 
-    /**
-     * Use the default browser which has an isolated profile and user data directory.
-     * Any modifications made to the browser will be preserved, including the cookies, history, etc.
-     * */
-    fun withDefaultBrowser() = withBrowserContextMode(BrowserContextMode.DEFAULT, BrowserType.DEFAULT)
+    companion object {
+        @JvmStatic
+        @JvmOverloads
+        fun withBrowserContextMode(contextMode: BrowserProfileMode, conf: MutableConfig? = null): Companion =
+            withBrowserContextMode(contextMode, BrowserType.DEFAULT, conf)
 
-    /**
-     * Use the default browser which has an isolated profile and user data directory.
-     * Any modifications made to the browser will be preserved, including the cookies, history, etc.
-     *
-     *
-     * */
-    fun withDefaultBrowser(browserType: BrowserType): PulsarSettings {
-        return withBrowserContextMode(BrowserContextMode.DEFAULT, browserType)
-    }
+        @JvmStatic
+        @JvmOverloads
+        fun withBrowserContextMode(contextMode: BrowserProfileMode, browserType: BrowserType, conf: MutableConfig? = null): Companion {
+            BrowserSettings.withBrowserContextMode(contextMode, browserType, conf)
+            return PulsarSettings
+        }
 
-    /**
-     * Use Google Chrome with the prototype environment.
-     * Any modifications made to the browser will be preserved.
-     * Sequential and temporary browsers will inherit the environment from the prototype browser.
-     */
-    fun withPrototypeBrowser() = withBrowserContextMode(BrowserContextMode.PROTOTYPE, BrowserType.DEFAULT)
+        @JvmStatic
+        @JvmOverloads
+        fun withBrowser(browserType: BrowserType, conf: MutableConfig? = null): Companion {
+            BrowserSettings.withBrowser(browserType, conf)
+            return PulsarSettings
+        }
 
-    /**
-     * Use the specified browser with the prototype environment.
-     * Any modifications made to the browser will be preserved.
-     * Sequential and temporary browsers will inherit the environment from the prototype browser.
-     * */
-    fun withPrototypeBrowser(browserType: BrowserType): PulsarSettings {
-        return withBrowserContextMode(BrowserContextMode.PROTOTYPE, browserType)
-    }
+        /**
+         * Use the system's default Chrome browser, so Browser4 visits websites just like you do.
+         * Any change to the browser will be kept.
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun withSystemDefaultBrowser(conf: MutableConfig? = null) = withBrowserContextMode(BrowserProfileMode.DEFAULT, BrowserType.DEFAULT, conf)
 
-    /**
-     * Use sequential browsers that inherits the prototype browser’s environment.
-     * The sequential browsers are permanent unless the context directories are deleted manually.
-     *
-     * @return the PulsarSettings itself
-     * */
-    fun withSequentialBrowsers(): PulsarSettings {
-        return withSequentialBrowsers(BrowserType.DEFAULT, 10)
-    }
+        /**
+         * Use the system's default browser with the given type, so Browser4 visits websites just like you do.
+         * Any change to the browser will be kept.
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun withSystemDefaultBrowser(browserType: BrowserType, conf: MutableConfig? = null): Companion {
+            return withBrowserContextMode(BrowserProfileMode.SYSTEM_DEFAULT, browserType, conf)
+        }
 
-    /**
-     * Use sequential browsers that inherits the prototype browser’s environment.
-     * The sequential browsers are permanent unless the context directories are deleted manually.
-     *
-     *
-     *
-     * @return the PulsarSettings itself
-     * */
-    fun withSequentialBrowsers(browserType: BrowserType): PulsarSettings {
-        return withSequentialBrowsers(browserType, 10)
-    }
+        /**
+         * Use the default browser which has an isolated profile and user data directory.
+         * Any modifications made to the browser will be preserved, including the cookies, history, etc.
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun withDefaultBrowser(conf: MutableConfig? = null) = withBrowserContextMode(BrowserProfileMode.DEFAULT, BrowserType.DEFAULT, conf)
 
-    /**
-     * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
-     * permanent unless the context directories are deleted manually.
-     *
-     * @param maxAgents The maximum number of sequential privacy agents, the active privacy contexts is chosen from them.
-     * @return the PulsarSettings itself
-     * */
-    fun withSequentialBrowsers(browserType: BrowserType, maxAgents: Int): PulsarSettings {
-        BrowserSettings.withSequentialBrowsers(browserType, maxAgents)
-        return this
-    }
+        /**
+         * Use the default browser which has an isolated profile and user data directory.
+         * Any modifications made to the browser will be preserved, including the cookies, history, etc.
+         *
+         *
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun withDefaultBrowser(browserType: BrowserType, conf: MutableConfig? = null): Companion {
+            return withBrowserContextMode(BrowserProfileMode.DEFAULT, browserType, conf)
+        }
 
-    /**
-     * Use a temporary browser that inherits from the prototype browser’s environment. The temporary browser
-     * will not be used again after it is shut down.
-     * */
-    fun withTemporaryBrowser(): PulsarSettings {
-        return withBrowserContextMode(BrowserContextMode.TEMPORARY, BrowserType.DEFAULT)
-    }
+        /**
+         * Use Google Chrome with the prototype environment.
+         * Any modifications made to the browser will be preserved.
+         * Sequential and temporary browsers will inherit the environment from the prototype browser.
+         */
+        @JvmStatic
+        @JvmOverloads
+        fun withPrototypeBrowser(conf: MutableConfig? = null) = withBrowserContextMode(BrowserProfileMode.PROTOTYPE, BrowserType.DEFAULT, conf)
 
-    /**
-     * Use a temporary browser that inherits from the prototype browser’s environment. The temporary browser
-     * will not be used again after it is shut down.
-     * */
-    fun withTemporaryBrowser(browserType: BrowserType) = withBrowserContextMode(BrowserContextMode.TEMPORARY, browserType)
+        /**
+         * Use the specified browser with the prototype environment.
+         * Any modifications made to the browser will be preserved.
+         * Sequential and temporary browsers will inherit the environment from the prototype browser.
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun withPrototypeBrowser(browserType: BrowserType, conf: MutableConfig? = null): Companion {
+            return withBrowserContextMode(BrowserProfileMode.PROTOTYPE, browserType, conf)
+        }
 
-    /**
-     * Launch the browser in GUI mode.
-     * */
-    fun withGUI(): PulsarSettings {
-        BrowserSettings.withGUI()
-        return this
-    }
+        /**
+         * Use sequential browsers that inherits the prototype browser’s environment.
+         * The sequential browsers are permanent unless the context directories are deleted manually.
+         *
+         * @return the PulsarSettings itself
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun withSequentialBrowsers(conf: MutableConfig? = null): Companion {
+            return withSequentialBrowsers(BrowserType.DEFAULT, 10, conf)
+        }
 
-    /**
-     * Launch the browser in GUI mode.
-     * */
-    fun headed() = withGUI()
+        /**
+         * Use sequential browsers that inherits the prototype browser’s environment.
+         * The sequential browsers are permanent unless the context directories are deleted manually.
+         *
+         *
+         *
+         * @return the PulsarSettings itself
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun withSequentialBrowsers(browserType: BrowserType, conf: MutableConfig? = null): Companion {
+            return withSequentialBrowsers(browserType, 10, conf)
+        }
 
-    /**
-     * Launch the browser in headless mode.
-     * */
-    fun headless(): PulsarSettings {
-        BrowserSettings.headless()
-        return this
-    }
+        /**
+         * Use sequential browsers that inherits from the prototype browser’s environment. The sequential browsers are
+         * permanent unless the context directories are deleted manually.
+         *
+         * @param maxAgents The maximum number of sequential privacy agents, the active privacy contexts is chosen from them.
+         * @return the PulsarSettings itself
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun withSequentialBrowsers(browserType: BrowserType, maxAgents: Int, conf: MutableConfig? = null): Companion {
+            BrowserSettings.withSequentialBrowsers(browserType, maxAgents, conf)
+            return PulsarSettings
+        }
 
-    /**
-     * Launch the browser in supervised mode.
-     * */
-    fun supervised(): PulsarSettings {
-        BrowserSettings.supervised()
-        return this
-    }
+        /**
+         * Use a temporary browser that inherits from the prototype browser’s environment. The temporary browser
+         * will not be used again after it is shut down.
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun withTemporaryBrowser(conf: MutableConfig? = null): Companion {
+            return withBrowserContextMode(BrowserProfileMode.TEMPORARY, BrowserType.DEFAULT, conf)
+        }
 
-    /**
-     * Set the max number of agents
-     * */
-    @Deprecated("Use maxBrowserContexts instead", ReplaceWith("maxBrowserContexts(n)"))
-    fun maxBrowsers(n: Int): PulsarSettings {
-        maxBrowserContexts(n)
-        return this
-    }
+        /**
+         * Use a temporary browser that inherits from the prototype browser’s environment. The temporary browser
+         * will not be used again after it is shut down.
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun withTemporaryBrowser(browserType: BrowserType, conf: MutableConfig? = null) =
+            withBrowserContextMode(BrowserProfileMode.TEMPORARY, browserType, conf)
 
-    /**
-     * Set the max number of agents
-     * */
-    fun maxBrowserContexts(n: Int): PulsarSettings {
-        BrowserSettings.maxBrowserContexts(n)
-        return this
-    }
+        /**
+         * Launch the browser in GUI mode.
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun withGUI(conf: MutableConfig? = null): Companion {
+            BrowserSettings.withGUI(conf)
+            return PulsarSettings
+        }
 
-    /**
-     * Set the max number to open tabs in each browser context
-     * */
-    fun maxOpenTabs(n: Int): PulsarSettings {
-        BrowserSettings.maxOpenTabs(n)
-        return this
-    }
+        /**
+         * Launch the browser in GUI mode.
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun headed(conf: MutableConfig? = null) = withGUI(conf)
 
-    /**
-     * Tell the system to work with single page application.
-     * To collect SPA data, the execution needs to have no timeout limit.
-     * */
-    fun withSPA(): PulsarSettings {
-        BrowserSettings.withSPA()
-        return this
-    }
+        /**
+         * Launch the browser in headless mode.
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun headless(conf: MutableConfig? = null): Companion {
+            BrowserSettings.headless(conf)
+            return PulsarSettings
+        }
 
-    /**
-     * Defines the level of interaction with a webpage during crawling.
-     *
-     * Higher levels involve more interaction (e.g., scrolling, clicking),
-     * which may improve content extraction quality at the cost of speed.
-     * */
-    fun withInteractLevel(level: InteractLevel): PulsarSettings {
-        BrowserSettings.withInteractSettings(InteractSettings.create(level))
-        return this
-    }
+        /**
+         * Launch the browser in supervised mode.
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun supervised(conf: MutableConfig? = null): Companion {
+            BrowserSettings.supervised(conf)
+            return PulsarSettings
+        }
 
-    /**
-     * Use the specified interact settings to interact with webpages.
-     * */
-    fun withInteractSettings(settings: InteractSettings): PulsarSettings {
-        BrowserSettings.withInteractSettings(settings)
-        return this
-    }
+        /**
+         * Set the max number of agents
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun maxBrowserContexts(n: Int, conf: MutableConfig? = null): Companion {
+            BrowserSettings.maxBrowserContexts(n, conf)
+            return PulsarSettings
+        }
 
-    /**
-     * Enable url blocking. If url blocking is enabled and the blocking rules are set,
-     * resources matching the rules will be blocked by the browser.
-     * */
-    fun enableUrlBlocking(): PulsarSettings {
-        BrowserSettings.enableUrlBlocking()
-        return this
-    }
+        /**
+         * Set the max number to open tabs in each browser context
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun maxOpenTabs(n: Int, conf: MutableConfig? = null): Companion {
+            // BrowserSettings.maxOpenTabs does not currently accept conf; we fallback to system property for conf=null
+            if (conf == null) {
+                BrowserSettings.maxOpenTabs(n)
+            } else {
+                conf[BROWSER_MAX_OPEN_TABS] = "$n"
+            }
+            return PulsarSettings
+        }
 
-    /**
-     * Enable url blocking with the given probability.
-     * The probability must be in [0, 1].
-     * */
-    fun enableUrlBlocking(probability: Float): PulsarSettings {
-        BrowserSettings.enableUrlBlocking(probability)
-        return this
-    }
+        /**
+         * Tell the system to work with single page application.
+         * To collect SPA data, the execution needs to have no timeout limit.
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun withSPA(conf: MutableConfig? = null) = withSinglePageApplication(conf)
 
-    /**
-     * Disable url blocking. If url blocking is disabled, blocking rules are ignored.
-     * */
-    fun disableUrlBlocking(): PulsarSettings {
-        BrowserSettings.disableUrlBlocking()
-        return this
-    }
+        /**
+         * Tell the system to work with single page application.
+         * To collect SPA data, the execution needs to have no timeout limit.
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun withSinglePageApplication(conf: MutableConfig? = null): Companion {
+            BrowserSettings.withSPA(conf)
+            return PulsarSettings
+        }
 
-    /**
-     * Block all images.
-     * */
-    fun blockImages(): PulsarSettings {
-        BrowserSettings.blockImages()
-        return this
-    }
+        /**
+         * Defines the level of interaction with a webpage during crawling.
+         *
+         * Higher levels involve more interaction (e.g., scrolling, clicking),
+         * which may improve content extraction quality at the cost of speed.
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun withInteractLevel(level: InteractLevel, conf: MutableConfig? = null): Companion {
+            // Interact settings modify config via settings override; no direct conf mapping here
+            val settings = InteractSettings.create(level)
+            BrowserSettings.withInteractSettings(settings, conf)
+            return PulsarSettings
+        }
 
-    /**
-     * Export all pages automatically once they are fetched.
-     *
-     * The export directory is under AppPaths.WEB_CACHE_DIR.
-     * A typical export path is:
-     *
-     * * AppPaths.WEB_CACHE_DIR/default/pulsar_chrome/OK/amazon-com
-     * * C:\Users\pereg\AppData\Local\Temp\pulsar-pereg\cache\web\default\pulsar_chrome\OK\amazon-com
-     * */
-    fun enableOriginalPageContentAutoExporting(): PulsarSettings {
-        BrowserSettings.enableOriginalPageContentAutoExporting()
-        return this
-    }
+        /**
+         * Use the specified interact settings to interact with webpages.
+         * */
+        @JvmStatic
+        @JvmOverloads
+        fun withInteractSettings(settings: InteractSettings, conf: MutableConfig? = null): Companion {
+            // Interact settings override system properties; conf routing is handled inside settings if needed
+            BrowserSettings.withInteractSettings(settings, conf)
+            return PulsarSettings
+        }
 
-    /**
-     * Export at most [limit] pages once they are fetched.
-     *
-     * The export directory is under AppPaths.WEB_CACHE_DIR.
-     * A typical export path is:
-     *
-     * * AppPaths.WEB_CACHE_DIR/default/pulsar_chrome/OK/amazon-com
-     * * C:\Users\pereg\AppData\Local\Temp\pulsar-pereg\cache\web\default\pulsar_chrome\OK\amazon-com
-     * */
-    fun enableOriginalPageContentAutoExporting(limit: Int): PulsarSettings {
-        BrowserSettings.enableOriginalPageContentAutoExporting(limit)
-        return this
-    }
+        fun withDOMSettlePolicy(domSettlePolicy: DomSettlePolicy, conf: MutableConfig? = null): Companion {
+            val settings = InteractSettings.DEFAULT.copy(domSettlePolicy = domSettlePolicy)
+            BrowserSettings.withInteractSettings(settings, conf)
+            return PulsarSettings
+        }
 
-    /**
-     * Disable original page content exporting.
-     * */
-    fun disableOriginalPageContentAutoExporting(): PulsarSettings {
-        BrowserSettings.disableOriginalPageContentAutoExporting()
-        return this
-    }
+        /**
+         * Sets the Large Language Model (LLM) provider for the Browser4 settings.
+         *
+         * This function allows specifying the LLM provider to be used. The provider must be a non-null string.
+         *
+         * Supported LLM providers include:
+         * * <a href='https://www.volcengine.com/docs/82379/1399008'>Volcengine API</a>
+         * * <a href='https://api-docs.deepseek.com/'>DeepSeek API</a>
+         *
+         * For example, you can use the following code to set the LLM provider:
+         * ```kotlin
+         * // use volcengine as the LLM provider
+         * PulsarSettings.withLLM("volcengine", "ep-20250218132011-2scs8", apiKey)
+         * ```
+         *
+         * @param provider The name of the LLM provider to be used. Must not be null.
+         * @return The current instance of [PulsarSettings] to allow method chaining.
+         * @throws IllegalArgumentException If the provided `provider` is null.
+         */
+        @JvmStatic
+        fun withLLM(provider: String, name: String, apiKey: String): Companion {
+            withLLMProvider(provider)
+            withLLMName(name)
+            withLLMAPIKey(apiKey)
+            return PulsarSettings
+        }
 
-    /**
-     * Sets the Large Language Model (LLM) provider for the Browser4 settings.
-     *
-     * This function allows specifying the LLM provider to be used. The provider must be a non-null string.
-     *
-     * Supported LLM providers include:
-     * * <a href='https://www.volcengine.com/docs/82379/1399008'>Volcengine API</a>
-     * * <a href='https://api-docs.deepseek.com/'>DeepSeek API</a>
-     *
-     * For example, you can use the following code to set the LLM provider:
-     * ```kotlin
-     * // use volcengine as the LLM provider
-     * PulsarSettings().withLLM("volcengine", "ep-20250218132011-2scs8", apiKey)
-     * ```
-     *
-     * @param provider The name of the LLM provider to be used. Must not be null.
-     * @return The current instance of [PulsarSettings] to allow method chaining.
-     * @throws IllegalArgumentException If the provided `provider` is null.
-     */
-    fun withLLM(provider: String, name: String, apiKey: String): PulsarSettings {
-        withLLMProvider(provider)
-        withLLMName(name)
-        withLLMAPIKey(apiKey)
-        return this
-    }
+        /**
+         * Sets the Large Language Model (LLM) provider for the Browser4 settings.
+         *
+         * This function allows specifying the LLM provider to be used. The provider must be a non-null string.
+         *
+         * Supported LLM providers include:
+         * * <a href='https://www.volcengine.com/docs/82379/1399008'>Volcengine API</a>
+         * * <a href='https://api-docs.deepseek.com/'>DeepSeek API</a>
+         *
+         * For example, you can use the following code to set the LLM provider:
+         * ```kotlin
+         * PulsarSettings
+         *     .withLLMProvider("volcengine") // use volcengine as the LLM provider
+         *     .withLLMName("ep-20250218132011-2scs8") // the LLM name, you should change it to your own
+         *     .withLLMAPIKey(apiKey) // the LLM api key, you should change it to your own
+         * ```
+         *
+         * @param provider The name of the LLM provider to be used. Must not be null.
+         * @return The current instance of [PulsarSettings] to allow method chaining.
+         * @throws IllegalArgumentException If the provided `provider` is null.
+         */
+        @JvmStatic
+        fun withLLMProvider(provider: String?): Companion {
+            // Validate that the provider is not null
+            requireNotNull(provider) { "$LLM_PROVIDER NOT set" }
 
-    /**
-     * Sets the Large Language Model (LLM) provider for the Browser4 settings.
-     *
-     * This function allows specifying the LLM provider to be used. The provider must be a non-null string.
-     *
-     * Supported LLM providers include:
-     * * <a href='https://www.volcengine.com/docs/82379/1399008'>Volcengine API</a>
-     * * <a href='https://api-docs.deepseek.com/'>DeepSeek API</a>
-     *
-     * For example, you can use the following code to set the LLM provider:
-     * ```kotlin
-     * PulsarSettings()
-     *     .withLLMProvider("volcengine") // use volcengine as the LLM provider
-     *     .withLLMName("ep-20250218132011-2scs8") // the LLM name, you should change it to your own
-     *     .withLLMAPIKey(apiKey) // the LLM api key, you should change it to your own
-     * ```
-     *
-     * @param provider The name of the LLM provider to be used. Must not be null.
-     * @return The current instance of [PulsarSettings] to allow method chaining.
-     * @throws IllegalArgumentException If the provided `provider` is null.
-     */
-    fun withLLMProvider(provider: String?): PulsarSettings {
-        // Validate that the provider is not null
-        requireNotNull(provider) { "$LLM_PROVIDER NOT set" }
+            // Set the LLM provider as a system property
+            System.setProperty(LLM_PROVIDER, provider)
+            return PulsarSettings
+        }
 
-        // Set the LLM provider as a system property
-        System.setProperty(LLM_PROVIDER, provider)
-        return this
-    }
+        /**
+         * Sets the Large Language Model (LLM) name for the Browser4 settings.
+         *
+         * Supported LLM providers include:
+         * * <a href='https://www.volcengine.com/docs/82379/1399008'>Volcengine API</a>
+         * * <a href='https://api-docs.deepseek.com/'>DeepSeek API</a>
+         *
+         * For example, you can use the following code to set the LLM provider:
+         * ```kotlin
+         * PulsarSettings
+         *     .withLLMProvider("volcengine") // use volcengine as the LLM provider
+         *     .withLLMName("ep-20250218132011-2scs8") // the LLM name, you should change it to your own
+         *     .withLLMAPIKey(apiKey) // the LLM api key, you should change it to your own
+         * ```
+         *
+         * @param name The name of the Large Language Model (LLM) to be set. This parameter cannot be null.
+         * @return The current instance of [PulsarSettings] to allow for method chaining.
+         * @throws IllegalArgumentException If the provided name is null.
+         */
+        @JvmStatic
+        fun withLLMName(name: String?): Companion {
+            // Validate that the LLM name is not null
+            requireNotNull(name) { "$LLM_NAME NOT set" }
 
-    /**
-     * Sets the Large Language Model (LLM) name for the Browser4 settings.
-     *
-     * Supported LLM providers include:
-     * * <a href='https://www.volcengine.com/docs/82379/1399008'>Volcengine API</a>
-     * * <a href='https://api-docs.deepseek.com/'>DeepSeek API</a>
-     *
-     * For example, you can use the following code to set the LLM provider:
-     * ```kotlin
-     * PulsarSettings()
-     *     .withLLMProvider("volcengine") // use volcengine as the LLM provider
-     *     .withLLMName("ep-20250218132011-2scs8") // the LLM name, you should change it to your own
-     *     .withLLMAPIKey(apiKey) // the LLM api key, you should change it to your own
-     * ```
-     *
-     * @param name The name of the Large Language Model (LLM) to be set. This parameter cannot be null.
-     * @return The current instance of [PulsarSettings] to allow for method chaining.
-     * @throws IllegalArgumentException If the provided name is null.
-     */
-    fun withLLMName(name: String?): PulsarSettings {
-        // Validate that the LLM name is not null
-        requireNotNull(name) { "$LLM_NAME NOT set" }
+            // Set the LLM name as a system property
+            System.setProperty(LLM_NAME, name)
+            return PulsarSettings
+        }
 
-        // Set the LLM name as a system property
-        System.setProperty(LLM_NAME, name)
-        return this
-    }
+        /**
+         * Sets the Large Language Model (LLM) API key for the Browser4 settings.
+         *
+         * Supported LLM providers include:
+         * * <a href='https://www.volcengine.com/docs/82379/1399008'>Volcengine API</a>
+         * * <a href='https://api-docs.deepseek.com/'>DeepSeek API</a>
+         *
+         * For example, you can use the following code to set the LLM provider:
+         * ```kotlin
+         * PulsarSettings
+         *     .withLLMProvider("volcengine") // use volcengine as the LLM provider
+         *     .withLLMName("ep-20250218132011-2scs8") // the LLM name, you should change it to your own
+         *     .withLLMAPIKey(apiKey) // the LLM api key, you should change it to your own
+         * ```
+         *
+         * @param key The API key to be set. This parameter cannot be null, as the LLM service requires a valid API key.
+         * @return The current instance of [PulsarSettings] to allow for method chaining.
+         * @throws IllegalArgumentException If the provided API key is null, indicating that a valid key is required.
+         */
+        @JvmStatic
+        fun withLLMAPIKey(key: String?): Companion {
+            // Validate that the API key is not null before setting it as a system property.
+            requireNotNull(key) { "$LLM_API_KEY not set" }
 
-    /**
-     * Sets the Large Language Model (LLM) API key for the Browser4 settings.
-     *
-     * Supported LLM providers include:
-     * * <a href='https://www.volcengine.com/docs/82379/1399008'>Volcengine API</a>
-     * * <a href='https://api-docs.deepseek.com/'>DeepSeek API</a>
-     *
-     * For example, you can use the following code to set the LLM provider:
-     * ```kotlin
-     * PulsarSettings()
-     *     .withLLMProvider("volcengine") // use volcengine as the LLM provider
-     *     .withLLMName("ep-20250218132011-2scs8") // the LLM name, you should change it to your own
-     *     .withLLMAPIKey(apiKey) // the LLM api key, you should change it to your own
-     * ```
-     *
-     * @param key The API key to be set. This parameter cannot be null, as the LLM service requires a valid API key.
-     * @return The current instance of [PulsarSettings] to allow for method chaining.
-     * @throws IllegalArgumentException If the provided API key is null, indicating that a valid key is required.
-     */
-    fun withLLMAPIKey(key: String?): PulsarSettings {
-        // Validate that the API key is not null before setting it as a system property.
-        requireNotNull(key) { "$LLM_API_KEY not set" }
+            // Set the provided API key as a system property for global access.
+            System.setProperty(LLM_API_KEY, key)
 
-        // Set the provided API key as a system property for global access.
-        System.setProperty(LLM_API_KEY, key)
-        return this
+            return PulsarSettings
+        }
     }
 }

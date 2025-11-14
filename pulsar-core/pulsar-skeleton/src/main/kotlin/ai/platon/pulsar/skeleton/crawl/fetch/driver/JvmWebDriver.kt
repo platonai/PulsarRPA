@@ -63,9 +63,6 @@ interface JvmWebDriver {
     @Throws(WebDriverException::class)
     fun navigateToAsync(entry: NavigateEntry): CompletableFuture<Unit>
 
-    @Throws(WebDriverException::class)
-    fun setTimeoutsAsync(browserSettings: BrowserSettings): CompletableFuture<Unit>
-
     /**
      * Returns a string representing the current URL that the browser is looking at.
      *

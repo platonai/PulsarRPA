@@ -1,25 +1,26 @@
 package ai.platon.pulsar.rest.api.controller
 
 import ai.platon.pulsar.common.sql.SQLTemplate
-import ai.platon.pulsar.rest.api.TestUtils
+import ai.platon.pulsar.rest.api.config.MockEcServerConfiguration
+import ai.platon.pulsar.test.TestResourceUtil
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.context.annotation.Import
 
+@Import(MockEcServerConfiguration::class)
 open class ScrapeControllerTestBase : IntegrationTestBase() {
 
     companion object {
         val urls = mapOf(
-            "productListPage" to "https://www.amazon.com/b?node=1292115011",
-            "productDetailPage" to "https://www.amazon.com/dp/B08PP5MSVB"
+            "productListPage" to TestResourceUtil.MOCK_PRODUCT_LIST_URL,
+            "productDetailPage" to TestResourceUtil.MOCK_PRODUCT_DETAIL_URL
         )
 
         @JvmStatic
         @BeforeAll
         fun `Ensure resources are prepared`() {
-            TestUtils.ensurePage(requireNotNull(urls["productListPage"]))
-            TestUtils.ensurePage(requireNotNull(urls["productDetailPage"]))
         }
     }
 

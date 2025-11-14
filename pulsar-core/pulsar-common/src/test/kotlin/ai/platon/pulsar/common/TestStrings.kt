@@ -19,7 +19,7 @@ class TestStrings {
     fun testHTMLCharsetReplacer() {
         val html = "<html><head><meta charset=\"GBK\"></head><body><div>Hello World</div></body></html>"
         val html2 = HtmlUtils.replaceHTMLCharset(html, DEFAULT_CHARSET_PATTERN)
-        // println(html2.toString())
+        // logPrintln(html2.toString())
         assertTrue { html2.toString().contains("<meta charset=\"UTF-8\">") }
     }
 
@@ -37,22 +37,6 @@ class TestStrings {
         val url = "http://amazon.com/a/reviews/123?pageNumber=21&a=b"
         val matchResult = "\\d+".toRegex().find(url.substringAfter("pageNumber="))
         assertEquals("21", matchResult?.value)
-    }
-
-    @Test
-    fun testCompactFormat() {
-        var s = Strings.compactFormat(1e6.toLong(), true)
-        assertEquals("1.00 MB", s)
-
-        s = Strings.compactFormat(1e6.toLong())
-        assertEquals("976.56 KiB", s)
-
-        // negative numbers
-        s = Strings.compactFormat((-1e6).toLong(), true)
-        assertEquals("-1.00 MB", s)
-
-        s = Strings.compactFormat((-1e6).toLong())
-        assertEquals("-976.56 KiB", s)
     }
 
     @Test

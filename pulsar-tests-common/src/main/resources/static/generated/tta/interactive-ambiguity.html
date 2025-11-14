@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambiguity Resolution Test</title>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --gray: #6b7280;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section {
+            background: white;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .section h2 {
+            margin-top: 0;
+            color: #1f2937;
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 0.5rem;
+        }
+
+        .scenario-description {
+            background: #f0f9ff;
+            border-left: 4px solid var(--primary);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            border-radius: 0 6px 6px 0;
+        }
+
+        /* Button Ambiguity */
+        .button-groups {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .button-group {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .button-group h3 {
+            margin-top: 0;
+            color: #374151;
+        }
+
+        .button-cluster {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-secondary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #7c3aed;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #059669;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: white;
+        }
+
+        .btn-warning:hover {
+            background: #d97706;
+        }
+
+        .btn-error {
+            background: var(--error);
+            color: white;
+        }
+
+        .btn-error:hover {
+            background: #dc2626;
+        }
+
+        .btn-outline {
+            background: white;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* Position-based ambiguity */
+        .position-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .position-section {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .position-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .top-right {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+
+        .bottom-left {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+        }
+
+        .relative-container {
+            position: relative;
+            min-height: 200px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            padding: 1rem;
+        }
+
+        /* Form Ambiguity */
+        .form-ambiguity {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        .form-section {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Data attribute highlighting */
+        [data-testid]:hover {
+            outline: 2px dashed var(--primary);
+            outline-offset: 2px;
+        }
+
+        .testid-indicator {
+            position: absolute;
+            top: -20px;
+            left: 0;
+            background: var(--primary);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.75rem;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        [data-testid]:hover .testid-indicator {
+            opacity: 1;
+        }
+
+        /* Similar text content */
+        .similar-text-container {
+            margin-bottom: 2rem;
+        }
+
+        .text-button {
+            background: none;
+            border: none;
+            color: var(--primary);
+            text-decoration: underline;
+            cursor: pointer;
+            padding: 0.25rem 0.5rem;
+            margin: 0.25rem;
+        }
+
+        .text-button:hover {
+            color: #1d4ed8;
+            background: #f0f9ff;
+            border-radius: 3px;
+        }
+
+        /* Accessibility features */
+        .visually-hidden {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .button-groups,
+            .position-container,
+            .form-ambiguity {
+                grid-template-columns: 1fr;
+            }
+
+            .position-section {
+                position: relative;
+            }
+
+            .top-right,
+            .bottom-left {
+                position: static;
+                margin: 0.5rem 0;
+            }
+        }
+
+        /* Focus indicators for accessibility */
+        button:focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        /* Custom attributes for testing */
+        [data-ambiguous="true"] {
+            position: relative;
+        }
+
+        [data-ambiguous="true"]::after {
+            content: "⚠️";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            font-size: 1rem;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Ambiguity Resolution Test Page</h1>
+
+        <div class="section">
+            <h2>Button Text Ambiguity</h2>
+            <div class="scenario-description">
+                <p><strong>Test Scenario:</strong> Multiple buttons with identical or similar text content.
+                The AI should use context, position, or data attributes to disambiguate.</p>
+            </div>
+
+            <div class="button-groups">
+                <!-- Identical button text in different sections -->
+                <div class="button-group">
+                    <h3>User Management Section</h3>
+                    <div class="button-cluster">
+                        <button class="btn-primary" data-testid="tta-user-save"
+                                onclick="handleAction('user-save')">Save</button>
+                        <button class="btn-secondary" data-testid="tta-user-cancel"
+                                onclick="handleAction('user-cancel')">Cancel</button>
+                        <button class="btn-error" data-testid="tta-user-delete"
+                                onclick="handleAction('user-delete')">Delete</button>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <h3>Product Management Section</h3>
+                    <div class="button-cluster">
+                        <button class="btn-success" data-testid="tta-product-save"
+                                onclick="handleAction('product-save')">Save</button>
+                        <button class="btn-warning" data-testid="tta-product-cancel"
+                                onclick="handleAction('product-cancel')">Cancel</buttonu003e
+                        <button class="btn-error" data-testid="tta-product-delete"
+                                onclick="handleAction('product-delete')">Delete</button>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <h3>Settings Section</h3>
+                    <div class="button-cluster">
+                        <button class="btn-outline" data-testid="tta-settings-save"
+                                onclick="handleAction('settings-save')">Save</button>
+                        <button class="btn-outline" data-testid="tta-settings-cancel"
+                                onclick="handleAction('settings-cancel')">Cancel</button>
+                        <button class="btn-outline" data-testid="tta-settings-reset"
+                                onclick="handleAction('settings-reset')">Reset</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Similar button text -->
+            <div class="similar-text-container">
+                <h3>Similar Button Text</h3>
+                <div class="button-cluster">
+                    <button class="btn-primary" data-testid="tta-save-changes"
+                            onclick="handleAction('save-changes')">Save Changes</button>
+                    <button class="btn-secondary" data-testid="tta-save-draft"
+                            onclick="handleAction('save-draft')">Save Draft</button>
+                    <button class="btn-success" data-testid="tta-save-as"
+                            onclick="handleAction('save-as')">Save As...</button>
+                    <button class="btn-warning" data-testid="tta-save-copy"
+                            onclick="handleAction('save-copy')">Save Copy</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Position-based Ambiguity -->
+        <div class="section">
+            <h2>Position-based Ambiguity</h2>
+            <div class="scenario-description">
+                <p><strong>Test Scenario:</strong> Multiple elements in different positions with similar text or function.
+                The AI should use spatial context and positioning to disambiguate.</p>
+            </div>
+
+            <div class="position-container">
+                <div class="position-section">
+                    <div class="position-header">
+                        <h3>Header Actions</h3>
+                        <button class="btn-primary top-right" data-testid="tta-header-menu"
+                                onclick="handleAction('header-menu')">Menu</button>
+                    </div>
+                    <p>This section contains buttons in the header area</p>
+                </div>
+
+                <div class="position-section">
+                    <div class="position-header">
+                        <h3>Footer Actions</h3>
+                        <button class="btn-secondary bottom-left" data-testid="tta-footer-menu"
+                                onclick="handleAction('footer-menu')">Menu</button>
+                    </div>
+                    <p>This section contains buttons in the footer area</p>
+                </div>
+            </div>
+
+            <div class="relative-container">
+                <h3>Relative Positioning</h3>
+                <button class="btn-primary" style="position: absolute; top: 50px; left: 20px;"
+                        data-testid="tta-relative-top"
+                        onclick="handleAction('relative-top')">Top Button</button>
+                <button class="btn-secondary" style="position: absolute; top: 50px; right: 20px;"
+                        data-testid="tta-relative-right"
+                        onclick="handleAction('relative-right')">Right Button</button>
+                <button class="btn-success" style="position: absolute; bottom: 20px; left: 20px;"
+                        data-testid="tta-relative-bottom"
+                        onclick="handleAction('relative-bottom')">Bottom Button</buttonu003e
+                <button class="btn-warning" style="position: absolute; bottom: 20px; right: 20px;"
+                        data-testid="tta-relative-left"
+                        onclick="handleAction('relative-left')">Left Button</button>
+                <p style="text-align: center; margin-top: 80px;">Multiple buttons positioned absolutely within this container</p>
+            </div>
+        </div>
+
+        <!-- Form Field Ambiguity -->
+        <div class="section">
+            <h2>Form Field Ambiguity</h2>
+            <div class="scenario-description">
+                <p><strong>Test Scenario:</strong> Multiple form fields with similar labels or purposes.
+                The AI should use context, position, and attributes to select the correct field.</p>
+            </div>
+
+            <div class="form-ambiguity">
+                <!-- Billing Address Form -->
+                <div class="form-section">
+                    <h3>Billing Address</h3>
+                    <form id="billingForm">
+                        <div class="form-group">
+                            <label for="billingName">Name</label>
+                            <input type="text" id="billingName" name="billingName"
+                                   data-testid="tta-billing-name" data-context="billing">
+                        </div>
+                        <div class="form-group">
+                            <label for="billingAddress">Address</label>
+                            <input type="text" id="billingAddress" name="billingAddress"
+                                   data-testid="tta-billing-address" data-context="billing">
+                        </divu003e
+                        <div class="form-group">
+                            <label for="billingCity">City</label>
+                            <input type="text" id="billingCity" name="billingCity"
+                                   data-testid="tta-billing-city" data-context="billing">
+                        </div>
+                        <div class="form-group">
+                            <label for="billingEmail">Email</label>
+                            <input type="email" id="billingEmail" name="billingEmail"
+                                   data-testid="tta-billing-email" data-context="billing">
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Shipping Address Form -->
+                <div class="form-section">
+                    <h3>Shipping Address</h3>
+                    <form id="shippingForm">
+                        <div class="form-group">
+                            <label for="shippingName">Name</label>
+                            <input type="text" id="shippingName" name="shippingName"
+                                   data-testid="tta-shipping-name" data-context="shipping">
+                        </div>
+                        <div class="form-group">
+                            <label for="shippingAddress">Address</label>
+                            <input type="text" id="shippingAddress" name="shippingAddress"
+                                   data-testid="tta-shipping-address" data-context="shipping">
+                        </div>
+                        <div class="form-group">
+                            <label for="shippingCity">City</label>
+                            <input type="text" id="shippingCity" name="shippingCity"
+                                   data-testid="tta-shipping-city" data-context="shipping">
+                        </div>
+                        <div class="form-group">
+                            <label for="shippingEmail">Email</label>
+                            <input type="email" id="shippingEmail" name="shippingEmail"
+                                   data-testid="tta-shipping-email" data-context="shipping">
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Multiple search fields -->
+            <div class="form-section">
+                <h3>Multiple Search Fields</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;">
+                    <div class="form-group">
+                        <label for="productSearch">Search Products</label>
+                        <input type="search" id="productSearch" placeholder="Search products..."
+                               data-testid="tta-product-search" data-search-type="product">
+                    </div>
+                    <div class="form-group">
+                        <label for="customerSearch">Search Customers</label>
+                        <input type="search" id="customerSearch" placeholder="Search customers..."
+                               data-testid="tta-customer-search" data-search-type="customer">
+                    </div>
+                    <div class="form-group">
+                        <label for="orderSearch">Search Orders</label>
+                        <input type="search" id="orderSearch" placeholder="Search orders..."
+                               data-testid="tta-order-search" data-search-type="order">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Text-based Ambiguity -->
+        <div class="section">
+            <h2>Text-based Ambiguity</h2>
+            <div class="scenario-description">
+                <p><strong>Test Scenario:</strong> Multiple text elements with similar or identical content.
+                The AI should use context, surrounding elements, and semantic meaning to disambiguate.</p>
+            </div>
+
+            <div class="similar-text-container">
+                <h3>Similar Link Text</h3>
+                <p>Here are some <button class="text-button" data-testid="tta-learn-more-about"
+                        onclick="handleAction('learn-more-about')">learn more</button> about our products.</p>
+                <p>If you want to <button class="text-button" data-testid="tta-learn-more-services"
+                        onclick="handleAction('learn-more-services')">learn more</button> about our services, click here.</p>
+                <p>To <button class="text-button" data-testid="tta-learn-more-company"
+                        onclick="handleAction('learn-more-company')">learn more</button> about our company history, visit our about page.</p>
+            </div>
+
+            <div class="similar-text-container">
+                <h3>Contextual Actions</h3>
+                <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
+                    <h4>User Profile</h4>
+                    <p>John Doe - john@example.com</p>
+                    <button class="btn-primary" data-testid="tta-edit-profile"
+                            onclick="handleAction('edit-profile')">Edit</button>
+                </div>
+                <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
+                    <h4>Company Settings</h4>
+                    <p>Acme Corporation</p>
+                    <button class="btn-primary" data-testid="tta-edit-company"
+                            onclick="handleAction('edit-company')">Edit</button>
+                </div>
+                <div style="border: 1px solid #e5e7eb; border-radius: 8px; padding: 1rem; margin: 1rem 0;">
+                    <h4>Product Details</h4>
+                    <p>Premium Widget</p>
+                    <button class="btn-primary" data-testid="tta-edit-product"
+                            onclick="handleAction('edit-product')">Edit</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Feedback -->
+        <div class="section">
+            <h2>Action Feedback</h2>
+            <div id="actionFeedback" class="status-indicator success">
+                <span>Ready for testing</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function handleAction(actionType) {
+            const feedback = document.getElementById('actionFeedback');
+            const timestamp = new Date().toLocaleTimeString();
+
+            // Remove existing status classes
+            feedback.className = feedback.className.replace(/\b(status-indicator|success|error|warning)\b/g, '');
+
+            // Add appropriate status class
+            if (actionType.includes('save')) {
+                feedback.classList.add('status-indicator', 'success');
+            } else if (actionType.includes('delete') || actionType.includes('error')) {
+                feedback.classList.add('status-indicator', 'error');
+            } else if (actionType.includes('cancel')) {
+                feedback.classList.add('status-indicator', 'warning');
+            } else {
+                feedback.classList.add('status-indicator', 'success');
+            }
+
+            feedback.querySelector('span').textContent = `Action triggered: ${actionType} at ${timestamp}`;
+
+            // Log to console for debugging
+            console.log(`Action triggered: ${actionType}`, {
+                timestamp: timestamp,
+                element: event.target,
+                testId: event.target.getAttribute('data-testid')
+            });
+
+            // Visual feedback
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = '✓';
+            button.style.background = '#10b981';
+
+            setTimeout(() => {
+                button.textContent = originalText;
+                button.style.background = '';
+            }, 1000);
+        }
+
+        // Add hover effects to show data-testid
+        document.addEventListener('DOMContentLoaded', function() {
+            const elementsWithTestId = document.querySelectorAll('[data-testid]');
+
+            elementsWithTestId.forEach(element => {
+                const indicator = document.createElement('div');
+                indicator.className = 'testid-indicator';
+                indicator.textContent = element.getAttribute('data-testid');
+                element.style.position = 'relative';
+                element.appendChild(indicator);
+            });
+
+            // Add click handlers to all buttons with data-testid
+            document.querySelectorAll('button[data-testid]').forEach(button => {
+                if (!button.onclick) {
+                    button.addEventListener('click', function() {
+                        const testId = this.getAttribute('data-testid');
+                        handleAction(testId.replace('tta-', ''));
+                    });
+                }
+            });
+        });
+
+        // Form handling
+        document.addEventListener('DOMContentLoaded', function() {
+            const forms = document.querySelectorAll('form');
+
+            forms.forEach(form => {
+                form.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const formId = this.id;
+                    handleAction(`${formId}-submit`);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

@@ -83,7 +83,7 @@ class GoraWebPage(
          * @param content The content of the internal page.
          * @return A new GoraWebPage instance representing an internal page.
          */
-        fun newInternalPage(url: String, id: Int, title: String, content: String): GoraWebPage {
+        fun newInternalPage(url: String, id: Long, title: String, content: String): GoraWebPage {
             val unsafe = VolatileConfig.UNSAFE
             val page = newWebPage(url, unsafe)
             if (id >= 0) {

@@ -15,6 +15,11 @@ interface Browser: AutoCloseable {
      * The browser instance id
      * */
     val instanceId: Int
+
+    val host: String
+
+    val port: Int
+
     /**
      * The user agent. A user agent is a string that a browser sends to each website you visit.
      * It's created when the browser first connected to the remote browser.
@@ -28,6 +33,10 @@ interface Browser: AutoCloseable {
      * The created drivers by this browser.
      * */
     val drivers: Map<String, WebDriver>
+    /**
+     * The front driver who has called bringToFront()
+     * */
+    val frontDriver: WebDriver?
     /**
      * The associated data.
      * */

@@ -1,9 +1,11 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.config.ImmutableConfig
 import java.nio.file.Files
 import java.time.Duration
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertContains
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class TestMultiSinkWriter {
 
@@ -21,8 +23,8 @@ class TestMultiSinkWriter {
         writers.forEach { assertTrue { it.isIdle } }
 
         val testFile = "hello.1.txt"
-        writer.write("Still work once even it's idle", testFile)
-        assertTrue { writer.writers.isEmpty() }
+        writer.write("Idle writer becomes active after write", testFile)
+        assertEquals(1, writer.writers.count { !it.value.isIdle })
 
         writer.write("reopen the file", testFile)
         val content = Files.readString(writer.getPath(testFile))

@@ -22,7 +22,7 @@ class TestCollections {
     fun testDeque() {
         val deque = ConcurrentLinkedDeque<Int>()
         IntRange(1, 10).forEach { deque.addFirst(it) }
-//        deque.take(5).joinToString().let { println(it) }
+//        deque.take(5).joinToString().let { logPrintln(it) }
         assertEquals("10, 9, 8, 7, 6", deque.take(5).joinToString())
     }
 

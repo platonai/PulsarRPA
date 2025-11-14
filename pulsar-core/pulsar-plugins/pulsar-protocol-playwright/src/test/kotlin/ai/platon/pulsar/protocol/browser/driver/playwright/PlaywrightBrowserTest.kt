@@ -30,7 +30,7 @@ class PlaywrightBrowserTest {
     @BeforeEach
     fun setup() {
         Assumptions.assumeTrue(Runtimes.isGUIAvailable(), "Test playwright only in a GUI environment")
-        launcherOptions.browserSettings.confuser.reset()
+        launcherOptions.settings.confuser.reset()
         browser = PlaywrightBrowserLauncher().launch(browserId, launcherOptions, chromeOptions)
     }
 

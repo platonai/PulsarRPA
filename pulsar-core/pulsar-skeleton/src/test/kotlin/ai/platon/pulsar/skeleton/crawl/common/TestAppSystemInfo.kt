@@ -1,5 +1,6 @@
 package ai.platon.pulsar.skeleton.crawl.common
 
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
 import kotlin.test.*
 import oshi.SystemInfo
@@ -21,18 +22,18 @@ class TestAppSystemInfo {
 
         runCatching {
             val versionInfo = si.operatingSystem.versionInfo
-            println("Operation system: $versionInfo")
-        }.onFailure { println(it.message) }
+            printlnPro("Operation system: $versionInfo")
+        }.onFailure { printlnPro(it.message) }
 
         runCatching {
             val processor = si.hardware.processor
-            println("Processor: $processor")
-        }.onFailure { println(it.message) }
+            printlnPro("Processor: $processor")
+        }.onFailure { printlnPro(it.message) }
 
         runCatching {
             val memory = si.hardware.memory
-            println("Memory: $memory")
-        }.onFailure { println(it.message) }
+            printlnPro("Memory: $memory")
+        }.onFailure { printlnPro(it.message) }
     }
 
     @Test
@@ -40,7 +41,7 @@ class TestAppSystemInfo {
         val systemInfo = AppSystemInfo.systemInfo ?: return
 
         val versionInfo = systemInfo.operatingSystem.versionInfo
-        println(versionInfo)
+        printlnPro(versionInfo)
     }
 
     @Test
@@ -54,7 +55,7 @@ class TestAppSystemInfo {
         val systemInfo = AppSystemInfo.systemInfo ?: return
 
         Executors.newScheduledThreadPool(1).scheduleAtFixedRate({
-            println()
+            printlnPro()
             measureCPU()
         }, 2, 2, TimeUnit.SECONDS)
 
@@ -64,7 +65,7 @@ class TestAppSystemInfo {
             executor.submit { compute() }
         }
         executor.awaitTermination(10, TimeUnit.SECONDS)
-        println(sum)
+        printlnPro(sum)
     }
 
     fun compute() {
@@ -84,9 +85,10 @@ class TestAppSystemInfo {
 
         val cpuLoad = processor.getSystemCpuLoadBetweenTicks(prevTicks) * 100
         prevTicks = processor.systemCpuLoadTicks
-        println(String.format("cpuLoad: %.2f%%", cpuLoad))
+        printlnPro(String.format("cpuLoad: %.2f%%", cpuLoad))
 
         val systemLoadAverage = processor.getSystemLoadAverage(3).joinToString()
-        println("Sys: $systemLoadAverage")
+        printlnPro("Sys: $systemLoadAverage")
     }
 }
+

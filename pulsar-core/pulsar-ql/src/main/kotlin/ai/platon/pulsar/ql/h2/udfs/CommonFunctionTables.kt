@@ -24,7 +24,7 @@ import kotlin.reflect.jvm.javaType
 object CommonFunctionTables {
 
     @UDFunction(deterministic = true, description = "Show all load options, " +
-            "almost every user defined functions who have an url parameter " +
+            "almost every user defined functions who have a url parameter " +
             "can be configured by adding load options to the url parameter")
     @JvmStatic
     fun loadOptions(): ResultSet {

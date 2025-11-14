@@ -1,13 +1,21 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
 import ai.platon.pulsar.browser.common.BrowserSettings
+import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
+import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 
 /**
  * A factory to create browser instances.
  * */
 interface BrowserFactory {
+
+    val conf: ImmutableConfig
+
+    val settings: BrowserSettings
+
     /**
      * Connect to a browser instance, the browser instance should be open with Chrome devtools open.
      * */
@@ -18,6 +26,12 @@ interface BrowserFactory {
      * */
     @Throws(BrowserLaunchException::class)
     fun launch(browserId: BrowserId): Browser
+
+    /**
+     * Launch the system default browser, the system default browser is your daily used browser.
+     * */
+    @Throws(BrowserLaunchException::class)
+    fun launch(browserId: BrowserId, settings: BrowserSettings): Browser
 
     /**
      * Launch the system default browser, the system default browser is your daily used browser.
@@ -48,4 +62,12 @@ interface BrowserFactory {
      * */
     @Throws(BrowserLaunchException::class)
     fun launchRandomTempBrowser(): Browser
+
+    /**
+     * Launch a browser with the given browser id, the browser id is used to identify the browser instance.
+     * */
+    @Throws(BrowserLaunchException::class)
+    fun launch(
+        browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
+    ): Browser
 }

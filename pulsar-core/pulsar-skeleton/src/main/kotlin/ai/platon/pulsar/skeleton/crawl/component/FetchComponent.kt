@@ -32,7 +32,7 @@ open class FetchComponent(
     private val abnormalPage get() = GoraWebPage.NIL.takeIf { !isActive }
 
     /**
-     * Fetch an url
+     * Fetch a url
      *
      * @param url The url of web page to fetch
      * @return The fetch result
@@ -42,7 +42,7 @@ open class FetchComponent(
         abnormalPage ?: fetchContent(GoraWebPage.newWebPage(url, immutableConfig.toVolatileConfig()))
 
     /**
-     * Fetch an url
+     * Fetch a url
      *
      * @param url The url of web page to fetch
      * @param options The options

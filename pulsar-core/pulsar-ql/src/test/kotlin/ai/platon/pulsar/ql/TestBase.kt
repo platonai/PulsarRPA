@@ -5,7 +5,9 @@ import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.sql.ResultSetFormatter
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.ql.context.SQLContexts
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.common.options.LoadOptionDefaults
+import ai.platon.pulsar.test.TestResourceUtil
 import org.junit.jupiter.api.Assumptions
 import org.slf4j.LoggerFactory
 import java.sql.ResultSet
@@ -54,8 +56,8 @@ abstract class TestBase {
 
     val logger = getLogger(this)
 
-    val productIndexUrl = TestResource.productIndexUrl
-    val productDetailUrl = TestResource.productDetailUrl
+    val productIndexUrl = TestResourceUtil.PRODUCT_INDEX_URL_ZH
+    val productDetailUrl = TestResourceUtil.PRODUCT_DETAIL_URL_ZH
 
     fun execute(sql: String, printResult: Boolean = true) {
         context.run { connection ->
@@ -65,12 +67,12 @@ abstract class TestBase {
                     if (sql.uppercase(Locale.getDefault()).filter { it != '\n' }.trimIndent().matches(regex)) {
                         val rs = stat.executeQuery(sql)
                         if (printResult) {
-                            println(ResultSetFormatter(rs, withHeader = true))
+                            printlnPro(ResultSetFormatter(rs, withHeader = true))
                         }
                     } else {
                         val r = stat.execute(sql)
                         if (printResult) {
-                            println(r)
+                            printlnPro(r)
                         }
                     }
                     // SysProperties.serializeJavaObject = lastSerializeJavaObject
@@ -95,7 +97,7 @@ abstract class TestBase {
             val stat = connection.createStatement(ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_UPDATABLE)
             val rs = stat.executeQuery(sql)
             if (printResult) {
-                println(ResultSetFormatter(rs, withHeader = true))
+                printlnPro(ResultSetFormatter(rs, withHeader = true))
             }
             history.add("${sql.trim { it.isWhitespace() }};")
             rs.beforeFirst()
@@ -107,3 +109,4 @@ abstract class TestBase {
         assertEquals(expected, ResultSetFormatter(query(sql)).toString())
     }
 }
+

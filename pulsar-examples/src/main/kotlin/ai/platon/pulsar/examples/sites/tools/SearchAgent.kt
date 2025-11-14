@@ -1,6 +1,5 @@
 package ai.platon.pulsar.examples.sites.tools
 
-import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.NetUtil
 import ai.platon.pulsar.common.ResourceLoader
 import ai.platon.pulsar.common.getLogger

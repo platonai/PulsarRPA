@@ -7,6 +7,7 @@ import ai.platon.pulsar.common.proxy.ProxyParser
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import com.fasterxml.jackson.databind.JsonNode
+import kotlinx.coroutines.runBlocking
 import java.net.Proxy
 import java.nio.file.Files
 import java.nio.file.Path
@@ -50,7 +51,7 @@ Your response should contains ONLY the JSON object, and nothing else.
         get() = "UniversalProxyParser"
 
     override fun parse(text: String, format: String): List<ProxyEntry> {
-        val response = session.chat(prompt, text).content
+        val response = runBlocking { session.chat(prompt + "\n" + text).content }
         if (response == "LLM not available") {
             logger.warn(response)
             return listOf()
