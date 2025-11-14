@@ -211,6 +211,12 @@ class AgentStateManager(
         }
     }
 
+    fun clearHistory() {
+        synchronized(this) {
+            _stateHistory.clear()
+        }
+    }
+
     /**
      * Remove the last history entry if its step is >= provided step. Used for rollback on errors.
      */

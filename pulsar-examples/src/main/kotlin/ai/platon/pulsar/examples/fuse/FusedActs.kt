@@ -116,7 +116,7 @@ class FusedActs {
 
         // 7) Extract specific data after interactions
         log.info("[STEP ${++step}] Action: extract article titles and their hrefs from the main list")
-        result = agent.resolve("goto https://en.cppreference.com/index.html , extract article titles and their hrefs from the main list")
+        result = agent.resolve("goto https://en.cppreference.com/index.html , extract first 10 articles with there titles and hrefs from the main list")
         result("action result", result)
 
         // 5) Navigate back

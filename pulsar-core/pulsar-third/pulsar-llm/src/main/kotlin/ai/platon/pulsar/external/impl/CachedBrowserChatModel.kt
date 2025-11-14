@@ -266,7 +266,7 @@ open class CachedBrowserChatModel(
 
     private suspend fun sendChatMessageWithRetry(vararg messages: ChatMessage): ChatResponse {
         var i = 0
-        val maxRetry = 3
+        val maxRetry = 2
         var lastException: Exception? = null
         while (i++ < maxRetry) {
             try {

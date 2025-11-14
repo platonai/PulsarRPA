@@ -205,6 +205,10 @@ open class BrowserPerceptiveAgent constructor(
                 "⏳ resolve TIMEOUT"
             )
             ActResult(success = false, message = msg, action = instruction)
+        } finally {
+            // clear history so the next task will have a clean operation trace for summary.
+            // but we do not clear process trace which will be kept to trace all operations and states.
+            stateManager.clearHistory()
         }
     }
 
