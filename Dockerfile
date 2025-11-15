@@ -9,6 +9,8 @@ COPY pom.xml ./
 COPY VERSION ./
 COPY mvnw ./
 COPY .mvn ./.mvn
+# include **/src/**/target
+COPY .gitignore .
 COPY bin ./bin
 COPY . .
 

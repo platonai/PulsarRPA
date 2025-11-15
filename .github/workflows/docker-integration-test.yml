@@ -1,0 +1,108 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - master
+      - main
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+-ci.[0-9]+'
+    paths:
+      - '*.java'
+      - '*.kt'
+  workflow_dispatch:
+    inputs:
+      skip_tests:
+        description: 'Skip tests'
+        required: false
+        default: false
+        type: boolean
+      debug_mode:
+        description: 'Enable debug mode'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  IMAGE_NAME: browser4
+  NETWORK_NAME: 'browser4_backend'
+  CONTAINER_NAME: 'browser4-test'
+
+jobs:
+  ci-build:
+    runs-on: ubuntu-latest
+
+    outputs:
+      image_tag: ${{ steps.build.outputs.image_tag }}
+      test_results: ${{ steps.tests.outputs.test_status }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker Image
+        id: build
+        uses: ./.github/actions/docker-build
+        with:
+          image_name: 'browser4'
+          version: ${{ github.sha }}
+          timeout_minutes: '20'
+
+      - name: Start Application
+        id: app
+        uses: ./.github/actions/start-application
+        with:
+          image_name: 'browser4'
+          version: ${{ github.sha }}
+          container_name: ${{ env.CONTAINER_NAME }}
+          network_name: ${{ env.NETWORK_NAME }}
+          deepseek_api_key: ${{ secrets.DEEPSEEK_API_KEY }}
+          proxy_rotation_url: ${{ secrets.PROXY_ROTATION_URL }}
+
+      - name: Health Check
+        id: health
+        uses: ./.github/actions/health-check
+        with:
+          service_port: '8182'
+          timeout_minutes: '5'
+          container_name: ${{ env.CONTAINER_NAME }}
+
+      - name: Run End to End Tests
+        id: end-to-end-tests
+        shell: bash
+        run: |
+          echo "::group::🧪 End to End Tests"
+
+          if [ -f "./bin/tests/run-e2e-test.sh" ]; then
+            echo "✅ Found E2E test script"
+            chmod +x ./bin/tests/run-e2e-test.sh
+
+            echo "🚀 Running E2E tests..."
+            date
+            echo "Application URL: http://localhost:8182"
+            echo "Network: ${{ env.NETWORK_NAME }}"
+            echo "Container: ${{ env.CONTAINER_NAME }}"
+
+            if timeout 1200 ./bin/tests/run-e2e-test.sh; then
+              echo "✅ E2E tests passed"
+              echo "E2E_status=success" >> $GITHUB_OUTPUT
+            else
+              echo "❌ E2E tests failed"
+              echo "integration_status=failed" >> $GITHUB_OUTPUT
+              exit 1
+            fi
+          else
+            echo "⚠️ E2E test script not found: ./bin/tests/run-E2E-test.sh"
+            echo "Skipping E2E tests..."
+            echo "E2E_status=skipped" >> $GITHUB_OUTPUT
+          fi
+
+          echo "::endgroup::"
+
+      - name: Cleanup Resources
+        if: always()
+        uses: ./.github/actions/cleanup-resources
+        with:
+          container_name: ${{ env.CONTAINER_NAME }}
+          cleanup_compose: 'true'
+          cleanup_volumes: 'true'
