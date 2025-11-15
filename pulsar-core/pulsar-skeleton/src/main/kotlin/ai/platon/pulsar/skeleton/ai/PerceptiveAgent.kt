@@ -390,9 +390,9 @@ data class ProcessTrace(
     val timestamp: Instant = Instant.now(),
 ) {
     override fun toString(): String {
-        val itemStr = items.entries.joinToString { (k, v) -> "$k=" + Strings.compactLog(v.toString()) }
+        val itemStr = items.entries.joinToString { (k, v) -> "$k=" + Strings.compactLog(v.toString(), 50) }
         val msg = message?.let { " | $it" } ?: ""
-        return "$timestamp [$step] $itemStr$msg"
+        return "$step.\t$timestamp\t$itemStr$msg"
     }
 }
 

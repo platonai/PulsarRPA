@@ -13,7 +13,9 @@ import kotlin.jvm.optionals.getOrNull
  */
 object ProjectUtils {
 
-    const val CODE_RESOURCE_DIR = "pulsar-core/pulsar-resources/src/main/resources/code-mirror"
+    const val CODE_MIRROR_DIR = "code-mirror"
+
+    const val CODE_RESOURCE_DIR = "pulsar-core/pulsar-resources/src/main/resources/$CODE_MIRROR_DIR"
 
     fun isInJar(): Boolean {
         val location = this::class.java.protectionDomain.codeSource.location
@@ -53,7 +55,7 @@ object ProjectUtils {
         val rootDir = findProjectRootDir() ?: return false
         val destPath = rootDir.resolve(CODE_RESOURCE_DIR)
 
-        val filename = source.fileName.toString()
+        val filename = source.fileName.toString() + ".txt"
         val target = destPath.resolve(filename)
         Files.copy(source, target, StandardCopyOption.REPLACE_EXISTING)
 
