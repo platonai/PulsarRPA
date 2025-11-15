@@ -51,10 +51,10 @@ class BrowserToolExecutor: AbstractToolExecutor() {
                 val tabId = paramString(args, "tabId", functionName)!!
                 val driver = tabId.toIntOrNull()?.let { browser.findDriverById(it) } ?: browser.drivers[tabId]
                 if (driver == null || driver !is AbstractWebDriver) {
-                    return buildErrorResponse("tab_not_found", "Tab '$tabId' not found", browser)
+                    throw IllegalArgumentException("Tab '$tabId' not found")
                 }
                 driver.bringToFront()
-                logger.info("Switched to tab {} (driver {}/{})", tabId, driver.id, driver.guid)
+                logger.info("""👀 Switched to tab {} (driver {}/{})""", tabId, driver.id, driver.guid)
                 driver
             }
             else -> throw IllegalArgumentException("Unsupported browser method: $functionName(${args.keys})")
