@@ -6,16 +6,12 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
 import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.withTimeout
 import java.nio.file.Path
-import java.nio.file.Paths
 import java.time.Instant
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 class AgentStateManager(
@@ -33,13 +29,19 @@ class AgentStateManager(
 
     val auxLogDir: Path get() = AppPaths.detectAuxiliaryLogDir().resolve("agent")
 
-    suspend fun buildInitExecutionContext(action: ActionOptions, baseContext: ExecutionContext? = null): ExecutionContext {
+    suspend fun buildInitExecutionContext(
+        action: ActionOptions,
+        baseContext: ExecutionContext? = null
+    ): ExecutionContext {
         val context = buildExecutionContext(action.action, baseContext = baseContext)
         action.setContext(context)
         return context
     }
 
-    suspend fun buildInitExecutionContext(options: ObserveOptions, baseContext: ExecutionContext? = null): ExecutionContext {
+    suspend fun buildInitExecutionContext(
+        options: ObserveOptions,
+        baseContext: ExecutionContext? = null
+    ): ExecutionContext {
         val context = buildExecutionContext(options.instruction ?: "", baseContext = baseContext)
         options.setContext(context)
         return context
@@ -193,12 +195,8 @@ class AgentStateManager(
         _processTrace.add(trace)
     }
 
-    fun addTrace(message: String) {
-        addTrace(stateHistory.lastOrNull(), emptyMap(), message)
-    }
-
     fun writeProcessTrace() {
-        val path = auxLogDir.resolve("processTrace_${DateTimes.formatNow()}.log")
+        val path = auxLogDir.resolve("processTrace_${AppPaths.fromNow()}.log")
         MessageWriter.writeOnce(path, processTrace)
     }
 

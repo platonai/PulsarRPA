@@ -1,8 +1,8 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.DateTimes.PATH_SAFE_FORMATTER_11
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
-import ai.platon.pulsar.common.concurrent.ConcurrentPassiveExpiringSet
 import ai.platon.pulsar.common.urls.URLUtils
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
@@ -11,6 +11,8 @@ import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.Instant
+import java.time.LocalDateTime
 import kotlin.io.path.exists
 import kotlin.io.path.getLastModifiedTime
 import kotlin.io.path.isDirectory
@@ -417,6 +419,14 @@ object AppPaths {
         val dirForDomain = fromHost(u)
         val fileId = fileId(uri)
         return "$prefix$dirForDomain-$fileId$suffix"
+    }
+
+    fun fromTime(time: LocalDateTime): String {
+        return time.format(PATH_SAFE_FORMATTER_11)
+    }
+
+    fun fromNow(): String {
+        return LocalDateTime.now().format(PATH_SAFE_FORMATTER_11)
     }
 
     /**

@@ -150,10 +150,6 @@ object DateTimes {
         return format(Instant.now(), format)
     }
 
-    fun formatNow(): String {
-        return LocalDateTime.now().format(PATH_SAFE_FORMATTER_11)
-    }
-
     @JvmOverloads
     fun readableDuration(duration: Duration, truncatedToUnit: ChronoUnit = ChronoUnit.SECONDS): String {
         return StringUtils.removeStart(duration.truncatedTo(truncatedToUnit).toString(), "PT")

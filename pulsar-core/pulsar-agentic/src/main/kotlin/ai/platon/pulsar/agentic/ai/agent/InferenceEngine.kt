@@ -79,7 +79,7 @@ class InferenceEngine(
         messages.addUser(promptBuilder.buildExtractUserRequestPrompt(params), "user_request")
         messages.addLast(promptBuilder.buildExtractUserPrompt(params))
 
-        val timestamp = DateTimes.formatNow()
+        val timestamp = AppPaths.fromNow()
         var callFile: Path? = null
         if (params.logInferenceToFile) {
             callFile = logModelCall(
@@ -217,7 +217,7 @@ class InferenceEngine(
         val startTime = Instant.now()
         val prefix = if (params.fromAct) "act" else "observe"
         var callFile: Path? = null
-        val timestamp = DateTimes.format(startTime)
+        val timestamp = AppPaths.fromNow()
         if (params.logInferenceToFile) {
             callFile = logModelCall(
                 dirPrefix = "${prefix}Summary",
