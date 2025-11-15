@@ -17,7 +17,7 @@ class ExecutorsNamedArgsTest {
     fun agent_act_uses_named_args() {
         val agent = mockk<PerceptiveAgent>(relaxed = true)
         val exec = AgentToolExecutor()
-        val tc = ToolCall(domain = "agent", method = "act", arguments = mutableMapOf<String, String?>("action" to "Do it"))
+        val tc = ToolCall(domain = "agent", method = "act", arguments = mutableMapOf("action" to "Do it"))
 
         runBlocking { exec.execute(tc, agent) }
         coVerify { agent.act("Do it") }

@@ -72,6 +72,7 @@ open class BasicToolCallExecutor(
         }
     }
 
+    @Deprecated("Executing `expression` is deprecated")
     suspend fun execute(expression: String, browser: Browser, session: AgenticSession): TcEvaluate {
         return BrowserToolExecutor().execute(expression, browser, session)
     }
@@ -84,6 +85,7 @@ open class BasicToolCallExecutor(
             ?: throw UnsupportedOperationException("❓ Unsupported target ${target::class}")
     }
 
+    @Deprecated("Executing `expression` is deprecated")
     @Throws(UnsupportedOperationException::class)
     suspend fun execute(expression: String, target: Any): TcEvaluate {
         return toolExecutors

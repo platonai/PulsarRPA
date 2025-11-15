@@ -16,6 +16,7 @@ class BrowserToolExecutor: AbstractToolExecutor() {
 
     override val targetClass: KClass<*> = Browser::class
 
+    @Deprecated("Executing `expression` is deprecated")
     suspend fun execute(expression: String, browser: Browser, session: AgenticSession): TcEvaluate {
         if (expression.contains("switchTab")) {
             val result = execute(expression, browser)

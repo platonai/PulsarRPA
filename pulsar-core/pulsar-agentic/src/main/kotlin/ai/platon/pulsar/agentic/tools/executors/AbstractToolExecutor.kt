@@ -13,6 +13,8 @@ interface ToolExecutor {
     val targetClass: KClass<*>
 
     suspend fun execute(tc: ToolCall, target: Any): TcEvaluate
+
+    @Deprecated("Executing `expression` is deprecated")
     suspend fun execute(expression: String, target: Any): TcEvaluate
 
     fun help(): String
@@ -43,6 +45,7 @@ abstract class AbstractToolExecutor : ToolExecutor {
         }
     }
 
+    @Deprecated("Executing `expression` is deprecated")
     override suspend fun execute(expression: String, target: Any): TcEvaluate {
         val (objectName, functionName, args) = simpleParser.parseFunctionExpression(expression)
             ?: return TcEvaluate(expression = expression, cause = IllegalArgumentException("Illegal expression"), "")

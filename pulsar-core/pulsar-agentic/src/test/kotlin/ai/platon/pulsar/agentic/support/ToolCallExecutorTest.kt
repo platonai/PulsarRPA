@@ -77,6 +77,7 @@ class ToolCallExecutorTest {
         assertEquals("a.link", tc.arguments["0"]) // single arg despite trailing comma
     }
 
+
     @Test
     fun `parse mixed whitespace and trailing comma`() {
         val src = "driver.scrollToMiddle(   0.75   ,   )"
