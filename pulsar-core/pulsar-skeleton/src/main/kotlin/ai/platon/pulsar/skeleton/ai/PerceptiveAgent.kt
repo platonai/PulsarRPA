@@ -65,8 +65,11 @@ data class ActResult constructor(
     @get:JsonIgnore
     val detail: DetailedActResult? = null
 ) {
+    /**
+     * TODO: every expression is a pseudoExpression currently
+     * */
     @get:JsonIgnore
-    val expression get() = result?.expression
+    val expression get() = result?.actionDescription?.expression
 
     @get:JsonIgnore
     val tcEvalValue get() = result?.evaluate?.value
@@ -201,7 +204,7 @@ data class TcEvaluate constructor(
         return when (value) {
             is Number -> "$value"
             is Boolean -> "$value"
-            else -> Strings.compactInline("$value")
+            else -> Strings.compactInline("$value", 50)
         }
     }
 }
@@ -210,8 +213,7 @@ data class ToolCallResult constructor(
     val success: Boolean = false,
     val evaluate: TcEvaluate? = null,
     val message: String? = null,
-    val expression: String? = null,
-    val modelResponse: String? = null,
+    val actionDescription: ActionDescription? = null
 )
 
 data class ObserveElement constructor(
@@ -230,6 +232,9 @@ data class ObserveElement constructor(
     val backendNodeId: Int? = null,
     val xpath: String? = null,
     val cssSelector: String? = null,
+    /**
+     * TODO: every expression is a pseudoExpression currently
+     * */
     val expression: String? = null,
     val cssFriendlyExpression: String? = null,
 ) {
@@ -324,9 +329,11 @@ data class AgentState constructor(
             .filter { it.second != null }
             .joinToString("\n") { (k, s) -> "\t- $k: ${Strings.compactInline(s)}" }
 
-        val state = if (success) "💯OK" else "💔FAIL"
+        val state = if (success) """✨OK""" else "💔FAIL"
+        val pseudoExpression = actionDescription?.pseudoExpression
+        val resultPreview = toolCallResult?.evaluate?.preview ?: "(absent)"
         val toolCallState = if (toolCallResult?.success == true) "✅OK" else "❌FAIL"
-        return "[$state] ToolCall:$domain.$method($toolCallState)\n$summary"
+        return "$state | ToolCall: $pseudoExpression | Result: $resultPreview | $toolCallState\n$summary"
     }
 }
 
@@ -382,6 +389,9 @@ data class ActionDescription constructor(
     val toolCall: ToolCall? get() = observeElement?.toolCall
     val locator: String? get() = observeElement?.locator
     val xpath: String? get() = observeElement?.xpath
+    /**
+     * TODO: every expression is a pseudoExpression currently
+     * */
     val expression: String? get() = observeElement?.expression
     val cssFriendlyExpression: String? get() = observeElement?.cssFriendlyExpression
     val pseudoExpression: String? get() = observeElement?.pseudoExpression

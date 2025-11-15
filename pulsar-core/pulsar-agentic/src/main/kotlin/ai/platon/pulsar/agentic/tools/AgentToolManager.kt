@@ -50,8 +50,7 @@ class AgentToolManager(
                 success = false,
                 evaluate = null,
                 message = "USER interrupted",
-                expression = actionDescription.cssFriendlyExpression,
-                modelResponse = actionDescription.modelResponse?.content
+                actionDescription = actionDescription,
             )
         }
 
@@ -71,8 +70,7 @@ class AgentToolManager(
                 success = true,
                 evaluate = evaluate,
                 message = message,
-                expression = actionDescription.cssFriendlyExpression,
-                modelResponse = actionDescription.modelResponse?.content
+                actionDescription = actionDescription,
             )
 
             val method = tc.method
@@ -104,8 +102,7 @@ class AgentToolManager(
                 success = false,
                 evaluate = TcEvaluate(expression, e),
                 message = e.message,
-                expression = expression,
-                modelResponse = actionDescription.modelResponse?.content
+                actionDescription = actionDescription,
             )
         }
     }

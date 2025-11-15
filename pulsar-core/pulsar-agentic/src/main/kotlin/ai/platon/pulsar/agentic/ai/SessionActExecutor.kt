@@ -43,8 +43,7 @@ internal class SessionActExecutor(
             success = true,
             evaluate = evaluate,
             message = "performAct",
-            expression = action.cssFriendlyExpression,
-            modelResponse = action.modelResponse?.content
+            actionDescription = action,
         )
     }
 
