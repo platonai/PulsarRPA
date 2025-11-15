@@ -39,7 +39,7 @@ data class ExtractParams constructor(
     val schema: ExtractionSchema,
     val requestId: String = UUID.randomUUID().toString(),
     val userProvidedInstructions: String? = null,
-    val logInferenceToFile: Boolean = true,
+    val logInferenceToFile: Boolean = false,
 )
 
 data class ObserveParams constructor(
@@ -136,7 +136,7 @@ class InferenceEngine(
         val metadataMessages = AgentMessageList()
         val metadataSystem = promptBuilder.buildMetadataSystemPrompt()
         // For metadata, pass the extracted object directly
-        val metadataUser = promptBuilder.buildMetadataPrompt(params.instruction, extractedNode, params.agentState)
+        val metadataUser = promptBuilder.buildMetadataUserPrompt(params.instruction, extractedNode, params.agentState)
 
         metadataMessages.addLast(metadataSystem)
         metadataMessages.addLast(metadataUser)

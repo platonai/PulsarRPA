@@ -958,7 +958,7 @@ ${schema.toJsonSchema()}
         )
     }
 
-    fun buildMetadataPrompt(
+    fun buildMetadataUserPrompt(
         instruction: String,
         extractionResponse: Any,
         agentState: AgentState,
@@ -983,6 +983,7 @@ ${schema.toJsonSchema()}
         val content =
             """
 ## 用户指令
+（数据提取的最初要求）
 <user_request>
 $instruction
 </user_request>
@@ -1000,7 +1001,9 @@ $instruction
 - 视口之上像素高度: 当前视口上方、已滚动出可视范围的网页内容高度
 - 视口之下像素高度: 当前视口下方、不在可视范围内的网页内容高度
 
-提取结果:
+---
+
+## 提取结果
 
 $extractedJson
 

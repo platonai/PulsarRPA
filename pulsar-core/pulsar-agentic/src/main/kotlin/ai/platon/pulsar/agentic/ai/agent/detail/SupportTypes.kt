@@ -71,7 +71,7 @@ data class ExecutionContext(
         return ObserveParams(
             context = this,
             returnAction = options.returnAction ?: false,
-            logInferenceToFile = config.enableStructuredLogging,
+            logInferenceToFile = config.logInferenceToFile,
             fromAct = fromAct,
             resolve = resolve
         )
@@ -83,7 +83,7 @@ data class ExecutionContext(
             fromAct = true,
             returnAction = true,
             resolve = resolve,
-            logInferenceToFile = config.enableStructuredLogging,
+            logInferenceToFile = config.logInferenceToFile,
         )
     }
 
@@ -93,7 +93,7 @@ data class ExecutionContext(
             agentState = agentState,
             schema = schema,
             requestId = requestId,
-            logInferenceToFile = config.enableStructuredLogging,
+            logInferenceToFile = config.logInferenceToFile,
         )
     }
 }

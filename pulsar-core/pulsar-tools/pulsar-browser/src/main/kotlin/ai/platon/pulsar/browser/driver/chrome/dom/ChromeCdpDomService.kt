@@ -900,6 +900,8 @@ private fun AXNode.toEnhanced(): AXNodeEx {
         }
     }
 
+    // TODO: what about the `value` field?
+    //  val `value`: AXValue? = null
     return AXNodeEx(
         axNodeId = nodeId,
         ignored = ignored,

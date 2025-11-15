@@ -178,8 +178,39 @@ data class AXPropertyEx(
  */
 data class AXNodeEx(
     val axNodeId: String,
+    /**
+     * 表示此节点是否被无障碍服务忽略。
+     * 举例：
+     * - 被 CSS display:none 隐藏的节点
+     * - 纯装饰节点
+     * - 没有语义的 wrapper（例如 <span> 容器）
+     *
+     * 如果 ignored = true，通常不出现在屏幕阅读器内容中。
+     *
+     * ignoredReasons:
+     * - aria-hidden
+     * - not-visible
+     * - ancestor-ignored
+     * */
     val ignored: Boolean = false,
+    /**
+     * 节点的语义角色，例如：
+     * - button
+     * - checkbox
+     * - radio
+     * - textbox
+     * - link
+     * - paragraph
+     * - heading
+     * */
     val role: String? = null,
+    /**
+     * 无障碍名称（Accessible Name），来源可能包括：
+     * - <label>
+     * - aria-label
+     * - 文本节点
+     * - alt 属性（图片）
+     * */
     val name: String? = null,
     val description: String? = null,
     val properties: List<AXPropertyEx>? = null,
