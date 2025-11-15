@@ -41,7 +41,7 @@ class MicroToNanoTreeHelper(
 
         val y1 = startY.roundTo(1)
         val y2 = endY.roundTo(1)
-        logger.info("Generated a nano-tree with $numNodes nodes distributed along Y-axis ($y1, $y2], chunks has seen: $seenChunks")
+        logger.info("Nano-tree generated | nodes: $numNodes | Y-axis: ($y1, $y2] | seen chunks: $seenChunks")
 
         return tree
     }
@@ -67,6 +67,7 @@ class MicroToNanoTreeHelper(
         } else {
             val y1 = childNanoList.minOf { it.bounds?.y ?: 100000.0 } // remove nulls
             val y2 = childNanoList.maxOf { it.bounds?.y ?: -100000.0 } // remove nulls
+
             seenChunks.add(Pair(y1, y2))
             numNodes++
             root.copy(children = childNanoList)

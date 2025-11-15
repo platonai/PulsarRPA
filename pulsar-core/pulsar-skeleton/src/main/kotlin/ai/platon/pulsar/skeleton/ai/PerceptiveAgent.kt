@@ -3,6 +3,7 @@ package ai.platon.pulsar.skeleton.ai
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.compactedBrief
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import com.fasterxml.jackson.annotation.JsonIgnore
@@ -74,20 +75,23 @@ data class ActResult constructor(
     val tcEvalValue get() = result?.evaluate?.value
 
     override fun toString(): String {
-        val eval = Strings.compactLog(tcEvalValue?.toString(), 50)
+        val eval = Strings.compactInline(tcEvalValue?.toString(), 50)
         return "[$action] expr: $expression eval: $eval message: $message"
     }
 
     companion object {
         fun failed(message: String, action: String? = null) = ActResult(false, message, action)
-        fun failed(message: String, detail: DetailedActResult) = ActResult(false,
+        fun failed(message: String, detail: DetailedActResult) = ActResult(
+            false,
             message,
             detail = detail,
         )
+
         fun complete(actionDescription: ActionDescription): ActResult {
             val detailedActResult = DetailedActResult(actionDescription, null, true, actionDescription.summary)
             return ActResult(
-                true, "completed", actionDescription.instruction, null, detailedActResult)
+                true, "completed", actionDescription.instruction, null, detailedActResult
+            )
         }
     }
 }
@@ -110,7 +114,7 @@ data class ExtractResult(
     val data: JsonNode
 ) {
     override fun toString(): String {
-        return "success: $success message: $message data: " + Strings.compactLog(data.toString(), 50)
+        return "success: $success message: $message data: " + Strings.compactInline(data.toString(), 50)
     }
 }
 
@@ -145,16 +149,18 @@ data class ToolCallSpec constructor(
         val defaultValue: String? = null,
     ) {
         @get:JsonIgnore
-        val expression: String get() {
-            return if (defaultValue != null) "$name: $type = $defaultValue" else "$name: $type"
-        }
+        val expression: String
+            get() {
+                return if (defaultValue != null) "$name: $type = $defaultValue" else "$name: $type"
+            }
     }
 
     @get:JsonIgnore
-    val expression: String get() {
-        val args = arguments.joinToString(prefix = "(", postfix = ")")
-        return "$domain.$method$args"
-    }
+    val expression: String
+        get() {
+            val args = arguments.joinToString(prefix = "(", postfix = ")")
+            return "$domain.$method$args"
+        }
 }
 
 data class ToolCall constructor(
@@ -164,8 +170,9 @@ data class ToolCall constructor(
     val description: String? = null,
 ) {
     @get:JsonIgnore
-    val pseudoNamedArguments get() = arguments.entries
-        .joinToString { (k, v) -> "$k=" + Strings.doubleQuote(Strings.compactLog(v, 20)) }
+    val pseudoNamedArguments
+        get() = arguments.entries
+            .joinToString { (k, v) -> "$k=" + Strings.doubleQuote(Strings.compactInline(v, 20)) }
 
     val pseudoExpression: String get() = "$domain.${method}($pseudoNamedArguments)"
 
@@ -197,7 +204,7 @@ data class TcEvaluate constructor(
         return when (value) {
             is Number -> "$value"
             is Boolean -> "$value"
-            else -> Strings.compactLog("$value")
+            else -> Strings.compactInline("$value")
         }
     }
 }
@@ -281,8 +288,6 @@ data class AgentState constructor(
     var browserUseState: BrowserUseState,
     // A simple and descriptive description
     var description: String? = null,
-    // A message about the current state, especially detailed error message
-    var message: String? = null,
     // AI:
     var domain: String? = null,
     // AI:
@@ -297,6 +302,8 @@ data class AgentState constructor(
     var nextGoal: String? = null,
     // timestamp
     var timestamp: Instant = Instant.now(),
+    // The last exception
+    var exception: Exception? = null,
     @JsonIgnore
     var actionDescription: ActionDescription? = null,
     @JsonIgnore
@@ -313,13 +320,14 @@ data class AgentState constructor(
             "pageContentSummary" to currentPageContentSummary,
             "screenshotContentSummary" to screenshotContentSummary,
             "evaluationPreviousGoal" to evaluationPreviousGoal,
-            "nextGoal" to nextGoal
+            "nextGoal" to nextGoal,
+            "exception" to exception?.compactedBrief(),
         )
             .filter { it.second != null }
-            .joinToString("\n\t- ") { (k, v) -> "$k=$v" }
+            .joinToString("\n") { (k, v) -> "\t- $k: $v" }
 
         val toolCallState = toolCallResult?.success ?: false
-        return "$timestamp\tStep:[$step] ToolCall:$domain.$method ToolCallState:$toolCallState\n$summary"
+        return "ToolCall:$domain.$method ToolCallState:$toolCallState\n$summary"
     }
 }
 
@@ -419,13 +427,13 @@ data class ProcessTrace(
     val timestamp: Instant = Instant.now(),
 ) {
     override fun toString(): String {
-        val itemStr = items.entries.joinToString { (k, v) -> "$k=" + Strings.compactLog(v.toString(), 50) }
+        val itemStr = items.entries.joinToString { (k, v) -> "$k=" + Strings.compactInline(v.toString(), 50) }
         val msg = message?.let { " | $it" } ?: ""
         return "$timestamp\t[$step]\t$itemStr$msg"
     }
 }
 
-interface PerceptiveAgent: AutoCloseable {
+interface PerceptiveAgent : AutoCloseable {
     val uuid: UUID
 
     /**

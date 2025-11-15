@@ -120,26 +120,27 @@ open class BrowserAgentActor(
                 method, observe.locator, observeElement.cssSelector, observeElement.pseudoExpression
             )
 
-            val msg = MessageFormatter.arrayFormat(
+            val description = MessageFormatter.arrayFormat(
                 "✅ Action executed | {} | {}/{} | {}",
                 arrayOf(method, observe.locator, observeElement.cssSelector, observeElement.pseudoExpression)
-            )
+            ).message
 
-            stateManager.updateAgentState(agentState, observeElement, toolCall, toolCallResult, msg.message)
+            stateManager.updateAgentState(agentState, observeElement, toolCall, toolCallResult, description = description)
 
             // ActResult(success = true, action = toolCall.method, message = msg.message, result = toolCallResult, actionDescription = actionDescription)
             detailedActResult.toActResult()
         } catch (e: Exception) {
             logger.error("❌ observe.act execution failed sid={} msg={}", uuid.toString().take(8), e.message, e)
 
-            val msg = MessageFormatter.arrayFormat(
-                "❌ observe.act execution failed | {} | {}/{} | {}",
-                arrayOf(method, observe.locator, observeElement.cssSelector, e.message)
-            ).toString()
+            val description = MessageFormatter.arrayFormat(
+                "❌ observe.act execution failed | {} | {}/{}",
+                arrayOf(method, observe.locator, observeElement.cssSelector)
+            ).message
 
-            stateManager.updateAgentState(agentState, observeElement, toolCall, null, msg, success = false)
+            stateManager.updateAgentState(
+                agentState, observeElement, toolCall, description = description, success = false, exception = e)
 
-            ActResult.failed(msg, toolCall.method)
+            ActResult.failed(description, toolCall.method)
         }
     }
 

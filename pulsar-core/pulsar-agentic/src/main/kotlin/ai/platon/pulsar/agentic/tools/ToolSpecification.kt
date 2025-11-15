@@ -32,6 +32,9 @@ fs.replaceContent(filename: String, oldStr: String, newStr: String)
     const val TOOL_CALL_SPECIFICATION = """
 // domain: driver
 driver.navigateTo(url: String)
+driver.reload()
+driver.goBack()
+driver.goForward()
 driver.waitForSelector(selector: String, timeoutMillis: Long = 3000)
 driver.exists(selector: String): Boolean
 driver.isVisible(selector: String): Boolean
@@ -46,11 +49,7 @@ driver.uncheck(selector: String)
 driver.scrollTo(selector: String)
 driver.scrollToTop()
 driver.scrollToBottom()
-driver.scrollToMiddle(ratio: Double = 0.5)
 driver.scrollBy(pixels: Double = 200.0): Double
-driver.reload()
-driver.goBack()
-driver.goForward()
 driver.textContent(): String?                            // Returns the document's text content.
 driver.selectFirstTextOrNull(selector: String): String?  // Returns the node's text content including it's descendants, the node is located by [selector]. If the node does not exist, returns null.
 driver.delay(millis: Long)

@@ -1001,14 +1001,14 @@ public final class Strings {
      *
      */
     @Nonnull
-    public static String compactLog(String log, int maxWidth) {
+    public static String compactInline(String log, int maxWidth) {
         if (log == null) return "";
         return StringUtils.abbreviate(compactWhitespaces(log), maxWidth);
     }
 
     @Nonnull
-    public static String compactLog(String log) {
-        return compactLog(log, 200);
+    public static String compactInline(String log) {
+        return compactInline(log, 200);
     }
 
     /**

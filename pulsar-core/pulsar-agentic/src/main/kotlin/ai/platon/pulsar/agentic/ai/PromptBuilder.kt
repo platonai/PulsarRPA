@@ -603,7 +603,7 @@ $TOOL_CALL_RULE_CONTENT
 
             val compacted = KStrings.replaceContentInSections(prompt, boundaryPairs, "\n...\n\n")
 
-            return Strings.compactLog(compacted, maxWidth)
+            return Strings.compactInline(compacted, maxWidth)
         }
     }
 
@@ -818,7 +818,7 @@ $historyJson
         val evalMessage = when {
             exception != null -> "[执行异常]\n" + exception.brief()
             else -> evalResult
-        }.let { Strings.compactLog(it, 5000) }
+        }.let { Strings.compactInline(it, 5000) }
         val help = evaluate?.exception?.help?.takeIf { it.isNotBlank() }
         val helpMessage = help?.let { "帮助信息：\n```\n$it\n```" } ?: ""
         val lastModelError = agentState.actionDescription?.modelResponse?.modelError

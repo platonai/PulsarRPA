@@ -162,7 +162,7 @@ open class BrowserPerceptiveAgent constructor(
         val sessionStartTime = context.timestamp
 
         // Add start history for better traceability (meta record only)
-        val goal = Strings.compactLog(instruction, 160)
+        val goal = Strings.compactInline(instruction, 160)
         stateManager.addTrace(
             context.agentState,
             mapOf(
@@ -201,7 +201,7 @@ open class BrowserPerceptiveAgent constructor(
             stateManager.addTrace(
                 context.agentState, mapOf(
                     "event" to "resolveTimeout",
-                    "timeoutMs" to effectiveTimeout, "instruction" to Strings.compactLog(instruction, 160)
+                    "timeoutMs" to effectiveTimeout, "instruction" to Strings.compactInline(instruction, 160)
                 ),
                 "⏳ resolve TIMEOUT"
             )
@@ -576,7 +576,7 @@ open class BrowserPerceptiveAgent constructor(
         val sid = initContext.sid
         logger.info(
             "🚀 agent.start sid={} step={} url={} instr='{}' attempt={} maxSteps={} maxRetries={}",
-            sid, initContext.step, initContext.targetUrl, Strings.compactLog(initContext.instruction, 100),
+            sid, initContext.step, initContext.targetUrl, Strings.compactInline(initContext.instruction, 100),
             attempt + 1, config.maxSteps, config.maxRetries
         )
         if (config.enableTodoWrites) {

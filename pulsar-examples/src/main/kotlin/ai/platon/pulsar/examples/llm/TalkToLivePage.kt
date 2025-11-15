@@ -43,7 +43,7 @@ get the text of the element with id 'productTitle'
                         val s = functionResult.toString()
                         if (s.isNotBlank()) {
                             println()
-                            println(Strings.compactLog(s, 500))
+                            println(Strings.compactInline(s, 500))
                         }
                     }
                 }

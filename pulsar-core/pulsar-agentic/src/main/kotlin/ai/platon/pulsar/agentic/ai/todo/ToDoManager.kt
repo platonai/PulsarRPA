@@ -28,7 +28,7 @@ class ToDoManager(
         val now = Instant.now().toString()
         val header = buildString {
             appendLine("# TODO for session $shortId")
-            appendLine("Instruction: ${Strings.compactLog(instruction, 200)}")
+            appendLine("Instruction: ${Strings.compactInline(instruction, 200)}")
             appendLine("Started at: $now")
             appendLine("Current URL: ${url ?: "(unknown)"}")
             appendLine("Progress: (0/∞)")
@@ -60,7 +60,7 @@ class ToDoManager(
         val time = LocalDateTime.now().toLocalTime().toString().take(8)
         val method = toolCall?.method ?: "(unknown)"
         val selector = selectorSnippet(observe)
-        val summaryText = Strings.compactLog(summary ?: "", 120)
+        val summaryText = Strings.compactInline(summary ?: "", 120)
         val line = "- [OK] $time $method \"${selector}\" @ ${url} | ${summaryText}\n"
 
         val existing = fs.getTodoContents()

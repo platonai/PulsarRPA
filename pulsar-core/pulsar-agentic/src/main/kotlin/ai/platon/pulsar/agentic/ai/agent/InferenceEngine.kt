@@ -275,7 +275,7 @@ class InferenceEngine(
     }
 
     private fun safeJsonPreview(raw: String, limit: Int = 2000): String {
-        return Strings.compactLog(raw, limit)
+        return Strings.compactInline(raw, limit)
     }
 
     private fun logsDir(): Path = Path.of("logs")

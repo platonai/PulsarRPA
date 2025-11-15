@@ -2,9 +2,7 @@ package ai.platon.pulsar.examples.fuse
 
 import ai.platon.pulsar.agentic.context.AgenticContexts
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.printlnPro
-import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 
 class Extract {
@@ -34,7 +32,7 @@ class Extract {
     }
 
     private fun result(label: String, value: Any?) {
-        val text = Strings.compactLog(value?.toString(), 2000)
+        val text = Strings.compactInline(value?.toString(), 2000)
 
         val e = """🟢"""
         printlnPro("$e [RESULT ${stepNo}] $label => $text")

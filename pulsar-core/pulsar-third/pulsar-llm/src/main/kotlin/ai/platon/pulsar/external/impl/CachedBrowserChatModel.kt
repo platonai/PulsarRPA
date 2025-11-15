@@ -249,7 +249,7 @@ open class CachedBrowserChatModel(
                 content.contains("screenshotContentSummary") -> 2000 // A browser agent's response
                 else -> 500
             }
-            val log = Strings.compactLog(modelResponse.content, maxWidth)
+            val log = Strings.compactInline(modelResponse.content, maxWidth)
             logger.info("◀ Chat - token: {} | [len: {}] {}",
                 modelResponse.tokenUsage.totalTokenCount, modelResponse.content.length, log)
         }

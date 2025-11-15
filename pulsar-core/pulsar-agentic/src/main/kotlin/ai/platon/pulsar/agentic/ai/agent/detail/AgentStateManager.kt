@@ -131,28 +131,19 @@ class AgentStateManager(
         observeElement: ObserveElement? = null,
         toolCall: ToolCall? = null,
         toolCallResult: ToolCallResult? = null,
-        /**
-         * Additional message appended to description
-         * */
-        message: String? = null,
+        description: String? = null,
+        exception: Exception? = null,
         success: Boolean = true,
     ) {
         val computedStep = agentState.step.takeIf { it > 0 } ?: ((stateHistory.lastOrNull()?.step ?: 0) + 1)
         val descPrefix = if (success) "OK" else "FAIL"
-        val descMsg = buildString {
-            append(descPrefix)
-            if (!message.isNullOrBlank()) {
-                append(": ")
-                append(Strings.compactLog(message, 200))
-            }
-        }
 
         agentState.apply {
             step = computedStep
             domain = toolCall?.domain
             method = toolCall?.method
-            description = descMsg
-            this.message = message
+            this.description = "[$descPrefix] $description"
+            this.exception = exception
             screenshotContentSummary = observeElement?.screenshotContentSummary
             currentPageContentSummary = observeElement?.currentPageContentSummary
             evaluationPreviousGoal = observeElement?.evaluationPreviousGoal

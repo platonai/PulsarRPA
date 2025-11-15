@@ -30,7 +30,7 @@ class Acts {
     }
 
     private fun result(label: String, value: Any?) {
-        val text = Strings.compactLog(value?.toString(), 2000)
+        val text = Strings.compactInline(value?.toString(), 2000)
 
         val e = """🟢"""
         printlnPro("$e [RESULT ${stepNo}] $label => $text")

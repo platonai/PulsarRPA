@@ -25,3 +25,5 @@ open class IllegalApplicationStateException: IllegalStateException {
 fun Throwable.stringify(prefix: String = "", postfix: String = "") = stringifyException(this, prefix, postfix)
 
 fun Throwable.brief(prefix: String = "", postfix: String = "") = simplifyException(this, prefix, postfix)
+
+fun Throwable.compactedBrief(prefix: String = "", postfix: String = "") = Strings.compactInline(brief(prefix, postfix))

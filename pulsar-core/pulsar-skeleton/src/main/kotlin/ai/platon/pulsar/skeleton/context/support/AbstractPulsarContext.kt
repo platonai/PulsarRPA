@@ -233,7 +233,7 @@ abstract class AbstractPulsarContext(
         val url0 = try {
             url.takeIf { it.contains("://") } ?: String(Base64.getUrlDecoder().decode(url))
         } catch (e: IllegalArgumentException) {
-            logger.warn("Invalid URL, will goto the default search engine {}", Strings.compactLog(url))
+            logger.warn("Invalid URL, will goto the default search engine {}", Strings.compactInline(url))
             AppConstants.SEARCH_ENGINE_URL
         }
 
