@@ -4,7 +4,6 @@ import ai.platon.pulsar.agentic.context.AgenticContexts
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.printlnPro
-import ai.platon.pulsar.skeleton.ai.ActionOptions
 import ai.platon.pulsar.test.server.DemoSiteStarter
 
 class SummarizePage {
@@ -21,27 +20,14 @@ class SummarizePage {
         starter.start(url)
         session.registerClosable(starter)
 
-        val driver = session.getOrCreateBoundDriver()
         val agent = session.companionAgent
 
         step("Open URL: $url")
-        var page = session.open(url)
+        val page = session.open(url)
         result("page", page)
 
-        printlnPro(driver.url())
-
-        // Basic action examples (natural language instructions) - now operate on local mock page.
-        step("Action: search for 'browser'")
-        var actOptions = ActionOptions("search for 'browser'")
-        var result = agent.act(actOptions)
-        result("action result", result)
-
-        var text = driver.selectFirstPropertyValueOrNull("#searchBox", "value")
-        println("Input value of search box: $text")
-
         step("Action: Extract the full text of the webpage")
-        actOptions = ActionOptions("Extract the full text of the webpage")
-        result = agent.act(actOptions)
+        var result = agent.act("Extract the full text of the webpage")
         result("action result", result)
 
         step("Action: Summarize the full text of the webpage")

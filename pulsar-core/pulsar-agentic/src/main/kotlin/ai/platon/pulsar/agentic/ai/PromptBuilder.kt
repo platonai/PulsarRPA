@@ -430,9 +430,11 @@ $A11Y_TREE_NOTE_CONTENT
 - 仅输出 JSON 内容，无多余文字
 
 1. 动作输出格式，最多一个元素，domain & method 字段非空, arguments 必须按工具方法声明顺序排列(<output_act>)：
+
 ${buildObserveResultSchema(true)}
 
 2. 任务完成输出格式(<output_done>):
+
 $TASK_COMPLETE_SCHEMA
 
 
