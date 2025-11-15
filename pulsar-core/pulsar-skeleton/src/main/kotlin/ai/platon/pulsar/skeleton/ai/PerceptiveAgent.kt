@@ -58,7 +58,8 @@ data class ActResult constructor(
     val tcEvalValue get() = result?.evaluate?.value
 
     override fun toString(): String {
-        return "[$action] expr: $expression eval: $tcEvalValue message: $message"
+        val eval = Strings.compactLog(tcEvalValue?.toString(), 50)
+        return "[$action] expr: $expression eval: $eval message: $message"
     }
 
     companion object {
@@ -91,7 +92,11 @@ data class ExtractResult(
     val success: Boolean,
     val message: String = "",
     val data: JsonNode
-)
+) {
+    override fun toString(): String {
+        return "success: $success message: $message data: " + Strings.compactLog(data.toString(), 50)
+    }
+}
 
 data class ObserveOptions(
     val instruction: String? = null,
@@ -281,17 +286,18 @@ data class AgentState constructor(
     val url: String get() = browserUseState.browserState.url
 
     override fun toString(): String {
-        val summary = listOfNotNull(
-            "description: $description",
-            "pageContentSummary: $currentPageContentSummary",
-            "screenshotContentSummary: $screenshotContentSummary",
-            "evaluationPreviousGoal: $evaluationPreviousGoal",
-            "nextGoal: $nextGoal"
+        val summary = listOf(
+            "description" to description,
+            "pageContentSummary" to currentPageContentSummary,
+            "screenshotContentSummary" to screenshotContentSummary,
+            "evaluationPreviousGoal" to evaluationPreviousGoal,
+            "nextGoal" to nextGoal
         )
-            .joinToString("\t\n")
+            .filter { it.second != null }
+            .joinToString("\t\n") { (k, v) -> "$k=$v" }
 
         val toolCallState = toolCallResult?.success ?: false
-        return "$step.\t$timestamp\tTool call:$domain.$method\tTool call state:$toolCallState\n$summary"
+        return "$timestamp\t[$step]\tTool call:$domain.$method\tTool call state:$toolCallState\n$summary"
     }
 }
 
@@ -392,7 +398,7 @@ data class ProcessTrace(
     override fun toString(): String {
         val itemStr = items.entries.joinToString { (k, v) -> "$k=" + Strings.compactLog(v.toString(), 50) }
         val msg = message?.let { " | $it" } ?: ""
-        return "$step.\t$timestamp\t$itemStr$msg"
+        return "$timestamp\t[$step]\t$itemStr$msg"
     }
 }
 

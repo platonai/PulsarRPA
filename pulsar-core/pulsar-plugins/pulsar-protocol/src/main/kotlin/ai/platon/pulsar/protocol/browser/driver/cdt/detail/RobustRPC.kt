@@ -55,13 +55,13 @@ class RobustRPC(
         }
 
         var result = kotlin.runCatching { invokeDeferred0(action, block) }
-            .onFailure { logger.info("Failed to execute action: [$action], retrying 1/$maxRetry time ...", it.brief()) }
+            .onFailure { logger.info("Oop, a bit slip-up executing action: [$action], retrying 1/$maxRetry time ...", it.brief()) }
 
         var i = 1
         while (result.isFailure && i++ < maxRetry && driver.checkState()) {
             delay(500)
             result = kotlin.runCatching { invokeDeferred0(action, block) }
-                .onFailure { logger.warn("Failed to execute action: [$action], retrying $i/$maxRetry times", it) }
+                .onFailure { logger.warn("Exception to execute action: [$action], retrying $i/$maxRetry times", it) }
         }
 
         return result.getOrElse { throw it }

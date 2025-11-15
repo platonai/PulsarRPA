@@ -23,7 +23,7 @@ class Acts {
         var result = agent.resolve("goto https://www.amazon.com/dp/B08PP5MSVB , search for 'calabi-yau' and submit the form")
         result("action result", result)
 
-        result = agent.resolve("goto https://en.cppreference.com/index.html , extract articles with there titles and hrefs from the main list")
+        result = agent.resolve("goto https://en.cppreference.com/index.html , extract top 20 articles with there titles and hrefs from the main list")
         result("action result", result)
 
         agent.processTrace.forEach { println("""🚩$it""") }
