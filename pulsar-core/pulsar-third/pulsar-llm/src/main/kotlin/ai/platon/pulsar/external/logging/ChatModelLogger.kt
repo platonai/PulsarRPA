@@ -1,6 +1,5 @@
 package ai.platon.pulsar.external.logging
 
-import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
 import ai.platon.pulsar.external.ModelResponse
@@ -19,11 +18,13 @@ class ChatModelLogger : AutoCloseable {
         ConcurrentExpiringLRUCache<Int, RequestResponsePair>(ttl = Duration.ofMinutes(10))
 
     private var logDirectory = "logs/chat-model"
+    private var enableSystemMessages = false
     private val dateFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss.SSS")
     private val writer: MessageWriter
 
-    fun configure(logDirectory: String = "logs/chat-model") {
+    fun configure(logDirectory: String = "logs/chat-model", enableSystemMessages: Boolean = false) {
         this.logDirectory = logDirectory
+        this.enableSystemMessages = enableSystemMessages
     }
 
     init {
@@ -66,13 +67,19 @@ class ChatModelLogger : AutoCloseable {
             sb.appendLine("--------------------------------------------------------------------")
             sb.append(";;REQUEST ID: ${pair.id}\n")
             sb.append(";;TIMESTAMP: ${pair.timestamp}\n")
-            sb.append(";;SYSTEM MESSAGE:\n${pair.systemMessage}\n")
+
+            if (enableSystemMessages) {
+                sb.append(";;SYSTEM MESSAGE:\n${pair.systemMessage}\n")
+            }
+
             sb.append(";;USER MESSAGE:\n${pair.userMessage}\n")
             sb.append(";;RESPONSE TIMESTAMP: ${pair.responseTimestamp}\n")
             sb.append(";;RESPONSE STATE: ${pair.response?.state}\n")
             sb.append(";;TOKEN USAGE: ${pair.response?.tokenUsage?.totalTokenCount ?: "N/A"}\n")
             sb.append(";;RESPONSE CONTENT:\n${pair.response?.content ?: "No response"}")
+
             writer.write(sb.toString())
+
             // Mark persisted only after successful write
             pair.persistedToFile = true
         } catch (e: Exception) {
