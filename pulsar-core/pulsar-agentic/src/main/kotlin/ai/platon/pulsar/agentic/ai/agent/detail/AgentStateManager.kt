@@ -121,9 +121,8 @@ class AgentStateManager(
         val toolCallResult = detailedActResult.toolCallResult
         // additional message appended to description
         val message = detailedActResult.message
-        val success = detailedActResult.success
 
-        updateAgentState(agentState, observeElement, toolCall, toolCallResult, message, success = success)
+        updateAgentState(agentState, observeElement, toolCall, toolCallResult, message)
     }
 
     fun updateAgentState(
@@ -132,17 +131,15 @@ class AgentStateManager(
         toolCall: ToolCall? = null,
         toolCallResult: ToolCallResult? = null,
         description: String? = null,
-        exception: Exception? = null,
-        success: Boolean = true,
+        exception: Exception? = null
     ) {
         val computedStep = agentState.step.takeIf { it > 0 } ?: ((stateHistory.lastOrNull()?.step ?: 0) + 1)
-        val descPrefix = if (success) "OK" else "FAIL"
 
         agentState.apply {
             step = computedStep
             domain = toolCall?.domain
             method = toolCall?.method
-            this.description = "[$descPrefix] $description"
+            this.description = description
             this.exception = exception
             screenshotContentSummary = observeElement?.screenshotContentSummary
             currentPageContentSummary = observeElement?.currentPageContentSummary

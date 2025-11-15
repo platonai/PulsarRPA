@@ -138,7 +138,7 @@ open class BrowserAgentActor(
             ).message
 
             stateManager.updateAgentState(
-                agentState, observeElement, toolCall, description = description, success = false, exception = e)
+                agentState, observeElement, toolCall, description = description, exception = e)
 
             ActResult.failed(description, toolCall.method)
         }

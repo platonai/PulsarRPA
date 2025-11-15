@@ -313,6 +313,7 @@ data class AgentState constructor(
 ) {
     // the url to handle in this step
     val url: String get() = browserUseState.browserState.url
+    val success: Boolean get() = exception != null
 
     override fun toString(): String {
         val summary = listOf(
@@ -324,10 +325,11 @@ data class AgentState constructor(
             "exception" to exception?.compactedBrief(),
         )
             .filter { it.second != null }
-            .joinToString("\n") { (k, v) -> "\t- $k: $v" }
+            .joinToString("\n") { (k, s) -> "\t- $k: ${Strings.compactInline(s)}" }
 
-        val toolCallState = toolCallResult?.success ?: false
-        return "ToolCall:$domain.$method ToolCallState:$toolCallState\n$summary"
+        val state = if (success) "💯OK" else "💔FAIL"
+        val toolCallState = if (toolCallResult?.success == true) "✅OK" else "❌FAIL"
+        return "[$state] ToolCall:$domain.$method($toolCallState)\n$summary"
     }
 }
 
@@ -427,7 +429,15 @@ data class ProcessTrace(
     val timestamp: Instant = Instant.now(),
 ) {
     override fun toString(): String {
-        val itemStr = items.entries.joinToString { (k, v) -> "$k=" + Strings.compactInline(v.toString(), 50) }
+        fun format(v: Any?): String? {
+            return when (v) {
+                null -> null
+                is Throwable -> v.compactedBrief()
+                else -> Strings.compactInline(v.toString(), 50)
+            }
+        }
+
+        val itemStr = items.entries.joinToString { (k, v) -> "$k=" + format(v) }
         val msg = message?.let { " | $it" } ?: ""
         return "$timestamp\t[$step]\t$itemStr$msg"
     }
