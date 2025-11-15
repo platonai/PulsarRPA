@@ -66,7 +66,7 @@ data class ActResult constructor(
     val detail: DetailedActResult? = null
 ) {
     /**
-     * TODO: every expression is a pseudoExpression currently
+     * Expression with weak parameter types
      * */
     @get:JsonIgnore
     val expression get() = result?.actionDescription?.expression
@@ -170,9 +170,15 @@ data class ToolCall constructor(
     val description: String? = null,
 ) {
     @get:JsonIgnore
+    val weakTypeNamedArguments
+        get() = arguments.entries.joinToString { (k, v) -> "$k=" + Strings.doubleQuote(v) }
+
+    @get:JsonIgnore
     val pseudoNamedArguments
         get() = arguments.entries
             .joinToString { (k, v) -> "$k=" + Strings.doubleQuote(Strings.compactInline(v, 20)) }
+
+    val weakTypeExpression: String get() = "$domain.${method}($weakTypeNamedArguments)"
 
     val pseudoExpression: String get() = "$domain.${method}($pseudoNamedArguments)"
 
@@ -236,10 +242,6 @@ data class ObserveElement constructor(
     val backendNodeId: Int? = null,
     val xpath: String? = null,
     val cssSelector: String? = null,
-    /**
-     * TODO: every expression is a pseudoExpression currently
-     * */
-    val expression: String? = null,
     val cssFriendlyExpression: String? = null,
 ) {
     @get:JsonIgnore
@@ -253,6 +255,11 @@ data class ObserveElement constructor(
 
     @get:JsonIgnore
     val arguments: Map<String, Any?>? get() = toolCall?.arguments
+
+    /**
+     * Expression with weak parameter types
+     * */
+    val expression: String? get() = toolCall?.weakTypeExpression
 
     @get:JsonIgnore
     val pseudoExpression get() = toolCall?.pseudoExpression
@@ -394,7 +401,7 @@ data class ActionDescription constructor(
     val locator: String? get() = observeElement?.locator
     val xpath: String? get() = observeElement?.xpath
     /**
-     * TODO: every expression is a pseudoExpression currently
+     * Expression with weak parameter types
      * */
     val expression: String? get() = observeElement?.expression
     val cssFriendlyExpression: String? get() = observeElement?.cssFriendlyExpression

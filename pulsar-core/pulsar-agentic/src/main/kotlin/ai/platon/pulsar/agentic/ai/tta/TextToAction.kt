@@ -132,8 +132,9 @@ open class TextToAction(
 
         val errorMessage = "非法响应，必须是合法 JSON 格式。客户端已经修正，未来需严格遵循格式。"
         var modelError: String? = null
-        val heading20 = content.take(20)
-        val tailing20 = content.takeLast(20)
+        val heading20 = content.take(30)
+        val tailing20 = content.takeLast(30)
+
         if (heading20.contains("<output_act>")) {
             content = content.replace("<output_act>", "")
             modelError = errorMessage
@@ -148,7 +149,7 @@ open class TextToAction(
         }
 
         return if (modelError != null) {
-            logger.info("""🖌️Model response revised""")
+            logger.info("""🖌️ Model response revised""")
             modelResponse.copy(content = content, modelError = modelError)
         } else modelResponse
     }
@@ -203,7 +204,7 @@ open class TextToAction(
 
         // CSS friendly expression
         val cssSelector = node?.cssSelector()
-        val expression = toolCall.pseudoExpression
+        val expression = toolCall.weakTypeExpression
         val cssFriendlyExpression = if (locator != null && cssSelector != null) {
             expression.replace(locator, cssSelector)
         } else null
@@ -214,7 +215,6 @@ open class TextToAction(
             backendNodeId = node?.backendNodeId,
             toolCall = toolCall,
             cssSelector = cssSelector,
-            expression = expression,
             cssFriendlyExpression = cssFriendlyExpression,
         )
 
