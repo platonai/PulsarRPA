@@ -1,4 +1,4 @@
-name: CI/CD Pipeline
+name: Docker Integration Test
 
 on:
   push:
