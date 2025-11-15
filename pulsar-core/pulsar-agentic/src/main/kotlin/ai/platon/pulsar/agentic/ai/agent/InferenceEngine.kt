@@ -7,11 +7,7 @@ import ai.platon.pulsar.agentic.ai.SimpleMessage
 import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
 import ai.platon.pulsar.agentic.ai.tta.ContextToAction
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.MessageWriter
-import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.skeleton.ai.ActionDescription
@@ -83,20 +79,18 @@ class InferenceEngine(
         messages.addUser(promptBuilder.buildExtractUserRequestPrompt(params), "user_request")
         messages.addLast(promptBuilder.buildExtractUserPrompt(params))
 
-        // val messages = listOf(systemMsg, userMsg)
-        var callFile = ""
-        var extractCallTs = ""
+        val timestamp = DateTimes.formatNow()
+        var callFile: Path? = null
         if (params.logInferenceToFile) {
-            val (file, ts) = logCallIfEnabled(
+            callFile = logModelCall(
                 dirPrefix = "extractSummary",
                 kind = "extractCall",
+                timestamp = timestamp,
                 requestId = params.requestId,
                 modelCall = "extract",
                 messages = messages.messages,
                 enabled = true
             )
-            callFile = file
-            extractCallTs = ts
         }
 
         val extractStartTime = Instant.now()
@@ -106,23 +100,24 @@ class InferenceEngine(
             mapper.readTree(extractResponse.content) as? ObjectNode ?: JsonNodeFactory.instance.objectNode()
         }.getOrElse { JsonNodeFactory.instance.objectNode() }
 
-        var extractRespFile = ""
+        var extractRespFile: Path
         if (params.logInferenceToFile) {
-            extractRespFile = writeTimestampedTxtFile(
+            extractRespFile = writeAuxLog(
                 prefix = "extractSummary",
                 kind = "extractResponse",
+                timestamp = timestamp,
                 payload = mapOf(
                     "requestId" to params.requestId,
                     "modelResponse" to "extract",
                     "rawResponse" to safeJsonPreview(extractResponse.content),
                 )
-            ).first
+            )
 
             appendSummaryToFile(
                 prefix = "extract",
                 entry = mapOf(
                     "extractInferenceType" to "extract",
-                    "timestamp" to extractCallTs,
+                    "timestamp" to timestamp,
                     "llmInputFile" to callFile,
                     "llmOutputFile" to extractRespFile,
                     "outputTokenCount" to extractResponse.tokenUsage.outputTokenCount,
@@ -141,18 +136,17 @@ class InferenceEngine(
         metadataMessages.addLast(metadataSystem)
         metadataMessages.addLast(metadataUser)
 
-        var metadataCallFile = ""
-        var metadataCallTs = ""
+        var metadataCallFile: Path? = null
         if (params.logInferenceToFile) {
-            val (file, ts) = logCallIfEnabled(
+            metadataCallFile = logModelCall(
                 dirPrefix = "extractSummary",
                 kind = "metadataCall",
+                timestamp = timestamp,
                 requestId = params.requestId,
                 modelCall = "metadata",
                 messages = metadataMessages.messages,
                 enabled = true
             )
-            metadataCallFile = file; metadataCallTs = ts
         }
 
         val metadataStartTime = Instant.now()
@@ -164,24 +158,25 @@ class InferenceEngine(
         val progress = metaNode.path("progress").asText("")
         val completed = metaNode.path("completed").asBoolean(false)
 
-        var metadataRespFile = ""
+        var metadataRespFile: Path
         if (params.logInferenceToFile) {
-            metadataRespFile = writeTimestampedTxtFile(
+            metadataRespFile = writeAuxLog(
                 prefix = "extractSummary",
                 kind = "metadataResponse",
+                timestamp = timestamp,
                 payload = mapOf(
                     "requestId" to params.requestId,
                     "modelResponse" to "metadata",
                     "completed" to completed,
                     "progress" to progress,
                 )
-            ).first
+            )
 
             appendSummaryToFile(
                 prefix = "extract",
                 entry = mapOf(
                     "extractInferenceType" to "metadata",
-                    "timestamp" to metadataCallTs,
+                    "timestamp" to timestamp,
                     "llmInputFile" to metadataCallFile,
                     "llmOutputFile" to metadataRespFile,
                     "inputTokenCount" to metadataResponse.tokenUsage.inputTokenCount,
@@ -219,23 +214,21 @@ class InferenceEngine(
             promptBuilder.buildObserveMessageListAll(params, context)
         }
 
+        val startTime = Instant.now()
         val prefix = if (params.fromAct) "act" else "observe"
-        var callFile = ""
-        var callTs = ""
+        var callFile: Path? = null
+        val timestamp = DateTimes.format(startTime)
         if (params.logInferenceToFile) {
-            val (f, ts) = logCallIfEnabled(
+            callFile = logModelCall(
                 dirPrefix = "${prefix}Summary",
                 kind = "${prefix}Call",
                 requestId = context.requestId,
+                timestamp = timestamp,
                 modelCall = prefix,
                 messages = messages.messages,
                 enabled = true
             )
-            callFile = f
-            callTs = ts
         }
-
-        val startTime = Instant.now()
 
         val actionDescription = cta.generate(messages, context)
         requireNotNull(context.agentState.actionDescription) { "Filed should be set: context.agentState.actionDescription" }
@@ -244,23 +237,24 @@ class InferenceEngine(
         val tokenUsage = modelResponse.tokenUsage
         val responseContent = modelResponse.content
 
-        var respFile = ""
+        var respFile: Path
         if (params.logInferenceToFile) {
-            respFile = writeTimestampedTxtFile(
+            respFile = writeAuxLog(
                 prefix = "${prefix}Summary",
                 kind = "${prefix}Response",
+                timestamp = timestamp,
                 payload = mapOf(
                     "requestId" to context.requestId,
                     "modelResponse" to prefix,
                     "rawResponse" to safeJsonPreview(responseContent)
                 )
-            ).first
+            )
 
             appendSummaryToFile(
                 prefix = prefix,
                 entry = mapOf(
                     "${prefix}InferenceType" to prefix,
-                    "timestamp" to callTs,
+                    "timestamp" to timestamp,
                     "llmInputFile" to callFile,
                     "llmOutputFile" to respFile,
                     "inputTokenCount" to tokenUsage.inputTokenCount,
@@ -278,14 +272,14 @@ class InferenceEngine(
         return Strings.compactInline(raw, limit)
     }
 
-    private fun writeTimestampedTxtFile(prefix: String, kind: String, payload: Any): Pair<String, String> {
-        val ts = DateTimes.formatNow()
-        val path = auxLogDir.resolve(prefix).resolve("${kind}_${ts}.txt")
-        val mapper = ObjectMapper()
-        val content = runCatching { mapper.writerWithDefaultPrettyPrinter().writeValueAsString(payload) }
+    private fun writeAuxLog(
+        prefix: String, kind: String, timestamp: String, payload: Any
+    ): Path {
+        val path = auxLogDir.resolve(prefix).resolve("${kind}_$timestamp.txt")
+        val content = runCatching { prettyPulsarObjectMapper().writeValueAsString(payload) }
             .getOrNull() ?: payload
         MessageWriter.writeOnce(path, content)
-        return Pair(path.toString(), ts)
+        return path
     }
 
     private fun appendSummaryToFile(prefix: String, entry: Map<String, Any?>) {
@@ -301,18 +295,21 @@ class InferenceEngine(
     }
 
     // ------------------------------ Small utilities --------------------------------
-    private fun logCallIfEnabled(
+    private fun logModelCall(
         dirPrefix: String,
         kind: String,
         requestId: String,
+        timestamp: String,
         modelCall: String,
         messages: List<Any>,
         enabled: Boolean
-    ): Pair<String, String> {
-        if (!enabled) return "" to ""
-        return writeTimestampedTxtFile(
+    ): Path? {
+        if (!enabled) return null
+
+        return writeAuxLog(
             prefix = dirPrefix,
             kind = kind,
+            timestamp = timestamp,
             payload = mapOf(
                 "requestId" to requestId,
                 "modelCall" to modelCall,

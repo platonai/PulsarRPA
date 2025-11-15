@@ -3,6 +3,7 @@ package ai.platon.pulsar.common
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.nio.file.Path
 import kotlin.reflect.KClass
 
 fun <T : Any> getLogger(clazz: KClass<T>): Logger = getLogger(clazz, "")
@@ -197,6 +198,12 @@ fun warnForClose(target: Any, t: Throwable, message: String, vararg args: Any?) 
         logger?.warn(message2)
         logger?.warn(t.stringify())
     }
+}
+
+fun writeAuxLog(fileName: String, payload: Any): Path {
+    val path = AppPaths.detectAuxiliaryLogDir().resolve(fileName)
+    MessageWriter.writeOnce(path, payload)
+    return path
 }
 
 /**
