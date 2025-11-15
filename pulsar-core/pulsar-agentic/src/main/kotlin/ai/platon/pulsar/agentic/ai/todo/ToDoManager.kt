@@ -127,8 +127,7 @@ class ToDoManager(
 
     private fun selectorSnippet(observe: ObserveElement?): String {
         if (observe == null) return ""
-        val s = observe.cssFriendlyExpression
-            ?: observe.cssSelector
+        val s = observe.cssSelector
             ?: observe.locator
             ?: observe.backendNodeId?.let { "backend:$it" }
             ?: ""

@@ -164,7 +164,8 @@ data class ToolCall constructor(
     val description: String? = null,
 ) {
     @get:JsonIgnore
-    val pseudoNamedArguments get() = arguments.entries.joinToString { (k, v) -> "$k=" + Strings.doubleQuote(v) }
+    val pseudoNamedArguments get() = arguments.entries
+        .joinToString { (k, v) -> "$k=" + Strings.doubleQuote(Strings.compactLog(v, 20)) }
 
     val pseudoExpression: String get() = "$domain.${method}($pseudoNamedArguments)"
 
@@ -239,6 +240,9 @@ data class ObserveElement constructor(
 
     @get:JsonIgnore
     val arguments: Map<String, Any?>? get() = toolCall?.arguments
+
+    @get:JsonIgnore
+    val pseudoExpression get() = toolCall?.pseudoExpression
 }
 
 data class ObserveResult constructor(
@@ -373,6 +377,7 @@ data class ActionDescription constructor(
     val xpath: String? get() = observeElement?.xpath
     val expression: String? get() = observeElement?.expression
     val cssFriendlyExpression: String? get() = observeElement?.cssFriendlyExpression
+    val pseudoExpression: String? get() = observeElement?.pseudoExpression
 
     fun toActionDescriptions(): List<ActionDescription> {
         val elements = observeElements ?: return emptyList()

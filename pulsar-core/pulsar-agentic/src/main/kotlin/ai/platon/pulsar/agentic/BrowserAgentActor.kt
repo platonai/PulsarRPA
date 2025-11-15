@@ -117,12 +117,12 @@ open class BrowserAgentActor(
 
             logger.info(
                 "✅ Action executed | {} | {}/{} | {}",
-                method, observe.locator, observeElement.cssSelector, observeElement.cssFriendlyExpression
+                method, observe.locator, observeElement.cssSelector, observeElement.pseudoExpression
             )
 
             val msg = MessageFormatter.arrayFormat(
                 "✅ Action executed | {} | {}/{} | {}",
-                arrayOf(method, observe.locator, observeElement.cssSelector, observeElement.cssFriendlyExpression)
+                arrayOf(method, observe.locator, observeElement.cssSelector, observeElement.pseudoExpression)
             )
 
             stateManager.updateAgentState(agentState, observeElement, toolCall, toolCallResult, msg.message)

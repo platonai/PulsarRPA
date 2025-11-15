@@ -83,12 +83,12 @@ class AgentToolManager(
 
             val timeoutMs = 3_000L
             val oldUrl = actionDescription.agentState?.browserUseState?.browserState?.url
-            val expression = actionDescription.cssFriendlyExpression
+            val pseudoExpression = actionDescription.pseudoExpression
             val maybeNavMethod = method in ToolSpecification.MAY_NAVIGATE_ACTIONS
             if (oldUrl != null && maybeNavMethod) {
                 val remainingTime = driver.waitForNavigation(oldUrl, timeoutMs)
                 if (remainingTime <= 0) {
-                    val navError = "⏳ Navigation timeout after ${timeoutMs}ms for expression: $expression"
+                    val navError = "⏳ Navigation timeout after ${timeoutMs}ms for expression: $pseudoExpression"
                     logger.warn(navError)
                     return tcResult
                 }
@@ -98,7 +98,8 @@ class AgentToolManager(
         } catch (e: Exception) {
             logger.warn("Failed to execute tool call | $actionDescription", e)
 
-            val expression = actionDescription.cssFriendlyExpression ?: actionDescription.expression ?: ""
+            val ad = actionDescription
+            val expression = ad.pseudoExpression ?: ad.cssFriendlyExpression ?: ad.expression ?: ""
             return ToolCallResult(
                 success = false,
                 evaluate = TcEvaluate(expression, e),
