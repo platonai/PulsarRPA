@@ -1,17 +1,19 @@
 package ai.platon.pulsar.common
 
 import ai.platon.pulsar.common.browser.BrowserType
+import ai.platon.pulsar.common.concurrent.ConcurrentExpiringLRUCache
+import ai.platon.pulsar.common.concurrent.ConcurrentPassiveExpiringSet
 import ai.platon.pulsar.common.urls.URLUtils
 import com.google.common.net.InternetDomainName
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.RandomStringUtils
-import java.io.IOException
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import kotlin.io.path.exists
-import kotlin.io.path.notExists
+import kotlin.io.path.getLastModifiedTime
+import kotlin.io.path.isDirectory
 
 @Retention(AnnotationRetention.RUNTIME)
 @Target(AnnotationTarget.FIELD)
@@ -26,11 +28,13 @@ annotation class RequiredDirectory
  * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 object AppPaths {
-    
+
+    private val CACHE = ConcurrentExpiringLRUCache<String, Any>()
+
     val SYS_TMP_DIR = Paths.get(AppContext.TMP_DIR)
     val SYS_USER_DIR = Paths.get(AppContext.USER_DIR)
     val SYS_USER_HOME = Paths.get(AppContext.USER_HOME)
-    
+
     /**
      * The directory for the user's default browser.
      *
@@ -41,14 +45,14 @@ object AppPaths {
      */
     val SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER = SYS_TMP_DIR.resolve(".SYSTEM_DEFAULT_DATA_DIR_PLACEHOLDER")
     val SYSTEM_DEFAULT_BROWSER_CONTEXT_DIR_PLACEHOLDER = SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER
-    
+
     // Directory for symbolic links, this path should be as short as possible
     @RequiredDirectory
     val SYS_TMP_LINKS_DIR = SYS_TMP_DIR.resolve("ln")
-    
+
     @RequiredDirectory
     val DATA_DIR = AppContext.APP_DATA_DIR
-    
+
     @RequiredDirectory
     val CONFIG_DIR = AppContext.APP_DATA_DIR.resolve("config")
 
@@ -60,49 +64,49 @@ object AppPaths {
 
     @RequiredDirectory
     val BROWSER_DATA_DIR = DATA_DIR.resolve("browser")
-    
+
     @RequiredDirectory
     val CHROME_DATA_DIR_PROTOTYPE = BROWSER_DATA_DIR.resolve("chrome/prototype/google-chrome")
-    
+
     @RequiredDirectory
     val CONTEXT_DEFAULT_DIR = BROWSER_DATA_DIR.resolve("chrome/default")
-    
+
     @RequiredDirectory
     val LOCAL_DATA_DIR = DATA_DIR.resolve("data")
-    
+
     @RequiredDirectory
     val LOCAL_STORAGE_DIR = LOCAL_DATA_DIR.resolve("store")
-    
+
     @RequiredDirectory
     val LOCAL_TEST_DATA_DIR = LOCAL_DATA_DIR.resolve("test")
-    
+
     @RequiredDirectory
     val LOCAL_TEST_WEB_PAGE_DIR = LOCAL_TEST_DATA_DIR.resolve("web")
-    
+
     @RequiredDirectory
     val TMP_DIR = AppContext.APP_TMP_DIR
-    
+
     @RequiredDirectory
     val PROC_TMP_DIR = AppContext.APP_PROC_TMP_DIR
-    
+
     @RequiredDirectory
     val PROC_TMP_TMP_DIR = PROC_TMP_DIR.resolve("tmp")
-    
+
     @RequiredDirectory
     val CACHE_DIR = PROC_TMP_DIR.resolve("cache")
-    
+
     @RequiredDirectory
     val WEB_CACHE_DIR = CACHE_DIR.resolve("web")
-    
+
     @RequiredDirectory
     val DOC_EXPORT_DIR = WEB_CACHE_DIR.resolve("export")
-    
+
     @RequiredDirectory
     val WEB_SCREENSHOT_DIR = WEB_CACHE_DIR.resolve("screenshot")
-    
+
     @RequiredDirectory
     val FILE_CACHE_DIR = CACHE_DIR.resolve("files")
-    
+
     @RequiredDirectory
     val PROMPT_CACHE_DIR = CACHE_DIR.resolve("prompts")
 
@@ -111,16 +115,16 @@ object AppPaths {
 
     @RequiredDirectory
     val METRICS_DIR = REPORT_DIR.resolve("metrics")
-    
+
     @RequiredDirectory
     val SCRIPT_DIR = PROC_TMP_DIR.resolve("scripts")
-    
+
     @RequiredDirectory
     val TEST_DIR = PROC_TMP_DIR.resolve("test")
-    
+
     @RequiredDirectory
     val CONTEXT_BASE_DIR = PROC_TMP_DIR.resolve("context")
-    
+
     @RequiredDirectory
     val CONTEXT_GROUP_BASE_DIR = CONTEXT_BASE_DIR.resolve("groups")
 
@@ -150,17 +154,17 @@ object AppPaths {
 
     @RequiredFile
     val PATH_UNREACHABLE_HOSTS = REPORT_DIR.resolve("unreachable-hosts.txt")
-    
+
     private val tmpDirStr get() = TMP_DIR.toString()
     private val procTmpDirStr get() = PROC_TMP_DIR.toString()
     private val homeDirStr get() = DATA_DIR.toString()
-    
+
     init {
         AppPaths::class.java.declaredFields
             .filter { it.annotations.any { it is RequiredDirectory } }
             .mapNotNull { it.get(AppPaths) as? Path }
             .forEach { it.takeUnless { Files.exists(it) }?.let { Files.createDirectories(it) } }
-        
+
         AppPaths::class.java.declaredFields
             .filter { it.annotations.any { it is RequiredFile } }
             .mapNotNull { it.get(AppPaths) as? Path }
@@ -169,7 +173,7 @@ object AppPaths {
                 it.takeUnless { Files.exists(it) }?.let { Files.createFile(it) }
             }
     }
-    
+
     /**
      * Resolve the given path parts to a path.
      * Copy from JDK 22 for backward compatibility.
@@ -199,7 +203,7 @@ object AppPaths {
      * @see Path#of(String,String...)
      */
     fun get(first: String, vararg more: String): Path = Paths.get(homeDirStr, first.removePrefix(homeDirStr), *more)
-    
+
     /**
      * Get a path of the application's temporary directory.
      *
@@ -219,7 +223,7 @@ object AppPaths {
      */
     fun getTmpDirectory(first: String, vararg more: String): Path = resolve(TMP_DIR, first, *more)
 
-    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getTmpDirectory(first, *more)" ))
+    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getTmpDirectory(first, *more)"))
     fun getTmp(first: String, vararg more: String) = getTmpDirectory(first, *more)
 
     /**
@@ -239,7 +243,7 @@ object AppPaths {
     fun getRandomTmpDirectory(prefix: String = "", suffix: String = ""): Path =
         getTmpDirectory(prefix, RandomStringUtils.randomAlphabetic(18), suffix)
 
-    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getRandomTmpDirectory(prefix, suffix)" ))
+    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getRandomTmpDirectory(prefix, suffix)"))
     fun getRandomTmp(prefix: String = "", suffix: String = "") = getRandomTmpDirectory(prefix, suffix)
 
     /**
@@ -258,7 +262,7 @@ object AppPaths {
      * */
     fun getProcTmpDirectory(first: String, vararg more: String): Path = resolve(PROC_TMP_DIR, first, *more)
 
-    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getProcTmpDirectory(first, *more)" ))
+    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getProcTmpDirectory(first, *more)"))
     fun getProcTmp(first: String, vararg more: String) = getProcTmpDirectory(first, *more)
 
     /**
@@ -281,9 +285,10 @@ object AppPaths {
      *
      * @return the path in the process's temporary directory
      * */
-    fun getProcTmpTmpDirectory(first: String, vararg more: String): Path = resolve(PROC_TMP_DIR.resolve("tmp"), first, *more)
+    fun getProcTmpTmpDirectory(first: String, vararg more: String): Path =
+        resolve(PROC_TMP_DIR.resolve("tmp"), first, *more)
 
-    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getProcTmpTmpDirectory(first, *more)" ))
+    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getProcTmpTmpDirectory(first, *more)"))
     fun getProcTmpTmp(first: String, vararg more: String) = getProcTmpTmpDirectory(first, *more)
 
     /**
@@ -308,7 +313,15 @@ object AppPaths {
 
     fun getTmpContextGroupDir(group: String) = CONTEXT_TMP_GROUP_BASE_DIR.resolve(group)
 
-    fun getTmpContextBaseDir(group: String, browserType: BrowserType) = getTmpContextGroupDir(group).resolve(browserType.name)
+    fun getTmpContextBaseDir(group: String, browserType: BrowserType) =
+        getTmpContextGroupDir(group).resolve(browserType.name)
+
+    /**
+     * Detect the auxiliary log directory which is used for non-logback-logs.
+     * */
+    fun detectAuxiliaryLogDir(): Path {
+        return CACHE.computeIfAbsent("AUXILIARY_LOG_DIR") { detectAuxiliaryLogDir0() } as Path
+    }
 
     /**
      * Generates a random string that is compatible with file paths and can be used as a file name.
@@ -321,6 +334,7 @@ object AppPaths {
      * */
     fun random(prefix: String = "", suffix: String = ""): String =
         "$prefix${RandomStringUtils.randomAlphabetic(18)}$suffix"
+
     /**
      * Generates a path-compatible, hex string that can be used as a file name.
      *
@@ -343,6 +357,7 @@ object AppPaths {
         // concatenating the prefix, the hash, and the suffix.
         return DigestUtils.md5Hex(uri).let { "$prefix$it$suffix" }
     }
+
     /**
      * Generates a path-compatible, hex string that can be used as a file name.
      *
@@ -357,7 +372,7 @@ object AppPaths {
      */
     fun md5Hex(uri: String) = DigestUtils.md5Hex(uri)
 
-    @Deprecated("Inappropriate name", ReplaceWith("md5Hex(uri)" ))
+    @Deprecated("Inappropriate name", ReplaceWith("md5Hex(uri)"))
     fun fileId(uri: String) = md5Hex(uri)
 
     /**
@@ -367,7 +382,7 @@ object AppPaths {
         val filename = fromUri(uri, "", ".htm")
         return LOCAL_TEST_WEB_PAGE_DIR.resolve(filename)
     }
-    
+
     /**
      * Create a filename compatible string from the given url.
      * */
@@ -378,7 +393,7 @@ object AppPaths {
         } else {
             runCatching { InternetDomainName.from(host).topPrivateDomain().toString() }.getOrNull() ?: "unknown"
         }
-        
+
         return host.replace('.', '-')
     }
 
@@ -389,21 +404,21 @@ object AppPaths {
         val u = URLUtils.getURLOrNull(url) ?: return "unknown"
         return fromHost(u)
     }
-    
+
     @Deprecated("Use AppPaths.fromHost instead", replaceWith = ReplaceWith("AppPaths.fromHost(url)"))
     fun fromDomain(url: String) = fromHost(url)
-    
+
     /**
      * Create a filename compatible string from the given uri.
      * */
     fun fromUri(uri: String, prefix: String = "", suffix: String = ""): String {
         val u = URLUtils.getURLOrNull(uri) ?: return "${prefix}unknown$suffix"
-        
+
         val dirForDomain = fromHost(u)
         val fileId = fileId(uri)
         return "$prefix$dirForDomain-$fileId$suffix"
     }
-    
+
     /**
      * Create a symbolic link from the given uri.
      *
@@ -411,5 +426,26 @@ object AppPaths {
      * */
     fun uniqueSymbolicLinkForUri(uri: String, suffix: String = ".htm"): Path {
         return SYS_TMP_LINKS_DIR.resolve(hex(uri, "", suffix))
+    }
+
+    private fun detectAuxiliaryLogDir0(): Path {
+        val candidates = listOf(
+            Paths.get("."),
+            getProcTmpDirectory(""),
+            getProcTmpTmpDirectory(""),
+            getTmpDirectory(""),
+            DATA_DIR
+        ).map { it.resolve("logs") }
+            .filter { it.isDirectory() && it.exists() }
+            .sortedByDescending { it.getLastModifiedTime() }
+
+        if (candidates.isNotEmpty()) {
+            return candidates[0]
+        }
+
+        val fallback = SYS_TMP_DIR.resolve("pulsar").resolve("logs")
+        Files.createDirectories(fallback)
+
+        return fallback
     }
 }

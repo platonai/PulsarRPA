@@ -4,6 +4,7 @@ import ai.platon.pulsar.agentic.ai.agent.detail.*
 import ai.platon.pulsar.agentic.ai.todo.ToDoManager
 import ai.platon.pulsar.agentic.tools.ActionValidator
 import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
+import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
@@ -14,6 +15,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import kotlinx.coroutines.*
 import java.nio.file.Files
+import java.nio.file.Paths
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
@@ -153,6 +155,8 @@ open class BrowserPerceptiveAgent constructor(
             withContext(agentScope.coroutineContext) { resolveInCoroutine(action) }
         } catch (_: CancellationException) {
             ActResult(false, "USER interrupted", action = action.action)
+        } finally {
+            stateManager.writeProcessTrace()
         }
     }
 

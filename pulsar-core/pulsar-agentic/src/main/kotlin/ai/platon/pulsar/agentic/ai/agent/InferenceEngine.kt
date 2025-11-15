@@ -7,7 +7,9 @@ import ai.platon.pulsar.agentic.ai.SimpleMessage
 import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
 import ai.platon.pulsar.agentic.ai.tta.ContextToAction
 import ai.platon.pulsar.browser.driver.chrome.dom.DomService
+import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
@@ -25,12 +27,9 @@ import dev.langchain4j.data.message.SystemMessage
 import dev.langchain4j.data.message.UserMessage
 import dev.langchain4j.model.chat.request.ChatRequest
 import dev.langchain4j.model.chat.response.ChatResponse
-import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Instant
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 data class ExtractParams constructor(
@@ -65,6 +64,7 @@ class InferenceEngine(
     // Reuse a single ObjectMapper for JSON parsing within this class
     private val mapper = ObjectMapper()
     private val cta = ContextToAction(session.sessionConfig)
+    private val auxLogDir: Path get() = AppPaths.detectAuxiliaryLogDir().resolve("agent")
 
     val domService: DomService
         get() = (session.getOrCreateBoundDriver() as? AbstractWebDriver)?.domService
@@ -278,26 +278,18 @@ class InferenceEngine(
         return Strings.compactInline(raw, limit)
     }
 
-    private fun logsDir(): Path = Path.of("logs")
-
-    private fun ensureDir(p: Path) {
-        if (!Files.exists(p)) Files.createDirectories(p)
-    }
-
     private fun writeTimestampedTxtFile(prefix: String, kind: String, payload: Any): Pair<String, String> {
-        val ts = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss"))
-        val dir = logsDir().resolve(prefix)
-        ensureDir(dir)
-        val file = dir.resolve("${kind}_${ts}.txt")
+        val ts = DateTimes.formatNow()
+        val path = auxLogDir.resolve(prefix).resolve("${kind}_${ts}.txt")
         val mapper = ObjectMapper()
-        val bytes = runCatching { mapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(payload) }
-            .getOrElse { payload.toString().toByteArray(StandardCharsets.UTF_8) }
-        Files.write(file, bytes)
-        return Pair(file.toString(), ts)
+        val content = runCatching { mapper.writerWithDefaultPrettyPrinter().writeValueAsString(payload) }
+            .getOrNull() ?: payload
+        MessageWriter.writeOnce(path, content)
+        return Pair(path.toString(), ts)
     }
 
     private fun appendSummaryToFile(prefix: String, entry: Map<String, Any?>) {
-        val file = logsDir().resolve("${prefix}_summary.json")
+        val file = auxLogDir.resolve("${prefix}_summary.json")
         val mapper = ObjectMapper()
         val current: ArrayNode = if (Files.exists(file)) {
             runCatching { mapper.readTree(Files.readAllBytes(file)) as? ArrayNode }

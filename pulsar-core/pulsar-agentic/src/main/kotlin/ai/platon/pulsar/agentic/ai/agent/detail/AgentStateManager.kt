@@ -5,10 +5,17 @@ import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
+import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.DateTimes
+import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.withTimeout
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.time.Instant
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.*
 
 class AgentStateManager(
@@ -23,6 +30,8 @@ class AgentStateManager(
     val driver: WebDriver get() = agent.session.getOrCreateBoundDriver()
     val stateHistory: List<AgentState> get() = _stateHistory
     val processTrace: List<ProcessTrace> get() = _processTrace
+
+    val auxLogDir: Path get() = AppPaths.detectAuxiliaryLogDir().resolve("agent")
 
     suspend fun buildInitExecutionContext(action: ActionOptions, baseContext: ExecutionContext? = null): ExecutionContext {
         val context = buildExecutionContext(action.action, baseContext = baseContext)
@@ -186,6 +195,11 @@ class AgentStateManager(
 
     fun addTrace(message: String) {
         addTrace(stateHistory.lastOrNull(), emptyMap(), message)
+    }
+
+    fun writeProcessTrace() {
+        val path = auxLogDir.resolve("processTrace_${DateTimes.formatNow()}.log")
+        MessageWriter.writeOnce(path, processTrace)
     }
 
     fun clearUpHistory(toRemove: Int) {

@@ -11,7 +11,6 @@ import ai.platon.pulsar.agentic.tools.AgentToolManager
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.NotSupportedException
-import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
@@ -33,7 +32,7 @@ open class BrowserAgentActor(
     private val _startTime: Instant = Instant.now()
     private val _uuid: UUID = UUID.randomUUID()
     private val _baseDir: Path = AppPaths.get("agent")
-        .resolve(DateTimes.PATH_SAFE_FORMAT_101.format(_startTime))
+        .resolve(DateTimes.PATH_SAFE_FORMATTER_1.format(_startTime))
         .resolve(_uuid.toString())
 
     protected val cta by lazy { ContextToAction(session.sessionConfig) }
