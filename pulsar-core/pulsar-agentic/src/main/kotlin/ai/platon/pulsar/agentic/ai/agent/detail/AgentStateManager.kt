@@ -5,13 +5,11 @@ import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
-import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.withTimeout
 import java.time.Instant
 import java.util.*
-import kotlin.math.acos
 
 class AgentStateManager(
     val agent: BrowserAgentActor,
@@ -121,9 +119,9 @@ class AgentStateManager(
         val toolCall = detailedActResult.actionDescription.toolCall
         val toolCallResult = detailedActResult.toolCallResult
         // additional message appended to description
-        val message = detailedActResult.message
+        val description = detailedActResult.description
 
-        updateAgentState(agentState, observeElement, toolCall, toolCallResult, message)
+        updateAgentState(agentState, observeElement, toolCall, toolCallResult, description)
     }
 
     fun updateAgentState(

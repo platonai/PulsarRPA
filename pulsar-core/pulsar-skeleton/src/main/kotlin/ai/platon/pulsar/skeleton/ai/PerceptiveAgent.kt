@@ -30,7 +30,10 @@ data class DetailedActResult(
     val actionDescription: ActionDescription,
     val toolCallResult: ToolCallResult? = null,
     val success: Boolean = false,
-    val summary: String? = null,
+    /**
+     * A short description about the current state
+     * */
+    val description: String? = null,
     /**
      * The exception that not from tool call execution which is already in ToolCallResult
      * */
@@ -40,7 +43,7 @@ data class DetailedActResult(
         return ActResult(
             action = actionDescription.instruction,
             success = success,
-            message = summary ?: "",
+            message = description ?: "",
             result = toolCallResult,
             detail = this
         )
