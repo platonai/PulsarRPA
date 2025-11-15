@@ -10,6 +10,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.skeleton.ai.ActionDescription
 import ai.platon.pulsar.skeleton.ai.AgentState
@@ -32,19 +33,13 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.*
 
-// ----------------------------------- Data models -----------------------------------
-data class LLMUsage(
-    val promptTokens: Int = 0,
-    val completionTokens: Int = 0,
-)
-
-data class ExtractParams(
+data class ExtractParams constructor(
     val instruction: String,
     val agentState: AgentState,
     val schema: ExtractionSchema,
     val requestId: String = UUID.randomUUID().toString(),
     val userProvidedInstructions: String? = null,
-    val logInferenceToFile: Boolean = false,
+    val logInferenceToFile: Boolean = true,
 )
 
 data class ObserveParams constructor(
@@ -58,12 +53,6 @@ data class ObserveParams constructor(
     val logInferenceToFile: Boolean = false,
     val fromAct: Boolean = false,
 ) {
-    /**
-     * The user's instruction/request
-     * */
-    val instruction: String get() = context.instruction
-
-    val screenshotB64: String? get() = context.screenshotB64
 }
 
 class InferenceEngine(
@@ -99,8 +88,8 @@ class InferenceEngine(
         var extractCallTs = ""
         if (params.logInferenceToFile) {
             val (file, ts) = logCallIfEnabled(
-                dirPrefix = "extract_summary",
-                kind = "extract_call",
+                dirPrefix = "extractSummary",
+                kind = "extractCall",
                 requestId = params.requestId,
                 modelCall = "extract",
                 messages = messages.messages,
@@ -113,11 +102,6 @@ class InferenceEngine(
         val extractStartTime = Instant.now()
         val extractResponse = cta.generateResponseRaw(messages)
 
-        // val (extractResp, extractElapsedMs) = doLangChainChat(systemMsg, userMsg)
-
-//        val messageText = extractResp.aiMessage().text().trim()
-//        val usage1 = toUsage(extractResp)
-
         val extractedNode: ObjectNode = runCatching {
             mapper.readTree(extractResponse.content) as? ObjectNode ?: JsonNodeFactory.instance.objectNode()
         }.getOrElse { JsonNodeFactory.instance.objectNode() }
@@ -125,8 +109,8 @@ class InferenceEngine(
         var extractRespFile = ""
         if (params.logInferenceToFile) {
             extractRespFile = writeTimestampedTxtFile(
-                prefix = "extract_summary",
-                kind = "extract_response",
+                prefix = "extractSummary",
+                kind = "extractResponse",
                 payload = mapOf(
                     "requestId" to params.requestId,
                     "modelResponse" to "extract",
@@ -134,13 +118,13 @@ class InferenceEngine(
                 )
             ).first
 
-            appendSummary(
+            appendSummaryToFile(
                 prefix = "extract",
                 entry = mapOf(
-                    "extract_inference_type" to "extract",
+                    "extractInferenceType" to "extract",
                     "timestamp" to extractCallTs,
-                    "LLM_input_file" to callFile,
-                    "LLM_output_file" to extractRespFile,
+                    "llmInputFile" to callFile,
+                    "llmOutputFile" to extractRespFile,
                     "outputTokenCount" to extractResponse.tokenUsage.outputTokenCount,
                     "totalTokenCount" to extractResponse.tokenUsage.totalTokenCount,
                     "inferenceTimeMillis" to DateTimes.elapsedTime(extractStartTime).toMillis()
@@ -155,15 +139,14 @@ class InferenceEngine(
         val metadataUser = promptBuilder.buildMetadataPrompt(params.instruction, extractedNode, params.agentState)
 
         metadataMessages.addLast(metadataSystem)
-        metadataMessages.addUser(promptBuilder.buildExtractUserRequestPrompt(params), "user_request")
         metadataMessages.addLast(metadataUser)
 
         var metadataCallFile = ""
         var metadataCallTs = ""
         if (params.logInferenceToFile) {
             val (file, ts) = logCallIfEnabled(
-                dirPrefix = "extract_summary",
-                kind = "metadata_call",
+                dirPrefix = "extractSummary",
+                kind = "metadataCall",
                 requestId = params.requestId,
                 modelCall = "metadata",
                 messages = metadataMessages.messages,
@@ -175,11 +158,6 @@ class InferenceEngine(
         val metadataStartTime = Instant.now()
         val metadataResponse = cta.generateResponseRaw(messages)
 
-//        val (metadataResp, metadataElapsedMs) = doLangChainChat(metadataSystem, metadataUser)
-
-        // val usage2 = toUsage(metadataResponse)
-
-        // val metaText = metadataResp.aiMessage().text().trim()
         val metaNode: ObjectNode = runCatching {
             mapper.readTree(metadataResponse.content) as? ObjectNode ?: JsonNodeFactory.instance.objectNode()
         }.getOrElse { JsonNodeFactory.instance.objectNode() }
@@ -189,8 +167,8 @@ class InferenceEngine(
         var metadataRespFile = ""
         if (params.logInferenceToFile) {
             metadataRespFile = writeTimestampedTxtFile(
-                prefix = "extract_summary",
-                kind = "metadata_response",
+                prefix = "extractSummary",
+                kind = "metadataResponse",
                 payload = mapOf(
                     "requestId" to params.requestId,
                     "modelResponse" to "metadata",
@@ -199,13 +177,13 @@ class InferenceEngine(
                 )
             ).first
 
-            appendSummary(
+            appendSummaryToFile(
                 prefix = "extract",
                 entry = mapOf(
-                    "extract_inference_type" to "metadata",
+                    "extractInferenceType" to "metadata",
                     "timestamp" to metadataCallTs,
-                    "LLM_input_file" to metadataCallFile,
-                    "LLM_output_file" to metadataRespFile,
+                    "llmInputFile" to metadataCallFile,
+                    "llmOutputFile" to metadataRespFile,
                     "inputTokenCount" to metadataResponse.tokenUsage.inputTokenCount,
                     "outputTokenCount" to metadataResponse.tokenUsage.outputTokenCount,
                     "totalTokenCount" to metadataResponse.tokenUsage.totalTokenCount,
@@ -214,7 +192,6 @@ class InferenceEngine(
             )
         }
 
-        // 3) Merge & return ------------------------------------------------------------------
         val usage1 = extractResponse.tokenUsage
         val usage2 = extractResponse.tokenUsage
         val inputTokenCount = usage1.inputTokenCount + usage2.inputTokenCount
@@ -231,6 +208,7 @@ class InferenceEngine(
             put("totalTokenCount", totalTokenCount)
             put("inferenceTimeMillis", DateTimes.elapsedTime(extractStartTime).toMillis())
         }
+
         return result
     }
 
@@ -246,8 +224,8 @@ class InferenceEngine(
         var callTs = ""
         if (params.logInferenceToFile) {
             val (f, ts) = logCallIfEnabled(
-                dirPrefix = "${prefix}_summary",
-                kind = "${prefix}_call",
+                dirPrefix = "${prefix}Summary",
+                kind = "${prefix}Call",
                 requestId = context.requestId,
                 modelCall = prefix,
                 messages = messages.messages,
@@ -257,29 +235,20 @@ class InferenceEngine(
             callTs = ts
         }
 
-        // val systemMessages = messages.systemMessages()
-        // val userMessages = messages.userMessages()
-        // val (resp, elapsedMs) = doLangChainChat(systemMessages, userMessages)
-
         val startTime = Instant.now()
 
         val actionDescription = cta.generate(messages, context)
         requireNotNull(context.agentState.actionDescription) { "Filed should be set: context.agentState.actionDescription" }
-        // val modelResponse = cta.generateResponseRaw(messages, params.screenshotB64)
         val modelResponse = actionDescription.modelResponse!!
 
         val tokenUsage = modelResponse.tokenUsage
-        // val responseContent = resp.aiMessage().text().trim()
         val responseContent = modelResponse.content
-
-//        var actionDescription = cta.tta.modelResponseToActionDescription(instruction, context.agentState, modelResponse)
-//        actionDescription = cta.tta.reviseActionDescription(actionDescription)
 
         var respFile = ""
         if (params.logInferenceToFile) {
             respFile = writeTimestampedTxtFile(
-                prefix = "${prefix}_summary",
-                kind = "${prefix}_response",
+                prefix = "${prefix}Summary",
+                kind = "${prefix}Response",
                 payload = mapOf(
                     "requestId" to context.requestId,
                     "modelResponse" to prefix,
@@ -287,13 +256,13 @@ class InferenceEngine(
                 )
             ).first
 
-            appendSummary(
+            appendSummaryToFile(
                 prefix = prefix,
                 entry = mapOf(
-                    "${prefix}_inference_type" to prefix,
+                    "${prefix}InferenceType" to prefix,
                     "timestamp" to callTs,
-                    "LLM_input_file" to callFile,
-                    "LLM_output_file" to respFile,
+                    "llmInputFile" to callFile,
+                    "llmOutputFile" to respFile,
                     "inputTokenCount" to tokenUsage.inputTokenCount,
                     "outputTokenCount" to tokenUsage.outputTokenCount,
                     "totalTokenCount" to tokenUsage.totalTokenCount,
@@ -306,7 +275,6 @@ class InferenceEngine(
     }
 
     private fun safeJsonPreview(raw: String, limit: Int = 2000): String {
-        // Bound file payload length for safety
         return Strings.compactLog(raw, limit)
     }
 
@@ -328,17 +296,16 @@ class InferenceEngine(
         return Pair(file.toString(), ts)
     }
 
-    private fun appendSummary(prefix: String, entry: Map<String, Any?>) {
+    private fun appendSummaryToFile(prefix: String, entry: Map<String, Any?>) {
         val file = logsDir().resolve("${prefix}_summary.json")
         val mapper = ObjectMapper()
         val current: ArrayNode = if (Files.exists(file)) {
             runCatching { mapper.readTree(Files.readAllBytes(file)) as? ArrayNode }
                 .getOrNull() ?: JsonNodeFactory.instance.arrayNode()
         } else JsonNodeFactory.instance.arrayNode()
-        // Explicitly convert the entry Map to a JsonNode to disambiguate ArrayNode.add overloads
         val entryNode: JsonNode = mapper.valueToTree(entry)
         current.add(entryNode)
-        Files.write(file, mapper.writerWithDefaultPrettyPrinter().writeValueAsBytes(current))
+        Files.write(file, prettyPulsarObjectMapper().writeValueAsBytes(current))
     }
 
     // ------------------------------ Small utilities --------------------------------
@@ -400,9 +367,4 @@ class InferenceEngine(
 
         return resp to (t1 - t0)
     }
-
-    private fun toUsage(resp: ChatResponse): LLMUsage = LLMUsage(
-        promptTokens = resp.tokenUsage().inputTokenCount(),
-        completionTokens = resp.tokenUsage().outputTokenCount(),
-    )
 }

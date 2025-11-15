@@ -282,13 +282,16 @@ data class AgentState constructor(
 
     override fun toString(): String {
         val summary = listOfNotNull(
-            description,
-            currentPageContentSummary, screenshotContentSummary,
-            evaluationPreviousGoal,
-            nextGoal
+            "description: $description",
+            "pageContentSummary: $currentPageContentSummary",
+            "screenshotContentSummary: $screenshotContentSummary",
+            "evaluationPreviousGoal: $evaluationPreviousGoal",
+            "nextGoal: $nextGoal"
         )
-            .joinToString("\n")
-        return "$timestamp $method - $summary"
+            .joinToString("\t\n")
+
+        val toolCallState = toolCallResult?.success ?: false
+        return "$step.\t$timestamp\tTool call:$domain.$method\tTool call state:$toolCallState\n$summary"
     }
 }
 

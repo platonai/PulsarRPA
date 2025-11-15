@@ -869,7 +869,8 @@ $userRequest
             return """
 从网页中提取关键数据结构。
 
-- 每次提供一个视口高度(viewport height)内的所有无障碍树 DOM 节点，你将的数据来源是无障碍树。
+- 每次提供一个视口高度(viewport height)内的所有无障碍树 DOM 节点，你的数据来源是无障碍树
+- 视口之上的数据视为已被处理，视口之下的数据视为待处理
 - 视口之上像素高度: 当前视口上方、已滚动出可视范围的网页内容高度
 - 视口之下像素高度: 当前视口下方、不在可视范围内的网页内容高度
 
@@ -909,12 +910,6 @@ ${params.instruction}
         val schema = params.schema
 
         val content = """
-
-## 浏览器状态
-${browserState.lazyJson}
-
----
-
 ## 视口信息
 
 本次焦点视口序号: $processingViewport
@@ -926,7 +921,7 @@ ${browserState.lazyJson}
 ---
 
 ## 无障碍树
-
+（仅当前视口范围内）
 ${nanoTree.lazyJson}
 
 ---
@@ -941,24 +936,25 @@ ${schema.toJsonSchema()}
         return SimpleMessage(role = "user", content = content)
     }
 
-    private val metadataSystemPromptCN: String = """
+    fun buildMetadataSystemPrompt(): SimpleMessage {
+        val metadataSystemPromptCN: String = """
 你是一名 AI 助手，负责评估一次抽取任务的进展和完成状态。
+
+- 每次提取当前视口范围内的数据
+- 视口之上的数据已处理，视口之下的数据待处理
+
 请分析抽取响应，判断任务是否已经完成或是否需要更多信息。
 严格遵循以下标准：
-1. 一旦当前抽取响应已经满足了指令，必须将完成状态设为 true 并停止处理，不论是否还有未处理视口。
+1. 一旦当前抽取响应已经满足了指令，必须将完成状态设为 true 并停止处理，不论是否还有未查看视口。
 2. 只有在以下两个条件同时成立时，才将完成状态设为 false：
    - 指令尚未被满足
    - 仍然有剩余视口数据未提取（viewportsTotal > processingViewport）
 
 """.trimIndent()
 
-    private val metadataSystemPromptEN = metadataSystemPromptCN
-
-    fun buildMetadataSystemPrompt(): SimpleMessage {
-        val content = if (isZH) metadataSystemPromptCN else metadataSystemPromptEN
         return SimpleMessage(
             role = "system",
-            content = content,
+            content = metadataSystemPromptCN,
         )
     }
 
@@ -986,6 +982,11 @@ ${schema.toJsonSchema()}
 
         val content =
             """
+## 用户指令
+<user_request>
+$instruction
+</user_request>
+
 ## 视口信息
 
 本次焦点视口序号: $processingViewport
@@ -994,12 +995,10 @@ ${schema.toJsonSchema()}
 视口之上像素高度: $hiddenTopHeight
 视口之下像素高度: $hiddenBottomHeight
 
-- 默认每次查看一个视口高度(viewport height)内的所有 DOM 节点
+- 每次提供一个视口高度(viewport height)内的所有无障碍树 DOM 节点，你的数据来源是无障碍树
+- 视口之上的数据视为已被处理，视口之下的数据视为待处理
 - 视口之上像素高度: 当前视口上方、已滚动出可视范围的网页内容高度
 - 视口之下像素高度: 当前视口下方、不在可视范围内的网页内容高度
-- 注意：网页内容变化可能导致视口位置和视口序号随时发生变化
-- 默认提供的无障碍树仅包含第`i`个视口内的 DOM 节点，并包含少量视口外邻近节点，以保证信息完整
-- 如需查看下一视口，调用 `scrollBy(viewportHeight)` 向下滚动一屏获取更多信息
 
 提取结果:
 
@@ -1155,13 +1154,24 @@ ${nanoTree.lazyJson}
 
     fun buildSummaryPrompt(goal: String, stateHistory: List<AgentState>): Pair<String, String> {
         val system = "你是总结助理，请基于执行轨迹对原始目标进行总结，输出 JSON。"
-        val user = buildString {
-            appendLine("原始目标：$goal")
-            appendLine("执行轨迹(按序)：")
-            stateHistory.forEach { appendLine(it) }
-            appendLine()
-            appendLine("""请严格输出 JSON：$TASK_COMPLETE_SCHEMA 无多余文字。""")
-        }
+
+        val history = stateHistory.joinToString("\n") { "🚩 $it" }
+        val user = """
+## 原始目标
+$goal
+
+## 执行轨迹（按序）
+
+$history
+
+## 输出
+
+严格输出 JSON，无多余文字：
+
+$TASK_COMPLETE_SCHEMA
+
+        """.trimIndent()
+
         return system to user
     }
 
