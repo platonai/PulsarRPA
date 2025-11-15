@@ -119,7 +119,8 @@ class AgentStateManager(
         val observeElement = detailedActResult.actionDescription.observeElement
         val toolCall = detailedActResult.actionDescription.toolCall
         val toolCallResult = detailedActResult.toolCallResult
-        val message = detailedActResult.summary
+        // additional message appended to description
+        val message = detailedActResult.message
         val success = detailedActResult.success
 
         updateAgentState(agentState, observeElement, toolCall, toolCallResult, message, success = success)
@@ -130,6 +131,9 @@ class AgentStateManager(
         observeElement: ObserveElement? = null,
         toolCall: ToolCall? = null,
         toolCallResult: ToolCallResult? = null,
+        /**
+         * Additional message appended to description
+         * */
         message: String? = null,
         success: Boolean = true,
     ) {
@@ -148,6 +152,7 @@ class AgentStateManager(
             domain = toolCall?.domain
             method = toolCall?.method
             description = descMsg
+            this.message = message
             screenshotContentSummary = observeElement?.screenshotContentSummary
             currentPageContentSummary = observeElement?.currentPageContentSummary
             evaluationPreviousGoal = observeElement?.evaluationPreviousGoal

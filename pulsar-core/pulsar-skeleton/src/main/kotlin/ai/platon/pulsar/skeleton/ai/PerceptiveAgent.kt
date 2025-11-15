@@ -275,12 +275,14 @@ data class AgentState constructor(
     // The current browser use state
     @JsonIgnore
     var browserUseState: BrowserUseState,
+    // A simple and descriptive description
+    var description: String? = null,
+    // A message about the current state, especially detailed error message
+    var message: String? = null,
     // AI:
     var domain: String? = null,
     // AI:
     var method: String? = null,
-    // AI:
-    var description: String? = null,
     // AI: the summary of the screenshot provided in this step
     var screenshotContentSummary: String? = null,
     // AI: the summary of the page content provided in this step
@@ -310,10 +312,10 @@ data class AgentState constructor(
             "nextGoal" to nextGoal
         )
             .filter { it.second != null }
-            .joinToString("\t\n") { (k, v) -> "$k=$v" }
+            .joinToString("\n\t- ") { (k, v) -> "$k=$v" }
 
         val toolCallState = toolCallResult?.success ?: false
-        return "$timestamp\t[$step]\tTool call:$domain.$method\tTool call state:$toolCallState\n$summary"
+        return "$timestamp\tStep:[$step] ToolCall:$domain.$method ToolCallState:$toolCallState\n$summary"
     }
 }
 

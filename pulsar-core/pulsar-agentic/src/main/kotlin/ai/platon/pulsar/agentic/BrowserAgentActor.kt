@@ -131,7 +131,11 @@ open class BrowserAgentActor(
             detailedActResult.toActResult()
         } catch (e: Exception) {
             logger.error("❌ observe.act execution failed sid={} msg={}", uuid.toString().take(8), e.message, e)
-            val msg = e.message ?: "Execution failed"
+
+            val msg = MessageFormatter.arrayFormat(
+                "❌ observe.act execution failed | {} | {}/{} | {}",
+                arrayOf(method, observe.locator, observeElement.cssSelector, e.message)
+            ).toString()
 
             stateManager.updateAgentState(agentState, observeElement, toolCall, null, msg, success = false)
 

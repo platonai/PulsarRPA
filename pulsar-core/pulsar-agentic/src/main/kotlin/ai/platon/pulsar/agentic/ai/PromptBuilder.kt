@@ -1160,20 +1160,29 @@ ${nanoTree.lazyJson}
     fun buildSummaryPrompt(goal: String, stateHistory: List<AgentState>): Pair<String, String> {
         val system = "你是总结助理，请基于执行轨迹对原始目标进行总结，输出 JSON。"
 
-        val history = stateHistory.withIndex().joinToString("\n") { "${it.index}.\t🚩 ${it.value}" }
+        val history = stateHistory.withIndex().joinToString("\n") {
+            "${it.index}.\t🚩 ${it.value}"
+        }
+
         val user = """
 ## 原始目标
 $goal
 
+---
+
 ## 执行轨迹（按序）
 
 $history
+
+---
 
 ## 输出
 
 严格输出 JSON，无多余文字：
 
 $TASK_COMPLETE_SCHEMA
+
+---
 
         """.trimIndent()
 
