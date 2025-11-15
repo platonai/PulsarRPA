@@ -8,7 +8,20 @@ done
 [[ -f "$APP_HOME/VERSION" ]] && cd "$APP_HOME" || exit 1
 
 function print_usage {
-  echo "Usage: build.sh [-clean|-test]"
+  echo "Usage: build.sh [-clean] [-test] [maven-args...]"
+  echo ""
+  echo "Options:"
+  echo "  -clean      Clean before building"
+  echo "  -test       Run tests (by default tests are skipped)"
+  echo "  -pl         Build only specified modules (Maven argument)"
+  echo "  -am         Build required modules (Maven argument)"
+  echo "  -amd        Build dependent modules (Maven argument)"
+  echo "  -D*         Pass system properties to Maven"
+  echo ""
+  echo "Examples:"
+  echo "  build.sh -clean -test"
+  echo "  build.sh -clean -test -pl :pulsar-tests"
+  echo "  build.sh -DskipTests=false"
   exit 1
 }
 
@@ -40,8 +53,9 @@ for Arg in "$@"; do
     -h|-help|--help)
       print_usage
       ;;
-    -*|--*)
-      print_usage
+    # Allow Maven-specific arguments to pass through
+    -pl|-am|-amd|-f|-file|-gs|-gt|-s|-settings|-Dmaven.*|-DskipTests*|-Dtest*)
+      AdditionalMvnArgs+=("$Arg")
       ;;
     *)
       AdditionalMvnArgs+=("$Arg")
