@@ -41,7 +41,7 @@ class MicroToNanoTreeHelper(
 
         val y1 = startY.roundTo(1)
         val y2 = endY.roundTo(1)
-        logger.info("Nano-tree generated | nodes: $numNodes | Y-axis: ($y1, $y2] | seen chunks: $seenChunks")
+        logger.info("""📤Nano-tree generated | nodes: $numNodes | Y-axis: ($y1, $y2] | seen chunks: $seenChunks""")
 
         return tree
     }

@@ -32,10 +32,6 @@ data class DetailedActResult(
     val success: Boolean = false,
     val summary: String? = null,
     /**
-     * Additional message, especially for state description, error description, etc.
-     * */
-    val message: String? = null,
-    /**
      * The exception that not from tool call execution which is already in ToolCallResult
      * */
     val exception: Exception? = null,
@@ -51,10 +47,8 @@ data class DetailedActResult(
     }
 
     companion object {
-        fun failed(
-            actionDescription: ActionDescription, exception: Exception? = null, message: String? = null
-        ): DetailedActResult {
-            return DetailedActResult(actionDescription, exception = exception, message = message)
+        fun failed(actionDescription: ActionDescription, exception: Exception? = null): DetailedActResult {
+            return DetailedActResult(actionDescription, exception = exception)
         }
     }
 }
@@ -313,7 +307,7 @@ data class AgentState constructor(
 ) {
     // the url to handle in this step
     val url: String get() = browserUseState.browserState.url
-    val success: Boolean get() = exception != null
+    val success: Boolean get() = exception == null
 
     override fun toString(): String {
         val summary = listOf(
@@ -424,6 +418,9 @@ data class ActionDescription constructor(
 
 data class ProcessTrace(
     val step: Int,
+    val method: String? = null,
+    val expression: String? = null,
+    val tcEvalResult: Any?? = null,
     val message: String? = null,
     val items: Map<String, Any?> = emptyMap(),
     val timestamp: Instant = Instant.now(),
@@ -438,8 +435,18 @@ data class ProcessTrace(
         }
 
         val itemStr = items.entries.joinToString { (k, v) -> "$k=" + format(v) }
-        val msg = message?.let { " | $it" } ?: ""
-        return "$timestamp\t[$step]\t$itemStr$msg"
+        val sep = " | "
+        val str = buildString {
+            append(timestamp)
+            append(sep)
+            append("[$step]")
+            append(sep)
+            method?.let { append("""🔧""").append(it).append(sep) }
+            append(itemStr).append(sep)
+            message?.let { append(it) }
+        }
+
+        return str
     }
 }
 

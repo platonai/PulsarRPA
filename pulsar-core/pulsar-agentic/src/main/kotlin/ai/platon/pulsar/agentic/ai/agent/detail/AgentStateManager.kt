@@ -11,6 +11,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.withTimeout
 import java.time.Instant
 import java.util.*
+import kotlin.math.acos
 
 class AgentStateManager(
     val agent: BrowserAgentActor,
@@ -172,18 +173,18 @@ class AgentStateManager(
     }
 
     fun addTrace(state: AgentState?, items: Map<String, Any?>, message: String? = null) {
-        val items2 = if (state != null) {
-            mapOf(
-                "action" to state.method,
-                "expression" to state.toolCallResult?.expression,
-                "tcEvalResult" to state.toolCallResult?.evaluate?.value
-            ).filterValues { it != null }
-        } else emptyMap()
-
-        val items3 = items + items2
         val step = state?.step ?: 0
         val msg = message ?: state?.toString()
-        val trace = ProcessTrace(step = step, items = items3, message = msg)
+
+        val trace = ProcessTrace(
+            step = step,
+            method = state?.method,
+            expression = state?.toolCallResult?.expression,
+            tcEvalResult = state?.toolCallResult?.evaluate?.value,
+            items = items,
+            message = msg
+        )
+
         _processTrace.add(trace)
     }
 

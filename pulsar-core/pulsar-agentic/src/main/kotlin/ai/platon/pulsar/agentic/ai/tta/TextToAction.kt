@@ -129,10 +129,12 @@ open class TextToAction(
 
     private fun reviseModelResponse(modelResponse: ModelResponse): ModelResponse {
         var content = modelResponse.content.trim()
+
         val errorMessage = "非法响应，必须是合法 JSON 格式。客户端已经修正，未来需严格遵循格式。"
         var modelError: String? = null
+        val heading20 = content.take(20)
         val tailing20 = content.takeLast(20)
-        if (content.take(20).contains("<output_act>")) {
+        if (heading20.contains("<output_act>")) {
             content = content.replace("<output_act>", "")
             modelError = errorMessage
         }
@@ -146,6 +148,7 @@ open class TextToAction(
         }
 
         return if (modelError != null) {
+            logger.info("""🖌️Model response revised""")
             modelResponse.copy(content = content, modelError = modelError)
         } else modelResponse
     }

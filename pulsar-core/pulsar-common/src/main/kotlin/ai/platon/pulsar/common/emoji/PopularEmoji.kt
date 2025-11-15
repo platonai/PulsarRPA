@@ -192,3 +192,8 @@ fun emo(n: Int): String {
         }
     }.joinToString("")
 }
+
+/**
+ * 常用来表示 输出 / 数据 / 结果 / 导出 的 emoji 👇
+ * */
+const val DATA_EMOJIS = """📤📄📊📈🧾💾🗃️🧮📝📥📦📰"""

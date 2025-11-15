@@ -277,12 +277,10 @@ open class BrowserAgentActor(
     ): DetailedActResult {
         val step = context.step
         val toolCall = actionDescription.toolCall
-            ?: return DetailedActResult.failed(actionDescription, message = "No toolCall")
+            ?: return DetailedActResult.failed(actionDescription, IllegalArgumentException("No tool call"))
 
         return try {
-            logger.info(
-                "🛠️ tool.exec sid={} step={} tool={} args={}",
-                context.sid, context.step, toolCall.method, toolCall.arguments)
+            logger.info("🛠️ tool.exec sid={} step={} tool={}", context.sid, context.step, toolCall.pseudoExpression)
 
             val toolCallResult = toolExecutor.execute(actionDescription, "resolve, #$step")
             val success = toolCallResult.success
@@ -300,7 +298,7 @@ open class BrowserAgentActor(
                 "💥 unexpected failure"
             )
             val message = "💥 unexpected failure | tool.exec.fail sid=${context.sid} step=${context.step}"
-            DetailedActResult.failed(actionDescription, e, message)
+            DetailedActResult.failed(actionDescription, IllegalStateException(message, e))
         }
     }
 
