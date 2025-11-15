@@ -460,16 +460,14 @@ data class ProcessTrace constructor(
         }
 
         val itemStr = items.entries.joinToString { (k, v) -> "$k=" + format(v) }
-        val sep = " | "
+
         val str = buildString {
             append(timestamp)
-            append(sep)
-            append("$step")
-            append(sep)
-            method?.let { append(it).append(sep) }
-            agentState?.let { append(it).append(sep) }
-            append(itemStr).append(sep)
-            message?.let { append(it) }
+            append(" | ").append("$step")
+            method?.let { append(" | ").append(it) }
+            agentState?.let { append(" | ").append(it) }
+            append(" | ").append(itemStr)
+            message?.let { append(" | ").append(it) }
         }
 
         return str

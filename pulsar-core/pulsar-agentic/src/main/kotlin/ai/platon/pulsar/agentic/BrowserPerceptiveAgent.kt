@@ -802,7 +802,7 @@ open class BrowserPerceptiveAgent constructor(
             val summary = summarize(instruction, context)
             stateManager.addTrace(
                 context.agentState,
-                mapOf("event" to "final", "preview" to summary.content.take(200)),
+                mapOf("event" to "final", "summaryPreview" to summary.content.take(200)),
                 "🧾 FINAL"
             )
             persistTranscript(instruction, summary, context)
