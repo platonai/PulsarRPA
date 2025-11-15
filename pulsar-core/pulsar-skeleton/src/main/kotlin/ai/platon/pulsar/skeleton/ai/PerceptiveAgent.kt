@@ -30,6 +30,14 @@ data class DetailedActResult(
     val toolCallResult: ToolCallResult? = null,
     val success: Boolean = false,
     val summary: String? = null,
+    /**
+     * Additional message, especially for state description, error description, etc.
+     * */
+    val message: String? = null,
+    /**
+     * The exception that not from tool call execution which is already in ToolCallResult
+     * */
+    val exception: Exception? = null,
 ) {
     fun toActResult(): ActResult {
         return ActResult(
@@ -39,6 +47,14 @@ data class DetailedActResult(
             result = toolCallResult,
             detail = this
         )
+    }
+
+    companion object {
+        fun failed(
+            actionDescription: ActionDescription, exception: Exception? = null, message: String? = null
+        ): DetailedActResult {
+            return DetailedActResult(actionDescription, exception = exception, message = message)
+        }
     }
 }
 

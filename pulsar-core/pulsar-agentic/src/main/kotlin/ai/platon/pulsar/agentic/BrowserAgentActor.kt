@@ -11,6 +11,7 @@ import ai.platon.pulsar.agentic.tools.AgentToolManager
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.NotSupportedException
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
@@ -90,12 +91,8 @@ open class BrowserAgentActor(
             val msg = "⏳ Action timed out after ${config.actTimeoutMs}ms: ${action.action}"
             stateManager.addTrace(
                 context.agentState,
-                mapOf(
-                    "event" to "actTimeout",
-                    "timeoutMs" to config.actTimeoutMs,
-                    "instruction" to action.action
-                ),
-                "⏳ act TIMEOUT"
+                items = mapOf("event" to "actTimeout", "timeoutMs" to config.actTimeoutMs, "instruction" to action.action),
+                message = "⏳ act TIMEOUT"
             )
             ActResult.failed(msg, action.action)
         }
@@ -116,7 +113,7 @@ open class BrowserAgentActor(
         return try {
             val detailedActResult = executeToolCall(actionDescription, context)
 
-            val toolCallResult = detailedActResult?.toolCallResult
+            val toolCallResult = detailedActResult.toolCallResult
 
             logger.info(
                 "✅ Action executed | {} | {}/{} | {}",
@@ -131,7 +128,7 @@ open class BrowserAgentActor(
             stateManager.updateAgentState(agentState, observeElement, toolCall, toolCallResult, msg.message)
 
             // ActResult(success = true, action = toolCall.method, message = msg.message, result = toolCallResult, actionDescription = actionDescription)
-            detailedActResult?.toActResult() ?: ActResult.failed("No detailed act result", instruction)
+            detailedActResult.toActResult()
         } catch (e: Exception) {
             logger.error("❌ observe.act execution failed sid={} msg={}", uuid.toString().take(8), e.message, e)
             val msg = e.message ?: "Execution failed"
@@ -272,38 +269,33 @@ open class BrowserAgentActor(
     private suspend fun executeToolCall(
         actionDescription: ActionDescription,
         context: ExecutionContext
-    ): DetailedActResult? {
+    ): DetailedActResult {
         val step = context.step
-        val toolCall = actionDescription.toolCall ?: return null
+        val toolCall = actionDescription.toolCall
+            ?: return DetailedActResult.failed(actionDescription, message = "No toolCall")
 
         return try {
             logger.info(
                 "🛠️ tool.exec sid={} step={} tool={} args={}",
-                context.sid,
-                context.step,
-                toolCall.method,
-                toolCall.arguments
-            )
+                context.sid, context.step, toolCall.method, toolCall.arguments)
 
             val toolCallResult = toolExecutor.execute(actionDescription, "resolve, #$step")
+            val success = toolCallResult.success
 
-            val summary = "✅ ${toolCall.method} executed successfully"
-            stateManager.addTrace(context.agentState, mapOf("event" to "toolExecOk", "tool" to toolCall.method), summary)
-            DetailedActResult(actionDescription, toolCallResult, success = true, summary)
+            val summary = "✅ ${toolCall.method} executed | " + if (success) "✅ success" else """☑️ executed"""
+            stateManager.addTrace(context.agentState,
+                mapOf("event" to "toolExecOk", "tool" to toolCall.method), summary)
+
+            DetailedActResult(actionDescription, toolCallResult, success = success, summary)
         } catch (e: Exception) {
-            logger.error(
-                "🛠️❌ tool.exec.fail sid={} step={} msg={}",
-                context.sid,
-                context.step,
-                e.message,
-                e
-            )
+            logger.error("🛠️❌ tool.exec.fail sid={} step={} msg={}", context.sid, context.step, e.message, e)
             stateManager.addTrace(
                 context.agentState,
                 mapOf("event" to "toolExecUnexpectedFail", "tool" to toolCall.method),
                 "💥 unexpected failure"
             )
-            null
+            val message = "💥 unexpected failure | tool.exec.fail sid=${context.sid} step=${context.step}"
+            DetailedActResult.failed(actionDescription, e, message)
         }
     }
 

@@ -96,12 +96,14 @@ class AgentToolManager(
 
             return tcResult
         } catch (e: Exception) {
-            logger.warn("Failed to execute tool call $actionDescription", e)
+            logger.warn("Failed to execute tool call | $actionDescription", e)
 
+            val expression = actionDescription.cssFriendlyExpression ?: actionDescription.expression ?: ""
             return ToolCallResult(
                 success = false,
+                evaluate = TcEvaluate(expression, e),
                 message = e.message,
-                expression = actionDescription.cssFriendlyExpression,
+                expression = expression,
                 modelResponse = actionDescription.modelResponse?.content
             )
         }
