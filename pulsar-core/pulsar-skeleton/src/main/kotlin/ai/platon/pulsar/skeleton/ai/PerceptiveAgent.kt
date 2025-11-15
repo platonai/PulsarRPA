@@ -213,8 +213,12 @@ data class ToolCallResult constructor(
     val success: Boolean = false,
     val evaluate: TcEvaluate? = null,
     val message: String? = null,
+    @JsonIgnore
     val actionDescription: ActionDescription? = null
-)
+) {
+    val expression: String get() = actionDescription?.expression ?: ""
+    val modelResponse: String? get() = actionDescription?.modelResponse?.content
+}
 
 data class ObserveElement constructor(
     val locator: String? = null,
@@ -429,11 +433,12 @@ data class ActionDescription constructor(
     }
 }
 
-data class ProcessTrace(
+data class ProcessTrace constructor(
     val step: Int,
     val method: String? = null,
+    val agentState: String? = null,
     val expression: String? = null,
-    val tcEvalResult: Any?? = null,
+    val tcEvalResult: Any? = null,
     val message: String? = null,
     val items: Map<String, Any?> = emptyMap(),
     val timestamp: Instant = Instant.now(),
@@ -452,9 +457,10 @@ data class ProcessTrace(
         val str = buildString {
             append(timestamp)
             append(sep)
-            append("[$step]")
+            append("$step")
             append(sep)
-            method?.let { append("""🔧""").append(it).append(sep) }
+            method?.let { append(it).append(sep) }
+            agentState?.let { append(it).append(sep) }
             append(itemStr).append(sep)
             message?.let { append(it) }
         }

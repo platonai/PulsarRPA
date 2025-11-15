@@ -152,11 +152,9 @@ class AgentStateManager(
 
     fun addToHistory(state: AgentState) {
         val items = mapOf(
-            "action" to state.method,
-            "expression" to state.toolCallResult?.actionDescription?.pseudoExpression,
-            "tcEvalResult" to state.toolCallResult?.evaluate?.value
-        ).filterValues { it != null }
-        val trace = ProcessTrace(state.step, state.toString(), items = items)
+            "subAction" to "addToHistory"
+        )
+        val trace = ProcessTrace(state.step, state.method, agentState = state.toString(), items = items)
 
         synchronized(this) {
             _stateHistory.add(state)
