@@ -52,6 +52,7 @@ data class AgentConfig(
     val actionGenerationTimeoutMs: Long = 30_000,
     val screenshotCaptureTimeoutMs: Long = 5_000,
     val enableStructuredLogging: Boolean = false,
+    val logInferenceToFile: Boolean = true,
     val enableDebugMode: Boolean = false,
     val enablePerformanceMetrics: Boolean = true,
     val memoryCleanupIntervalSteps: Int = 50,
