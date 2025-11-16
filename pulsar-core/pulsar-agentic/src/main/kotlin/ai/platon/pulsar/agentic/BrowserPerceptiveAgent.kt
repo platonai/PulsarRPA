@@ -370,14 +370,12 @@ open class BrowserPerceptiveAgent constructor(
         ctxIn: ExecutionContext,
         noOpsIn: Int
     ): ExecutionContext {
-        var context = ctxIn
         var consecutiveNoOps = noOpsIn
-        val nextStep = context.step + 1
 
         ensureReadyForStep(action)
 
-        context = stateManager.buildExecutionContext(
-            action.action, "step", step = nextStep, baseContext = context)
+        val context = stateManager.buildExecutionContext(
+            action.action, "step", baseContext = ctxIn)
         action.setContext(context)
         val agentState = context.agentState
         val browserUseState = agentState.browserUseState
@@ -787,9 +785,7 @@ open class BrowserPerceptiveAgent constructor(
     }
 
     protected suspend fun summarize(goal: String, cxtIn: ExecutionContext): ModelResponse {
-        val context = stateManager.buildExecutionContext(
-            goal, actionType = "summarize", step = cxtIn.step, baseContext = cxtIn
-        )
+        val context = stateManager.buildExecutionContext(goal, actionType = "summarize", baseContext = cxtIn)
         context.agentState.event = "summary"
 
         return try {

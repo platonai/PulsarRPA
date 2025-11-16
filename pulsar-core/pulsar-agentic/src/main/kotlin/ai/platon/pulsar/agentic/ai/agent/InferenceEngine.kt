@@ -150,7 +150,8 @@ class InferenceEngine(
         }
 
         val metadataStartTime = Instant.now()
-        val metadataResponse = cta.generateResponseRaw(messages)
+        // BUGFIX: Use metadataMessages (not extraction messages) for metadata stage
+        val metadataResponse = cta.generateResponseRaw(metadataMessages)
 
         val metaNode: ObjectNode = runCatching {
             mapper.readTree(metadataResponse.content) as? ObjectNode ?: JsonNodeFactory.instance.objectNode()
@@ -188,7 +189,8 @@ class InferenceEngine(
         }
 
         val usage1 = extractResponse.tokenUsage
-        val usage2 = extractResponse.tokenUsage
+        // BUGFIX: usage2 should come from metadataResponse
+        val usage2 = metadataResponse.tokenUsage
         val inputTokenCount = usage1.inputTokenCount + usage2.inputTokenCount
         val outputTokenCount = usage1.outputTokenCount + usage2.outputTokenCount
         val totalTokenCount = usage1.totalTokenCount + usage2.totalTokenCount
@@ -231,7 +233,8 @@ class InferenceEngine(
         }
 
         val actionDescription = cta.generate(messages, context)
-        requireNotNull(context.agentState.actionDescription) { "Filed should be set: context.agentState.actionDescription" }
+        // Minor typo fix: "Field" instead of "Filed"
+        requireNotNull(context.agentState.actionDescription) { "Field should be set: context.agentState.actionDescription" }
         val modelResponse = actionDescription.modelResponse!!
 
         val tokenUsage = modelResponse.tokenUsage

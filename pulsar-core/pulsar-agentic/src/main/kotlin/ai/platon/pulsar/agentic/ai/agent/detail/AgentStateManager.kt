@@ -54,7 +54,6 @@ class AgentStateManager(
          * */
         instruction: String,
         actionType: String = "",
-        step: Int = 0,
         /**
          * The current agent state
          * */
@@ -64,13 +63,14 @@ class AgentStateManager(
          * */
         baseContext: ExecutionContext? = null
     ): ExecutionContext {
+        val step = (baseContext?.step ?: -1) + 1
         val sessionId = baseContext?.sessionId ?: UUID.randomUUID().toString()
         val prevAgentState = baseContext?.agentState
         val currentAgentState = agentState ?: getAgentState(instruction, step, prevAgentState)
 
         val bc = baseContext ?: ExecutionContext(
             instruction = instruction,
-            step = 0,
+            step = step,
             actionType = "init",
             sessionId = sessionId,
             agentState = currentAgentState,
