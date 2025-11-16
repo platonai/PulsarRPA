@@ -165,7 +165,11 @@ class AgentStateManager(
      * Make sure add to history at every end of step
      * */
     fun addToHistory(state: AgentState) {
-        val trace = ProcessTrace(state.step, state.method, agentState = state.toString())
+//        val trace = ProcessTrace(
+//            state.step,
+//            state.method,
+//            agentState = state.toString()
+//        )
 
         synchronized(this) {
             _stateHistory.add(state)
@@ -175,17 +179,19 @@ class AgentStateManager(
                 _stateHistory.clear()
                 _stateHistory.addAll(remaining)
             }
-            _processTrace.add(trace)
+            // _processTrace.add(trace)
         }
     }
 
-    fun addTrace(state: AgentState?, items: Map<String, Any?>, message: String? = null) {
+    fun addTrace(state: AgentState?, items: Map<String, Any?> = emptyMap(), event: String? = null, message: String? = null) {
         val step = state?.step ?: 0
         val msg = message ?: state?.toString()
 
         val trace = ProcessTrace(
             step = step,
+            event = event ?: state?.event,
             method = state?.method,
+            isComplete = state?.isComplete ?: false,
             expression = state?.toolCallResult?.actionDescription?.pseudoExpression,
             tcEvalResult = state?.toolCallResult?.evaluate?.value,
             items = items,

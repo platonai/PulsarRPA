@@ -91,7 +91,8 @@ open class BrowserAgentActor(
             val msg = "⏳ Action timed out after ${config.actTimeoutMs}ms: ${action.action}"
             stateManager.addTrace(
                 context.agentState,
-                items = mapOf("event" to "actTimeout", "timeoutMs" to config.actTimeoutMs, "instruction" to action.action),
+                items = mapOf("timeoutMs" to config.actTimeoutMs, "instruction" to action.action),
+                event = "actTimeout",
                 message = "⏳ act TIMEOUT"
             )
             ActResult.failed(msg, action.action)
@@ -235,7 +236,7 @@ open class BrowserAgentActor(
 
         if (observeResults.isEmpty()) {
             val msg = "⚠️ doObserveAct: No observe result"
-            stateManager.addTrace(context.agentState, mapOf("event" to "observeActNoAction"), msg)
+            stateManager.addTrace(context.agentState, emptyMap(), event = "observeActNoAction", message = msg)
             return ActResult.failed(msg, action = options.action)
         }
 
@@ -265,15 +266,16 @@ open class BrowserAgentActor(
             stateManager.addTrace(
                 context.agentState,
                 mapOf(
-                    "event" to "actSuccess", "candidateIndex" to (index + 1), "candidateTotal" to resultsToTry.size),
-                "✅ act SUCCESS"
+                    "candidateIndex" to (index + 1), "candidateTotal" to resultsToTry.size),
+                event = "actSuccess",
+                message = "✅ act SUCCESS"
             )
 
             return actResult
         }
 
         val msg = "❌ All ${resultsToTry.size} candidates failed. Last error: $lastError"
-        stateManager.addTrace(context.agentState, mapOf("event" to "actAllFailed", "candidates" to resultsToTry.size), msg)
+        stateManager.addTrace(context.agentState, mapOf("candidates" to resultsToTry.size), event = "actAllFailed", message = msg)
         return ActResult.failed(msg, options.action)
     }
 
@@ -297,15 +299,16 @@ open class BrowserAgentActor(
 
             context.agentState.toolCallResult = toolCallResult
             stateManager.addTrace(context.agentState,
-                mapOf("event" to "toolExecOk", "tool" to toolCall.method), summary)
+                mapOf("tool" to toolCall.method), event = "toolExecOk", message = summary)
 
             DetailedActResult(actionDescription, toolCallResult, success = success, summary)
         } catch (e: Exception) {
             logger.error("🛠️❌ tool.exec.fail sid={} step={} msg={}", context.sid, context.step, e.message, e)
             stateManager.addTrace(
                 context.agentState,
-                mapOf("event" to "toolExecUnexpectedFail", "tool" to toolCall.method),
-                "💥 unexpected failure"
+                mapOf("tool" to toolCall.method),
+                event = "toolExecUnexpectedFail",
+                message = "💥 unexpected failure"
             )
             val message = "💥 unexpected failure | tool.exec.fail sid=${context.sid} step=${context.step}"
             DetailedActResult.failed(actionDescription, IllegalStateException(message, e))

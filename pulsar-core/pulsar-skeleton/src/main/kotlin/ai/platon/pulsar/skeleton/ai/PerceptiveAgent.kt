@@ -315,6 +315,8 @@ data class AgentState constructor(
     var evaluationPreviousGoal: String? = null,
     // AI: the next goal to archive
     var nextGoal: String? = null,
+    // if is complete method
+    var isComplete: Boolean = false,
     // timestamp
     var timestamp: Instant = Instant.now(),
     // The last exception
@@ -344,10 +346,15 @@ data class AgentState constructor(
 
         val state = if (success) """✨OK""" else "💔FAIL"
         val event0 = event ?: method
-        val pseudoExpression = actionDescription?.pseudoExpression
-        val resultPreview = toolCallResult?.evaluate?.preview ?: "(absent)"
-        val toolCallState = if (toolCallResult?.success == true) "✅OK" else "❌FAIL"
-        return "$state, event=$event0, tool=`$pseudoExpression`, resultPreview=`$resultPreview`, $toolCallState\n$summary"
+
+        if (isComplete) {
+            return """$state, event=$event0, isComplete=true 🎉"""
+        } else {
+            val pseudoExpression = actionDescription?.pseudoExpression
+            val resultPreview = toolCallResult?.evaluate?.preview ?: "(absent)"
+            val toolCallState = if (toolCallResult?.success == true) "✅OK" else "❌FAIL"
+            return "$state, event=$event0, tool=`$pseudoExpression`, resultPreview=`$resultPreview`, $toolCallState\n$summary"
+        }
     }
 }
 
@@ -445,9 +452,11 @@ data class ActionDescription constructor(
 
 data class ProcessTrace constructor(
     val step: Int,
+    val event: String? = null,
     val method: String? = null,
     val agentState: String? = null,
     val expression: String? = null,
+    val isComplete: Boolean = false,
     val tcEvalResult: Any? = null,
     val message: String? = null,
     val items: Map<String, Any?> = emptyMap(),
@@ -467,6 +476,7 @@ data class ProcessTrace constructor(
         val str = buildString {
             append(timestamp)
             append(" | step=$step")
+            event?.let { append(", method=$event") }
             method?.let { append(", method=$method") }
             listOfNotNull(agentState, itemStr, message).forEach {
                 append(" | $it")
