@@ -284,7 +284,9 @@ open class BrowserAgentActor(
             val toolCallResult = toolExecutor.execute(actionDescription, "resolve, #$step")
             val success = toolCallResult.success
 
-            val summary = "✅ ${toolCall.method} executed | " + if (success) "✅ success" else """☑️ executed"""
+            val summary = """🔧 Tool used: ${toolCall.method} | """ + if (success) "✅ success" else """☑️ executed"""
+
+            context.agentState.toolCallResult = toolCallResult
             stateManager.addTrace(context.agentState,
                 mapOf("event" to "toolExecOk", "tool" to toolCall.method), summary)
 
