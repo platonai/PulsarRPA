@@ -301,6 +301,8 @@ data class AgentState constructor(
     var browserUseState: BrowserUseState,
     // A simple and descriptive description
     var description: String? = null,
+    // The last event
+    var event: String? = null,
     // AI:
     var domain: String? = null,
     // AI:
@@ -341,10 +343,11 @@ data class AgentState constructor(
             .joinToString("\n") { (k, s) -> "\t- $k: ${Strings.compactInline(s)}" }
 
         val state = if (success) """✨OK""" else "💔FAIL"
+        val event0 = event ?: method
         val pseudoExpression = actionDescription?.pseudoExpression
         val resultPreview = toolCallResult?.evaluate?.preview ?: "(absent)"
         val toolCallState = if (toolCallResult?.success == true) "✅OK" else "❌FAIL"
-        return "$state | ToolCall: $pseudoExpression | Result: $resultPreview | $toolCallState\n$summary"
+        return "$state | $event0 | ToolCall: $pseudoExpression | Result: $resultPreview | $toolCallState\n$summary"
     }
 }
 

@@ -18,12 +18,11 @@ class ObserveActBrowserAgent constructor(
         ctxIn: ExecutionContext,
         noOpsIn: Int
     ): StepProcessingResult {
-        val context = ctxIn
+        var context = ctxIn
         var consecutiveNoOps = noOpsIn
         val step = context.step
-        val nextStep = step + 1
 
-        prepareStep(action, ctxIn, nextStep)
+        context = prepareStep(action, ctxIn, consecutiveNoOps)
 
         // Execute the tool call with enhanced error handling
         val actResult = act(action)

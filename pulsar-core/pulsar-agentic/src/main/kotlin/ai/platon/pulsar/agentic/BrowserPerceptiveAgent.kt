@@ -376,7 +376,8 @@ open class BrowserPerceptiveAgent constructor(
 
         ensureReadyForStep(action)
 
-        context = stateManager.buildExecutionContext(action.action, "step", nextStep, baseContext = context)
+        context = stateManager.buildExecutionContext(
+            action.action, "step", step = nextStep, baseContext = context)
         action.setContext(context)
         val agentState = context.agentState
         val browserUseState = agentState.browserUseState
@@ -385,7 +386,8 @@ open class BrowserPerceptiveAgent constructor(
 
         val unchangedCount = pageStateTracker.checkStateChange(browserUseState)
         if (unchangedCount >= 3) {
-            logger.info("⚠️ loop.warn sid={} step={} unchangedSteps={}", sid, step, unchangedCount); consecutiveNoOps++
+            logger.info("⚠️ loop.warn sid={} step={} unchangedSteps={}", sid, step, unchangedCount)
+            consecutiveNoOps++
         }
 
         logger.info("▶️ step.exec sid={} step={}/{} noOps={}", sid, step, config.maxSteps, consecutiveNoOps)
@@ -604,9 +606,8 @@ open class BrowserPerceptiveAgent constructor(
     ): StepProcessingResult {
         var consecutiveNoOps = noOpsIn
         val step = ctxIn.step
-        val nextStep = ctxIn.step + 1
 
-        val context = prepareStep(action, ctxIn, nextStep)
+        val context = prepareStep(action, ctxIn, consecutiveNoOps)
 
         val actionDescription = generateActions(context)
 

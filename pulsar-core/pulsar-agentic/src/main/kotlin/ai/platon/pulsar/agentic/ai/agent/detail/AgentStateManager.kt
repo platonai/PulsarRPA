@@ -10,6 +10,7 @@ import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.withTimeout
+import java.lang.ref.WeakReference
 import java.nio.file.Path
 import java.time.Instant
 import java.util.*
@@ -88,6 +89,7 @@ class AgentStateManager(
             agentState = currentAgentState,
             config = bc.config,
             stateHistory = _stateHistory,
+            baseContext = WeakReference(bc)
         )
     }
 

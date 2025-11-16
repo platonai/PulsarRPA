@@ -58,6 +58,8 @@ data class ExecutionContext(
     val sessionId: String,
     val timestamp: Instant = Instant.now(),
     val additionalContext: Map<String, Any> = emptyMap(),
+
+    var baseContext: WeakReference<ExecutionContext> = WeakReference<ExecutionContext>(null)
 ) {
     val sid get() = sessionId.take(8)
 

@@ -408,6 +408,16 @@
   "description" : "Brings the browser window to the front."
 }, {
   "domain" : "driver",
+  "method" : "hover",
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String",
+    "defaultValue" : ""
+  } ],
+  "returnType" : "Unit",
+  "description" : "This method hovers over the element. 1. Scroll the element into view if needed. 2. Move mouse to hover over a random position near the center of the element."
+}, {
+  "domain" : "driver",
   "method" : "focus",
   "arguments" : [ {
     "name" : "selector",
