@@ -466,8 +466,8 @@ data class ProcessTrace constructor(
 
         val str = buildString {
             append(timestamp)
-            append(" | ").append("$step")
-            method?.let { append(" | ").append(it) }
+            append(" | step=$step")
+            method?.let { append(", method=$method") }
             agentState?.let { append(" | ").append(it) }
             append(" | ").append(itemStr)
             message?.let { append(" | ").append(it) }
