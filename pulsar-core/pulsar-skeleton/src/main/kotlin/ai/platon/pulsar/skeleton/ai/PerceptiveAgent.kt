@@ -415,7 +415,7 @@ data class ActionDescription constructor(
         return elements.map { this.copy(observeElements = listOf(it)) }
     }
 
-    fun toObserveResults(agentState: AgentState, context: Any): List<ObserveResult> {
+    fun toObserveResults(agentState: AgentState): List<ObserveResult> {
         val results = observeElements?.map { ele ->
             ObserveResult(
                 agentState = agentState,
@@ -431,7 +431,7 @@ data class ActionDescription constructor(
                 backendNodeId = ele.backendNodeId,
                 observeElement = ele,
                 actionDescription = this,
-            ).also { it.additionalContext["context"] = WeakReference(context) }
+            )
         }
 
         return results ?: emptyList()

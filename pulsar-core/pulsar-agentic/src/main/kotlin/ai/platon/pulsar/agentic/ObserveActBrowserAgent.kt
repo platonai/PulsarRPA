@@ -13,16 +13,10 @@ class ObserveActBrowserAgent constructor(
 ) : BrowserPerceptiveAgent(session, maxSteps, config) {
     private val logger = getLogger(this)
 
-    override suspend fun step(
-        action: ActionOptions,
-        ctxIn: ExecutionContext,
-        noOpsIn: Int
-    ): StepProcessingResult {
-        var context = ctxIn
+    override suspend fun step(action: ActionOptions, ctxIn: ExecutionContext, noOpsIn: Int): StepProcessingResult {
         var consecutiveNoOps = noOpsIn
-        val step = context.step
 
-        context = prepareStep(action, ctxIn, consecutiveNoOps)
+        val context = prepareStep(action, ctxIn, consecutiveNoOps)
 
         // Execute the tool call with enhanced error handling
         val actResult = act(action)
@@ -41,7 +35,7 @@ class ObserveActBrowserAgent constructor(
         } else {
             consecutiveNoOps++
             val stop = handleConsecutiveNoOps(consecutiveNoOps, context)
-            updatePerformanceMetrics(step, context.timestamp, false)
+            updatePerformanceMetrics(context.step, context.timestamp, false)
             if (stop) return StepProcessingResult(context, consecutiveNoOps, true)
         }
 

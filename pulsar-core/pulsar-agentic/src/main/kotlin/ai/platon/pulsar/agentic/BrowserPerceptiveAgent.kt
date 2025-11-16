@@ -152,7 +152,8 @@ open class BrowserPerceptiveAgent constructor(
     override suspend fun resolve(action: ActionOptions): ActResult {
         if (isClosed) return ActResult(false, "USER interrupted", action = action.action)
         return try {
-            withContext(agentScope.coroutineContext) { resolveInCoroutine(action) }
+            val result = withContext(agentScope.coroutineContext) { resolveInCoroutine(action) }
+            result.result
         } catch (_: CancellationException) {
             ActResult(false, "USER interrupted", action = action.action)
         } finally {
@@ -160,7 +161,7 @@ open class BrowserPerceptiveAgent constructor(
         }
     }
 
-    private suspend fun resolveInCoroutine(action: ActionOptions): ActResult {
+    private suspend fun resolveInCoroutine(action: ActionOptions): ResolveResult {
         val instruction = action.action
         val context = stateManager.buildInitExecutionContext(action)
         val sessionStartTime = context.timestamp
@@ -194,7 +195,7 @@ open class BrowserPerceptiveAgent constructor(
             stateManager.addTrace(
                 context.agentState, mapOf(
                     "event" to "resolveDone", "session" to context.sid,
-                    "success" to result.success, "durationMs" to dur
+                    "success" to result.result.success, "durationMs" to dur
                 ), "✅ resolve DONE"
             )
 
@@ -209,7 +210,8 @@ open class BrowserPerceptiveAgent constructor(
                 ),
                 "⏳ resolve TIMEOUT"
             )
-            ActResult(success = false, message = msg, action = instruction)
+            val actResult = ActResult(success = false, message = msg, action = instruction)
+            ResolveResult(context, actResult)
         } finally {
             // clear history so the next task will have a clean operation trace for summary.
             // but we do not clear process trace which will be kept to trace all operations and states.
@@ -413,11 +415,16 @@ open class BrowserPerceptiveAgent constructor(
 //        }
     }
 
+    data class ResolveResult(
+        val context: ExecutionContext,
+        val result: ActResult
+    )
+
     private suspend fun doResolveProblem(
         initActionOptions: ActionOptions,
         initContext: ExecutionContext,
         attempt: Int
-    ): ActResult {
+    ): ResolveResult {
         initializeResolution(initContext, attempt)
         var consecutiveNoOps = 0
         var context = initContext
@@ -431,10 +438,13 @@ open class BrowserPerceptiveAgent constructor(
                 if (stepResult.shouldStop) break
             }
 
-            return buildFinalActResult(initContext.instruction, context, startTime)
+            val result = buildFinalActResult(initContext.instruction, context, startTime)
+
+            return ResolveResult(context, result)
         } catch (_: CancellationException) {
             logger.info("""🛑 [USER interrupted] sid={} steps={}""", context.sid, context.step)
-            return ActResult(success = false, message = "USER interrupted", action = initContext.instruction)
+            val result = ActResult(success = false, message = "USER interrupted", action = initContext.instruction)
+            return ResolveResult(context, result)
         } catch (e: Exception) {
             throw handleResolutionFailure(e, context, startTime)
         }
@@ -446,7 +456,7 @@ open class BrowserPerceptiveAgent constructor(
      */
     private suspend fun resolveProblemWithRetry(
         action: ActionOptions, context: ExecutionContext
-    ): ActResult {
+    ): ResolveResult {
         var lastError: Exception? = null
         val sid = context.sid
         var currentContext = context
@@ -463,7 +473,8 @@ open class BrowserPerceptiveAgent constructor(
             )
 
             try {
-                val res = doResolveProblem(action, currentContext, attempt)
+                val result = doResolveProblem(action, currentContext, attempt)
+                currentContext = result.context
 
                 stateManager.addTrace(
                     currentContext.agentState,
@@ -471,7 +482,7 @@ open class BrowserPerceptiveAgent constructor(
                     "✅ resolve ATTEMPT OK"
                 )
 
-                return res
+                return result
             } catch (e: PerceptiveAgentError.TransientError) {
                 lastError = e
                 logger.error("🔄 resolve.transient attempt={} sid={} msg={}", attempt + 1, sid, e.message, e)
@@ -571,11 +582,13 @@ open class BrowserPerceptiveAgent constructor(
             "❌ resolve FAIL"
         )
 
-        return ActResult(
+        val actResult = ActResult(
             success = false,
             message = "Failed after ${config.maxRetries + 1} attempts. Last error: ${lastError?.message}",
             action = action.action
         )
+
+        return ResolveResult(currentContext, actResult)
     }
 
     protected suspend fun initializeResolution(initContext: ExecutionContext, attempt: Int) {

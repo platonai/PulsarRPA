@@ -431,7 +431,7 @@ data class ActionDescription constructor(
                 backendNodeId = ele.backendNodeId,
                 observeElement = ele,
                 actionDescription = this,
-            ).also { it.additionalContext["context"] = WeakReference(context) }
+            ).also { it.additionalContext["context"] = context }
         }
 
         return results ?: emptyList()

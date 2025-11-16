@@ -101,25 +101,25 @@ data class ExecutionContext(
 }
 
 fun ActionOptions.setContext(context: ExecutionContext) {
-    additionalContext["context"] = WeakReference(context)
+    additionalContext["context"] = context
 }
 
 fun ActionOptions.getContext(): ExecutionContext? {
-    return (additionalContext["context"] as? WeakReference<*>)?.get() as? ExecutionContext
+    return additionalContext["context"] as? ExecutionContext
 }
 
 fun ObserveResult.setContext(context: ExecutionContext) {
-    additionalContext["context"] = WeakReference(context)
+    additionalContext["context"] = context
 }
 
 fun ObserveResult.getContext(): ExecutionContext? {
-    return (additionalContext["context"] as? WeakReference<*>)?.get() as? ExecutionContext
+    return additionalContext["context"] as? ExecutionContext
 }
 
 fun ObserveOptions.setContext(context: ExecutionContext) {
-    additionalContext["context"] = WeakReference(context)
+    additionalContext["context"] = context
 }
 
 fun ObserveOptions.getContext(): ExecutionContext? {
-    return (additionalContext["context"] as? WeakReference<*>)?.get() as? ExecutionContext
+    return additionalContext["context"] as? ExecutionContext
 }

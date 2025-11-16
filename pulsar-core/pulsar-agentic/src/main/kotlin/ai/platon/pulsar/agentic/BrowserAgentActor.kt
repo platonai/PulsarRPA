@@ -6,6 +6,7 @@ import ai.platon.pulsar.agentic.ai.agent.detail.AgentStateManager
 import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
 import ai.platon.pulsar.agentic.ai.agent.detail.PageStateTracker
 import ai.platon.pulsar.agentic.ai.agent.detail.getContext
+import ai.platon.pulsar.agentic.ai.agent.detail.setContext
 import ai.platon.pulsar.agentic.ai.tta.ContextToAction
 import ai.platon.pulsar.agentic.tools.AgentToolManager
 import ai.platon.pulsar.common.AppPaths
@@ -208,7 +209,10 @@ open class BrowserAgentActor(
         context.agentState.event = "observe"
         val actionDescription = captureScreenshotAndObserve(options, context, options.resolve)
 
-        return actionDescription.toObserveResults(context.agentState, context)
+        val observeResults = actionDescription.toObserveResults(context.agentState)
+        observeResults.forEach { it.setContext(context) }
+
+        return observeResults
     }
 
     private suspend fun doObserveAct(options: ActionOptions): ActResult {
@@ -226,7 +230,8 @@ open class BrowserAgentActor(
             return ActResult.complete(actionDescription)
         }
 
-        val observeResults = actionDescription.toObserveResults(context.agentState, context)
+        val observeResults = actionDescription.toObserveResults(context.agentState)
+        observeResults.forEach { it.setContext(context) }
 
         if (observeResults.isEmpty()) {
             val msg = "⚠️ doObserveAct: No observe result"
