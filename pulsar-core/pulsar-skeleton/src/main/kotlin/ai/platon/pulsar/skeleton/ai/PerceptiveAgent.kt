@@ -462,15 +462,15 @@ data class ProcessTrace constructor(
             }
         }
 
-        val itemStr = items.entries.joinToString { (k, v) -> "$k=" + format(v) }
+        val itemStr = items.entries.joinToString { (k, v) -> "$k=" + format(v) }.takeIf { it.isNotBlank() }
 
         val str = buildString {
             append(timestamp)
             append(" | step=$step")
             method?.let { append(", method=$method") }
-            agentState?.let { append(" | ").append(it) }
-            append(" | ").append(itemStr)
-            message?.let { append(" | ").append(it) }
+            listOfNotNull(agentState, itemStr, message).forEach {
+                append(" | $it")
+            }
         }
 
         return str
