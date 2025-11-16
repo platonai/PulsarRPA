@@ -217,7 +217,7 @@ open class BrowserPerceptiveAgent constructor(
     override suspend fun observe(options: ObserveOptions): List<ObserveResult> {
         if (isClosed) return emptyList()
 
-        val context = options.getContext() ?: stateManager.buildInitExecutionContext(options)
+        val context = options.getContext() ?: stateManager.buildInitExecutionContext(options, "observe")
         options.setContext(context)
 
         if (!options.resolve) {
@@ -270,14 +270,14 @@ open class BrowserPerceptiveAgent constructor(
 
     private suspend fun resolveInCoroutine(action: ActionOptions): ResolveResult {
         val instruction = action.action
-        val initContext = stateManager.buildInitExecutionContext(action)
-        val sessionStartTime = initContext.timestamp
+        val baseContext = stateManager.buildBaseExecutionContext(action, "resolve-init")
+        val sessionStartTime = baseContext.timestamp
 
         // Add start history for better traceability (meta record only)
         stateManager.addTrace(
-            initContext.agentState,
+            baseContext.agentState,
             mapOf(
-                "session" to initContext.sid,
+                "session" to baseContext.sid,
                 "goal" to Strings.compactInline(instruction, 160),
                 "maxSteps" to config.maxSteps,
                 "maxRetries" to config.maxRetries
@@ -293,14 +293,14 @@ open class BrowserPerceptiveAgent constructor(
 
         return try {
             val result = withTimeout(effectiveTimeout) {
-                resolveProblemWithRetry(action, initContext)
+                resolveProblemWithRetry(action, baseContext)
             }
 
             val dur = Duration.between(sessionStartTime, Instant.now()).toMillis()
             // Not a single-step action, keep it out of AgentState history
             stateManager.addTrace(
                 result.context.agentState, mapOf(
-                    "session" to initContext.sid,
+                    "session" to baseContext.sid,
                     "success" to result.result.success, "durationMs" to dur
                 ), event = "resolveDone", message = "✅ resolve DONE"
             )
@@ -310,14 +310,14 @@ open class BrowserPerceptiveAgent constructor(
             val msg = "⏳ Resolve timed out after ${effectiveTimeout}ms (base: ${config.resolveTimeoutMs}ms + " +
                     "retries: ${maxPossibleDelays}ms): $instruction"
             stateManager.addTrace(
-                initContext.agentState, mapOf(
+                baseContext.agentState, mapOf(
                     "timeoutMs" to effectiveTimeout, "instruction" to Strings.compactInline(instruction, 160)
                 ),
                 event = "resolveTimeout",
                 message = "⏳ resolve TIMEOUT"
             )
             val actResult = ActResult(success = false, message = msg, action = instruction)
-            ResolveResult(initContext, actResult)
+            ResolveResult(baseContext, actResult)
         } finally {
             // clear history so the next task will have a clean operation trace for summary.
             // but we do not clear process trace which will be kept to trace all operations and states.
@@ -424,7 +424,8 @@ open class BrowserPerceptiveAgent constructor(
 //        }
 
         val instruction = action.action
-        val context = stateManager.buildExecutionContext(instruction, event, baseContext = ctxIn)
+        val step = ctxIn.step + 1
+        val context = stateManager.buildExecutionContext(instruction, step, event, baseContext = ctxIn)
         action.setContext(context)
 
         return context
@@ -521,7 +522,7 @@ open class BrowserPerceptiveAgent constructor(
                     try {
                         cleanupPartialState(currentContext)
                         // Rebuild context for next attempt to avoid corrupted state
-                        currentContext = stateManager.buildInitExecutionContext(action)
+                        currentContext = stateManager.buildBaseExecutionContext(action, "resolve-recovery")
                     } catch (cleanupError: Exception) {
                         logger.warn("⚠️ Failed to cleanup state before retry: ${cleanupError.message}")
                     }
@@ -549,7 +550,7 @@ open class BrowserPerceptiveAgent constructor(
                     // Clean up partial state before retry
                     try {
                         cleanupPartialState(currentContext)
-                        currentContext = stateManager.buildInitExecutionContext(action)
+                        currentContext = stateManager.buildBaseExecutionContext(action, "resolve-init-recovery")
                     } catch (cleanupError: Exception) {
                         logger.warn("⚠️ Failed to cleanup state before retry: ${cleanupError.message}")
                     }
@@ -577,7 +578,7 @@ open class BrowserPerceptiveAgent constructor(
                     // Clean up partial state before retry
                     try {
                         cleanupPartialState(currentContext)
-                        currentContext = stateManager.buildInitExecutionContext(action)
+                        currentContext = stateManager.buildBaseExecutionContext(action, "resolve-init-recovery")
                     } catch (cleanupError: Exception) {
                         logger.warn("⚠️ Failed to cleanup state before retry: ${cleanupError.message}")
                     }
@@ -818,8 +819,9 @@ open class BrowserPerceptiveAgent constructor(
         }
     }
 
-    protected suspend fun summarize(goal: String, cxtIn: ExecutionContext): ModelResponse {
-        val context = stateManager.buildExecutionContext(goal, event = "summarize", baseContext = cxtIn)
+    protected suspend fun summarize(goal: String, ctxIn: ExecutionContext): ModelResponse {
+        val step = ctxIn.step + 1
+        val context = stateManager.buildExecutionContext(goal, step, event = "summarize", baseContext = ctxIn)
         context.agentState.event = "summary"
 
         return try {

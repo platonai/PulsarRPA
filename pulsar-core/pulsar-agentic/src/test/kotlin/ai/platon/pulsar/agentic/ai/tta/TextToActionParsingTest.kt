@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 private class TestableTextToAction(conf: ImmutableConfig): TextToAction(conf) {
-    val agentState = AgentState(0, "", BrowserUseState.DUMMY)
+    val agentState = AgentState(1, "", BrowserUseState.DUMMY)
     fun parse(response: ModelResponse): ActionDescription = modelResponseToActionDescription("", agentState, response)
 }
 

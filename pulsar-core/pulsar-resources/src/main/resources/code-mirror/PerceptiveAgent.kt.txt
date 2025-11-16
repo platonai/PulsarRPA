@@ -333,6 +333,10 @@ data class AgentState constructor(
     val success: Boolean get() = exception == null
 
     override fun toString(): String {
+        if (step == 0) {
+            return "step=0, N/A"
+        }
+
         val summary = listOf(
             "description" to description,
             "pageContentSummary" to currentPageContentSummary,

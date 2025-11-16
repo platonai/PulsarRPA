@@ -30,20 +30,33 @@ class AgentStateManager(
 
     val auxLogDir: Path get() = AppPaths.detectAuxiliaryLogDir().resolve("agent")
 
-    suspend fun buildInitExecutionContext(
+    suspend fun buildBaseExecutionContext(
         action: ActionOptions,
+        event: String,
         baseContext: ExecutionContext? = null
     ): ExecutionContext {
-        val context = buildExecutionContext(action.action, baseContext = baseContext)
+        val context = buildExecutionContext(action.action, 0, event, baseContext = baseContext)
+        action.setContext(context)
+        return context
+    }
+
+    suspend fun buildInitExecutionContext(
+        action: ActionOptions,
+        event: String,
+        baseContext: ExecutionContext? = null
+    ): ExecutionContext {
+        val context = buildExecutionContext(action.action, 1, event, baseContext = baseContext)
         action.setContext(context)
         return context
     }
 
     suspend fun buildInitExecutionContext(
         options: ObserveOptions,
+        event: String,
         baseContext: ExecutionContext? = null
     ): ExecutionContext {
-        val context = buildExecutionContext(options.instruction ?: "", baseContext = baseContext)
+        val instruction = options.instruction ?: ""
+        val context = buildExecutionContext(instruction, 1, event, baseContext = baseContext)
         options.setContext(context)
         return context
     }
@@ -53,13 +66,15 @@ class AgentStateManager(
          * The user's instruction
          * */
         instruction: String,
-        event: String = "",
+        step: Int,
+        event: String,
         /**
          * A base context that the new context can inherit from
          * */
         baseContext: ExecutionContext? = null
     ): ExecutionContext {
-        val step = (baseContext?.step ?: -1) + 1
+        // val step = (baseContext?.step ?: -1) + 1
+
         val sessionId = baseContext?.sessionId ?: UUID.randomUUID().toString()
         val prevAgentState = baseContext?.agentState
         val currentAgentState = getAgentState(instruction, step, prevAgentState)
@@ -91,7 +106,7 @@ class AgentStateManager(
     }
 
     suspend fun getAgentState(
-        instruction: String, step: Int = 0, prevAgentState: AgentState? = null
+        instruction: String, step: Int, prevAgentState: AgentState? = null
     ): AgentState {
         pageStateTracker.waitForDOMSettle()
 

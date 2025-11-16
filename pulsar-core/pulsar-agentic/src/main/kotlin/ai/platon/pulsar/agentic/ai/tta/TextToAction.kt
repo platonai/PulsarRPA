@@ -50,7 +50,7 @@ open class TextToAction(
         val options = SnapshotOptions()
         val domState = domService.getDOMState(snapshotOptions = options)
         val browserUseState = domService.getBrowserUseState()
-        val agentState = AgentState(0, "", browserUseState = browserUseState)
+        val agentState = AgentState(1, "", browserUseState = browserUseState)
         val toolCallExpressions = SourceCodeToToolCallSpec.webDriverToolCallList.joinToString("\n") { it.expression }
 
         val promptTemplate = PromptTemplate(SINGLE_ACTION_GENERATION_PROMPT)

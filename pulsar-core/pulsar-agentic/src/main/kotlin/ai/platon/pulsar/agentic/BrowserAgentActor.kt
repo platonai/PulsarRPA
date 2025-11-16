@@ -81,7 +81,7 @@ open class BrowserAgentActor(
      * one successful execution is recorded in stateHistory.
      */
     override suspend fun act(action: ActionOptions): ActResult {
-        val context = action.getContext() ?: stateManager.buildInitExecutionContext(action)
+        val context = action.getContext() ?: stateManager.buildInitExecutionContext(action, "act")
 
         return try {
             withTimeout(config.actTimeoutMs) {
@@ -151,7 +151,7 @@ open class BrowserAgentActor(
      */
     override suspend fun extract(options: ExtractOptions): ExtractResult {
         val instruction = promptBuilder.initExtractUserInstruction(options.instruction)
-        val context = stateManager.buildExecutionContext(instruction, "extract")
+        val context = stateManager.buildExecutionContext(instruction, 1, "extract")
 
         return try {
             val params = context.createExtractParams(options.schema)
@@ -204,7 +204,7 @@ open class BrowserAgentActor(
         val ctx = options.getContext()
         val context = if (ctx == null) {
             val instruction = promptBuilder.initObserveUserInstruction(options.instruction).instruction?.content
-            stateManager.buildInitExecutionContext(options.copy(instruction = instruction))
+            stateManager.buildInitExecutionContext(options.copy(instruction = instruction), "observe")
         } else ctx
 
         context.agentState.event = "observe"
