@@ -205,6 +205,7 @@ open class BrowserAgentActor(
             stateManager.buildInitExecutionContext(options.copy(instruction = instruction))
         } else ctx
 
+        context.agentState.event = "observe"
         val actionDescription = captureScreenshotAndObserve(options, context, options.resolve)
 
         return actionDescription.toObserveResults(context.agentState, context)
@@ -217,6 +218,7 @@ open class BrowserAgentActor(
         }
 
         val context = requireNotNull(options.getContext()) { "Context is required to doObserveAct" }
+        context.agentState.event = "doObserveAct"
 
         val actionDescription = captureScreenshotAndObserve(options, context, options.resolve)
 
@@ -274,6 +276,8 @@ open class BrowserAgentActor(
         actionDescription: ActionDescription,
         context: ExecutionContext
     ): DetailedActResult {
+        context.agentState.event = "toolExec"
+
         val step = context.step
         val toolCall = actionDescription.toolCall
             ?: return DetailedActResult.failed(actionDescription, IllegalArgumentException("No tool call"))

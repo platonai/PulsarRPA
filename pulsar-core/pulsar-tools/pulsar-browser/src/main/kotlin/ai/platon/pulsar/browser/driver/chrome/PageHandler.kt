@@ -471,10 +471,10 @@ class PageHandler(
         // Check if this script is a IIFE
         if (lines.size > 1) {
             val firstLine = lines[0]
-            if (!firstLine.startsWith("(")) {
-                expression = JsUtils.toIIFE(confuser.confuse(script))
+            expression = if (!firstLine.startsWith("(")) {
+                JsUtils.toIIFE(confuser.confuse(script))
             } else {
-                expression = script
+                script
             }
         } else {
             expression = script
