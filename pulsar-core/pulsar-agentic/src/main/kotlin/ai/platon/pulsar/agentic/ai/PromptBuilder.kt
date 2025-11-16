@@ -430,14 +430,16 @@ $A11Y_TREE_NOTE_CONTENT
 - 输出严格使用下面两种 JSON 格式之一
 - 仅输出 JSON 内容，无多余文字
 
-1. 动作输出格式，最多一个元素，domain & method 字段非空, arguments 必须按工具方法声明顺序排列(<output_act>)：
+1. 动作输出格式(<output_act>)
+
+- 最多一个元素
+- arguments 必须按工具方法声明顺序排列
 
 ${buildObserveResultSchema(true)}
 
 2. 任务完成输出格式(<output_done>):
 
 $TASK_COMPLETE_SCHEMA
-
 
 ---
 
@@ -699,7 +701,7 @@ $AGENT_GUIDE_SYSTEM_PROMPT
             messages.addUser(buildBrowserVisionInfo())
         }
 
-        val prevTCResult = context.prevAgentState?.toolCallResult
+        val prevTCResult = context.agentState.prevState?.toolCallResult
         if (prevTCResult != null) {
             messages.addUser(buildPrevToolCallResultMessage(context))
         }
@@ -812,13 +814,14 @@ $historyJson
 
     fun buildPrevToolCallResultMessage(context: ExecutionContext): String {
         val agentState = requireNotNull(context.agentState)
-        val toolCallResult = requireNotNull(context.prevAgentState?.toolCallResult)
+        val toolCallResult = requireNotNull(context.agentState.prevState?.toolCallResult)
         val evaluate = toolCallResult.evaluate
         val evalResult = evaluate?.value?.toString()
         val exception = evaluate?.exception?.cause
         val evalMessage = when {
             exception != null -> "[执行异常]\n" + exception.brief()
-            else -> evalResult
+            evalResult.isNullOrBlank() -> "[执行成功]"
+            else -> "[执行成功] 输出结果：$evalResult"
         }.let { Strings.compactInline(it, 5000) }
         val help = evaluate?.exception?.help?.takeIf { it.isNotBlank() }
         val helpMessage = help?.let { "帮助信息：\n```\n$it\n```" } ?: ""

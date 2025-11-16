@@ -55,10 +55,6 @@ class AgentStateManager(
         instruction: String,
         event: String = "",
         /**
-         * The current agent state
-         * */
-        agentState: AgentState? = null,
-        /**
          * A base context that the new context can inherit from
          * */
         baseContext: ExecutionContext? = null
@@ -66,9 +62,24 @@ class AgentStateManager(
         val step = (baseContext?.step ?: -1) + 1
         val sessionId = baseContext?.sessionId ?: UUID.randomUUID().toString()
         val prevAgentState = baseContext?.agentState
-        val currentAgentState = agentState ?: getAgentState(instruction, step, prevAgentState)
+        val currentAgentState = getAgentState(instruction, step, prevAgentState)
 
-        val bc = baseContext ?: ExecutionContext(
+        if (baseContext != null) {
+            return ExecutionContext(
+                instruction = baseContext.instruction,
+                step = step,
+                actionType = event,
+                targetUrl = prevAgentState?.browserUseState?.browserState?.url,
+                sessionId = baseContext.sessionId,
+                timestamp = Instant.now(),
+                agentState = currentAgentState,
+                config = baseContext.config,
+                stateHistory = _stateHistory,
+                baseContext = WeakReference(baseContext)
+            )
+        }
+
+        return ExecutionContext(
             instruction = instruction,
             step = step,
             actionType = "init",
@@ -76,20 +87,6 @@ class AgentStateManager(
             agentState = currentAgentState,
             config = config,
             stateHistory = _stateHistory,
-        )
-
-        return ExecutionContext(
-            instruction = bc.instruction,
-            step = step,
-            actionType = event,
-            targetUrl = prevAgentState?.browserUseState?.browserState?.url,
-            sessionId = bc.sessionId,
-            timestamp = Instant.now(),
-            prevAgentState = bc.agentState,
-            agentState = currentAgentState,
-            config = bc.config,
-            stateHistory = _stateHistory,
-            baseContext = WeakReference(bc)
         )
     }
 
@@ -127,36 +124,37 @@ class AgentStateManager(
         }
     }
 
-    fun updateAgentState(agentState: AgentState, detailedActResult: DetailedActResult) {
-        val observeElement = detailedActResult.actionDescription.observeElement
-        val toolCall = detailedActResult.actionDescription.toolCall
+    fun updateAgentState(context: ExecutionContext, detailedActResult: DetailedActResult) {
+        val observeElement = requireNotNull(detailedActResult.actionDescription.observeElement)
+        val toolCall = requireNotNull(detailedActResult.actionDescription.toolCall)
         val toolCallResult = detailedActResult.toolCallResult
         // additional message appended to description
         val description = detailedActResult.description
 
-        updateAgentState(agentState, observeElement, toolCall, toolCallResult, description)
+        updateAgentState(context, observeElement, toolCall, toolCallResult, description)
     }
 
     fun updateAgentState(
-        agentState: AgentState,
-        observeElement: ObserveElement? = null,
-        toolCall: ToolCall? = null,
+        context: ExecutionContext,
+        observeElement: ObserveElement,
+        toolCall: ToolCall,
         toolCallResult: ToolCallResult? = null,
         description: String? = null,
         exception: Exception? = null
     ) {
+        val agentState = requireNotNull(context.agentState)
         val computedStep = agentState.step.takeIf { it > 0 } ?: ((stateHistory.lastOrNull()?.step ?: 0) + 1)
 
         agentState.apply {
             step = computedStep
-            domain = toolCall?.domain
-            method = toolCall?.method
+            domain = toolCall.domain
+            method = toolCall.method
             this.description = description
             this.exception = exception
-            screenshotContentSummary = observeElement?.screenshotContentSummary
-            currentPageContentSummary = observeElement?.currentPageContentSummary
-            evaluationPreviousGoal = observeElement?.evaluationPreviousGoal
-            nextGoal = observeElement?.nextGoal
+            screenshotContentSummary = observeElement.screenshotContentSummary
+            currentPageContentSummary = observeElement.currentPageContentSummary
+            evaluationPreviousGoal = observeElement.evaluationPreviousGoal
+            nextGoal = observeElement.nextGoal
             this.toolCallResult = toolCallResult
         }
     }
@@ -187,16 +185,29 @@ class AgentStateManager(
         val step = state?.step ?: 0
         val msg = message ?: state?.toString()
 
-        val trace = ProcessTrace(
-            step = step,
-            event = event ?: state?.event,
-            method = state?.method,
-            isComplete = state?.isComplete ?: false,
-            expression = state?.toolCallResult?.actionDescription?.pseudoExpression,
-            tcEvalResult = state?.toolCallResult?.evaluate?.value,
-            items = items,
-            message = msg
-        )
+        val isComplete = state?.isComplete == true
+        val trace = if (isComplete) {
+            ProcessTrace(
+                step = step,
+                event = event ?: state.event,
+                isComplete = true,
+                agentState = state.toString(),
+                items = items,
+                message = msg
+            )
+        } else {
+            ProcessTrace(
+                step = step,
+                event = event ?: state?.event,
+                method = state?.method,
+                isComplete = isComplete,
+                agentState = state.toString(),
+                expression = state?.toolCallResult?.actionDescription?.pseudoExpression,
+                tcEvalResult = state?.toolCallResult?.evaluate?.value,
+                items = items,
+                message = msg
+            )
+        }
 
         _processTrace.add(trace)
     }

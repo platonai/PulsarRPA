@@ -102,10 +102,10 @@ open class BrowserAgentActor(
     override suspend fun act(observe: ObserveResult): ActResult {
         val instruction = observe.agentState.instruction
         val context = observe.getContext()
-        val agentState = observe.agentState
+        require(observe.agentState == context?.agentState) { "Required: observe.agentState == context?.agentState" }
+
         val observeElement = observe.observeElement
-        context ?: return ActResult.failed("No context to act", instruction)
-        observeElement ?: return ActResult.failed("No observation to act", instruction)
+            ?: return ActResult.failed("No observation to act", instruction)
         val actionDescription =
             observe.actionDescription ?: return ActResult.failed("No action description to act", instruction)
         val toolCall = observeElement.toolCall ?: return ActResult.failed("No tool call to act", instruction)
@@ -126,7 +126,7 @@ open class BrowserAgentActor(
                 arrayOf(method, observe.locator, observeElement.cssSelector, observeElement.pseudoExpression)
             ).message
 
-            stateManager.updateAgentState(agentState, observeElement, toolCall, toolCallResult, description = description)
+            stateManager.updateAgentState(context, observeElement, toolCall, toolCallResult, description = description)
 
             // ActResult(success = true, action = toolCall.method, message = msg.message, result = toolCallResult, actionDescription = actionDescription)
             detailedActResult.toActResult()
@@ -139,7 +139,7 @@ open class BrowserAgentActor(
             ).message
 
             stateManager.updateAgentState(
-                agentState, observeElement, toolCall, description = description, exception = e)
+                context, observeElement, toolCall, description = description, exception = e)
 
             ActResult.failed(description, toolCall.method)
         }
@@ -223,7 +223,6 @@ open class BrowserAgentActor(
         }
 
         val context = requireNotNull(options.getContext()) { "Context is required to doObserveAct" }
-        context.agentState.event = "doObserveAct"
 
         val actionDescription = captureScreenshotAndObserve(options, context, options.resolve)
 
@@ -244,6 +243,9 @@ open class BrowserAgentActor(
         var lastError: String? = null
         val actResults = mutableListOf<ActResult>()
         for ((index, chosen) in resultsToTry.withIndex()) {
+            require(context.step == context.agentState.step) { "Required: context.step == context.agentState.step" }
+            require(context.prevAgentState == context.agentState.prevState) { "Required: context.step == context.agentState.step" }
+
             val method = chosen.method?.trim().orEmpty()
             if (method.isBlank()) {
                 lastError = "LLM returned no method for candidate ${index + 1}"
@@ -251,7 +253,9 @@ open class BrowserAgentActor(
             }
 
             val actResult = try {
-                act(chosen).also { actResults.add(it) }
+                val res = act(chosen)
+                actResults.add(res)
+                res
             } catch (e: Exception) {
                 lastError = "Execution failed for candidate ${index + 1}: ${e.message}"
                 logger.warn("⚠️ Failed to execute candidate {}: {}", index + 1, e.message)

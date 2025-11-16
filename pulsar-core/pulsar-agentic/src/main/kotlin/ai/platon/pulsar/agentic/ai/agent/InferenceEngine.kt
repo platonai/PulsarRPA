@@ -224,7 +224,7 @@ class InferenceEngine(
             callFile = logModelCall(
                 dirPrefix = "${prefix}Summary",
                 kind = "${prefix}Call",
-                requestId = context.requestId,
+                requestId = context.uuid,
                 timestamp = timestamp,
                 modelCall = prefix,
                 messages = messages.messages,
@@ -247,7 +247,7 @@ class InferenceEngine(
                 kind = "${prefix}Response",
                 timestamp = timestamp,
                 payload = mapOf(
-                    "requestId" to context.requestId,
+                    "requestId" to context.uuid,
                     "modelResponse" to prefix,
                     "rawResponse" to safeJsonPreview(responseContent)
                 )

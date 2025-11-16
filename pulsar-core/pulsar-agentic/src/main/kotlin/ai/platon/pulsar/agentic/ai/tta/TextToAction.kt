@@ -87,7 +87,13 @@ open class TextToAction(
         modelResponse: ModelResponse
     ): ActionDescription {
         try {
-            return modelResponseToActionDescription0(instruction, agentState, modelResponse)
+            val actionDescription = modelResponseToActionDescription0(instruction, agentState, modelResponse)
+
+            val revised = reviseActionDescription(actionDescription)
+
+            agentState.actionDescription = revised
+
+            return revised
         } catch (e: Exception) {
             logger.warn("Exception while parsing model response", e)
             return ActionDescription(instruction, modelResponse = modelResponse, exception = e)

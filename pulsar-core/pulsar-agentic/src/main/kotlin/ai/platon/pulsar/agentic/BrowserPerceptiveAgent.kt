@@ -159,63 +159,6 @@ open class BrowserPerceptiveAgent constructor(
         }
     }
 
-    private suspend fun resolveInCoroutine(action: ActionOptions): ResolveResult {
-        val instruction = action.action
-        val initContext = stateManager.buildInitExecutionContext(action)
-        val sessionStartTime = initContext.timestamp
-
-        // Add start history for better traceability (meta record only)
-        stateManager.addTrace(
-            initContext.agentState,
-            mapOf(
-                "session" to initContext.sid,
-                "goal" to Strings.compactInline(instruction, 160),
-                "maxSteps" to config.maxSteps,
-                "maxRetries" to config.maxRetries
-            ),
-            event = "resolveStart",
-            message = "🚀 resolve START"
-        )
-
-        // Overall timeout to prevent indefinite hangs for a full resolve session
-        // Calculate effective timeout accounting for potential retry delays
-        val maxPossibleDelays = (0 until config.maxRetries).fold(0L) { acc, i -> acc + calculateRetryDelay(i) }
-        val effectiveTimeout = config.resolveTimeoutMs + maxPossibleDelays
-
-        return try {
-            val result = withTimeout(effectiveTimeout) {
-                resolveProblemWithRetry(action, initContext)
-            }
-
-            val dur = Duration.between(sessionStartTime, Instant.now()).toMillis()
-            // Not a single-step action, keep it out of AgentState history
-            stateManager.addTrace(
-                result.context.agentState, mapOf(
-                    "session" to initContext.sid,
-                    "success" to result.result.success, "durationMs" to dur
-                ), event = "resolveDone", message = "✅ resolve DONE"
-            )
-
-            result
-        } catch (_: TimeoutCancellationException) {
-            val msg = "⏳ Resolve timed out after ${effectiveTimeout}ms (base: ${config.resolveTimeoutMs}ms + " +
-                    "retries: ${maxPossibleDelays}ms): $instruction"
-            stateManager.addTrace(
-                initContext.agentState, mapOf(
-                    "timeoutMs" to effectiveTimeout, "instruction" to Strings.compactInline(instruction, 160)
-                ),
-                event = "resolveTimeout",
-                message = "⏳ resolve TIMEOUT"
-            )
-            val actResult = ActResult(success = false, message = msg, action = instruction)
-            ResolveResult(initContext, actResult)
-        } finally {
-            // clear history so the next task will have a clean operation trace for summary.
-            // but we do not clear process trace which will be kept to trace all operations and states.
-            stateManager.clearHistory()
-        }
-    }
-
     /**
      * Executes a single observe->act cycle for a supplied ActionOptions. Times out after actTimeoutMs
      * to prevent indefinite hangs. Model may produce multiple candidate tool calls internally; only
@@ -320,6 +263,68 @@ open class BrowserPerceptiveAgent constructor(
         return stateHistory.lastOrNull()?.toString() ?: "(no history)"
     }
 
+    protected data class ResolveResult(
+        val context: ExecutionContext,
+        val result: ActResult
+    )
+
+    private suspend fun resolveInCoroutine(action: ActionOptions): ResolveResult {
+        val instruction = action.action
+        val initContext = stateManager.buildInitExecutionContext(action)
+        val sessionStartTime = initContext.timestamp
+
+        // Add start history for better traceability (meta record only)
+        stateManager.addTrace(
+            initContext.agentState,
+            mapOf(
+                "session" to initContext.sid,
+                "goal" to Strings.compactInline(instruction, 160),
+                "maxSteps" to config.maxSteps,
+                "maxRetries" to config.maxRetries
+            ),
+            event = "resolveStart",
+            message = "🚀 resolve START"
+        )
+
+        // Overall timeout to prevent indefinite hangs for a full resolve session
+        // Calculate effective timeout accounting for potential retry delays
+        val maxPossibleDelays = (0 until config.maxRetries).fold(0L) { acc, i -> acc + calculateRetryDelay(i) }
+        val effectiveTimeout = config.resolveTimeoutMs + maxPossibleDelays
+
+        return try {
+            val result = withTimeout(effectiveTimeout) {
+                resolveProblemWithRetry(action, initContext)
+            }
+
+            val dur = Duration.between(sessionStartTime, Instant.now()).toMillis()
+            // Not a single-step action, keep it out of AgentState history
+            stateManager.addTrace(
+                result.context.agentState, mapOf(
+                    "session" to initContext.sid,
+                    "success" to result.result.success, "durationMs" to dur
+                ), event = "resolveDone", message = "✅ resolve DONE"
+            )
+
+            result
+        } catch (_: TimeoutCancellationException) {
+            val msg = "⏳ Resolve timed out after ${effectiveTimeout}ms (base: ${config.resolveTimeoutMs}ms + " +
+                    "retries: ${maxPossibleDelays}ms): $instruction"
+            stateManager.addTrace(
+                initContext.agentState, mapOf(
+                    "timeoutMs" to effectiveTimeout, "instruction" to Strings.compactInline(instruction, 160)
+                ),
+                event = "resolveTimeout",
+                message = "⏳ resolve TIMEOUT"
+            )
+            val actResult = ActResult(success = false, message = msg, action = instruction)
+            ResolveResult(initContext, actResult)
+        } finally {
+            // clear history so the next task will have a clean operation trace for summary.
+            // but we do not clear process trace which will be kept to trace all operations and states.
+            stateManager.clearHistory()
+        }
+    }
+
     protected suspend fun generateActions(context: ExecutionContext): ActionDescription {
         context.screenshotB64 = if (context.step % config.screenshotEveryNSteps == 0) {
             if (isClosed) return ActionDescription(
@@ -342,6 +347,7 @@ open class BrowserPerceptiveAgent constructor(
             requireNotNull(context.agentState.actionDescription) { "Filed should be set: context.agentState.actionDescription" }
             circuitBreaker.recordSuccess(CircuitBreaker.FailureType.LLM_FAILURE)
             consecutiveLLMFailureCounter.set(0) // Keep for backward compatibility
+
             actionDescription
         } catch (e: Exception) {
             handleObserveException(e, context)
@@ -423,11 +429,6 @@ open class BrowserPerceptiveAgent constructor(
 
         return context
     }
-
-    data class ResolveResult(
-        val context: ExecutionContext,
-        val result: ActResult
-    )
 
     private suspend fun doResolveProblem(
         initActionOptions: ActionOptions,
@@ -658,8 +659,9 @@ open class BrowserPerceptiveAgent constructor(
 
         consecutiveNoOps = 0
         val detailedActResult = executeToolCall(actionDescription, context)
+
         if (detailedActResult != null) {
-            stateManager.updateAgentState(context.agentState, detailedActResult)
+            stateManager.updateAgentState(context, detailedActResult)
             updateTodo(context, detailedActResult.actionDescription)
             updatePerformanceMetrics(step, context.timestamp, true)
             val preview = detailedActResult.toolCallResult?.evaluate?.preview
@@ -978,6 +980,8 @@ open class BrowserPerceptiveAgent constructor(
     protected suspend fun onTaskCompletion(action: ActionDescription, context: ExecutionContext) {
         val step = context.step
         val sid = context.sessionId
+
+        require(context.agentState.isComplete) { "Required context.agentState.isComplete" }
 
         logger.info("✅ task.complete sid={} step={} complete={}", sid.take(8), step, action.isComplete)
         stateManager.addTrace(

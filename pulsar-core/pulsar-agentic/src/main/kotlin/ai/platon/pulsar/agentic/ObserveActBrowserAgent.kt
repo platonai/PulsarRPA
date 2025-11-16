@@ -17,6 +17,10 @@ class ObserveActBrowserAgent constructor(
         var consecutiveNoOps = noOpsIn
 
         val context = prepareStep(action, ctxIn, consecutiveNoOps)
+        require(context.step == ctxIn.step + 1) { "Required: context.step == ctxIn.step + 1" }
+        require(context.agentState.prevState == context.baseContext.get()?.agentState) {
+            "Required: context.agentState.prevState == context.baseContext.get()?.agentState"
+        }
 
         // Execute the tool call with enhanced error handling
         val actResult = act(action)
@@ -27,7 +31,7 @@ class ObserveActBrowserAgent constructor(
         }
 
         if (actResult.success) {
-            stateManager.updateAgentState(context.agentState, actResult.detail!!)
+            // stateManager.updateAgentState(context, actResult.detail!!)
             updateTodo(context, actResult)
             updatePerformanceMetrics(context.step, context.timestamp, true)
             val preview = actResult.detail?.toolCallResult?.evaluate?.preview

@@ -40,7 +40,7 @@ data class PerformanceMetrics(
 /**
  * Structured logging context for better debugging
  */
-data class ExecutionContext(
+data class ExecutionContext constructor(
     var step: Int,
 
     var instruction: String = "",
@@ -49,7 +49,6 @@ data class ExecutionContext(
     var actionType: String,
     var targetUrl: String? = null,
 
-    var prevAgentState: AgentState? = null,
     val agentState: AgentState,
     val stateHistory: List<AgentState>,
 
@@ -63,7 +62,9 @@ data class ExecutionContext(
 ) {
     val sid get() = sessionId.take(8)
 
-    val requestId = UUID.randomUUID().toString()
+    val uuid = UUID.randomUUID().toString()
+
+    val prevAgentState: AgentState? get() = agentState.prevState
 
     fun createObserveParams(
         options: ObserveOptions,
@@ -94,7 +95,7 @@ data class ExecutionContext(
             instruction = instruction,
             agentState = agentState,
             schema = schema,
-            requestId = requestId,
+            requestId = uuid,
             logInferenceToFile = config.logInferenceToFile,
         )
     }

@@ -452,6 +452,7 @@ data class ActionDescription constructor(
 
 data class ProcessTrace constructor(
     val step: Int,
+    val event: String? = null,
     val method: String? = null,
     val agentState: String? = null,
     val expression: String? = null,
@@ -475,6 +476,7 @@ data class ProcessTrace constructor(
         val str = buildString {
             append(timestamp)
             append(" | step=$step")
+            event?.let { append(", method=$event") }
             method?.let { append(", method=$method") }
             listOfNotNull(agentState, itemStr, message).forEach {
                 append(" | $it")
