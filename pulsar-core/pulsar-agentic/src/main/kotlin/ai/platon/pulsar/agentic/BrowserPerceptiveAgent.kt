@@ -983,12 +983,13 @@ open class BrowserPerceptiveAgent constructor(
         val step = context.step
         val sid = context.sessionId
 
-        require(context.agentState.isComplete) { "Required context.agentState.isComplete" }
+        require(action.isComplete) { "Required action.isComplete" }
+        // require(context.agentState.isComplete) { "Required context.agentState.isComplete" }
+        context.agentState.isComplete = true
 
         logger.info("✅ task.complete sid={} step={} complete={}", sid.take(8), step, action.isComplete)
         stateManager.addTrace(
             context.agentState,
-            items = mapOf("taskComplete" to action.isComplete),
             event = "complete",
             message = "#${step} complete"
         )
