@@ -347,7 +347,7 @@ data class AgentState constructor(
         val pseudoExpression = actionDescription?.pseudoExpression
         val resultPreview = toolCallResult?.evaluate?.preview ?: "(absent)"
         val toolCallState = if (toolCallResult?.success == true) "✅OK" else "❌FAIL"
-        return "$state | $event0 | ToolCall: $pseudoExpression | Result: $resultPreview | $toolCallState\n$summary"
+        return "$state, event=$event0, tool=`$pseudoExpression`, resultPreview=`$resultPreview`, $toolCallState\n$summary"
     }
 }
 
@@ -415,7 +415,7 @@ data class ActionDescription constructor(
         return elements.map { this.copy(observeElements = listOf(it)) }
     }
 
-    fun toObserveResults(agentState: AgentState, context: Any): List<ObserveResult> {
+    fun toObserveResults(agentState: AgentState): List<ObserveResult> {
         val results = observeElements?.map { ele ->
             ObserveResult(
                 agentState = agentState,
@@ -431,7 +431,7 @@ data class ActionDescription constructor(
                 backendNodeId = ele.backendNodeId,
                 observeElement = ele,
                 actionDescription = this,
-            ).also { it.additionalContext["context"] = context }
+            )
         }
 
         return results ?: emptyList()

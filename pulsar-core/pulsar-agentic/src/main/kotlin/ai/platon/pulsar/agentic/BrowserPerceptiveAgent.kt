@@ -4,7 +4,6 @@ import ai.platon.pulsar.agentic.ai.agent.detail.*
 import ai.platon.pulsar.agentic.ai.todo.ToDoManager
 import ai.platon.pulsar.agentic.tools.ActionValidator
 import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
-import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
@@ -15,7 +14,6 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import kotlinx.coroutines.*
 import java.nio.file.Files
-import java.nio.file.Paths
 import java.time.Duration
 import java.time.Instant
 import java.util.concurrent.ConcurrentHashMap
@@ -163,17 +161,16 @@ open class BrowserPerceptiveAgent constructor(
 
     private suspend fun resolveInCoroutine(action: ActionOptions): ResolveResult {
         val instruction = action.action
-        val context = stateManager.buildInitExecutionContext(action)
-        val sessionStartTime = context.timestamp
+        val initContext = stateManager.buildInitExecutionContext(action)
+        val sessionStartTime = initContext.timestamp
 
         // Add start history for better traceability (meta record only)
-        val goal = Strings.compactInline(instruction, 160)
         stateManager.addTrace(
-            context.agentState,
+            initContext.agentState,
             mapOf(
                 "event" to "resolveStart",
-                "session" to context.sid,
-                "goal" to goal,
+                "session" to initContext.sid,
+                "goal" to Strings.compactInline(instruction, 160),
                 "maxSteps" to config.maxSteps,
                 "maxRetries" to config.maxRetries
             ),
@@ -187,14 +184,14 @@ open class BrowserPerceptiveAgent constructor(
 
         return try {
             val result = withTimeout(effectiveTimeout) {
-                resolveProblemWithRetry(action, context)
+                resolveProblemWithRetry(action, initContext)
             }
 
             val dur = Duration.between(sessionStartTime, Instant.now()).toMillis()
             // Not a single-step action, keep it out of AgentState history
             stateManager.addTrace(
-                context.agentState, mapOf(
-                    "event" to "resolveDone", "session" to context.sid,
+                result.context.agentState, mapOf(
+                    "event" to "resolveDone", "session" to initContext.sid,
                     "success" to result.result.success, "durationMs" to dur
                 ), "✅ resolve DONE"
             )
@@ -204,14 +201,14 @@ open class BrowserPerceptiveAgent constructor(
             val msg = "⏳ Resolve timed out after ${effectiveTimeout}ms (base: ${config.resolveTimeoutMs}ms + " +
                     "retries: ${maxPossibleDelays}ms): $instruction"
             stateManager.addTrace(
-                context.agentState, mapOf(
+                initContext.agentState, mapOf(
                     "event" to "resolveTimeout",
                     "timeoutMs" to effectiveTimeout, "instruction" to Strings.compactInline(instruction, 160)
                 ),
                 "⏳ resolve TIMEOUT"
             )
             val actResult = ActResult(success = false, message = msg, action = instruction)
-            ResolveResult(context, actResult)
+            ResolveResult(initContext, actResult)
         } finally {
             // clear history so the next task will have a clean operation trace for summary.
             // but we do not clear process trace which will be kept to trace all operations and states.
@@ -377,7 +374,8 @@ open class BrowserPerceptiveAgent constructor(
         ensureReadyForStep(action)
 
         val context = stateManager.buildExecutionContext(
-            action.action, "step", baseContext = ctxIn)
+            action.action, "step", baseContext = ctxIn
+        )
         action.setContext(context)
         val agentState = context.agentState
         val browserUseState = agentState.browserUseState
@@ -432,10 +430,14 @@ open class BrowserPerceptiveAgent constructor(
         try {
             val action = initActionOptions.copy(resolve = true)
             while (!isClosed && context.step < config.maxSteps) {
-                val stepResult = step(action, context, consecutiveNoOps)
-                context = stepResult.context
-                consecutiveNoOps = stepResult.consecutiveNoOps
-                if (stepResult.shouldStop) break
+                try {
+                    val stepResult = step(action, context, consecutiveNoOps)
+                    context = stepResult.context
+                    consecutiveNoOps = stepResult.consecutiveNoOps
+                    if (stepResult.shouldStop) break
+                } finally {
+                    stateManager.addToHistory(context.agentState)
+                }
             }
 
             val result = buildFinalActResult(initContext.instruction, context, startTime)

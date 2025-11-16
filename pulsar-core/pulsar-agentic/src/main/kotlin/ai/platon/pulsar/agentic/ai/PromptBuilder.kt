@@ -10,6 +10,7 @@ import ai.platon.pulsar.common.KStrings
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.ai.llm.PromptTemplate
 import ai.platon.pulsar.common.brief
+import ai.platon.pulsar.common.serialize.json.Pson
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.skeleton.ai.AgentState
 import java.time.LocalDate
@@ -1160,9 +1161,11 @@ ${nanoTree.lazyJson}
     fun buildSummaryPrompt(goal: String, stateHistory: List<AgentState>): Pair<String, String> {
         val system = "你是总结助理，请基于执行轨迹对原始目标进行总结，输出 JSON。"
 
-        val history = stateHistory.withIndex().joinToString("\n") {
-            "${it.index}.\t🚩 ${it.value}"
-        }
+//        val history = stateHistory.withIndex().joinToString("\n") {
+//            "${it.index}.\t🚩 ${it.value}"
+//        }
+
+        val history = stateHistory.joinToString("\n") { Pson.toJson(it) }
 
         val user = """
 ## 原始目标

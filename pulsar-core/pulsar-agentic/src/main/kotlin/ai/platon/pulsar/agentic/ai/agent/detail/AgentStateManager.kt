@@ -159,15 +159,13 @@ class AgentStateManager(
             nextGoal = observeElement?.nextGoal
             this.toolCallResult = toolCallResult
         }
-
-        addToHistory(agentState)
     }
 
+    /**
+     * Make sure add to history at every end of step
+     * */
     fun addToHistory(state: AgentState) {
-        val items = mapOf(
-            "subAction" to "addToHistory"
-        )
-        val trace = ProcessTrace(state.step, state.method, agentState = state.toString(), items = items)
+        val trace = ProcessTrace(state.step, state.method, agentState = state.toString())
 
         synchronized(this) {
             _stateHistory.add(state)

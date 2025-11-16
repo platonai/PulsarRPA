@@ -347,7 +347,7 @@ data class AgentState constructor(
         val pseudoExpression = actionDescription?.pseudoExpression
         val resultPreview = toolCallResult?.evaluate?.preview ?: "(absent)"
         val toolCallState = if (toolCallResult?.success == true) "✅OK" else "❌FAIL"
-        return "$state | $event0 | ToolCall: $pseudoExpression | Result: $resultPreview | $toolCallState\n$summary"
+        return "$state, event=$event0, tool=`$pseudoExpression`, resultPreview=`$resultPreview`, $toolCallState\n$summary"
     }
 }
 
