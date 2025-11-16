@@ -32,8 +32,6 @@ class SessionActMethodTest : TextToActionTestBase() {
 
     @BeforeEach
     fun setUp() {
-        PulsarSettings.withSPA()
-
         runBlocking {
             driver = session.createBoundDriver()
             // Open demo page so each test begins from consistent state

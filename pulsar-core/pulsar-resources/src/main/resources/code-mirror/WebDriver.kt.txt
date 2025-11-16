@@ -765,6 +765,19 @@ interface WebDriver : Closeable {
     suspend fun bringToFront()
 
     /**
+     * This method hovers over the element.
+     *
+     * 1. Scroll the element into view if needed.
+     * 2. Move mouse to hover over a random position near the center of the element.
+     *
+     * ```kotlin
+     * driver.hover("h1")
+     * ```
+     */
+    @Throws(WebDriverException::class)
+    suspend fun hover(selector: String)
+
+    /**
      * This method fetches an element with `selector` and focuses it. If there's no
      * element matching `selector`, nothing to do.
      *

@@ -29,7 +29,7 @@ class PulsarWebDriverProxyTests : WebDriverTestBase() {
     // val ipTestUrl = "https://ip.tool.chinaz.com/"
     // val ipTestUrl = "https://whatismyipaddress.com/"
     val ipTestUrl = "https://www.baidu.com/"
-    val browserId = BrowserId.Companion.RANDOM_TEMP
+    val browserId = BrowserId.RANDOM_TEMP
 
     @BeforeEach
     fun setupBrowserContext() {
@@ -39,7 +39,7 @@ class PulsarWebDriverProxyTests : WebDriverTestBase() {
     @BeforeEach
     fun checkProxyHub() {
         Assumptions.assumeTrue(NetUtil.testHttpNetwork(proxyHubUrl))
-        System.setProperty(ProxyHubLoader.Companion.PROXY_HUB_URL, proxyHubUrl)
+        System.setProperty(ProxyHubLoader.PROXY_HUB_URL, proxyHubUrl)
 
         proxyLoader.loadProxies().toCollection(proxies)
         printlnPro(proxies)
@@ -75,7 +75,6 @@ class PulsarWebDriverProxyTests : WebDriverTestBase() {
 //        assertTrue { browserId.fingerprint.proxyURI?.host == proxyEntry.host }
 //        assertTrue { driver.selectFirstTextOrNull(".ipLocalContent")?.contains(proxyEntry.host) == true }
 
-        // readlnOrNull()
         delay(3000)
     }
 
@@ -90,7 +89,7 @@ class PulsarWebDriverProxyTests : WebDriverTestBase() {
             return
         }
 
-        val browserId = BrowserId.Companion.RANDOM_TEMP
+        val browserId = BrowserId.RANDOM_TEMP
         browserId.setProxy(proxyEntry)
 
         val browser = browserFactory.launch(browserId)

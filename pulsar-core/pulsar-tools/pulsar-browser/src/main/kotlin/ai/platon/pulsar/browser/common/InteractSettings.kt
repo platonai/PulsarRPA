@@ -46,7 +46,7 @@ data class InteractSettings constructor(
      * */
     var scriptTimeout: Duration = Duration.ofMinutes(1),
     /**
-     * Timeout for loading a webpage.
+     * Timeout for loading a webpage by session.load().
      * */
     var pageLoadTimeout: Duration = Duration.ofMinutes(3),
     /**
@@ -62,7 +62,7 @@ data class InteractSettings constructor(
     /**
      * The minimum delay time in milliseconds.
      * */
-    var minDelayMillis = 100
+    var minDelayMillis = 50
 
     /**
      * The minimum delay time in milliseconds.
@@ -197,7 +197,6 @@ data class InteractSettings constructor(
             val ratio = (0.6 + 0.1 * i).coerceAtMost(0.8)
             positions.add(ratio)
         }
-        positions.add(0.0)
 
         return positions
     }
