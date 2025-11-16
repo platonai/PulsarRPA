@@ -392,7 +392,7 @@ abstract class AbstractWebDriver(
 })($pixels, ${if (smooth) "true" else "false"});
     """.trimIndent()
 
-        return (evaluate(js) as? Number)?.toDouble() ?: 0.0
+        return evaluate(js, 0.0)
     }
 
     @Throws(WebDriverException::class)
