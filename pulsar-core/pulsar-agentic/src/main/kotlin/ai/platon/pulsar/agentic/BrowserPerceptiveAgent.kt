@@ -148,7 +148,10 @@ open class BrowserPerceptiveAgent constructor(
      * stateHistory focused on executed tool actions only.
      */
     override suspend fun resolve(action: ActionOptions): ActResult {
-        if (isClosed) return ActResult(false, "USER interrupted", action = action.action)
+        if (isClosed) {
+            return ActResult(false, "USER interrupted", action = action.action)
+        }
+
         return try {
             val result = withContext(agentScope.coroutineContext) { resolveInCoroutine(action) }
             result.result
@@ -165,7 +168,10 @@ open class BrowserPerceptiveAgent constructor(
      * one successful execution is recorded in stateHistory.
      */
     override suspend fun act(action: ActionOptions): ActResult {
-        if (isClosed) return ActResult(false, "USER interrupted", action = action.action)
+        if (isClosed) {
+            return ActResult(false, "USER interrupted", action = action.action)
+        }
+
         return try {
             withContext(agentScope.coroutineContext) {
                 super.act(action)
@@ -180,7 +186,10 @@ open class BrowserPerceptiveAgent constructor(
      * validation, and updates AgentState history on success or failure.
      */
     override suspend fun act(observe: ObserveResult): ActResult {
-        if (isClosed) return ActResult(false, "USER interrupted", action = observe.agentState.instruction)
+        if (isClosed) {
+            return ActResult(false, "USER interrupted", action = observe.agentState.instruction)
+        }
+
         return try {
             withContext(agentScope.coroutineContext) {
                 super.act(observe)
@@ -195,11 +204,13 @@ open class BrowserPerceptiveAgent constructor(
      * two-stage LLM calls (extract + metadata) and merges results with token/time metrics.
      */
     override suspend fun extract(options: ExtractOptions): ExtractResult {
-        if (isClosed) return ExtractResult(
-            success = false,
-            message = "USER interrupted",
-            data = JsonNodeFactory.instance.objectNode()
-        )
+        if (isClosed) {
+            return ExtractResult(
+                success = false,
+                message = "USER interrupted",
+                data = JsonNodeFactory.instance.objectNode()
+            )
+        }
 
         return try {
             withContext(agentScope.coroutineContext) {
@@ -215,7 +226,9 @@ open class BrowserPerceptiveAgent constructor(
      * candidate elements and potential actions (if returnAction=true).
      */
     override suspend fun observe(options: ObserveOptions): List<ObserveResult> {
-        if (isClosed) return emptyList()
+        if (isClosed) {
+            return emptyList()
+        }
 
         val context = options.getContext() ?: stateManager.buildInitExecutionContext(options, "observe")
         options.setContext(context)
@@ -481,10 +494,8 @@ open class BrowserPerceptiveAgent constructor(
 
             stateManager.addTrace(
                 currentContext.agentState,
-                mapOf(
-                    "attemptNo" to attemptNo
-                ),
                 event = "resolveAttempt",
+                items = mapOf("attemptNo" to attemptNo),
                 message = "🔁 resolve ATTEMPT"
             )
 
@@ -494,8 +505,8 @@ open class BrowserPerceptiveAgent constructor(
 
                 stateManager.addTrace(
                     currentContext.agentState,
-                    mapOf("attemptNo" to attemptNo),
                     event = "resolveAttemptOk",
+                    items = mapOf("attemptNo" to attemptNo),
                     message = "✅ resolve ATTEMPT OK"
                 )
 

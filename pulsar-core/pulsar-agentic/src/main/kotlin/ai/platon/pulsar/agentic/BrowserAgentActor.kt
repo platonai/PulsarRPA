@@ -208,7 +208,7 @@ open class BrowserAgentActor(
         } else ctx
 
         context.agentState.event = "observe"
-        val actionDescription = captureScreenshotAndObserve(options, context, options.resolve)
+        val actionDescription = doObserveActObserve(options, context, options.resolve)
 
         val observeResults = actionDescription.toObserveResults(context.agentState)
         observeResults.forEach { it.setContext(context) }
@@ -224,7 +224,7 @@ open class BrowserAgentActor(
 
         val context = requireNotNull(options.getContext()) { "Context is required to doObserveAct" }
 
-        val actionDescription = captureScreenshotAndObserve(options, context, options.resolve)
+        val actionDescription = doObserveActObserve(options, context, options.resolve)
 
         if (actionDescription.isComplete) {
             return ActResult.complete(actionDescription)
@@ -242,6 +242,7 @@ open class BrowserAgentActor(
         val resultsToTry = observeResults.take(config.maxResultsToTry)
         var lastError: String? = null
         val actResults = mutableListOf<ActResult>()
+        // The current logic is to take the first success action
         for ((index, chosen) in resultsToTry.withIndex()) {
             require(context.step == context.agentState.step) { "Required: context.step == context.agentState.step" }
             require(context.prevAgentState == context.agentState.prevState) { "Required: context.step == context.agentState.step" }
@@ -269,9 +270,8 @@ open class BrowserAgentActor(
 
             stateManager.addTrace(
                 context.agentState,
-                mapOf(
-                    "candidateIndex" to (index + 1), "candidateTotal" to resultsToTry.size),
                 event = "actSuccess",
+                items = mapOf("candidateIndex" to (index + 1), "candidateTotal" to resultsToTry.size),
                 message = "✅ act SUCCESS"
             )
 
@@ -280,6 +280,7 @@ open class BrowserAgentActor(
 
         val msg = "❌ All ${resultsToTry.size} candidates failed. Last error: $lastError"
         stateManager.addTrace(context.agentState, mapOf("candidates" to resultsToTry.size), event = "actAllFailed", message = msg)
+
         return ActResult.failed(msg, options.action)
     }
 
@@ -319,7 +320,7 @@ open class BrowserAgentActor(
         }
     }
 
-    private suspend fun captureScreenshotAndObserve(
+    private suspend fun doObserveActObserve(
         options: Any,
         context: ExecutionContext,
         resolve: Boolean,
