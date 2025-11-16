@@ -53,7 +53,7 @@ class AgentStateManager(
          * The user's instruction
          * */
         instruction: String,
-        actionType: String = "",
+        event: String = "",
         /**
          * The current agent state
          * */
@@ -81,7 +81,7 @@ class AgentStateManager(
         return ExecutionContext(
             instruction = bc.instruction,
             step = step,
-            actionType = actionType,
+            actionType = event,
             targetUrl = prevAgentState?.browserUseState?.browserState?.url,
             sessionId = bc.sessionId,
             timestamp = Instant.now(),

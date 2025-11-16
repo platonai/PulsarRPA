@@ -334,7 +334,10 @@ open class BrowserPerceptiveAgent constructor(
         val messages = promptBuilder.buildResolveMessageListAll(context)
 
         return try {
-            if (isClosed) throw CancellationException("closed")
+            if (isClosed) {
+                throw CancellationException("closed")
+            }
+
             val actionDescription = cta.generate(messages, context)
             requireNotNull(context.agentState.actionDescription) { "Filed should be set: context.agentState.actionDescription" }
             circuitBreaker.recordSuccess(CircuitBreaker.FailureType.LLM_FAILURE)
@@ -369,19 +372,15 @@ open class BrowserPerceptiveAgent constructor(
         ctxIn: ExecutionContext,
         noOpsIn: Int
     ): ExecutionContext {
-        var consecutiveNoOps = noOpsIn
+        val context = ensureReadyForStep(action, "step", ctxIn)
+        requireNotNull(action.getContext()) { "Filed should be set: action.context" }
 
-        ensureReadyForStep(action)
-
-        val context = stateManager.buildExecutionContext(
-            action.action, "step", baseContext = ctxIn
-        )
-        action.setContext(context)
         val agentState = context.agentState
         val browserUseState = agentState.browserUseState
         val step = context.step
         val sid = context.sid
 
+        var consecutiveNoOps = noOpsIn
         val unchangedCount = pageStateTracker.checkStateChange(browserUseState)
         if (unchangedCount >= 3) {
             logger.info("⚠️ loop.warn sid={} step={} unchangedSteps={}", sid, step, unchangedCount)
@@ -389,8 +388,12 @@ open class BrowserPerceptiveAgent constructor(
         }
 
         logger.info("▶️ step.exec sid={} step={}/{} noOps={}", sid, step, config.maxSteps, consecutiveNoOps)
-        if (logger.isDebugEnabled) logger.debug("🧩 dom={}", DomDebug.summarizeStr(browserUseState.domState, 5))
-        if (step % config.memoryCleanupIntervalSteps == 0) performMemoryCleanup(context)
+        if (logger.isDebugEnabled) {
+            logger.debug("🧩 dom={}", DomDebug.summarizeStr(browserUseState.domState, 5))
+        }
+        if (step % config.memoryCleanupIntervalSteps == 0) {
+            performMemoryCleanup(context)
+        }
         if (config.enableCheckpointing && step % config.checkpointIntervalSteps == 0) {
             runCatching { saveCheckpoint(context) }
                 .onFailure { e -> logger.warn("💾❌ checkpoint.save.fail sid={} step={} msg={}", sid, step, e.message) }
@@ -399,7 +402,9 @@ open class BrowserPerceptiveAgent constructor(
         return context
     }
 
-    protected suspend fun ensureReadyForStep(action: ActionOptions) {
+    protected suspend fun ensureReadyForStep(
+        action: ActionOptions, event: String, ctxIn: ExecutionContext
+    ): ExecutionContext {
         val driver = activeDriver
         val url = driver.url()
         if (url.isBlank() || url == "about:blank") {
@@ -411,6 +416,12 @@ open class BrowserPerceptiveAgent constructor(
 //        if (settleMs > 0) {
 //            pageStateTracker.waitForDOMSettle(settleMs, config.domSettleCheckIntervalMs)
 //        }
+
+        val instruction = action.action
+        val context = stateManager.buildExecutionContext(instruction, event, baseContext = ctxIn)
+        action.setContext(context)
+
+        return context
     }
 
     data class ResolveResult(
@@ -806,7 +817,7 @@ open class BrowserPerceptiveAgent constructor(
     }
 
     protected suspend fun summarize(goal: String, cxtIn: ExecutionContext): ModelResponse {
-        val context = stateManager.buildExecutionContext(goal, actionType = "summarize", baseContext = cxtIn)
+        val context = stateManager.buildExecutionContext(goal, event = "summarize", baseContext = cxtIn)
         context.agentState.event = "summary"
 
         return try {
