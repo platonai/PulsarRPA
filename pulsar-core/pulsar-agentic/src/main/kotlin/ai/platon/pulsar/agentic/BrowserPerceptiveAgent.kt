@@ -369,7 +369,7 @@ open class BrowserPerceptiveAgent constructor(
         action: ActionOptions,
         ctxIn: ExecutionContext,
         noOpsIn: Int
-    ) {
+    ): ExecutionContext {
         var context = ctxIn
         var consecutiveNoOps = noOpsIn
         val nextStep = context.step + 1
@@ -395,6 +395,8 @@ open class BrowserPerceptiveAgent constructor(
             runCatching { saveCheckpoint(context) }
                 .onFailure { e -> logger.warn("💾❌ checkpoint.save.fail sid={} step={} msg={}", sid, step, e.message) }
         }
+
+        return context
     }
 
     protected suspend fun ensureReadyForStep(action: ActionOptions) {
@@ -600,12 +602,11 @@ open class BrowserPerceptiveAgent constructor(
         ctxIn: ExecutionContext,
         noOpsIn: Int
     ): StepProcessingResult {
-        val context = ctxIn
         var consecutiveNoOps = noOpsIn
-        val step = context.step
-        val nextStep = context.step + 1
+        val step = ctxIn.step
+        val nextStep = ctxIn.step + 1
 
-        prepareStep(action, ctxIn, nextStep)
+        val context = prepareStep(action, ctxIn, nextStep)
 
         val actionDescription = generateActions(context)
 
@@ -670,6 +671,8 @@ open class BrowserPerceptiveAgent constructor(
         actionDescription: ActionDescription,
         context: ExecutionContext
     ): DetailedActResult? {
+        context.agentState.event = "toolExec"
+
         val step = context.step
         val toolCall = actionDescription.toolCall ?: return null
 
@@ -710,6 +713,7 @@ open class BrowserPerceptiveAgent constructor(
             circuitBreaker.recordSuccess(CircuitBreaker.FailureType.EXECUTION_FAILURE)
             consecutiveFailureCounter.set(0)
             val summary = "✅ ${toolCall.method} executed successfully"
+
             stateManager.addTrace(
                 context.agentState,
                 mapOf("event" to "toolExecOk", "tool" to toolCall.method),
@@ -785,6 +789,7 @@ open class BrowserPerceptiveAgent constructor(
         val context = stateManager.buildExecutionContext(
             goal, actionType = "summarize", step = cxtIn.step, baseContext = cxtIn
         )
+        context.agentState.event = "summary"
 
         return try {
             val (system, user) = promptBuilder.buildSummaryPrompt(goal, stateHistory)
@@ -820,7 +825,7 @@ open class BrowserPerceptiveAgent constructor(
     protected fun persistTranscript(instruction: String, finalResp: ModelResponse, context: ExecutionContext) {
         runCatching {
             val ts = Instant.now().toEpochMilli()
-            val log = baseDir.resolve("session-${uuid}-${ts}.log")
+            val log = baseDir.resolve("session-${ts}.log")
             slogger.info("🧾💾 Persisting execution transcript", context, mapOf("path" to log))
             val sb = StringBuilder()
             sb.appendLine("SESSION_ID: ${uuid}")
@@ -960,6 +965,8 @@ open class BrowserPerceptiveAgent constructor(
         context: ExecutionContext,
         startTime: Instant
     ): ActResult {
+        context.agentState.event = "summary"
+
         val executionTime = Duration.between(startTime, Instant.now())
 
         if (closed.get()) {
