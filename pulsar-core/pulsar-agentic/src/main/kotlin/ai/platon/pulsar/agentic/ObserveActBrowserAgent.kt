@@ -34,8 +34,11 @@ class ObserveActBrowserAgent constructor(
             // stateManager.updateAgentState(context, actResult.detail!!)
             updateTodo(context, actResult)
             updatePerformanceMetrics(context.step, context.timestamp, true)
-            val preview = actResult.detail?.toolCallResult?.evaluate?.preview
-            logger.info("🏁 step.done sid={} step={} result={}", context.sid, context.step, preview)
+
+            val tcResult = actResult.detail?.toolCallResult
+            val method = actResult.detail?.actionDescription?.toolCall?.method
+            val preview = tcResult?.evaluate?.preview
+            logger.info("🏁 step.done sid={} step={} method={} result={}", context.sid, context.step, method, preview)
         } else {
             consecutiveNoOps++
             val stop = handleConsecutiveNoOps(consecutiveNoOps, context)

@@ -200,7 +200,7 @@ class AgentStateManager(
                 step = step,
                 event = event ?: state?.event,
                 method = state?.method,
-                isComplete = isComplete,
+                isComplete = false,
                 agentState = state.toString(),
                 expression = state?.toolCallResult?.actionDescription?.pseudoExpression,
                 tcEvalResult = state?.toolCallResult?.evaluate?.value,
