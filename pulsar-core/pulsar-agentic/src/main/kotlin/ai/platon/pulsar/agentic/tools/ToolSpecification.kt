@@ -49,6 +49,7 @@ driver.uncheck(selector: String)
 driver.scrollTo(selector: String)
 driver.scrollToTop()
 driver.scrollToBottom()
+driver.scrollToMiddle(ratio: Double = 0.5)
 driver.scrollBy(pixels: Double = 200.0): Double
 driver.textContent(): String?                            // Returns the document's text content.
 driver.selectFirstTextOrNull(selector: String): String?  // Returns the node's text content including it's descendants, the node is located by [selector]. If the node does not exist, returns null.

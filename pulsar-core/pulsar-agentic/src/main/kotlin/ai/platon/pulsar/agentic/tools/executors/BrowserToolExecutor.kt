@@ -1,37 +1,17 @@
 package ai.platon.pulsar.agentic.tools.executors
 
-import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.skeleton.ai.TcEvaluate
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractBrowser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlin.reflect.KClass
 
-class BrowserToolExecutor: AbstractToolExecutor() {
+class BrowserToolExecutor : AbstractToolExecutor() {
     private val logger = getLogger(this)
 
     override val domain = "browser"
 
     override val targetClass: KClass<*> = Browser::class
-
-    @Deprecated("Executing `expression` is deprecated")
-    suspend fun execute(expression: String, browser: Browser, session: AgenticSession): TcEvaluate {
-        if (expression.contains("switchTab")) {
-            val result = execute(expression, browser)
-
-            val value = result.value
-            if (value is WebDriver) {
-                session.bindDriver(value)
-            }
-
-            return result
-        }
-
-        val exception = IllegalArgumentException("Unknown expression: $expression, domain: browser")
-        return TcEvaluate(expression, exception, "")
-    }
 
     /**
      * Execute browser.* expressions against a Browser target using named args.
@@ -57,6 +37,7 @@ class BrowserToolExecutor: AbstractToolExecutor() {
                 logger.info("""👀 Switched to tab {} (driver {}/{})""", tabId, driver.id, driver.guid)
                 driver
             }
+
             else -> throw IllegalArgumentException("Unsupported browser method: $functionName(${args.keys})")
         }
     }

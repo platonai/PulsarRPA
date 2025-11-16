@@ -113,17 +113,17 @@ class AgentToolManager(
     @Suppress("UNUSED_PARAMETER")
     private fun onDidSwitchTab(evaluate: TcEvaluate) {
         val frontDriver = session.boundBrowser?.frontDriver
-        val boundDriver = session.boundDriver
         if (frontDriver == null) {
             logger.warn("⚠️ No driver is in front after switchTab")
             return
         }
 
-        if (frontDriver == boundDriver) {
+        val oldBoundDriver = session.boundDriver
+        if (frontDriver == oldBoundDriver) {
             logger.warn("⚠️ The bound driver does not change after switchTab")
-            return
         }
 
+        // bind the driver which has been brought to front just now
         session.bindDriver(frontDriver)
     }
 
