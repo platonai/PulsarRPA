@@ -118,6 +118,8 @@ open class BrowserAgentActor(
             )
             logger.info(description)
 
+            // Sync browser state after tool call
+            stateManager.syncBrowserUseState(context)
             // Update agent state after tool call
             stateManager.updateAgentState(context, element, toolCall, result, description = description)
 
@@ -304,7 +306,7 @@ open class BrowserAgentActor(
             else -> throw IllegalArgumentException("Not supported option")
         }
 
-        // val browserUseState = stateManager.syncBrowserUseState(context)
+        stateManager.syncBrowserUseState(context)
         val interactiveElements = context.agentState.browserUseState.getInteractiveElements()
         try {
             if (drawOverlay) {

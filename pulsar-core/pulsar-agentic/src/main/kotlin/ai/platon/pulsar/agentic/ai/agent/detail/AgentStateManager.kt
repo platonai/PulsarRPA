@@ -118,6 +118,12 @@ class AgentStateManager(
         return agentState
     }
 
+    suspend fun syncBrowserUseState(context: ExecutionContext): BrowserUseState {
+        val browserUseState = getBrowserUseState()
+        context.agentState.browserUseState = browserUseState
+        return browserUseState
+    }
+
     suspend fun getBrowserUseState(): BrowserUseState {
         val snapshotOptions = SnapshotOptions(
             maxDepth = 1000,
