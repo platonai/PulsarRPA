@@ -39,7 +39,7 @@ open class BrowserAgentActor(
 
     // Helper classes for better code organization
     protected val pageStateTracker = PageStateTracker(session, config)
-    protected val stateManager by lazy { AgentStateManager(this, domService, pageStateTracker) }
+    protected val stateManager by lazy { AgentStateManager(this, pageStateTracker) }
 
     override val uuid get() = _uuid
     override val stateHistory: List<AgentState> get() = stateManager.stateHistory
@@ -304,6 +304,7 @@ open class BrowserAgentActor(
             else -> throw IllegalArgumentException("Not supported option")
         }
 
+        // val browserUseState = stateManager.syncBrowserUseState(context)
         val interactiveElements = context.agentState.browserUseState.getInteractiveElements()
         try {
             if (drawOverlay) {
@@ -316,18 +317,14 @@ open class BrowserAgentActor(
                 inference.observe(params, context)
             }
 
-            if (drawOverlay) {
-                val force = actionDescription.toolCall?.method == "switchTab"
-                domService.removeHighlights(force)
-            }
-
             val observeResults = actionDescription.toObserveResults(context.agentState)
             observeResults.forEach { it.setContext(context) }
 
             return observeResults to actionDescription
-        } catch (e: Exception) {
-            domService.removeHighlights()
-            throw e
+        } finally {
+            if (drawOverlay) {
+                domService.removeHighlights()
+            }
         }
     }
 

@@ -7,8 +7,7 @@ class Browser4Agent {
 
     suspend fun run() {
         val problems = """
-
-            go to amazon.com, search for pens to draw on whiteboards, compare the first 4 ones, write the result to a markdown file.
+            go to amazon.com, search for pens to draw on whiteboards, compare the first 4 ones (read detail), write the result to a markdown file.
 
 go to https://news.ycombinator.com/news , read top 3 articles and give me a summary
 go to https://news.ycombinator.com/item?id=19553941 , extract content and give me a summary

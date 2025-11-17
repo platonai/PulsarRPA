@@ -530,7 +530,12 @@ data class MicroDOMTreeNode(
     fun slimHTML(): String? = MicroDOMTreeNodeHelper.slimHTML(this)
 
     fun toInteractiveDOMTreeNodeList(currentViewportIndex: Int, maxViewportIndex: Int): InteractiveDOMTreeNodeList =
-        MicroDOMTreeNodeHelper(this, seenChunks, currentViewportIndex, maxViewportIndex).toInteractiveDOMTreeNodeList()
+        MicroDOMTreeNodeHelper(this, seenChunks, currentViewportIndex, maxViewportIndex)
+            .toInteractiveDOMTreeNodeList()
+
+    fun toInteractiveDOMTreeNodeList(): InteractiveDOMTreeNodeList =
+        MicroDOMTreeNodeHelper(this, seenChunks, 0, 10000)
+            .toInteractiveDOMTreeNodeList()
 
     fun toNanoTree(): NanoDOMTree = toNanoTreeInRange(0.0, 1000000.0)
 
@@ -716,6 +721,17 @@ data class BrowserUseState(
     val browserState: BrowserState,
     val domState: DOMState
 ) {
+    fun getAllInteractiveElements(): InteractiveDOMTreeNodeList {
+        // The 1-based viewport to see.
+        val scrollState = browserState.scrollState
+
+        // The 1-based viewport to see.
+        val processingViewport = scrollState.processingViewport
+        val viewportsTotal = scrollState.viewportsTotal
+
+        return domState.microTree.toInteractiveDOMTreeNodeList()
+    }
+
     fun getInteractiveElements(): InteractiveDOMTreeNodeList {
         // The 1-based viewport to see.
         val scrollState = browserState.scrollState
