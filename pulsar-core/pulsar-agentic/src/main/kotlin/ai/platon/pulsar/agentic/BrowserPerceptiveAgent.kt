@@ -455,6 +455,7 @@ open class BrowserPerceptiveAgent constructor(
         val startTime = Instant.now()
         try {
             val action = initActionOptions.copy(resolve = true)
+
             while (!isClosed && context.step < config.maxSteps) {
                 try {
                     val stepResult = step(action, context, consecutiveNoOps)
@@ -490,126 +491,19 @@ open class BrowserPerceptiveAgent constructor(
         var currentContext = context
 
         for (attempt in 0..config.maxRetries) {
-            val attemptNo = attempt + 1
-
-            stateManager.addTrace(
-                currentContext.agentState,
-                event = "resolveAttempt",
-                items = mapOf("attemptNo" to attemptNo),
-                message = "🔁 resolve ATTEMPT"
-            )
-
             try {
                 val result = doResolveProblem(action, currentContext, attempt)
                 currentContext = result.context
 
-                stateManager.addTrace(
-                    currentContext.agentState,
-                    event = "resolveAttemptOk",
-                    items = mapOf("attemptNo" to attemptNo),
-                    message = "✅ resolve ATTEMPT OK"
-                )
-
                 return result
-            } catch (e: PerceptiveAgentError.TransientError) {
-                lastError = e
-                logger.error("🔄 resolve.transient attempt={} sid={} msg={}", attempt + 1, sid, e.message, e)
-
-                if (attempt < config.maxRetries) {
-                    val backoffMs = calculateRetryDelay(attempt)
-                    stateManager.addTrace(
-                        currentContext.agentState,
-                        mapOf(
-                            "cause" to "Transient",
-                            "attemptNo" to attemptNo,
-                            "delayMs" to backoffMs,
-                            "msg" to (e.message ?: "")
-                        ),
-                        event = "resolveRetry",
-                        message = "🔁 resolve RETRY"
-                    )
-
-                    // Clean up partial state before retry
-                    try {
-                        cleanupPartialState(currentContext)
-                        // Rebuild context for next attempt to avoid corrupted state
-                        currentContext = stateManager.buildBaseExecutionContext(action, "resolve-recovery")
-                    } catch (cleanupError: Exception) {
-                        logger.warn("⚠️ Failed to cleanup state before retry: ${cleanupError.message}")
-                    }
-
-                    delay(backoffMs)
-                }
-            } catch (e: PerceptiveAgentError.TimeoutError) {
-                lastError = e
-                logger.error("⏳ resolve.timeout attempt={} sid={} msg={}", attempt + 1, sid, e.message, e)
-
-                if (attempt < config.maxRetries) {
-                    val baseBackoffMs = config.baseRetryDelayMs
-                    stateManager.addTrace(
-                        currentContext.agentState,
-                        mapOf(
-                            "cause" to "Timeout",
-                            "attemptNo" to attemptNo,
-                            "delayMs" to baseBackoffMs,
-                            "msg" to (e.message ?: "")
-                        ),
-                        event = "resolveRetry",
-                        message = "🔁 resolve RETRY"
-                    )
-
-                    // Clean up partial state before retry
-                    try {
-                        cleanupPartialState(currentContext)
-                        currentContext = stateManager.buildBaseExecutionContext(action, "resolve-init-recovery")
-                    } catch (cleanupError: Exception) {
-                        logger.warn("⚠️ Failed to cleanup state before retry: ${cleanupError.message}")
-                    }
-
-                    delay(baseBackoffMs)
-                }
             } catch (e: Exception) {
                 lastError = e
                 logger.error("💥 resolve.unexpected attempt={} sid={} msg={}", attempt + 1, sid, e.message, e)
 
-                if (shouldRetryError(e) && attempt < config.maxRetries) {
-                    val backoffMs = calculateRetryDelay(attempt)
-                    stateManager.addTrace(
-                        currentContext.agentState,
-                        mapOf(
-                            "cause" to "Unexpected",
-                            "attemptNo" to attemptNo,
-                            "delayMs" to backoffMs,
-                            "msg" to (e.message ?: "")
-                        ),
-                        event = "resolveRetry",
-                        message = "🔁 resolve RETRY"
-                    )
-
-                    // Clean up partial state before retry
-                    try {
-                        cleanupPartialState(currentContext)
-                        currentContext = stateManager.buildBaseExecutionContext(action, "resolve-init-recovery")
-                    } catch (cleanupError: Exception) {
-                        logger.warn("⚠️ Failed to cleanup state before retry: ${cleanupError.message}")
-                    }
-
-                    delay(backoffMs)
-                } else {
-                    // Non-retryable error, exit loop
-                    break
-                }
+                cleanupPartialState(currentContext)
+                currentContext = stateManager.buildBaseExecutionContext(action, "resolve-init-recovery")
             }
         }
-
-        stateManager.addTrace(
-            currentContext.agentState,
-            mapOf(
-                "attemptsTotal" to (config.maxRetries + 1), "msg" to lastError?.message
-            ),
-            event = "resolveFail",
-            message = "❌ resolve FAIL"
-        )
 
         val actResult = ActResult(
             success = false,
@@ -639,11 +533,7 @@ open class BrowserPerceptiveAgent constructor(
         val shouldStop: Boolean
     )
 
-    protected open suspend fun step(
-        action: ActionOptions,
-        ctxIn: ExecutionContext,
-        noOpsIn: Int
-    ): StepProcessingResult {
+    protected open suspend fun step(action: ActionOptions, ctxIn: ExecutionContext, noOpsIn: Int): StepProcessingResult {
         var consecutiveNoOps = noOpsIn
         val step = ctxIn.step
 
@@ -660,15 +550,6 @@ open class BrowserPerceptiveAgent constructor(
             return StepProcessingResult(context, consecutiveNoOps, true)
         }
 
-        if (actionDescription.toolCall == null) {
-            consecutiveNoOps++
-            val stop = handleConsecutiveNoOps(consecutiveNoOps, context)
-            updatePerformanceMetrics(step, context.timestamp, false)
-            if (stop) return StepProcessingResult(context, consecutiveNoOps, true)
-            delay(calculateAdaptiveDelay())
-            return StepProcessingResult(context, consecutiveNoOps, false)
-        }
-
         consecutiveNoOps = 0
         val detailedActResult = executeToolCall(actionDescription, context)
 
@@ -676,8 +557,11 @@ open class BrowserPerceptiveAgent constructor(
             stateManager.updateAgentState(context, detailedActResult)
             updateTodo(context, detailedActResult.actionDescription)
             updatePerformanceMetrics(step, context.timestamp, true)
-            val preview = detailedActResult.toolCallResult?.evaluate?.preview
-            logger.info("🏁 step.done sid={} step={} tcResult={}", context.sid, step, preview)
+
+            val tcResult = detailedActResult.toolCallResult
+            val method = detailedActResult.actionDescription.toolCall?.method
+            val preview = tcResult?.evaluate?.preview
+            logger.info("🏁 step.done sid={} step={} method={} result={}", context.sid, context.step, method, preview)
         } else {
             consecutiveNoOps++
             val stop = handleConsecutiveNoOps(consecutiveNoOps, context)

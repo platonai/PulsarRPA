@@ -31,8 +31,6 @@ class ObserveActBrowserAgent constructor(
         }
 
         if (actResult.success) {
-            // Update agent state earlier when the tool executed
-            // stateManager.updateAgentState(context, actResult.detail!!)
             updateTodo(context, actResult)
             updatePerformanceMetrics(context.step, context.timestamp, true)
 

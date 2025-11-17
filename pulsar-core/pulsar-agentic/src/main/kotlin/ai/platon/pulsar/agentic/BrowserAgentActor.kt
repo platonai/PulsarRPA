@@ -2,26 +2,19 @@ package ai.platon.pulsar.agentic
 
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.agent.InferenceEngine
-import ai.platon.pulsar.agentic.ai.agent.detail.AgentStateManager
-import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
-import ai.platon.pulsar.agentic.ai.agent.detail.PageStateTracker
-import ai.platon.pulsar.agentic.ai.agent.detail.getContext
-import ai.platon.pulsar.agentic.ai.agent.detail.setContext
+import ai.platon.pulsar.agentic.ai.agent.detail.*
 import ai.platon.pulsar.agentic.ai.tta.ContextToAction
 import ai.platon.pulsar.agentic.tools.AgentToolManager
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.DateTimes
-import ai.platon.pulsar.common.NotSupportedException
-import ai.platon.pulsar.common.getLogger
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
-import org.slf4j.helpers.MessageFormatter
 import java.nio.file.Files
 import java.nio.file.Path
+import java.text.MessageFormat
 import java.time.Instant
 import java.util.*
 
@@ -104,42 +97,42 @@ open class BrowserAgentActor(
         val context = observe.getContext()
         require(observe.agentState == context?.agentState) { "Required: observe.agentState == context?.agentState" }
 
-        val observeElement = observe.observeElement
+        val element = observe.observeElement
             ?: return ActResult.failed("No observation to act", instruction)
         val actionDescription =
             observe.actionDescription ?: return ActResult.failed("No action description to act", instruction)
-        val toolCall = observeElement.toolCall ?: return ActResult.failed("No tool call to act", instruction)
+        val step = context.step
+        val toolCall = element.toolCall ?: return ActResult.failed("No tool call to act", instruction)
         val method = toolCall.method
 
+        logger.info("🛠️ tool.exec sid={} step={} tool={}", context.sid, context.step, toolCall.pseudoExpression)
+
         return try {
-            val detailedActResult = executeToolCall(actionDescription, context)
+            val result = toolExecutor.execute(actionDescription, "resolve, #$step")
 
-            val toolCallResult = detailedActResult.toolCallResult
+            val state = if (result.success) "✅ success" else """☑️ executed"""
+            val description = MessageFormat.format("✅ tool.done | {0}, {1} | {2}/{3} | {4}",
+                method, state, element.locator, element.cssSelector, element.pseudoExpression)
+            logger.info(description)
 
-            logger.info(
-                "✅ Action executed | {} | {}/{} | {}",
-                method, observe.locator, observeElement.cssSelector, observeElement.pseudoExpression
-            )
+            // Update agent state after tool call
+            stateManager.updateAgentState(context, element, toolCall, result, description = description)
 
-            val description = MessageFormatter.arrayFormat(
-                "✅ Action executed | {} | {}/{} | {}",
-                arrayOf(method, observe.locator, observeElement.cssSelector, observeElement.pseudoExpression)
-            ).message
+            stateManager.addTrace(context.agentState,
+                items = mapOf("tool" to method), event = "toolExecOk", message = description)
 
-            stateManager.updateAgentState(context, observeElement, toolCall, toolCallResult, description = description)
-
-            // ActResult(success = true, action = toolCall.method, message = msg.message, result = toolCallResult, actionDescription = actionDescription)
-            detailedActResult.toActResult()
+            DetailedActResult(actionDescription, result, success = result.success, description).toActResult()
         } catch (e: Exception) {
             logger.error("❌ observe.act execution failed sid={} msg={}", uuid.toString().take(8), e.message, e)
 
-            val description = MessageFormatter.arrayFormat(
-                "❌ observe.act execution failed | {} | {}/{}",
-                arrayOf(method, observe.locator, observeElement.cssSelector)
-            ).message
+            val description = MessageFormat.format(
+                "❌ observe.act execution failed | {0} | {1}/{2}",
+                method, observe.locator, element.cssSelector
+            )
 
             stateManager.updateAgentState(
-                context, observeElement, toolCall, description = description, exception = e)
+                context, element, toolCall, description = description, exception = e
+            )
 
             ActResult.failed(description, toolCall.method)
         }
@@ -208,12 +201,9 @@ open class BrowserAgentActor(
         } else ctx
 
         context.agentState.event = "observe"
-        val actionDescription = doObserveActObserve(options, context, options.resolve)
+        val observeResults = doObserveActObserve(options, context, options.resolve)
 
-        val observeResults = actionDescription.toObserveResults(context.agentState)
-        observeResults.forEach { it.setContext(context) }
-
-        return observeResults
+        return observeResults.first
     }
 
     private suspend fun doObserveAct(options: ActionOptions): ActResult {
@@ -224,14 +214,14 @@ open class BrowserAgentActor(
 
         val context = requireNotNull(options.getContext()) { "Context is required to doObserveAct" }
 
-        val actionDescription = doObserveActObserve(options, context, options.resolve)
+        val (observeResults, actionDescription) = doObserveActObserve(options, context, options.resolve)
 
         if (actionDescription.isComplete) {
             return ActResult.complete(actionDescription)
         }
 
-        val observeResults = actionDescription.toObserveResults(context.agentState)
-        observeResults.forEach { it.setContext(context) }
+//        val observeResults = actionDescription.toObserveResults(context.agentState)
+//        observeResults.forEach { it.setContext(context) }
 
         if (observeResults.isEmpty()) {
             val msg = "⚠️ doObserveAct: No observe result"
@@ -242,21 +232,22 @@ open class BrowserAgentActor(
         val resultsToTry = observeResults.take(config.maxResultsToTry)
         var lastError: String? = null
         val actResults = mutableListOf<ActResult>()
-        // The current logic is to take the first success action
+        // Take the first success action
         for ((index, chosen) in resultsToTry.withIndex()) {
             require(context.step == context.agentState.step) { "Required: context.step == context.agentState.step" }
             require(context.prevAgentState == context.agentState.prevState) { "Required: context.step == context.agentState.step" }
 
-            val method = chosen.method?.trim().orEmpty()
-            if (method.isBlank()) {
+            val method = chosen.method?.trim()
+            if (method == null) {
                 lastError = "LLM returned no method for candidate ${index + 1}"
                 continue
             }
 
             val actResult = try {
-                val res = act(chosen)
-                actResults.add(res)
-                res
+                val result = act(chosen)
+                actResults.add(result)
+
+                result
             } catch (e: Exception) {
                 lastError = "Execution failed for candidate ${index + 1}: ${e.message}"
                 logger.warn("⚠️ Failed to execute candidate {}: {}", index + 1, e.message)
@@ -279,55 +270,21 @@ open class BrowserAgentActor(
         }
 
         val msg = "❌ All ${resultsToTry.size} candidates failed. Last error: $lastError"
-        stateManager.addTrace(context.agentState, mapOf("candidates" to resultsToTry.size), event = "actAllFailed", message = msg)
+        stateManager.addTrace(
+            context.agentState,
+            mapOf("candidates" to resultsToTry.size),
+            event = "actAllFailed",
+            message = msg
+        )
 
         return ActResult.failed(msg, options.action)
     }
 
-    private suspend fun executeToolCall(
-        actionDescription: ActionDescription,
-        context: ExecutionContext
-    ): DetailedActResult {
-        context.agentState.event = "toolExec"
-
-        val step = context.step
-        val toolCall = actionDescription.toolCall
-            ?: return DetailedActResult.failed(actionDescription, IllegalArgumentException("No tool call"))
-
-        return try {
-            logger.info("🛠️ tool.exec sid={} step={} tool={}", context.sid, context.step, toolCall.pseudoExpression)
-
-            val toolCallResult = toolExecutor.execute(actionDescription, "resolve, #$step")
-            val success = toolCallResult.success
-
-            val summary = """🔧 Tool used: ${toolCall.method} | """ + if (success) "✅ success" else """☑️ executed"""
-
-            context.agentState.toolCallResult = toolCallResult
-            stateManager.addTrace(context.agentState,
-                mapOf("tool" to toolCall.method), event = "toolExecOk", message = summary)
-
-            DetailedActResult(actionDescription, toolCallResult, success = success, summary)
-        } catch (e: Exception) {
-            logger.error("🛠️❌ tool.exec.fail sid={} step={} msg={}", context.sid, context.step, e.message, e)
-            stateManager.addTrace(
-                context.agentState,
-                mapOf("tool" to toolCall.method),
-                event = "toolExecUnexpectedFail",
-                message = "💥 unexpected failure"
-            )
-            val message = "💥 unexpected failure | tool.exec.fail sid=${context.sid} step=${context.step}"
-            DetailedActResult.failed(actionDescription, IllegalStateException(message, e))
-        }
-    }
-
     private suspend fun doObserveActObserve(
-        options: Any,
-        context: ExecutionContext,
-        resolve: Boolean,
-    ): ActionDescription {
+        options: Any, context: ExecutionContext, resolve: Boolean
+    ): Pair<List<ObserveResult>, ActionDescription> {
         val observeOptions = options as? ObserveOptions
-//        val drawOverlay = observeOptions?.drawOverlay ?: false
-        val drawOverlay = true
+        val drawOverlay = alwaysTrue() || (observeOptions?.drawOverlay ?: false)
 
         val params = when (options) {
             is ObserveOptions -> context.createObserveParams(
@@ -358,7 +315,10 @@ open class BrowserAgentActor(
             }
         }
 
-        return actionDescription
+        val observeResults = actionDescription.toObserveResults(context.agentState)
+        observeResults.forEach { it.setContext(context) }
+
+        return observeResults to actionDescription
     }
 
     protected suspend fun captureScreenshotWithRetry(context: ExecutionContext): String? {
@@ -368,8 +328,10 @@ open class BrowserAgentActor(
             try {
                 val screenshot = activeDriver.captureScreenshot()
                 if (screenshot != null) {
-                    logger.info("📸✅ screenshot.ok sid={} step={} size={} attempt={} ",
-                        context.sid, context.step, screenshot.length, i)
+                    logger.info(
+                        "📸✅ screenshot.ok sid={} step={} size={} attempt={} ",
+                        context.sid, context.step, screenshot.length, i
+                    )
                     return screenshot
                 } else {
                     logger.info("📸⚪ screenshot.null sid={} step={} attempt={}", context.sid, context.step, i)

@@ -72,6 +72,8 @@ data class ActResult constructor(
     @get:JsonIgnore
     val tcEvalValue get() = result?.evaluate?.value
 
+    val isComplete: Boolean get() = detail?.actionDescription?.isComplete == true
+
     override fun toString(): String {
         val eval = Strings.compactInline(tcEvalValue?.toString(), 50)
         return "[$action] expr: $expression eval: $eval message: $message"
