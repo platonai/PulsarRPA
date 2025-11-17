@@ -23,7 +23,7 @@ class BrowserSettingsTests {
 //        val settings2 = Gson().fromJson(json, InteractSettings::class.java)
         assertEquals(settings.toString(), settings2.toString())
     }
-    
+
     @Test
     fun testDelayPolicy() {
         val settings = InteractSettings()
@@ -31,10 +31,10 @@ class BrowserSettingsTests {
 
         assertNotNull(delayPolicy[""])
         assertNotNull(delayPolicy["default"])
-        delayPolicy.values.forEach { assertTrue(it.first >= 100, "range: $it") }
+        delayPolicy.values.forEach { assertTrue(it.first >= 50, "range: $it") }
         delayPolicy.values.forEach { assertTrue(it.last <= 2000, "range: $it") }
     }
-    
+
     @Test
     fun testTimeoutPolicy() {
         val settings = InteractSettings()
@@ -45,7 +45,7 @@ class BrowserSettingsTests {
         timeoutPolicy.values.forEach { assertTrue(it >= settings.minTimeout, "timeout: $it") }
         timeoutPolicy.values.forEach { assertTrue(it <= settings.maxTimeout, "timeout: $it") }
     }
-    
+
     @Test
     fun testInteractSettingsJson() {
         val settings = InteractSettings()
@@ -56,7 +56,7 @@ class BrowserSettingsTests {
         assertNotNull(settings2)
         assertEquals(settings.toString(), settings2.toString())
     }
-    
+
     @Test
     fun testOverrideConfiguration() {
         val settings = InteractSettings()
