@@ -1,14 +1,13 @@
 package ai.platon.pulsar.agentic.ai.agent.detail
 
 import ai.platon.pulsar.agentic.BrowserAgentActor
-import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.MessageWriter
+import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import ai.platon.pulsar.skeleton.ai.*
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import kotlinx.coroutines.withTimeout
 import java.lang.ref.WeakReference
 import java.nio.file.Path
@@ -17,14 +16,13 @@ import java.util.*
 
 class AgentStateManager(
     val agent: BrowserAgentActor,
-    val domService: DomService,
     val pageStateTracker: PageStateTracker,
 ) {
     private val _stateHistory = mutableListOf<AgentState>()
     private val _processTrace = mutableListOf<ProcessTrace>()
     private val config get() = agent.config
 
-    val driver: WebDriver get() = agent.session.getOrCreateBoundDriver()
+    val driver get() = agent.activeDriver as PulsarWebDriver
     val stateHistory: List<AgentState> get() = _stateHistory
     val processTrace: List<ProcessTrace> get() = _processTrace
 
@@ -134,7 +132,7 @@ class AgentStateManager(
         )
         // Add timeout to prevent hanging on DOM snapshot operations
         return withTimeout(30_000) {
-            val baseState = domService.getBrowserUseState(snapshotOptions = snapshotOptions)
+            val baseState = driver.domService.getBrowserUseState(snapshotOptions = snapshotOptions)
             injectTabsInfo(baseState)
         }
     }
