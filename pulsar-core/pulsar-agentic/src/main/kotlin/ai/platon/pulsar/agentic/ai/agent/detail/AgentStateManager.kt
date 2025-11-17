@@ -83,7 +83,7 @@ class AgentStateManager(
             return ExecutionContext(
                 instruction = baseContext.instruction,
                 step = step,
-                actionType = event,
+                event = event,
                 targetUrl = prevAgentState?.browserUseState?.browserState?.url,
                 sessionId = baseContext.sessionId,
                 timestamp = Instant.now(),
@@ -97,7 +97,7 @@ class AgentStateManager(
         return ExecutionContext(
             instruction = instruction,
             step = step,
-            actionType = "init",
+            event = "init",
             sessionId = sessionId,
             agentState = currentAgentState,
             config = config,

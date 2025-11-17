@@ -46,7 +46,7 @@ data class ExecutionContext constructor(
     var instruction: String = "",
     var screenshotB64: String? = null,
 
-    var actionType: String,
+    var event: String,
     var targetUrl: String? = null,
 
     val agentState: AgentState,
