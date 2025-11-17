@@ -56,4 +56,6 @@ interface DomService {
 
     suspend fun removeHighlights(elements: InteractiveDOMTreeNodeList)
 
+    suspend fun removeHighlights(force: Boolean = false)
+
 }

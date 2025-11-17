@@ -895,9 +895,7 @@ open class BrowserPerceptiveAgent constructor(
     }
 
     private suspend fun buildFinalActResult(
-        instruction: String,
-        context: ExecutionContext,
-        startTime: Instant
+        instruction: String, context: ExecutionContext, startTime: Instant
     ): ActResult {
         context.agentState.event = "summary"
 
@@ -905,22 +903,14 @@ open class BrowserPerceptiveAgent constructor(
 
         if (closed.get()) {
             logger.info("""🛑 [USER interrupted] sid={} steps={} dur={}""", context.sid, context.step, executionTime)
-            return ActResult(
-                success = false,
-                message = "USER interrupted",
-                action = instruction
-            )
+            return ActResult(success = false, message = "USER interrupted", action = instruction)
         }
 
         logger.info("✅ agent.done sid={} steps={} dur={}", context.sid, context.step, executionTime)
         val summary = generateFinalSummary(instruction, context)
         val ok = summary.state != ResponseState.OTHER
-        return ActResult(
-            success = ok,
-            message = summary.content,
-            action = instruction,
-            result = context.agentState.toolCallResult
-        )
+        return ActResult(success = ok,
+            message = summary.content, action = instruction, result = context.agentState.toolCallResult)
     }
 
     private fun handleResolutionFailure(

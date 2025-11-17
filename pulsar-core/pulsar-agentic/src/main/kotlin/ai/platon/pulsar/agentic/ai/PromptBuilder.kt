@@ -764,7 +764,15 @@ $userInstructions
             else -> history.take(headingSize) + history.takeLast(tailingSize)
         }
 
-        val historyJson = result.joinToString("\n") { pulsarObjectMapper().writeValueAsString(it) }
+        fun compactAgentState(agentState: AgentState): AgentState {
+            return agentState.copy(
+                instruction = Strings.compactInline(agentState.instruction, 20)
+            )
+        }
+
+        val historyJson = result
+            .map { compactAgentState(it) }
+            .joinToString("\n") { pulsarObjectMapper().writeValueAsString(it) }
 
         val msg = """
 ## 智能体历史

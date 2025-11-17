@@ -316,7 +316,7 @@ data class AgentState constructor(
     // AI: the next goal to archive
     var nextGoal: String? = null,
     // if is complete method
-    var isComplete: Boolean = false,
+    var isComplete: Boolean? = null,
     // timestamp
     var timestamp: Instant = Instant.now(),
     // The last exception
@@ -351,7 +351,7 @@ data class AgentState constructor(
         val state = if (success) """✨OK""" else "💔FAIL"
         val event0 = event ?: method
 
-        if (isComplete) {
+        if (isComplete == true) {
             return """$state, event=$event0, isComplete=true 🎉"""
         } else {
             val pseudoExpression = actionDescription?.pseudoExpression

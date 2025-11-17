@@ -3,6 +3,7 @@ package ai.platon.pulsar.browser.driver.chrome.dom
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.model.InteractiveDOMTreeNodeList
 import ai.platon.pulsar.common.getLogger
+import kotlinx.coroutines.delay
 
 class HighlightManager(
     private val devTools: RemoteDevTools,
@@ -16,6 +17,24 @@ class HighlightManager(
 
     suspend fun removeHighlights(elements: InteractiveDOMTreeNodeList) {
         removeHighlights0(elements)
+    }
+
+    suspend fun removeHighlights(force: Boolean = false) {
+        if (!force) {
+            removeHighlights0()
+            return
+        }
+
+        var attempts = 5
+        while (attempts-- > 0) {
+            val eval = runCatching {
+                devTools.runtime.evaluate("Boolean(document.querySelector('[data-b4-highlight]'))")
+            }.getOrNull()
+            val hasHighlights = eval?.result?.value == true
+            if (!hasHighlights) break
+            removeHighlights0()
+            if (attempts > 0) delay(200)
+        }
     }
 
     private suspend fun addHighlights0(elements: InteractiveDOMTreeNodeList) {
@@ -41,13 +60,15 @@ class HighlightManager(
                         val parts = loc.split(',')
                         if (parts.size >= 2) parts[1].trim().toIntOrNull() else null
                     } else null
-                } catch (_: Exception) { null }
+                } catch (_: Exception) {
+                    null
+                }
 
                 val x = rect?.x ?: 0.0
                 val y = rect?.y ?: 0.0
 
                 if (!first) payload.append(',') else first = false
-                payload.append("{" )
+                payload.append("{")
                 payload.append("\"x\":").append(x)
                 payload.append(",\"y\":").append(y)
                 payload.append(",\"width\":").append(w)
@@ -143,6 +164,10 @@ class HighlightManager(
     }
 
     private suspend fun removeHighlights0(elements: InteractiveDOMTreeNodeList) {
+        removeHighlights0()
+    }
+
+    private suspend fun removeHighlights0() {
         try {
             val script = """
 (function() {

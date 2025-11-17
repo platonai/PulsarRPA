@@ -9,6 +9,7 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
+import jdk.graal.compiler.truffle.nodes.frame.ForceMaterializeNode.force
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
@@ -253,6 +254,8 @@ open class BrowserAgentActor(
                 lastError = "Execution failed for candidate ${index + 1}: ${e.message}"
                 logger.warn("⚠️ Failed to execute candidate {}: {}", index + 1, e.message)
                 continue
+            } finally {
+
             }
 
             if (!actResult.success) {
@@ -299,27 +302,30 @@ open class BrowserAgentActor(
         }
 
         val interactiveElements = context.agentState.browserUseState.getInteractiveElements()
-        val actionDescription = try {
+        try {
             if (drawOverlay) {
                 domService.addHighlights(interactiveElements)
             }
 
             context.screenshotB64 = captureScreenshotWithRetry(context)
 
-            withTimeout(config.llmInferenceTimeoutMs) {
+            val actionDescription = withTimeout(config.llmInferenceTimeoutMs) {
                 inference.observe(params, context)
             }
-        } finally {
+
             if (drawOverlay) {
-                runCatching { domService.removeHighlights(interactiveElements) }
-                    .onFailure { e -> logger.warn("⚠️ Failed to remove highlights: ${e.message}") }
+                val force = actionDescription.toolCall?.method == "switchTab"
+                domService.removeHighlights(force)
             }
+
+            val observeResults = actionDescription.toObserveResults(context.agentState)
+            observeResults.forEach { it.setContext(context) }
+
+            return observeResults to actionDescription
+        } catch (e: Exception) {
+            domService.removeHighlights()
+            throw e
         }
-
-        val observeResults = actionDescription.toObserveResults(context.agentState)
-        observeResults.forEach { it.setContext(context) }
-
-        return observeResults to actionDescription
     }
 
     protected suspend fun captureScreenshotWithRetry(context: ExecutionContext): String? {

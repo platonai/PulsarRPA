@@ -879,6 +879,11 @@ class ChromeCdpDomService(
         highlightManager.addHighlights(elements)
     }
 
+    override suspend fun removeHighlights(force: Boolean) {
+        val highlightManager = HighlightManager(devTools)
+        highlightManager.removeHighlights(force)
+    }
+
     override suspend fun removeHighlights(elements: InteractiveDOMTreeNodeList) {
         val highlightManager = HighlightManager(devTools)
         highlightManager.removeHighlights(elements)
