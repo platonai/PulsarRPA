@@ -9,7 +9,6 @@ import ai.platon.pulsar.common.*
 import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
-import jdk.graal.compiler.truffle.nodes.frame.ForceMaterializeNode.force
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withTimeout
@@ -113,15 +112,19 @@ open class BrowserAgentActor(
             val result = toolExecutor.execute(actionDescription, "resolve, #$step")
 
             val state = if (result.success) "✅ success" else """☑️ executed"""
-            val description = MessageFormat.format("✅ tool.done | {0} {1} | {4} | {2}/{3}",
-                method, state, element.locator, element.cssSelector, element.pseudoExpression)
+            val description = MessageFormat.format(
+                "✅ tool.done | {0} {1} | {4} | {2}/{3}",
+                method, state, element.locator, element.cssSelector, element.pseudoExpression
+            )
             logger.info(description)
 
             // Update agent state after tool call
             stateManager.updateAgentState(context, element, toolCall, result, description = description)
 
-            stateManager.addTrace(context.agentState,
-                items = mapOf("tool" to method), event = "toolExecOk", message = description)
+            stateManager.addTrace(
+                context.agentState,
+                items = mapOf("tool" to method), event = "toolExecOk", message = description
+            )
 
             DetailedActResult(actionDescription, result, success = result.success, description).toActResult()
         } catch (e: Exception) {
