@@ -832,8 +832,7 @@ open class BrowserPerceptiveAgent constructor(
 
     protected suspend fun summarize(goal: String, ctxIn: ExecutionContext): ModelResponse {
         val step = ctxIn.step + 1
-        val context = stateManager.buildExecutionContext(goal, step, event = "summarize", baseContext = ctxIn)
-        context.agentState.event = "summary"
+        val context = stateManager.buildExecutionContext(goal, step, event = "summary", baseContext = ctxIn)
 
         return try {
             val (system, user) = promptBuilder.buildSummaryPrompt(goal, stateHistory)

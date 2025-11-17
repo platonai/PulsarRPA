@@ -1,6 +1,6 @@
 package ai.platon.pulsar.agentic.common
 
-import ai.platon.pulsar.common.AppPaths
+import ai.platon.pulsar.common.getLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.IOException
@@ -10,74 +10,66 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
-import kotlin.collections.iterator
 import kotlin.io.path.createDirectories
-import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 
-private const val INVALID_FILENAME_ERROR_MESSAGE = "Error: Invalid filename format. Must be alphanumeric with supported extension."
+private const val INVALID_FILENAME_ERROR_MESSAGE =
+    "Error: Invalid filename format. Must be alphanumeric with supported extension."
 private const val DEFAULT_FILE_SYSTEM_PATH = "fs"
 
 /** Custom exception for file system operations that should be shown to LLM */
-class FileSystemError(message: String, cause: Throwable? = null) : RuntimeException(message, cause)
+class FileSystemError(message: String, cause: Throwable? = null) : IOException(message, cause)
 
 /** Base class for all file types */
-sealed class BaseFile(open val name: String, open var content: String = "") {
+sealed class BaseFile(
+    open val name: String,
+    open var content: String = ""
+) {
     /** File extension (e.g. "txt", "md") */
     abstract val extension: String
 
     val fullName: String get() = "$name.$extension"
 
-    fun writeFileContent(newContent: String) { updateContent(newContent) }
-    fun appendFileContent(append: String) { updateContent(content + append) }
-    protected fun updateContent(newContent: String) { content = newContent }
+    fun writeFileContent(newContent: String) {
+        updateContent(newContent)
+    }
+
+    fun appendFileContent(append: String) {
+        updateContent(content + append)
+    }
+
+    protected fun updateContent(newContent: String) {
+        content = newContent
+    }
 
     // Align method names with java.nio.file.Files for a more idiomatic Kotlin/Java feel
-    open fun writeString(path: Path) {
-        val filePath = path.resolve(fullName)
+    @Throws(IOException::class)
+    open fun writeString(baseDir: Path): Path {
+        val filePath = baseDir.resolve(fullName)
         try {
             Files.createDirectories(filePath.parent)
             Files.writeString(filePath, content, StandardCharsets.UTF_8)
+
+            return filePath
         } catch (e: Exception) {
             throw FileSystemError("Error: Could not write to file '$fullName'. ${e.message}", e)
         }
     }
 
-    open suspend fun writeStringAsync(path: Path) = withContext(Dispatchers.IO) { writeString(path) }
+    open suspend fun writeStringAsync(dataDir: Path) = withContext(Dispatchers.IO) { writeString(dataDir) }
 
-    @Deprecated("Use writeStringAsync(path)", ReplaceWith("writeStringAsync(path)"))
-    open suspend fun syncToDisk(path: Path) = withContext(Dispatchers.IO) { writeString(path) }
-
-    @Deprecated("Use writeString(path)", ReplaceWith("writeString(path)"))
-    open fun syncToDiskSync(path: Path) { writeString(path) }
-
-    suspend fun writeString(newContent: String, path: Path) {
+    suspend fun writeString(newContent: String, dataDir: Path): Path {
         writeFileContent(newContent)
-        writeStringAsync(path)
+        return writeStringAsync(dataDir)
     }
 
-    suspend fun appendString(append: String, path: Path) {
+    suspend fun appendString(append: String, dataDir: Path): Path {
         appendFileContent(append)
-        writeStringAsync(path)
+        return writeStringAsync(dataDir)
     }
 
-    @Deprecated("Use writeString(newContent, path)", ReplaceWith("writeString(newContent, path)"))
-    open suspend fun write(newContent: String, path: Path) {
-        writeFileContent(newContent)
-        writeStringAsync(path)
-    }
-
-    @Deprecated("Use appendString(append, path)", ReplaceWith("appendString(append, path)"))
-    open suspend fun append(append: String, path: Path) {
-        appendFileContent(append)
-        writeStringAsync(path)
-    }
-
-    open fun readString(): String = content
-
-    @Deprecated("Use readString()", ReplaceWith("readString()"))
-    open fun read(): String = readString()
+    open fun content(): String = content
 
     val size: Int get() = content.length
     val lineCount: Int get() = content.split("\n").size
@@ -86,15 +78,19 @@ sealed class BaseFile(open val name: String, open var content: String = "") {
 class MarkdownFile(override val name: String, override var content: String = "") : BaseFile(name, content) {
     override val extension: String get() = "md"
 }
+
 class TxtFile(override val name: String, override var content: String = "") : BaseFile(name, content) {
     override val extension: String get() = "txt"
 }
+
 class JsonFile(override val name: String, override var content: String = "") : BaseFile(name, content) {
     override val extension: String get() = "json"
 }
+
 class CsvFile(override val name: String, override var content: String = "") : BaseFile(name, content) {
     override val extension: String get() = "csv"
 }
+
 class JsonlFile(override val name: String, override var content: String = "") : BaseFile(name, content) {
     override val extension: String get() = "jsonl"
 }
@@ -118,6 +114,8 @@ class AgentFileSystem constructor(
 
         val DEFAULT_FILES = listOf("todolist.md")
     }
+
+    private val logger = getLogger(this)
 
     private val dataDir: Path = baseDir.resolve(DEFAULT_FILE_SYSTEM_PATH)
 
@@ -160,7 +158,8 @@ class AgentFileSystem constructor(
     fun getAllowedExtensions(): List<String> = fileFactories.keys.toList()
 
     private fun createFile(extension: String, name: String, content: String = ""): BaseFile {
-        val factory = fileFactories[extension.lowercase()] ?: throw IllegalArgumentException("Error: Invalid file extension '$extension' for file '$name.$extension'.")
+        val factory = fileFactories[extension.lowercase()]
+            ?: throw IllegalArgumentException("Error: Invalid file extension '$extension' for file '$name.$extension'.")
         return factory(name, content)
     }
 
@@ -184,7 +183,7 @@ class AgentFileSystem constructor(
     fun displayFile(fullFilename: String): String? {
         if (!isValidFilename(fullFilename)) return null
         val file = getFile(fullFilename) ?: return null
-        return file.readString()
+        return file.content()
     }
 
     suspend fun readString(fullFilename: String, externalFile: Boolean = false): String {
@@ -201,6 +200,7 @@ class AgentFileSystem constructor(
                         }
                         "Read from file $fullFilename.\n<content>\n$content\n</content>"
                     }
+
                     else -> "Error: Cannot read file $fullFilename as $ext extension is not supported."
                 }
             } catch (e: IOException) {
@@ -212,8 +212,9 @@ class AgentFileSystem constructor(
 
         if (!isValidFilename(fullFilename)) return INVALID_FILENAME_ERROR_MESSAGE
         val file = getFile(fullFilename) ?: return "File '$fullFilename' not found."
+
         return try {
-            val content = file.readString()
+            val content = file.content()
             "Read from file $fullFilename.\n<content>\n$content\n</content>"
         } catch (e: FileSystemError) {
             e.message ?: "Error: Could not read file '$fullFilename'."
@@ -227,7 +228,10 @@ class AgentFileSystem constructor(
         return try {
             val (name, ext) = parseFilename(fullFilename)
             val file = files[fullFilename] ?: createFile(ext, name).also { files[fullFilename] = it }
-            file.writeString(content, dataDir)
+            val path = file.writeString(content, dataDir)
+
+            logger.info("Write to file | {}", path.toUri())
+
             "Data written to file $fullFilename successfully."
         } catch (e: FileSystemError) {
             e.message ?: "Error: Could not write to file '$fullFilename'."
@@ -254,7 +258,7 @@ class AgentFileSystem constructor(
         if (oldStr.isEmpty()) return "Error: Cannot replace empty string. Please provide a non-empty string to replace."
         val file = getFile(fullFilename) ?: return "File '$fullFilename' not found."
         return try {
-            val replaced = file.readString().replace(oldStr, newStr)
+            val replaced = file.content().replace(oldStr, newStr)
             file.writeString(replaced, dataDir)
             "Successfully replaced all occurrences of \"$oldStr\" with \"$newStr\" in file $fullFilename"
         } catch (e: FileSystemError) {
@@ -278,7 +282,7 @@ class AgentFileSystem constructor(
         val sb = StringBuilder()
         for (file in files.values) {
             if (file.fullName == "todolist.md") continue
-            val content = file.readString()
+            val content = file.content()
             if (content.isEmpty()) {
                 sb.append("<file>\n${file.fullName} - [empty file]\n</file>\n")
                 continue
@@ -328,7 +332,7 @@ class AgentFileSystem constructor(
         return sb.toString().trimEnd('\n')
     }
 
-    fun getTodoContents(): String = getFile("todolist.md")?.readString() ?: ""
+    fun getTodoContents(): String = getFile("todolist.md")?.content() ?: ""
 
     fun getState(): FileSystemState {
         val map = files.mapValues { (_, f) -> FileStateEntry(f::class.simpleName ?: "", f.name, f.content) }
