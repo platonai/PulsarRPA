@@ -150,7 +150,7 @@ open class TextToAction(
 
         if (modelError != null) {
             val jsonStart = content.indexOf("{")
-            val jsonEnd = content.indexOf("}")
+            val jsonEnd = content.lastIndexOf("}")
             content = content.substring(jsonStart, jsonEnd)
         }
 
