@@ -886,7 +886,7 @@ open class BrowserPerceptiveAgent constructor(
         logger.info("✅ task.complete sid={} step={} complete={}", sid.take(8), step, true)
         stateManager.addTrace(context.agentState, event = "complete", message = "#${step} complete")
 
-        logger.info("Agent files: \n{}", fs.describe())
+        logger.info("Agent files: \n{}", fs.listOSFiles().joinToString("\n") { it.toUri().toString() })
 
         if (config.enableTodoWrites) {
             runCatching { todo.onTaskCompletion(context.instruction) }

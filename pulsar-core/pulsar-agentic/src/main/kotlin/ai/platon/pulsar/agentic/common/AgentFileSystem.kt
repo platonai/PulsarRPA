@@ -180,6 +180,8 @@ class AgentFileSystem constructor(
 
     fun listFiles(): List<String> = files.values.map { it.fullName }
 
+    fun listOSFiles(): List<Path> = files.values.map { dataDir.resolve(it.fullName) }
+
     fun displayFile(fullFileName: String): String? {
         if (!isValidFilename(fullFileName)) return null
         val file = getFile(fullFileName) ?: return null
