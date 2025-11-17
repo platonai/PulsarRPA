@@ -110,6 +110,8 @@ open class BrowserAgentActor(
 
         return try {
             val result = toolExecutor.execute(actionDescription, "resolve, #$step")
+            // Sync browser state after tool call immediately
+            stateManager.syncBrowserUseState(context)
 
             val state = if (result.success) "✅ success" else """☑️ executed"""
             val description = MessageFormat.format(
@@ -118,8 +120,6 @@ open class BrowserAgentActor(
             )
             logger.info(description)
 
-            // Sync browser state after tool call
-            stateManager.syncBrowserUseState(context)
             // Update agent state after tool call
             stateManager.updateAgentState(context, element, toolCall, result, description = description)
 

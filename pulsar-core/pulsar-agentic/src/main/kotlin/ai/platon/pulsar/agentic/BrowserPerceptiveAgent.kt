@@ -636,6 +636,8 @@ open class BrowserPerceptiveAgent constructor(
             )
 
             val toolCallResult = toolExecutor.execute(actionDescription, "resolve, #$step")
+            // Sync browser state after tool call immediately
+            stateManager.syncBrowserUseState(context)
 
             circuitBreaker.recordSuccess(CircuitBreaker.FailureType.EXECUTION_FAILURE)
             consecutiveFailureCounter.set(0)
