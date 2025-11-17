@@ -149,9 +149,13 @@ open class TextToAction(
         }
 
         if (modelError != null) {
-            val jsonStart = content.indexOf("{")
-            val jsonEnd = content.lastIndexOf("}")
-            content = content.substring(jsonStart, jsonEnd)
+            val jsonStart = content.indexOf('{')
+            val jsonEnd = content.lastIndexOf('}')
+            if (jsonStart in 0..<jsonEnd) {
+                content = content.substring(jsonStart, jsonEnd + 1)
+            } else {
+                logger.warn("Unable to extract JSON from model response; keeping original content")
+            }
         }
 
         return if (modelError != null) {

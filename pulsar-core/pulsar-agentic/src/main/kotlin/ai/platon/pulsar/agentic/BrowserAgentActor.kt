@@ -35,6 +35,7 @@ open class BrowserAgentActor(
     protected val promptBuilder = PromptBuilder()
 
     protected val toolExecutor by lazy { AgentToolManager(_baseDir, this) }
+    protected val fs get() = toolExecutor.fs
 
     // Helper classes for better code organization
     protected val pageStateTracker = PageStateTracker(session, config)
@@ -111,7 +112,7 @@ open class BrowserAgentActor(
             val result = toolExecutor.execute(actionDescription, "resolve, #$step")
 
             val state = if (result.success) "✅ success" else """☑️ executed"""
-            val description = MessageFormat.format("✅ tool.done | {0}, {1} | {2}/{3} | {4}",
+            val description = MessageFormat.format("✅ tool.done | {0} {1} | {4} | {2}/{3}",
                 method, state, element.locator, element.cssSelector, element.pseudoExpression)
             logger.info(description)
 

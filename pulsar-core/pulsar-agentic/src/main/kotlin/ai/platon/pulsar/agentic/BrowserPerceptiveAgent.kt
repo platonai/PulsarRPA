@@ -883,12 +883,11 @@ open class BrowserPerceptiveAgent constructor(
         // require(context.agentState.isComplete) { "Required context.agentState.isComplete" }
         context.agentState.isComplete = true
 
-        logger.info("✅ task.complete sid={} step={} complete={}", sid.take(8), step, action.isComplete)
-        stateManager.addTrace(
-            context.agentState,
-            event = "complete",
-            message = "#${step} complete"
-        )
+        logger.info("✅ task.complete sid={} step={} complete={}", sid.take(8), step, true)
+        stateManager.addTrace(context.agentState, event = "complete", message = "#${step} complete")
+
+        logger.info("Agent files: \n{}", fs.describe())
+
         if (config.enableTodoWrites) {
             runCatching { todo.onTaskCompletion(context.instruction) }
                 .onFailure { e -> slogger.logError("📝❌ todo.complete.fail", e, sid) }

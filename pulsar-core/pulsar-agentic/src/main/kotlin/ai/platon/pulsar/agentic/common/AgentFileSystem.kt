@@ -15,7 +15,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
 
 private const val INVALID_FILENAME_ERROR_MESSAGE =
-    "Error: Invalid filename format. Must be alphanumeric with supported extension."
+    "Error: Invalid fileName format. Must be alphanumeric with supported extension."
 private const val DEFAULT_FILE_SYSTEM_PATH = "fs"
 
 /** Custom exception for file system operations that should be shown to LLM */
@@ -99,7 +99,7 @@ class JsonlFile(override val name: String, override var content: String = "") : 
 data class FileStateEntry(val type: String, val name: String, val content: String)
 
 data class FileSystemState(
-    val files: Map<String, FileStateEntry> = emptyMap(), // full filename -> file data
+    val files: Map<String, FileStateEntry> = emptyMap(), // full fileName -> file data
     val baseDir: String,
     val extractedContentCount: Int = 0
 )
@@ -165,117 +165,117 @@ class AgentFileSystem constructor(
 
     private fun isValidFilename(fileName: String): Boolean = allowedExtensionsPattern.matcher(fileName).matches()
 
-    private fun parseFilename(filename: String): Pair<String, String> {
-        val idx = filename.lastIndexOf('.')
-        require(idx > 0 && idx < filename.length - 1) { "Invalid filename: $filename" }
-        val name = filename.take(idx)
-        val ext = filename.substring(idx + 1).lowercase()
+    private fun parseFilename(fileName: String): Pair<String, String> {
+        val idx = fileName.lastIndexOf('.')
+        require(idx > 0 && idx < fileName.length - 1) { "Invalid fileName: $fileName" }
+        val name = fileName.take(idx)
+        val ext = fileName.substring(idx + 1).lowercase()
         return name to ext
     }
 
-    fun getFile(fullFilename: String): BaseFile? {
-        if (!isValidFilename(fullFilename)) return null
-        return files[fullFilename]
+    fun getFile(fullFileName: String): BaseFile? {
+        if (!isValidFilename(fullFileName)) return null
+        return files[fullFileName]
     }
 
     fun listFiles(): List<String> = files.values.map { it.fullName }
 
-    fun displayFile(fullFilename: String): String? {
-        if (!isValidFilename(fullFilename)) return null
-        val file = getFile(fullFilename) ?: return null
+    fun displayFile(fullFileName: String): String? {
+        if (!isValidFilename(fullFileName)) return null
+        val file = getFile(fullFileName) ?: return null
         return file.content()
     }
 
-    suspend fun readString(fullFilename: String, externalFile: Boolean = false): String {
+    suspend fun readString(fullFileName: String, externalFile: Boolean = false): String {
         if (externalFile) {
             return try {
-                val ext = runCatching { parseFilename(fullFilename).second }.getOrElse {
-                    return "Error: Invalid filename format $fullFilename. Must be alphanumeric with a supported extension."
+                val ext = runCatching { parseFilename(fullFileName).second }.getOrElse {
+                    return "Error: Invalid fileName format $fullFileName. Must be alphanumeric with a supported extension."
                 }
                 when (ext) {
                     "md", "txt", "json", "jsonl", "csv" -> {
-                        val p = Path.of(fullFilename)
+                        val p = Path.of(fullFileName)
                         val content = withContext(Dispatchers.IO) {
                             Files.newBufferedReader(p, StandardCharsets.UTF_8).use { it.readText() }
                         }
-                        "Read from file $fullFilename.\n<content>\n$content\n</content>"
+                        "Read from file $fullFileName.\n<content>\n$content\n</content>"
                     }
 
-                    else -> "Error: Cannot read file $fullFilename as $ext extension is not supported."
+                    else -> "Error: Cannot read file $fullFileName as $ext extension is not supported."
                 }
             } catch (e: IOException) {
-                "Error: Could not read file '$fullFilename'."
+                "Error: Could not read file '$fullFileName'."
             } catch (_: SecurityException) {
-                "Error: Permission denied to read file '$fullFilename'."
+                "Error: Permission denied to read file '$fullFileName'."
             }
         }
 
-        if (!isValidFilename(fullFilename)) return INVALID_FILENAME_ERROR_MESSAGE
-        val file = getFile(fullFilename) ?: return "File '$fullFilename' not found."
+        if (!isValidFilename(fullFileName)) return INVALID_FILENAME_ERROR_MESSAGE
+        val file = getFile(fullFileName) ?: return "File '$fullFileName' not found."
 
         return try {
             val content = file.content()
-            "Read from file $fullFilename.\n<content>\n$content\n</content>"
+            "Read from file $fullFileName.\n<content>\n$content\n</content>"
         } catch (e: FileSystemError) {
-            e.message ?: "Error: Could not read file '$fullFilename'."
+            e.message ?: "Error: Could not read file '$fullFileName'."
         } catch (e: Exception) {
-            "Error: Could not read file '$fullFilename'."
+            "Error: Could not read file '$fullFileName'."
         }
     }
 
-    suspend fun writeString(fullFilename: String, content: String): String {
-        if (!isValidFilename(fullFilename)) return INVALID_FILENAME_ERROR_MESSAGE
+    suspend fun writeString(fullFileName: String, content: String): String {
+        if (!isValidFilename(fullFileName)) return INVALID_FILENAME_ERROR_MESSAGE
         return try {
-            val (name, ext) = parseFilename(fullFilename)
-            val file = files[fullFilename] ?: createFile(ext, name).also { files[fullFilename] = it }
+            val (name, ext) = parseFilename(fullFileName)
+            val file = files[fullFileName] ?: createFile(ext, name).also { files[fullFileName] = it }
             val path = file.writeString(content, dataDir)
 
-            logger.info("Write to file | {}", path.toUri())
+            // logger.info("Write to file | {}", path.toUri())
 
-            "Data written to file $fullFilename successfully."
+            "Data written to file $fullFileName successfully."
         } catch (e: FileSystemError) {
-            e.message ?: "Error: Could not write to file '$fullFilename'."
+            e.message ?: "Error: Could not write to file '$fullFileName'."
         } catch (e: Exception) {
-            "Error: Could not write to file '$fullFilename'. ${e.message ?: ""}".trim()
+            "Error: Could not write to file '$fullFileName'. ${e.message ?: ""}".trim()
         }
     }
 
-    suspend fun append(fullFilename: String, content: String): String {
-        if (!isValidFilename(fullFilename)) return INVALID_FILENAME_ERROR_MESSAGE
-        val file = getFile(fullFilename) ?: return "File '$fullFilename' not found."
+    suspend fun append(fullFileName: String, content: String): String {
+        if (!isValidFilename(fullFileName)) return INVALID_FILENAME_ERROR_MESSAGE
+        val file = getFile(fullFileName) ?: return "File '$fullFileName' not found."
         return try {
             file.appendString(content, dataDir)
-            "Data appended to file $fullFilename successfully."
+            "Data appended to file $fullFileName successfully."
         } catch (e: FileSystemError) {
-            e.message ?: "Error: Could not append to file '$fullFilename'."
+            e.message ?: "Error: Could not append to file '$fullFileName'."
         } catch (e: Exception) {
-            "Error: Could not append to file '$fullFilename'. ${e.message ?: ""}".trim()
+            "Error: Could not append to file '$fullFileName'. ${e.message ?: ""}".trim()
         }
     }
 
-    suspend fun replaceContent(fullFilename: String, oldStr: String, newStr: String): String {
-        if (!isValidFilename(fullFilename)) return INVALID_FILENAME_ERROR_MESSAGE
+    suspend fun replaceContent(fullFileName: String, oldStr: String, newStr: String): String {
+        if (!isValidFilename(fullFileName)) return INVALID_FILENAME_ERROR_MESSAGE
         if (oldStr.isEmpty()) return "Error: Cannot replace empty string. Please provide a non-empty string to replace."
-        val file = getFile(fullFilename) ?: return "File '$fullFilename' not found."
+        val file = getFile(fullFileName) ?: return "File '$fullFileName' not found."
         return try {
             val replaced = file.content().replace(oldStr, newStr)
             file.writeString(replaced, dataDir)
-            "Successfully replaced all occurrences of \"$oldStr\" with \"$newStr\" in file $fullFilename"
+            "Successfully replaced all occurrences of \"$oldStr\" with \"$newStr\" in file $fullFileName"
         } catch (e: FileSystemError) {
-            e.message ?: "Error: Could not replace string in file '$fullFilename'."
+            e.message ?: "Error: Could not replace string in file '$fullFileName'."
         } catch (e: Exception) {
-            "Error: Could not replace string in file '$fullFilename'. ${e.message ?: ""}".trim()
+            "Error: Could not replace string in file '$fullFileName'. ${e.message ?: ""}".trim()
         }
     }
 
     suspend fun saveExtractedContent(content: String): String {
         val initial = "extracted_content_$extractedContentCount"
-        val filename = "$initial.md"
+        val fileName = "$initial.md"
         val file = MarkdownFile(initial)
         file.writeString(content, dataDir)
-        files[filename] = file
+        files[fileName] = file
         extractedContentCount += 1
-        return filename
+        return fileName
     }
 
     fun describe(): String {
@@ -346,4 +346,11 @@ class AgentFileSystem constructor(
             .sorted(Comparator.reverseOrder())
             .forEach { p -> if (p != dir) p.toFile().delete() }
     }
+}
+
+suspend fun main() {
+    val fs = AgentFileSystem()
+
+    fs.writeString("todolist.md", "todolist.md")
+    fs.listFiles().forEach { println(it) }
 }
