@@ -125,7 +125,7 @@ data class ObserveOptions(
     val domSettleTimeoutMs: Long? = null,
     val returnAction: Boolean? = null,
 
-    val drawOverlay: Boolean? = null,
+    val drawOverlay: Boolean = true,
     val iframes: Boolean? = null,
     val frameId: String? = null,
 
@@ -479,11 +479,19 @@ data class ProcessTrace constructor(
 
         val str = buildString {
             append(timestamp)
+
             append(" | step=$step")
-            event?.let { append(", method=$event") }
+            event?.let { append(", event=$event") }
             method?.let { append(", method=$method") }
-            listOfNotNull(agentState, itemStr, message).forEach {
-                append(" | $it")
+
+            if (itemStr != null) {
+                append("\n    $itemStr")
+            }
+            if (message != null) {
+                append("\n    $message")
+            }
+            if (agentState != null) {
+                append("\n    $agentState")
             }
         }
 

@@ -326,7 +326,8 @@ open class BrowserAgentActor(
         resolve: Boolean,
     ): ActionDescription {
         val observeOptions = options as? ObserveOptions
-        val drawOverlay = observeOptions?.drawOverlay ?: false
+//        val drawOverlay = observeOptions?.drawOverlay ?: false
+        val drawOverlay = true
 
         val params = when (options) {
             is ObserveOptions -> context.createObserveParams(
