@@ -15,7 +15,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import java.nio.file.Path
 
-class AgentToolManager(
+class AgentToolManager constructor(
     val baseDir: Path,
     val agent: BrowserAgentActor,
 ) {

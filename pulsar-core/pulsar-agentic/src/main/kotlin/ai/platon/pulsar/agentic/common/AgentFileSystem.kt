@@ -7,6 +7,7 @@ import java.io.IOException
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.Paths
 import java.util.concurrent.ConcurrentHashMap
 import java.util.regex.Pattern
 import kotlin.collections.iterator
@@ -108,26 +109,14 @@ data class FileSystemState(
 )
 
 /** Enhanced file system with in-memory storage and multiple file type support */
-class AgentFileSystem(
-    private val baseDir: Path = AppPaths.getTmpDirectory("agent"),
+class AgentFileSystem constructor(
+    private val baseDir: Path = Paths.get("target"),
     createDefaultFiles: Boolean = true
 ) {
     companion object {
         const val DISPLAY_CHARS = 400
 
         val DEFAULT_FILES = listOf("todolist.md")
-
-        fun fromState(state: FileSystemState): AgentFileSystem {
-            val fs = AgentFileSystem(Path.of(state.baseDir), createDefaultFiles = false)
-            fs.extractedContentCount = state.extractedContentCount
-            for ((full, data) in state.files) {
-                val ext = full.substringAfterLast('.', "").lowercase()
-                val file = fs.createFile(ext, data.name, data.content)
-                fs.files[full] = file
-                file.writeString(fs.dataDir)
-            }
-            return fs
-        }
     }
 
     private val dataDir: Path = baseDir.resolve(DEFAULT_FILE_SYSTEM_PATH)
@@ -154,7 +143,9 @@ class AgentFileSystem(
             // clean
             cleanDirectory(dataDir)
         }
-        if (!dataDir.exists()) dataDir.createDirectories()
+        if (!dataDir.exists()) {
+            dataDir.createDirectories()
+        }
 
         if (createDefaultFiles) {
             for (full in DEFAULT_FILES) {
@@ -182,8 +173,6 @@ class AgentFileSystem(
         val ext = filename.substring(idx + 1).lowercase()
         return name to ext
     }
-
-    fun getDir(): Path = dataDir
 
     fun getFile(fullFilename: String): BaseFile? {
         if (!isValidFilename(fullFilename)) return null
@@ -344,11 +333,6 @@ class AgentFileSystem(
     fun getState(): FileSystemState {
         val map = files.mapValues { (_, f) -> FileStateEntry(f::class.simpleName ?: "", f.name, f.content) }
         return FileSystemState(files = map, baseDir = baseDir.toString(), extractedContentCount = extractedContentCount)
-    }
-
-    fun nuke() {
-        cleanDirectory(dataDir)
-        dataDir.deleteIfExists()
     }
 
     private fun cleanDirectory(dir: Path) {

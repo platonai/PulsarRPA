@@ -870,8 +870,10 @@ open class BrowserPerceptiveAgent constructor(
     protected fun persistTranscript(instruction: String, finalResp: ModelResponse, context: ExecutionContext) {
         runCatching {
             val ts = Instant.now().toEpochMilli()
-            val log = baseDir.resolve("session-${ts}.log")
-            slogger.info("🧾💾 Persisting execution transcript", context, mapOf("path" to log))
+            val path = baseDir.resolve("session-${ts}.log")
+            slogger.info("🧾💾 Persisting execution transcript", context,
+                mapOf("path" to path.toUri())
+            )
             val sb = StringBuilder()
             sb.appendLine("SESSION_ID: ${uuid}")
             sb.appendLine("TIMESTAMP: ${Instant.now()}")
@@ -889,11 +891,11 @@ open class BrowserPerceptiveAgent constructor(
             sb.appendLine("Failed actions: ${performanceMetrics.failedActions}")
             sb.appendLine("Retry count: ${retryCounter.get()}")
             sb.appendLine("Consecutive failures: ${consecutiveFailureCounter.get()}")
-            Files.writeString(log, sb)
+            Files.writeString(path, sb)
             slogger.info(
                 "🧾✅ Transcript persisted successfully",
                 context,
-                mapOf("lines" to stateHistory.size + 10, "path" to log)
+                mapOf("lines" to stateHistory.size + 10, "path" to path.toUri())
             )
         }.onFailure { e -> slogger.logError("🧾❌ Failed to persist transcript", e, context.sessionId) }
     }

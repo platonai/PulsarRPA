@@ -49,7 +49,7 @@ class StructuredAgentLogger(
             logData.remove("timestamp")
             logData.remove("message")
             val log = logData.entries.joinToString(", ") { (key, value) -> "$key:$value" }
-            logger.info("{} | {} | {}", message, context.sid, log)
+            logger.info("{} | {}", message, log)
         }
     }
 
