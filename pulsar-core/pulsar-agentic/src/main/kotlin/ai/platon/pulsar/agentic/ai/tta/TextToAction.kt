@@ -136,22 +136,22 @@ open class TextToAction(
     private fun reviseModelResponse(modelResponse: ModelResponse): ModelResponse {
         var content = modelResponse.content.trim()
 
-        val errorMessage = "非法响应，必须是合法 JSON 格式。客户端已经修正，未来需严格遵循格式。"
-        var modelError: String? = null
+        val errorMessage = "不合格响应，必须按照`## 输出格式`要求输出合法 JSON 格式。客户端已经修正，但以后务必严格遵循格式要求输出。"
         val heading20 = content.take(30)
         val tailing20 = content.takeLast(30)
 
-        if (heading20.contains("<output_act>")) {
-            content = content.replace("<output_act>", "")
-            modelError = errorMessage
+        val modelError = when {
+            heading20.contains("[{\"elements") -> errorMessage
+            heading20.contains("<output_act>") -> errorMessage
+            tailing20.contains("</output_act>") -> errorMessage
+            tailing20.contains("<output_act>") -> errorMessage
+            else -> null
         }
-        if (tailing20.contains("</output_act>")) {
-            content = content.replace("</output_act>", "")
-            modelError = errorMessage
-        }
-        if (tailing20.contains("<output_act>")) {
-            content = content.replace("<output_act>", "")
-            modelError = errorMessage
+
+        if (modelError != null) {
+            val jsonStart = content.indexOf("{")
+            val jsonEnd = content.indexOf("}")
+            content = content.substring(jsonStart, jsonEnd)
         }
 
         return if (modelError != null) {

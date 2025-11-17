@@ -16,8 +16,6 @@ go to https://news.ycombinator.com/news , read top 3 articles and give me a summ
 
         val problem = problems[0]
         agent.resolve(problem)
-
-        agent.processTrace.forEach { println("""🚩$it""") }
     }
 }
 

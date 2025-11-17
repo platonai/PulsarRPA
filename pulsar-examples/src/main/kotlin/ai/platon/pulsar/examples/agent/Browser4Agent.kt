@@ -23,8 +23,6 @@ go to https://news.ycombinator.com/news , open the 4-th articles in new tab
 
         val problem = problems[0]
         agent.resolve(problem)
-
-        agent.processTrace.forEach { println("""🚩$it""") }
     }
 }
 

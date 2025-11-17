@@ -228,8 +228,8 @@ class AgentStateManager(
     }
 
     fun writeProcessTrace() {
-        val path = auxLogDir.resolve("processTrace_${AppPaths.fromNow()}.log")
-        MessageWriter.writeOnce(path, processTrace)
+        val path = auxLogDir.resolve("processTrace").resolve("processTrace_${AppPaths.fromNow()}.log")
+        MessageWriter.writeOnce(path, processTrace.joinToString("\n") { """🚩$it""" })
     }
 
     fun clearUpHistory(toRemove: Int) {
