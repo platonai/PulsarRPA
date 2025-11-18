@@ -110,8 +110,8 @@ open class BrowserAgentActor(
 
         return try {
             val result = toolExecutor.execute(actionDescription, "resolve, #$step")
-            // Sync browser state after tool call immediately
-            stateManager.syncBrowserUseState(context)
+            // Discuss: should we sync browser state after tool call immediately? probably not.
+            // stateManager.syncBrowserUseState(context)
 
             val state = if (result.success) "✅ success" else """☑️ executed"""
             val description = MessageFormat.format(
@@ -311,6 +311,7 @@ open class BrowserAgentActor(
             else -> throw IllegalArgumentException("Not supported option")
         }
 
+        // Sync browser state just before observe
         stateManager.syncBrowserUseState(context)
         val interactiveElements = context.agentState.browserUseState.getAllInteractiveElements()
         try {

@@ -124,25 +124,6 @@ class AgentStateManager(
         return browserUseState
     }
 
-    suspend fun getBrowserUseState(): BrowserUseState {
-        val snapshotOptions = SnapshotOptions(
-            maxDepth = 1000,
-            includeAX = true,
-            includeSnapshot = true,
-            includeStyles = true,
-            includePaintOrder = true,
-            includeDOMRects = true,
-            includeScrollAnalysis = true,
-            includeVisibility = true,
-            includeInteractivity = true
-        )
-        // Add timeout to prevent hanging on DOM snapshot operations
-        return withTimeout(30_000) {
-            val baseState = driver.domService.getBrowserUseState(snapshotOptions = snapshotOptions)
-            injectTabsInfo(baseState)
-        }
-    }
-
     fun updateAgentState(context: ExecutionContext, detailedActResult: DetailedActResult) {
         val observeElement = requireNotNull(detailedActResult.actionDescription.observeElement)
         val toolCall = requireNotNull(detailedActResult.actionDescription.toolCall)
@@ -264,6 +245,25 @@ class AgentStateManager(
             if (last != null && last.step >= step) {
                 _stateHistory.removeAt(_stateHistory.size - 1)
             }
+        }
+    }
+
+    private suspend fun getBrowserUseState(): BrowserUseState {
+        val snapshotOptions = SnapshotOptions(
+            maxDepth = 1000,
+            includeAX = true,
+            includeSnapshot = true,
+            includeStyles = true,
+            includePaintOrder = true,
+            includeDOMRects = true,
+            includeScrollAnalysis = true,
+            includeVisibility = true,
+            includeInteractivity = true
+        )
+        // Add timeout to prevent hanging on DOM snapshot operations
+        return withTimeout(30_000) {
+            val baseState = driver.domService.getBrowserUseState(snapshotOptions = snapshotOptions)
+            injectTabsInfo(baseState)
         }
     }
 
