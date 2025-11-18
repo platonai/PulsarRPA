@@ -55,7 +55,7 @@ data class ExecutionContext constructor(
     val config: AgentConfig,
 
     val sessionId: String,
-    val timestamp: Instant = Instant.now(),
+    val stepStartTime: Instant = Instant.now(),
     val additionalContext: Map<String, Any> = emptyMap(),
 
     var baseContext: WeakReference<ExecutionContext> = WeakReference<ExecutionContext>(null)

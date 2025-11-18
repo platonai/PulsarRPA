@@ -6,6 +6,7 @@ import ai.platon.pulsar.agentic.context.AgenticContexts.getOrCreateSession
 import ai.platon.pulsar.agentic.context.AgenticContexts.shutdown
 import ai.platon.pulsar.browser.common.DisplayMode
 import ai.platon.pulsar.browser.common.InteractSettings
+import ai.platon.pulsar.common.browser.BrowserProfileMode
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
 import ai.platon.pulsar.skeleton.context.PulsarContexts
@@ -110,9 +111,10 @@ object AgenticContexts {
         maxBrowsers: Int? = null,
         maxOpenTabs: Int? = null,
         interactSettings: InteractSettings? = null,
+        profileMode: BrowserProfileMode? = null
     ): AgenticSession {
         val displayMode = if (headless) DisplayMode.HEADLESS else null
-        val settings = PulsarSettings(spa, displayMode, maxBrowsers, maxOpenTabs, interactSettings)
+        val settings = PulsarSettings(spa, displayMode, maxBrowsers, maxOpenTabs, interactSettings, profileMode)
         return createSession(settings)
     }
 
@@ -133,9 +135,10 @@ object AgenticContexts {
         maxBrowsers: Int? = null,
         maxOpenTabs: Int? = null,
         interactSettings: InteractSettings? = null,
+        profileMode: BrowserProfileMode? = null,
     ): AgenticSession {
         val displayMode = if (headless) DisplayMode.HEADLESS else null
-        val settings = PulsarSettings(spa, displayMode, maxBrowsers, maxOpenTabs, interactSettings)
+        val settings = PulsarSettings(spa, displayMode, maxBrowsers, maxOpenTabs, interactSettings, profileMode)
         return getOrCreateSession(settings)
     }
 
@@ -151,8 +154,9 @@ object AgenticContexts {
         headless: Boolean = false,
         maxBrowsers: Int? = null,
         maxOpenTabs: Int? = null,
-        interactSettings: InteractSettings? = null
-    ): PerceptiveAgent = createSession(spa, headless, maxBrowsers, maxOpenTabs, interactSettings).companionAgent
+        interactSettings: InteractSettings? = null,
+        profileMode: BrowserProfileMode? = null,
+    ): PerceptiveAgent = createSession(spa, headless, maxBrowsers, maxOpenTabs, interactSettings, profileMode).companionAgent
 
     @Synchronized
     fun getOrCreateAgent(
@@ -160,8 +164,9 @@ object AgenticContexts {
         headless: Boolean = false,
         maxBrowsers: Int? = null,
         maxOpenTabs: Int? = null,
-        interactSettings: InteractSettings? = null
-    ): PerceptiveAgent = getOrCreateSession(spa, headless, maxBrowsers, maxOpenTabs, interactSettings).companionAgent
+        interactSettings: InteractSettings? = null,
+        profileMode: BrowserProfileMode? = null,
+    ): PerceptiveAgent = getOrCreateSession(spa, headless, maxBrowsers, maxOpenTabs, interactSettings, profileMode).companionAgent
 
     /**
      * Block the current thread until the context shutdown is triggered.

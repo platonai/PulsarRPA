@@ -25,6 +25,13 @@ class ObserveActBrowserAgent constructor(
         // Execute the tool call with enhanced error handling
         val actResult = act(action)
 
+        val sid = context.sid
+        val step = context.step
+        val stepStartTime = context.stepStartTime
+        val tcResult = actResult.detail?.toolCallResult
+        val method = actResult.detail?.actionDescription?.toolCall?.method
+        val preview = tcResult?.evaluate?.preview
+
         if (shouldTerminate(actResult)) {
             onTaskCompletion(actResult, context)
             return StepProcessingResult(context, consecutiveNoOps, true)
@@ -32,17 +39,16 @@ class ObserveActBrowserAgent constructor(
 
         if (actResult.success) {
             updateTodo(context, actResult)
-            updatePerformanceMetrics(context.step, context.timestamp, true)
+            updatePerformanceMetrics(step, stepStartTime, true)
 
-            val tcResult = actResult.detail?.toolCallResult
-            val method = actResult.detail?.actionDescription?.toolCall?.method
-            val preview = tcResult?.evaluate?.preview
-            logger.info("🏁 step.done sid={} step={} method={} result={}", context.sid, context.step, method, preview)
+            logger.info("🏁 step.done sid={} step={} method={} result={}", sid, step, method, preview)
         } else {
             consecutiveNoOps++
             val stop = handleConsecutiveNoOps(consecutiveNoOps, context)
-            updatePerformanceMetrics(context.step, context.timestamp, false)
-            if (stop) return StepProcessingResult(context, consecutiveNoOps, true)
+            updatePerformanceMetrics(step, stepStartTime, false)
+            if (stop) {
+                return StepProcessingResult(context, consecutiveNoOps, true)
+            }
         }
 
         delay(calculateAdaptiveDelay())

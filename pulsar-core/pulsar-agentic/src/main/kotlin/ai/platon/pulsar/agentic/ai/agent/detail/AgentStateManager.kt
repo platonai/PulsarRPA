@@ -84,7 +84,7 @@ class AgentStateManager(
                 event = event,
                 targetUrl = prevAgentState?.browserUseState?.browserState?.url,
                 sessionId = baseContext.sessionId,
-                timestamp = Instant.now(),
+                stepStartTime = Instant.now(),
                 agentState = currentAgentState,
                 config = baseContext.config,
                 stateHistory = _stateHistory,

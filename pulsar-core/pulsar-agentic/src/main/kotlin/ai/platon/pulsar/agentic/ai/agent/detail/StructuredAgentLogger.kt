@@ -35,7 +35,7 @@ class StructuredAgentLogger(
             put("step", context.step)
             put("message", message)
             put("sessionId", context.sessionId)
-            put("timestamp", context.timestamp.toString())
+            put("timestamp", context.stepStartTime.toString())
             putAll(additionalData)
         }.toMutableMap()
 

@@ -284,7 +284,7 @@ open class BrowserPerceptiveAgent constructor(
     private suspend fun resolveInCoroutine(action: ActionOptions): ResolveResult {
         val instruction = action.action
         val baseContext = stateManager.buildBaseExecutionContext(action, "resolve-init")
-        val sessionStartTime = baseContext.timestamp
+        val sessionStartTime = baseContext.stepStartTime
 
         // Add start history for better traceability (meta record only)
         stateManager.addTrace(
@@ -556,7 +556,7 @@ open class BrowserPerceptiveAgent constructor(
         if (detailedActResult != null) {
             stateManager.updateAgentState(context, detailedActResult)
             updateTodo(context, detailedActResult.actionDescription)
-            updatePerformanceMetrics(step, context.timestamp, true)
+            updatePerformanceMetrics(step, context.stepStartTime, true)
 
             val tcResult = detailedActResult.toolCallResult
             val method = detailedActResult.actionDescription.toolCall?.method
@@ -565,7 +565,7 @@ open class BrowserPerceptiveAgent constructor(
         } else {
             consecutiveNoOps++
             val stop = handleConsecutiveNoOps(consecutiveNoOps, context)
-            updatePerformanceMetrics(step, context.timestamp, false)
+            updatePerformanceMetrics(step, context.stepStartTime, false)
             if (stop) return StepProcessingResult(context, consecutiveNoOps, true)
         }
 
