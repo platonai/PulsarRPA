@@ -349,7 +349,7 @@ open class BrowserAgentActor(
             }
 
             val observeResults = actionDescription.toObserveResults(context.agentState)
-            observeResults.forEach { it.setContext(context) }
+            // observeResults.forEach { it.setContext(context) }
 
             return ObserveActResult(observeResults, actionDescription)
         } finally {

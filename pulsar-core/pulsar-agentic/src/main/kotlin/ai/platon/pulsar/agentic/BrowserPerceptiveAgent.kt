@@ -440,7 +440,7 @@ open class BrowserPerceptiveAgent constructor(
         val instruction = action.action
         val step = ctxIn.step + 1
         activeContext = stateManager.buildExecutionContext(instruction, step, event, baseContext = ctxIn)
-        action.setContext(activeContext!!)
+        // action.setContext(activeContext!!)
 
         return activeContext!!
     }

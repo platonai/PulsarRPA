@@ -34,7 +34,7 @@ class AgentStateManager(
         baseContext: ExecutionContext? = null
     ): ExecutionContext {
         val context = buildExecutionContext(action.action, 0, event, baseContext = baseContext)
-        action.setContext(context)
+        // action.setContext(context)
         return context
     }
 
@@ -44,7 +44,7 @@ class AgentStateManager(
         baseContext: ExecutionContext? = null
     ): ExecutionContext {
         val context = buildExecutionContext(action.action, 1, event, baseContext = baseContext)
-        action.setContext(context)
+        // action.setContext(context)
         return context
     }
 
@@ -55,7 +55,7 @@ class AgentStateManager(
     ): ExecutionContext {
         val instruction = options.instruction ?: ""
         val context = buildExecutionContext(instruction, 1, event, baseContext = baseContext)
-        options.setContext(context)
+        // options.setContext(context)
         return context
     }
 
