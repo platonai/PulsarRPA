@@ -455,7 +455,7 @@ open class BrowserPerceptiveAgent constructor(
         var context = initContext
         val startTime = Instant.now()
         try {
-            val action = initActionOptions.copy(resolve = true)
+            val action = initActionOptions.copy(fromResolve = true)
 
             while (!isClosed && context.step < config.maxSteps) {
                 try {

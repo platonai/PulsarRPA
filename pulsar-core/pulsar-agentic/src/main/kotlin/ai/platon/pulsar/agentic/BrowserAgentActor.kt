@@ -227,14 +227,14 @@ open class BrowserAgentActor(
 
     private suspend fun doObserveAct(options: ActionOptions): ActResult {
         val options = when {
-            !options.resolve -> options.copy(action = promptBuilder.buildObserveActToolUsePrompt(options.action))
+            !options.fromResolve -> options.copy(action = promptBuilder.buildObserveActToolUsePrompt(options.action))
             else -> options
         }
 
         // val context = requireNotNull(options.getContext()) { "Context is required to doObserveAct" }
         val context = stateManager.getActiveContext()
 
-        val (observeResults, actionDescription) = doObserveActObserve(options, context, options.resolve)
+        val (observeResults, actionDescription) = doObserveActObserve(options, context, options.fromResolve)
 
         if (actionDescription.isComplete) {
             return ActResultHelper.complete(actionDescription)
