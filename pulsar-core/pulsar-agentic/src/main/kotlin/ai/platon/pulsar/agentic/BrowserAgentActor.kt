@@ -215,7 +215,7 @@ open class BrowserAgentActor(
 
         val context = stateManager.getOrCreateActiveContext(options)
 
-        val result = doObserveActObserve(options, context, options.resolve)
+        val result = doObserveActObserve(options, context, options.fromResolve)
 
         return result.observeResults
     }

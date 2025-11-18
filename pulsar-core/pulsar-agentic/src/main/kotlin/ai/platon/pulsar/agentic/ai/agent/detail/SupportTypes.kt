@@ -4,14 +4,7 @@ import ai.platon.pulsar.agentic.AgentConfig
 import ai.platon.pulsar.agentic.ai.agent.ExtractParams
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.skeleton.ai.ActResult
-import ai.platon.pulsar.skeleton.ai.ActionDescription
-import ai.platon.pulsar.skeleton.ai.ActionOptions
-import ai.platon.pulsar.skeleton.ai.AgentState
-import ai.platon.pulsar.skeleton.ai.DetailedActResult
-import ai.platon.pulsar.skeleton.ai.ObserveOptions
-import ai.platon.pulsar.skeleton.ai.ObserveResult
-import ai.platon.pulsar.skeleton.ai.ToolCall
+import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import java.lang.ref.WeakReference
 import java.time.Instant

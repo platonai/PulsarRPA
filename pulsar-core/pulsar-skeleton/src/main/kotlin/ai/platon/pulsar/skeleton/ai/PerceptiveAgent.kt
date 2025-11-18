@@ -107,6 +107,8 @@ data class ExtractOptions(
     val iframes: Boolean? = null,
     // reserved
     val frameId: String? = null,
+    // Internal
+    @get:JsonIgnore
     val agentState: AgentState? = null,
 )
 
@@ -121,19 +123,23 @@ data class ExtractResult(
 }
 
 data class ObserveOptions(
+    // the user's instruction
     val instruction: String? = null,
     val modelName: String? = null,
     val modelClientOptions: Map<String, Any>? = null,
     val domSettleTimeoutMs: Long? = null,
+    // if true, the LLM should return a tool call for the next action
     val returnAction: Boolean? = null,
 
+    // highlight interactive elements or not
     val drawOverlay: Boolean = true,
     // reserved
     val iframes: Boolean? = null,
     // reserved
     val frameId: String? = null,
 
-    val resolve: Boolean = false,
+    // from `resolve` loop or not
+    val fromResolve: Boolean = false,
 
     // internal
     @get:JsonIgnore
@@ -141,6 +147,38 @@ data class ObserveOptions(
     // internal
     @get:JsonIgnore
     val additionalContext: MutableMap<String, Any> = mutableMapOf(),
+)
+
+data class ObserveResult constructor(
+    // the DOM node locator, format is `frameIndex,backendNodeId`
+    val locator: String? = null,
+
+    // the domain of the tool call, `driver`, `browser`, `fs`, `agent`, etc
+    val domain: String? = null,
+    // the tool call method, `click`, `type`, `scrollBy`, etc
+    val method: String? = null,
+    // the tool call arguments
+    val arguments: Map<String, Any?>? = null,
+    // the tool call description
+    val description: String? = null,
+
+    val screenshotContentSummary: String? = null,
+    val currentPageContentSummary: String? = null,
+    val evaluationPreviousGoal: String? = null,
+    val nextGoal: String? = null,
+
+    val backendNodeId: Int? = null,
+
+    val observeElement: ObserveElement? = null,
+
+    // internal
+    val additionalContext: MutableMap<String, Any> = mutableMapOf(),
+
+    // internal
+    val actionDescription: ActionDescription? = null,
+
+    // internal
+    val agentState: AgentState
 )
 
 interface PerceptiveAgent : AutoCloseable {

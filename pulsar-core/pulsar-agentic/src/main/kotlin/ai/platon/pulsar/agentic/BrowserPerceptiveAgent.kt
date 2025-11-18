@@ -234,7 +234,7 @@ open class BrowserPerceptiveAgent constructor(
 //        options.setContext(context)
         val context = stateManager.getOrCreateActiveContext(options)
 
-        if (!options.resolve) {
+        if (!options.fromResolve) {
             return withContext(agentScope.coroutineContext) {
                 if (isClosed) throw CancellationException("closed")
                 super.observe(options)
@@ -543,7 +543,11 @@ open class BrowserPerceptiveAgent constructor(
         val shouldStop: Boolean
     )
 
-    protected open suspend fun step(action: ActionOptions, context: ExecutionContext, noOpsIn: Int): StepProcessingResult {
+    protected open suspend fun step(
+        action: ActionOptions,
+        context: ExecutionContext,
+        noOpsIn: Int
+    ): StepProcessingResult {
         var consecutiveNoOps = noOpsIn
 
         // val context = prepareStep(action, ctxIn, consecutiveNoOps)
@@ -698,8 +702,8 @@ open class BrowserPerceptiveAgent constructor(
         val step = context.step
         val toolCall = actionDescription.toolCall
         val observeElement = actionDescription.observeElement
-    val progressInterval = config.todoProgressWriteEveryNSteps.coerceAtLeast(1)
-    val writeEveryNStepsHit = progressInterval == 1 || step % progressInterval == 0
+        val progressInterval = config.todoProgressWriteEveryNSteps.coerceAtLeast(1)
+        val writeEveryNStepsHit = progressInterval == 1 || step % progressInterval == 0
         val shouldWrite = config.todoWriteProgressEveryStep || writeEveryNStepsHit
         if (!shouldWrite) return
         val urlNow0 = activeDriver.currentUrl()
@@ -771,7 +775,8 @@ open class BrowserPerceptiveAgent constructor(
         runCatching {
             val ts = Instant.now().toEpochMilli()
             val path = baseDir.resolve("session-${ts}.log")
-            slogger.info("🧾💾 Persisting execution transcript", context,
+            slogger.info(
+                "🧾💾 Persisting execution transcript", context,
                 mapOf("path" to path.toUri())
             )
             val sb = StringBuilder()
@@ -922,8 +927,10 @@ open class BrowserPerceptiveAgent constructor(
         logger.info("✅ agent.done sid={} steps={} dur={}", context.sid, context.step, executionTime)
         val summary = generateFinalSummary(instruction, context)
         val ok = summary.state != ResponseState.OTHER
-        return ActResult(success = ok,
-            message = summary.content, action = instruction, result = context.agentState.toolCallResult)
+        return ActResult(
+            success = ok,
+            message = summary.content, action = instruction, result = context.agentState.toolCallResult
+        )
     }
 
     private fun handleResolutionFailure(

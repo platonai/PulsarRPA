@@ -106,6 +106,7 @@ data class TcEvaluate constructor(
     val expression: String? = null,
     var exception: TcException? = null
 ) {
+    @get:JsonIgnore
     val preview get() = doGetPreview()
 
     constructor(expression: String, cause: Exception, help: String? = null) :
@@ -164,35 +165,12 @@ data class ObserveElement constructor(
     /**
      * Expression with weak parameter types
      * */
+    @get:JsonIgnore
     val expression: String? get() = toolCall?.weakTypeExpression
 
     @get:JsonIgnore
     val pseudoExpression get() = toolCall?.pseudoExpression
 }
-
-data class ObserveResult constructor(
-    val agentState: AgentState,
-
-    val locator: String? = null,
-
-    val domain: String? = null,
-    val method: String? = null,
-    val arguments: Map<String, Any?>? = null,
-    val description: String? = null,
-
-    val screenshotContentSummary: String? = null,
-    val currentPageContentSummary: String? = null,
-    val evaluationPreviousGoal: String? = null,
-    val nextGoal: String? = null,
-
-    val backendNodeId: Int? = null,
-
-    val observeElement: ObserveElement? = null,
-
-    val actionDescription: ActionDescription? = null,
-
-    val additionalContext: MutableMap<String, Any> = mutableMapOf(),
-)
 
 data class AgentState constructor(
     var step: Int,
@@ -334,7 +312,6 @@ data class ActionDescription constructor(
     fun toObserveResults(agentState: AgentState): List<ObserveResult> {
         val results = observeElements?.map { ele ->
             ObserveResult(
-                agentState = agentState,
                 locator = ele.locator,
                 domain = ele.domain?.ifBlank { null },
                 method = ele.method?.ifBlank { null },
@@ -346,6 +323,7 @@ data class ActionDescription constructor(
                 nextGoal = ele.nextGoal,
                 backendNodeId = ele.backendNodeId,
                 observeElement = ele,
+                agentState = agentState,
                 actionDescription = this,
             )
         }
