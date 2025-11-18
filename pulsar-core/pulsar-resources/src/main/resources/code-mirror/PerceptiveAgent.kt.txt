@@ -1,8 +1,100 @@
 package ai.platon.pulsar.skeleton.ai
 
+import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.JsonNode
 import java.util.*
+
+data class ActionOptions(
+    val action: String,  // the user's action command
+    val modelName: String? = null,
+    val variables: Map<String, String>? = null,
+    val domSettleTimeoutMs: Int? = null,
+    // reserved
+    val timeoutMs: Int? = null,
+    // reserved
+    val iframes: Boolean? = null,
+    @get:JsonIgnore
+    val resolve: Boolean = true,
+    @get:JsonIgnore
+    val additionalContext: MutableMap<String, Any> = mutableMapOf(),
+)
+
+data class ActResult constructor(
+    val success: Boolean = false,
+    val message: String = "",
+
+    val action: String? = null,
+    val result: ToolCallResult? = null,
+    // internal
+    @get:JsonIgnore
+    val detail: DetailedActResult? = null
+) {
+    /**
+     * Expression with weak parameter types
+     * */
+    @get:JsonIgnore
+    val expression get() = result?.actionDescription?.expression
+
+    @get:JsonIgnore
+    val tcEvalValue get() = result?.evaluate?.value
+
+    override fun toString(): String {
+        val eval = Strings.compactInline(tcEvalValue?.toString(), 50)
+        return "[$action] expr: $expression eval: $eval message: $message"
+    }
+}
+
+data class ExtractOptions(
+    val instruction: String,
+    val schema: ExtractionSchema,
+    // reserved
+    val modelName: String? = null,
+    // reserved
+    val modelClientOptions: Map<String, Any>? = null,
+    val domSettleTimeoutMs: Long? = null,
+    // reserved
+    val selector: String? = null,
+    // reserved
+    val iframes: Boolean? = null,
+    // reserved
+    val frameId: String? = null,
+    val agentState: AgentState? = null,
+)
+
+data class ExtractResult(
+    val success: Boolean,
+    val message: String = "",
+    val data: JsonNode
+) {
+    override fun toString(): String {
+        return "success: $success message: $message data: " + Strings.compactInline(data.toString(), 50)
+    }
+}
+
+data class ObserveOptions(
+    val instruction: String? = null,
+    val modelName: String? = null,
+    val modelClientOptions: Map<String, Any>? = null,
+    val domSettleTimeoutMs: Long? = null,
+    val returnAction: Boolean? = null,
+
+    val drawOverlay: Boolean = true,
+    // reserved
+    val iframes: Boolean? = null,
+    // reserved
+    val frameId: String? = null,
+
+    val resolve: Boolean = false,
+
+    // internal
+    @get:JsonIgnore
+    val agentState: AgentState? = null,
+    // internal
+    @get:JsonIgnore
+    val additionalContext: MutableMap<String, Any> = mutableMapOf(),
+)
 
 interface PerceptiveAgent : AutoCloseable {
     val uuid: UUID

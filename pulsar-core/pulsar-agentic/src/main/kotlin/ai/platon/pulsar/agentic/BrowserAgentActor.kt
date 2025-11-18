@@ -40,6 +40,8 @@ open class BrowserAgentActor(
     // Helper classes for better code organization
     protected val pageStateTracker = PageStateTracker(session, config)
     protected val stateManager by lazy { AgentStateManager(this, pageStateTracker) }
+    protected lateinit var initContext: ExecutionContext
+    protected var activeContext: ExecutionContext? = null
 
     override val uuid get() = _uuid
     override val stateHistory: List<AgentState> get() = stateManager.stateHistory
@@ -75,7 +77,8 @@ open class BrowserAgentActor(
      * one successful execution is recorded in stateHistory.
      */
     override suspend fun act(action: ActionOptions): ActResult {
-        val context = action.getContext() ?: stateManager.buildInitExecutionContext(action, "act")
+        // val context = action.getContext() ?: stateManager.buildInitExecutionContext(action, "act")
+        val context = getActiveContext(action, "act")
 
         return try {
             withTimeout(config.actTimeoutMs) {
@@ -95,8 +98,8 @@ open class BrowserAgentActor(
 
     override suspend fun act(observe: ObserveResult): ActResult {
         val instruction = observe.agentState.instruction
-        val context = observe.getContext()
-        require(observe.agentState == context?.agentState) { "Required: observe.agentState == context?.agentState" }
+        val context = activeContext()
+        require(observe.agentState == context.agentState) { "Required: observe.agentState == context?.agentState" }
 
         val element = observe.observeElement
             ?: return ActResultHelper.failed("No observation to act", instruction)
@@ -201,16 +204,38 @@ open class BrowserAgentActor(
     }
 
     override suspend fun observe(options: ObserveOptions): List<ObserveResult> {
-        val ctx = options.getContext()
-        val context = if (ctx == null) {
-            val instruction = promptBuilder.initObserveUserInstruction(options.instruction).instruction?.content
-            stateManager.buildInitExecutionContext(options.copy(instruction = instruction), "observe")
-        } else ctx
+//        val ctx = options.getContext()
+//        val context = if (ctx == null) {
+//            val instruction = promptBuilder.initObserveUserInstruction(options.instruction).instruction?.content
+//            stateManager.buildInitExecutionContext(options.copy(instruction = instruction), "observe")
+//        } else ctx
 
-        context.agentState.event = "observe"
+        val context = getActiveContext(options)
+
         val result = doObserveActObserve(options, context, options.resolve)
 
         return result.observeResults
+    }
+
+    protected suspend fun getActiveContext(action: ActionOptions, event: String): ExecutionContext {
+        if (activeContext == null) {
+            initContext = stateManager.buildInitExecutionContext(action, event)
+            activeContext = initContext
+        }
+        return activeContext!!
+    }
+
+    protected suspend fun getActiveContext(options: ObserveOptions): ExecutionContext {
+        if (activeContext == null) {
+            val instruction = promptBuilder.initObserveUserInstruction(options.instruction).instruction?.content
+            initContext = stateManager.buildInitExecutionContext(options.copy(instruction = instruction), "observe")
+            activeContext = initContext
+        }
+        return activeContext!!
+    }
+
+    protected fun activeContext(): ExecutionContext {
+        return requireNotNull(activeContext) { "Actor not initialized, call act(action: ActionOptions) first!" }
     }
 
     data class ObserveActResult(
@@ -224,7 +249,8 @@ open class BrowserAgentActor(
             else -> options
         }
 
-        val context = requireNotNull(options.getContext()) { "Context is required to doObserveAct" }
+        // val context = requireNotNull(options.getContext()) { "Context is required to doObserveAct" }
+        val context = activeContext()
 
         val (observeResults, actionDescription) = doObserveActObserve(options, context, options.resolve)
 
