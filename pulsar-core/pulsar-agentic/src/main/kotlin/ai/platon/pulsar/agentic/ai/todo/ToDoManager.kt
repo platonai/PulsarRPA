@@ -56,7 +56,7 @@ class ToDoManager(
         observe: ObserveElement?,
         url: String,
         summary: String?,
-    ) {
+    ): Boolean {
         val time = LocalDateTime.now().toLocalTime().toString().take(8)
         val method = toolCall?.method ?: "(unknown)"
         val selector = selectorSnippet(observe)
@@ -64,12 +64,17 @@ class ToDoManager(
         val line = "- [OK] $time $method \"${selector}\" @ ${url} | ${summaryText}\n"
 
         val existing = fs.getTodoContents()
-        val okLines = "\n- [OK] ".toRegex().findAll(existing).count()
-        if (okLines >= config.todoMaxProgressLines) return
+        // Count any occurrence of the OK marker (don't rely on a previous newline)
+        val okLines = Regex("""- \[OK\]""").findAll(existing).count()
+        if (okLines >= config.todoMaxProgressLines) return false
 
         val updated = if (existing.endsWith("\n")) existing + line else existing + "\n" + line
-        runCatching { fs.writeString("todolist.md", updated) }
-            .onFailure { e -> slogger?.logError("todo.progress.write.fail", e, uuid.toString()) }
+        return runCatching {
+            fs.writeString("todolist.md", updated)
+            true
+        }.onFailure { e ->
+            slogger?.logError("todo.progress.write.fail", e, uuid.toString())
+        }.getOrElse { false }
     }
 
     /** Increment the Progress counter in the header if present. */
@@ -93,7 +98,9 @@ class ToDoManager(
         var modified = false
         for (i in lines.indices) {
             val line = lines[i]
-            if (line.trimStart().startsWith("- [ ]") && tags.any { tag -> line.contains(tag) }) {
+            val lineLower = line.lowercase()
+            // match unchecked plan items and do a case-insensitive tag search
+            if (line.trimStart().startsWith("- [ ]") && tags.any { tag -> lineLower.contains(tag.lowercase()) }) {
                 lines[i] = line.replaceFirst("- [ ]", "- [x]")
                 modified = true
                 break
@@ -110,7 +117,15 @@ class ToDoManager(
         val tags = mutableSetOf<String>()
         val method = toolCall.method.trim().lowercase()
         if (method.isNotBlank()) tags.add("#action:$method")
-        val host = runCatching { java.net.URI(url ?: "").host }.getOrNull()?.lowercase()
+        // Try to extract host robustly. If the URL lacks a scheme, attempt to parse with http:// added.
+        val host = runCatching {
+            val uri = try {
+                java.net.URI(url ?: "")
+            } catch (e: Exception) {
+                java.net.URI("http://${url ?: ""}")
+            }
+            uri.host
+        }.getOrNull()?.lowercase()
         if (!host.isNullOrBlank()) tags.add("#domain:$host")
         return tags
     }

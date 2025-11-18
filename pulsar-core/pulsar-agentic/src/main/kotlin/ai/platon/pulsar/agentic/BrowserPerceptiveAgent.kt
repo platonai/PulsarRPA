@@ -694,14 +694,17 @@ open class BrowserPerceptiveAgent constructor(
         val step = context.step
         val toolCall = actionDescription.toolCall
         val observeElement = actionDescription.observeElement
-        val shouldWrite = config.todoWriteProgressEveryStep ||
-                (config.todoProgressWriteEveryNSteps > 1 && step % config.todoProgressWriteEveryNSteps == 0)
+    val progressInterval = config.todoProgressWriteEveryNSteps.coerceAtLeast(1)
+    val writeEveryNStepsHit = progressInterval == 1 || step % progressInterval == 0
+        val shouldWrite = config.todoWriteProgressEveryStep || writeEveryNStepsHit
         if (!shouldWrite) return
         val urlNow0 = activeDriver.currentUrl()
         runCatching {
-            todo.appendProgress(step, toolCall, observeElement, urlNow0, actionDescription.summary)
-            todo.updateProgressCounter()
-            if (config.todoEnableAutoCheck) {
+            val appended = todo.appendProgress(step, toolCall, observeElement, urlNow0, actionDescription.summary)
+            if (appended) {
+                todo.updateProgressCounter()
+            }
+            if (config.todoEnableAutoCheck && config.todoTagsFromToolCall) {
                 val tags = todo.buildTags(toolCall, urlNow0)
                 if (tags.isNotEmpty()) todo.markPlanItemDoneByTags(tags)
             }
