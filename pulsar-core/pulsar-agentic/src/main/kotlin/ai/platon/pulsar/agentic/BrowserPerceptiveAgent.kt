@@ -551,7 +551,7 @@ open class BrowserPerceptiveAgent constructor(
         // Observe
         val actionDescription = generateActions(context)
 
-        if (shouldTerminate(actionDescription)) {
+        if (actionDescription.isReallyComplete) {
             onTaskCompletion(actionDescription, context)
             return StepProcessingResult(context, consecutiveNoOps, true)
         }
@@ -872,10 +872,6 @@ open class BrowserPerceptiveAgent constructor(
         val path = checkpointManager.save(checkpoint)
         logger.info("💾 checkpoint.saved sid={} step={} path={}", context.sid, context.step, path)
         checkpointManager.pruneOldCheckpoints(context.sessionId, config.maxCheckpointsPerSession)
-    }
-
-    protected fun shouldTerminate(actResult: ActResult? = null): Boolean {
-        return shouldTerminate(actResult?.detail?.actionDescription)
     }
 
     protected fun shouldTerminate(actionDescription: ActionDescription? = null): Boolean {

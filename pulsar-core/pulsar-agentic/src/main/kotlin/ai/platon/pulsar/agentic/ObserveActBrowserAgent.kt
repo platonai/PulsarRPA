@@ -32,7 +32,7 @@ class ObserveActBrowserAgent constructor(
         val method = actResult.detail?.actionDescription?.toolCall?.method
         val preview = tcResult?.evaluate?.preview
 
-        if (shouldTerminate(actResult)) {
+        if (actResult.isComplete) {
             onTaskCompletion(actResult, context)
             return StepProcessingResult(context, consecutiveNoOps, true)
         }

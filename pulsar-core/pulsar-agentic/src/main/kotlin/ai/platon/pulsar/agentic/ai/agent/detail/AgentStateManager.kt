@@ -20,20 +20,22 @@ class AgentStateManager(
     val pageStateTracker: PageStateTracker,
 ) {
     private val logger = getLogger(this)
+    // for non-logback logs
+    val auxLogDir: Path get() = AppPaths.detectAuxiliaryLogDir().resolve("agent")
 
     private val _stateHistory = mutableListOf<AgentState>()
     private val _processTrace = mutableListOf<ProcessTrace>()
     private val config get() = agent.config
 
+    // should be the first in context list
     private lateinit var _baseContext: ExecutionContext
+    // should be the last in context list
     private var _activeContext: ExecutionContext? = null
     private val contexts: MutableList<ExecutionContext> = mutableListOf()
 
     val driver get() = agent.activeDriver as PulsarWebDriver
     val stateHistory: List<AgentState> get() = _stateHistory
     val processTrace: List<ProcessTrace> get() = _processTrace
-
-    val auxLogDir: Path get() = AppPaths.detectAuxiliaryLogDir().resolve("agent")
 
     suspend fun getOrCreateActiveContext(action: ActionOptions, event: String): ExecutionContext {
         if (_activeContext == null) {

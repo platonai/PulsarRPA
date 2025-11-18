@@ -32,6 +32,11 @@ data class ActResult constructor(
     val detail: DetailedActResult? = null
 ) {
     /**
+     * Check if the task is complete
+     * */
+    val isComplete: Boolean = detail?.actionDescription?.isReallyComplete == true
+
+    /**
      * Expression with weak parameter types
      * */
     @get:JsonIgnore

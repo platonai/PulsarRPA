@@ -5,16 +5,12 @@ import ai.platon.pulsar.agentic.context.AgenticContexts
 suspend fun main() {
     val agent = AgenticContexts.getOrCreateAgent()
 
-    val problem = "打开 https://www.amazon.com/b?node=172282，向下滚动10次"
-    agent.resolve(problem)
-
     val maxSteps = 100
     var i = 0
     while (i++ < maxSteps) {
-        // TODO: interface/API call with remote context management is under deployment
-        val result = agent.act("向下滚动 10 次")
+        val result = agent.act("打开 https://www.amazon.com/b?node=172282，严格遵循向下滚动10次的指令，每次滚动报告当前滚动位置和当前的屏幕截图中的内容")
 
-        if (result.message == "completed") {
+        if (result.isComplete) {
             break
         }
     }

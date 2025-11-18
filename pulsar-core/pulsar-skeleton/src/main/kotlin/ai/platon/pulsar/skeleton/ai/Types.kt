@@ -324,6 +324,8 @@ data class ActionDescription constructor(
     val cssFriendlyExpression: String? get() = observeElement?.cssFriendlyExpression
     val pseudoExpression: String? get() = observeElement?.pseudoExpression
 
+    val isReallyComplete get() = isComplete || expression?.contains("agent.done") == true
+
     fun toActionDescriptions(): List<ActionDescription> {
         val elements = observeElements ?: return emptyList()
         return elements.map { this.copy(observeElements = listOf(it)) }
