@@ -44,22 +44,6 @@ data class ActResult constructor(
         val eval = Strings.compactInline(tcEvalValue?.toString(), 50)
         return "[$action] expr: $expression eval: $eval message: $message"
     }
-
-    companion object {
-        fun failed(message: String, action: String? = null) = ActResult(false, message, action)
-        fun failed(message: String, detail: DetailedActResult) = ActResult(
-            false,
-            message,
-            detail = detail,
-        )
-
-        fun complete(actionDescription: ActionDescription): ActResult {
-            val detailedActResult = DetailedActResult(actionDescription, null, true, actionDescription.summary)
-            return ActResult(
-                true, "completed", actionDescription.instruction, null, detailedActResult
-            )
-        }
-    }
 }
 
 data class ExtractOptions(
@@ -103,6 +87,7 @@ data class ObserveOptions(
     val frameId: String? = null,
 
     val resolve: Boolean = false,
+
     // internal
     @get:JsonIgnore
     val agentState: AgentState? = null,

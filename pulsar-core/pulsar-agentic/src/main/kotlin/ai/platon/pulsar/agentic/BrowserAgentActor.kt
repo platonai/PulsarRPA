@@ -89,7 +89,7 @@ open class BrowserAgentActor(
                 event = "actTimeout",
                 message = "⏳ act TIMEOUT"
             )
-            ActResult.failed(msg, action.action)
+            ActResultHelper.failed(msg, action.action)
         }
     }
 
@@ -99,11 +99,11 @@ open class BrowserAgentActor(
         require(observe.agentState == context?.agentState) { "Required: observe.agentState == context?.agentState" }
 
         val element = observe.observeElement
-            ?: return ActResult.failed("No observation to act", instruction)
+            ?: return ActResultHelper.failed("No observation to act", instruction)
         val actionDescription =
-            observe.actionDescription ?: return ActResult.failed("No action description to act", instruction)
+            observe.actionDescription ?: return ActResultHelper.failed("No action description to act", instruction)
         val step = context.step
-        val toolCall = element.toolCall ?: return ActResult.failed("No tool call to act", instruction)
+        val toolCall = element.toolCall ?: return ActResultHelper.failed("No tool call to act", instruction)
         val method = toolCall.method
 
         logger.info("🛠️ tool.exec sid={} step={} tool={}", context.sid, context.step, toolCall.pseudoExpression)
@@ -141,7 +141,7 @@ open class BrowserAgentActor(
                 context, element, toolCall, description = description, exception = e
             )
 
-            ActResult.failed(description, toolCall.method)
+            ActResultHelper.failed(description, toolCall.method)
         }
     }
 
@@ -229,16 +229,13 @@ open class BrowserAgentActor(
         val (observeResults, actionDescription) = doObserveActObserve(options, context, options.resolve)
 
         if (actionDescription.isComplete) {
-            return ActResult.complete(actionDescription)
+            return ActResultHelper.complete(actionDescription)
         }
-
-//        val observeResults = actionDescription.toObserveResults(context.agentState)
-//        observeResults.forEach { it.setContext(context) }
 
         if (observeResults.isEmpty()) {
             val msg = "⚠️ doObserveAct: No observe result"
             stateManager.addTrace(context.agentState, emptyMap(), event = "observeActNoAction", message = msg)
-            return ActResult.failed(msg, action = options.action)
+            return ActResultHelper.failed(msg, action = options.action)
         }
 
         val resultsToTry = observeResults.take(config.maxResultsToTry)
@@ -291,7 +288,7 @@ open class BrowserAgentActor(
             message = msg
         )
 
-        return ActResult.failed(msg, options.action)
+        return ActResultHelper.failed(msg, options.action)
     }
 
     private suspend fun doObserveActObserve(
@@ -308,7 +305,7 @@ open class BrowserAgentActor(
             )
 
             is ActionOptions -> context.createObserveActParams(resolve)
-            else -> throw IllegalArgumentException("Not supported option")
+            else -> throw IllegalArgumentException("Not supported options | $options")
         }
 
         // Sync browser state just before observe

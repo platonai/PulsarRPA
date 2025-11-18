@@ -1,6 +1,7 @@
 package ai.platon.pulsar.app.api.controller
 
 import ai.platon.pulsar.agentic.AgenticSession
+import ai.platon.pulsar.agentic.ai.agent.detail.ActResultHelper
 import ai.platon.pulsar.agentic.context.QLAgenticContext
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.ResourceStatus.SC_INTERNAL_SERVER_ERROR
@@ -153,7 +154,7 @@ class SinglePageApplicationController(
             warnUnexpected(this, e, "Failed to execute act on current page")
             val message = e.message ?: "Failed to act | ${request.action}"
             val statusCode = SC_INTERNAL_SERVER_ERROR
-            val actResult = ActResult.failed(ResourceStatus.getStatusText(statusCode) + " | " + message)
+            val actResult = ActResultHelper.failed(ResourceStatus.getStatusText(statusCode) + " | " + message)
             ResponseEntity.status(statusCode).body(actResult)
         }
     }

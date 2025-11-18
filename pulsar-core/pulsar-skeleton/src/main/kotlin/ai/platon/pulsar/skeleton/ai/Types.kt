@@ -81,8 +81,10 @@ data class ToolCall constructor(
         get() = arguments.entries
             .joinToString { (k, v) -> "$k=" + Strings.doubleQuote(Strings.compactInline(v, 20)) }
 
+    @get:JsonIgnore
     val weakTypeExpression: String get() = "$domain.${method}($weakTypeNamedArguments)"
 
+    @get:JsonIgnore
     val pseudoExpression: String get() = "$domain.${method}($pseudoNamedArguments)"
 
     override fun toString() = pseudoExpression

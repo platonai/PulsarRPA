@@ -2,7 +2,7 @@ package ai.platon.pulsar.agentic.tools
 
 object ToolSpecification {
 
-    const val AGENT_TOOL_CALL_LIST_BAK = """
+    const val AGENT_TOOL_CALL_LIST_RESERVED = """
 // domain: agent
 agent.observe(instruction: String): List<ObserveResult>
 agent.observe(options: ObserveOptions): List<ObserveResult>
@@ -12,18 +12,6 @@ agent.act(observe: ObserveResult): ActResult
 agent.extract(instruction: String): ExtractResult
 agent.extract(options: ExtractOptions): ExtractResult
 agent.done()
-    """
-
-    const val AGENT_TOOL_CALL_LIST = """
-// domain: agent
-agent.done()
-    """
-
-    const val FILE_TOOL_CALL_LIST = """
-// domain: fs
-fs.writeString(filename: String, content: String)
-fs.readString(filename: String)
-fs.replaceContent(filename: String, oldStr: String, newStr: String)
     """
 
     /**
@@ -79,7 +67,7 @@ system.help(domain: String, method: String): String        // get help for a too
         .filter { it.contains("(") }
         .toList()
 
-    val SUPPORTED_ACTIONS = SUPPORTED_TOOL_CALLS.map { it.substringBefore("(") }
+    val SUPPORTED_ACTIONS = SUPPORTED_TOOL_CALLS.map { it.substringBefore("(").trim() }
 
     val MAY_NAVIGATE_ACTIONS = setOf("navigateTo", "click", "reload", "goBack", "goForward")
 }
