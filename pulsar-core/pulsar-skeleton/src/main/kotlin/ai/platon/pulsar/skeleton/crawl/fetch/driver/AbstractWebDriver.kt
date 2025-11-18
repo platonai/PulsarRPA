@@ -46,7 +46,7 @@ abstract class AbstractWebDriver(
      * Responsibilities:
      * - Maintain a lightweight navigation/session state (no heavy browser objects are stored here).
      * - Provide higher-level convenience operations (attribute/property selection, scrolling helpers, delays).
-     * - Coordinate AI-assisted action generation (Text-To-Action) and dispatch via [ai.platon.pulsar.skeleton.ai.support.ToolCallExecutor].
+     * - Coordinate AI-assisted action generation (Text-To-Action) and dispatch via AI tool executors.
      * - Bridge between low-level browser protocol implementations and higher-level crawling / task logic.
      *
      * Threading model:
@@ -250,8 +250,10 @@ abstract class AbstractWebDriver(
     fun free() {
         canceled.set(false)
         crashed.set(false)
+        @Suppress("UNUSED_EXPRESSION")
         if (!isInit && !isWorking) {
-            // Intentionally left blank: avoiding exception to prevent pool inconsistency.
+            // Intentional no-op
+            Unit
         }
         state.set(State.READY)
     }
@@ -262,8 +264,10 @@ abstract class AbstractWebDriver(
     fun startWork() {
         canceled.set(false)
         crashed.set(false)
+        @Suppress("UNUSED_EXPRESSION")
         if (!isInit && !isReady) {
-            // Intentionally left blank: soft transition without throwing.
+            // Intentional no-op
+            Unit
         }
         state.set(State.WORKING)
     }
@@ -349,135 +353,97 @@ abstract class AbstractWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun scrollDown(count: Int) {
+    override suspend fun scrollDown(count: Int): Double {
         repeat(count) { evaluate("window.scrollBy(0, 500);") }
+        return (evaluate("window.scrollY") as? Number)?.toDouble() ?: 0.0
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun scrollUp(count: Int) {
+    override suspend fun scrollUp(count: Int): Double {
         evaluate("window.scrollBy(0, -500);")
+        return (evaluate("window.scrollY") as? Number)?.toDouble() ?: 0.0
     }
 
     @Throws(WebDriverException::class)
     override suspend fun scrollBy(pixels: Double, smooth: Boolean): Double {
-        val js = """
-(async (delta, smooth) => {
-    if (!document || !document.documentElement || !document.body) return null;
+        // Gather current viewport and document information
+        val totalHeight = (evaluate("Math.min(Math.max(document.documentElement.scrollHeight, document.body.scrollHeight), 15000)") as? Number)?.toDouble() ?: 0.0
+        val viewportHeight = (evaluate("window.innerHeight") as? Number)?.toDouble() ?: 800.0
+        val currentY = (evaluate("window.scrollY") as? Number)?.toDouble() ?: 0.0
 
-    const totalHeight = Math.min(
-        Math.max(document.documentElement.scrollHeight, document.body.scrollHeight),
-        15000
-    );
-    const viewportHeight = window.innerHeight;
-    const currentY = window.scrollY;
+        // Compute target position and clamp to valid range
+        val maxScrollY = (totalHeight - viewportHeight).coerceAtLeast(0.0)
+        val targetY = (currentY + pixels).coerceIn(0.0, maxScrollY)
 
-    // 计算目标位置，并限制在可滚动范围内
-    const targetY = Math.max(0, Math.min(totalHeight - viewportHeight, currentY + delta));
-
-    // 执行滚动
-    window.scrollTo({
-        top: targetY,
-        behavior: smooth ? 'smooth' : 'instant'
-    });
-
-    // 如果启用平滑滚动，则等待动画结束
-    if (smooth) {
-        const start = performance.now();
-        while (Math.abs(window.scrollY - targetY) > 1 && performance.now() - start < 2000) {
-            await new Promise(r => setTimeout(r, 50));
+        if (!smooth) {
+            evaluate("window.scrollTo(0, $targetY)")
+            return (evaluate("window.scrollY") as? Number)?.toDouble() ?: targetY
         }
-    }
 
-    return window.scrollY;
-})($pixels, ${if (smooth) "true" else "false"});
-    """.trimIndent()
+        // Smooth scrolling in discrete steps: avoid async Promise issues causing evaluate() to return early
+        val distance = targetY - currentY
+        val absDistance = kotlin.math.abs(distance)
+        // Step size based on viewport size, limit max steps to balance speed and smooth feel
+        val stepSize = kotlin.math.max(64.0, kotlin.math.min(viewportHeight * 0.6, 600.0))
+        var steps = kotlin.math.ceil(absDistance / stepSize).toInt().coerceIn(1, 25)
+        // If distance is very small, jump directly in a single step
+        if (absDistance < 10) steps = 1
 
-        return evaluate(js, 0.0)
+        for (i in 1..steps) {
+            if (!isActive || isCanceled) break
+            val y = currentY + distance * i / steps
+            evaluate("window.scrollTo(0, $y)")
+            // Wait for current step to stabilize: poll until scrollY ~ target y (error <=2px) or timeout
+            val stepStart = Instant.now()
+            while (kotlin.math.abs(((evaluate("window.scrollY") as? Number)?.toDouble() ?: y) - y) > 2 &&
+                Duration.between(stepStart, Instant.now()).toMillis() < 400 && isActive && !isCanceled) {
+                kotlinx.coroutines.delay(25)
+            }
+            // Minor buffer to allow lazy loading or layout jitter to settle
+            kotlinx.coroutines.delay(10)
+        }
+
+        // Final alignment to targetY, ensure precise last position
+        evaluate("window.scrollTo(0, $targetY)")
+        val finalStart = Instant.now()
+        while (kotlin.math.abs(((evaluate("window.scrollY") as? Number)?.toDouble() ?: targetY) - targetY) > 1 &&
+            Duration.between(finalStart, Instant.now()).toMillis() < 1000 && isActive && !isCanceled) {
+            kotlinx.coroutines.delay(30)
+        }
+
+        // Return final scroll position
+        return (evaluate("window.scrollY") as? Number)?.toDouble() ?: targetY
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun scrollToTop() {
-        val js = """
-(async () => {
-    if (!document?.documentElement || !document?.body) return;
-
-    const docEl = document.documentElement;
-    const body = document.body;
-
-    const totalHeight = Math.min(
-        Math.max(docEl.scrollHeight, body.scrollHeight, docEl.clientHeight),
-        15000
-    );
-    const viewportHeight = window.innerHeight || docEl.clientHeight || 800;
-
-    const startY = window.scrollY || window.pageYOffset || docEl.scrollTop || body.scrollTop || 0;
-    const targetY = 0;
-
-    const distance = targetY - startY; // negative or zero
-    const stepSize = Math.max(64, Math.floor(viewportHeight * 0.8));
-    let steps = Math.ceil(Math.abs(distance) / stepSize);
-    steps = Math.max(1, Math.min(steps, 100));
-
-    for (let i = 1; i <= steps; i++) {
-        const y = startY + (distance * i) / steps;
-        window.scrollTo({ top: y, behavior: 'smooth' });
-        const start = performance.now();
-        while (Math.abs(window.scrollY - y) > 1 && performance.now() - start < 600) {
-            await new Promise(r => setTimeout(r, 20));
-        }
-        // settle a bit to allow lazy-loaders
-        await new Promise(r => setTimeout(r, 20));
-    }
-
-    window.scrollTo({ top: targetY, behavior: 'smooth' });
-})();
-        """.trimIndent()
-        evaluate(js)
+    override suspend fun scrollToTop(): Double {
+        // Use scrollBy with negative currentY to reach top ensuring consistent logic
+        val currentY = (evaluate("window.scrollY") as? Number)?.toDouble() ?: 0.0
+        return scrollBy(-currentY, false)
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun scrollToBottom() {
-        val js = """
-(async () => {
-    if (!document || !document.documentElement || !document.body) return;
-
-    const docEl = document.documentElement;
-    const body = document.body;
-
-    const totalHeight = Math.min(
-        Math.max(docEl.scrollHeight, body.scrollHeight, docEl.clientHeight),
-        15000
-    );
-    const viewportHeight = window.innerHeight || docEl.clientHeight || 800;
-
-    const startY = window.scrollY || window.pageYOffset || docEl.scrollTop || body.scrollTop || 0;
-    const targetY = Math.max(0, totalHeight - viewportHeight);
-
-    const distance = targetY - startY; // positive or zero
-    const stepSize = Math.max(64, Math.floor(viewportHeight * 0.8));
-    let steps = Math.ceil(Math.abs(distance) / stepSize);
-    steps = Math.max(1, Math.min(steps, 100));
-
-    for (let i = 1; i <= steps; i++) {
-        const y = startY + (distance * i) / steps;
-        window.scrollTo({ top: y, behavior: 'smooth' });
-        const start = performance.now();
-        while (Math.abs(window.scrollY - y) > 1 && performance.now() - start < 600) {
-            await new Promise(r => setTimeout(r, 20));
-        }
-        // settle a bit to allow lazy-loaders
-        await new Promise(r => setTimeout(r, 20));
-    }
-
-    window.scrollTo({ top: targetY, behavior: 'smooth' });
-})();
-        """.trimIndent()
-        evaluate(js)
+    override suspend fun scrollToBottom(): Double {
+        // Compute delta to bottom using same clamping logic as scrollBy
+        val totalHeight = (evaluate("Math.min(Math.max(document.documentElement.scrollHeight, document.body.scrollHeight), 15000)") as? Number)?.toDouble() ?: 0.0
+        val viewportHeight = (evaluate("window.innerHeight") as? Number)?.toDouble() ?: 0.0
+        val currentY = (evaluate("window.scrollY") as? Number)?.toDouble() ?: 0.0
+        val maxScrollY = (totalHeight - viewportHeight).coerceAtLeast(0.0)
+        val delta = maxScrollY - currentY
+        return scrollBy(delta, false)
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun scrollToMiddle(ratio: Double) {
-        evaluate("__pulsar_utils__.scrollToMiddle($ratio)")
+    override suspend fun scrollToMiddle(ratio: Double): Double {
+        // Ratio defines relative position between top(0.0) and bottom(1.0)
+        val r = ratio.coerceIn(0.0, 1.0)
+        val totalHeight = (evaluate("Math.min(Math.max(document.documentElement.scrollHeight, document.body.scrollHeight), 15000)") as? Number)?.toDouble() ?: 0.0
+        val viewportHeight = (evaluate("window.innerHeight") as? Number)?.toDouble() ?: 0.0
+        val currentY = (evaluate("window.scrollY") as? Number)?.toDouble() ?: 0.0
+        val maxScrollY = (totalHeight - viewportHeight).coerceAtLeast(0.0)
+        val targetY = maxScrollY * r
+        val delta = targetY - currentY
+        return scrollBy(delta, false)
     }
 
     /**
@@ -488,37 +454,14 @@ abstract class AbstractWebDriver(
      * @return Actual scrollY pixel value after scrolling
      */
     override suspend fun scrollToViewport(n: Double, smooth: Boolean): Double {
-        val js = """
-(async (n, smooth) => {
-    if (!document?.documentElement || !document?.body) return null;
-
-    const viewportHeight = window.innerHeight;
-    const totalHeight = Math.min(
-        Math.max(document.documentElement.scrollHeight, document.body.scrollHeight),
-        15000
-    );
-
-    const targetY = Math.max(0, Math.min(totalHeight - viewportHeight, (n - 1) * viewportHeight));
-
-    // 执行滚动
-    window.scrollTo({
-        top: targetY,
-        behavior: smooth ? 'smooth' : 'instant'
-    });
-
-    // 若是平滑滚动，则等待滚动稳定
-    if (smooth) {
-        const start = performance.now();
-        while (Math.abs(window.scrollY - targetY) > 1 && performance.now() - start < 2000) {
-            await new Promise(r => setTimeout(r, 50));
-        }
-    }
-
-    return window.scrollY;
-})($n, ${if (smooth) "true" else "false"});
-    """.trimIndent()
-
-        return (evaluate(js) as? Number)?.toDouble() ?: 0.0
+        // Reuse scrollBy logic: compute delta to target viewport
+        val viewportHeight = (evaluate("window.innerHeight") as? Number)?.toDouble() ?: 0.0
+        val totalHeight = (evaluate("Math.min(Math.max(document.documentElement.scrollHeight, document.body.scrollHeight), 15000)") as? Number)?.toDouble() ?: 0.0
+        val currentY = (evaluate("window.scrollY") as? Number)?.toDouble() ?: 0.0
+        val maxScrollY = (totalHeight - viewportHeight).coerceAtLeast(0.0)
+        val targetY = ((n - 1.0) * viewportHeight).coerceIn(0.0, maxScrollY)
+        val delta = targetY - currentY
+        return scrollBy(delta, smooth)
     }
 
     @Throws(WebDriverException::class)

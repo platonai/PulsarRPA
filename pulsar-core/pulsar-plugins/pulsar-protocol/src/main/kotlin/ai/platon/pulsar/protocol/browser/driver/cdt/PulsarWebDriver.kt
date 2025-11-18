@@ -415,8 +415,9 @@ class PulsarWebDriver(
     }
 
     @Throws(WebDriverException::class)
-    override suspend fun scrollTo(selector: String) {
+    override suspend fun scrollTo(selector: String): Double {
         rpc.invokeDeferredSilently("scrollTo") { page.scrollIntoViewIfNeeded(selector) }
+        return (evaluate("window.scrollY") as? Number)?.toDouble() ?: 0.0
     }
 
     @Throws(WebDriverException::class)

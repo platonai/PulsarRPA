@@ -142,15 +142,15 @@ interface JvmWebDriver {
     fun uncheckAsync(selector: String): CompletableFuture<Unit>
 
     @Throws(WebDriverException::class)
-    fun scrollToAsync(selector: String): CompletableFuture<Unit>
+    fun scrollToAsync(selector: String): CompletableFuture<Double>
     @Throws(WebDriverException::class)
-    fun scrollDownAsync(count: Int = 1): CompletableFuture<Unit>
+    fun scrollDownAsync(count: Int = 1): CompletableFuture<Double>
     @Throws(WebDriverException::class)
-    fun scrollUpAsync(count: Int = 1): CompletableFuture<Unit>
+    fun scrollUpAsync(count: Int = 1): CompletableFuture<Double>
     @Throws(WebDriverException::class)
-    fun scrollToTopAsync(): CompletableFuture<Unit>
+    fun scrollToTopAsync(): CompletableFuture<Double>
     @Throws(WebDriverException::class)
-    fun scrollToBottomAsync(): CompletableFuture<Unit>
+    fun scrollToBottomAsync(): CompletableFuture<Double>
     @Throws(WebDriverException::class)
     fun mouseWheelDownAsync(count: Int = 1, deltaX: Double = 0.0, deltaY: Double = 150.0, delayMillis: Long = 0): CompletableFuture<Unit>
     @Throws(WebDriverException::class)

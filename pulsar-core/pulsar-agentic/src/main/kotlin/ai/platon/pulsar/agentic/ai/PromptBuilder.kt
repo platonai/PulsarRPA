@@ -853,9 +853,7 @@ $evalMessage
 ```
 
 $helpMessage
-
 $lastModelMessage
-
 ---
         """.trimIndent()
     }

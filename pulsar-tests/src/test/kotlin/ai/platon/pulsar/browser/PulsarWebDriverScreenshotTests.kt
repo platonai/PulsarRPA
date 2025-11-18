@@ -12,7 +12,7 @@ import kotlin.test.Test
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
-class PulsarWebDriverMockSiteScreenshotTests : WebDriverTestBase() {
+class PulsarWebDriverScreenshotTests : WebDriverTestBase() {
     private val screenshotDir = AppPaths.TEST_DIR.resolve("screenshot")
 
     @Test

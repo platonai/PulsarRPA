@@ -570,67 +570,79 @@ class PlaywrightDriver(
         }
     }
 
-    override suspend fun scrollTo(selector: String) {
-        try {
+    override suspend fun scrollTo(selector: String): Double {
+        return try {
             rpc.invokeDeferred("scrollTo") {
                 page.querySelector(selector).scrollIntoViewIfNeeded()
             }
+            (page.evaluate("window.scrollY") as Number).toDouble()
         } catch (e: Exception) {
             logger.warn("Failed to scroll to element: ${e.message}")
+            0.0
         }
     }
 
-    override suspend fun scrollDown(count: Int) {
-        try {
+    override suspend fun scrollDown(count: Int): Double {
+        return try {
             rpc.invokeDeferred("scrollDown") {
                 repeat(count) {
                     page.evaluate("window.scrollBy(0, window.innerHeight)")
                 }
             }
+            (page.evaluate("window.scrollY") as Number).toDouble()
         } catch (e: Exception) {
             rpc.handleWebDriverException(e, "scrollDown", "count: $count")
+            0.0
         }
     }
 
-    override suspend fun scrollUp(count: Int) {
-        try {
+    override suspend fun scrollUp(count: Int): Double {
+        return try {
             rpc.invokeDeferred("scrollUp") {
                 repeat(count) {
                     page.evaluate("window.scrollBy(0, -window.innerHeight)")
                 }
             }
+            (page.evaluate("window.scrollY") as Number).toDouble()
         } catch (e: Exception) {
             rpc.handleWebDriverException(e, "scrollUp", "count: $count")
+            0.0
         }
     }
 
-    override suspend fun scrollToTop() {
-        try {
+    override suspend fun scrollToTop(): Double {
+        return try {
             rpc.invokeDeferred("scrollToTop") {
                 page.evaluate("window.scrollTo(0, 0)")
             }
+            (page.evaluate("window.scrollY") as Number).toDouble()
         } catch (e: Exception) {
             rpc.handleWebDriverException(e, "scrollToTop")
+            0.0
         }
     }
 
-    override suspend fun scrollToBottom() {
-        try {
+    override suspend fun scrollToBottom(): Double {
+        return try {
             rpc.invokeDeferred("scrollToBottom") {
                 page.evaluate("window.scrollTo(0, document.body.scrollHeight)")
             }
+            (page.evaluate("window.scrollY") as Number).toDouble()
         } catch (e: Exception) {
             rpc.handleWebDriverException(e, "scrollToBottom")
+            0.0
         }
     }
 
-    override suspend fun scrollToMiddle(ratio: Double) {
-        try {
+    override suspend fun scrollToMiddle(ratio: Double): Double {
+        return try {
             rpc.invokeDeferred("scrollToMiddle") {
                 page.evaluate("window.scrollTo(0, document.body.scrollHeight * $ratio)")
             }
+            (page.evaluate("window.scrollY") as Number).toDouble()
         } catch (e: Exception) {
             rpc.handleWebDriverException(e, "scrollToMiddle", "ratio: $ratio")
+            0.0
         }
     }
 

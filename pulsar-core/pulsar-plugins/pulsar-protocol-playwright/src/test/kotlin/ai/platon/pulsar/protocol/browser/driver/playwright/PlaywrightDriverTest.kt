@@ -59,7 +59,7 @@ class PlaywrightDriverTest {
             driver.navigateTo(url)
             val text = driver.selectFirstTextOrNull("body")
             assertNotNull(text)
-            printlnPro(">>>\n" + text?.substring(0, 100) + "\n<<<")
+            printlnPro(">>>\n" + text.take(100) + "\n<<<")
         }
     }
 
@@ -72,7 +72,7 @@ class PlaywrightDriverTest {
             driver.waitForNavigation()
             val text = driver.selectFirstTextOrNull("body")
             assertNotNull(text)
-            printlnPro(">>>\n" + text.substring(0, 100) + "\n<<<")
+            printlnPro(">>>\n" + text.take(100) + "\n<<<")
         }
     }
 

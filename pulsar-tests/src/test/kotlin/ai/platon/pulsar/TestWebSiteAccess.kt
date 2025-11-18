@@ -54,6 +54,8 @@ class TestWebSiteAccess {
 
     protected val generatedAssetsBaseURL get() = "http://127.0.0.1:$port/generated"
 
+    protected val simpleDomURL get() = "$assetsBaseURL/dom.html"
+
     protected val interactiveUrl get() = "$generatedAssetsBaseURL/interactive-1.html"
 
     protected val ttaBaseURL get() = "$generatedAssetsBaseURL/tta"
