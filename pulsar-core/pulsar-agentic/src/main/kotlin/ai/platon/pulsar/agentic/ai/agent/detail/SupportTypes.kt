@@ -11,6 +11,7 @@ import ai.platon.pulsar.skeleton.ai.AgentState
 import ai.platon.pulsar.skeleton.ai.DetailedActResult
 import ai.platon.pulsar.skeleton.ai.ObserveOptions
 import ai.platon.pulsar.skeleton.ai.ObserveResult
+import ai.platon.pulsar.skeleton.ai.ToolCall
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import java.lang.ref.WeakReference
 import java.time.Instant
@@ -36,8 +37,13 @@ object ActResultHelper {
 
     fun complete(actionDescription: ActionDescription): ActResult {
         val detailedActResult = DetailedActResult(actionDescription, null, true, actionDescription.summary)
+        // val toolCall = ToolCall("agent", "done")
         return ActResult(
-            true, "completed", actionDescription.instruction, null, detailedActResult
+            true,
+            "completed",
+            actionDescription.instruction,
+            null,
+            detailedActResult
         )
     }
 }
@@ -133,30 +139,36 @@ data class ExecutionContext constructor(
 
 @Deprecated("Use requestId to retrieve context")
 fun ActionOptions.setContext(context: ExecutionContext) {
+    // TODO: interface/API call with remote context management
     additionalContext["context"] = context
 }
 
 @Deprecated("Use requestId to retrieve context")
 fun ActionOptions.getContext(): ExecutionContext? {
+    // TODO: interface/API call with remote context management
     return additionalContext["context"] as? ExecutionContext
 }
 
 @Deprecated("Use requestId to retrieve context")
 fun ObserveResult.setContext(context: ExecutionContext) {
+    // TODO: interface/API call with remote context management
     additionalContext["context"] = context
 }
 
 @Deprecated("Use requestId to retrieve context")
 fun ObserveResult.getContext(): ExecutionContext? {
+    // TODO: interface/API call with remote context management
     return additionalContext["context"] as? ExecutionContext
 }
 
 @Deprecated("Use requestId to retrieve context")
 fun ObserveOptions.setContext(context: ExecutionContext) {
+    // TODO: interface/API call with remote context management
     additionalContext["context"] = context
 }
 
 @Deprecated("Use requestId to retrieve context")
 fun ObserveOptions.getContext(): ExecutionContext? {
+    // TODO: interface/API call with remote context management
     return additionalContext["context"] as? ExecutionContext
 }
