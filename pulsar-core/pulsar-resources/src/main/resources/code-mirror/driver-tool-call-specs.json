@@ -578,7 +578,7 @@
     "type" : "String",
     "defaultValue" : ""
   } ],
-  "returnType" : "Unit",
+  "returnType" : "Double",
   "description" : "This method fetches an element with [selector], scrolls it into view if needed. If there's no element matching [selector], the method does nothing."
 }, {
   "domain" : "driver",
@@ -588,7 +588,7 @@
     "type" : "Int",
     "defaultValue" : "1"
   } ],
-  "returnType" : "Unit",
+  "returnType" : "Double",
   "description" : "The current page frame scrolls down for [count] times."
 }, {
   "domain" : "driver",
@@ -598,7 +598,7 @@
     "type" : "Int",
     "defaultValue" : "1"
   } ],
-  "returnType" : "Unit",
+  "returnType" : "Double",
   "description" : "The current page frame scrolls up for [count] times."
 }, {
   "domain" : "driver",
@@ -613,18 +613,18 @@
     "defaultValue" : "true"
   } ],
   "returnType" : "Double",
-  "description" : null
+  "description" : "Scrolls the current page frame vertically by the given number of pixels. Positive values scroll down, negative values scroll up. The target position is clamped to the scrollable range [0, scrollHeight - viewportHeight]. When [smooth] is true a deterministic, step‑wise scrolling algorithm is used (instead of relying on the browser's native smooth scrolling..."
 }, {
   "domain" : "driver",
   "method" : "scrollToTop",
   "arguments" : [ ],
-  "returnType" : "Unit",
+  "returnType" : "Double",
   "description" : "The current page frame scrolls to the top."
 }, {
   "domain" : "driver",
   "method" : "scrollToBottom",
   "arguments" : [ ],
-  "returnType" : "Unit",
+  "returnType" : "Double",
   "description" : "The current page frame scrolls to the bottom."
 }, {
   "domain" : "driver",
@@ -634,7 +634,7 @@
     "type" : "Double",
     "defaultValue" : ""
   } ],
-  "returnType" : "Unit",
+  "returnType" : "Double",
   "description" : "The current page frame scrolls to the middle."
 }, {
   "domain" : "driver",

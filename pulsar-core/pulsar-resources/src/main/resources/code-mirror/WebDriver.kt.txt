@@ -10,7 +10,6 @@ import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.dom.nodes.GeoAnchor
 import ai.platon.pulsar.external.ModelResponse
-import com.google.common.annotations.Beta
 import org.jsoup.Connection
 import java.io.Closeable
 import java.time.Duration
@@ -953,7 +952,7 @@ interface WebDriver : Closeable {
      * the [selector], the first will be selected.
      */
     @Throws(WebDriverException::class)
-    suspend fun scrollTo(selector: String)
+    suspend fun scrollTo(selector: String): Double
 
     /**
      * The current page frame scrolls down for [count] times.
@@ -965,7 +964,7 @@ interface WebDriver : Closeable {
      * @param count The times to scroll down.
      */
     @Throws(WebDriverException::class)
-    suspend fun scrollDown(count: Int = 1)
+    suspend fun scrollDown(count: Int = 1): Double
 
     /**
      * The current page frame scrolls up for [count] times.
@@ -977,8 +976,36 @@ interface WebDriver : Closeable {
      * @param count The times to scroll up.
      */
     @Throws(WebDriverException::class)
-    suspend fun scrollUp(count: Int = 1)
+    suspend fun scrollUp(count: Int = 1): Double
 
+    /**
+     * Scrolls the current page frame vertically by the given number of pixels.
+     *
+     * Positive values scroll down, negative values scroll up. The target position is clamped to the
+     * scrollable range [0, scrollHeight - viewportHeight].
+     *
+     * When [smooth] is true a deterministic, step‑wise scrolling algorithm is used (instead of relying
+     * on the browser's native smooth scrolling) for higher stability: it issues incremental
+     * `window.scrollTo()` calls and waits for the viewport to settle after each step. This reduces race
+     * conditions with lazy‑loaded content or async layout changes and yields more predictable final
+     * positions.
+     *
+     * Typical usage:
+     * ```kotlin
+     * // Scroll down 200px smoothly (default)
+     * driver.scrollBy()
+     * // Scroll up 500px immediately
+     * driver.scrollBy(-500.0, smooth = false)
+     * // Scroll down one viewport height, smooth
+     * val y = driver.scrollBy(driver.viewportHeight(), smooth = true)
+     * ```
+     *
+     * @param pixels The delta in pixels to scroll; positive scrolls down, negative scrolls up. Default 200.0.
+     * @param smooth Whether to perform a deterministic smooth scrolling sequence. If false a single
+     *               `window.scrollTo()` is executed.
+     * @return The final vertical scroll offset (window.scrollY) after scrolling.
+     * @throws WebDriverException If the underlying browser interaction fails.
+     */
     @Throws(WebDriverException::class)
     suspend fun scrollBy(pixels: Double = 200.0, smooth: Boolean = true): Double
 
@@ -990,7 +1017,7 @@ interface WebDriver : Closeable {
      * ```
      */
     @Throws(WebDriverException::class)
-    suspend fun scrollToTop()
+    suspend fun scrollToTop(): Double
 
     /**
      * The current page frame scrolls to the bottom.
@@ -1000,7 +1027,7 @@ interface WebDriver : Closeable {
      * ```
      */
     @Throws(WebDriverException::class)
-    suspend fun scrollToBottom()
+    suspend fun scrollToBottom(): Double
 
     /**
      * The current page frame scrolls to the middle.
@@ -1014,7 +1041,7 @@ interface WebDriver : Closeable {
      * @param ratio The ratio of the page to scroll to, 0.0 means the top, 1.0 means the bottom.
      */
     @Throws(WebDriverException::class)
-    suspend fun scrollToMiddle(ratio: Double)
+    suspend fun scrollToMiddle(ratio: Double): Double
 
     @Deprecated("Inappropriate name", ReplaceWith("scrollToViewport(screenNumber)"))
     @Throws(WebDriverException::class)

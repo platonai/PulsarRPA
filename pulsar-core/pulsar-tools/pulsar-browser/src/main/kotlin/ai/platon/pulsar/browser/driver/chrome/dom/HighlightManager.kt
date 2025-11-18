@@ -99,7 +99,7 @@ class HighlightManager(
         container.id = 'b4debug-highlights';
         container.setAttribute('data-b4-highlight','container');
         container.style.cssText = `
-            position: fixed; /* fixed so we subtract scroll offsets manually */
+            position: absolute;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
             pointer-events: none;
