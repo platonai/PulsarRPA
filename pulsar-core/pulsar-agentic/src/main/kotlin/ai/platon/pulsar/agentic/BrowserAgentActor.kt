@@ -2,7 +2,10 @@ package ai.platon.pulsar.agentic
 
 import ai.platon.pulsar.agentic.ai.PromptBuilder
 import ai.platon.pulsar.agentic.ai.agent.InferenceEngine
-import ai.platon.pulsar.agentic.ai.agent.detail.*
+import ai.platon.pulsar.agentic.ai.agent.detail.ActResultHelper
+import ai.platon.pulsar.agentic.ai.agent.detail.AgentStateManager
+import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
+import ai.platon.pulsar.agentic.ai.agent.detail.PageStateTracker
 import ai.platon.pulsar.agentic.ai.tta.ContextToAction
 import ai.platon.pulsar.agentic.tools.AgentToolManager
 import ai.platon.pulsar.common.*
@@ -38,10 +41,10 @@ open class BrowserAgentActor(
     protected val fs get() = toolExecutor.fs
 
     // Helper classes for better code organization
+//    protected lateinit var baseContext: ExecutionContext
+//    protected var activeContext: ExecutionContext? = null
     protected val pageStateTracker = PageStateTracker(session, config)
     protected val stateManager by lazy { AgentStateManager(this, pageStateTracker) }
-    protected lateinit var initContext: ExecutionContext
-    protected var activeContext: ExecutionContext? = null
 
     override val uuid get() = _uuid
     override val stateHistory: List<AgentState> get() = stateManager.stateHistory
@@ -78,7 +81,7 @@ open class BrowserAgentActor(
      */
     override suspend fun act(action: ActionOptions): ActResult {
         // val context = action.getContext() ?: stateManager.buildInitExecutionContext(action, "act")
-        val context = getActiveContext(action, "act")
+        val context = stateManager.getOrCreateActiveContext(action, "act")
 
         return try {
             withTimeout(config.actTimeoutMs) {
@@ -98,7 +101,7 @@ open class BrowserAgentActor(
 
     override suspend fun act(observe: ObserveResult): ActResult {
         val instruction = observe.agentState.instruction
-        val context = activeContext()
+        val context = stateManager.getActiveContext()
         require(observe.agentState == context.agentState) { "Required: observe.agentState == context?.agentState" }
 
         val element = observe.observeElement
@@ -154,7 +157,7 @@ open class BrowserAgentActor(
      */
     override suspend fun extract(options: ExtractOptions): ExtractResult {
         val instruction = promptBuilder.initExtractUserInstruction(options.instruction)
-        val context = stateManager.buildExecutionContext(instruction, 1, "extract")
+        val context = stateManager.buildIndependentExecutionContext(instruction, 1, "extract")
 
         return try {
             val params = context.createExtractParams(options.schema)
@@ -210,32 +213,11 @@ open class BrowserAgentActor(
 //            stateManager.buildInitExecutionContext(options.copy(instruction = instruction), "observe")
 //        } else ctx
 
-        val context = getActiveContext(options)
+        val context = stateManager.getOrCreateActiveContext(options)
 
         val result = doObserveActObserve(options, context, options.resolve)
 
         return result.observeResults
-    }
-
-    protected suspend fun getActiveContext(action: ActionOptions, event: String): ExecutionContext {
-        if (activeContext == null) {
-            initContext = stateManager.buildInitExecutionContext(action, event)
-            activeContext = initContext
-        }
-        return activeContext!!
-    }
-
-    protected suspend fun getActiveContext(options: ObserveOptions): ExecutionContext {
-        if (activeContext == null) {
-            val instruction = promptBuilder.initObserveUserInstruction(options.instruction).instruction?.content
-            initContext = stateManager.buildInitExecutionContext(options.copy(instruction = instruction), "observe")
-            activeContext = initContext
-        }
-        return activeContext!!
-    }
-
-    protected fun activeContext(): ExecutionContext {
-        return requireNotNull(activeContext) { "Actor not initialized, call act(action: ActionOptions) first!" }
     }
 
     data class ObserveActResult(
@@ -250,7 +232,7 @@ open class BrowserAgentActor(
         }
 
         // val context = requireNotNull(options.getContext()) { "Context is required to doObserveAct" }
-        val context = activeContext()
+        val context = stateManager.getActiveContext()
 
         val (observeResults, actionDescription) = doObserveActObserve(options, context, options.resolve)
 

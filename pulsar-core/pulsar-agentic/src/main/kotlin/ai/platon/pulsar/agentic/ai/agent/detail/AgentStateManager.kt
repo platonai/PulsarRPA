@@ -6,6 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.MessageWriter
+import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import ai.platon.pulsar.skeleton.ai.*
 import kotlinx.coroutines.withTimeout
@@ -18,9 +19,15 @@ class AgentStateManager(
     val agent: BrowserAgentActor,
     val pageStateTracker: PageStateTracker,
 ) {
+    private val logger = getLogger(this)
+
     private val _stateHistory = mutableListOf<AgentState>()
     private val _processTrace = mutableListOf<ProcessTrace>()
     private val config get() = agent.config
+
+    private lateinit var _baseContext: ExecutionContext
+    private var _activeContext: ExecutionContext? = null
+    private val contexts: MutableList<ExecutionContext> = mutableListOf()
 
     val driver get() = agent.activeDriver as PulsarWebDriver
     val stateHistory: List<AgentState> get() = _stateHistory
@@ -28,22 +35,48 @@ class AgentStateManager(
 
     val auxLogDir: Path get() = AppPaths.detectAuxiliaryLogDir().resolve("agent")
 
-    suspend fun buildBaseExecutionContext(
-        action: ActionOptions,
-        event: String,
-        baseContext: ExecutionContext? = null
-    ): ExecutionContext {
-        val context = buildExecutionContext(action.action, 0, event, baseContext = baseContext)
-        // action.setContext(context)
+    suspend fun getOrCreateActiveContext(action: ActionOptions, event: String): ExecutionContext {
+        if (_activeContext == null) {
+            _baseContext = buildInitExecutionContext(action, event)
+            setActiveContext(_baseContext)
+        }
+        return _activeContext!!
+    }
+
+    suspend fun getOrCreateActiveContext(options: ObserveOptions): ExecutionContext {
+        if (_activeContext == null) {
+//            val instruction = promptBuilder.initObserveUserInstruction(options.instruction).instruction?.content
+//            baseContext = buildInitExecutionContext(options.copy(instruction = instruction), "observe")
+            _baseContext = buildInitExecutionContext(options, "observe")
+            setActiveContext(_baseContext)
+        }
+        return _activeContext!!
+    }
+
+    fun getActiveContext(): ExecutionContext {
+        val context = requireNotNull(_activeContext) { "Actor not initialized, call act(action: ActionOptions) first!" }
+        require(context == contexts.last()) { "Active context should be the last context in the list. Context list size: ${contexts.size}" }
         return context
     }
 
-    suspend fun buildInitExecutionContext(
-        action: ActionOptions,
-        event: String,
-        baseContext: ExecutionContext? = null
-    ): ExecutionContext {
-        val context = buildExecutionContext(action.action, 1, event, baseContext = baseContext)
+    fun setActiveContext(context: ExecutionContext) {
+        _activeContext = context
+        if (contexts.lastOrNull() == context) {
+            logger.warn("Context has been already added | sid=${context.sid}")
+            return
+        }
+        contexts.add(context)
+    }
+
+    suspend fun buildBaseExecutionContext(action: ActionOptions, event: String): ExecutionContext {
+        val context = buildExecutionContext(action.action, 0, event)
+        // action.setContext(context)
+        _baseContext = context
+        return context
+    }
+
+    suspend fun buildInitExecutionContext(action: ActionOptions, event: String): ExecutionContext {
+        val context = buildExecutionContext(action.action, 1, event)
         // action.setContext(context)
         return context
     }
@@ -60,6 +93,38 @@ class AgentStateManager(
     }
 
     suspend fun buildExecutionContext(
+        /**
+         * The user's instruction
+         * */
+        instruction: String,
+        step: Int,
+        event: String,
+        /**
+         * A base context that the new context can inherit from
+         * */
+        baseContext: ExecutionContext? = null
+    ): ExecutionContext {
+        val context = buildExecutionContext0(instruction, step, event, baseContext = baseContext)
+        return context
+    }
+
+    suspend fun buildIndependentExecutionContext(
+        /**
+         * The user's instruction
+         * */
+        instruction: String,
+        step: Int,
+        event: String,
+        /**
+         * A base context that the new context can inherit from
+         * */
+        baseContext: ExecutionContext? = null
+    ): ExecutionContext {
+        val context = buildExecutionContext0(instruction, step, event, baseContext = baseContext)
+        return context
+    }
+
+    private suspend fun buildExecutionContext0(
         /**
          * The user's instruction
          * */
@@ -103,9 +168,7 @@ class AgentStateManager(
         )
     }
 
-    suspend fun getAgentState(
-        instruction: String, step: Int, prevAgentState: AgentState? = null
-    ): AgentState {
+    suspend fun getAgentState(instruction: String, step: Int, prevAgentState: AgentState? = null): AgentState {
         pageStateTracker.waitForDOMSettle()
 
         val browserUseState = getBrowserUseState()
@@ -181,7 +244,9 @@ class AgentStateManager(
         }
     }
 
-    fun addTrace(state: AgentState?, items: Map<String, Any?> = emptyMap(), event: String? = null, message: String? = null) {
+    fun addTrace(
+        state: AgentState?, items: Map<String, Any?> = emptyMap(), event: String? = null, message: String? = null
+    ) {
         val step = state?.step ?: 0
         val msg = message ?: state?.toString()
 
