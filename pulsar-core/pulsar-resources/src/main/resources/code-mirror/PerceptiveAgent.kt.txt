@@ -18,6 +18,8 @@ data class ActionOptions(
     @get:JsonIgnore
     val resolve: Boolean = true,
     @get:JsonIgnore
+    val multiAct: Boolean = false,
+    @get:JsonIgnore
     val additionalContext: MutableMap<String, Any> = mutableMapOf(),
 )
 
@@ -31,6 +33,11 @@ data class ActResult constructor(
     @get:JsonIgnore
     val detail: DetailedActResult? = null
 ) {
+    /**
+     * Check if the task is complete
+     * */
+    val isComplete: Boolean = detail?.actionDescription?.isReallyComplete == true
+
     /**
      * Expression with weak parameter types
      * */

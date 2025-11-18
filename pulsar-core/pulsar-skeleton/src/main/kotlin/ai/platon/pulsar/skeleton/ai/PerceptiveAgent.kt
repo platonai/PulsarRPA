@@ -6,42 +6,84 @@ import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.JsonNode
 import java.util.*
 
+/**
+ * Options describing a single user action to be executed by the agent.
+ *
+ * Contract / 行为约定:
+ * - action: Required. A natural-language instruction or a tool expression to execute.
+ * - multiAct: When true, each act() call creates a new step/context in a chain; when false, it reuses the last context.
+ * - Timeouts are milliseconds. `domSettleTimeoutMs` waits for DOM to become stable; `timeoutMs` bounds the whole action.
+ * - `resolve`: Internal flag indicating the action is triggered from the resolve loop (excluded from JSON).
+ *
+ * Notes / 说明:
+ * - This data class is immutable. Prefer `copy(...)` to adjust values.
+ * - `modelName`, `variables`, and `iframes` are reserved for future model/runtime options.
+ * - `additionalContext` is deprecated and will be removed in future versions.
+ *
+ * @property action The user's action command or tool expression. 必填，用户动作/工具表达式。
+ * @property multiAct Whether each act forms a new chained context (true) or reuses the last one (false). 是否每次 act 新建上下文。
+ * @property modelName Reserved: LLM/model name to use (e.g., "chatgpt-5.1"). 保留字段：模型名。
+ * @property variables Reserved: Extra variables for prompt/tool. 保留字段：额外变量。
+ * @property domSettleTimeoutMs Optional timeout in ms to wait for DOM settling. DOM 稳定等待超时（毫秒）。
+ * @property timeoutMs Optional overall timeout in ms for this action. 动作总超时（毫秒）。
+ * @property iframes Reserved: Whether to include iframes when observing/acting. 保留字段：是否包含 iframe。
+ * @property resolve Internal: true if invoked from resolve loop; excluded from JSON. 内部字段：是否由 resolve 驱动。
+ * @property additionalContext Deprecated: no longer used. 废弃字段。
+ */
 data class ActionOptions(
-    val action: String,  // the user's action command
+    val action: String,
+    val multiAct: Boolean = false,
     val modelName: String? = null,
     val variables: Map<String, String>? = null,
-    val domSettleTimeoutMs: Int? = null,
-    // reserved
-    val timeoutMs: Int? = null,
-    // reserved
+    val domSettleTimeoutMs: Long? = null,
+    val timeoutMs: Long? = null,
     val iframes: Boolean? = null,
     @get:JsonIgnore
     val resolve: Boolean = true,
+    @Deprecated("no longer used")
     @get:JsonIgnore
     val additionalContext: MutableMap<String, Any> = mutableMapOf(),
 )
 
+/**
+ * Result returned after executing an action/tool call.
+ *
+ * Semantics / 语义:
+ * - `success`: Execution status of the attempted action/tool call.
+ * - `message`: Human-readable status or error description.
+ * - `action`: The original user command that led to this result (if available).
+ * - `result`: Structured tool-call output; may be null if the call didn't execute or failed early.
+ * - `detail`: Internal rich details for diagnostics/tracing; excluded from JSON.
+ *
+ * Derived fields / 派生字段:
+ * - `isComplete`: Whether the task has been determined to be complete by the agent.
+ * - `expression`: The tool expression with weakly typed parameters, if any.
+ * - `tcEvalValue`: The evaluation value returned by the tool, if any.
+ *
+ * The `toString()` provides a compact, log-friendly summary.
+ *
+ * @property success Whether the action/tool execution succeeded. 是否成功。
+ * @property message Additional status or error message. 状态/错误信息。
+ * @property action The user action command that produced this result. 触发该结果的用户动作。
+ * @property result The structured tool-call result payload. 工具调用结果。
+ * @property detail Internal diagnostics detail; not serialized. 内部诊断信息（不序列化）。
+ */
 data class ActResult constructor(
     val success: Boolean = false,
     val message: String = "",
-
     val action: String? = null,
     val result: ToolCallResult? = null,
-    // internal
     @get:JsonIgnore
     val detail: DetailedActResult? = null
 ) {
-    /**
-     * Check if the task is complete
-     * */
+    /** Check if the overall task is complete according to the agent. */
     val isComplete: Boolean = detail?.actionDescription?.isReallyComplete == true
 
-    /**
-     * Expression with weak parameter types
-     * */
+    /** Expression with weak parameter types (if provided by the model/tool). */
     @get:JsonIgnore
     val expression get() = result?.actionDescription?.expression
 
+    /** Evaluation value returned by the tool call, if available. */
     @get:JsonIgnore
     val tcEvalValue get() = result?.evaluate?.value
 

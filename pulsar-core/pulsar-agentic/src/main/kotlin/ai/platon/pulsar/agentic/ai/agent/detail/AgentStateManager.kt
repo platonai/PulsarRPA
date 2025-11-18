@@ -41,7 +41,14 @@ class AgentStateManager(
         if (_activeContext == null) {
             _baseContext = buildInitExecutionContext(action, event)
             setActiveContext(_baseContext)
+        } else if (action.multiAct) {
+            val lastActiveContext = getActiveContext()
+            val step = lastActiveContext.step + 1
+            val context = buildExecutionContext(action.action, step, event = "act-$step",
+                baseContext = lastActiveContext)
+            setActiveContext(context)
         }
+
         return _activeContext!!
     }
 
