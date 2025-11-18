@@ -5,24 +5,9 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.compactedBrief
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.databind.JsonNode
 import org.apache.commons.lang3.StringUtils
 import java.time.Instant
-
-data class ActionOptions(
-    val action: String,  // the user's action command
-    val modelName: String? = null,
-    val variables: Map<String, String>? = null,
-    val domSettleTimeoutMs: Int? = null,
-    val timeoutMs: Int? = null,
-    val iframes: Boolean? = null,
-    @get:JsonIgnore
-    val resolve: Boolean = true,
-    @get:JsonIgnore
-    val additionalContext: MutableMap<String, Any> = mutableMapOf(),
-)
 
 data class DetailedActResult(
     val actionDescription: ActionDescription,
@@ -53,88 +38,6 @@ data class DetailedActResult(
         }
     }
 }
-
-data class ActResult constructor(
-    val success: Boolean = false,
-    val message: String = "",
-
-    val action: String? = null,
-    val result: ToolCallResult? = null,
-    @get:JsonIgnore
-    val detail: DetailedActResult? = null
-) {
-    /**
-     * Expression with weak parameter types
-     * */
-    @get:JsonIgnore
-    val expression get() = result?.actionDescription?.expression
-
-    @get:JsonIgnore
-    val tcEvalValue get() = result?.evaluate?.value
-
-    val isComplete: Boolean get() = detail?.actionDescription?.isComplete == true
-
-    override fun toString(): String {
-        val eval = Strings.compactInline(tcEvalValue?.toString(), 50)
-        return "[$action] expr: $expression eval: $eval message: $message"
-    }
-
-    companion object {
-        fun failed(message: String, action: String? = null) = ActResult(false, message, action)
-        fun failed(message: String, detail: DetailedActResult) = ActResult(
-            false,
-            message,
-            detail = detail,
-        )
-
-        fun complete(actionDescription: ActionDescription): ActResult {
-            val detailedActResult = DetailedActResult(actionDescription, null, true, actionDescription.summary)
-            return ActResult(
-                true, "completed", actionDescription.instruction, null, detailedActResult
-            )
-        }
-    }
-}
-
-data class ExtractOptions(
-    val instruction: String,
-    val schema: ExtractionSchema,
-    val modelName: String? = null,
-    val modelClientOptions: Map<String, Any>? = null,
-    val domSettleTimeoutMs: Long? = null,
-    val selector: String? = null,
-    val iframes: Boolean? = null,
-    val frameId: String? = null,
-    val agentState: AgentState? = null,
-)
-
-data class ExtractResult(
-    val success: Boolean,
-    val message: String = "",
-    val data: JsonNode
-) {
-    override fun toString(): String {
-        return "success: $success message: $message data: " + Strings.compactInline(data.toString(), 50)
-    }
-}
-
-data class ObserveOptions(
-    val instruction: String? = null,
-    val modelName: String? = null,
-    val modelClientOptions: Map<String, Any>? = null,
-    val domSettleTimeoutMs: Long? = null,
-    val returnAction: Boolean? = null,
-
-    val drawOverlay: Boolean = true,
-    val iframes: Boolean? = null,
-    val frameId: String? = null,
-
-    val resolve: Boolean = false,
-    @get:JsonIgnore
-    val agentState: AgentState? = null,
-    @get:JsonIgnore
-    val additionalContext: MutableMap<String, Any> = mutableMapOf(),
-)
 
 data class ToolCallSpec constructor(
     val domain: String,
@@ -287,10 +190,7 @@ data class ObserveResult constructor(
     val actionDescription: ActionDescription? = null,
 
     val additionalContext: MutableMap<String, Any> = mutableMapOf(),
-) {
-    @Deprecated("Use observeElement instead", ReplaceWith("observeElement"))
-    val observeElements: List<ObserveElement>? get() = actionDescription?.observeElements
-}
+)
 
 data class AgentState constructor(
     var step: Int,
@@ -414,6 +314,7 @@ data class ActionDescription constructor(
     val toolCall: ToolCall? get() = observeElement?.toolCall
     val locator: String? get() = observeElement?.locator
     val xpath: String? get() = observeElement?.xpath
+
     /**
      * Expression with weak parameter types
      * */

@@ -26,26 +26,11 @@ Read root README-AI.md and `devdocs/copilot/test-guide.md` for guidelines
 
 - function call 中有一些参数需要提前传入，或者要求 LLM 留空
 
-### Fully locator support in WebDriver
+## Failed tests 🚩
 
-在 PulsarWebDriver 中，对所有依赖 selector 的方法进行改进：
 
-1. 如果 selector 具有 `backend:` 前缀，则 `backend:` 后的部分为 `backendNodeId`，使用该 id 进行元素定位。
-2. 其他情况，保持现有逻辑不变，使用标准 css path 定位
 
-### CDP scrolling methods in PulsarWebDriver
-
-使用 CDP 方法实现 PulsarWebDriver 的 scroll 方法。
-
-## Failed tests
-
-ai.platon.pulsar.browser.PulsarWebDriverMockSite2Tests#When navigate to a HTML page then the navigate state are correct
-
-ai.platon.pulsar.browser.driver.chrome.dom.ChromeDomServiceIsScrollableTest#isScrollable basics - regular elements and overflow hidden
-
-ai.platon.pulsar.browser.driver.chrome.dom.ChromeDomServiceIsScrollableTest#isScrollable special - body html and toggle overflow
-
-## Tool Call Upgrading Automatically
+## Tool Call Upgrading Automatically  🚩
 
 1. update MiniWebDriver.kt from WebDriver.kt
 2. update ToolCallExecutor
@@ -59,7 +44,7 @@ Ensure all expressions in tool call specification can be correctly executed.
 2. generate kotlin expressions for each tool call
 3. call `ToolCallExecutor.execute()` to execute each kotlin expression
 4. check the web page to ensure the tool call is called as expected
-5.
+
 
 ## PageStateTracker
 
@@ -87,14 +72,15 @@ May be combined:
 
 ## Bugs
 
-- WebDriver.scrollBy returns a wrong value
-- scroll 后，highlight 绘制错误
+- WebDriver.scrollBy returns a wrong value ✅
+- scroll 后，highlight 绘制错误 ✅
+
+## Features
+
+- add tool: hover
+- test todolist.md, `write todolist.md with 5 steps, and then replace the plan with 7 steps, all steps are mock steps for test`
 
 ## Notes
 
-- if a tool call not handled by parser in ToolCallExecutor, fallback to ToolCallExecutor.eval()
-- NanoDOMTreeNode 确保每一个可见元素的文档坐标均存在
-- highlight 非常重要
-- click() 增加 Key 参数，譬如 Ctrl + click
-- 增加对 AbstractWebDriver 中所有 js 方法的测试，在PulsarWebDriverMockSiteTests中测试
+- 增加对 AbstractWebDriver 中所有 js 方法的测试，在PulsarWebDriverMockSiteTests中测试 🚩
 
