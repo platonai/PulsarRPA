@@ -5,6 +5,6 @@ import ai.platon.pulsar.agentic.context.AgenticContexts
 suspend fun main() {
     val agent = AgenticContexts.getOrCreateAgent()
 
-    val problem = "打开 amazon.com，搜索 calabi-yau，对搜索结果给出一个总结"
+    val problem = "打开 https://www.amazon.com/b?node=172282，向下滚动10次"
     agent.resolve(problem)
 }

@@ -85,6 +85,11 @@ May be combined:
 
 充分使用文件系统来保留各种现场数据，智能体需要能够随时调阅文档库。
 
+## Bugs
+
+- WebDriver.scrollBy returns a wrong value
+- scroll 后，highlight 绘制错误
+
 ## Notes
 
 - if a tool call not handled by parser in ToolCallExecutor, fallback to ToolCallExecutor.eval()

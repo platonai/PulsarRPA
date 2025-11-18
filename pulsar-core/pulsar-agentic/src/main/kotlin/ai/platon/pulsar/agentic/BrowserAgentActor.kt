@@ -312,7 +312,7 @@ open class BrowserAgentActor(
         }
 
         stateManager.syncBrowserUseState(context)
-        val interactiveElements = context.agentState.browserUseState.getInteractiveElements()
+        val interactiveElements = context.agentState.browserUseState.getAllInteractiveElements()
         try {
             if (drawOverlay) {
                 domService.addHighlights(interactiveElements)

@@ -6,7 +6,7 @@ import ai.platon.pulsar.common.math.roundTo
 import org.apache.commons.lang3.StringUtils
 import kotlin.math.max
 
-class MicroToNanoTreeHelper(
+class MicroToNanoTreeHelper constructor(
     private val microTree: MicroDOMTreeNode,
     private val seenChunks: MutableList<Pair<Double, Double>>,
 ) {
@@ -160,9 +160,9 @@ class MicroToNanoTreeHelper(
 
 class MicroDOMTreeNodeHelper(
     private val root: MicroDOMTreeNode,
-    private val seenChunks: MutableList<Pair<Double, Double>>,
-    private val currentViewportIndex: Int,
-    private val maxViewportIndex: Int = 10000,
+    private val includeAllViewports: Boolean = false,
+    private val currentViewportIndex: Int = 1,
+    private val lastViewportIndex: Int = 10000,
     private val maxNonInteractiveTextLength: Int = 100,
 ) {
     companion object {
@@ -303,8 +303,10 @@ class MicroDOMTreeNodeHelper(
             )
         }
 
-        val desiredViewports = mutableSetOf(1, 2, currentViewportIndex, maxViewportIndex)
-        var shorterNodeList = nodes.filter { (it.viewportIndex ?: -1) in desiredViewports }
+        var shorterNodeList = if (!includeAllViewports) {
+            val desiredViewports = mutableSetOf(1, 2, currentViewportIndex, lastViewportIndex)
+            nodes.filter { (it.viewportIndex ?: -1) in desiredViewports }
+        } else nodes
 
         fun goodSize() = estimatedSize(shorterNodeList) <= 100_000
 
@@ -315,7 +317,7 @@ class MicroDOMTreeNodeHelper(
         }
         if (goodSize()) return InteractiveDOMTreeNodeList(shorterNodeList)
 
-        val discardViewportIndexes = listOf(2, maxViewportIndex, 1)
+        val discardViewportIndexes = listOf(2, lastViewportIndex, 1)
         discardViewportIndexes.forEach { discardViewportIndex ->
             shorterNodeList = shorterNodeList.filterNot { it.viewportIndex == discardViewportIndex }
             if (goodSize()) return InteractiveDOMTreeNodeList(shorterNodeList)

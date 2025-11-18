@@ -80,6 +80,10 @@ class HighlightManager(
 
             if (payload.length <= 2) return // no valid elements
 
+            if (logger.isDebugEnabled) {
+                logger.debug("addHighlights | scrollAware | totalNodes=${nodes.size}")
+            }
+
             val script = $$"""
 (function() {
     try {
@@ -95,7 +99,7 @@ class HighlightManager(
         container.id = 'b4debug-highlights';
         container.setAttribute('data-b4-highlight','container');
         container.style.cssText = `
-            position: absolute;
+            position: fixed; /* fixed so we subtract scroll offsets manually */
             top: 0; left: 0;
             width: 100vw; height: 100vh;
             pointer-events: none;
@@ -106,6 +110,9 @@ class HighlightManager(
 
         const scrollX = window.pageXOffset || document.documentElement.scrollLeft || 0;
         const scrollY = window.pageYOffset || document.documentElement.scrollTop || 0;
+        if (console && console.debug) {
+            console.debug('[b4] highlight debug | scrollX=', scrollX, 'scrollY=', scrollY, 'count=', interactiveElements.length);
+        }
 
         let added = 0;
         interactiveElements.forEach((element, index) => {
@@ -113,7 +120,9 @@ class HighlightManager(
             if (!isFinite(w) || !isFinite(h) || w <= 0 || h <= 0) return;
             const x = Number(element.x) - scrollX;
             const y = Number(element.y) - scrollY;
-            if (!isFinite(x) || !isFinite(y)) return;
+            if (console && console.debug && index < 5) {
+                console.debug('[b4] rect', index, 'abs=(', element.x, element.y, element.width, element.height, ') vp=(', x, y, element.width, element.height, ')');
+            }
 
             const highlight = document.createElement('div');
             highlight.setAttribute('data-b4-highlight','element');
@@ -163,6 +172,7 @@ class HighlightManager(
         }
     }
 
+    @Suppress("UNUSED_PARAMETER")
     private suspend fun removeHighlights0(elements: InteractiveDOMTreeNodeList) {
         removeHighlights0()
     }
