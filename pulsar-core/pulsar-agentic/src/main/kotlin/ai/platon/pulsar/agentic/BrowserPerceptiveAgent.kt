@@ -458,10 +458,16 @@ open class BrowserPerceptiveAgent constructor(
 
             while (!isClosed && context.step < config.maxSteps) {
                 try {
+                    context = prepareStep(action, context, consecutiveNoOps)
+
                     val stepResult = step(action, context, consecutiveNoOps)
+
                     context = stepResult.context
                     consecutiveNoOps = stepResult.consecutiveNoOps
-                    if (stepResult.shouldStop) break
+
+                    if (stepResult.shouldStop) {
+                        break
+                    }
                 } finally {
                     stateManager.addToHistory(context.agentState)
                 }
@@ -533,17 +539,13 @@ open class BrowserPerceptiveAgent constructor(
         val shouldStop: Boolean
     )
 
-    protected open suspend fun step(action: ActionOptions, ctxIn: ExecutionContext, noOpsIn: Int): StepProcessingResult {
+    protected open suspend fun step(action: ActionOptions, context: ExecutionContext, noOpsIn: Int): StepProcessingResult {
         var consecutiveNoOps = noOpsIn
-        val step = ctxIn.step
 
-        val context = prepareStep(action, ctxIn, consecutiveNoOps)
+        // val context = prepareStep(action, ctxIn, consecutiveNoOps)
 
+        // Observe
         val actionDescription = generateActions(context)
-
-        if (logger.isDebugEnabled) {
-            logger.debug("Let's make a final step decision | {}", actionDescription.modelResponse)
-        }
 
         if (shouldTerminate(actionDescription)) {
             onTaskCompletion(actionDescription, context)
@@ -551,7 +553,12 @@ open class BrowserPerceptiveAgent constructor(
         }
 
         consecutiveNoOps = 0
+        // Act
         val detailedActResult = executeToolCall(actionDescription, context)
+
+        val sid = context.sid
+        val step = context.step
+        val stepStartTime = context.stepStartTime
 
         if (detailedActResult != null) {
             stateManager.updateAgentState(context, detailedActResult)
@@ -561,11 +568,11 @@ open class BrowserPerceptiveAgent constructor(
             val tcResult = detailedActResult.toolCallResult
             val method = detailedActResult.actionDescription.toolCall?.method
             val preview = tcResult?.evaluate?.preview
-            logger.info("🏁 step.done sid={} step={} method={} result={}", context.sid, context.step, method, preview)
+            logger.info("🏁 step.done sid={} step={} method={} result={}", sid, step, method, preview)
         } else {
             consecutiveNoOps++
             val stop = handleConsecutiveNoOps(consecutiveNoOps, context)
-            updatePerformanceMetrics(step, context.stepStartTime, false)
+            updatePerformanceMetrics(step, stepStartTime, false)
             if (stop) return StepProcessingResult(context, consecutiveNoOps, true)
         }
 

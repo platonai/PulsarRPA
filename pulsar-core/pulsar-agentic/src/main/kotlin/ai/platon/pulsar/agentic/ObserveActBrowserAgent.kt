@@ -13,11 +13,11 @@ class ObserveActBrowserAgent constructor(
 ) : BrowserPerceptiveAgent(session, maxSteps, config) {
     private val logger = getLogger(this)
 
-    override suspend fun step(action: ActionOptions, ctxIn: ExecutionContext, noOpsIn: Int): StepProcessingResult {
+    override suspend fun step(action: ActionOptions, context: ExecutionContext, noOpsIn: Int): StepProcessingResult {
         var consecutiveNoOps = noOpsIn
 
-        val context = prepareStep(action, ctxIn, consecutiveNoOps)
-        require(context.step == ctxIn.step + 1) { "Required: context.step == ctxIn.step + 1" }
+        // val context = prepareStep(action, ctxIn, consecutiveNoOps)
+        // require(context.step == ctxIn.step + 1) { "Required: context.step == ctxIn.step + 1" }
         require(context.agentState.prevState == context.baseContext.get()?.agentState) {
             "Required: context.agentState.prevState == context.baseContext.get()?.agentState"
         }

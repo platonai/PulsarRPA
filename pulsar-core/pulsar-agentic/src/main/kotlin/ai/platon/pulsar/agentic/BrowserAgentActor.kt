@@ -208,10 +208,15 @@ open class BrowserAgentActor(
         } else ctx
 
         context.agentState.event = "observe"
-        val observeResults = doObserveActObserve(options, context, options.resolve)
+        val result = doObserveActObserve(options, context, options.resolve)
 
-        return observeResults.first
+        return result.observeResults
     }
+
+    data class ObserveActResult(
+        val observeResults: List<ObserveResult>,
+        val actionDescription: ActionDescription,
+    )
 
     private suspend fun doObserveAct(options: ActionOptions): ActResult {
         val options = when {
@@ -291,7 +296,7 @@ open class BrowserAgentActor(
 
     private suspend fun doObserveActObserve(
         options: Any, context: ExecutionContext, resolve: Boolean
-    ): Pair<List<ObserveResult>, ActionDescription> {
+    ): ObserveActResult {
         val observeOptions = options as? ObserveOptions
         val drawOverlay = alwaysTrue() || (observeOptions?.drawOverlay ?: false)
 
@@ -322,7 +327,7 @@ open class BrowserAgentActor(
             val observeResults = actionDescription.toObserveResults(context.agentState)
             observeResults.forEach { it.setContext(context) }
 
-            return observeResults to actionDescription
+            return ObserveActResult(observeResults, actionDescription)
         } finally {
             if (drawOverlay) {
                 domService.removeHighlights()
