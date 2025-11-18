@@ -22,6 +22,7 @@ import kotlin.test.Ignore
 import org.springframework.web.context.request.async.AsyncRequestTimeoutException
 
 @Ignore("Disabled temporarily, Run the tests manually")
+@Tag("MustManualRun")
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class SinglePageApplicationControllerTest : IntegrationTestBase() {
 

@@ -904,7 +904,7 @@
 
         <surefire.excludedGroups>
             TimeConsumingTest,ExternalServiceTest,IntegrationTest,E2ETest,HeavyTest,
-            TestInfraCheck,SkippableLowerLevelTest
+            SkippableLowerLevelTest,TestInfraCheck,MustManualRun
         </surefire.excludedGroups>
 
         <ktor.version>3.3.1</ktor.version>

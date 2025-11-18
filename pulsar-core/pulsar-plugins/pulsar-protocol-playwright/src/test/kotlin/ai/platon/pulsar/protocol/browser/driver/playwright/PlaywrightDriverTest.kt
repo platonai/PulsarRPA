@@ -12,6 +12,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -19,6 +20,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @Disabled("Run PlaywrightDriverTest manually")
+@Tag("MustManualRun")
 class PlaywrightDriverTest {
 
     val browserId = BrowserId.createRandomTemp(BrowserType.PLAYWRIGHT_CHROME)
