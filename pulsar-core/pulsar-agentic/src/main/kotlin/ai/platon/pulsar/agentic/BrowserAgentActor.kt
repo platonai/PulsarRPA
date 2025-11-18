@@ -54,11 +54,11 @@ open class BrowserAgentActor(
     }
 
     override suspend fun resolve(action: ActionOptions): ActResult {
-        throw NotSupportedException("Not supported, use stateful agents instead, such as BrowserPerceptiveAgent, DelegatingPerceptiveAgent, etc.")
+        throw NotSupportedException("Not supported, use stateful agents instead, such as BrowserPerceptiveAgent, TaskScopedBrowserPerceptiveAgent, etc.")
     }
 
     override suspend fun resolve(problem: String): ActResult {
-        throw NotSupportedException("Not supported, use stateful agents instead, such as BrowserPerceptiveAgent, DelegatingPerceptiveAgent, etc.")
+        throw NotSupportedException("Not supported, use stateful agents instead, such as BrowserPerceptiveAgent, TaskScopedBrowserPerceptiveAgent, etc.")
     }
 
     /**
