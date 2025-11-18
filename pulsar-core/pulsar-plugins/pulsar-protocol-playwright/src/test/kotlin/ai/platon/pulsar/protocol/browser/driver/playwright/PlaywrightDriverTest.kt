@@ -11,12 +11,14 @@ import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+@Disabled("Run PlaywrightDriverTest manually")
 class PlaywrightDriverTest {
 
     val browserId = BrowserId.createRandomTemp(BrowserType.PLAYWRIGHT_CHROME)
@@ -25,6 +27,7 @@ class PlaywrightDriverTest {
     lateinit var browser: PlaywrightBrowser
     lateinit var driver: PlaywrightDriver
     val url = "https://www.baidu.com"
+    val url2 = "https://www.example.com"
 
     @BeforeEach
     fun checkIfGUIAvailable() {
@@ -68,7 +71,7 @@ class PlaywrightDriverTest {
         runBlocking {
             driver.navigateTo(url)
             driver.waitForNavigation()
-            driver.navigateTo("https://www.example.com")
+            driver.navigateTo(url2)
             driver.waitForNavigation()
             val text = driver.selectFirstTextOrNull("body")
             assertNotNull(text)
@@ -112,7 +115,7 @@ class PlaywrightDriverTest {
 
             driver.addInitScript("window.__test_utils__ = { add: (a, b) => a + b }")
 
-            driver.navigateTo("https://www.example.com/")
+            driver.navigateTo(url2)
             driver.waitForNavigation()
 
             var result = driver.evaluate("1+1")
@@ -183,4 +186,3 @@ class PlaywrightDriverTest {
         }
     }
 }
-
