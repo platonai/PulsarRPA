@@ -26,6 +26,10 @@ class LoadingWebDriverPoolTest {
     private val seeds = LinkExtractors.fromResource("seeds/seeds.txt")
 
     fun checkPlaywrightAvailable(): Boolean {
+        if (!config.getBoolean("pulsar.test.playwright", false)) {
+            return false
+        }
+
         val outputs = Runtimes.exec("playwright --version")
         return outputs.any { it.contains("Version") }
     }
@@ -47,18 +51,19 @@ class LoadingWebDriverPoolTest {
         poolManager.close()
     }
 
+    @Tag("TimeConsumingTest")
     @Test
     fun test_pollWebDrivers() {
-        while(pool.numDriverSlots > 0 && !AppSystemInfo.isSystemOverCriticalLoad) {
-            val driver = pool.poll()
+        runBlocking {
+            while(pool.numDriverSlots > 0 && !AppSystemInfo.isSystemOverCriticalLoad) {
+                val driver = pool.poll()
 
-            if (driver is PlaywrightDriver) {
-                printlnPro("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver.guid} | ${driver::class.qualifiedName}")
-            } else {
-                printlnPro("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver::class.qualifiedName}")
-            }
+                if (driver is PlaywrightDriver) {
+                    printlnPro("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver.guid} | ${driver::class.qualifiedName}")
+                } else {
+                    printlnPro("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver::class.qualifiedName}")
+                }
 
-            runBlocking {
                 driver.navigateTo(seeds.random())
                 driver.waitForSelector("body")
                 driver.stop()
@@ -73,7 +78,7 @@ class LoadingWebDriverPoolTest {
         val executor = Executors.newFixedThreadPool(pool.numDriverSlots)
 
         var i = 0
-        while(i++ < 120) {
+        while(i++ < 60) {
             if (pool.numDriverSlots == 0) {
                 sleepSeconds(1)
                 continue

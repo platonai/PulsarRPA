@@ -58,6 +58,10 @@ object PulsarContexts {
         return activeContext!!
     }
 
+    @Synchronized
+    @JvmStatic
+    fun getOrCreate(): PulsarContext = create()
+
     /**
      * Activates the given context unless an equivalent active context already exists; in that case the existing one is returned.
      * Also registers shutdown hooks for both Spring and Pulsar contexts.
@@ -87,6 +91,10 @@ object PulsarContexts {
         return context
     }
 
+    @Synchronized
+    @JvmStatic
+    fun getOrCreate(context: PulsarContext): PulsarContext = create(context)
+
     /**
      * Creates and activates a new context from the given Spring XML location if none compatible is active;
      * otherwise returns the existing active context.
@@ -97,6 +105,10 @@ object PulsarContexts {
     @Synchronized
     @JvmStatic
     fun create(contextLocation: String) = create(ClassPathXmlPulsarContext(contextLocation))
+
+    @Synchronized
+    @JvmStatic
+    fun getOrCreate(contextLocation: String): PulsarContext = create(contextLocation)
 
     /**
      * Creates and activates a new context backed by the provided Spring application context if none compatible is active;
@@ -109,6 +121,10 @@ object PulsarContexts {
     @JvmStatic
     fun create(applicationContext: ApplicationContext) =
         create(BasicPulsarContext(applicationContext as AbstractApplicationContext))
+
+    @Synchronized
+    @JvmStatic
+    fun getOrCreate(applicationContext: ApplicationContext) = create(applicationContext)
 
     /**
      * Creates a `PulsarSession` using the active context (creating a default context if necessary).
@@ -129,7 +145,7 @@ object PulsarContexts {
     @Synchronized
     @JvmStatic
     @Throws(Exception::class)
-    fun getOrCreateSession() = create().getOrCreateSession()
+    fun getOrCreateSession() = getOrCreate().getOrCreateSession()
 
     /**
      * Waits for all submitted URLs to be processed.

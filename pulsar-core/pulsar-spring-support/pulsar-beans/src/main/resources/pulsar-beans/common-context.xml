@@ -47,7 +47,7 @@
 
     <bean id="crawlLoop" class="ai.platon.pulsar.skeleton.crawl.impl.StreamingCrawlLoop">
         <constructor-arg ref="conf"/>
-        <constructor-arg value="StreamingCrawlLoop"/>
+        <constructor-arg value="SpringCrawlLoop"/>
     </bean>
 
     <!-- Do not auto start crawl loops, the PulsarSession depended on might not be the correct one -->

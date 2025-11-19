@@ -97,7 +97,7 @@ class UrlFeeder(
      * Add a hyperlink to the end of the fetch queue, so it will be served last
      * */
     fun addLast(url: UrlAware) = loadingIterable.addLast(url)
-    
+
     override fun iterator(): Iterator<UrlAware> = loadingIterable.iterator()
 
     /**

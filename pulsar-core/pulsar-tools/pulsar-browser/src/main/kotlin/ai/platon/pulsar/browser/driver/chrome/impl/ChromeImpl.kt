@@ -26,38 +26,38 @@ class ChromeImpl(
     companion object {
         const val ABOUT_BLANK_PAGE = "about:blank"
         const val LOCALHOST = "localhost"
-        
+
         const val LIST_TABS = "json/list"
         const val CREATE_TAB = "json/new"
         const val ACTIVATE_TAB = "json/activate"
         const val CLOSE_TAB = "json/close"
         const val VERSION = "json/version"
     }
-    
+
     enum class HttpMethod {
         CONNECT, DELETE, GET, HEAD, OPTIONS, POST, PUT, TRACE
     }
-    
+
     private val logger = getLogger(this)
     private val objectMapper = ObjectMapper()
-    
+
     /**
      * DevTools map, the key is the Chrome tab id.
      * */
     private val remoteDevTools = ConcurrentHashMap<String, RemoteDevTools>()
     private val closed = AtomicBoolean()
-    
+
     override val isActive get() = !closed.get()
-    
+
     private val _version: Lazy<ChromeVersion> = lazy { refreshVersion() }
-    
+
     /**
      * The Chrome version.
      * */
     override val version get() = _version.value
 
     constructor(port: Int) : this(LOCALHOST, port)
-    
+
     @Throws(ChromeIOException::class)
     override fun listTabs(): Array<ChromeTab> {
         return try {
@@ -71,12 +71,12 @@ class ChromeImpl(
             }
         }
     }
-    
+
     @Throws(ChromeIOException::class)
     override fun createTab(): ChromeTab {
         return createTab(ABOUT_BLANK_PAGE)
     }
-    
+
     @Throws(ChromeIOException::class)
     override fun createTab(url: String): ChromeTab {
         val chromeTab =
@@ -84,12 +84,12 @@ class ChromeImpl(
                 ?: throw ChromeIOException("Failed to create tab, unexpected null response | $url")
         return chromeTab
     }
-    
+
     @Throws(ChromeIOException::class)
     override fun activateTab(tab: ChromeTab) {
         request(Void::class.java, HttpMethod.PUT, "http://%s:%d/%s/%s", host, port, ACTIVATE_TAB, tab.id)
     }
-    
+
     @Throws(ChromeIOException::class)
     override fun closeTab(tab: ChromeTab) {
         if (!isActive || !canConnect()) {
@@ -97,36 +97,36 @@ class ChromeImpl(
         }
         request(Void::class.java, HttpMethod.PUT, "http://%s:%d/%s/%s", host, port, CLOSE_TAB, tab.id)
     }
-    
+
     @Throws(ChromeIOException::class)
     @Synchronized
     override fun createDevTools(tab: ChromeTab, config: DevToolsConfig): RemoteDevTools {
         return remoteDevTools.computeIfAbsent(tab.id) { createDevTools0(version, tab, config) }
     }
-    
+
     override fun canConnect(): Boolean {
         val url = URL("http://$host:$port")
         return NetUtil.testHttpNetwork(url)
     }
-    
+
     @Throws(ChromeIOException::class)
     private fun refreshVersion(): ChromeVersion {
         return request(ChromeVersion::class.java, HttpMethod.GET, "http://%s:%d/%s", host, port, VERSION)
             ?: throw ChromeIOException("Failed to get version")
     }
-    
+
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             if (!canConnect()) {
                 return
             }
-            
+
             val devTools = remoteDevTools.values
             devTools.forEach { it.runCatching { close() }.onFailure { warnForClose(this, it) } }
             remoteDevTools.clear()
         }
     }
-    
+
     @Throws(ChromeIOException::class)
     private fun createDevTools0(version: ChromeVersion, tab: ChromeTab, config: DevToolsConfig): RemoteDevTools {
         val browserUrl = version.webSocketDebuggerUrl
@@ -176,12 +176,12 @@ class ChromeImpl(
     ): T? {
         var connection: HttpURLConnection? = null
         var inputStream: InputStream? = null
-        
+
         try {
             val uri = URL(String.format(path, *params))
-            
+
             connection = uri.openConnection() as HttpURLConnection
-            
+
             /**
              * Chrome 111 no longer accepts HTTP GET to create tabs, PUT is the correct verb.
              *
@@ -192,7 +192,7 @@ class ChromeImpl(
              * @see [#87](https://github.com/kklisura/chrome-devtools-java-client/issues/87)
              * */
             connection.requestMethod = method.toString()
-            
+
             val responseCode = connection.responseCode
             if (HttpURLConnection.HTTP_OK == responseCode) {
                 if (Void::class.java == responseType) {
@@ -204,7 +204,7 @@ class ChromeImpl(
                 inputStream = connection.errorStream
                 val responseBody = readString(inputStream)
                 val message = "Received error ($responseCode) - ${connection.responseMessage}\n$responseBody"
-                
+
                 throw ChromeIOException(message)
             }
         } catch (e: ConnectException) {
@@ -216,7 +216,7 @@ class ChromeImpl(
             connection?.disconnect()
         }
     }
-    
+
     /**
      * Converts input stream to string. If input string is null, it returns empty string.
      *
