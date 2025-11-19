@@ -137,6 +137,7 @@ Find all links containing /dp/.
 ```
 
 ### LLM + X-SQL
+采用X-SQL处理复杂数据提取任务：
 ```shell
 curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
 select
@@ -150,6 +151,19 @@ from load_and_select('https://www.amazon.com/dp/B08PP5MSVB', 'body');
 
 ### 原生 API
 高速并行抓取和浏览器控制示例如下（更多请参见高级部分）。
+```kotlin
+val args = "-refresh -dropContent -interactLevel fastest"
+val blockingUrls = listOf("*.png", "*.jpg")
+val links =
+    LinkExtractors.fromResource("urls.txt").asSequence().map { ListenableHyperlink(it, "", args = args) }.onEach {
+        it.eventHandlers.browseEventHandlers.onWillNavigate.addLast { page, driver ->
+            driver.addBlockedURLs(blockingUrls)
+        }
+    }
+
+session.submitAll(links.toList())
+```
+---
 
 ### Native API
 High-speed parallel scraping & browser control examples are shown below (see advanced sections for more).
