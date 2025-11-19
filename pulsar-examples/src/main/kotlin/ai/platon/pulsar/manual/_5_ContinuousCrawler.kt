@@ -12,7 +12,7 @@ import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
  * */
 fun main() {
     // For continuous crawls, you'd better use sequential browsers or temporary browsers
-    PulsarSettings.withSequentialBrowsers()
+    PulsarSettings.withSequentialBrowsers().maxOpenTabs(8)
 
     val context = PulsarContexts.create()
 

@@ -4,6 +4,8 @@ import ai.platon.pulsar.boilerpipe.extractors.DefaultExtractor
 import ai.platon.pulsar.boilerpipe.sax.SAXInput
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
+import ai.platon.pulsar.common.browser.BrowserProfileMode
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_CONTEXT_MODE
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.extractor.TextDocument
 import ai.platon.pulsar.common.urls.PlainUrl
@@ -93,7 +95,9 @@ abstract class AbstractPulsarSession(
 
     private val closableObjects = mutableSetOf<AutoCloseable>()
 
-    override fun disablePDCache() { enablePDCache = false }
+    override fun disablePDCache() {
+        enablePDCache = false
+    }
 
     override fun registerClosable(closable: AutoCloseable) {
         closableObjects.takeIf { isActive }?.add(closable)
@@ -203,7 +207,11 @@ abstract class AbstractPulsarSession(
     }
 
     override fun createBoundDriver(): WebDriver {
-        return context.launchDefaultBrowser().newDriver().also { bindDriver(it) }
+        val mode = BrowserProfileMode.fromString(sessionConfig[BROWSER_CONTEXT_MODE])
+        val driver = context.browserFactory.launch(mode).newDriver()
+        bindDriver(driver)
+        // return context.launchDefaultBrowser().newDriver().also { bindDriver(it) }
+        return driver
     }
 
     override fun getOrCreateBoundDriver(): WebDriver {
@@ -212,9 +220,7 @@ abstract class AbstractPulsarSession(
             return driver
         }
 
-        val newDriver = context.launchDefaultBrowser().newDriver()
-        bindDriver(newDriver)
-        return newDriver
+        return createBoundDriver()
     }
 
     override fun bindDriver(driver: WebDriver) {

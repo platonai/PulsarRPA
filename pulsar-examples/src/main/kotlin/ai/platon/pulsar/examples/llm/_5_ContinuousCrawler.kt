@@ -13,7 +13,7 @@ import kotlinx.coroutines.runBlocking
  * */
 fun main() {
     // For continuous crawls, you'd better use sequential browsers or temporary browsers
-    PulsarSettings.withSequentialBrowsers()
+    PulsarSettings.withSequentialBrowsers().maxOpenTabs(8)
 
     val session = AgenticContexts.createSession()
 

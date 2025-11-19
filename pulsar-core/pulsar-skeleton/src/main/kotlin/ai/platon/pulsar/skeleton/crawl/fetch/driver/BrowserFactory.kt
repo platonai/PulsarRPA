@@ -3,6 +3,7 @@ package ai.platon.pulsar.skeleton.crawl.fetch.driver
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
+import ai.platon.pulsar.common.browser.BrowserProfileMode
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
@@ -20,6 +21,9 @@ interface BrowserFactory {
      * Connect to a browser instance, the browser instance should be open with Chrome devtools open.
      * */
     fun connect(browserType: BrowserType, port: Int, settings: BrowserSettings = BrowserSettings()): Browser
+
+    @Throws(BrowserLaunchException::class)
+    fun launch(profileMode: BrowserProfileMode): Browser
 
     /**
      * Launch the system default browser, the system default browser is your daily used browser.

@@ -3,6 +3,7 @@ package ai.platon.pulsar.protocol.browser.impl
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.browser.driver.chrome.common.ChromeOptions
 import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
+import ai.platon.pulsar.common.browser.BrowserProfileMode
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
@@ -13,6 +14,19 @@ abstract class AbstractBrowserFactory(
     override val conf: ImmutableConfig,
     override val settings: BrowserSettings = BrowserSettings(conf),
 ) : BrowserFactory {
+
+    @Throws(BrowserLaunchException::class)
+    override fun launch(profileMode: BrowserProfileMode): Browser {
+        val browserId = when (profileMode) {
+            BrowserProfileMode.SYSTEM_DEFAULT -> BrowserId.SYSTEM_DEFAULT
+            BrowserProfileMode.DEFAULT -> BrowserId.DEFAULT
+            BrowserProfileMode.PROTOTYPE -> BrowserId.PROTOTYPE
+            BrowserProfileMode.TEMPORARY -> BrowserId.RANDOM_TEMP
+            BrowserProfileMode.SEQUENTIAL -> BrowserId.NEXT_SEQUENTIAL
+        }
+
+        return launch(browserId)
+    }
 
     /**
      * Launch a browser with the given browser id, the browser id is used to identify the browser instance.
