@@ -137,7 +137,8 @@ Find all links containing /dp/.
 ```
 
 ### LLM + X-SQL
-Use X-SQL for complex data extraction jobs:
+X-SQL is suited for high-complexity data-extraction pipelines, including cases with
+multiple-dozen entities and several hundred fields per entity.
 ```shell
 curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
 select
