@@ -58,9 +58,9 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 #### Download
 ```shell
-curl -L -o Browser4.jar https://github.com/platonai/browser4/releases/download/v4.1.0/Browser4.jar
+curl -L -o Browser4.jar https://github.com/platonai/browser4/releases/download/v4.1.0-rc.1/Browser4.jar
 ```
-(Replace `v4.1.0` with the latest release if needed.)
+(Replace `v4.1.0-rc.1` with the latest release if needed.)
 
 #### Run
 ```shell

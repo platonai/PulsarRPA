@@ -58,9 +58,9 @@
 
 #### 下载
 ```shell
-curl -L -o Browser4.jar https://github.com/platonai/browser4/releases/download/v4.1.0/Browser4.jar
+curl -L -o Browser4.jar https://github.com/platonai/browser4/releases/download/v4.1.0-rc.1/Browser4.jar
 ```
-（如需要，请将 `v4.1.0` 替换为最新版本。）
+（如需要，请将 `v4.1.0-rc.1` 替换为最新版本。）
 
 #### 运行
 ```shell
