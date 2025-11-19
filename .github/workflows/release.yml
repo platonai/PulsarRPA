@@ -24,14 +24,12 @@ env:
   CONTAINER_NAME: browser4
   NETWORK_NAME: 'browser4_backend'
   DOCKER_USERNAME: galaxyeye88
-  PRODUCTION_JAR_MODULE_NAME: 'pulsar-browser4'
-  PRODUCTION_JAR_MODULE_PATH: 'pulsar-browser4'
+  PRODUCTION_JAR_MODULE_NAME: 'browser4-crawler'
+  PRODUCTION_JAR_MODULE_PATH: 'browser4/browser4-crawler'
   PRODUCTION_JAR_NAME: 'Browser4.jar'
-  PRODUCTION_JAR_PATH: 'pulsar-browser4/target/Browser4.jar'
-  JAVA_VERSION: '17'
+  PRODUCTION_JAR_PATH: 'browser4/browser4-crawler/target/Browser4.jar'
+  JAVA_VERSION: '21'
   MAVEN_OPTS: '-Xmx3g -XX:+UseG1GC'
-  MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-  MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
 
 jobs:
   build-and-release:
@@ -66,8 +64,9 @@ jobs:
           fi
           VERSION=${TAG#v}
 
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+(\+.+)?)?$ ]]; then
             echo "❌ Invalid version format: $VERSION"
+            echo "Expected: X.Y.Z or X.Y.Z-rc.N or X.Y.Z-rc.N+build.info"
             exit 1
           fi
 
@@ -144,11 +143,11 @@ jobs:
         shell: bash
         run: |
           echo "::group::🧪 End to End Tests"
-          
+
           if [ -f "./bin/tests/run-e2e-test.sh" ]; then
             echo "✅ Found E2E test script"
             chmod +x ./bin/tests/run-e2e-test.sh
-          
+
             echo "🚀 Running E2E tests..."
             date
             echo "Application URL: http://localhost:8182"
@@ -160,16 +159,23 @@ jobs:
               echo "E2E_status=success" >> $GITHUB_OUTPUT
             else
               echo "❌ E2E tests failed"
-              echo "integration_status=failed" >> $GITHUB_OUTPUT
+              echo "E2E_status=failed" >> $GITHUB_OUTPUT
               exit 1
             fi
           else
-            echo "⚠️ E2E test script not found: ./bin/tests/run-E2E-test.sh"
+            echo "⚠️ E2E test script not found: ./bin/tests/run-e2e-test.sh"
             echo "Skipping E2E tests..."
             echo "E2E_status=skipped" >> $GITHUB_OUTPUT
           fi
-          
+
           echo "::endgroup::"
+
+      - name: Cleanup Docker Container
+        if: always()
+        run: |
+          echo "🧹 Cleaning up Docker container..."
+          docker stop ${{ env.CONTAINER_NAME }} 2>/dev/null || echo "Container already stopped"
+          docker network rm ${{ env.NETWORK_NAME }} 2>/dev/null || echo "Network already removed"
 
       - name: Build Browser4 JAR
         if: success()
@@ -271,8 +277,8 @@ jobs:
         if: success()
         run: |
           echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
-          docker push ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
-          docker push ${{ env.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Push Docker Images to GitHub Container Registry
         if: success()
