@@ -4,12 +4,15 @@ import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import java.util.*
 
+/**
+ * An agent delegate that creates a new agent every time starts a new resolve loop.
+ * */
 class TaskScopedBrowserPerceptiveAgent(
     val session: AgenticSession
 ) : PerceptiveAgent {
     private val historyAgents = mutableListOf<PerceptiveAgent>()
 
-    private var agent: PerceptiveAgent = BrowserPerceptiveAgent(session)
+    private var agent: PerceptiveAgent = ObserveActBrowserAgent(session)
 
     override val uuid: UUID = UUID.randomUUID()
     override val stateHistory: List<AgentState> get() = agent.stateHistory
@@ -50,10 +53,7 @@ class TaskScopedBrowserPerceptiveAgent(
         return agent.extract(instruction)
     }
 
-    override suspend fun extract(
-        instruction: String,
-        schema: ExtractionSchema
-    ): ExtractResult {
+    override suspend fun extract(instruction: String, schema: ExtractionSchema): ExtractResult {
         return agent.extract(instruction, schema)
     }
 

@@ -207,7 +207,14 @@ abstract class AbstractPulsarSession(
     }
 
     override fun getOrCreateBoundDriver(): WebDriver {
-        return boundDriver ?: context.launchDefaultBrowser().newDriver().also { bindDriver(it) }
+        val driver = boundDriver
+        if (driver != null) {
+            return driver
+        }
+
+        val newDriver = context.launchDefaultBrowser().newDriver()
+        bindDriver(newDriver)
+        return newDriver
     }
 
     override fun bindDriver(driver: WebDriver) {

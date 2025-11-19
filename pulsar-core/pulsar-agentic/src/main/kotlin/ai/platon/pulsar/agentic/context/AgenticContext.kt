@@ -42,7 +42,10 @@ abstract class AbstractAgenticContext(
         return session.also { sessions[it.id] = it }
     }
 
-    override fun createSession(settings: PulsarSettings) = createSession().also { settings.overrideConfiguration(it.sessionConfig)}
+    override fun createSession(settings: PulsarSettings): AgenticSession {
+        // settings.profileMode?.let { PulsarSettings.withBrowserContextMode(it) }
+        return createSession().also { settings.overrideConfiguration(it.sessionConfig) }
+    }
 
     override fun getOrCreateSession(): AgenticSession = sessions.values.filterIsInstance<AgenticSession>().firstOrNull() ?: createSession()
 

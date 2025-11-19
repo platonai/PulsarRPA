@@ -101,7 +101,7 @@ data class PulsarSettings(
          * */
         @JvmStatic
         @JvmOverloads
-        fun withSystemDefaultBrowser(conf: MutableConfig? = null) = withBrowserContextMode(BrowserProfileMode.DEFAULT, BrowserType.DEFAULT, conf)
+        fun withSystemDefaultBrowser(conf: MutableConfig? = null) = withBrowserContextMode(BrowserProfileMode.SYSTEM_DEFAULT, BrowserType.DEFAULT, conf)
 
         /**
          * Use the system's default browser with the given type, so Browser4 visits websites just like you do.
