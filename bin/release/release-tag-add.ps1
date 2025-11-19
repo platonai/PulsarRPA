@@ -1,7 +1,8 @@
 #!/usr/bin/env pwsh
 
 param(
-    [string]$remote = "origin"
+    [string]$remote = "origin",
+    [string]$message = ""
 )
 
 # Find VERSION file
@@ -9,7 +10,6 @@ $AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
 while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
     $AppHome = Split-Path -Parent $AppHome
 }
-Set-Location $AppHome
 
 if (!$AppHome) {
     Write-Error "VERSION file not found"
@@ -46,11 +46,6 @@ if ($status) {
 }
 
 # Read and process version
-if (!(Test-Path "VERSION")) {
-    Write-Error "VERSION file not found"
-    exit 1
-}
-
 $version = (Get-Content "VERSION").Trim()
 Write-Host "Version from file: $version"
 
@@ -78,8 +73,16 @@ if ($existingTag) {
         exit 0
     }
     try {
+        # Delete local tag
         git tag -d $newTag
-        Write-Host "Deleted existing tag: $newTag"
+        Write-Host "Deleted local tag: $newTag"
+
+        # Delete remote tag if it exists
+        $remoteTag = git ls-remote --tags $remote "refs/tags/$newTag" 2>$null
+        if ($remoteTag) {
+            git push $remote --delete $newTag
+            Write-Host "Deleted remote tag: $newTag"
+        }
     } catch {
         Write-Error "Failed to delete existing tag: $_"
         exit 1
@@ -104,9 +107,16 @@ if ($prevTag) {
     git log --oneline --no-merges -5 | ForEach-Object { Write-Host "  • $_" }
 }
 
+# Prompt for tag message if not provided
+if ([string]::IsNullOrWhiteSpace($message)) {
+    Write-Host ""
+    $message = Read-Host "Enter release message (optional, press Enter to skip)"
+}
+
 # Confirm creation
 Write-Host ""
-$confirm = Read-Host "Create and push tag '$newTag'? (y/n)"
+$tagType = if ([string]::IsNullOrWhiteSpace($message)) { "lightweight" } else { "annotated" }
+$confirm = Read-Host "Create and push $tagType tag '$newTag'? (y/n)"
 if ($confirm -ne 'y') {
     Write-Host "Cancelled"
     exit 0
@@ -114,9 +124,18 @@ if ($confirm -ne 'y') {
 
 # Create and push tag
 try {
-    git tag $newTag
+    # Create annotated tag if message provided, otherwise lightweight tag
+    if ([string]::IsNullOrWhiteSpace($message)) {
+        git tag $newTag
+        Write-Host "Created lightweight tag: $newTag"
+    } else {
+        git tag -a $newTag -m $message
+        Write-Host "Created annotated tag: $newTag"
+    }
+
+    # Push tag to remote
     git push $remote $newTag
-    Write-Host "✅ Successfully created and pushed tag: $newTag"
+    Write-Host "✅ Successfully pushed tag: $newTag"
 
     # Try to show GitHub URL
     $remoteUrl = git config --get remote.$remote.url
@@ -130,3 +149,4 @@ try {
     Write-Error "Failed to create/push tag: $_"
     exit 1
 }
+
