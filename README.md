@@ -6,8 +6,6 @@
 
 ---
 
-> **⚠️ License Notice: This project uses dual licensing. The main project is licensed under Apache License 2.0. The `browser4` module is licensed under GNU AGPL v3. See LICENSE and browser4/LICENSE for details.**
-
 English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platonai_galaxyeye/Browser4)
 
 <!-- TOC -->
@@ -114,7 +112,7 @@ java -jar browser4/browser4-crawler/target/Browser4.jar
 
 ## Usage Examples
 
-### Browser Use (Agents)
+### Browser Agents
 ```kotlin
 val problems = """
     go to amazon.com, search for pens to draw on whiteboards, compare the first 4 ones, write the result to a markdown file.
@@ -125,7 +123,7 @@ val problems = """
 problems.forEach { agent.resolve(it) }
 ```
 
-### Text Commands API
+### Workflow
 Use free-form text to drive the browser:
 ```text
 Go to https://www.amazon.com/dp/B08PP5MSVB

@@ -6,8 +6,6 @@
 
 ---
 
-> **⚠️ 授权声明：本项目采用双重授权模式。主项目遵循 Apache License 2.0，`browser4` 模块采用 GNU AGPL v3。详情见 LICENSE 及 browser4/LICENSE。**
-
 [English](README.md) | 简体中文 | [中国镜像](https://gitee.com/platonai_galaxyeye/Browser4)
 
 <!-- TOC -->
@@ -125,7 +123,7 @@ val problems = """
 problems.forEach { agent.resolve(it) }
 ```
 
-### 文本命令 API
+### 工作流
 使用自由文本驱动浏览器：
 ```text
 Go to https://www.amazon.com/dp/B08PP5MSVB
