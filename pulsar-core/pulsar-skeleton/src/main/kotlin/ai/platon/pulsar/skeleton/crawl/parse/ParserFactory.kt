@@ -1,9 +1,8 @@
 
 package ai.platon.pulsar.skeleton.crawl.parse
 
-import ai.platon.pulsar.skeleton.common.MimeTypeResolver
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.config.Params
+import ai.platon.pulsar.skeleton.common.MimeTypeResolver
 import ai.platon.pulsar.skeleton.crawl.parse.html.PrimerHtmlParser
 import org.slf4j.LoggerFactory
 import java.util.*
@@ -31,8 +30,8 @@ class ParserFactory(private val conf: ImmutableConfig) {
             mineType2Parsers[mimeType] = Collections.synchronizedList(parsers)
         }
 
-        mineType2Parsers.keys.associateWith { mineType2Parsers[it]?.joinToString { it.javaClass.name } }
-                .let { Params(it) }.withLogger(LOG).info("Active parsers: ", "", false)
+//        mineType2Parsers.keys.associateWith { mineType2Parsers[it]?.joinToString { it.javaClass.name } }
+//                .let { Params(it) }.withLogger(LOG).info("Active parsers: ", "", false)
     }
 
     constructor(parses: Map<String, List<Parser>>, conf: ImmutableConfig): this(conf) {
@@ -65,12 +64,6 @@ class ParserFactory(private val conf: ImmutableConfig) {
     fun getParsers(contentType: String, url: String = ""): List<Parser> {
         val mimeType = MimeTypeResolver.cleanMimeType(contentType)
         return mineType2Parsers[mimeType]?: mineType2Parsers[DEFAULT_MINE_TYPE] ?: listOf()
-    }
-
-    private fun escapeContentType(contentType: String): String {
-        // Escapes contentType in order to use as a regex (and keep backwards compatibility).
-        // This enables to accept multiple types for a single parser.
-        return contentType.replace("+", "\\+").replace(".", "\\.")
     }
 
     override fun toString(): String {

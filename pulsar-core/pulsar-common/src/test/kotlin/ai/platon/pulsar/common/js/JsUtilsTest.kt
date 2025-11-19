@@ -53,7 +53,7 @@ class JsUtilsTest {
     @Test
     fun `test object literal should not be treated as function`() {
         val input = "{ key: 'value' }"
-        val expected = "({ key: 'value' })();"
+        val expected = "({ key: 'value' });"
         assertEquals(expected, toIIFEOrNull(input))
     }
 

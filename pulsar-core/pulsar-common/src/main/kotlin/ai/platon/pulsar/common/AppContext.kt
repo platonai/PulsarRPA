@@ -1,17 +1,17 @@
 package ai.platon.pulsar.common
 
+import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.*
 import org.apache.commons.lang3.SystemUtils
-import java.awt.GraphicsEnvironment
 import java.net.InetAddress
 import java.nio.file.Files
 import java.nio.file.Paths
 import java.util.concurrent.atomic.AtomicReference
 
 object AppContext {
-    
+
     private val logger = getLogger(AppContext::class)
-    
+
     enum class State {
         NEW, RUNNING, TERMINATING, TERMINATED
     }
@@ -20,6 +20,13 @@ object AppContext {
      * The application is production environment
      * */
     val isProd get() = System.getenv("ENV").equals("prod", true)
+
+    /**
+     * The node id in the cluster.
+     * */
+    val nodeId: Long = System.getProperty(APP_NODE_ID)?.toLongOrNull()
+        ?: System.getenv(APP_NODE_ID)?.toLongOrNull()
+        ?: 0L
 
     /**
      * The number of processors available to the Java virtual machine

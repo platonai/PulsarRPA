@@ -1,5 +1,6 @@
 package ai.platon.pulsar.basic
 
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.brief
 import kotlin.test.*
 import oshi.SystemInfo
@@ -11,24 +12,25 @@ import oshi.SystemInfo
     which has no close() method.
  * */
 class TestAppSystemInfo {
-    
+
     @Test
     fun testOSHIAvailable() {
         val si = SystemInfo()
-        
+
         runCatching {
             val versionInfo = si.operatingSystem.versionInfo
-            println("Operation system: $versionInfo")
-        }.onFailure { println(it.brief()) }
-        
+            printlnPro("Operation system: $versionInfo")
+        }.onFailure { printlnPro(it.brief()) }
+
         runCatching {
             val processor = si.hardware.processor
-            println("Processor: $processor")
-        }.onFailure { println(it.brief()) }
-        
+            printlnPro("Processor: $processor")
+        }.onFailure { printlnPro(it.brief()) }
+
         runCatching {
             val memory = si.hardware.memory
-            println("Memory: $memory")
-        }.onFailure { println(it.brief()) }
+            printlnPro("Memory: $memory")
+        }.onFailure { printlnPro(it.brief()) }
     }
 }
+

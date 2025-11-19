@@ -18,13 +18,13 @@ open class StreamingCrawlLoop(
     /**
      * The unmodified configuration load from file
      * */
-    unmodifiedConfig: ImmutableConfig,
+    configuration: ImmutableConfig,
     /**
      * The loop name
      * */
     name: String = "StreamingCrawlLoop"
 
-) : AbstractCrawlLoop(name, unmodifiedConfig) {
+) : AbstractCrawlLoop(name, configuration) {
     private val logger = LoggerFactory.getLogger(StreamingCrawlLoop::class.java)
 
     private val scope = CoroutineScope(Dispatchers.Default) + CoroutineName("sc")
@@ -41,12 +41,12 @@ open class StreamingCrawlLoop(
      * */
     override val urlFeeder: UrlFeeder get() = getOrCreateUrlFeeder()
 
-    private val context get() = PulsarContexts.create()
+    private val context get() = PulsarContexts.getOrCreate()
 
     init {
-        // logger.info("Crawl loop is created | #{} | {}@{}", id, this::class.simpleName, hashCode())
+        logger.info("Crawl loop is created | #{} | {}@{}", id, name, hashCode())
     }
-    
+
     override val abstract: String get() {
         return if (!isRunning) {
             "[stopped] crawler: ${crawler.name}#${crawler.id}, urlPool: ${urlFeeder.urlPool} \n${urlFeeder.abstract}"
@@ -54,7 +54,7 @@ open class StreamingCrawlLoop(
             urlFeeder.abstract
         }
     }
-    
+
     override val report: String get() {
         return if (!isRunning) {
             return "[stopped] crawler: ${crawler.name}#${crawler.id}, urlPool: ${urlFeeder.urlPool} \n${urlFeeder.report}"
@@ -62,7 +62,7 @@ open class StreamingCrawlLoop(
             urlFeeder.report
         }
     }
-    
+
     @Synchronized
     override fun start() {
         if (isRunning) {
@@ -72,7 +72,8 @@ open class StreamingCrawlLoop(
 
         if (running.compareAndSet(false, true)) {
             start0()
-            logger.info("Crawl loop is started with {} link collectors | #{} | {}", urlFeeder.collectors.size, id, this)
+            val count = urlFeeder.collectors.size
+            logger.info("Crawl loop is started with {} link collectors | #{} | {}@{}", count, id, name, this)
         }
     }
 

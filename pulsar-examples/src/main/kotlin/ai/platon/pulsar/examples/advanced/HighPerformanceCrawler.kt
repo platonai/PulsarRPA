@@ -41,7 +41,7 @@ fun main() {
         System.setProperty(PROXY_ROTATION_URL, proxyHubURL)
     }
 
-    PulsarSettings().maxBrowserContexts(2).maxOpenTabs(8).withSequentialBrowsers()
+    PulsarSettings.maxBrowserContexts(2).maxOpenTabs(8).withSequentialBrowsers()
 
     HighPerformanceCrawler().crawl()
     PulsarContexts.await()

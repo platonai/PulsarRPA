@@ -1,5 +1,6 @@
 package ai.platon.pulsar.protocol.browser.driver.playwright.badcase
 
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightTestBase.Companion.BAD_PARALLELISM_WARNING
 import com.microsoft.playwright.BrowserType
 import com.microsoft.playwright.Page
@@ -12,7 +13,7 @@ import java.util.concurrent.TimeUnit
  * Warning: this is a bad case to demonstrate the problem of Playwright's parallelism.
  * */
 fun main() {
-    println(BAD_PARALLELISM_WARNING)
+    printlnPro(BAD_PARALLELISM_WARNING)
 
     val THREAD_COUNT = 5
     val PAGES_PER_THREAD = 5
@@ -38,33 +39,34 @@ fun main() {
 
                 val pages = mutableListOf<Page>()
                 for (i in 1..PAGES_PER_THREAD) {
-                    println("$i. Creating new page")
+                    printlnPro("$i. Creating new page")
                     val page = context.newPage()
                     pages.add(page)
                 }
 
                 val myUrls = chunks.getOrNull(threadIndex) ?: emptyList()
 
-                println("🚀 Thread-$threadIndex starting with ${myUrls.size} URLs")
+                printlnPro("🚀 Thread-$threadIndex starting with ${myUrls.size} URLs")
 
                 myUrls.forEachIndexed { i, url ->
                     val page = pages[i % pages.size]
                     try {
                         page.navigate(url, Page.NavigateOptions().setTimeout(10_000.0))
-                        println("✅ [Thread-$threadIndex] Opened $url in tab ${page.hashCode()}")
+                        printlnPro("✅ [Thread-$threadIndex] Opened $url in tab ${page.hashCode()}")
                     } catch (e: Exception) {
-                        println("❌ [Thread-$threadIndex] Failed to open $url: ${e.message}")
+                        printlnPro("❌ [Thread-$threadIndex] Failed to open $url: ${e.message}")
                     }
                 }
 
                 context.close()  // 关闭该线程的浏览器上下文
-                println("✅ Thread-$threadIndex done")
+                printlnPro("✅ Thread-$threadIndex done")
             }
         }
 
         executor.awaitTermination(30, TimeUnit.MINUTES)
-        println("🎉 All threads complete.")
+        printlnPro("🎉 All threads complete.")
 
         executor.shutdown()
     }
 }
+

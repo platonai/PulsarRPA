@@ -5,9 +5,8 @@
        xsi:schemaLocation = "http://www.springframework.org/schema/beans
    http://www.springframework.org/schema/beans/spring-beans-3.0.xsd" default-lazy-init="true">
 
-    <bean id="conf" class="ai.platon.pulsar.common.config.MutableConfig">
-        <constructor-arg value="test-context" />
-    </bean>
+    <bean id="conf" class="ai.platon.pulsar.common.config.MutableConfig"/>
+
     <bean id="webDb" class="ai.platon.pulsar.persist.WebDb">
         <constructor-arg value="conf" />
     </bean>

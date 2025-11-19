@@ -2,6 +2,7 @@ package ai.platon.pulsar.protocol.browser.driver.playwright.badcase
 
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.sleepSeconds
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightTestBase.Companion.BAD_PARALLELISM_WARNING
 import com.microsoft.playwright.BrowserType
 import com.microsoft.playwright.Page
@@ -62,9 +63,9 @@ class PlaywrightConcurrentLoadTest {
 
                 }
             } catch (e: InterruptedException) {
-                println("❌ Thread interrupted: ${e.message}")
+                printlnPro("❌ Thread interrupted: ${e.message}")
             } catch (e: Exception) {
-                println("❌ Error occurred: ${e.message}")
+                printlnPro("❌ Error occurred: ${e.message}")
             } finally {
                 pagePool.forEach { it.context().close() }
                 executor.shutdownNow()
@@ -72,7 +73,7 @@ class PlaywrightConcurrentLoadTest {
 
             executor.awaitTermination(10, TimeUnit.MINUTES)
 
-            println("🎉 All requests completed.")
+            printlnPro("🎉 All requests completed.")
         }
     }
 
@@ -83,20 +84,20 @@ class PlaywrightConcurrentLoadTest {
 
             page.navigate(url, Page.NavigateOptions().setTimeout(30_000.0))
             page.waitForSelector("div[data-asin]", Page.WaitForSelectorOptions().setTimeout(30_000.0))
-            println("✅ Opened $url in tab ${page.hashCode()}")
+            printlnPro("✅ Opened $url in tab ${page.hashCode()}")
 
             val elements = page.querySelectorAll("div[data-asin]")
             elements.mapTo(asins) { it.getAttribute("data-asin") }
-            println(asins.joinToString())
+            printlnPro(asins.joinToString())
 
             page.navigate("about:blank")
             // wait for 1 second before reusing the page
             Thread.sleep(1000)
         } catch (e: Exception) {
             if (asins.isEmpty()) {
-                println("❌ Failed to open $url: ${e.message}")
+                printlnPro("❌ Failed to open $url: ${e.message}")
             } else {
-                println("ASINs: ${asins.joinToString()}, error: ${e.message}")
+                printlnPro("ASINs: ${asins.joinToString()}, error: ${e.message}")
             }
         } finally {
             pagePool.add(page)
@@ -105,7 +106,8 @@ class PlaywrightConcurrentLoadTest {
 }
 
 fun main() {
-    println(BAD_PARALLELISM_WARNING)
+    printlnPro(BAD_PARALLELISM_WARNING)
 
     PlaywrightConcurrentLoadTest().run()
 }
+

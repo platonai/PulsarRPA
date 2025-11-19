@@ -1,7 +1,10 @@
 package ai.platon.pulsar.boot.autoconfigure
 
+import ai.platon.pulsar.agentic.AgenticSession
+import ai.platon.pulsar.agentic.context.AgenticContexts
+import ai.platon.pulsar.agentic.context.QLAgenticContext
 import ai.platon.pulsar.ql.context.H2SQLContext
-import ai.platon.pulsar.ql.context.SQLContexts
+import ai.platon.pulsar.ql.context.SQLContext
 import ai.platon.pulsar.skeleton.crawl.CrawlLoops
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
@@ -15,16 +18,13 @@ import org.springframework.context.annotation.Scope
 @Configuration
 @ImportResource("classpath:pulsar-beans/app-context.xml")
 class PulsarContextConfiguration(
-    val applicationContext: ApplicationContext,
-    val globalCache: GlobalCache,
-    val globalCacheFactory: GlobalCacheFactory,
-    val crawlLoops: CrawlLoops
+    val applicationContext: ApplicationContext
 ) {
     @Bean
     @Scope("prototype")
-    fun getPulsarSession(): PulsarSession {
-        val context = SQLContexts.create(applicationContext)
-        require(context is H2SQLContext)
+    fun getPulsarSession(): AgenticSession {
+        val context = AgenticContexts.create(applicationContext)
+        require(context is QLAgenticContext)
         require(context.applicationContext == applicationContext)
         return context.createSession()
     }

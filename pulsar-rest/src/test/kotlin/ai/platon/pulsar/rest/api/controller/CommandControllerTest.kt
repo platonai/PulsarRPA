@@ -1,8 +1,9 @@
 package ai.platon.pulsar.rest.api.controller
 
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
-import ai.platon.pulsar.rest.api.TestUtils.PRODUCT_DETAIL_URL
+import ai.platon.pulsar.rest.api.TestHelper.MOCK_PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.entities.CommandRequest
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.rest.api.entities.CommandStatus
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
@@ -28,7 +29,7 @@ class CommandControllerTest : ScrapeControllerTestBase() {
 
         val status = restTemplate.postForObject("$baseUri/api/commands", request, CommandStatus::class.java)
 
-        println(status)
+        printlnPro(status)
         Assumptions.assumeTrue(status.pageStatusCode == 200)
         Assumptions.assumeTrue(status.isDone)
         Assumptions.assumeTrue(status.statusCode == 200)
@@ -59,7 +60,7 @@ class CommandControllerTest : ScrapeControllerTestBase() {
 
         val status = restTemplate.postForObject("$baseUri/api/commands", request, CommandStatus::class.java)
 
-        println(status)
+        printlnPro(status)
         Assumptions.assumeTrue(status.pageStatusCode == 200)
         Assumptions.assumeTrue(status.isDone)
         Assumptions.assumeTrue(status.statusCode == 200)
@@ -76,12 +77,12 @@ class CommandControllerTest : ScrapeControllerTestBase() {
     fun `test executeCommand with X-SQL + sync mode`() {
         val sqlTemplate = sqlTemplates["productDetailPage"]!!.template
         val request = CommandRequest(
-            PRODUCT_DETAIL_URL,
+            MOCK_PRODUCT_DETAIL_URL,
             xsql = sqlTemplate,
             mode = "sync",
         )
         val status = restTemplate.postForObject("$baseUri/api/commands", request, CommandStatus::class.java)
-        println(prettyPulsarObjectMapper().writeValueAsString(status))
+        printlnPro(prettyPulsarObjectMapper().writeValueAsString(status))
         val result = status.commandResult
 
         Assumptions.assumeTrue(status.pageStatusCode == 200)
@@ -95,3 +96,4 @@ class CommandControllerTest : ScrapeControllerTestBase() {
         assertNotNull(result.xsqlResultSet)
     }
 }
+

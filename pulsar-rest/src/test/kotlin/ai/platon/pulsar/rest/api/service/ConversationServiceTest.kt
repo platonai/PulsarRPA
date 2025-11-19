@@ -2,22 +2,27 @@ package ai.platon.pulsar.rest.api.service
 
 import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.ChatModelFactory
-import ai.platon.pulsar.rest.api.TestUtils.PRODUCT_DETAIL_URL
-import ai.platon.pulsar.rest.api.TestUtils.PRODUCT_LIST_URL
+import ai.platon.pulsar.rest.api.TestHelper.MOCK_PRODUCT_DETAIL_URL
+import ai.platon.pulsar.rest.api.common.MockEcServerTestBase
+import ai.platon.pulsar.rest.api.config.MockEcServerConfiguration
 import ai.platon.pulsar.rest.api.entities.CommandRequest
 import ai.platon.pulsar.rest.api.entities.PromptRequest
+import ai.platon.pulsar.test.TestResourceUtil
+import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Tag
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.annotation.Import
 import org.springframework.test.context.ContextConfiguration
 import kotlin.test.*
 
 const val API_COMMAND_PROMPT1 = """
-Visit https://www.amazon.com/dp/B08PP5MSVB
+Visit http://localhost:18080/ec/dp/B0E000001
 After page load: click #title, then scroll to the middle.
 Summarize the product.
 Extract: product name, price, ratings.
@@ -25,7 +30,7 @@ Find all links containing /dp/.
     """
 
 const val API_COMMAND_PROMPT2 = """
-Visit https://www.amazon.com/dp/B08PP5MSVB
+Visit http://localhost:18080/ec/dp/B0E000001
 When the page is ready, click the element with id "title" and scroll to the middle.
 
 Page summary prompt: Provide a brief introduction of this product.
@@ -35,23 +40,23 @@ Extract links: all links containing `/dp/` on the page.
     """
 
 const val API_COMMAND_PROMPT3 = """
-Visit the page: https://www.amazon.com/dp/B08PP5MSVB
+Visit the page: http://localhost:8182/ec/dp/B0E000001
 
 ### 📝 Tasks:
 
-**1. Page Summary**  
+**1. Page Summary**
 Provide a brief introduction to the product.
 
-**2. Field Extraction**  
+**2. Field Extraction**
 Extract the following information from the page content:
 - Product name
 - Price
 - Ratings
 
-**3. Link Extraction**  
+**3. Link Extraction**
 Collect all hyperlinks on the page that contain the substring `/dp/`.
 
-**4. Page Interaction**  
+**4. Page Interaction**
 Once the document is fully loaded:
 - Click the element with `id="title"`
 - Scroll to the middle of the page
@@ -60,7 +65,8 @@ Once the document is fully loaded:
 @Tag("TimeConsumingTest")
 @SpringBootTest
 @ContextConfiguration(initializers = [PulsarTestContextInitializer::class])
-class ConversationServiceTest {
+@Import(MockEcServerConfiguration::class)
+class ConversationServiceTest : MockEcServerTestBase() {
 
     @Autowired
     private lateinit var conf: ImmutableConfig
@@ -69,7 +75,8 @@ class ConversationServiceTest {
     private lateinit var conversationService: ConversationService
 
     @BeforeEach
-    fun setup() {
+    override fun setup() {
+        super.setup() // Call parent setup to verify mock server is running
         Assumptions.assumeTrue(ChatModelFactory.isModelConfigured(conf))
     }
 
@@ -77,8 +84,8 @@ class ConversationServiceTest {
     fun `test prompt conversion to request`() {
         val prompt = API_COMMAND_PROMPT1
 
-        val request = conversationService.normalizePlainCommand(prompt)
-        println(prettyPulsarObjectMapper().writeValueAsString(request))
+        val request = runBlocking { conversationService.normalizePlainCommand(prompt) }
+        printlnPro(prettyPulsarObjectMapper().writeValueAsString(request).toString())
         assertNotNull(request)
         verifyPromptRequestL2(request)
     }
@@ -87,16 +94,16 @@ class ConversationServiceTest {
     fun `test prompt conversion to request 2`() {
         val prompt = API_COMMAND_PROMPT2
 
-        val request = conversationService.normalizePlainCommand(prompt)
-        println(prettyPulsarObjectMapper().writeValueAsString(request))
+        val request = runBlocking { conversationService.normalizePlainCommand(prompt) }
+        printlnPro(prettyPulsarObjectMapper().writeValueAsString(request).toString())
         assertNotNull(request)
         verifyPromptRequestL2(request)
     }
 
     @Test
     fun `test convertPlainCommandToJSON with X-SQL`() {
-        val url1 = "https://www.amazon.com/dp/B08PP5MSVB"
-        val url2 = "https://www.amazon.com/dp/B07PX3ZRJ6"
+        val url1 = "http://localhost:18080/ec/dp/B0E000001"
+        val url2 = "http://localhost:18080/ec/dp/B0E000002"
 
         val commandTemplate = """
 Go to {PLACEHOLDER_URL}
@@ -126,12 +133,12 @@ from load_and_select(@url, 'body');
 
         val prompt1 = commandTemplate.replace("{PLACEHOLDER_URL}", url1)
 
-        val result1 = conversationService.convertPlainCommandToJSON(prompt1, url1)
+        val result1 = runBlocking { conversationService.convertPlainCommandToJSON(prompt1, url1) }
         assertNotNull(result1)
 
         val prompt2 = commandTemplate.replace("{PLACEHOLDER_URL}", url2)
 
-        val result2 = conversationService.convertPlainCommandToJSON(prompt2, url2)
+        val result2 = runBlocking { conversationService.convertPlainCommandToJSON(prompt2, url2) }
         assertNotNull(result2)
 
         val template1 = result1.replace(url1, "").replace(url2, "")
@@ -144,16 +151,16 @@ from load_and_select(@url, 'body');
     fun `test prompt conversion to request 3`() {
         val prompt = API_COMMAND_PROMPT3
 
-        val request = conversationService.normalizePlainCommand(prompt)
-        println(prettyPulsarObjectMapper().writeValueAsString(request))
+        val request = runBlocking { conversationService.normalizePlainCommand(prompt) }
+        printlnPro(prettyPulsarObjectMapper().writeValueAsString(request).toString())
         assertNotNull(request)
         verifyPromptRequestL2(request)
     }
 
     @Test
     fun `test convertPlainCommandToJSON with cache`() {
-        val url1 = "https://www.amazon.com/dp/B08PP5MSVB"
-        val url2 = "https://www.amazon.com/dp/B07PX3ZRJ6"
+        val url1 = "http://localhost:18080/ec/dp/B0E000001"
+        val url2 = "http://localhost:18080/ec/dp/B0E000002"
 
         val prompt1 = """
 Visit $url1
@@ -162,7 +169,7 @@ Page summary prompt: Provide a brief introduction of this product.
 
         """.trimIndent()
 
-        val result1 = conversationService.convertPlainCommandToJSON(prompt1, url1)
+        val result1 = runBlocking { conversationService.convertPlainCommandToJSON(prompt1, url1) }
         assertNotNull(result1)
 
         val prompt2 = """
@@ -172,7 +179,7 @@ Page summary prompt: Provide a brief introduction of this product.
 
         """.trimIndent()
 
-        val result2 = conversationService.convertPlainCommandToJSON(prompt2, url2)
+        val result2 = runBlocking { conversationService.convertPlainCommandToJSON(prompt2, url2) }
         assertNotNull(result2)
 
         val template1 = result1.replace(url1, "").replace(url2, "")
@@ -184,12 +191,12 @@ Page summary prompt: Provide a brief introduction of this product.
     @Test
     fun `test prompt conversion without URL`() {
         val prompt = """
-Go to amazon.com/dp/B08PP5MSVB
+Go to localhost:18080/ec/dp/B0E000001
 
 Page summary prompt: Provide a brief introduction of this product.
         """.trimIndent()
 
-        val request = conversationService.normalizePlainCommand(prompt)
+        val request = runBlocking { conversationService.normalizePlainCommand(prompt) }
         assertNull(request)
     }
 
@@ -198,10 +205,10 @@ Page summary prompt: Provide a brief introduction of this product.
      * */
     @Test
     fun `When chat about a page then the result is not empty`() {
-        val request = PromptRequest(PRODUCT_LIST_URL, "Tell me something about the page")
+        val request = PromptRequest(TestResourceUtil.MOCK_PRODUCT_LIST_URL, "Tell me something about the page")
 
-        val response = conversationService.chat(request)
-        println(response)
+        val response = runBlocking { conversationService.chat(request) }
+        printlnPro(response.toString())
         assertTrue { response.isNotEmpty() }
     }
 
@@ -214,11 +221,11 @@ Page summary prompt: Provide a brief introduction of this product.
             get the text of the element with id 'title'
         """.trimIndent().split("\n")
         val request = PromptRequest(
-            PRODUCT_DETAIL_URL, "Tell me something about the page", "", actions = actions
+            MOCK_PRODUCT_DETAIL_URL, "Tell me something about the page", "", actions = actions
         )
 
-        val response = conversationService.chat(request)
-        println(response)
+        val response = runBlocking { conversationService.chat(request) }
+        printlnPro(response.toString())
         assertTrue { response.isNotEmpty() }
     }
 
@@ -233,7 +240,7 @@ Page summary prompt: Provide a brief introduction of this product.
   "isDone" : true,
   "pageSummary" : "The **Huawei P60 Pro** is a premium, factory-unlocked smartphone featuring a **Dual SIM** setup, **8GB RAM**, and **256GB storage** (Global Model MNA-LX9). It comes in **Black** and is designed for global use, though it may lack warranty coverage in certain regions like the U.S.  \n\n### **Key Features:**  \n- **Display:** High-resolution screen (exact size not specified, but likely 6.6\"+) with vibrant colors.  \n- **Camera:** Advanced multi-lens rear camera system (details not listed, but Huawei flagships typically emphasize low-light and zoom capabilities).  \n- **Performance:** Powered by a flagship-grade processor (likely Kirin or Snapdragon, though specifics depend on the global variant).  \n- **Storage:** 256GB internal storage (non-expandable).  \n- **Dual SIM:** Supports two SIM cards for flexibility.  \n- **Unlocked:** Works with compatible GSM carriers worldwide (may not support CDMA networks like Verizon).  \n\n### **Additional Notes:**  \n- **Price:** ${'$'}595.00 (may vary with promotions).  \n- **Seller:** Ships from **Sell Phone Basement LLC** with a 30-day return policy.  \n- **Protection Plans:** Optional 2-year accidental damage coverage (${'$'}159.99) or monthly subscription (${'$'}7.49/month).  \n\n### **Potential Drawbacks:**  \n- **Limited U.S. carrier compatibility** (check bands for your provider).  \n- **No Google Services** (Huawei devices use HarmonyOS/HMS instead of Google Play).  \n\nIdeal for users seeking a high-end Huawei device with global network support, though research carrier compatibility before purchase. Let me know if you'd like further details!",
   "fields" : "Here’s the extracted information you requested from the provided Amazon product page:\n\n### **Product Name:**  \n**Huawei P60 Pro Dual SIM 8GB + 256GB Global Model (MNA-LX9) Factory Unlocked Smartphone - Black**  \n\n### **Price:**  \n**${'$'}595.00**  \n\n### **Ratings:**  \n- **Overall Rating:** Not explicitly stated in the provided text, but the **2-Year Protection Plan** by Asurion has a **3.7/5** (based on 393 ratings).  \n- **Customer Reviews Breakdown:**  \n  - 5-star: 49%  \n  - 4-star: 8%  \n  - 3-star: 14%  \n  - 2-star: 12%  \n  - 1-star: 17%  \n\n### **Additional Details:**  \n- **Storage:** 256GB  \n- **RAM:** 8GB  \n- **Model:** MNA-LX9 (Global Version, Factory Unlocked)  \n- **Color:** Black  \n- **Seller:** Sell Phone Basement LLC  \n- **Availability:** Only 4 left in stock  \n- **Delivery Estimate:** May 6 - 8 (if ordered soon)  \n\n### **Protection Plans (Optional):**  \n1. **2-Year Protection Plan** – **${'$'}159.99** (3.7/5 rating)  \n2. **Monthly Mobile Accident Protection Plan** – **${'$'}7.49/month** (3.0/5 rating)  \n\nWould you like any additional details, such as specifications or seller policies?",
-  "links" : "Here are all the links containing `/dp/` found on the page:\n\n1. `https://www.amazon.com/dp/B08PP5MSVB#nic-po-expander-heading`  \n2. `https://www.amazon.com/dp/B08PP5MSVB#productFactsDesktopExpander`  \n3. `https://www.amazon.com/dp/B08PP5MSVB`  \n4. `https://www.amazon.com/dp/B08PP5MSVB#`  \n5. `https://www.amazon.com/dp/B089MCQKD5/ref=dp_atch_dss_w_lm_B08PP5MSVB_`  \n6. `https://www.amazon.com/dp/B088YS1F7W/ref=dp_atch_dss_w_lm_B08PP5MSVB_`  \n7. `https://www.amazon.com/dp/B089MCQKD5/ref=psd_bb_lm1_B08PP5MSVB_B089MCQKD5`  \n8. `https://www.amazon.com/dp/B088YS1F7W/ref=psd_bb_lm2_B08PP5MSVB_B088YS1F7W`  \n9. `https://www.amazon.com/dp/B08PP5MSVB#productDetails`  \n\nLet me know if you'd like further analysis or filtering of these links!",
+  "links" : "Here are all the links containing `/dp/` found on the page:\n\n1. `http://localhost:18080/ec/dp/B08PP5MSVB#nic-po-expander-heading`  \n2. `http://localhost:18080/ec/dp/B08PP5MSVB#productFactsDesktopExpander`  \n3. `http://localhost:18080/ec/dp/B08PP5MSVB`  \n4. `http://localhost:18080/ec/dp/B08PP5MSVB#`  \n5. `http://localhost:18080/ec/dp/B089MCQKD5/ref=dp_atch_dss_w_lm_B08PP5MSVB_`  \n6. `http://localhost:18080/ec/dp/B088YS1F7W/ref=dp_atch_dss_w_lm_B08PP5MSVB_`  \n7. `http://localhost:18080/ec/dp/B089MCQKD5/ref=psd_bb_lm1_B08PP5MSVB_B089MCQKD5`  \n8. `http://localhost:18080/ec/dp/B088YS1F7W/ref=psd_bb_lm2_B08PP5MSVB_B088YS1F7W`  \n9. `http://localhost:18080/ec/dp/B08PP5MSVB#productDetails`  \n\nLet me know if you'd like further analysis or filtering of these links!",
   "xsqlResultSet" : null,
   "createTime" : "2025-05-02T08:13:44.580574300Z",
   "finishTime" : "2025-05-02T08:14:42.128567700Z",
@@ -243,19 +250,20 @@ Page summary prompt: Provide a brief introduction of this product.
         """.trimIndent()
 
         try {
-            val markdown = conversationService.convertResponseToMarkdown(response)
-            println(markdown)
+            val markdown = runBlocking { conversationService.convertResponseToMarkdown(response) }
+            printlnPro(markdown.toString())
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
     private fun verifyPromptRequestL2(request: CommandRequest) {
-        assertTrue { request.url == "https://www.amazon.com/dp/B08PP5MSVB" }
-        assertEquals("https://www.amazon.com/dp/B08PP5MSVB", request.url)
+        assertTrue { request.url == "http://localhost:18080/ec/dp/B0E000001" }
+        assertEquals("http://localhost:18080/ec/dp/B0E000001", request.url)
         assertNotNull(request.pageSummaryPrompt)
         assertNotNull(request.dataExtractionRules)
         assertNotNull(request.uriExtractionRules)
         assertNotNull(request.onPageReadyActions)
     }
 }
+

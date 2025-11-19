@@ -1,11 +1,9 @@
 package ai.platon.pulsar.persist
 
 import ai.platon.pulsar.common.brief
-import ai.platon.pulsar.common.config.AppConstants.UNICODE_LAST_CODE_POINT
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.common.urls.URLUtils
-import ai.platon.pulsar.common.urls.URLUtils.reverseUrlOrNull
 import ai.platon.pulsar.persist.gora.db.DbIterator
 import ai.platon.pulsar.persist.gora.db.DbQuery
 import ai.platon.pulsar.persist.gora.generated.GWebPage
@@ -240,8 +238,6 @@ class WebDb(
     @Throws(WebDBException::class)
     fun scan(urlBase: String): Iterator<WebPage> {
         val query = dataStore.newQuery()
-        // TODO: key range does not working in MongoStore
-        query.setKeyRange(reverseUrlOrNull(urlBase), reverseUrlOrNull(urlBase + UNICODE_LAST_CODE_POINT))
 
         val result = dataStore.execute(query)
         return DbIterator(result, conf)

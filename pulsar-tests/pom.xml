@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>4.0.1-SNAPSHOT</version>
+        <version>4.1.0-rc.1</version>
     </parent>
 
     <artifactId>pulsar-tests</artifactId>
@@ -43,6 +43,13 @@
             <artifactId>pulsar-rest</artifactId>
         </dependency>
 
+        <!-- Ensure browser DOM service & debug utilities are available to tests -->
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-browser</artifactId>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
@@ -63,6 +70,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-tests-common</artifactId>
         </dependency>
     </dependencies>
 </project>

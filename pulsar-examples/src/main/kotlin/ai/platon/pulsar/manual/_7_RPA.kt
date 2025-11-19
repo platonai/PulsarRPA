@@ -5,6 +5,7 @@ import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.context.PulsarContexts.createSession
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.session.PulsarSession
+import ai.platon.pulsar.test.TestResourceUtil
 import org.slf4j.LoggerFactory
 
 internal class RPACrawler(private val session: PulsarSession = createSession()) {
@@ -51,9 +52,9 @@ internal class RPACrawler(private val session: PulsarSession = createSession()) 
  * Demonstrates how to use RPA for Web scraping.
  * */
 fun main() {
-    PulsarSettings().withDefaultBrowser()
+    PulsarSettings.withDefaultBrowser()
 
-    val url = "https://www.amazon.com/dp/B08PP5MSVB"
+    val url = TestResourceUtil.PRODUCT_DETAIL_URL
     val args = "-refresh -parse"
     val session = createSession()
     val crawler = RPACrawler(session)

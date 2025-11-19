@@ -38,13 +38,13 @@ abstract class AbstractPrivacyManager(
      * 3. PrivacyAgent.DEFAULT
      * 4. PrivacyAgent.NEXT_SEQUENTIAL
      */
-    val permanentContexts = ConcurrentHashMap<PrivacyAgent, PrivacyContext>()
+    val permanentContexts = ConcurrentHashMap<BrowserProfile, PrivacyContext>()
 
     /**
      * Temporary contexts have a short lifecycle and are discarded if a privacy leak is detected.
      * A new context is created to replace the leaked one.
      */
-    val temporaryContexts = ConcurrentHashMap<PrivacyAgent, PrivacyContext>()
+    val temporaryContexts = ConcurrentHashMap<BrowserProfile, PrivacyContext>()
 
     /**
      * Returns all active contexts, including both permanent and temporary contexts.
@@ -135,30 +135,30 @@ abstract class AbstractPrivacyManager(
     abstract override fun tryGetNextUnderLoadedPrivacyContext(page: WebPage, fingerprint: Fingerprint, task: FetchTask): PrivacyContext?
 
     /**
-     * Gets or creates a privacy context for the given privacy agent.
+     * Gets or creates a privacy context for the given browser profile.
      *
-     * @param privacyAgent The privacy agent associated with the context.
+     * @param profile The browser profile associated with the context.
      * @return The privacy context.
      */
-    abstract override fun getOrCreate(privacyAgent: PrivacyAgent): PrivacyContext
+    abstract override fun getOrCreate(profile: BrowserProfile): PrivacyContext
 
     /**
-     * Creates an unmanaged privacy context for the given privacy agent.
+     * Creates an unmanaged privacy context for the given browser profile.
      *
-     * @param privacyAgent The privacy agent associated with the context.
+     * @param profile The browser profile associated with the context.
      * @return The unmanaged privacy context.
      */
-    abstract override fun createUnmanagedContext(privacyAgent: PrivacyAgent): PrivacyContext
+    abstract override fun createUnmanagedContext(profile: BrowserProfile): PrivacyContext
 
     /**
-     * Creates an unmanaged privacy context for the given privacy agent and fetcher.
+     * Creates an unmanaged privacy context for the given browser profile and fetcher.
      *
-     * @param privacyAgent The privacy agent associated with the context.
+     * @param profile The browser profile associated with the context.
      * @param fetcher The web driver fetcher used to create the context.
      * @return The unmanaged privacy context.
      */
-    override fun createUnmanagedContext(privacyAgent: PrivacyAgent, fetcher: WebDriverFetcher) =
-        createUnmanagedContext(privacyAgent).also { (it as? AbstractPrivacyContext)?.webdriverFetcher = fetcher }
+    override fun createUnmanagedContext(profile: BrowserProfile, fetcher: WebDriverFetcher) =
+        createUnmanagedContext(profile).also { (it as? AbstractPrivacyContext)?.webdriverFetcher = fetcher }
 
     /**
      * Builds a status string summarizing the current state of active contexts.
@@ -226,11 +226,11 @@ abstract class AbstractPrivacyManager(
     @Throws(Exception::class)
     private fun doClose(privacyContext: PrivacyContext) {
         if (logger.isDebugEnabled) {
-            logger.debug("Closing privacy context | {}", privacyContext.privacyAgent)
+            logger.debug("Closing privacy context | {}", privacyContext.profile)
             logger.debug("Active contexts: {}, zombie contexts: {}", activeContexts.size, zombieContexts.size)
         }
 
-        val privacyAgent = privacyContext.privacyAgent
+        val privacyAgent = privacyContext.profile
 
         synchronized(contextLifeCycleMonitor) {
             permanentContexts.remove(privacyAgent)
@@ -278,8 +278,8 @@ abstract class AbstractPrivacyManager(
      */
     private fun reportHistoricalContexts() {
         val maximumRecords = 15
-        val historicalContexts = zombieContexts.filter { it.privacyAgent.isTemporary } +
-            deadContexts.filter { it.privacyAgent.isTemporary }
+        val historicalContexts = zombieContexts.filter { it.profile.isTemporary } +
+            deadContexts.filter { it.profile.isTemporary }
         if (historicalContexts.isNotEmpty()) {
             val prefix = "The latest temporary context throughput: "
             val postfix = " (success/min)"

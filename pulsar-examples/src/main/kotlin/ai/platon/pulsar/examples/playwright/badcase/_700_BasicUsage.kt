@@ -3,6 +3,7 @@ package ai.platon.pulsar.examples.playwright.badcase
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.test.TestResourceUtil
 import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
 
@@ -14,12 +15,12 @@ fun main() {
 
     // Use the default browser which has an isolated profile.
     // You can also try other browsers, such as system default, prototype, sequential, temporary, etc.
-    PulsarSettings().withDefaultBrowser(BrowserType.PLAYWRIGHT_CHROME)
+    PulsarSettings.withDefaultBrowser(BrowserType.PLAYWRIGHT_CHROME)
 
     // Create a pulsar session
     val session = PulsarContexts.createSession()
     // The main url we are playing with
-    val url = "https://www.amazon.com/dp/B08PP5MSVB"
+    val url = TestResourceUtil.PRODUCT_DETAIL_URL
 
     // Open a page with the browser
     val page = session.open(url)
@@ -41,7 +42,7 @@ fun main() {
     // ...
 
     // Chat with the page
-    val response = session.chat("Tell me something about the page", document)
+    val response = runBlocking { session.chat("Tell me something about the page", document) }
     println(response)
 
     // Load the portal page and then load all links specified by `-outLink`.

@@ -21,11 +21,11 @@ class ConversationService(
     val loadService: LoadService,
 ) {
 
-    fun chat(prompt: String): String {
+    suspend fun chat(prompt: String): String {
         return session.chat(prompt).content
     }
 
-    fun chat(request: PromptRequest): String {
+    suspend fun chat(request: PromptRequest): String {
         request.args = LoadOptions.mergeArgs(request.args, "-refresh")
         val (page, document) = loadService.loadDocument(request)
 
@@ -35,7 +35,7 @@ class ConversationService(
         }
 
         return if (page.protocolStatus.isSuccess) {
-            session.chat(prompt, document.text).content
+            session.chat(prompt + "\n" + document.text).content
         } else {
             // Throw?
             page.protocolStatus.toString()
@@ -51,7 +51,7 @@ class ConversationService(
      * @param request The request string containing a URL.
      * @return A PromptRequestL2 object if a URL is found in the request string, null otherwise.
      * */
-    fun normalizePlainCommand(request: String): CommandRequest? {
+    suspend fun normalizePlainCommand(request: String): CommandRequest? {
         if (request.isBlank()) {
             return null
         }
@@ -72,7 +72,7 @@ class ConversationService(
         return request2
     }
 
-    fun convertPlainCommandToJSON(plainCommand: String, url: String): String? {
+    suspend fun convertPlainCommandToJSON(plainCommand: String, url: String): String? {
         require(URLUtils.isStandard(url)) { "URL must not be blank" }
 
         // Replace the URL in the request with a placeholder, so the result from the LLM can be cached.
@@ -100,7 +100,7 @@ class ConversationService(
     }
 
     val resource = "prompts/api/request/command/convert_response_to_markdown_prompt.md"
-    fun convertResponseToMarkdown(jsonResponse: String): String {
+    suspend fun convertResponseToMarkdown(jsonResponse: String): String {
         val userMessage = PromptTemplateLoader(resource,
             CONVERT_RESPONSE_TO_MARKDOWN_PROMPT,
             mapOf(PLACEHOLDER_JSON_STRING to jsonResponse)
@@ -108,7 +108,7 @@ class ConversationService(
         return session.chat(userMessage).content
     }
 
-    fun convertResponseToMarkdown(status: CommandStatus): String {
+    suspend fun convertResponseToMarkdown(status: CommandStatus): String {
         val jsonResponse = pulsarObjectMapper().writeValueAsString(status)
         return convertResponseToMarkdown(jsonResponse)
     }

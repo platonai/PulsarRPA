@@ -26,8 +26,6 @@ interface CallableDegenerateUrl: DegenerateUrl {
  * `UrlAware` encapsulates a URL along with additional specifications defining its loading behavior.
  *
  * A URL represents a Uniform Resource Locator, a pointer to a "resource" on the World Wide Web.
- * A resource can be something as simple as a file or a directory, or it can be a reference to
- * a more complicated object, such as a query to a database or to a search engine.
  *
  * In java, a [URL] object represents a URL.
  * In Browser4, a [UrlAware] object represents a URL with extra information telling the system
@@ -111,7 +109,7 @@ interface UrlAware {
     val toURLOrNull: URL?
 
     /**
-     * An url is Nil if it equals to AppConstants.NIL_PAGE_URL
+     * A url is Nil if it equals to AppConstants.NIL_PAGE_URL
      * */
     val isNil: Boolean
     

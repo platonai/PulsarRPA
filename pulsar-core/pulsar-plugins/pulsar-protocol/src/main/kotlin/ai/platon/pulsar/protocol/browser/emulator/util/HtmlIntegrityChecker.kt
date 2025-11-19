@@ -17,12 +17,10 @@ package ai.platon.pulsar.protocol.browser.emulator.util
 
 import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.HtmlUtils
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.persist.PageDatum
 import java.util.concurrent.CopyOnWriteArrayList
-
 
 interface HtmlIntegrityChecker {
     fun isRelevant(url: String): Boolean
@@ -36,7 +34,6 @@ abstract class AbstractHtmlIntegrityChecker: HtmlIntegrityChecker {
 
 open class DefaultHtmlIntegrityChecker(val conf: ImmutableConfig): AbstractHtmlIntegrityChecker() {
     private val tracer = getLogger(DefaultHtmlIntegrityChecker::class).takeIf { it.isTraceEnabled }
-    private val jsEnabled = conf.getBoolean(CapabilityTypes.BROWSER_JS_INVADING_ENABLED, true)
 
     override operator fun invoke(pageSource: String, pageDatum: PageDatum): HtmlIntegrity {
         return checkHtmlIntegrity(pageSource)
@@ -67,15 +64,12 @@ open class DefaultHtmlIntegrityChecker(val conf: ImmutableConfig): AbstractHtmlI
         val p3 = pageSource.indexOf("<a", p2)
         if (p3 < p2) return HtmlIntegrity.NO_ANCHOR
 
-        if (jsEnabled) {
-            // TODO: optimize using region match
-            val bodyTag = pageSource.substring(p1, p2)
-            tracer?.trace("Body tag: $bodyTag")
-            // The javascript set data-error flag to indicate if the vision information of all DOM nodes is calculated
-            val r = bodyTag.contains("data-error=\"0\"")
-            if (!r) {
-                return HtmlIntegrity.NO_JS_OK_FLAG
-            }
+        val bodyTag = pageSource.substring(p1, p2)
+        tracer?.trace("Body tag: $bodyTag")
+        // The javascript set data-error flag to indicate if the vision information of all DOM nodes is calculated
+        val r = bodyTag.contains("data-error=\"0\"")
+        if (!r) {
+            return HtmlIntegrity.NO_JS_OK_FLAG
         }
 
         return HtmlIntegrity.OK

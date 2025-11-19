@@ -2,7 +2,8 @@ package ai.platon.pulsar.common.urls
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.config.AppConstants
-import ai.platon.pulsar.common.config.AppConstants.BROWSER_SPECIFIC_URL_PREFIX
+import ai.platon.pulsar.common.printlnPro
+import ai.platon.pulsar.common.config.AppConstants.BROWSER_INTERNAL_BASE_URL
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.condition.EnabledOnOs
@@ -69,33 +70,33 @@ class URLUtilsTest {
     @Test
     fun ensureChromeURLsAreMalformed() {
         assertThrows(MalformedURLException::class.java) {
-            URL("chrome://chrome-urls")
+            URI.create("chrome://chrome-urls").toURL()
         }
     }
 
     @Test
     fun testNormalize_WithoutQuery() {
         val result = URLUtils.normalize("http://example.com/path?query=123#fragment", true)
-        assertEquals(URL("http://example.com/path"), result)
+        assertEquals(URI.create("http://example.com/path").toURL(), result)
     }
 
     @Test
     fun testNormalize_WithQuery() {
         val result = URLUtils.normalize("http://example.com/path?query=123#fragment")
-        assertEquals(URL("http://example.com/path?query=123"), result)
+        assertEquals(URI.create("http://example.com/path?query=123").toURL(), result)
     }
 
     @Test
     fun testNormalize_RemoveFragment() {
         val result = URLUtils.normalize("http://example.com/path#fragment")
-        assertEquals(URL("http://example.com/path"), result)
+        assertEquals(URI.create("http://example.com/path").toURL(), result)
     }
 
     @Test
     fun testNormalize_InvalidUrl() {
         assertThrows(IllegalArgumentException::class.java) {
             val url = URLUtils.normalize("invalid-url")
-//            println(url)
+//            logPrintln(url)
         }
     }
 
@@ -122,7 +123,7 @@ class URLUtilsTest {
     fun testNormalize_WindowsFileURI() {
         val filePath = "C:\\Users\\Vincent\\Documents"
         val uri = File(filePath).toURI()  // 自动转换为合法的 file:// URI
-        println(uri.toString()) // 输出 file:/C:/Users/Vincent/Documents
+        printlnPro(uri.toString()) // 输出 file:/C:/Users/Vincent/Documents
         assertEquals("file:/C:/Users/Vincent/Documents", uri.toString())
 
         // 注意：虽然 URI 标准中为绝对路径推荐 file:///C:/...，
@@ -139,7 +140,7 @@ class URLUtilsTest {
 
         val url = "file:///C:/Users/User/Documents/file.txt"
         val normalizedUrl = URLUtils.normalize(url)
-        assertEquals(URL("file:///C:/Users/User/Documents/file.txt"), normalizedUrl)
+        assertEquals(URI.create("file:///C:/Users/User/Documents/file.txt").toURL(), normalizedUrl)
     }
 
 
@@ -157,8 +158,8 @@ class URLUtilsTest {
     fun testBrowserURLToStandardURL() {
         // Test converting a browser protocol to URL
         val url = "chrome://settings"
-        val expected = "$BROWSER_SPECIFIC_URL_PREFIX?url=${URLEncoder.encode(url, Charsets.UTF_8)}"
-        println(expected)
+        val expected = "$BROWSER_INTERNAL_BASE_URL?url=${URLEncoder.encode(url, Charsets.UTF_8)}"
+        printlnPro(expected)
         assertEquals(expected, URLUtils.browserURLToStandardURL(url))
     }
 
@@ -166,7 +167,7 @@ class URLUtilsTest {
     fun testUrlToBrowserProtocol() {
         // Test extracting and re-encoding a browser protocol from URL
         val expected = "chrome://settings"
-        val url = "$BROWSER_SPECIFIC_URL_PREFIX?url=${URLEncoder.encode(expected, Charsets.UTF_8)}"
+        val url = "$BROWSER_INTERNAL_BASE_URL?url=${URLEncoder.encode(expected, Charsets.UTF_8)}"
         assertEquals(expected, URLUtils.standardURLToBrowserURL(url))
 
         // Test with a URL that does not contain a browser protocol
@@ -187,9 +188,10 @@ class URLUtilsTest {
         val base64 = Base64.getUrlEncoder().encode(path.toString().toByteArray()).toString(Charsets.UTF_8)
         val expectedURL = "$expectedPrefix?path=$base64"
 
-        println(path)
-        println(result)
+        printlnPro(path)
+        printlnPro(result)
 
         assertEquals(expectedURL, result)
     }
 }
+

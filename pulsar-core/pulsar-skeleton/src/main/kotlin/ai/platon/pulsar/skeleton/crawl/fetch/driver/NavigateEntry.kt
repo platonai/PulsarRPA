@@ -10,7 +10,7 @@ import kotlin.concurrent.withLock
  * Created by vincent on 18-1-1.
  * Copyright @ 2013-2023 Platon AI. All rights reserved.
  */
-data class NavigateEntry(
+data class NavigateEntry constructor(
     /**
      * The url to navigate.
      *
@@ -19,9 +19,9 @@ data class NavigateEntry(
      * */
     val url: String,
     /**
-     * The page id, 0 means there is no WebPage.
+     * The in-process page id, 0 means there is no WebPage.
      * */
-    val pageId: Int = 0,
+    val pageId: Long = 0,
     /**
      * The page url which can be used to retrieve the WebPage from database.
      * An empty string means there is no WebPage.
@@ -51,6 +51,10 @@ data class NavigateEntry(
     private val lock = ReentrantLock()
 
     /**
+     * The user typed url return from the browser, should be the same as `url`.
+     * */
+    val userTypedUrl: String get() = url
+    /**
      * Main request is only used for HTML documents for now.
      *
      * For HTML webpages, the main request is the request for the first HTML document.
@@ -66,7 +70,8 @@ data class NavigateEntry(
     var mainResponseStatusText: String = ""
     var mainResponseHeaders: Map<String, Any> = mapOf()
 
-    val documentTransferred get() = mainResponseStatus > 0
+    var mainFrameId: String? = null
+    val mainFrameReceived get() = mainFrameId != null
 
     /**
      * The time when the document is ready.

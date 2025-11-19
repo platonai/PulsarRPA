@@ -9,9 +9,11 @@ import org.jsoup.nodes.Node
 import org.jsoup.nodes.TextNode
 import org.jsoup.select.NodeFilter
 import org.jsoup.select.NodeTraversor
-import java.net.URI
 import java.util.concurrent.atomic.AtomicReference
 
+/**
+ * Deprecated, use [ai.platon.pulsar.browser.driver.chrome.dom.DomService] instead.
+ * */
 object DomUtils {
 
     const val SCREEN_OFFSET = -0.2f

@@ -21,7 +21,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>4.0.1-SNAPSHOT</version>
+    <version>4.1.0-rc.1</version>
 
     <name>Browser4</name>
     <description>A lightning-fast, coroutine-safe browser for your AI.</description>
@@ -90,16 +90,14 @@
      with a single click in the IDE right after opening the project. -->
     <modules>
         <module>pulsar-core</module>
-        <module>pulsar-third</module>
-        <module>pulsar-tools</module>
-
         <module>pulsar-rest</module>
-
         <module>pulsar-client</module>
+        <module>pulsar-tests-common</module>
         <module>pulsar-tests</module>
-
         <module>pulsar-examples</module>
-        <module>pulsar-browser4</module>
+        <!-- Benchmark / performance regression module (not published in release profile) -->
+        <module>pulsar-benchmarks</module>
+        <module>browser4</module>
     </modules>
 
     <profiles>
@@ -186,20 +184,15 @@
             </properties>
             <modules>
                 <module>pulsar-core</module>
-                <module>pulsar-third</module>
 
-                <module>pulsar-tools</module>
-                <module>pulsar-rest</module>
-
+                <module>pulsar-tests-common</module>
                 <module>pulsar-tests</module>
                 <module>pulsar-all</module>
-
                 <module>pulsar-client</module>
-
                 <module>pulsar-bom</module>
-
                 <module>pulsar-examples</module>
-                <module>pulsar-browser4</module>
+
+                <module>browser4</module>
             </modules>
 
             <build>
@@ -569,12 +562,18 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>${surefire.version}</version>
+                <version>${maven-surefire-plugin.version}</version>
                 <configuration>
-                    <excludedGroups>TimeConsumingTest,ExternalServiceTest,IntegrationTest,E2ETest,HeavyTest,TestInfraCheck,SkippableLowerLevelTest</excludedGroups>
+                    <!--
+
+                    -->
+                    <excludedGroups>${surefire.excludedGroups}</excludedGroups>
                     <!-- All tests are in the same JVM process -->
                     <forkCount>1</forkCount>
                     <reuseForks>true</reuseForks>
+                    <!-- Enable byte-buddy-agent -->
+                    <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+                    <useModulePath>false</useModulePath>
                 </configuration>
 
                 <dependencies>
@@ -665,6 +664,7 @@
                 <artifactId>pulsar-parse</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-browser</artifactId>
@@ -705,6 +705,12 @@
                 <artifactId>pulsar-ql</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-agentic</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-rest</artifactId>
@@ -731,6 +737,18 @@
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-tests-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-tests-common</artifactId>
+                <classifier>tests</classifier>
+                <scope>test</scope>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-tests</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -741,6 +759,13 @@
                 <type>test-jar</type>
                 <classifier>tests</classifier>
                 <scope>test</scope>
+            </dependency>
+
+
+            <dependency>
+                <groupId>dev.langchain4j</groupId>
+                <artifactId>langchain4j-bom</artifactId>
+                <version>${langchain4j.version}</version>
             </dependency>
 
             <dependency>
@@ -764,7 +789,42 @@
                 <artifactId>ktor-serialization-kotlinx-json-jvm</artifactId>
                 <version>${ktor.version}</version>
             </dependency>
+            <!-- https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp-bom -->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp-bom</artifactId>
+                <version>${okhttp.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
 
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-coroutines-bom</artifactId>
+                <version>${kotlin.coroutine.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-bom</artifactId>
+                <version>${kotlin.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-serialization</artifactId>
+                <version>${kotlin.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit5.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -775,6 +835,19 @@
 
             <!-- MockBean and SpyBean, but for MockK instead of Mockito -->
             <!-- Be careful to keep consistent with spring-boot -->
+            <!-- MockK for Kotlin-friendly mocking -->
+            <dependency>
+                <groupId>io.mockk</groupId>
+                <artifactId>mockk</artifactId>
+                <version>${mockk.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>io.mockk</groupId>
+                <artifactId>mockk-jvm</artifactId>
+                <version>${mockk.version}</version>
+                <scope>test</scope>
+            </dependency>
             <dependency>
                 <groupId>com.ninja-squad</groupId>
                 <artifactId>springmockk</artifactId>
@@ -803,8 +876,11 @@
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-core-jvm</artifactId>
-            <version>${kotlin.coroutine.version}</version>
         </dependency>
 
         <dependency>
@@ -813,6 +889,12 @@
             <version>${mockito-junit-jupiter.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.openjdk.jmh</groupId>
+            <artifactId>jmh-core</artifactId>
+            <version>1.37</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <properties>
@@ -820,20 +902,29 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <ktor.version>2.3.11</ktor.version>
+        <surefire.excludedGroups>
+            TimeConsumingTest,ExternalServiceTest,IntegrationTest,E2ETest,HeavyTest,
+            SkippableLowerLevelTest,TestInfraCheck,MustManualRun
+        </surefire.excludedGroups>
+
+        <ktor.version>3.3.1</ktor.version>
+        <okhttp.version>5.2.1</okhttp.version>
+        <junit5.version>5.12.1</junit5.version>
+        <mockk.version>1.14.6</mockk.version>
         <springmockk.version>4.0.2</springmockk.version>
+        <mockito-junit-jupiter.version>5.20.0</mockito-junit-jupiter.version>
+        <langchain4j.version>1.5.0</langchain4j.version>
+
         <version.maven-exec-plugin>3.3.0</version.maven-exec-plugin>
-        <mockito-junit-jupiter.version>5.11.0</mockito-junit-jupiter.version>
-
-
         <!-- Plugin versions -->
+        <!-- Overrides ai.platon:platon -->
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
         <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
         <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
         <maven-deploy-plugin.version>3.1.1</maven-deploy-plugin.version>
         <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
         <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
-        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
+        <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
         <nexus-staging-maven-plugin.version>1.7.0</nexus-staging-maven-plugin.version>
         <checksum-maven-plugin.version>1.11</checksum-maven-plugin.version>
@@ -841,10 +932,9 @@
         <license-maven-plugin.version>4.3</license-maven-plugin.version>
         <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
 
-        <!-- Overrides ai.platon:platon -->
-<!--        <kotlin.version>2.2.20</kotlin.version>-->
-<!--        <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>-->
-<!--        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>-->
+        <kotlin.version>2.2.20</kotlin.version>
+        <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>
+        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
     </properties>
 
 </project>

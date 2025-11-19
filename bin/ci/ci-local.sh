@@ -1,7 +1,34 @@
 #!/bin/bash
 
-# Define a parameter for intervalSeconds with a default value of 60
-intervalSeconds=${1:-60}
+# Parse command line arguments
+forceTest=false
+intervalSeconds=60
+
+# Process arguments
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --force-test)
+            forceTest=true
+            shift
+            ;;
+        -*)
+            echo "Unknown option: $1"
+            echo "Usage: $0 [--force-test] [intervalSeconds]"
+            exit 1
+            ;;
+        *)
+            # If it's a number, treat it as intervalSeconds
+            if [[ $1 =~ ^[0-9]+$ ]]; then
+                intervalSeconds=$1
+            else
+                echo "Invalid argument: $1"
+                echo "Usage: $0 [--force-test] [intervalSeconds]"
+                exit 1
+            fi
+            shift
+            ;;
+    esac
+done
 
 # Find the first parent directory containing the VERSION file
 AppHome=$(dirname "$(realpath "$0")")
@@ -43,6 +70,11 @@ echo "[INFO] First run: Pulling latest changes and running build script..."
 git pull
 run_build_script
 
+# Force test flag logic
+if [[ "$forceTest" == true ]]; then
+    echo "[INFO] Force test flag is enabled - will run tests on every iteration"
+fi
+
 # Get the current HEAD hash after first run
 lastHash=$(get_head_hash)
 
@@ -56,11 +88,15 @@ while true; do
     # Get the new HEAD hash
     newHash=$(get_head_hash)
 
-    # Compare hashes
-    if [[ "$newHash" != "$lastHash" ]]; then
-        echo "[INFO] New updates detected (Old: $lastHash, New: $newHash)"
+    # Compare hashes or force test flag
+    if [[ "$newHash" != "$lastHash" ]] || [[ "$forceTest" == true ]]; then
+        if [[ "$newHash" != "$lastHash" ]]; then
+            echo "[INFO] New updates detected (Old: $lastHash, New: $newHash)"
+        else
+            echo "[INFO] Force test flag enabled - running tests despite no code changes"
+        fi
 
-        # Run build script if updates are detected
+        # Run build script if updates are detected or force test is enabled
         run_build_script
 
         # Update the last hash

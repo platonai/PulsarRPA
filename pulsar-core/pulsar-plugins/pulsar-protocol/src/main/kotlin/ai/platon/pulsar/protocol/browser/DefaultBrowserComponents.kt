@@ -27,17 +27,19 @@ import ai.platon.pulsar.protocol.browser.emulator.impl.BrowserResponseHandlerImp
 import ai.platon.pulsar.protocol.browser.emulator.impl.InteractiveBrowserEmulator
 import ai.platon.pulsar.protocol.browser.emulator.impl.PrivacyManagedBrowserFetcher
 import ai.platon.pulsar.protocol.browser.impl.BrowserManager
-import ai.platon.pulsar.skeleton.crawl.fetch.WebDriverFetcher
+import ai.platon.pulsar.protocol.browser.impl.DefaultBrowserFactory
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
 
-class DefaultBrowserManager(conf: ImmutableConfig): BrowserManager(conf)
+class DefaultBrowserManager(conf: ImmutableConfig): BrowserManager(DefaultBrowserFactory(conf), conf)
 
+@Deprecated("Use BrowserFactory instead")
 class DefaultWebDriverFactory(conf: ImmutableConfig)
     : WebDriverFactory(DefaultBrowserManager(conf), conf)
 
 class DefaultWebDriverPoolManager(conf: ImmutableConfig) :
     WebDriverPoolManager(
         DefaultBrowserManager(conf),
-        DefaultWebDriverFactory(conf),
+        DefaultBrowserFactory(conf),
         conf, suppressMetrics = true
     )
 
@@ -51,27 +53,26 @@ class DefaultBrowserEmulator(
 )
 
 class DefaultPrivacyManagedBrowserFetcher(
-    privacyManager: BrowserPrivacyManager,
+    browserManager: BrowserManager,
+    browserFactory: BrowserFactory,
     browserEmulator: BrowserEmulator,
+    privacyManager: BrowserPrivacyManager,
     conf: ImmutableConfig,
     closeCascaded: Boolean = true
 ): PrivacyManagedBrowserFetcher(
+    browserManager,
+    browserFactory,
     privacyManager,
     browserEmulator,
     conf,
     closeCascaded
 ) {
     constructor(conf: ImmutableConfig, driverPoolManager: WebDriverPoolManager = DefaultWebDriverPoolManager(conf)): this(
-        MultiPrivacyContextManager(driverPoolManager, conf),
+        driverPoolManager.browserManager,
+        driverPoolManager.browserFactory,
         DefaultBrowserEmulator(driverPoolManager, conf),
+        MultiPrivacyContextManager(driverPoolManager, conf),
         conf,
-        closeCascaded = true
-    )
-    
-    constructor(privacyManager: BrowserPrivacyManager, driverPoolManager: WebDriverPoolManager) : this(
-        privacyManager,
-        DefaultBrowserEmulator(driverPoolManager, privacyManager.conf),
-        privacyManager.conf,
         closeCascaded = true
     )
 }
@@ -84,18 +85,15 @@ class DefaultBrowserComponents(val conf: ImmutableConfig = ImmutableConfig.DEFAU
         DefaultPrivacyManagedBrowserFetcher(conf)
     }
 
-    val webdriverFetcher: WebDriverFetcher
-        get() = incognitoBrowserFetcher.webdriverFetcher
-
     val privacyManager: BrowserPrivacyManager
         get() = incognitoBrowserFetcher.privacyManager
 
     val driverPoolManager: WebDriverPoolManager
         get() = privacyManager.driverPoolManager
 
-    val driverFactory: WebDriverFactory
-        get() = driverPoolManager.driverFactory
-
     val browserManager: BrowserManager
-        get() = driverFactory.browserManager
+        get() = privacyManager.browserManager
+
+    val browserFactory: BrowserFactory
+        get() = privacyManager.browserFactory
 }

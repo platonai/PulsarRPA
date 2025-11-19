@@ -99,7 +99,6 @@ derby.log
 .flattened-pom.xml
 
 # a source directory is "target"
-!*/**/src/main/java/com/github/kklisura/cdt/protocol/v2023/types/target
 !*/**/src/**/target
 /cron.log
 /.vscode/settings.json
@@ -118,3 +117,6 @@ application-private.properties
 /bin/test-results/
 /test-results/
 /release_notes.md
+/node_modules/
+*/**/py/dom/
+*/**/human-private/

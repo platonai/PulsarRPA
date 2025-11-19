@@ -35,7 +35,7 @@ class PlaywrightBrowserLauncher : BrowserLauncher {
             "Browser type must be PLAYWRIGHT_CHROME | $browserId"
         }
 
-        val browserSettings = launcherOptions.browserSettings
+        val browserSettings = launcherOptions.settings
         val browser = launchPlaywrightBrowser(browserId, launcherOptions, launchOptions)
 
         if (!browserSettings.isGUI) {
@@ -55,7 +55,7 @@ class PlaywrightBrowserLauncher : BrowserLauncher {
             val options = toLaunchPersistentContextOptions(browserId, launcherOptions, chromeOptions)
 
             val context = PlaywrightBrowser.launchPersistentContext(browserId.userDataDir, options)
-            return PlaywrightBrowser(browserId, context, launcherOptions.browserSettings)
+            return PlaywrightBrowser(browserId, context, launcherOptions.settings)
         } catch (e: Exception) {
             throw BrowserLaunchException("Failed to launch browser | $browserId", e)
         }
@@ -78,7 +78,7 @@ class PlaywrightBrowserLauncher : BrowserLauncher {
 
         options.ignoreHTTPSErrors = true
         // chromeOptions.ignoreCertificateErrors
-        val settings = launcherOptions.browserSettings
+        val settings = launcherOptions.settings
         options.viewportSize = Optional.of(com.microsoft.playwright.options.ViewportSize(
             settings.viewportSize.width, settings.viewportSize.height
         ))

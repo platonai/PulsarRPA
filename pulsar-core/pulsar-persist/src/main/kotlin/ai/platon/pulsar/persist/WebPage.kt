@@ -20,7 +20,7 @@ import java.time.ZoneId
 import java.util.function.Function
 
 /**
- * Represents a web page in the Browser4 system. This interface provides methods to access and manipulate
+ * Represents a static web page in the Browser4 system. This interface provides methods to access and manipulate
  * various properties and metadata associated with a web page, such as its content, headers, fetch status,
  * and more. It also includes methods for managing beans, and other page-related data.
  *
@@ -30,7 +30,7 @@ interface WebPage : Comparable<WebPage> {
     /**
      * The unique, in-process identifier of the web page.
      */
-    val id: Int
+    val id: Long
 
     /**
      * The url is the permanent internal address, and it's also the storage key (reserved).
@@ -41,8 +41,8 @@ interface WebPage : Comparable<WebPage> {
 
     /**
      * The key associated with the web page, typically used for indexing or identification purposes.
-     * The key is defined as the reserved url, for example, the key for page "https://www.amazon.com/dp/B08PP5MSVB"
-     * is "uk.co.amazon.www:https/dp/B08PP5MSVB".
+     * The key is defined as the reserved url, for example, the key for page TestResourceUtil.PRODUCT_DETAIL_URL
+     * is "uk.co.amazon.www:https/dp/B0E000001".
      */
     val key: String
 
@@ -51,7 +51,7 @@ interface WebPage : Comparable<WebPage> {
      * where it extracted from.
      * For example, the href can be extracted from an HTML page:
      * ```html
-     * <a href='https://www.amazon.com/dp/B08PP5MSVB?th=1'>Huawei P60 ...</a>
+     * <a href='https://www.amazon.com/dp/B0E000001?th=1'>Huawei P60 ...</a>
      * ```
      */
     var href: String?

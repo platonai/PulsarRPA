@@ -1,5 +1,6 @@
 package ai.platon.pulsar.basic.session
 
+import ai.platon.pulsar.agentic.BasicAgenticSession
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import ai.platon.pulsar.ql.SQLSession
@@ -31,7 +32,7 @@ class SessionLoadTests: TestBase() {
     @Test
     fun ensureSessionCreatedBySQLContextIsNotSQLSession() {
         assertFalse { session is SQLSession }
-        assertTrue { session is BasicPulsarSession }
+        assertTrue { session is BasicAgenticSession }
     }
 
     /**
@@ -144,10 +145,10 @@ class SessionLoadTests: TestBase() {
         options.eventHandlers.browseEventHandlers.onDidScroll.addLast { page, driver ->
             require(driver is PulsarWebDriver)
             val navigateEntry = driver.navigateEntry
-            assertTrue { navigateEntry.documentTransferred }
+            assertTrue { navigateEntry.mainFrameReceived }
             assertTrue { navigateEntry.networkRequestCount.get() > 0 }
             assertTrue { navigateEntry.networkResponseCount.get() > 0 }
-            
+
             assertEquals(200, driver.mainResponseStatus)
             assertTrue { driver.mainResponseStatus == 200 }
             assertTrue { driver.mainResponseHeaders.isNotEmpty() }

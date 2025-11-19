@@ -8,6 +8,7 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.event.impl.DefaultPageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
+import ai.platon.pulsar.test.TestResourceUtil
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -114,9 +115,9 @@ class PrintFlowEventHandlers: DefaultPageEventHandlers() {
  * Demonstrates how to use event handlers.
  * */
 fun main() {
-    PulsarSettings().withDefaultBrowser()
+    PulsarSettings.withDefaultBrowser()
 
-    val url = "https://www.amazon.com/dp/B08PP5MSVB"
+    val url = TestResourceUtil.PRODUCT_DETAIL_URL
     val session = PulsarContexts.createSession()
     val link = ListenableHyperlink(url, "", args = "-refresh -parse", eventHandlers = PrintFlowEventHandlers())
 

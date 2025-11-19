@@ -61,18 +61,18 @@ jobs:
             TAG=${GITHUB_REF#refs/tags/}
           fi
           VERSION=${TAG#v}
-          
+
           if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
             echo "❌ Invalid version format: $VERSION"
             exit 1
           fi
-          
+
           # Dynamic prerelease detection
           IS_PRERELEASE="false"
           if [[ "$VERSION" == *"-"* ]]; then
             IS_PRERELEASE="true"
           fi
-          
+
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "TAG=$TAG" >> $GITHUB_ENV
           echo "IS_PRERELEASE=$IS_PRERELEASE" >> $GITHUB_ENV
@@ -94,8 +94,8 @@ jobs:
           if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
             SKIP_TESTS_FLAG="-DskipTests"
           fi
-          
-          ./mvnw clean install $SKIP_TESTS_FLAG -Pall-modules --batch-mode --show-version
+
+          ./mvnw clean install $SKIP_TESTS_FLAG --batch-mode --show-version
 
       - name: Import GPG key
         run: |
@@ -125,7 +125,7 @@ jobs:
           else
             echo "❌ settings.xml not found at ~/.m2/settings.xml"
           fi
-          
+
           echo "=== Maven settings locations ==="
           ls -la ~/.m2/ || echo "~/.m2/ directory not found"
 

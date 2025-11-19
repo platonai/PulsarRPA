@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Forms Test</title>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --error: #dc2626;
+            --success: #16a34a;
+            --disabled: #6b7280;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #f8fafc;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        input:disabled, select:disabled, textarea:disabled {
+            background-color: #f3f4f6;
+            color: var(--disabled);
+            cursor: not-allowed;
+        }
+
+        input[readonly], textarea[readonly] {
+            background-color: #f9fafb;
+            border-color: #e5e7eb;
+        }
+
+        .error {
+            border-color: var(--error) !important;
+        }
+
+        .error-message {
+            color: var(--error);
+            font-size: 0.875rem;
+            margin-top: 0.25rem;
+        }
+
+        .radio-group, .checkbox-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        .radio-group label, .checkbox-group label {
+            font-weight: normal;
+            margin-bottom: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        button {
+            background: var(--primary);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 6px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            background: #1d4ed8;
+        }
+
+        button:disabled {
+            background: var(--disabled);
+            cursor: not-allowed;
+        }
+
+        .progress-container {
+            margin: 1rem 0;
+        }
+
+        progress {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e5e7eb;
+        }
+
+        progress::-webkit-progress-bar {
+            background: #e5e7eb;
+            border-radius: 4px;
+        }
+
+        progress::-webkit-progress-value {
+            background: var(--primary);
+            border-radius: 4px;
+        }
+
+        meter {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        .file-upload {
+            border: 2px dashed #d1d5db;
+            padding: 2rem;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .file-upload:hover {
+            border-color: var(--primary);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+        }
+
+        .contenteditable {
+            border: 1px solid #d1d5db;
+            padding: 0.75rem;
+            border-radius: 6px;
+            min-height: 100px;
+            background: white;
+        }
+
+        .contenteditable:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .aria-live {
+            position: absolute;
+            left: -10000px;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+
+        .validation-summary {
+            background: #fef2f2;
+            border: 1px solid #fecaca;
+            color: var(--error);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+
+        .success-message {
+            background: #f0fdf4;
+            border: 1px solid #bbf7d0;
+            color: var(--success);
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 1rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Advanced Forms Test Page</h1>
+
+        <div class="validation-summary" id="validationSummary" role="alert">
+            <strong>Please correct the following errors:</strong>
+            <ul id="errorList"></ul>
+        </div>
+
+        <div class="success-message" id="successMessage" role="status">
+            <strong>Success!</strong> Form submitted successfully.
+        </div>
+
+        <form id="advancedForm" novalidate>
+            <!-- Advanced Input Types -->
+            <div class="form-section">
+                <h2>Advanced Input Types</h2>
+
+                <div class="form-group">
+                    <label for="password">Password (required):</label>
+                    <input type="password" id="password" name="password" required
+                           data-testid="tta-password-input" aria-describedby="passwordHelp">
+                    <div class="error-message" id="passwordError"></div>
+                    <small id="passwordHelp">Must be at least 8 characters</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="search">Search field:</label>
+                    <input type="search" id="search" name="search" placeholder="Search products..."
+                           data-testid="tta-search-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="date">Date picker:</label>
+                    <input type="date" id="date" name="date"
+                           data-testid="tta-date-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="time">Time picker:</label>
+                    <input type="time" id="time" name="time"
+                           data-testid="tta-time-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="datetime">Date and time:</label>
+                    <input type="datetime-local" id="datetime" name="datetime"
+                           data-testid="tta-datetime-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="file">File upload:</label>
+                    <div class="file-upload" onclick="document.getElementById('file').click()">
+                        <input type="file" id="file" name="file" accept=".jpg,.jpeg,.png,.pdf"
+                               style="display: none;" onchange="handleFileSelect(this)"
+                               data-testid="tta-file-input">
+                        <p>Click to upload or drag and drop</p>
+                        <p id="fileName" style="margin-top: 0.5rem; font-weight: 600;"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Radio Buttons -->
+            <div class="form-section">
+                <h2>Radio Buttons</h2>
+                <div class="form-group">
+                    <label>Subscription Plan:</label>
+                    <div class="radio-group" role="radiogroup" aria-labelledby="subscriptionLabel">
+                        <label>
+                            <input type="radio" name="subscription" value="basic"
+                                   data-testid="tta-radio-basic">
+                            Basic
+                        </label>
+                        <label>
+                            <input type="radio" name="subscription" value="premium" checked
+                                   data-testid="tta-radio-premium">
+                            Premium
+                        </label>
+                        <label>
+                            <input type="radio" name="subscription" value="enterprise"
+                                   data-testid="tta-radio-enterprise">
+                            Enterprise
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disabled and Readonly Fields -->
+            <div class="form-section">
+                <h2>Disabled and Readonly Fields</h2>
+
+                <div class="form-group">
+                    <label for="disabledInput">Disabled Input:</label>
+                    <input type="text" id="disabledInput" value="Cannot edit this" disabled
+                           data-testid="tta-disabled-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="readonlyInput">Readonly Input:</label>
+                    <input type="text" id="readonlyInput" value="Read only value" readonly
+                           data-testid="tta-readonly-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="disabledButton">Disabled Button:</label>
+                    <button type="button" id="disabledButton" disabled
+                            data-testid="tta-disabled-button">
+                        Cannot Click This
+                    </button>
+                </div>
+            </div>
+
+            <!-- Progress and Meter -->
+            <div class="form-section">
+                <h2>Progress and Meter Elements</h2>
+
+                <div class="form-group">
+                    <label for="progress">Progress Bar:</label>
+                    <progress id="progress" value="70" max="100"
+                              data-testid="tta-progress">70%</progress>
+                    <button type="button" onclick="updateProgress()">Update Progress</button>
+                </div>
+
+                <div class="form-group">
+                    <label for="meter">Meter Element:</label>
+                    <meter id="meter" value="0.7" min="0" max="1" low="0.3" high="0.8" optimum="0.5"
+                           data-testid="tta-meter">70%</meter>
+                    <button type="button" onclick="updateMeter()">Update Meter</button>
+                </div>
+            </div>
+
+            <!-- Content Editable -->
+            <div class="form-section">
+                <h2>Content Editable</h2>
+
+                <div class="form-group">
+                    <label for="contenteditable">Rich Text Editor:</label>
+                    <div id="contenteditable" class="contenteditable" contenteditable="true"
+                         data-testid="tta-contenteditable">
+                        <p>Edit this <strong>rich text</strong> content...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Dialog -->
+            <div class="form-section">
+                <h2>Modal Dialog</h2>
+
+                <button type="button" onclick="openModal()"
+                        data-testid="tta-open-modal">
+                    Open Modal Dialog
+                </button>
+            </div>
+
+            <!-- Submit Buttons -->
+            <div class="form-section">
+                <button type="submit" data-testid="tta-submit-button">Submit Form</button>
+                <button type="reset" data-testid="tta-reset-button">Reset Form</button>
+                <button type="button" onclick="validateForm()"
+                        data-testid="tta-validate-button">
+                    Validate Only
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Modal Dialog -->
+    <div id="modal" class="modal" role="dialog" aria-labelledby="modalTitle" aria-hidden="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle">Form Confirmation</h2>
+                <button class="close-modal" onclick="closeModal()" aria-label="Close modal">&times;</button>
+            </div>
+            <p>Are you sure you want to submit this form?</p>
+            <button type="button" onclick="confirmSubmit()"
+                    data-testid="tta-modal-confirm">
+                Confirm Submit
+            </button>
+            <button type="button" onclick="closeModal()"
+                    data-testid="tta-modal-cancel">
+                Cancel
+            </button>
+        </div>
+    </div>
+
+    <!-- ARIA Live Region -->
+    <div class="aria-live" aria-live="polite" aria-atomic="true" id="ariaLiveRegion"></div>
+
+    <script>
+        function handleFileSelect(input) {
+            const fileName = input.files[0]?.name || '';
+            document.getElementById('fileName').textContent = fileName ? `Selected: ${fileName}` : '';
+        }
+
+        function updateProgress() {
+            const progress = document.getElementById('progress');
+            const currentValue = parseInt(progress.value);
+            const newValue = currentValue >= 100 ? 0 : currentValue + 10;
+            progress.value = newValue;
+            progress.textContent = `${newValue}%`;
+        }
+
+        function updateMeter() {
+            const meter = document.getElementById('meter');
+            const currentValue = parseFloat(meter.value);
+            const newValue = currentValue >= 1 ? 0 : currentValue + 0.1;
+            meter.value = newValue;
+            meter.textContent = `${Math.round(newValue * 100)}%`;
+        }
+
+        function openModal() {
+            const modal = document.getElementById('modal');
+            modal.style.display = 'block';
+            modal.setAttribute('aria-hidden', 'false');
+
+            // Focus management for accessibility
+            const firstFocusable = modal.querySelector('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+            if (firstFocusable) {
+                firstFocusable.focus();
+            }
+
+            announceToScreenReader('Modal dialog opened');
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('modal');
+            modal.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
+            announceToScreenReader('Modal dialog closed');
+        }
+
+        function confirmSubmit() {
+            closeModal();
+            document.getElementById('advancedForm').dispatchEvent(new Event('submit'));
+        }
+
+        function validateForm() {
+            const form = document.getElementById('advancedForm');
+            const errors = [];
+
+            // Clear previous errors
+            document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));
+            document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+            document.getElementById('validationSummary').style.display = 'none';
+
+            // Validate password
+            const password = document.getElementById('password');
+            if (password.value.length < 8) {
+                password.classList.add('error');
+                document.getElementById('passwordError').textContent = 'Password must be at least 8 characters';
+                errors.push('Password must be at least 8 characters');
+            }
+
+            if (errors.length > 0) {
+                showValidationErrors(errors);
+                return false;
+            }
+
+            announceToScreenReader('Form validation successful');
+            return true;
+        }
+
+        function showValidationErrors(errors) {
+            const summary = document.getElementById('validationSummary');
+            const errorList = document.getElementById('errorList');
+
+            errorList.innerHTML = errors.map(error => `<li>${error}</li>`).join('');
+            summary.style.display = 'block';
+
+            announceToScreenReader(`${errors.length} validation errors found`);
+        }
+
+        function announceToScreenReader(message) {
+            const liveRegion = document.getElementById('ariaLiveRegion');
+            liveRegion.textContent = message;
+
+            // Clear after announcement
+            setTimeout(() => {
+                liveRegion.textContent = '';
+            }, 1000);
+        }
+
+        // Form submission handler
+        document.getElementById('advancedForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            if (validateForm()) {
+                // Show success message
+                document.getElementById('successMessage').style.display = 'block';
+                announceToScreenReader('Form submitted successfully');
+
+                // Hide success message after 3 seconds
+                setTimeout(() => {
+                    document.getElementById('successMessage').style.display = 'none';
+                }, 3000);
+            }
+        });
+
+        // Escape key closes modal
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && document.getElementById('modal').style.display === 'block') {
+                closeModal();
+            }
+        });
+
+        // Focus trap for modal
+        document.getElementById('modal').addEventListener('keydown', function(e) {
+            if (e.key === 'Tab') {
+                const focusableElements = this.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+                const firstElement = focusableElements[0];
+                const lastElement = focusableElements[focusableElements.length - 1];
+
+                if (e.shiftKey && document.activeElement === firstElement) {
+                    e.preventDefault();
+                    lastElement.focus();
+                } else if (!e.shiftKey && document.activeElement === lastElement) {
+                    e.preventDefault();
+                    firstElement.focus();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

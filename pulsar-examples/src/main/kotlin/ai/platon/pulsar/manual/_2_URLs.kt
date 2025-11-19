@@ -8,6 +8,7 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.common.url.CompletableListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
+import ai.platon.pulsar.test.TestResourceUtil
 
 /**
  * Demonstrates various URLs in Browser4.
@@ -15,12 +16,12 @@ import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
 fun main() {
     // Use the default browser which has an isolated profile.
     // You can also try other browsers, such as system default, prototype, sequential, temporary, etc.
-    PulsarSettings().withDefaultBrowser()
+    PulsarSettings.withDefaultBrowser()
 
     // Create a pulsar session
     val session = PulsarContexts.createSession()
     // The main url we are playing with
-    val url = "https://www.amazon.com/dp/B08PP5MSVB"
+    val url = TestResourceUtil.PRODUCT_DETAIL_URL
 
     //
     // 1. PlainUrl

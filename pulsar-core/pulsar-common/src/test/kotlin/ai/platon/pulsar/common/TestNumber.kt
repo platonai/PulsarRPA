@@ -1,23 +1,14 @@
 package ai.platon.pulsar.common
 
-import org.apache.commons.lang3.math.NumberUtils
-import kotlin.test.Test
 import java.text.DecimalFormat
+import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertTrue
 
 /**
  * Created by vincent on 17-1-14.
  */
 class TestNumber {
-    @Test
-    fun testA() {
-        assertEquals(3.212, NumberUtils.createFloat("3.212").toDouble(), 10e-5)
-        assertTrue(NumberUtils.isNumber("3.122f"))
-        assertTrue(NumberUtils.isDigits("3122"))
-        // assertEquals(3.212, NumberUtils.createFloat("a3.212"), 10e-5);
-    }
-    
+
     @Test
     fun testDecimalFormat() {
         var df = DecimalFormat("0.0##")
@@ -32,6 +23,6 @@ class TestNumber {
         assertEquals("123456.0", df.format(123456.00001))
         
         df = DecimalFormat("#.##")
-        println(df.format(245.6787))
+        assertEquals("245.68", df.format(245.6787))
     }
 }

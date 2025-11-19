@@ -12,4 +12,4 @@ import org.springframework.test.context.ContextConfiguration
 @ComponentScan(basePackages = ["ai.platon.pulsar.rest.api"])
 @EntityScan("ai.platon.pulsar.rest.api.entities")
 @ImportResource("classpath:rest-beans/app-context.xml")
-class Application
+class ServiceApplication

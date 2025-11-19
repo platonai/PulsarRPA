@@ -2,6 +2,7 @@ package ai.platon.pulsar.manual
 
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.test.TestResourceUtil
 
 /**
  * Demonstrates the usage of load options.
@@ -9,12 +10,12 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
 fun main() {
     // Use the default browser which has an isolated profile.
     // You can also try other browsers, such as system default, prototype, sequential, temporary, etc.
-    PulsarSettings().withDefaultBrowser()
+    PulsarSettings.withDefaultBrowser()
 
     // Create a pulsar session
     val session = PulsarContexts.createSession()
     // The main url we are playing with
-    val url = "https://www.amazon.com/dp/B08PP5MSVB"
+    val url = TestResourceUtil.PRODUCT_DETAIL_URL
 
     // Load a page, or fetch it if the expiry time exceeds.
     //

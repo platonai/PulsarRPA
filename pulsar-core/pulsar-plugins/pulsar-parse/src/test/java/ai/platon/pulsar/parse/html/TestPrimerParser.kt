@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.skeleton.crawl.parse.html.PrimerParser
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.persist.HyperlinkPersistable
 import org.apache.html.dom.HTMLDocumentImpl
 import org.cyberneko.html.parsers.DOMFragmentParser
@@ -13,7 +14,6 @@ import kotlin.test.*
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig
-import org.springframework.test.context.junit4.SpringRunner
 import org.w3c.dom.DocumentFragment
 import org.xml.sax.InputSource
 import org.xml.sax.SAXException
@@ -189,9 +189,10 @@ class TestPrimerParser {
                 testBaseHrefURLs[i] = URL(testBaseHrefs[i])
             } catch (e: Exception) {
                 // assertTrue("caught exception: $e", false)
-                println(e.stringify())
+                printlnPro(e.stringify())
             }
             testDOMs[i] = node
         }
     }
 }
+

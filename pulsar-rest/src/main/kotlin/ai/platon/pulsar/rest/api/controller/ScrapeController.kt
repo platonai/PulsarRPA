@@ -23,8 +23,6 @@ class ScrapeController(
     val applicationContext: ApplicationContext,
     val scrapeService: ScrapeService,
 ) {
-    private val executor = Executors.newWorkStealingPool()
-
     /**
      * @param sql The sql to execute
      * @return The response

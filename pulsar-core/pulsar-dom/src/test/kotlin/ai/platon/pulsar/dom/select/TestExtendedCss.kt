@@ -8,7 +8,6 @@ import ai.platon.pulsar.dom.features.defined.HEIGHT
 import ai.platon.pulsar.dom.features.defined.WIDTH
 import ai.platon.pulsar.dom.nodes.node.ext.canonicalName
 import ai.platon.pulsar.dom.nodes.node.ext.getFeature
-import ai.platon.pulsar.dom.nodes.node.ext.intValue
 import kotlin.test.BeforeTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -51,7 +50,7 @@ class TestExtendedCss {
         assertEquals(3, elements.size)
         assertTrue { elements.last()!!.getFeature(WIDTH) > 400 }
         assertTrue { elements.last()!!.getFeature(HEIGHT) < 500 }
-        // elements.forEach { println("\n\n\n${it.uniqueName}\n$it") }
+        // elements.forEach { logPrintln("\n\n\n${it.uniqueName}\n$it") }
     }
 
     @Test
@@ -62,7 +61,7 @@ class TestExtendedCss {
         assertEquals("div.big.rel", elements[0].canonicalName)
         assertEquals("img", elements[1].canonicalName)
         assertEquals("div.pi_attr_box", elements[2].canonicalName)
-        // elements.forEach { println("\n\n\n${it.uniqueName}\n$it") }
+        // elements.forEach { logPrintln("\n\n\n${it.uniqueName}\n$it") }
     }
 
     @Test
@@ -83,7 +82,7 @@ class TestExtendedCss {
             val w = box.width + i * 5
             val h = box.height + i * 5
             val elements = doc.select(convertCssQuery("${w}x${h}"))
-            // elements.forEach { println(it) }
+            // elements.forEach { logPrintln(it) }
             assertEquals(2, elements.size)
             assertEquals("div.big.rel", elements[0].canonicalName)
             assertEquals("img", elements[1].canonicalName)
@@ -95,3 +94,4 @@ class TestExtendedCss {
         assertTrue { elements.isEmpty() }
     }
 }
+

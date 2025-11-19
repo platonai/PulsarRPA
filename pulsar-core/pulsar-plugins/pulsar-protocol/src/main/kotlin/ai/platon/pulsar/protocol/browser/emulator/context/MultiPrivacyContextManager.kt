@@ -37,7 +37,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.FetchResult
 import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.AbstractPrivacyContext
-import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyAgent
+import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserProfile
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyException
 import com.google.common.collect.Iterables
@@ -160,21 +160,21 @@ open class MultiPrivacyContextManager(
     /**
      * Create a privacy context who is not added to the context list yet.
      * */
-    override fun createUnmanagedContext(privacyAgent: PrivacyAgent): BrowserPrivacyContext {
-        val context = BrowserPrivacyContext(proxyPoolManager, driverPoolManager, coreMetrics, conf, privacyAgent)
+    override fun createUnmanagedContext(profile: BrowserProfile): BrowserPrivacyContext {
+        val context = BrowserPrivacyContext(proxyPoolManager, driverPoolManager, coreMetrics, conf, profile)
 
         when {
-            privacyAgent.isPermanent -> {
+            profile.isPermanent -> {
                 logger.info("Permanent privacy context is created | #{} | {}", context.display, context.baseDir)
             }
 
-            privacyAgent.isTemporary -> {
+            profile.isTemporary -> {
                 logger.info(
                     "Temporary privacy context is created | #{} | active: {}, allowed: {} | {}",
                     context.display, temporaryContexts.size, allowedPrivacyContextCount, context.baseDir
                 )
             }
-            privacyAgent.isGroup -> {
+            profile.isGroup -> {
                 logger.info(
                     "Sequential privacy context in group is created | {} | active: {}, allowed: {} | {}",
                     context.display, temporaryContexts.size, allowedPrivacyContextCount, context.baseDir
@@ -265,7 +265,7 @@ open class MultiPrivacyContextManager(
 
             val privacyAgent = createPrivacyAgent(page, fingerprint)
             if (privacyAgent.isPermanent) {
-                // logger.info("Prepare for permanent privacy agent | {}", privacyAgent)
+                // logger.info("Prepare for permanent browser profile | {}", privacyAgent)
                 reserveResourceForcefully()
                 return getOrCreate(privacyAgent)
             }
@@ -282,16 +282,16 @@ open class MultiPrivacyContextManager(
         }
     }
 
-    override fun getOrCreate(privacyAgent: PrivacyAgent): PrivacyContext {
+    override fun getOrCreate(profile: BrowserProfile): PrivacyContext {
         synchronized(contextLifeCycleMonitor) {
             if (!isActive) {
                 throw PrivacyException("Inactive privacy context manager")
             }
 
-            return if (privacyAgent.isPermanent) {
-                permanentContexts.computeIfAbsent(privacyAgent) { createUnmanagedContext(privacyAgent) }
+            return if (profile.isPermanent) {
+                permanentContexts.computeIfAbsent(profile) { createUnmanagedContext(profile) }
             } else {
-                temporaryContexts.computeIfAbsent(privacyAgent) { createUnmanagedContext(privacyAgent) }
+                temporaryContexts.computeIfAbsent(profile) { createUnmanagedContext(profile) }
             }
         }
     }
@@ -338,18 +338,18 @@ open class MultiPrivacyContextManager(
     }
 
     @Throws(PrivacyException::class)
-    private fun createPrivacyAgent(page: WebPage, fingerprint: Fingerprint): PrivacyAgent {
-        // Specify the privacy agent by the user code
-        val specifiedPrivacyAgent = page.getBeanOrNull(PrivacyAgent::class.java)
-        if (specifiedPrivacyAgent is PrivacyAgent) {
-            return specifiedPrivacyAgent
+    private fun createPrivacyAgent(page: WebPage, fingerprint: Fingerprint): BrowserProfile {
+        // Specify the browser profile by the user code
+        val specifiedProfile = page.getBeanOrNull(BrowserProfile::class.java)
+        if (specifiedProfile is BrowserProfile) {
+            return specifiedProfile
         }
 
         val generator = privacyAgentGeneratorFactory.generator
         try {
             return generator.invoke(fingerprint)
         } catch (e: IOException) {
-            throw PrivacyException("Failed to create a privacy agent | ${generator::class.simpleName}", e)
+            throw PrivacyException("Failed to create a browser profile | ${generator::class.simpleName}", e)
         }
     }
 
@@ -394,8 +394,8 @@ open class MultiPrivacyContextManager(
     private fun closeDyingContexts() {
         // weak consistency, which is OK
         activeContexts.filterValues { !it.isActive }.values.forEach {
-            permanentContexts.remove(it.privacyAgent)
-            temporaryContexts.remove(it.privacyAgent)
+            permanentContexts.remove(it.profile)
+            temporaryContexts.remove(it.profile)
 
             logger.info(
                 "Privacy context is inactive, closing it | {} | {} | {}",
@@ -405,7 +405,7 @@ open class MultiPrivacyContextManager(
         }
 
         temporaryContexts.filterValues { it.isIdle }.values.forEach {
-            temporaryContexts.remove(it.privacyAgent)
+            temporaryContexts.remove(it.profile)
             logger.warn(
                 "Privacy context hangs unexpectedly, closing it | {}/{} | {} | {}",
                 it.idleTime.readable(), it.elapsedTime.readable(), it.display, it.readableState
@@ -414,7 +414,7 @@ open class MultiPrivacyContextManager(
         }
 
         permanentContexts.filterValues { it.isIdle }.values.forEach {
-            permanentContexts.remove(it.privacyAgent)
+            permanentContexts.remove(it.profile)
             logger.warn(
                 "Permanent privacy context is idle, closing it | {}/{} | {} | {}",
                 it.idleTime.readable(), it.elapsedTime.readable(), it.display, it.readableState
@@ -423,8 +423,8 @@ open class MultiPrivacyContextManager(
         }
 
         activeContexts.filterValues { it.isHighFailureRate }.values.forEach {
-            permanentContexts.remove(it.privacyAgent)
-            temporaryContexts.remove(it.privacyAgent)
+            permanentContexts.remove(it.profile)
+            temporaryContexts.remove(it.profile)
             logger.warn(
                 "Privacy context has too high failure rate: {}, closing it | {} | {} | {}",
                 it.failureRate, it.elapsedTime.readable(), it.display, it.readableState
@@ -548,7 +548,7 @@ open class MultiPrivacyContextManager(
     }
 
     private fun formatPrivacyContext(privacyContext: AbstractPrivacyContext): String {
-        return String.format("%s(%.2f)", privacyContext.privacyAgent.display, privacyContext.meterSuccesses.meanRate)
+        return String.format("%s(%.2f)", privacyContext.profile.display, privacyContext.meterSuccesses.meanRate)
     }
 
     /**
@@ -581,7 +581,7 @@ open class MultiPrivacyContextManager(
         if (warnings > 0) {
             val symbol = PopularEmoji.WARNING
 
-            val warningMessage = if (privacyContext.privacyAgent.isPermanent) {
+            val warningMessage = if (privacyContext.profile.isPermanent) {
                 String.format("%s/%s", warnings, privacyContext.maximumWarnings)
             } else {
                 String.format("%s", warnings)

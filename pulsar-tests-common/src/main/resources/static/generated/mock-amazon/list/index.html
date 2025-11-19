@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>Mock Amazon Layout</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- 顶部导航栏 -->
+<header class="navbar">
+    <div class="nav-left">amazon</div>
+    <div class="nav-center">
+        <select>
+            <option>All</option>
+        </select>
+        <div class="autocomplete-container">
+            <input id="search-box" type="text" placeholder="Search Amazon" autocomplete="off">
+            <div id="autocomplete-list" class="autocomplete-list" style="display:none;"></div>
+        </div>
+        <button class="search-btn">🔍</button>
+    </div>
+    <div class="nav-right">
+        <a href="#">Hello, sign in</a>
+        <a href="#">Returns & Orders</a>
+        <a href="#">Cart</a>
+    </div>
+</header>
+
+<div class="container">
+    <!-- 左侧边栏 -->
+    <aside class="sidebar">
+        <h3>Department</h3>
+        <ul>
+            <li>Electronics</li>
+            <li>Computers & Accessories</li>
+            <li><strong>Monitors</strong></li>
+        </ul>
+
+        <h3>Delivery Day</h3>
+        <label><input type="checkbox"> Get it today</label><br>
+        <label><input type="checkbox"> Get it by tomorrow</label>
+
+        <h3>Amazon Prime</h3>
+        <label><input type="checkbox"> Prime eligible</label>
+
+        <h3>Brands</h3>
+        <label><input type="checkbox"> Samsung</label><br>
+        <label><input type="checkbox"> LG</label><br>
+        <label><input type="checkbox"> Dell</label><br>
+        <label><input type="checkbox"> ASUS</label><br>
+        <label><input type="checkbox"> HP</label><br>
+        <label><input type="checkbox"> ViewSonic</label>
+
+        <h3>Customer Reviews</h3>
+        ⭐⭐⭐⭐ & Up
+
+        <h3>Price</h3>
+        <ul>
+            <li>Under $25</li>
+            <li>$25 to $50</li>
+            <li>$50 to $100</li>
+            <li>$100 to $200</li>
+            <li>$200 & Above</li>
+        </ul>
+    </aside>
+
+    <!-- 主区域 -->
+    <main class="main-content">
+        <!-- 顶部横幅 -->
+        <section class="hero">
+            <div class="hero-text">
+                <h2>Handpicked Monitors</h2>
+                <p>We've done the research so you don't have to</p>
+                <button class="shop-btn">SHOP NOW →</button>
+            </div>
+            <div class="hero-img">
+                <img src="https://via.placeholder.com/400x250/7f7fff/ffffff?text=Monitor+Image" alt="Monitor">
+            </div>
+        </section>
+
+        <!-- 产品列表 -->
+        <section class="products-section">
+            <h3>Best sellers</h3>
+            <div id="product-list" class="product-list">
+                <!-- JS 动态填充 -->
+            </div>
+        </section>
+    </main>
+</div>
+
+<script src="main.js"></script>
+</body>
+</html>

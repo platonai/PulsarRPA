@@ -2,14 +2,16 @@ package ai.platon.pulsar.rest.api
 
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.test.TestResourceUtil
 import org.junit.jupiter.api.Assumptions
 
-object TestUtils {
+object TestHelper {
     val session = PulsarContexts.getOrCreateSession()
 
-    const val PRODUCT_LIST_URL = "https://www.amazon.com/b?node=1292115011"
+    // Using mock EC server URLs instead of real Amazon URLs
+    const val MOCK_PRODUCT_LIST_URL = TestResourceUtil.MOCK_PRODUCT_LIST_URL
 
-    const val PRODUCT_DETAIL_URL = "https://www.amazon.com/dp/B08PP5MSVB"
+    const val MOCK_PRODUCT_DETAIL_URL = TestResourceUtil.MOCK_PRODUCT_DETAIL_URL
 
     fun ensurePage(url: String) {
         val pageRequirement = { page: WebPage -> page.protocolStatus.isSuccess && page.persistedContentLength > 8000 }

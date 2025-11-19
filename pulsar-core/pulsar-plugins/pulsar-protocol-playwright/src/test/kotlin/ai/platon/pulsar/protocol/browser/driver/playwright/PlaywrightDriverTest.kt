@@ -5,17 +5,22 @@ import ai.platon.pulsar.browser.driver.chrome.common.LauncherOptions
 import ai.platon.pulsar.common.Runtimes
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.IllegalWebDriverStateException
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.assertThrows
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
+@Disabled("Run PlaywrightDriverTest manually")
+@Tag("MustManualRun")
 class PlaywrightDriverTest {
 
     val browserId = BrowserId.createRandomTemp(BrowserType.PLAYWRIGHT_CHROME)
@@ -24,6 +29,7 @@ class PlaywrightDriverTest {
     lateinit var browser: PlaywrightBrowser
     lateinit var driver: PlaywrightDriver
     val url = "https://www.baidu.com"
+    val url2 = "https://www.example.com"
 
     @BeforeEach
     fun checkIfGUIAvailable() {
@@ -36,7 +42,7 @@ class PlaywrightDriverTest {
 
         assertEquals("PLAYWRIGHT_CHROME", browserId.browserType.name)
 
-        launcherOptions.browserSettings.confuser.reset()
+        launcherOptions.settings.confuser.reset()
         browser = PlaywrightBrowserLauncher().launch(browserId, launcherOptions, chromeOptions)
         driver = browser.newDriver()
     }
@@ -58,7 +64,7 @@ class PlaywrightDriverTest {
             driver.navigateTo(url)
             val text = driver.selectFirstTextOrNull("body")
             assertNotNull(text)
-            println(">>>\n" + text?.substring(0, 100) + "\n<<<")
+            printlnPro(">>>\n" + text.take(100) + "\n<<<")
         }
     }
 
@@ -67,11 +73,11 @@ class PlaywrightDriverTest {
         runBlocking {
             driver.navigateTo(url)
             driver.waitForNavigation()
-            driver.navigateTo("https://www.example.com")
+            driver.navigateTo(url2)
             driver.waitForNavigation()
             val text = driver.selectFirstTextOrNull("body")
             assertNotNull(text)
-            println(">>>\n" + text.substring(0, 100) + "\n<<<")
+            printlnPro(">>>\n" + text.take(100) + "\n<<<")
         }
     }
 
@@ -111,28 +117,28 @@ class PlaywrightDriverTest {
 
             driver.addInitScript("window.__test_utils__ = { add: (a, b) => a + b }")
 
-            driver.navigateTo("https://www.example.com/")
+            driver.navigateTo(url2)
             driver.waitForNavigation()
 
             var result = driver.evaluate("1+1")
             assertEquals(2, result)
 
             result = driver.evaluate("typeof(window)")
-            println("typeof(window) -> $result")
+            printlnPro("typeof(window) -> $result")
             assertEquals("object", result)
 
 
             result = driver.evaluate("typeof(__test_utils__)")
-            println("typeof(__test_utils__) -> $result")
+            printlnPro("typeof(__test_utils__) -> $result")
             assertEquals("object", result)
 
 
             result = driver.evaluate("typeof(__pulsar_)")
-            println("typeof(__pulsar_) -> $result")
+            printlnPro("typeof(__pulsar_) -> $result")
             assertEquals("function", result)
 
             result = driver.evaluate("__pulsar_utils__.add(1, 2)")
-            println(result)
+            printlnPro(result)
             assertEquals(3, result)
         }
     }
@@ -147,7 +153,7 @@ class PlaywrightDriverTest {
             driver.navigateTo("https://www.hua.com/")
             driver.waitForSelector("body")
             val result = driver.evaluate(expression)
-            println(result)
+            printlnPro(result)
         }
     }
 
@@ -171,14 +177,14 @@ class PlaywrightDriverTest {
 
     private fun navigateTo(url: String, driver: PlaywrightDriver) {
         runBlocking {
-            println("Navigating - $url")
+            printlnPro("Navigating - $url")
             driver.navigateTo(url)
             driver.waitForSelector("body")
             val text = driver.selectFirstTextOrNull("body")?.trim()
                 ?.replace("\\s+".toRegex(), " ")
             assertNotNull(text)
             val start = text.length / 2
-            println(">>>\n" + text.substring(start, start + 100) + "\n<<<")
+            printlnPro(">>>\n" + text.substring(start, start + 100) + "\n<<<")
         }
     }
 }

@@ -1,6 +1,8 @@
 package ai.platon.pulsar.browser
 
+import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.common.Strings
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.urls.URLUtils
 import org.apache.commons.lang3.StringUtils
 import kotlin.test.*
@@ -20,8 +22,7 @@ class TestLoadResources: WebDriverTestBase() {
         ${"$assetsBaseURL/simple.json"}
         ${"$generatedAssetsBaseURL/interactive-1.html"}
         ${"$generatedAssetsBaseURL/interactive-2.html"}
-        https://www.baidu.com/s?wd=america
-    """.trimIndent().split("\n")
+    """.trimIndent().split("\n").map { it.trim() }
 
     @BeforeTest
     fun setup() {
@@ -37,7 +38,7 @@ class TestLoadResources: WebDriverTestBase() {
             val content = page.contentAsString.asSequence()
                 .filter { Strings.isCJK(it) }.take(100)
                 .joinToString("")
-            println("$i.\t" + page.contentLength + "\t" + content)
+            printlnPro("$i.\t" + page.contentLength + "\t" + content)
 
             assertTrue(resourceUrl) { page.fetchCount > 0 }
             assertTrue(resourceUrl) { page.protocolStatus.isSuccess }
@@ -47,9 +48,8 @@ class TestLoadResources: WebDriverTestBase() {
 
     @Ignore("This test is not stable")
     @Test
-    fun testLoadResource2() = runWebDriverTest(browser) { driver ->
+    fun testLoadResource2() = runEnhancedWebDriverTest(browser) { driver ->
         val resourceUrl = robotsUrl
-//        val resourceUrl = "https://www.amazon.com/robots.txt"
         val referrer = URLUtils.getOrigin(resourceUrl)
         driver.navigateTo(referrer)
         driver.waitForNavigation()
@@ -60,21 +60,20 @@ class TestLoadResources: WebDriverTestBase() {
         assertNotNull(headers)
         assertNotNull(body)
 
-        println(body)
+        // logPrintln(body)
 
-//        println(body)
         assertContains(body, "Disallow", ignoreCase = true,
             message = "Disallow should be in body: >>>\n${StringUtils.abbreviateMiddle(body, "...", 100)}\n<<<")
 
 //        val cookies = response.entries.joinToString("; ") { it.key + "=" + it.value }
-//        println(cookies)
-        // headers.forEach { (name, value) -> println("$name: $value") }
+//        logPrintln(cookies)
+        // headers.forEach { (name, value) -> logPrintln("$name: $value") }
         assertContains(headers.toString(), "Content-Type", ignoreCase = true,
             message = "Content-Type should be in headers: >>>\n$headers\n<<<")
     }
 
     @Test
-    fun testJsoupLoadResource() = runWebDriverTest { driver ->
+    fun testJsoupLoadResource() = runEnhancedWebDriverTest { driver ->
 //        val resourceUrl = "https://www.amazon.com/robots.txt"
         val resourceUrl = robotsUrl
 
@@ -87,14 +86,15 @@ class TestLoadResources: WebDriverTestBase() {
         val body = response.body()
         assertNotNull(body)
 
-//        println(body)
+//        logPrintln(body)
         assertContains(body, "Disallow")
         // check cookies and headers
         val cookies = response.cookies().entries.joinToString("; ") { it.key + "=" + it.value }
-        println(cookies)
-        response.headers().forEach { (name, value) -> println("$name: $value") }
+        printlnPro(cookies)
+        response.headers().forEach { (name, value) -> printlnPro("$name: $value") }
 
         assertContains(headers.toString(), "Content-Type", ignoreCase = true,
             message = "Content-Type should be in headers: >>>\n$headers\n<<<")
     }
 }
+

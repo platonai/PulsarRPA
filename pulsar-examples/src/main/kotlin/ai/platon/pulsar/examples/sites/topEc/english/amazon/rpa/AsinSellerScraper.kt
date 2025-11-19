@@ -219,7 +219,7 @@ class AsinSellerScraper {
 }
 
 fun main() {
-    PulsarSettings().maxBrowserContexts(2).maxOpenTabs(4)
+    PulsarSettings.maxBrowserContexts(2).maxOpenTabs(4)
 
     val crawler = AsinSellerScraper()
     crawler.crawl()

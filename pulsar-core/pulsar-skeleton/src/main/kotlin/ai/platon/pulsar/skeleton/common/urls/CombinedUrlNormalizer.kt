@@ -9,7 +9,7 @@ import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 
 class CombinedUrlNormalizer(private val urlNormalizers: ChainedUrlNormalizer? = null) {
     /**
-     * Normalize an url.
+     * Normalize a url.
      *
      * If both url arguments and [LoadOptions] are present, the url arguments overrides the [LoadOptions].
      *

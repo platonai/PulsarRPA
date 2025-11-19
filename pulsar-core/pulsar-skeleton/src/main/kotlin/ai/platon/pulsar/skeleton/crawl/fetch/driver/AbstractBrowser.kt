@@ -18,7 +18,7 @@ abstract class AbstractBrowser(
 ): Browser, AutoCloseable, AbstractEventEmitter<BrowserEvents>() {
     companion object {
         protected val SEQUENCER = AtomicInteger()
-        val DEFAULT_USER_AGENT = "Browser4 Robot/1.0"
+        val DEFAULT_USER_AGENT = "Browser4 Agent/1.0"
     }
 
     private val logger = getLogger(this)
@@ -26,9 +26,9 @@ abstract class AbstractBrowser(
     /**
      * All drivers, including the recovered drivers and the reused drivers.
      * */
-    protected val _drivers = ConcurrentHashMap<String, WebDriver>()
-    protected val _recoveredDrivers = ConcurrentHashMap<String, WebDriver>()
-    protected val _reusedDrivers = ConcurrentHashMap<String, WebDriver>()
+    protected val mutableDrivers = ConcurrentHashMap<String, WebDriver>()
+    protected val mutableRecoveredDrivers = ConcurrentHashMap<String, WebDriver>()
+    protected val mutableReusedDrivers = ConcurrentHashMap<String, WebDriver>()
 
     protected val initialized = AtomicBoolean()
     private val closed = AtomicBoolean()
@@ -36,12 +36,19 @@ abstract class AbstractBrowser(
 
     override val instanceId: Int = SEQUENCER.incrementAndGet()
 
+    override val host = "localhost"
+
+    override val port = 0
+
     override val userAgent get() = DEFAULT_USER_AGENT
 
     var userAgentOverride = getRandomUserAgentOrNull()
 
     override val navigateHistory = NavigateHistory()
-    override val drivers: Map<String, WebDriver> get() = _drivers
+
+    override val drivers: Map<String, WebDriver> get() = mutableDrivers
+
+    override var frontDriver: WebDriver? = null
 
     /**
      * The associated data.
@@ -51,8 +58,8 @@ abstract class AbstractBrowser(
     override val isConnected: Boolean get() = isActive
 
     override val isIdle get() = Duration.between(lastActiveTime, Instant.now()) > idleTimeout
-    
-    override val isPermanent: Boolean get() = id.privacyAgent.isPermanent
+
+    override val isPermanent: Boolean get() = id.profile.isPermanent
 
     override val isActive get() = AppContext.isActive && !isClosed // && initialized.get()
 
@@ -93,6 +100,18 @@ abstract class AbstractBrowser(
         return drivers.values.filterIsInstance<AbstractWebDriver>().filter { currentUrl(it).matches(urlRegex) }
     }
 
+    @Throws(WebDriverException::class)
+    fun findDriverById(id: Int): AbstractWebDriver? {
+        recoverUnmanagedPages()
+        return drivers.values.filterIsInstance<AbstractWebDriver>().firstOrNull { it.id == id }
+    }
+
+    @Throws(WebDriverException::class)
+    fun findDriverByGUID(guid: String): AbstractWebDriver? {
+        recoverUnmanagedPages()
+        return drivers[guid] as? AbstractWebDriver
+    }
+
     protected suspend fun currentUrl(driver: WebDriver) = driver.currentUrl()
 
     override fun destroyDriver(driver: WebDriver) {
@@ -119,15 +138,15 @@ abstract class AbstractBrowser(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             detach()
-            _recoveredDrivers.clear()
-            _drivers.values.filterIsInstance<AbstractWebDriver>().forEach {
+            mutableRecoveredDrivers.clear()
+            mutableDrivers.values.filterIsInstance<AbstractWebDriver>().forEach {
                 // tasks are return as soon as possible and should be cancelled
                 it.cancel()
                 // the driver should be retired
                 it.retire()
             }
-            _drivers.values.forEach { runCatching { it.close() }.onFailure { warnForClose(this, it) } }
-            _drivers.clear()
+            mutableDrivers.values.forEach { runCatching { it.close() }.onFailure { warnForClose(this, it) } }
+            mutableDrivers.clear()
         }
     }
 

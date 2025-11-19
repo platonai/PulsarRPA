@@ -7,7 +7,6 @@ class JsonCommandDispatcher {
         when (command.get("command").asString) {
             "addInitScript" -> driver.addInitScript(command.get("script").asString)
             "addBlockedURLs" -> driver.addBlockedURLs(command.get("urlPatterns").asJsonArray.map { it.asString })
-            "addProbabilityBlockedURLs" -> driver.addProbabilityBlockedURLs(command.get("urlPatterns").asJsonArray.map { it.asString })
             "click" -> driver.click(command.get("selector").asString, command.get("count").asInt)
         }
     }

@@ -21,29 +21,24 @@ import ai.platon.pulsar.common.measure.ByteUnit;
 import java.awt.*;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 
 @SuppressWarnings("unused")
 public interface AppConstants {
 
     String PULSAR_CONTEXT_CONFIG_LOCATION = "classpath*:/pulsar-beans/app-context.xml";
+    String QL_CONTEXT_CONFIG_LOCATION = "classpath*:/ql-beans/app-context.xml";
+    String AGENTIC_CONTEXT_CONFIG_LOCATION = "classpath*:/agentic-beans/app-context.xml";
 
     String YES_STRING = "y";
 
-    String ALL_BATCHES = "all";
+    String VAR_REFRESH = "refresh";
+    String VAR_CAPTURE = "capture";
 
     /**
-     * The first non-null Unicode character is U+0001, which is the Start of Heading (SOH) character.
-     * @link <a href="https://en.wikipedia.org/wiki/UTF-8">UTF-8</a>
-     * */
-    Character UNICODE_FIRST_CODE_POINT = '\u0001';
-    /**
-     * The last Unicode character in the Unicode standard is U+10FFFF, which is the highest code point in Unicode.
-     * @link <a href="https://en.wikipedia.org/wiki/UTF-8">UTF-8</a>
-     * */
-    Character UNICODE_LAST_CODE_POINT = '\uFFFF';
-
-    /**
-     * An example of the shortest url
+     * An example of the shortest accessible url: <a href="http://t.tt">http://t.tt</a>
+     * <p>
+     * Another example is <a href="http://a.co">http://a.co</a> (redirect to amazon.com)
      * */
     String SHORTEST_VALID_URL = "http://t.tt";
     /**
@@ -53,19 +48,26 @@ public interface AppConstants {
     /**
      * The example url
      * */
-    String EXAMPLE_URL = "http://example.com";
+    String EXAMPLE_URL = "https://example.com";
+    /**
+     * The example url
+     * */
+    List<String> SEARCH_ENGINE_URLS = List.of(
+            "https://www.google.com/",
+            "https://cn.bing.com/",
+            "https://www.baidu.com/",
+            "https://www.so.com/",
+            "https://www.bing.com/"
+    );
+    String SEARCH_ENGINE_URL = "https://cn.bing.com/";
     /**
      * The prefix of all pulsar specified urls
      * */
-    String INTERNAL_URL_PREFIX = "http://internal.pulsar.platon.ai";
+    String INTERNAL_URL_PREFIX = "http://internal.platon.ai";
     /**
      * The url of the nil page
      * */
     String NIL_PAGE_URL = INTERNAL_URL_PREFIX + "/nil";
-    /**
-     * The url of the top page
-     * */
-    String URL_TRACKER_HOME_URL = INTERNAL_URL_PREFIX + "/url/tracker";
 
     /**
      * Storage
@@ -74,7 +76,6 @@ public interface AppConstants {
     /** A minimal file backend store */
     String FILE_BACKEND_STORE_CLASS = "ai.platon.pulsar.persist.gora.FileBackendPageStore";
     String MONGO_STORE_CLASS = "org.apache.gora.mongodb.store.MongoStore";
-    String HBASE_STORE_CLASS = "org.apache.gora.hbase.store.HBaseStore";
     // schema version 1.10.x
 //    String WEBPAGE_SCHEMA = "webpage110";
     /**
@@ -103,8 +104,6 @@ public interface AppConstants {
     String CMD_PROXY_POOL_DUMP = "dump-proxy-pool";
 
     String CMD_PROXY_FORCE_IDLE = "IPS-force-idle";
-    String CMD_PROXY_RECONNECT = "IPS-reconnect";
-    String CMD_PROXY_DISCONNECT = "IPS-disconnect";
 
     /**
      * Browser
@@ -119,7 +118,7 @@ public interface AppConstants {
 
     Duration POLLING_DRIVER_TIMEOUT_DEFAULT = Duration.ofSeconds(60);
 
-    Dimension DEFAULT_VIEW_PORT = new Dimension(1920, 1080);
+    Dimension DEFAULT_VIEWPORT = new Dimension(1920, 1080);
     String PULSAR_META_INFORMATION_ID = "PulsarMetaInformation";
     String PULSAR_META_INFORMATION_SELECTOR = "#" + PULSAR_META_INFORMATION_ID;
     String PULSAR_SCRIPT_SECTION_ID = "PulsarScriptSection";
@@ -135,6 +134,10 @@ public interface AppConstants {
     String PULSAR_ATTR_ELEMENT_NODE_DATA = "nd";
 
     // Browser use tool
+    /**
+     * Deprecated, use ai.platon.pulsar.browser.driver.chrome.dom.DomService instead.
+     * */
+    @Deprecated
     String BROWSER_INTERACTIVE_ELEMENTS_SELECTOR = "a, button, input, select, textarea, " +
                 "[role='button'], [role='link'], [onclick], [onmousedown], [onmouseup]";
 
@@ -157,9 +160,8 @@ public interface AppConstants {
 
     /**
      * Local file base url, the host is a fake host.
-     * Consider just use http://localhost.
      * */
-    String LOCAL_FILE_BASE_URL = "http://localfile.org";
+    String LOCAL_FILE_BASE_URL = "http://localfile.internal";
 
-    String BROWSER_SPECIFIC_URL_PREFIX = "http://browser-specific.org";
+    String BROWSER_INTERNAL_BASE_URL = "http://browser.internal";
 }

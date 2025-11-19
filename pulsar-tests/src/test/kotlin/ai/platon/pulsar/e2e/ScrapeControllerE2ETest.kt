@@ -1,0 +1,43 @@
+package ai.platon.pulsar.e2e
+
+import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
+import ai.platon.pulsar.common.printlnPro
+import ai.platon.pulsar.integration.rest.IntegrationTestBase
+import ai.platon.pulsar.test.TestResourceUtil
+import org.junit.jupiter.api.Tag
+import org.junit.jupiter.api.Test
+import kotlin.test.Ignore
+import kotlin.test.assertTrue
+
+@Ignore("Websites might be fall, run these integration tests manually")
+@Tag("E2ETest")
+class ScrapeControllerE2ETest : IntegrationTestBase() {
+
+    fun testScraping(url: String) {
+        val result = scrape(url)
+        assertTrue(result != null, "Result should not be null | $url")
+        printlnPro(pulsarObjectMapper().writeValueAsString(result))
+    }
+
+    fun testLLMScraping(url: String) {
+        val result = llmScrape(url)?.resultSet
+        assertTrue(result != null, "Result should not be null | $url")
+        printlnPro(result)
+    }
+
+    @Test
+    fun testScraping() {
+        testScraping("https://www.amazon.com")
+        testScraping(TestResourceUtil.PRODUCT_DETAIL_URL)
+
+        testScraping("https://www.jd.com/")
+        testScraping("https://www.ebay.com/")
+    }
+
+    @Test
+    fun testLLMScraping() {
+        testLLMScraping("https://www.amazon.com")
+        testLLMScraping(TestResourceUtil.PRODUCT_DETAIL_URL)
+    }
+}
+

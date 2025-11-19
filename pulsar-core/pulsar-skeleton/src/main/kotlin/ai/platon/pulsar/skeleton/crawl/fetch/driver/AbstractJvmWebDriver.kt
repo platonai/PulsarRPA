@@ -1,6 +1,5 @@
 package ai.platon.pulsar.skeleton.crawl.fetch.driver
 
-import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.math.geometric.RectD
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
@@ -18,7 +17,6 @@ abstract class AbstractJvmWebDriver: JvmWebDriver, WebDriver {
     override fun addBlockedURLsAsync(urls: List<String>) = interopScope.future { addBlockedURLs(urls) }
     override fun navigateToAsync(url: String) = interopScope.future { navigateTo(url) }
     override fun navigateToAsync(entry: NavigateEntry) = interopScope.future { navigateTo(entry) }
-    override fun setTimeoutsAsync(browserSettings: BrowserSettings) = interopScope.future { setTimeouts(browserSettings) }
     override fun currentUrlAsync() = interopScope.future { currentUrl() }
     override fun pageSourceAsync() = interopScope.future { pageSource() }
     override fun getCookiesAsync() = interopScope.future { getCookies() }

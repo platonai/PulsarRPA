@@ -9,21 +9,41 @@ import ai.platon.pulsar.skeleton.context.support.StaticPulsarContext
 import org.springframework.context.ApplicationContext
 import org.springframework.context.support.AbstractApplicationContext
 
+/**
+ * Manages the creation and lifecycle of Pulsar contexts and sessions.
+ *
+ * A Pulsar session provides:
+ * - Full-featured `WebDriver`
+ * - Capture of live web pages into a local `WebPage`
+ * - Parsing a `WebPage` into a lightweight `Document`
+ * - Event handlers across the WebPage lifecycle
+ * - One-line scrapers & full crawler (fetching, parsing, scheduling, priorities, crawl pool, plugins)
+ * - Basic LLM support for interacting with pages or documents
+ *
+ * Additional context types:
+ * - `SQLContexts`: enables X‑SQL for advanced web page modeling
+ * - `AgenticContexts`: enables agentic/browser‑based agents (`AgenticSession`)
+ *
+ * This object coordinates the active context, shutdown hooks, and session creation.
+ *
+ * Thread‑safety:
+ * - All creation and shutdown entry points are synchronized.
+ */
 object PulsarContexts {
     private val logger = getLogger(this)
 
     private val contexts = mutableSetOf<PulsarContext>()
 
     /**
-     * The active context, it's the last created context.
+     * The active context (the most recently created context).
      */
     var activeContext: PulsarContext? = null
         private set
 
     /**
-     * Create a new context, if there is already an active context, return it.
+     * Creates and activates a new default context if none is active; otherwise returns the existing active context.
      *
-     * @return the created context
+     * @return The active context
      */
     @Synchronized
     @JvmStatic
@@ -38,11 +58,16 @@ object PulsarContexts {
         return activeContext!!
     }
 
+    @Synchronized
+    @JvmStatic
+    fun getOrCreate(): PulsarContext = create()
+
     /**
-     * Create a new context, if there is already an active context, return it.
+     * Activates the given context unless an equivalent active context already exists; in that case the existing one is returned.
+     * Also registers shutdown hooks for both Spring and Pulsar contexts.
      *
-     * @param context the context to be created
-     * @return the created context
+     * @param context The context to activate
+     * @return The active context
      */
     @Synchronized
     @JvmStatic
@@ -66,31 +91,45 @@ object PulsarContexts {
         return context
     }
 
+    @Synchronized
+    @JvmStatic
+    fun getOrCreate(context: PulsarContext): PulsarContext = create(context)
+
     /**
-     * Create a new context, if there is already an active context, return it.
+     * Creates and activates a new context from the given Spring XML location if none compatible is active;
+     * otherwise returns the existing active context.
      *
-     * @param contextLocation the location of the context
-     * @return the created context
+     * @param contextLocation The classpath location of the Spring XML context
+     * @return The active context
      */
     @Synchronized
     @JvmStatic
     fun create(contextLocation: String) = create(ClassPathXmlPulsarContext(contextLocation))
 
+    @Synchronized
+    @JvmStatic
+    fun getOrCreate(contextLocation: String): PulsarContext = create(contextLocation)
+
     /**
-     * Create a new context, if there is already an active context, return it.
+     * Creates and activates a new context backed by the provided Spring application context if none compatible is active;
+     * otherwise returns the existing active context.
      *
-     * @param applicationContext the Spring application context
-     * @return the created context
+     * @param applicationContext The Spring application context
+     * @return The active context
      */
     @Synchronized
     @JvmStatic
     fun create(applicationContext: ApplicationContext) =
         create(BasicPulsarContext(applicationContext as AbstractApplicationContext))
 
+    @Synchronized
+    @JvmStatic
+    fun getOrCreate(applicationContext: ApplicationContext) = create(applicationContext)
+
     /**
-     * Create a PulsarSession with the active context.
+     * Creates a `PulsarSession` using the active context (creating a default context if necessary).
      *
-     * @return the created session
+     * @return The created session
      */
     @Synchronized
     @JvmStatic
@@ -98,17 +137,18 @@ object PulsarContexts {
     fun createSession() = create().createSession()
 
     /**
-     * Create a PulsarSession with the active context.
+     * Returns the existing `PulsarSession` if present, otherwise creates one using the active context
+     * (creating a default context if necessary).
      *
-     * @return the created session
+     * @return The existing or newly created session
      */
     @Synchronized
     @JvmStatic
     @Throws(Exception::class)
-    fun getOrCreateSession() = create().getOrCreateSession()
+    fun getOrCreateSession() = getOrCreate().getOrCreateSession()
 
     /**
-     * Wait for all submitted urls to be processed.
+     * Waits for all submitted URLs to be processed.
      */
     @JvmStatic
     @Throws(InterruptedException::class)
@@ -117,13 +157,13 @@ object PulsarContexts {
     }
 
     /**
-     * Register a closable object to the active context.
-     * TODO: might fail before the context is created
+     * Registers a closable object with the active context.
+     * Note: If a context has not been created yet, this is a no‑op.
      *
-     * @param closable the closable object
-     * @param priority the priority of the closable object
+     * @param closable The object implementing `AutoCloseable`
+     * @param priority The priority for closing order
      * @see AutoCloseable
-     * @see AbstractPulsarContext.registerClosable
+     * @see PulsarContext.registerClosable
      */
     @JvmStatic
     fun registerClosable(closable: AutoCloseable, priority: Int = 0) {
@@ -131,7 +171,7 @@ object PulsarContexts {
     }
 
     /**
-     * Close the all the created context.
+     * Closes all created contexts and shuts down Browser4.
      */
     @Synchronized
     @JvmStatic
@@ -140,4 +180,11 @@ object PulsarContexts {
         contexts.clear()
         activeContext = null
     }
+
+    /**
+     * Closes all created contexts and shuts down Browser4 (alias for [shutdown]).
+     */
+    @Synchronized
+    @JvmStatic
+    fun close() = shutdown()
 }

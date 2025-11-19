@@ -2,7 +2,7 @@ package ai.platon.pulsar.skeleton.crawl.fetch.privacy
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.SParser
-import ai.platon.pulsar.common.browser.BrowserContextMode
+import ai.platon.pulsar.common.browser.BrowserProfileMode
 import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.ImmutableConfig
 import org.slf4j.LoggerFactory
@@ -14,19 +14,19 @@ class PrivacyAgentGeneratorFactory(val conf: ImmutableConfig) {
         private val generators = ConcurrentHashMap<String, PrivacyAgentGenerator>()
 
         val BROWSER_CONTEXT_MODE_TO_AGENTS = mapOf(
-            BrowserContextMode.PROTOTYPE  to PrototypePrivacyAgentGenerator::class,
-            BrowserContextMode.SEQUENTIAL to SequentialPrivacyAgentGenerator::class,
-            BrowserContextMode.TEMPORARY  to RandomPrivacyAgentGenerator::class,
-            BrowserContextMode.SYSTEM_DEFAULT to SystemDefaultPrivacyAgentGenerator::class,
-            BrowserContextMode.DEFAULT to DefaultPrivacyAgentGenerator::class
+            BrowserProfileMode.PROTOTYPE  to PrototypePrivacyAgentGenerator::class,
+            BrowserProfileMode.SEQUENTIAL to SequentialPrivacyAgentGenerator::class,
+            BrowserProfileMode.TEMPORARY  to RandomPrivacyAgentGenerator::class,
+            BrowserProfileMode.SYSTEM_DEFAULT to SystemDefaultPrivacyAgentGenerator::class,
+            BrowserProfileMode.DEFAULT to DefaultPrivacyAgentGenerator::class
         )
 
-        fun getPrivacyAgentGeneratorClass(mode: BrowserContextMode): KClass<out PrivacyAgentGenerator> {
+        fun getPrivacyAgentGeneratorClass(mode: BrowserProfileMode): KClass<out PrivacyAgentGenerator> {
             return when (mode) {
-                BrowserContextMode.PROTOTYPE -> PrototypePrivacyAgentGenerator::class
-                BrowserContextMode.SEQUENTIAL -> SequentialPrivacyAgentGenerator::class
-                BrowserContextMode.TEMPORARY -> RandomPrivacyAgentGenerator::class
-                BrowserContextMode.SYSTEM_DEFAULT -> SystemDefaultPrivacyAgentGenerator::class
+                BrowserProfileMode.PROTOTYPE -> PrototypePrivacyAgentGenerator::class
+                BrowserProfileMode.SEQUENTIAL -> SequentialPrivacyAgentGenerator::class
+                BrowserProfileMode.TEMPORARY -> RandomPrivacyAgentGenerator::class
+                BrowserProfileMode.SYSTEM_DEFAULT -> SystemDefaultPrivacyAgentGenerator::class
                 else -> DefaultPrivacyAgentGenerator::class
             }
         }
@@ -60,7 +60,7 @@ class PrivacyAgentGeneratorFactory(val conf: ImmutableConfig) {
         generators[gen::class.java.name] = gen
         generators[className] = gen
 
-        logger.info("Created privacy agent generator {} | {}", gen::class.java.simpleName, gen::class.java.name)
+        logger.info("Created browser profile generator {} | {}", gen::class.java.simpleName, gen::class.java.name)
 
         return gen
     }
@@ -79,7 +79,7 @@ class PrivacyAgentGeneratorFactory(val conf: ImmutableConfig) {
             SParser(className).getClass(defaultClazz)
         } catch (e: Exception) {
             logger.warn(
-                "No configured privacy agent generator {}, use default ({})",
+                "No configured browser profile generator {}, use default ({})",
                 className, defaultClazz.simpleName
             )
             defaultClazz

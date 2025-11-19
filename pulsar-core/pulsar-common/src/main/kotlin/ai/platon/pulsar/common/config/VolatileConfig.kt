@@ -15,20 +15,9 @@ open class VolatileConfig : MutableConfig {
     private val ttls: MutableMap<String, Int> = ConcurrentHashMap()
     val variables: MutableMap<String, Any> = ConcurrentHashMap()
 
-    constructor(): this("", false, listOf())
+    constructor(loadDefaults: Boolean = false): super(loadDefaults)
 
-    constructor(loadDefaults: Boolean): this(
-        System.getProperty(CapabilityTypes.PROFILE_KEY, ""),
-        loadDefaults
-    )
-
-    constructor(
-        profile: String = System.getProperty(CapabilityTypes.PROFILE_KEY, ""),
-        loadDefaults: Boolean = true,
-        resources: Iterable<String> = mutableSetOf()
-    ): super(profile, loadDefaults, resources)
-
-    constructor(fallbackConfig: ImmutableConfig) : this("", false) {
+    constructor(fallbackConfig: ImmutableConfig) : this(false) {
         this.fallbackConfig = fallbackConfig
         if (fallbackConfig is VolatileConfig) {
             ttls.putAll(fallbackConfig.ttls)

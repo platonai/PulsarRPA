@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>4.0.1-SNAPSHOT</version>
+        <version>4.1.0-rc.1</version>
     </parent>
 
     <artifactId>pulsar-rest</artifactId>
@@ -64,6 +64,10 @@
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-ql</artifactId>
         </dependency>
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-agentic</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -112,6 +116,16 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webflux</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlinx</groupId>
+            <artifactId>kotlinx-coroutines-reactor</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <scope>test</scope>
+        </dependency>
 
         <!-- Automatic Restart, LiveReload, Remote Debug -->
 <!--        <dependency>-->
@@ -127,6 +141,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-tests-common</artifactId>
+            <scope>test</scope>
         </dependency>
 
         <dependency>

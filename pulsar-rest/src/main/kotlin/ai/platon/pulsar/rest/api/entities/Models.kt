@@ -1,7 +1,6 @@
 package ai.platon.pulsar.rest.api.entities
 
 import ai.platon.pulsar.common.ResourceStatus
-import ai.platon.pulsar.common.serialize.json.FlatJSONExtractor
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
@@ -126,7 +125,7 @@ data class W3DocumentRequest(
 )
 
 /**
- * Advanced request for web page interactions with structured data extraction capabilities.
+ * Request for web page interactions with structured data extraction capabilities.
  *
  * @property url The target page URL to process.
  * @property args Optional load arguments to customize page loading behavior.
@@ -135,23 +134,26 @@ data class W3DocumentRequest(
  * @property pageSummaryPrompt A prompt to analyze or discuss the HTML structure of the page.
  * @property dataExtractionRules Specifications for extracting structured fields from the HTML content.
  * @property uriExtractionRules A regex pattern to extract specific URIs from the page, e.g. "links containing /dp/".
- * @property xsql An X-SQL query for structured data extraction, e.g.
- *              "select dom_first_text(dom, '#title') as title, llm_extract(dom, 'price') as price".
- * @property mode The execution mode, either "sync" (synchronous) or "async" (asynchronous).
+ * @property xsql An X-SQL query for structured data extraction, e.g. "select dom_first_text(dom, '#title') as title, llm_extract(dom, 'price') as price".
+ * @property richText Whether to retain rich text formatting in the extracted content.
+ * @property async If true, the command is executed asynchronous; otherwise, it's synchronously.
+ * @property mode The execution mode, either "sync" or "async", default to "sync". (Deprecated: use [async] instead)
  */
 data class CommandRequest(
     var url: String,
     var args: String? = null,
     var onBrowserLaunchedActions: List<String>? = null,
     var onPageReadyActions: List<String>? = null,
+    var actions: List<String>? = null,
     var pageSummaryPrompt: String? = null,
     var dataExtractionRules: String? = null,
     var uriExtractionRules: String? = null,
-    @Deprecated("Use uriExtractionRules instead")
-    var linkExtractionRules: String? = null,
     var xsql: String? = null,
     var richText: Boolean? = null,
-    var mode: String = "sync", // "sync" | "async"
+    var async: Boolean? = null,
+    @Deprecated("Use async instead")
+    var mode: String? = null, // "sync" or "async", default to "sync"
+    var id: String? = null,
 ) {
     fun hasAction(): Boolean {
         return !onBrowserLaunchedActions.isNullOrEmpty() || !onPageReadyActions.isNullOrEmpty()
@@ -333,3 +335,11 @@ fun CommandStatus.refreshed(lastModifiedTime: Instant): Boolean {
     val modifiedTime = this.lastModifiedTime ?: return false
     return modifiedTime > lastModifiedTime
 }
+
+data class NavigateRequest(
+    var url: String,
+)
+
+data class ScreenshotRequest(
+    var id: String
+)

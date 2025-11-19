@@ -35,7 +35,7 @@ class ProtocolFactory(private val immutableConfig: ImmutableConfig) : AutoClosea
             .onEach { it.value.configure(immutableConfig) }
             .toMap(protocols)
         protocols.keys.joinToString(", ", "Supported protocols: ", "")
-            .also { logger.info(it) }
+            .also { logger.debug(it) }
     }
 
     /**

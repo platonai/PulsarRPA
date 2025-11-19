@@ -1,12 +1,11 @@
 package ai.platon.pulsar.ql
 
-import ai.platon.pulsar.persist.model.WebPageFormatter
+import ai.platon.pulsar.test.TestResourceUtil
 import kotlin.test.Test
 
 class TestExtractCases : TestBase() {
-    private val newsIndexUrl = TestResource.newsIndexUrl
-    private val newsDetailUrl = TestResource.newsDetailUrl
-    private val urlGroups = TestResource.urlGroups
+    private val newsIndexUrl = TestResourceUtil.NEWS_INDEX_URL
+    private val newsDetailUrl = TestResourceUtil.NEWS_DETAIL_URL
 
     @Test
     fun testSavePages() {

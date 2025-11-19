@@ -43,25 +43,12 @@ public interface CapabilityTypes {
      * */
     String MAIN_LOOP_CONCURRENCY_OVERRIDE = "main.loop.concurrency.override";
 
-    String START = "start";
-
-    String LIMIT = "limit";
-
-    String BATCH_ID = "batch.id";
-
     String PARAM_JOB_NAME = "job.name";
-
-    String FORCE = "force";
-
-    String RECENT_DAYS_WINDOW = "recent.days.window";
 
     /**
      * Application metrics
      * */
     String METRICS_ENABLED = "metrics.enabled";
-
-    ///////////////////////////////////////////////////////////////////////////
-    // Crawl section
 
     String PAGE_EVENT_CLASS = "page.eventHandlers.class";
 
@@ -147,7 +134,7 @@ public interface CapabilityTypes {
      * */
     String MAX_SEQUENTIAL_PRIVACY_AGENT_NUMBER = "max.sequential.privacy.agent.number";
     /**
-     * The class name of privacy agent generator
+     * The class name of browser profile generator
      * */
     String PRIVACY_AGENT_GENERATOR_CLASS = "privacy.agent.generator.class";
     String PRIVACY_MINOR_WARNING_FACTOR = "privacy.minor.warning.factor";
@@ -169,12 +156,6 @@ public interface CapabilityTypes {
     String CHROME_PATH = "chrome.path";
     /**
      * The max value of tabs a browser can open
-     * @deprecated use BROWSER_MAX_OPEN_TABS
-     */
-    @Deprecated(since = "3.0.4")
-    String BROWSER_MAX_ACTIVE_TABS = "browser.max.active.tabs";
-    /**
-     * The max value of tabs a browser can open
      */
     String BROWSER_MAX_OPEN_TABS = "browser.max.open.tabs";
     /**
@@ -190,7 +171,6 @@ public interface CapabilityTypes {
      * */
     String BROWSER_INTERACT_SETTINGS = "browser.interact.settings";
     String BROWSER_DISPLAY_MODE = "browser.display.mode";
-    String BROWSER_JS_INVADING_ENABLED = "browser.js.invading.enabled";
 
     String BROWSER_DELETE_ALL_COOKIES = "browser.delete.all.cookies";
     String BROWSER_RESPONSE_HANDLER = "browser.response.handler";
@@ -273,10 +253,16 @@ public interface CapabilityTypes {
      * */
     String GLOBAL_DOCUMENT_CACHE_SIZE = "global.document.cache.size";
 
-    String PULSAR_DOMAIN = "pulsar.domain";
-
     // H2
     String H2_SESSION_FACTORY_CLASS = "h2.sessionFactory";
 
     String SCENT_EXTRACT_TABULATE_CELL_TYPE = "scent.extract.tabulate.cell.type";
+
+    /// /////////////////////////////////////////////////////
+    // Distributed
+
+    /**
+     * The node id. The node id **HAS TO** be specified as a JVM System variable or a Environment variable.
+     * */
+    String APP_NODE_ID = "app.node.id";
 }

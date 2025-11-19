@@ -6,7 +6,31 @@
 
 ---
 
+> **⚠️ License Notice: This project uses dual licensing. The main project is licensed under Apache License 2.0. The `browser4` module is licensed under GNU AGPL v3. See LICENSE and browser4/LICENSE for details.**
+
 English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platonai_galaxyeye/Browser4)
+
+<!-- TOC -->
+**Table of Contents**
+- [🌟 Introduction](#-introduction)
+- [🚀 Quick Start](#-quick-start)
+  - [Run from JAR](#run-from-jar)
+  - [Run with Docker](#run-with-docker)
+  - [Build from Source](#build-from-source)
+  - [Environment Variables](#environment-variables)
+- [Usage Examples](#usage-examples)
+  - [Browser Use (Agents)](#browser-use-agents)
+  - [Text Commands API](#text-commands-api)
+  - [LLM + X-SQL](#llm--x-sql)
+  - [Native API](#native-api)
+- [Modules Overview](#modules-overview)
+- [Performance Benchmarks](#performance-benchmarks)
+- [Proxies](#-proxies---unblock-websites)
+- [Features](#features)
+- [Documentation](#-documents)
+- [Troubleshooting](#troubleshooting)
+- [Support & Community](#-support--community)
+<!-- /TOC -->
 
 ## 🌟 Introduction
 
@@ -14,25 +38,11 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 ### ✨ Key Capabilities:
 
-- 🤖 **AI Integration with LLMs** – Smarter automation powered by large language models.
-- ⚡ **Ultra-Fast Automation** – Coroutine-safe browser automation concurrency, spider-level crawling performance.
+- 🤖 **Browser Use** – Let the agent think and resolve problems.
+- 🤖 **Browser Automation** – Automate the browser in workflow and extract data.
+- ⚡ **Ultra-Fast** – Coroutine-safe browser automation concurrency, spider-level crawling performance.
 - 🧠 **Web Understanding** – Deep comprehension of dynamic web content.
 - 📊 **Data Extraction APIs** – Powerful tools to extract structured data effortlessly.
-
----
-
-Automate the browser and extract data at scale with simple text.
-
-```text
-Go to https://www.amazon.com/dp/B08PP5MSVB
-
-After browser launch: clear browser cookies.
-After page load: scroll to the middle.
-
-Summarize the product.
-Extract: product name, price, ratings.
-Find all links containing /dp/.
-```
 
 ---
 
@@ -44,259 +54,119 @@ Find all links containing /dp/.
 📺 Bilibili:
 [https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
 
-
 ---
 
-# 🚀 Quick Start Guide
+## 🚀 Quick Start
 
-## ▶️ Run Browser4
+### Run from JAR
 
-### 📦 Run the Executable JAR — Best Experience
-
-#### 🧩 Download
-
+#### Download
 ```shell
-curl -L -o Browser4.jar https://github.com/platonai/browser4/releases/download/v4.0.0/Browser4.jar
+curl -L -o Browser4.jar https://github.com/platonai/browser4/releases/download/v4.1.0/Browser4.jar
 ```
+(Replace `v4.1.0` with the latest release if needed.)
 
-#### 🚀 Run
-
+#### Run
 ```shell
-# make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+# ensure an LLM api key is set. VOLCENGINE_API_KEY / OPENAI_API_KEY also supported
 echo $DEEPSEEK_API_KEY
 java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar Browser4.jar
 ```
+> Windows PowerShell: `$env:DEEPSEEK_API_KEY` (env) vs `$DEEPSEEK_API_KEY` (script variable).
 
-> 🔍 **Tip:** Make sure `DEEPSEEK_API_KEY` or other LLM API key is set in your environment, or AI features will not be available.
-
-> 🔍 **Tip:** Windows PowerShell syntax: `$env:DEEPSEEK_API_KEY` (environment variable) vs `$DEEPSEEK_API_KEY` (script variable).
-
----
-
-<details>
-<summary>📂 Resources</summary>
-
-* 🟦 [GitHub Release Download](https://github.com/platonai/browser4/releases/download/v4.0.0/Browser4.jar)
-* 📁 [Mirror / Backup Download](https://static.platonai.cn/repo/ai/platon/pulsar/)
-* 🛠️ [LLM Configuration Guide](docs/config/llm/llm-config.md)
-* 🛠️ [Configuration Guide](docs/config.md)
-
-</details>
-
-### ▶ Run with IDE
-
-<details>
-
-- Open the project in your IDE
-- Run the `ai.platon.pulsar.app.PulsarApplicationKt` main class
-
-</details>
-
-### 🐳 Docker Users
-
-<details>
-
+### Run with Docker
 ```shell
-# make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+# ensure LLM api key is set
 echo $DEEPSEEK_API_KEY
 docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/browser4:latest
 ```
-</details>
+> Add other supported keys as `-e OPENAI_API_KEY=...` etc.
+
+### Build from Source
+Refer to [Build from Source](docs/development/build.md). Quick commands:
+
+Windows (CMD):
+```shell
+mvnw.cmd -q -DskipTests
+mvnw.cmd -pl browser4 -am test -D"surefire.failIfNoSpecifiedTests=false"
+```
+Linux/macOS:
+```shell
+./mvnw -q -DskipTests
+./mvnw -pl browser4 -am test -Dsurefire.failIfNoSpecifiedTests=false
+```
+Run the app after build:
+```shell
+java -jar browser4/browser4-crawler/target/Browser4.jar
+```
+(Default port: 8182)
+
+### Environment Variables
+| Name | Purpose |
+|------|---------|
+| `DEEPSEEK_API_KEY` | Primary LLM key for AI features |
+| `OPENAI_API_KEY` | Alternative LLM provider key |
+| `VOLCENGINE_API_KEY` | Alternative LLM provider key |
+| `PROXY_ROTATION_URL` | Endpoint returning fresh rotating proxy IP(s) |
+| `JAVA_OPTS` | (Optional) Extra JVM opts (memory, GC tuning) |
+
+> At least one LLM key must be set or AI features will be disabled.
 
 ---
 
-## ✨ Browser Use
+## Usage Examples
 
+### Browser Use (Agents)
 ```kotlin
 val problems = """
     go to amazon.com, search for pens to draw on whiteboards, compare the first 4 ones, write the result to a markdown file.
     打开百度查找厦门岛旅游景点，给出一个总结
     go to https://news.ycombinator.com/news , read top 3 articles and give me a summary
-    """.split("\n").filter { it.isNotBlank() }
+    """.lines().filter { it.isNotBlank() }
 
 problems.forEach { agent.resolve(it) }
 ```
 
-## 🌟 For Beginners – Just Text, No Code!
+### Text Commands API
+Use free-form text to drive the browser:
+```text
+Go to https://www.amazon.com/dp/B08PP5MSVB
 
-Use the `commands` API to perform browser operations, extract web data, analyze websites, and more.
+After browser launch: clear browser cookies.
+After page load: scroll to the middle.
 
-### 📥 Example Request (Text-based):
+Summarize the product.
+Extract: product name, price, ratings.
+Find all links containing /dp/.
+```
 
-WebUI: http://localhost:8182/command.html
-
-<img src="docs/images/commander-ui.png" alt="commander" width="500" />
-
-<details>
-<summary>REST API</summary>
-
-#### 📄 Plain-Text-Based Version:
+### LLM + X-SQL
 ```shell
-curl -X POST "http://localhost:8182/api/commands/plain" -H "Content-Type: text/plain" -d '
-    Go to https://www.amazon.com/dp/B08PP5MSVB
-    
-    After browser launch: clear browser cookies.
-    After page load: scroll to the middle.
-    
-    Summarize the product.
-    Extract: product name, price, ratings.
-    Find all links containing /dp/.
-  '
-```
-
-#### 📄 JSON-Based Version:
-
-```shell
-curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/json" -d '{
-    "url": "https://www.amazon.com/dp/B08PP5MSVB",
-    "onBrowserLaunchedActions": ["clear browser cookies"],
-    "onPageReadyActions": ["scroll to the middle"],
-    "pageSummaryPrompt": "Provide a brief introduction of this product.",
-    "dataExtractionRules": "product name, price, and ratings",
-    "uriExtractionRules": "all links containing `/dp/` on the page"
-  }'
-```
-
-💡 **Tip:** You don't need to fill in every field — just what you need.
-
-</details>
-
-## 🎓 For Advanced Users — LLM + X-SQL: Precise, Flexible, Powerful
-
-Harness the power of the `x/e` API for highly precise, flexible, and intelligent data extraction.
-
-  ```shell
-  curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
-  select
-    llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
-    dom_base_uri(dom) as url,
-    dom_first_text(dom, '#productTitle') as title,
-    dom_first_slim_html(dom, 'img:expr(width > 400)') as img
-  from load_and_select('https://www.amazon.com/dp/B08PP5MSVB', 'body');
-  "
-  ```
-
-The extracted data example:
-
-```json
-{
-  "llm_extracted_data": {
-    "product name": "Apple iPhone 15 Pro Max",
-    "price": "$1,199.00",
-    "ratings": "4.5 out of 5 stars"
-  },
-  "url": "https://www.amazon.com/dp/B08PP5MSVB",
-  "title": "Apple iPhone 15 Pro Max",
-  "img": "<img src=\"https://example.com/image.jpg\" />"
-}
-```
-
-* X-SQL Guide: [X-SQL](docs/x-sql.md)
-
----
-
-## 👨‍💻 For Experts - Native API: Powerful!
-
-### 🚀 Superfast Page Visiting and Data Extraction:
-
-Browser4 enables high-speed parallel web scraping with coroutine-based concurrency, delivering efficient data extraction
-while minimizing resource overhead.
-
-<details>
-
-```kotlin
-val args = "-refresh -dropContent -interactLevel fastest"
-val resource = "seeds/amazon/best-sellers/leaf-categories.txt"
-val links =
-    LinkExtractors.fromResource(resource).asSequence().map { ListenableHyperlink(it, "", args = args) }.onEach {
-        it.eventHandlers.browseEventHandlers.onWillNavigate.addLast { page, driver ->
-            driver.addBlockedURLs(blockingUrls)
-        }
-    }.toList()
-
-session.submitAll(links)
-```
-
-📝 Example: [View Kotlin Code](https://github.com/platonai/browser4/blob/master/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/advanced/HighPerformanceCrawler.kt)
-
-</details>
-
-### 🎮 Browser Control:
-
-Browser4 implements coroutine-safe browser control.
-
-<details>
-
-```kotlin
-val prompts = """
-move cursor to the element with id 'title' and click it
-scroll to middle
-scroll to top
-get the text of the element with id 'title'
-"""
-
-val eventHandlers = DefaultPageEventHandlers()
-eventHandlers.browseEventHandlers.onDocumentFullyLoaded.addLast { page, driver ->
-    val result = session.instruct(prompts, driver)
-}
-session.open(url, eventHandlers)
-```
-📝 Example: [View Kotlin Code](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/llm/TalkToActivePage.kt)
-
-</details>
-
----
-
-### 🤖 Robotic Process Automation Capabilities:
-
-Browser4 provides flexible robotic process automation capabilities.
-
-<details>
-
-```kotlin
-val options = session.options(args)
-val event = options.eventHandlers.browseEventHandlers
-event.onBrowserLaunched.addLast { page, driver ->
-    warnUpBrowser(page, driver)
-}
-event.onWillFetch.addLast { page, driver ->
-    waitForReferrer(page, driver)
-    waitForPreviousPage(page, driver)
-}
-event.onWillCheckDocumentState.addLast { page, driver ->
-    driver.waitForSelector("body h1[itemprop=name]")
-    driver.click(".mask-layer-close-button")
-}
-session.load(url, options)
-```
-📝 Example: [View Kotlin Code](/pulsar-app/pulsar-examples/src/main/kotlin/ai/platon/pulsar/examples/sites/food/dianping/RestaurantCrawler.kt)
-
-</details>
-
----
-
-### 🔍 Complex Data Extraction with X-SQL:
-
-Browser4 provides X-SQL for complex data extraction.
-
-<details>
-
-```sql
+curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
 select
-    llm_extract(dom, 'product name, price, ratings, score') as llm_extracted_data,
-    dom_first_text(dom, '#productTitle') as title,
-    dom_first_text(dom, '#bylineInfo') as brand,
-    dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
-    dom_first_text(dom, '#acrCustomerReviewText') as ratings,
-    str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-from load_and_select('https://www.amazon.com/dp/B08PP5MSVB  -i 1s -njr 3', 'body');
+  llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
+  dom_base_uri(dom) as url,
+  dom_first_text(dom, '#productTitle') as title,
+  dom_first_slim_html(dom, 'img:expr(width > 400)') as img
+from load_and_select('https://www.amazon.com/dp/B08PP5MSVB', 'body');
+"
 ```
 
-📚 Example Code:
-* [Amazon Product Page Scraping (100+ fields)](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
-* [All Amazon Page Types Scraping](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
+### Native API
+High-speed parallel scraping & browser control examples are shown below (see advanced sections for more).
 
-</details>
+---
+
+## Modules Overview
+| Module | Description                                             |
+|--------|----------------------------------------------------------------|
+| `pulsar-core` | Core engine: sessions, scheduling, DOM, browser control |
+| `pulsar-rest` | Spring Boot REST layer & command endpoints              |
+| `pulsar-client` | Client SDK / CLI utilities                             |
+| `browser4-spa` | Browser4 API for agents with Single Page Application    |
+| `browser4-crawler` | Browser4 API for crawler & product packaging        |
+| `pulsar-tests` | Heavy integration & scenario tests                      |
+| `pulsar-tests-common` | Shared test utilities & fixtures                 |
 
 ---
 
@@ -327,78 +197,46 @@ Ask your proxy provider for such a URL.
 
 ---
 
-## ✨ Features
+## Features
 
-🕷️ **Web Spider**
-- Scalable crawling
-- Browser rendering
-- AJAX data extraction
+### AI & Agents
+- Problem-solving autonomous browser agents
+- Parallel agent sessions
+- LLM-assisted page understanding & extraction
 
-🤖 **AI-Powered**
-- Automatic field extraction
-- Pattern recognition
-- Accurate data capture
+### Browser Automation & RPA
+- Workflow-based browser actions
+- Precise coroutine-safe control (scroll, click, extract)
+- Flexible event handlers & lifecycle management
 
-🧠 **LLM Integration**
-- Natural language web content analysis
-- Intuitive content description
+### Data Extraction & Query
+- One-line data extraction commands
+- X-SQL extended query language for DOM/content
+- Structured + unstructured hybrid extraction (LLM + selectors)
 
-🎯 **Text-to-Action**
-- Simple language commands
-- Intuitive browser control
+### Performance & Scalability
+- High-efficiency parallel page rendering
+- Block-resistant design & smart retries
+- 100,000+ pages/day on modest hardware (indicative)
 
-🤖 **RPA Capabilities**
-- Human-like task automation
-- SPA crawling support
-- Advanced workflow automation
+### Stealth & Reliability
+- Advanced anti-bot techniques
+- IP & profile rotation
+- Resilient scheduling & quality assurance
 
-🛠️ **Developer-Friendly**
-- One-line data extraction
-- SQL-like query interface
-- Simple API integration
+### Developer Experience
+- Simple API integration (REST, native, text commands)
+- Rich configuration layering
+- Clear structured logging & metrics
 
-📊 **X-SQL Power**
-- Extended SQL for web data
-- Content mining capabilities
-- Web business intelligence
+### Storage & Monitoring
+- Local FS & MongoDB support (extensible)
+- Comprehensive logs & transparency
+- Detailed metrics & lifecycle visibility
 
-🛡️ **Bot Protection**
-- Advanced stealth techniques
-- IP rotation
-- Privacy context management
+---
 
-⚡ **Performance**
-- Parallel page rendering
-- High-efficiency processing
-- Block-resistant design
-
-💰 **Cost-Effective**
-- 100,000+ pages/day
-- Minimal hardware requirements
-- Resource-efficient operation
-
-✅ **Quality Assurance**
-- Smart retry mechanisms
-- Precise scheduling
-- Complete lifecycle management
-
-🌐 **Scalability**
-- Fully distributed architecture
-- Massive-scale capability
-- Enterprise-ready
-
-📦 **Storage Options**
-- Local File System
-- MongoDB
-- HBase
-- Gora support
-
-📊 **Monitoring**
-- Comprehensive logging
-- Detailed metrics
-- Full transparency
-
-## 📞 Contact Us
+## 🤝 Support & Community
 
 - 💬 WeChat: galaxyeye
 - 🌐 Weibo: [galaxyeye](https://weibo.com/galaxyeye)
@@ -409,3 +247,7 @@ Ask your proxy provider for such a URL.
 <div style="display: flex;">
   <img src="docs/images/wechat-author.png" width="300" height="365" alt="WeChat QR Code" />
 </div>
+
+---
+
+> For Chinese documentation see [简体中文 README](README-CN.md).

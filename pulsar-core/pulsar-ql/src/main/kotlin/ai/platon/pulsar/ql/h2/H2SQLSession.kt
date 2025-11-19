@@ -1,7 +1,6 @@
 package ai.platon.pulsar.ql.h2
 
 import ai.platon.pulsar.common.warnForClose
-import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.ql.AbstractSQLSession
 import ai.platon.pulsar.ql.SessionConfig
 import ai.platon.pulsar.ql.common.annotation.UDAggregation
@@ -10,6 +9,7 @@ import ai.platon.pulsar.ql.common.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.udas.GroupCollect
 import ai.platon.pulsar.ql.h2.udas.GroupFetch
 import ai.platon.pulsar.ql.h2.udfs.*
+import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import com.google.common.reflect.ClassPath
 import org.h2.api.Aggregate
 import org.h2.engine.Constants
@@ -21,7 +21,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.reflect.KClass
 
-class H2SQLSession(
+abstract class AbstractH2SQLSession(
     context: AbstractPulsarContext,
     sessionDelegate: H2SessionDelegate,
     config: SessionConfig
@@ -202,3 +202,9 @@ class H2SQLSession(
         }
     }
 }
+
+open class H2SQLSession(
+    context: AbstractPulsarContext,
+    sessionDelegate: H2SessionDelegate,
+    config: SessionConfig
+) : AbstractH2SQLSession(context, sessionDelegate, config) {}

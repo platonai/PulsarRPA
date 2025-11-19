@@ -1,6 +1,5 @@
 package ai.platon.pulsar.ql
 
-import kotlin.test.Ignore
 import kotlin.test.Test
 
 class TestCases: TestBase() {

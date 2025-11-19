@@ -3,6 +3,7 @@ package ai.platon.pulsar.heavy
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
+import org.junit.jupiter.api.Tag
 import kotlin.test.Test
 
 /**
@@ -12,11 +13,12 @@ import kotlin.test.Test
  *
  * Notice: before we load the local files using Browser4, we have to transform the paths using [URLUtils.pathToLocalURL].
  * */
+@Tag("HeavyTest")
 class MassiveUrlPoolTest: MassiveTestBase() {
 
     @Test
     fun test() {
-        PulsarSettings().maxBrowserContexts(4).maxOpenTabs(8)
+        PulsarSettings.maxBrowserContexts(4).maxOpenTabs(8)
 
         val links = testPaths.asSequence().map { URLUtils.pathToLocalURL(it) }.map { createHyperlink(it) }
 

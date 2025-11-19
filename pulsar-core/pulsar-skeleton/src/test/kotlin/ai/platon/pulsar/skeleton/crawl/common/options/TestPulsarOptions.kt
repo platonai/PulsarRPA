@@ -2,8 +2,8 @@ package ai.platon.pulsar.skeleton.crawl.common.options
 
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.OptionUtils
-import ai.platon.pulsar.skeleton.common.options.LinkOptions
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.common.options.PulsarOptions
 import com.google.common.collect.Lists
 import kotlin.test.Test
@@ -58,49 +58,9 @@ class TestPulsarOptions {
     }
 
     @Test
-    fun testOverrideOptions() {
-        val args = "-amin=1 -amin=2 -amin=3 -amax=100 -amax=200 -amax=300"
-        val linkOptions = LinkOptions.parse(PulsarOptions.normalize(args, "="))
-        assertEquals(3, linkOptions.minAnchorLength.toLong())
-        assertEquals(300, linkOptions.maxAnchorLength.toLong())
-    }
-
-    @Test
-    fun testEmptyOptions() {
-        assertEquals(LinkOptions.DEFAULT, LinkOptions(""))
-        assertEquals(LinkOptions.DEFAULT, LinkOptions())
-        assertEquals(LinkOptions.DEFAULT, LinkOptions(arrayOf()))
-        assertEquals(LinkOptions.DEFAULT, LinkOptions(arrayOf("")))
-        assertEquals(LinkOptions.DEFAULT, LinkOptions(HashMap()))
-
-        println(LinkOptions.DEFAULT)
-    }
-
-    @Test
-    fun testLinkFilterOptions1() {
-        val linkOptions = LinkOptions(linkFilterCommandLine, conf)
-        // linkOptions.parse()
-    }
-
-    @Test
-    fun testLinkFilterOptions() {
-        val linkOptions = LinkOptions(linkFilterCommandLine, conf)
-        linkOptions.parse()
-
-        println(linkFilterCommandLine)
-        println(linkOptions)
-
-        val filteredLinks = links.filter { linkOptions.asUrlPredicate().test(it) }
-        println(linkOptions.build())
-        println(linkOptions.getReport())
-
-        assertTrue(filteredLinks.size < links.size)
-    }
-
-    @Test
     fun testOptionHelp() {
         LoadOptions.helpList.forEach {
-            println(it)
+            printlnPro(it)
         }
     }
 
@@ -156,3 +116,4 @@ class TestPulsarOptions {
         private val linkFilterCommandLine2 = "-amin 5 -amax 50 -umin 50 -umax 200"
     }
 }
+

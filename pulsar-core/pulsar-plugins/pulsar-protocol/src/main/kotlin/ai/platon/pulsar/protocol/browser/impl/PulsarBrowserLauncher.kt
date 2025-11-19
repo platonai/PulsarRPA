@@ -29,14 +29,14 @@ open class PulsarBrowserLauncher: BrowserLauncher {
     private fun launchPulsarBrowser0(
         browserId: BrowserId, launcherOptions: LauncherOptions, launchOptions: ChromeOptions
     ): Browser {
-        val browserSettings = launcherOptions.browserSettings
+        val browserSettings = launcherOptions.settings
         val browser = launchPulsarBrowser1(browserId, launcherOptions, launchOptions)
-        
+
         if (!browserSettings.isGUI) {
             // Web drivers are in GUI mode, please close it manually
             // browser.registerShutdownHook()
         }
-        
+
         return browser
     }
 
@@ -48,7 +48,7 @@ open class PulsarBrowserLauncher: BrowserLauncher {
         try {
             val launcher = ChromeLauncher(userDataDir = browserId.userDataDir, options = launcherOptions)
             val chrome = launcher.launch(browserOptions)
-            return PulsarBrowser(browserId, chrome, launcherOptions.browserSettings, launcher)
+            return PulsarBrowser(browserId, chrome, launcherOptions.settings, launcher)
         } catch (e: ChromeLaunchException) {
             throw BrowserLaunchException("Failed to launch browser | $browserId", e)
         }

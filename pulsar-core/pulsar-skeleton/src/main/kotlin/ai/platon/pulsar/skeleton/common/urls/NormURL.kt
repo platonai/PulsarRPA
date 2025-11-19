@@ -28,7 +28,7 @@ open class NormURL constructor(
      * */
     val options: LoadOptions,
     /**
-     * The href is the raw url in the html without normalization, for example, an url with a timestamp
+     * The href is the raw url in the html without normalization, for example, a url with a timestamp
      * query parameter added.
      *
      * The href is the first choice to locate resources, because it's extracted from the HTML document

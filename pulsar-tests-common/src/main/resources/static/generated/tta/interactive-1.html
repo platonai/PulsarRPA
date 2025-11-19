@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interactive Single Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            line-height: 1.6;
+            background: #f9f9f9;
+            color: #333;
+        }
+        header, section {
+            padding: 2rem;
+            background: white;
+            margin: 1rem auto;
+            max-width: 800px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.05);
+        }
+        h2 {
+            margin-top: 0;
+        }
+        label {
+            display: block;
+            margin-top: 1rem;
+        }
+        input, select, button {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            font-size: 1rem;
+        }
+        .result {
+            margin-top: 1rem;
+            font-weight: bold;
+            color: #0066cc;
+        }
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Welcome to the Interactive Page</h1>
+    <p>This page demonstrates various interactive elements embedded in text across multiple sections.</p>
+</header>
+
+<section id="userInformation">
+    <h2>📋 User Information</h2>
+    <p>Enter your name below and see it reflected instantly.</p>
+    <label for="name">Your Name:</label>
+    <input type="text" id="name" placeholder="Type here..." />
+    <p class="result" id="nameOutput"></p>
+</section>
+
+<section id="preferences">
+    <h2>📊 Preferences</h2>
+    <p>Select your favorite color from the dropdown. The background will update accordingly.</p>
+    <label for="colorSelect">Favorite Color:</label>
+    <select id="colorSelect">
+        <option value="">-- Choose --</option>
+        <option value="lightblue">Light Blue</option>
+        <option value="lightgreen">Light Green</option>
+        <option value="lightyellow">Light Yellow</option>
+    </select>
+</section>
+
+<section>
+    <h2>🧮 Quick Calculator</h2>
+    <p>Try entering two numbers and click "Add".</p>
+    <label>First Number:</label>
+    <input type="number" id="num1" />
+    <label>Second Number:</label>
+    <input type="number" id="num2" />
+    <button onclick="addNumbers()">Add</button>
+    <p class="result" id="sumResult"></p>
+</section>
+
+<section>
+    <h2>🎯 Dynamic Toggle</h2>
+    <p>Click the toggle to reveal a hidden message.</p>
+    <button onclick="toggleMessage()">Toggle Message</button>
+    <p id="hiddenMessage" class="hidden">🎉 Surprise! You've discovered the hidden message.</p>
+</section>
+
+<script>
+    document.getElementById('name').addEventListener('input', function () {
+        const value = this.value.trim();
+        document.getElementById('nameOutput').textContent = value ? `Hello, ${value}!` : '';
+    });
+
+    document.getElementById('colorSelect').addEventListener('change', function () {
+        document.body.style.backgroundColor = this.value || '#f9f9f9';
+    });
+
+    function addNumbers() {
+        const a = parseFloat(document.getElementById('num1').value);
+        const b = parseFloat(document.getElementById('num2').value);
+        const sum = (!isNaN(a) && !isNaN(b)) ? a + b : 'Please enter valid numbers';
+        document.getElementById('sumResult').textContent = `Result: ${sum}`;
+    }
+
+    function toggleMessage() {
+        const msg = document.getElementById('hiddenMessage');
+        msg.classList.toggle('hidden');
+    }
+</script>
+
+</body>
+</html>

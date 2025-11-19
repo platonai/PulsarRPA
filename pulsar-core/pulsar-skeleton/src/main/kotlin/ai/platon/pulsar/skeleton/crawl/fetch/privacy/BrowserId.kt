@@ -25,9 +25,9 @@ data class BrowserId(
      * */
     val browserType: BrowserType get() = fingerprint.browserType
     /**
-     * The privacy agent of the browser.
+     * The browser profile of the browser.
      * */
-    val privacyAgent = PrivacyAgent(contextDir, fingerprint)
+    val profile = BrowserProfile(contextDir, fingerprint)
     /**
      * The creation time of the browser.
      * */
@@ -37,8 +37,8 @@ data class BrowserId(
      * */
     val userDataDir: Path
         get() = when {
-            privacyAgent.isSystemDefault -> AppPaths.SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER
-            privacyAgent.isPrototype -> PrivacyContext.PROTOTYPE_DATA_DIR
+            profile.isSystemDefault -> AppPaths.SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER
+            profile.isPrototype -> PrivacyContext.PROTOTYPE_DATA_DIR
             else -> contextDir.resolve(browserType.name)
         }
     /**
@@ -51,9 +51,9 @@ data class BrowserId(
     /**
      * The constructor of the browser id.
      *
-     * @param privacyAgent The privacy agent of the browser.
+     * @param profile The browser profile of the browser.
      * */
-    constructor(privacyAgent: PrivacyAgent): this(privacyAgent.contextDir, privacyAgent.fingerprint)
+    constructor(profile: BrowserProfile): this(profile.contextDir, profile.fingerprint)
     /**
      * The constructor of the browser id.
      *
@@ -67,16 +67,16 @@ data class BrowserId(
         fingerprint.setProxy(schema, hostPort, username, password)
     }
     fun setProxy(proxy: ProxyEntry) = fingerprint.setProxy(proxy)
-    
+
     fun unsetProxy() = fingerprint.unsetProxy()
-    
+
     override fun equals(other: Any?): Boolean {
-        return other is BrowserId && other.privacyAgent == privacyAgent
+        return other is BrowserId && other.profile == profile
     }
 
-    override fun hashCode() = privacyAgent.hashCode()
+    override fun hashCode() = profile.hashCode()
 
-    override fun compareTo(other: BrowserId) = privacyAgent.compareTo(other.privacyAgent)
+    override fun compareTo(other: BrowserId) = profile.compareTo(other.profile)
 
     override fun toString(): String {
         return "{$fingerprint, $contextDir}"
@@ -104,24 +104,24 @@ data class BrowserId(
          * */
         val RANDOM_TEMP get() = createRandomTemp()
 
-        fun createDefault() = BrowserId(PrivacyAgent.createDefault())
+        fun createDefault() = BrowserId(BrowserProfile.createDefault())
 
-        fun createDefault(browserType: BrowserType) = BrowserId(PrivacyAgent.createDefault(browserType))
+        fun createDefault(browserType: BrowserType) = BrowserId(BrowserProfile.createDefault(browserType))
 
-        fun createSystemDefault() = BrowserId(PrivacyAgent.createSystemDefault())
+        fun createSystemDefault() = BrowserId(BrowserProfile.createSystemDefault())
 
-        fun createSystemDefault(browserType: BrowserType) = BrowserId(PrivacyAgent.createSystemDefault(browserType))
+        fun createSystemDefault(browserType: BrowserType) = BrowserId(BrowserProfile.createSystemDefault(browserType))
 
-        fun createPrototype() = BrowserId(PrivacyAgent.createPrototype())
+        fun createPrototype() = BrowserId(BrowserProfile.createPrototype())
 
-        fun createPrototype(browserType: BrowserType) = BrowserId(PrivacyAgent.createPrototype(browserType))
+        fun createPrototype(browserType: BrowserType) = BrowserId(BrowserProfile.createPrototype(browserType))
 
-        fun createRandomTemp() = BrowserId(PrivacyAgent.createRandomTemp())
+        fun createRandomTemp() = BrowserId(BrowserProfile.createRandomTemp())
 
-        fun createRandomTemp(browserType: BrowserType) = BrowserId(PrivacyAgent.createRandomTemp(browserType))
+        fun createRandomTemp(browserType: BrowserType) = BrowserId(BrowserProfile.createRandomTemp(browserType))
 
-        fun createNextSequential() = BrowserId(PrivacyAgent.createNextSequential())
+        fun createNextSequential() = BrowserId(BrowserProfile.createNextSequential())
 
-        fun createNextSequential(browserType: BrowserType) = BrowserId(PrivacyAgent.createNextSequential(browserType))
+        fun createNextSequential(browserType: BrowserType) = BrowserId(BrowserProfile.createNextSequential(browserType))
     }
 }

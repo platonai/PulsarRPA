@@ -7,7 +7,14 @@
 
     <import resource="../proxy-context.xml"/>
 
+    <!-- Deprecated, Use BrowserSettings instead -->
     <bean id="webDriverSettings" class="ai.platon.pulsar.protocol.browser.driver.WebDriverSettings">
+        <constructor-arg ref="conf"/>
+    </bean>
+
+    <!-- Deprecated, use browserFactory instead -->
+    <bean id="webDriverFactory" class="ai.platon.pulsar.protocol.browser.driver.WebDriverFactory">
+        <constructor-arg ref="browserManager"/>
         <constructor-arg ref="conf"/>
     </bean>
 
@@ -16,8 +23,7 @@
         <constructor-arg ref="conf"/>
     </bean>
 
-    <bean id="webDriverFactory" class="ai.platon.pulsar.protocol.browser.driver.WebDriverFactory">
-        <constructor-arg ref="browserManager"/>
+    <bean id="browserFactory" class="ai.platon.pulsar.protocol.browser.impl.DefaultBrowserFactory">
         <constructor-arg ref="conf"/>
     </bean>
 
@@ -26,7 +32,7 @@
           destroy-method="close"
     >
         <constructor-arg ref="browserManager"/>
-        <constructor-arg ref="webDriverFactory"/>
+        <constructor-arg ref="browserFactory"/>
         <constructor-arg ref="conf"/>
         <constructor-arg name="suppressMetrics" value="false"/>
     </bean>
@@ -46,7 +52,6 @@
     </bean>
 
     <bean id="browserResponseHandler"
-          class="ai.platon.pulsar.protocol.browser.emulator.BrowserResponseHandler"
           factory-bean="browserResponseHandlerFactory"
           factory-method="getEventHandler"
     />

@@ -9,6 +9,7 @@ import ai.platon.pulsar.ql.common.types.ValueDom
 import ai.platon.pulsar.ql.common.types.ValueStringJSON
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import com.fasterxml.jackson.module.kotlin.readValue
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.atomic.AtomicInteger
 
 const val DATA_EXTRACTION_RULES_PLACEHOLDER = "{DATA_EXTRACTION_RULES}"
@@ -43,19 +44,19 @@ object LLMFunctions {
     @JvmStatic
     @UDFunction(description = "Get the LLM model name")
     fun modelName(): String {
-        return session.unmodifiedConfig["llm.name"] ?: "unknown"
+        return session.configuration["llm.name"] ?: "unknown"
     }
 
     @JvmStatic
     @UDFunction(description = "Chat with the LLM model")
     fun chat(prompt: String): String {
-        return session.chat(prompt).content
+        return runBlocking { session.chat(prompt).content }
     }
 
     @JvmStatic
     @UDFunction(description = "Chat with the LLM model")
     fun chat(dom: ValueDom, prompt: String): String {
-        return session.chat(dom.element, prompt).content
+        return runBlocking { session.chat(prompt, dom.element).content }
     }
 
     @JvmStatic
@@ -67,7 +68,7 @@ object LLMFunctions {
 
     internal fun extractInternal(domContent: String, dataExtractionRules: String): Map<String, String> {
         val prompt = LLM_UDF_EXTRACT_PROMPT.replace(DATA_EXTRACTION_RULES_PLACEHOLDER, dataExtractionRules)
-        val content = session.chat(domContent, prompt).content
+        val content = runBlocking { session.chat(prompt + "\n" + domContent).content }
 
         val jsonBlocks = JSONExtractor.extractJsonBlocks(content)
         if (jsonBlocks.isEmpty()) {

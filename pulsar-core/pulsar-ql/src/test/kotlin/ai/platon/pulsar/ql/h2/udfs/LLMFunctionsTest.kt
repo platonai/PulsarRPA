@@ -2,7 +2,9 @@ package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.ql.TestBase
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
+import ai.platon.pulsar.test.TestResourceUtil
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
 import kotlin.test.Ignore
@@ -10,7 +12,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class LLMFunctionsTest : TestBase() {
-    val url = "https://www.amazon.com/dp/B08PP5MSVB"
+    val url = TestResourceUtil.PRODUCT_DETAIL_URL
     val sql = """
   select
       llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
@@ -20,7 +22,7 @@ class LLMFunctionsTest : TestBase() {
 
     @BeforeEach
     fun setup() {
-        Assumptions.assumeTrue(ChatModelFactory.isModelConfigured(session.unmodifiedConfig))
+        Assumptions.assumeTrue(ChatModelFactory.isModelConfigured(session.configuration))
         ensurePage(url)
     }
 
@@ -60,7 +62,8 @@ class LLMFunctionsTest : TestBase() {
     fun `Test extract with field descriptions and convert to json`() {
         query(sql) {
             val json = ResultSetUtils.toJson(it, prettyPrinting = true)
-            println(json)
+            printlnPro(json)
         }
     }
 }
+

@@ -2,8 +2,6 @@ package ai.platon.pulsar.common.config
 
 import org.apache.commons.lang3.ArrayUtils
 import org.apache.commons.lang3.StringUtils
-import java.lang.Boolean.toString
-import java.lang.Integer.toString
 import java.time.Duration
 import java.time.Instant
 
@@ -16,20 +14,9 @@ import java.time.Instant
  */
 open class MutableConfig : ImmutableConfig {
 
-    constructor(): this(false)
+    constructor() : this(false)
 
-    constructor(profile: String): this(profile, true, listOf())
-
-    constructor(loadDefaults: Boolean): this(
-        System.getProperty(CapabilityTypes.PROFILE_KEY, ""),
-        loadDefaults, listOf()
-    )
-
-    constructor(
-        profile: String,
-        loadDefaults: Boolean,
-        resources: Iterable<String> = mutableSetOf()
-    ): super(profile, loadDefaults, resources)
+    constructor(loadDefaults: Boolean) : super(loadDefaults)
 
     constructor(conf: ImmutableConfig) : super(conf.unbox()) {
         this.environment = conf.environment
@@ -44,8 +31,14 @@ open class MutableConfig : ImmutableConfig {
      * @param name  property name.
      * @param value property value.
      */
-    operator fun set(name: String, value: String?) {
-        localFileConfiguration[name] = value
+    public override operator fun set(name: String, value: String?) {
+        super.set(name, value)
+    }
+
+    fun setIfUnset(name: String, value: String?) {
+        if (get(name) == null) {
+            set(name, value)
+        }
     }
 
     /**
@@ -106,24 +99,13 @@ open class MutableConfig : ImmutableConfig {
     }
 
     /**
-     * Set the array of string values for the `name` property as
-     * as comma delimited values.
-     *
-     * @param name   property name.
-     * @param values The values
-     */
-    fun setStrings(name: String?, vararg values: String) {
-        localFileConfiguration.setStrings(name!!, *values)
-    }
-
-    /**
      * Set the value of the `name` property to an `int`.
      *
      * @param name  property name.
      * @param value `int` value of the property.
      */
     fun setInt(name: String, value: Int) {
-        set(name, toString(value))
+        set(name, value.toString())
     }
 
     /**
@@ -163,7 +145,7 @@ open class MutableConfig : ImmutableConfig {
      * @param value `boolean` value of the property.
      */
     fun setBoolean(name: String, value: Boolean) {
-        set(name, toString(value))
+        set(name, value.toString())
     }
 
     /**
@@ -173,7 +155,7 @@ open class MutableConfig : ImmutableConfig {
      * @param value new value
      */
     fun setBooleanIfUnset(name: String, value: Boolean) {
-        unbox().setIfUnset(name, toString(value))
+        setIfUnset(name, value.toString())
     }
 
     /**
@@ -183,7 +165,7 @@ open class MutableConfig : ImmutableConfig {
      * @param name  property name
      * @param value new value
      * @param <T> a T object.
-    </T> */
+     */
     fun <T : Enum<T>> setEnum(name: String, value: T) {
         set(name, value.name)
     }
@@ -211,34 +193,24 @@ open class MutableConfig : ImmutableConfig {
     }
 
     /**
-     *
      * unset.
-     *
-     * @param name a [java.lang.String] object.
      */
-    fun unset(name: String) {
-        localFileConfiguration.unset(name)
+    public override fun unset(name: String) {
+        super.unset(name)
     }
 
     /**
-     *
      * clear.
      */
-    fun clear() {
-        localFileConfiguration.clear()
+    public override fun clear() {
+        super.clear()
     }
 
     /**
-     *
      * reset.
      */
-    fun reset(conf: LocalFileConfiguration) {
-        for ((key) in conf) {
-            unset(key)
-        }
-        for ((key, value) in conf) {
-            set(key, value)
-        }
+    public override fun reset(conf: MultiSourceProperties) {
+        super.reset(conf)
     }
 
     /**
@@ -247,7 +219,7 @@ open class MutableConfig : ImmutableConfig {
      *
      * @param names a [java.lang.String] object.
      */
-    fun merge(conf: LocalFileConfiguration, vararg names: String?) {
+    fun merge(conf: MultiSourceProperties, vararg names: String?) {
         for ((key, value) in conf) {
             if (names.isEmpty() || ArrayUtils.contains(names, key)) {
                 set(key, value)

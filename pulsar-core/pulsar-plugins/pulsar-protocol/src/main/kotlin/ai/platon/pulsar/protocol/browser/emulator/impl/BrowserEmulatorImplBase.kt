@@ -329,7 +329,7 @@ abstract class BrowserEmulatorImplBase(
     }
     
     private fun createSymbolicLink(path: Path, page: WebPage) {
-        // Create a symbolic link with an url based, unique, shorter but less readable file name,
+        // Create a symbolic link with a url based, unique, shorter but less readable file name,
         // we can generate and refer to this path at any place
         val link = AppPaths.uniqueSymbolicLinkForUri(page.url)
         try {

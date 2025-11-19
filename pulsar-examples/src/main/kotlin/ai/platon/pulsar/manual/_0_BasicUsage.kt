@@ -2,6 +2,7 @@ package ai.platon.pulsar.manual
 
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
+import ai.platon.pulsar.test.TestResourceUtil.Companion.PRODUCT_DETAIL_URL
 import com.google.gson.Gson
 import kotlinx.coroutines.runBlocking
 
@@ -11,12 +12,12 @@ import kotlinx.coroutines.runBlocking
 fun main() {
     // Use the default browser which has an isolated profile.
     // You can also try other browsers, such as system default, prototype, sequential, temporary, etc.
-    PulsarSettings().withDefaultBrowser()
+    PulsarSettings.withDefaultBrowser()
 
     // Create a pulsar session
     val session = PulsarContexts.createSession()
     // The main url we are playing with
-    val url = "https://www.amazon.com/dp/B08PP5MSVB"
+    val url = PRODUCT_DETAIL_URL
 
     // Open a page with the browser
     val page = session.open(url)
@@ -38,7 +39,7 @@ fun main() {
     // ...
 
     // Chat with the page
-    val response = session.chat("Tell me something about the page", document)
+    val response = runBlocking { session.chat("Tell me something about the page", document) }
     println(response)
 
     // Load the portal page and then load all links specified by `-outLink`.
@@ -52,16 +53,22 @@ fun main() {
     session.submitForOutPages(url, "-expires 1d -itemExpires 7d -outLink a[href~=/dp/] -topLinks 10")
 
     // Load, parse and scrape fields
-    val fields = session.scrape(url, "-expires 1d", "#centerCol",
-        listOf("#title", "#acrCustomerReviewText"))
+    val fields = session.scrape(
+        url, "-expires 1d", "#centerCol",
+        listOf("#title", "#acrCustomerReviewText")
+    )
 
     // Load, parse and scrape named fields
-    val fields2 = session.scrape(url, "-i 1d", "#centerCol",
-        mapOf("title" to "#title", "reviews" to "#acrCustomerReviewText"))
+    val fields2 = session.scrape(
+        url, "-i 1d", "#centerCol",
+        mapOf("title" to "#title", "reviews" to "#acrCustomerReviewText")
+    )
 
     // Load, parse and scrape named fields
-    val fields3 = session.scrapeOutPages(url, "-i 1d -ii 1d -outLink a[href~=/dp/] -topLink 10", "#centerCol",
-        mapOf("title" to "#title", "reviews" to "#acrCustomerReviewText"))
+    val fields3 = session.scrapeOutPages(
+        url, "-i 1d -ii 1d -outLink a[href~=/dp/] -topLink 10", "#centerCol",
+        mapOf("title" to "#title", "reviews" to "#acrCustomerReviewText")
+    )
 
     // Add `-parse` option to activate the parsing subsystem
     val page10 = session.load(url, "-parse -expires 1d")

@@ -1,8 +1,7 @@
 package ai.platon.pulsar.skeleton.session
 
+import ai.platon.pulsar.common.Runtimes
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.skeleton.common.options.LoadOptions
-import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 
 /**
@@ -10,16 +9,7 @@ import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
  * Copyright @ 2013-2023 Platon AI. All rights reserved
  */
 open class BasicPulsarSession(
-    /**
-     * The pulsar context
-     * */
     context: AbstractPulsarContext,
-    /**
-     * The session scope volatile config, every setting is supposed to be changed at any time and any place
-     * */
     sessionConfig: VolatileConfig,
-    /**
-     * The session id. Session id is expected to be set by the container, e.g. the h2 database runtime
-     * */
-    id: Int = generateNextId()
+    id: Long = generateNextInProcessId()
 ) : AbstractPulsarSession(context, sessionConfig, id)

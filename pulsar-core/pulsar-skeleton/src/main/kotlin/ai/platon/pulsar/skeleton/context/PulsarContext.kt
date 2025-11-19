@@ -1,17 +1,20 @@
 package ai.platon.pulsar.skeleton.context
 
 import ai.platon.pulsar.common.CheckState
-import ai.platon.pulsar.common.collect.UrlPool
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.persist.gora.generated.GWebPage
+import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.crawl.CrawlLoops
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserLaunchException
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.skeleton.session.PulsarSession
@@ -41,7 +44,7 @@ interface PulsarContext: java.lang.AutoCloseable {
     /**
      * An immutable config loaded from the config file at startup, and never changes
      * */
-    val unmodifiedConfig: ImmutableConfig
+    val configuration: ImmutableConfig
 
     /**
      * The url normalizer
@@ -54,15 +57,14 @@ interface PulsarContext: java.lang.AutoCloseable {
     val globalCache: GlobalCache
 
     /**
-     * The url pool to fetch
-     * */
-    @Deprecated("Use globalCache.urlPool instead", ReplaceWith("globalCache.urlPool"))
-    val crawlPool: UrlPool
-
-    /**
      * The main loops
      * */
     val crawlLoops: CrawlLoops
+
+    /**
+     * The browser factory.
+     * */
+    val browserFactory: BrowserFactory
 
     /**
      * Get a bean with the specified class, throws [BeansException] if the bean doesn't exist
@@ -86,6 +88,16 @@ interface PulsarContext: java.lang.AutoCloseable {
     fun getOrCreateSession(): PulsarSession
 
     /**
+     * Create a pulsar session
+     * */
+    fun createSession(settings: PulsarSettings): PulsarSession
+
+    /**
+     * Create a pulsar session
+     * */
+    fun getOrCreateSession(settings: PulsarSettings): PulsarSession
+
+    /**
      * Close a pulsar session
      * */
     fun closeSession(session: PulsarSession)
@@ -100,13 +112,37 @@ interface PulsarContext: java.lang.AutoCloseable {
     fun registerClosable(closable: java.lang.AutoCloseable, priority: Int = 0)
 
     /**
-     * Normalize an url, the url can be in one of the following forms:
+     * Launch the system default browser, the system default browser is your daily used browser.
+     * */
+    @Throws(BrowserLaunchException::class)
+    fun launchSystemDefaultBrowser(): Browser = browserFactory.launchSystemDefaultBrowser().also { registerClosable(it) }
+
+    /**
+     * Launch the default browser, notice, the default browser is not the one you used daily.
+     * */
+    @Throws(BrowserLaunchException::class)
+    fun launchDefaultBrowser(): Browser = browserFactory.launchDefaultBrowser().also { registerClosable(it) }
+
+    /**
+     * Launch the prototype browser, the prototype browser is a browser instance with default settings.
+     * */
+    @Throws(BrowserLaunchException::class)
+    fun launchPrototypeBrowser(): Browser = browserFactory.launchPrototypeBrowser().also { registerClosable(it) }
+
+    /**
+     * Launch a random temporary browser, the browser's user data dir is a random temporary dir.
+     * */
+    @Throws(BrowserLaunchException::class)
+    fun launchRandomTempBrowser(): Browser = browserFactory.launchRandomTempBrowser().also { registerClosable(it) }
+
+    /**
+     * Normalize a url, the url can be in one of the following forms:
      * 1. a normal url
      * 2. a configured url
      * 3. a base64 encoded url
      * 4. a base64 encoded configured url
      *
-     * An url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
+     * A url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
      * If both tailing arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
      * but default values in LoadOptions are ignored.
      *
@@ -118,13 +154,13 @@ interface PulsarContext: java.lang.AutoCloseable {
     fun normalize(url: String, options: LoadOptions, toItemOption: Boolean = false): NormURL
 
     /**
-     * Normalize an url, the url can be in one of the following forms:
+     * Normalize a url, the url can be in one of the following forms:
      * 1. a normal url
      * 2. a configured url
      * 3. a base64 encoded url
      * 4. a base64 encoded configured url
      *
-     * An url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
+     * A url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
      * If both tailing arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
      * but default values in LoadOptions are ignored.
      *
@@ -145,7 +181,7 @@ interface PulsarContext: java.lang.AutoCloseable {
      * */
     fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean = false): List<NormURL>
     /**
-     * Normalize an url.
+     * Normalize a url.
      *
      * If both url arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
      * but default values in LoadOptions are ignored.
@@ -157,13 +193,13 @@ interface PulsarContext: java.lang.AutoCloseable {
      * */
     fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean = false): NormURL
     /**
-     * Normalize an url, the url can be in one of the following forms:
+     * Normalize a url, the url can be in one of the following forms:
      * 1. a normal url
      * 2. a configured url
      * 3. a base64 encoded url
      * 4. a base64 encoded configured url
      *
-     * An url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
+     * A url can be configured by appending arguments to the url, and it also can be used with a LoadOptions,
      * If both tailing arguments and LoadOptions are present, the LoadOptions overrides the tailing arguments,
      * but default values in LoadOptions are ignored.
      *
@@ -272,6 +308,19 @@ interface PulsarContext: java.lang.AutoCloseable {
     suspend fun open(url: String, driver: WebDriver, options: LoadOptions): WebPage
 
     /**
+     * Attach a webpage to the given webdriver. This method is very like open(), but no url navigation.
+     *
+     * ```kotlin
+     * val url = context.normalize(driver.currentUrl())
+     * val page = context.attach(url, driver)
+     * ```
+     *
+     * @param normURL The NormURL of the page.
+     * @param driver The webdriver to attach to.
+     */
+    suspend fun capture(normURL: NormURL, driver: WebDriver): WebPage
+
+    /**
      * Load a url with specified options, see [LoadOptions] for all options
      *
      * @param url     The url followed by options
@@ -368,13 +417,13 @@ interface PulsarContext: java.lang.AutoCloseable {
      * Parse the WebPage using ParseComponent
      */
     fun parse(page: WebPage): FeaturedDocument?
-    
+
     /**
      * Chat with the AI model.
      *
      * @param prompt The prompt to chat
      */
-    fun chat(prompt: String): ModelResponse
+    suspend fun chat(prompt: String): ModelResponse
 
     /**
      * Chat with the AI model.
@@ -382,7 +431,7 @@ interface PulsarContext: java.lang.AutoCloseable {
      * @param userMessage The user message to chat
      * @param systemMessage The system message to chat
      * */
-    fun chat(userMessage: String, systemMessage: String): ModelResponse
+    suspend fun chat(userMessage: String, systemMessage: String): ModelResponse
 
     /**
      * Persist the webpage into the storage immediately.
