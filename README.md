@@ -24,11 +24,9 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
   - [LLM + X-SQL](#llm--x-sql)
   - [Native API](#native-api)
 - [Modules Overview](#modules-overview)
-- [Performance Benchmarks](#performance-benchmarks)
 - [Proxies](#-proxies---unblock-websites)
 - [Features](#features)
 - [Documentation](#-documents)
-- [Troubleshooting](#troubleshooting)
 - [Support & Community](#-support--community)
 <!-- /TOC -->
 
@@ -154,6 +152,28 @@ from load_and_select('https://www.amazon.com/dp/B08PP5MSVB', 'body');
 
 ### Native API
 High-speed parallel scraping & browser control examples are shown below (see advanced sections for more).
+
+```kotlin
+// Crawl arguments:
+// -refresh: always re-fetch the page
+// -dropContent: do not persist page content
+// -interactLevel fastest: prioritize speed over data completeness
+val args = "-refresh -dropContent -interactLevel fastest"
+
+// Block non-essential resources to improve load speed.
+// ⚠️ Be careful — blocking critical resources may break rendering or script execution.
+val blockingUrls = BlockRule().blockingUrls
+
+val resource = "seeds/amazon/best-sellers/leaf-categories.txt"
+val links =
+    LinkExtractors.fromResource(resource).asSequence().map { ListenableHyperlink(it, "", args = args) }.onEach {
+        it.eventHandlers.browseEventHandlers.onWillNavigate.addLast { page, driver ->
+            driver.addBlockedURLs(blockingUrls)
+        }
+    }.toList()
+
+session.submitAll(links)
+```
 
 ---
 
