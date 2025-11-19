@@ -19,7 +19,7 @@ go to https://moonshotai.github.io/Kimi-K2/thinking.html , extract content and g
 go to https://moonshotai.github.io/Kimi-K2/thinking.html , extract content and give me a summary
 go to https://news.ycombinator.com/news , search for browser and read top 5 articles and give me a summary
 go to https://news.ycombinator.com/news , open the 4-th articles in new tab
-        """.split("\n").filter { it.isNotBlank() }
+        """.lines().filter { it.isNotBlank() }
 
         val problem = problems[0]
         agent.resolve(problem)

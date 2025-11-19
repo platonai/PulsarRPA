@@ -1,4 +1,4 @@
-package ai.platon.pulsar.examples.todo
+package ai.platon.pulsar.examples.agent
 
 import ai.platon.pulsar.agentic.context.AgenticContexts
 import ai.platon.pulsar.common.browser.BrowserProfileMode
@@ -9,8 +9,7 @@ import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 
 class ParallelAgents {
-    val profileMode = BrowserProfileMode.TEMPORARY
-    val agents = IntRange(1, 5).map { AgenticContexts.createAgent(profileMode = profileMode) }
+    val agents = IntRange(1, 5).map { AgenticContexts.createAgent(profileMode = BrowserProfileMode.TEMPORARY) }
     val scope = CoroutineScope(Dispatchers.Default)
 
     suspend fun run() {
