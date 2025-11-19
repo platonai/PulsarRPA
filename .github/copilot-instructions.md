@@ -2,6 +2,44 @@
 
 —
 
+## 0) 快速开始
+- 克隆后首次构建（自动选择 OS 的最佳工具，优先 Maven Wrapper 与仓库脚本）
+  - Linux/macOS:
+    ```
+    chmod +x mvnw
+    ./mvnw -q -DskipTests
+    ```
+  - Windows (cmd):
+    ```
+    mvnw.cmd -q -DskipTests
+    ```
+- 仅验证核心模块单测：
+  - Linux/macOS:
+    ```
+    ./mvnw -pl pulsar-core -am test -Dsurefire.failIfNoSpecifiedTests=false
+    ```
+  - Windows (cmd):
+    ```
+    mvnw.cmd -pl pulsar-core -am test -D"surefire.failIfNoSpecifiedTests=false"
+    ```
+- 推荐使用仓库脚本（会自动判断平台）：
+  - Linux/macOS: `bin/build.sh [-test]`
+  - Windows (PowerShell): `bin/build.ps1 [-test]`
+
+> 环境探测示例（跨平台调用 Maven Wrapper）
+- bash/zsh:
+  ```bash
+  if [[ "$OS" == "Windows_NT" ]]; then
+    cmd /c mvnw.cmd -q -DskipTests
+  else
+    ./mvnw -q -DskipTests
+  fi
+  ```
+- PowerShell:
+  ```powershell
+  if ($IsWindows) { .\mvnw.cmd -q -D"skipTests" } else { ./mvnw -q -DskipTests }
+  ```
+
 ## 1) 概览
 - 仓库：多模块 Maven（使用根目录 `./mvnw`/`mvnw.cmd`）
 - 语言：Kotlin 优先，兼容 Java
@@ -18,6 +56,7 @@
     - Windows：`bin/build.ps1 [-test]`
     - Linux/macOS：`bin/build.sh [-test]`
 - 提示：Windows 下 -D 参数加引号，例如：`-D"dot.sperated.parameter=quoted"`
+- 说明：优先使用 Maven Wrapper（./mvnw / mvnw.cmd），必要时按平台自动选择（见“快速开始”的探测示例）。
 
 ## 3) 项目要点
 - 核心 API：`WebDriver`, `PulsarSession` -> `AgenticSession`
@@ -47,6 +86,21 @@
 - Kotlin：不可变 `data class`、显式返回类型、空安全（`require/check`/`?:`）
 - Java 互操作：不强制“Kotlin 化”既有 Java 代码；共享常量可用 Kotlin `object` 或 Java `final class`
 - 公共 API 要有 KDoc：摘要/参数/返回/异常
+> KDoc 模板示例：
+```kotlin
+/**
+ * Loads a page and returns its parsed snapshot.
+ *
+ * @param url The target URL to load.
+ * @param options Load options parsed from CLI-like URL params.
+ * @return Parsed page snapshot.
+ * @throws IllegalArgumentException if url is blank.
+ */
+fun load(url: String, options: LoadOptions): PageSnapshot {
+    require(url.isNotBlank()) { "url must not be blank" }
+    // ...existing code...
+}
+```
 
 ## 7) 测试策略
 - 位置：各模块 `src/test`，共享在 `pulsar-tests-common`，重型场景在 `pulsar-tests`
@@ -73,6 +127,13 @@
 - 浏览器/CDP：优先使用 `pulsar-tests` 重型套件复现
 - 代理与隐私上下文：保持处理程序幂等、线程安全
 - 日志定位：遵循结构化字段，便于筛选
+
+> 常见问题速查
+- Linux/macOS：`mvnw` 无执行权限 → `chmod +x mvnw`
+- JDK 版本不匹配 → 确保使用仓库要求版本（优先本地 `JAVA_HOME` 指向）
+- Windows 参数转义 → `-D"key.with.dots=value"`（为点分参数加引号）
+- 端口占用（默认 8182）→ 覆盖配置 `server.port` 或使用 `application-local.properties`
+- 日志风暴（CDP 重试）→ 复用现有重试工具并调低日志级别，勿在循环内拼接字符串
 
 —
 
