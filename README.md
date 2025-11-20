@@ -15,18 +15,17 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
         - [✨ Key Capabilities](#-key-capabilities)
     - [🎥 Demo Videos](#-demo-videos)
     - [🚀 Quick Start](#-quick-start)
-    - [Usage Examples](#usage-examples)
+    - [💡 Usage Examples](#-usage-examples)
         - [Browser Agents](#browser-agents)
-        - [Workflow](#workflow)
+        - [Workflow Automation](#workflow-automation)
         - [LLM + X-SQL](#llm--x-sql)
-        - [Native API](#native-api)
-    - [Modules Overview](#modules-overview)
-    - [📜 Documents](#-documents)
+        - [High-Speed Parallel Processing](#high-speed-parallel-processing)
+    - [📦 Modules Overview](#-modules-overview)
+    - [📜 Documentation](#-documentation)
     - [🔧 Proxies - Unblock Websites](#-proxies---unblock-websites)
-    - [Features](#features)
+    - [✨ Features](#-features)
     - [🤝 Support & Community](#-support--community)
 <!-- /TOC -->
-
 
 ## 🌟 Introduction
 
@@ -36,7 +35,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 * 👽 **Browser Agents** — Autonomous agents that reason, plan, and act within the browser.
 * 🤖 **Browser Automation** — High-performance automation for workflows, navigation, and data extraction.
-* ⚡ **Extreme Performance** — Fully coroutine-safe; supports 100k+ page visits per machine per day.
+* ⚡  **Extreme Performance** — Fully coroutine-safe; supports 100k+ page visits per machine per day.
 * 🧠 **Web Understanding** — Deep understanding of dynamic, script-driven, and interactive web pages.
 * 📊 **Data Extraction APIs** — Robust APIs for extracting structured data with minimal effort.
 
@@ -54,14 +53,39 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 ## 🚀 Quick Start
 
-1. Edit [application.properties](application.properties) to add your LLM API key
-2. Run any examples in module `pulsar-examples`
+**Prerequisites**: Java 17+ and Maven 3.6+
+
+1. **Clone the repository**
+   ```shell
+   git clone https://github.com/platonai/browser4.git
+   cd browser4
+   ```
+
+2. **Configure your LLM API key**
+   Edit [application.properties](application.properties) and add your API key.
+
+3. **Build the project** (Windows)
+   ```cmd
+   mvnw.cmd -q -DskipTests
+   ```
+   Or on Linux/macOS:
+   ```bash
+   ./mvnw -q -DskipTests
+   ```
+
+4. **Run examples**
+   Explore and run examples in the `pulsar-examples` module to see Browser4 in action.
+
+For Docker deployment, see our [Docker Hub repository](https://hub.docker.com/r/galaxyeye88/browser4).
 
 ---
 
-## Usage Examples
+## 💡 Usage Examples
 
 ### Browser Agents
+
+Autonomous agents that understand natural language instructions and execute complex browser workflows.
+
 ```kotlin
 val agent = AgenticContexts.getOrCreateAgent()
 
@@ -75,32 +99,47 @@ val problem = """
 agent.resolve(problem)
 ```
 
-### Workflow
-Low-level browser automation & data extractions.
+### Workflow Automation
 
-1. direct and full CDP control
-2. precise element interactions
-3. fast data extractions
+Low-level browser automation & data extraction with fine-grained control.
+
+**Features:**
+- Direct and full Chrome DevTools Protocol (CDP) control
+- Precise element interactions (click, scroll, input)
+- Fast data extraction using CSS selectors/XPath
 
 ```kotlin
-    val session = AgenticContexts.getOrCreateSession()
-    val agent = session.companionAgent
-    val driver = session.getOrCreateBoundDriver()
-    var page = session.open(url)
-    var document = session.parse(page)
-    var fields = session.extract(document, mapOf("title" to "#title"))
-    var result = agent.act("search for 'browser'")
-    var content = driver.selectFirstTextOrNull("body")
-    content = driver.selectFirstTextOrNull("body")
-    result = agent.resolve("search for 'web scraping', read each result and give me a summary")
-    page = session.capture(driver)
-    document = session.parse(page)
-    fields = session.extract(document, mapOf("title" to "#title"))
+val session = AgenticContexts.getOrCreateSession()
+val agent = session.companionAgent
+val driver = session.getOrCreateBoundDriver()
+
+// Open and parse a page
+var page = session.open(url)
+var document = session.parse(page)
+var fields = session.extract(document, mapOf("title" to "#title"))
+
+// Interact with the page
+var result = agent.act("scroll to the comment section")
+var content = driver.selectFirstTextOrNull("body")
+
+// Complex agent tasks
+result = agent.resolve("Search for 'smart phone', read the first four products, and give me a comparison.")
+
+// Capture and extract from current state
+page = session.capture(driver)
+document = session.parse(page)
+fields = session.extract(document, mapOf("ratings" to "#ratings"))
 ```
 
-### LLM + X-SQL (10x entities & 100x fields)
-X-SQL is suited for high-complexity data-extraction pipelines, including cases with
-multiple-dozen entities and several hundred fields per entity.
+### LLM + X-SQL
+
+Ideal for high-complexity data-extraction pipelines with multiple-dozen entities and several hundred fields per entity.
+
+**Benefits:**
+- Extract 10x more entities and 100x more fields compared to traditional methods
+- Combine LLM intelligence with precise CSS selectors/XPath
+- SQL-like syntax for familiar data queries
+
 ```kotlin
 val context = AgenticContexts.create()
 val sql = """
@@ -117,8 +156,15 @@ val rs = context.executeQuery(sql)
 println(ResultSetFormatter(rs, withHeader = true))
 ```
 
-### High-speed parallel browser control (100k+ page visits per machine per day)
-High-speed parallel scraping & browser control examples are shown below (see advanced sections for more).
+### High-Speed Parallel Processing
+
+Achieve extreme throughput with parallel browser control and smart resource optimization.
+
+**Performance:**
+- 100,000+ page visits per machine per day
+- Concurrent session management
+- Resource blocking for faster page loads
+
 ```kotlin
 val args = "-refresh -dropContent -interactLevel fastest"
 val blockingUrls = listOf("*.png", "*.jpg")
@@ -134,25 +180,24 @@ session.submitAll(links)
 ```
 ---
 
-## Modules Overview
-| Module | Description                                             |
-|--------|----------------------------------------------------------------|
+## 📦 Modules Overview
+
+| Module | Description |
+|--------|-------------|
 | `pulsar-core` | Core engine: sessions, scheduling, DOM, browser control |
-| `pulsar-rest` | Spring Boot REST layer & command endpoints              |
-| `pulsar-client` | Client SDK / CLI utilities                             |
-| `browser4-spa` | Browser4 API for agents with Single Page Application    |
-| `browser4-crawler` | Browser4 API for crawler & product packaging        |
-| `pulsar-tests` | Heavy integration & scenario tests                      |
-| `pulsar-tests-common` | Shared test utilities & fixtures                 |
+| `pulsar-rest` | Spring Boot REST layer & command endpoints |
+| `pulsar-client` | Client SDK / CLI utilities |
+| `browser4-spa` | Single Page Application for browser agents |
+| `browser4-agents` | Agent & crawler orchestration with product packaging |
+| `pulsar-tests` | Heavy integration & scenario tests |
+| `pulsar-tests-common` | Shared test utilities & fixtures |
 
 ---
 
-## 📜 Documents
+## 📜 Documentation
 
-* 📖 [REST API Examples](docs/rest-api-examples.md)
-* 🛠️ [LLM Configuration Guide](docs/config/llm/llm-config.md)
 * 🛠️ [Configuration Guide](docs/config.md)
-* 📚 [Build from Source](docs/development/build.md)
+* 📚 [Build from Source](docs/build.md)
 * 🧠 [Expert Guide](docs/advanced-guides.md)
 
 ---
@@ -174,7 +219,7 @@ Ask your proxy provider for such a URL.
 
 ---
 
-## Features
+## ✨ Features
 
 ### AI & Agents
 - Problem-solving autonomous browser agents
@@ -227,4 +272,4 @@ Ask your proxy provider for such a URL.
 
 ---
 
-> For Chinese documentation see [简体中文 README](README-CN.md).
+> For Chinese documentation, refer to [简体中文 README](README-CN.md).
