@@ -132,7 +132,7 @@ class Browser4Application {
 fun main(args: Array<String>) {
     runApplication<Browser4Application>(*args) {
         addInitializers(PulsarContextInitializer())
-        setAdditionalProfiles("crawler")
+        setAdditionalProfiles("agents", "private")
         setLogStartupInfo(true)
     }
 }

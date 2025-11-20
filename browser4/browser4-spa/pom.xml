@@ -19,7 +19,7 @@
     </parent>
 
     <artifactId>browser4-spa</artifactId>
-    <name>Pulsar Browser4</name>
+    <name>Browser4 SPA</name>
 
     <dependencies>
         <dependency>
