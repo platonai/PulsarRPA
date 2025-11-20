@@ -15,15 +15,15 @@
         - [✨ 核心能力](#-核心能力)
     - [🎥 演示视频](#-演示视频)
     - [🚀 快速开始](#-快速开始)
-    - [使用示例](#使用示例)
+    - [💡 使用示例](#-使用示例)
         - [浏览器智能体](#浏览器智能体)
-        - [工作流](#工作流)
+        - [工作流自动化](#工作流自动化)
         - [LLM + X-SQL](#llm--x-sql)
-        - [原生 API](#原生-api)
-    - [模块概览](#模块概览)
+        - [高速并行处理](#高速并行处理)
+    - [📦 模块概览](#-模块概览)
     - [📜 文档](#-文档)
     - [🔧 代理配置 - 解锁网站访问](#-代理配置---解锁网站访问)
-    - [功能特性](#功能特性)
+    - [✨ 功能特性](#-功能特性)
     - [🤝 支持与社区](#-支持与社区)
 <!-- /TOC -->
 
@@ -53,14 +53,39 @@
 
 ## 🚀 快速开始
 
-1. 编辑 [application.properties](application.properties) 添加你的 LLM API 密钥
-2. 运行 `pulsar-examples` 模块中的任意示例
+**前置要求**：Java 17+ 和 Maven 3.6+
+
+1. **克隆仓库**
+   ```shell
+   git clone https://github.com/platonai/browser4.git
+   cd browser4
+   ```
+
+2. **配置 LLM API 密钥**
+   编辑 [application.properties](application.properties) 并添加你的 API 密钥。
+
+3. **构建项目**（Windows）
+   ```cmd
+   mvnw.cmd -q -DskipTests
+   ```
+   或者在 Linux/macOS 上：
+   ```bash
+   ./mvnw -q -DskipTests
+   ```
+
+4. **运行示例**
+   浏览并运行 `pulsar-examples` 模块中的示例，体验 Browser4 的实际效果。
+
+Docker 部署请查看我们的 [Docker Hub 仓库](https://hub.docker.com/r/galaxyeye88/browser4)。
 
 ---
 
-## 使用示例
+## 💡 使用示例
 
 ### 浏览器智能体
+
+能够理解自然语言指令并执行复杂浏览器工作流的自主智能体。
+
 ```kotlin
 val agent = AgenticContexts.getOrCreateAgent()
 
@@ -74,30 +99,47 @@ val problem = """
 agent.resolve(problem)
 ```
 
-### 工作流
-底层浏览器自动化与数据提取。
+### 工作流自动化
 
-1. 直接和完整的 CDP 控制
-2. 精确的元素交互
-3. 快速数据提取
+底层浏览器自动化和数据提取，提供细粒度控制。
+
+**功能特性:**
+- 直接和完整的 Chrome DevTools Protocol (CDP) 控制
+- 精确的元素交互（点击、滚动、输入）
+- 使用 CSS 选择器/XPath 快速提取数据
 
 ```kotlin
-    val session = AgenticContexts.getOrCreateSession()
-    val agent = session.companionAgent
-    val driver = session.getOrCreateBoundDriver()
-    var page = session.open(url)
-    var document = session.parse(page)
-    var fields = session.extract(document, mapOf("title" to "#title"))
-    var result = agent.act("scroll to the comment section")
-    var content = driver.selectFirstTextOrNull("body")
-    result = agent.resolve("Search for “smart phone”, read the first four products, and give me a comparison.")
-    page = session.capture(driver)
-    document = session.parse(page)
-    fields = session.extract(document, mapOf("ratings" to "#ratings"))
+val session = AgenticContexts.getOrCreateSession()
+val agent = session.companionAgent
+val driver = session.getOrCreateBoundDriver()
+
+// 打开并解析页面
+var page = session.open(url)
+var document = session.parse(page)
+var fields = session.extract(document, mapOf("title" to "#title"))
+
+// 与页面交互
+var result = agent.act("scroll to the comment section")
+var content = driver.selectFirstTextOrNull("body")
+
+// 复杂的智能体任务
+result = agent.resolve("Search for 'smart phone', read the first four products, and give me a comparison.")
+
+// 捕获并提取当前状态
+page = session.capture(driver)
+document = session.parse(page)
+fields = session.extract(document, mapOf("ratings" to "#ratings"))
 ```
 
-### LLM + X-SQL（10倍实体数 & 100倍字段数）
-X-SQL 适用于高复杂度数据提取管道，包括包含数十个实体和每个实体数百个字段的情况。
+### LLM + X-SQL
+
+适用于具有多个实体和每个实体数百个字段的高复杂度数据提取管道。
+
+**优势:**
+- 与传统方法相比，提取 10 倍的实体数和 100 倍的字段数
+- 结合 LLM 智能与精确的 CSS 选择器/XPath
+- 类 SQL 语法，易于理解和使用
+
 ```kotlin
 val context = AgenticContexts.create()
 val sql = """
@@ -114,8 +156,15 @@ val rs = context.executeQuery(sql)
 println(ResultSetFormatter(rs, withHeader = true))
 ```
 
-### 高速并行浏览器控制（每台机器每天访问 100k+ 页面）
-高速并行抓取和浏览器控制示例如下（更多请参见高级部分）。
+### 高速并行处理
+
+通过并行浏览器控制和智能资源优化实现极致吞吐量。
+
+**性能:**
+- 每台机器每天访问 100,000+ 页面
+- 并发会话管理
+- 资源阻断以加快页面加载速度
+
 ```kotlin
 val args = "-refresh -dropContent -interactLevel fastest"
 val blockingUrls = listOf("*.png", "*.jpg")
@@ -131,16 +180,17 @@ session.submitAll(links)
 ```
 ---
 
-## 模块概览
-| 模块                 | 说明                      |
-|--------------------|-------------------------|
-| `pulsar-core`      | 核心引擎：会话、调度、DOM、浏览器控制    |
-| `pulsar-examples`  | 丰富的案例                   |
-| `pulsar-rest`      | Spring Boot REST 层和命令端点 |
-| `pulsar-client`    | 客户端 SDK / CLI 工具        |
-| `browser4-spa`     | 面向单页应用的智能体浏览器 API       |
-| `browser4-agents` | 面向多智能体和工作流的 API         |
-| `pulsar-tests`     | 重型集成和场景测试               |
+## 📦 模块概览
+
+| 模块 | 说明 |
+|--------|-------------|
+| `pulsar-core` | 核心引擎：会话、调度、DOM、浏览器控制 |
+| `pulsar-rest` | Spring Boot REST 层和命令端点 |
+| `pulsar-client` | 客户端 SDK / CLI 工具 |
+| `browser4-spa` | 用于浏览器智能体的单页应用 |
+| `browser4-agents` | 智能体和爬虫编排及产品打包 |
+| `pulsar-tests` | 重型集成和场景测试 |
+| `pulsar-tests-common` | 共享测试工具和固件 |
 
 ---
 
@@ -169,7 +219,7 @@ export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 
 ---
 
-## 功能特性
+## ✨ 功能特性
 
 ### AI 与智能体
 - 解决问题的自主浏览器智能体
