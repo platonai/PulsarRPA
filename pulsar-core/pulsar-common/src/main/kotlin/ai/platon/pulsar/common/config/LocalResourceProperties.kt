@@ -1,11 +1,7 @@
 package ai.platon.pulsar.common.config
 
-import ai.platon.pulsar.common.AppPaths
-import ai.platon.pulsar.common.PropertyNameStyle
-import ai.platon.pulsar.common.ResourceLoader
-import ai.platon.pulsar.common.SParser
+import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.code.ProjectUtils
-import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.URLUtils
 import com.ctc.wstx.io.StreamBootstrapper
 import com.ctc.wstx.io.SystemId
@@ -21,15 +17,11 @@ import java.net.URISyntaxException
 import java.net.URL
 import java.nio.file.Files
 import java.nio.file.Path
-import java.util.ArrayList
-import java.util.Properties
+import java.nio.file.Paths
+import java.util.*
 import javax.xml.stream.XMLStreamConstants
 import javax.xml.stream.XMLStreamException
 import javax.xml.stream.XMLStreamReader
-import kotlin.collections.iterator
-import kotlin.io.path.isReadable
-import kotlin.io.path.isRegularFile
-import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.notExists
 import kotlin.io.path.reader
 
@@ -65,11 +57,11 @@ class LocalResourceProperties(
         // (e.g., CLI tool, unit test, or native launch),
         // we can still load properties from these locations.
         // https://github.com/platonai/browser4/issues/110
+        val pwd = Paths.get(".")
         val projectRoot = ProjectUtils.findProjectRootDir()
-        if (projectRoot != null) {
-            // TODO: search classpath
-            loadExternalProperties(projectRoot)
-            loadExternalProperties(projectRoot.resolve("config"))
+        listOfNotNull(pwd, projectRoot).forEach {
+            loadExternalProperties(it)
+            loadExternalProperties(it.resolve("config"))
         }
 
         if (Files.isDirectory(AppPaths.CONFIG_ENABLED_DIR)) {
