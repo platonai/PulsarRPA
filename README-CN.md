@@ -29,15 +29,15 @@
 
 ## 🌟 项目介绍
 
-💖 **Browser4: 为 AI 而生的超快协程安全浏览器** 💖
+💖 **Browser4: 为 AI 自动化打造的闪电般快速、协程安全的浏览器引擎** 💖
 
-### ✨ 核心能力:
+### ✨ 核心能力
 
-- 🤖 **浏览器智能体** – 让智能体思考并解决问题。
-- 🤖 **浏览器自动化** – 在工作流中自动化浏览器并提取数据。
-- ⚡ **超快速** – 协程安全的浏览器自动化并发，爬虫级别的抓取性能。
-- 🧠 **网页理解** – 深度理解动态网页内容。
-- 📊 **数据提取 API** – 强大的结构化数据轻松提取工具。
+* 👽 **浏览器智能体** — 能够在浏览器中推理、规划和行动的自主智能体。
+* 🤖 **浏览器自动化** — 用于工作流、导航和数据提取的高性能自动化。
+* ⚡ **极致性能** — 完全协程安全；支持每台机器每天访问 100k+ 页面。
+* 🧠 **网页理解** — 深度理解动态、脚本驱动和交互式网页。
+* 📊 **数据提取 API** — 强大的 API，轻松提取结构化数据。
 
 ---
 
@@ -53,59 +53,8 @@
 
 ## 🚀 快速开始
 
-### 运行 JAR 文件
-
-#### 下载
-```shell
-curl -L -o Browser4.jar https://github.com/platonai/browser4/releases/download/v4.1.0-rc.1/Browser4.jar
-```
-（如需要，请将 `v4.1.0-rc.1` 替换为最新版本。）
-
-#### 运行
-```shell
-# 确保设置了 LLM API 密钥。也支持 VOLCENGINE_API_KEY / OPENAI_API_KEY
-echo $DEEPSEEK_API_KEY
-java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar Browser4.jar
-```
-> Windows PowerShell: `$env:DEEPSEEK_API_KEY`（环境变量）vs `$DEEPSEEK_API_KEY`（脚本变量）。
-
-### 使用 Docker 运行
-```shell
-# 确保设置了 LLM API 密钥
-echo $DEEPSEEK_API_KEY
-docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/browser4:latest
-```
-> 添加其他支持的密钥，如 `-e OPENAI_API_KEY=...` 等。
-
-### 从源码构建
-参考 [从源码构建](docs/development/build.md)。快速命令：
-
-Windows (CMD):
-```shell
-mvnw.cmd -q -DskipTests
-mvnw.cmd -pl browser4 -am test -D"surefire.failIfNoSpecifiedTests=false"
-```
-Linux/macOS:
-```shell
-./mvnw -q -DskipTests
-./mvnw -pl browser4 -am test -Dsurefire.failIfNoSpecifiedTests=false
-```
-构建后运行应用：
-```shell
-java -jar browser4/browser4-crawler/target/Browser4.jar
-```
-（默认端口：8182）
-
-### 环境变量
-| 变量名 | 用途 |
-|------|---------|
-| `DEEPSEEK_API_KEY` | AI 功能的主要 LLM 密钥 |
-| `OPENAI_API_KEY` | 备选 LLM 提供商密钥 |
-| `VOLCENGINE_API_KEY` | 备选 LLM 提供商密钥 |
-| `PROXY_ROTATION_URL` | 返回新鲜轮换代理 IP 的端点 |
-| `JAVA_OPTS` | （可选）额外的 JVM 选项（内存、GC 调优） |
-
-> 必须至少设置一个 LLM 密钥，否则 AI 功能将被禁用。
+1. 编辑 [application.properties](application.properties) 添加你的 LLM API 密钥
+2. 运行 `pulsar-examples` 模块中的任意示例
 
 ---
 
@@ -113,81 +62,92 @@ java -jar browser4/browser4-crawler/target/Browser4.jar
 
 ### 浏览器智能体
 ```kotlin
-val problems = """
-    go to amazon.com, search for pens to draw on whiteboards, compare the first 4 ones, write the result to a markdown file.
-    打开百度查找厦门岛旅游景点，给出一个总结
-    go to https://news.ycombinator.com/news , read top 3 articles and give me a summary
-    """.lines().filter { it.isNotBlank() }
+val agent = AgenticContexts.getOrCreateAgent()
 
-problems.forEach { agent.resolve(it) }
+val problem = """
+    1. go to amazon.com
+    2. search for pens to draw on whiteboards
+    3. compare the first 4 ones
+    4. write the result to a markdown file
+    """
+
+agent.resolve(problem)
 ```
 
 ### 工作流
-使用自由文本驱动浏览器：
-```text
-Go to https://www.amazon.com/dp/B08PP5MSVB
+底层浏览器自动化与数据提取。
 
-After browser launch: clear browser cookies.
-After page load: scroll to the middle.
+1. 直接和完整的 CDP 控制
+2. 精确的元素交互
+3. 快速数据提取
 
-Summarize the product.
-Extract: product name, price, ratings.
-Find all links containing /dp/.
+```kotlin
+    val session = AgenticContexts.getOrCreateSession()
+    val agent = session.companionAgent
+    val driver = session.getOrCreateBoundDriver()
+    var page = session.open(url)
+    var document = session.parse(page)
+    var fields = session.extract(document, mapOf("title" to "#title"))
+    var result = agent.act("scroll to the comment section")
+    var content = driver.selectFirstTextOrNull("body")
+    result = agent.resolve("Search for “smart phone”, read the first four products, and give me a comparison.")
+    page = session.capture(driver)
+    document = session.parse(page)
+    fields = session.extract(document, mapOf("ratings" to "#ratings"))
 ```
 
-### LLM + X-SQL
-采用X-SQL处理复杂数据提取任务：
-```shell
-curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
+### LLM + X-SQL（10倍实体数 & 100倍字段数）
+X-SQL 适用于高复杂度数据提取管道，包括包含数十个实体和每个实体数百个字段的情况。
+```kotlin
+val context = AgenticContexts.create()
+val sql = """
 select
   llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
-  dom_base_uri(dom) as url,
   dom_first_text(dom, '#productTitle') as title,
-  dom_first_slim_html(dom, 'img:expr(width > 400)') as img
-from load_and_select('https://www.amazon.com/dp/B08PP5MSVB', 'body');
-"
+  dom_first_text(dom, '#bylineInfo') as brand,
+  dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
+  dom_first_text(dom, '#acrCustomerReviewText') as ratings,
+  str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
+from load_and_select('https://www.amazon.com/dp/B08PP5MSVB -i 1s -njr 3', 'body');
+"""
+val rs = context.executeQuery(sql)
+println(ResultSetFormatter(rs, withHeader = true))
 ```
 
-### 原生 API
+### 高速并行浏览器控制（每台机器每天访问 100k+ 页面）
 高速并行抓取和浏览器控制示例如下（更多请参见高级部分）。
 ```kotlin
 val args = "-refresh -dropContent -interactLevel fastest"
 val blockingUrls = listOf("*.png", "*.jpg")
-val links =
-    LinkExtractors.fromResource("urls.txt").asSequence().map { ListenableHyperlink(it, "", args = args) }.onEach {
+val links = LinkExtractors.fromResource("urls.txt")
+    .map { ListenableHyperlink(it, "", args = args) }
+    .onEach {
         it.eventHandlers.browseEventHandlers.onWillNavigate.addLast { page, driver ->
             driver.addBlockedURLs(blockingUrls)
         }
     }
 
-session.submitAll(links.toList())
+session.submitAll(links)
 ```
 ---
 
-### Native API
-High-speed parallel scraping & browser control examples are shown below (see advanced sections for more).
-
----
-
 ## 模块概览
-| 模块 | 说明 |
-|--------|-------------|
-| `pulsar-core` | 核心引擎：会话、调度、DOM、浏览器控制 |
-| `pulsar-rest` | Spring Boot REST 层和命令端点 |
-| `pulsar-client` | 客户端 SDK / CLI 工具 |
-| `browser4-spa` | 带单页应用的智能体 API |
-| `browser4-crawler` | 用于爬虫和产品打包的 Browser4 API |
-| `pulsar-tests` | 重型集成和场景测试 |
-| `pulsar-tests-common` | 共享测试工具和装置 |
+| 模块                 | 说明                      |
+|--------------------|-------------------------|
+| `pulsar-core`      | 核心引擎：会话、调度、DOM、浏览器控制    |
+| `pulsar-examples`  | 丰富的案例                   |
+| `pulsar-rest`      | Spring Boot REST 层和命令端点 |
+| `pulsar-client`    | 客户端 SDK / CLI 工具        |
+| `browser4-spa`     | 面向单页应用的智能体浏览器 API       |
+| `browser4-agents` | 面向多智能体和工作流的 API         |
+| `pulsar-tests`     | 重型集成和场景测试               |
 
 ---
 
 ## 📜 文档
 
-* 📖 [REST API 示例](docs/rest-api-examples.md)
-* 🛠️ [LLM 配置指南](docs/config/llm/llm-config.md)
 * 🛠️ [配置指南](docs/config.md)
-* 📚 [从源码构建](docs/development/build.md)
+* 📚 [从源码构建](docs/build.md)
 * 🧠 [专家指南](docs/advanced-guides.md)
 
 ---
