@@ -54,59 +54,8 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 ## 🚀 Quick Start
 
-### Run from JAR
-
-#### Download
-```shell
-curl -L -o Browser4.jar https://github.com/platonai/browser4/releases/download/v4.1.0-rc.1/Browser4.jar
-```
-(Replace `v4.1.0-rc.1` with the latest release if needed.)
-
-#### Run
-```shell
-# ensure an LLM api key is set. VOLCENGINE_API_KEY / OPENAI_API_KEY also supported
-echo $DEEPSEEK_API_KEY
-java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar Browser4.jar
-```
-> Windows PowerShell: `$env:DEEPSEEK_API_KEY` (env) vs `$DEEPSEEK_API_KEY` (script variable).
-
-### Run with Docker
-```shell
-# ensure LLM api key is set
-echo $DEEPSEEK_API_KEY
-docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/browser4:latest
-```
-> Add other supported keys as `-e OPENAI_API_KEY=...` etc.
-
-### Build from Source
-Refer to [Build from Source](docs/development/build.md). Quick commands:
-
-Windows (CMD):
-```shell
-mvnw.cmd -q -DskipTests
-mvnw.cmd -pl browser4 -am test -D"surefire.failIfNoSpecifiedTests=false"
-```
-Linux/macOS:
-```shell
-./mvnw -q -DskipTests
-./mvnw -pl browser4 -am test -Dsurefire.failIfNoSpecifiedTests=false
-```
-Run the app after build:
-```shell
-java -jar browser4/browser4-crawler/target/Browser4.jar
-```
-(Default port: 8182)
-
-### Environment Variables
-| Name | Purpose |
-|------|---------|
-| `DEEPSEEK_API_KEY` | Primary LLM key for AI features |
-| `OPENAI_API_KEY` | Alternative LLM provider key |
-| `VOLCENGINE_API_KEY` | Alternative LLM provider key |
-| `PROXY_ROTATION_URL` | Endpoint returning fresh rotating proxy IP(s) |
-| `JAVA_OPTS` | (Optional) Extra JVM opts (memory, GC tuning) |
-
-> At least one LLM key must be set or AI features will be disabled.
+1. Edit [application.properties](application.properties) to add your LLM API key
+2. Run any examples in module `pulsar-examples`
 
 ---
 
@@ -114,55 +63,74 @@ java -jar browser4/browser4-crawler/target/Browser4.jar
 
 ### Browser Agents
 ```kotlin
-val problems = """
-    go to amazon.com, search for pens to draw on whiteboards, compare the first 4 ones, write the result to a markdown file.
-    打开百度查找厦门岛旅游景点，给出一个总结
-    go to https://news.ycombinator.com/news , read top 3 articles and give me a summary
-    """.lines().filter { it.isNotBlank() }
+val agent = AgenticContexts.getOrCreateAgent()
 
-problems.forEach { agent.resolve(it) }
+val problem = """
+    1. go to amazon.com
+    2. search for pens to draw on whiteboards
+    3. compare the first 4 ones
+    4. write the result to a markdown file
+    """
+
+agent.resolve(problem)
 ```
 
 ### Workflow
-Use free-form text to drive the browser:
-```text
-Go to https://www.amazon.com/dp/B08PP5MSVB
+Low-level browser automation & data extractions.
 
-After browser launch: clear browser cookies.
-After page load: scroll to the middle.
+1. direct and full CDP control
+2. precise element interactions
+3. fast data extractions
 
-Summarize the product.
-Extract: product name, price, ratings.
-Find all links containing /dp/.
+```kotlin
+    val session = AgenticContexts.getOrCreateSession()
+    val agent = session.companionAgent
+    val driver = session.getOrCreateBoundDriver()
+    var page = session.open(url)
+    var document = session.parse(page)
+    var fields = session.extract(document, mapOf("title" to "#title"))
+    var result = agent.act("search for 'browser'")
+    var content = driver.selectFirstTextOrNull("body")
+    content = driver.selectFirstTextOrNull("body")
+    result = agent.resolve("search for 'web scraping', read each result and give me a summary")
+    page = session.capture(driver)
+    document = session.parse(page)
+    fields = session.extract(document, mapOf("title" to "#title"))
 ```
 
-### LLM + X-SQL
+### LLM + X-SQL (10x entities & 100x fields)
 X-SQL is suited for high-complexity data-extraction pipelines, including cases with
 multiple-dozen entities and several hundred fields per entity.
-```shell
-curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
+```kotlin
+val context = AgenticContexts.create()
+val sql = """
 select
   llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
-  dom_base_uri(dom) as url,
   dom_first_text(dom, '#productTitle') as title,
-  dom_first_slim_html(dom, 'img:expr(width > 400)') as img
-from load_and_select('https://www.amazon.com/dp/B08PP5MSVB', 'body');
-"
+  dom_first_text(dom, '#bylineInfo') as brand,
+  dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
+  dom_first_text(dom, '#acrCustomerReviewText') as ratings,
+  str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
+from load_and_select('https://www.amazon.com/dp/B08PP5MSVB -i 1s -njr 3', 'body');
+"""
+val rs = context.executeQuery(sql)
+println(ResultSetFormatter(rs, withHeader = true))
 ```
 
-### Native API
+### High-speed parallel browser control (100k+ page visits per machine per day)
 High-speed parallel scraping & browser control examples are shown below (see advanced sections for more).
 ```kotlin
 val args = "-refresh -dropContent -interactLevel fastest"
 val blockingUrls = listOf("*.png", "*.jpg")
-val links =
-    LinkExtractors.fromResource("urls.txt").asSequence().map { ListenableHyperlink(it, "", args = args) }.onEach {
+val links = LinkExtractors.fromResource("urls.txt")
+    .map { ListenableHyperlink(it, "", args = args) }
+    .onEach {
         it.eventHandlers.browseEventHandlers.onWillNavigate.addLast { page, driver ->
             driver.addBlockedURLs(blockingUrls)
         }
     }
 
-session.submitAll(links.toList())
+session.submitAll(links)
 ```
 ---
 

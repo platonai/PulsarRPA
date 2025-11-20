@@ -1,7 +1,7 @@
 package ai.platon.pulsar.manual
 
+import ai.platon.pulsar.agentic.context.AgenticContexts
 import ai.platon.pulsar.common.sql.ResultSetFormatter
-import ai.platon.pulsar.ql.context.SQLContexts
 import ai.platon.pulsar.skeleton.PulsarSettings
 
 /**
@@ -11,7 +11,7 @@ fun main() {
     // Use the default browser which has an isolated profile.
     PulsarSettings.withDefaultBrowser()
 
-    val context = SQLContexts.create()
+    val context = AgenticContexts.create()
     val sql = """
 select
       dom_first_text(dom, '#productTitle') as title,
