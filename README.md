@@ -10,23 +10,29 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 <!-- TOC -->
 **Table of Contents**
-- [🌟 Introduction](#-introduction)
-- [🚀 Quick Start](#-quick-start)
-  - [Run from JAR](#run-from-jar)
-  - [Run with Docker](#run-with-docker)
-  - [Build from Source](#build-from-source)
-  - [Environment Variables](#environment-variables)
-- [Usage Examples](#usage-examples)
-  - [Browser Use (Agents)](#browser-use-agents)
-  - [Text Commands API](#text-commands-api)
-  - [LLM + X-SQL](#llm--x-sql)
-  - [Native API](#native-api)
-- [Modules Overview](#modules-overview)
-- [Proxies](#-proxies---unblock-websites)
-- [Features](#features)
-- [Documentation](#-documents)
-- [Support & Community](#-support--community)
+- [🤖 Browser4](#-browser4)
+    - [🌟 Introduction](#-introduction)
+        - [✨ Key Capabilities](#-key-capabilities)
+    - [🎥 Demo Videos](#-demo-videos)
+    - [🚀 Quick Start](#-quick-start)
+        - [Run from JAR](#run-from-jar)
+            - [Download](#download)
+            - [Run](#run)
+        - [Run with Docker](#run-with-docker)
+        - [Build from Source](#build-from-source)
+        - [Environment Variables](#environment-variables)
+    - [Usage Examples](#usage-examples)
+        - [Browser Agents](#browser-agents)
+        - [Workflow](#workflow)
+        - [LLM + X-SQL](#llm--x-sql)
+        - [Native API](#native-api)
+    - [Modules Overview](#modules-overview)
+    - [📜 Documents](#-documents)
+    - [🔧 Proxies - Unblock Websites](#-proxies---unblock-websites)
+    - [Features](#features)
+    - [🤝 Support & Community](#-support--community)
 <!-- /TOC -->
+
 
 ## 🌟 Introduction
 
