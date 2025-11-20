@@ -505,6 +505,22 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>exec-maven-plugin</artifactId>
                     <version>${version.maven-exec-plugin}</version>
+
+                    <configuration>
+                        <arguments>
+                            <argument>-Dfile.encoding=UTF-8</argument>
+                        </arguments>
+                        <systemProperties>
+                            <systemProperty>
+                                <key>file.encoding</key>
+                                <value>UTF-8</value>
+                            </systemProperty>
+                            <systemProperty>
+                                <key>sun.jnu.encoding</key>
+                                <value>UTF-8</value>
+                            </systemProperty>
+                        </systemProperties>
+                    </configuration>
                 </plugin>
                 <plugin>
                     <groupId>org.springframework.boot</groupId>
@@ -915,7 +931,7 @@
         <mockito-junit-jupiter.version>5.20.0</mockito-junit-jupiter.version>
         <langchain4j.version>1.5.0</langchain4j.version>
 
-        <version.maven-exec-plugin>3.3.0</version.maven-exec-plugin>
+        <version.maven-exec-plugin>3.6.1</version.maven-exec-plugin>
         <!-- Plugin versions -->
         <!-- Overrides ai.platon:platon -->
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>

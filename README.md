@@ -62,6 +62,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
    ```
 
 2. **Configure your LLM API key**
+
    Edit [application.properties](application.properties) and add your API key.
 
 3. **Build the project** (Windows)
@@ -73,7 +74,15 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
    ./mvnw -q -DskipTests
    ```
 
-4. **Run examples**
+4. **Run examples** (Windows)
+   ```cmd
+   ./bin/run-examples.ps1
+   ```
+   Or on Linux/macOS:
+   ```bash
+   mvnw.cmd -pl pulsar-examples exec:java -D"exec.mainClass=ai.platon.pulsar.examples.agent.Browser4AgentKt"
+   ```
+
    Explore and run examples in the `pulsar-examples` module to see Browser4 in action.
 
 For Docker deployment, see our [Docker Hub repository](https://hub.docker.com/r/galaxyeye88/browser4).
