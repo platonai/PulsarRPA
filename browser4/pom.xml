@@ -14,7 +14,7 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>4.1.0-rc.1</version>
+        <version>4.1.0-rc.2</version>
     </parent>
 
     <artifactId>browser4</artifactId>
@@ -24,6 +24,6 @@
 
     <modules>
         <module>browser4-spa</module>
-        <module>browser4-crawler</module>
+        <module>browser4-agents</module>
     </modules>
 </project>

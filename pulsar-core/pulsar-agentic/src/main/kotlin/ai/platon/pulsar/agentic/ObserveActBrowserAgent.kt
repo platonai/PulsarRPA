@@ -11,7 +11,7 @@ import kotlinx.coroutines.delay
 class ObserveActBrowserAgent constructor(
     session: AgenticSession, maxSteps: Int = 100, config: AgentConfig = AgentConfig(maxSteps = maxSteps)
 ) : BrowserPerceptiveAgent(session, maxSteps, config) {
-    private val logger = getLogger(this)
+    private val logger = getLogger(ObserveActBrowserAgent::class)
 
     override suspend fun step(action: ActionOptions, context: ExecutionContext, noOpsIn: Int): StepProcessingResult {
         var consecutiveNoOps = noOpsIn

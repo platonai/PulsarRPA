@@ -100,7 +100,7 @@ project-root/
 ├── pulsar-tests/           # Centralized tests
 ├── pulsar-examples/        # Examples & tutorials
 ├── browser4/               # Product-facing modules
-│    ├── browser4-crawler/  # Web crawling
+│    ├── browser4-agents/  # Web crawling
 │    └── browser4-spa/      # SPA UI (React/TypeScript)
 ├── pulsar-bom/             # Bill of Materials (versions)
 └── pom.xml                 # Root Maven config

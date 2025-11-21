@@ -16,7 +16,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-bom</artifactId>
     <name>Pulsar BOM</name>
-    <version>4.1.0-rc.1</version>
+    <version>4.1.0-rc.2</version>
 
     <packaging>pom</packaging>
 
@@ -424,7 +424,7 @@
 
         <ktor.version>2.3.11</ktor.version>
         <springmockk.version>4.0.2</springmockk.version>
-        <version.maven-exec-plugin>3.3.0</version.maven-exec-plugin>
+        <version.maven-exec-plugin>3.6.1</version.maven-exec-plugin>
         <mockito-junit-jupiter.version>5.11.0</mockito-junit-jupiter.version>
 
         <langchain4j.version>1.5.0</langchain4j.version>

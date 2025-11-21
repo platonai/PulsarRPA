@@ -208,7 +208,8 @@ abstract class AbstractPulsarContext(
 
     abstract override fun createSession(settings: PulsarSettings): PulsarSession
 
-    override fun getOrCreateSession(settings: PulsarSettings): PulsarSession = sessions.values.firstOrNull() ?: createSession()
+    override fun getOrCreateSession(settings: PulsarSettings): PulsarSession =
+        sessions.values.firstOrNull() ?: createSession()
 
     /**
      * Close the given session
@@ -269,6 +270,7 @@ abstract class AbstractPulsarContext(
     override fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean): List<NormURL> {
         return urls.mapNotNull { normalizeOrNull(it, options, toItemOption) }
     }
+
     /**
      * Get a webpage from the storage.
      * */
@@ -459,7 +461,8 @@ abstract class AbstractPulsarContext(
     }
 
     override suspend fun chat(userMessage: String, systemMessage: String): ModelResponse {
-        return ChatModelFactory.getOrCreateOrNull(configuration)?.callUmSm(userMessage, systemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
+        return ChatModelFactory.getOrCreateOrNull(configuration)?.callUmSm(userMessage, systemMessage)
+            ?: ModelResponse.LLM_NOT_AVAILABLE
     }
 
     @Throws(WebDBException::class)
@@ -555,11 +558,17 @@ abstract class AbstractPulsarContext(
             } catch (e: Exception) {
                 System.err.println("Exception while closing context | $this")
                 e.printStackTrace(System.err)
-                logger.warn("Exception while closing context | $this", e)
+                // When running via exec:java or other process starter,
+                // Pulsar-related classes are unloaded as the process exits.
+                // warnForClose("Exception while closing context | $this", e)
             } catch (t: Throwable) {
                 System.err.println("[Unexpected] Failed to close context | $this")
                 t.printStackTrace(System.err)
-                logger.error("[Unexpected] Failed to close context | $this", t)
+                // When running via exec:java or other process starter,
+                // Pulsar-related classes are unloaded as the process exits.
+                // No user-defined classes, objects, or methods remain available, and calling them may
+                // trigger ClassNotFoundException. Only invoke JDK built-in methods in this block.
+                // warnForClose("[Unexpected] Failed to close context | $this", t)
             }
         }
 
@@ -574,17 +583,17 @@ abstract class AbstractPulsarContext(
             this::class.java.simpleName
         )
 
-        val sessions1 = sessions.values.toList()
+        val sessions1 = LinkedList(sessions.values)
         sessions.clear()
-        val closableObjects1 = closableObjects.toList()
+        val closableObjects1 = PriorityQueue(closableObjects)
         closableObjects.clear()
 
         sessions1.forEach { session ->
-            runCatching { session.close() }.onFailure { warnForClose(this, it) }
+            runCatching { session.close() }.onFailure { it.printStackTrace() }
         }
 
-        closableObjects1.sortedByDescending { it.priority }.forEach { closable ->
-            runCatching { closable.closeable.close() }.onFailure { warnForClose(this, it) }
+        closableObjects1.forEach { closable ->
+            runCatching { closable.closeable.close() }.onFailure { it.printStackTrace() }
         }
     }
 

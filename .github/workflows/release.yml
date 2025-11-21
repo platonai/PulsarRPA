@@ -24,10 +24,10 @@ env:
   CONTAINER_NAME: browser4
   NETWORK_NAME: 'browser4_backend'
   DOCKER_USERNAME: galaxyeye88
-  PRODUCTION_JAR_MODULE_NAME: 'browser4-crawler'
-  PRODUCTION_JAR_MODULE_PATH: 'browser4/browser4-crawler'
+  PRODUCTION_JAR_MODULE_NAME: 'browser4-agents'
+  PRODUCTION_JAR_MODULE_PATH: 'browser4/browser4-agents'
   PRODUCTION_JAR_NAME: 'Browser4.jar'
-  PRODUCTION_JAR_PATH: 'browser4/browser4-crawler/target/Browser4.jar'
+  PRODUCTION_JAR_PATH: 'browser4/browser4-agents/target/Browser4.jar'
   JAVA_VERSION: '21'
   MAVEN_OPTS: '-Xmx3g -XX:+UseG1GC'
 

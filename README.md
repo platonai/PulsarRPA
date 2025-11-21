@@ -20,6 +20,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
         - [Workflow Automation](#workflow-automation)
         - [LLM + X-SQL](#llm--x-sql)
         - [High-Speed Parallel Processing](#high-speed-parallel-processing)
+        - [Auto Extraction](#auto-extraction)
     - [📦 Modules Overview](#-modules-overview)
     - [📜 Documentation](#-documentation)
     - [🔧 Proxies - Unblock Websites](#-proxies---unblock-websites)
@@ -62,7 +63,8 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
    ```
 
 2. **Configure your LLM API key**
-   Edit [application.properties](application.properties) and add your API key.
+
+   > Edit [application.properties](application.properties) and add your API key.
 
 3. **Build the project** (Windows)
    ```cmd
@@ -73,7 +75,15 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
    ./mvnw -q -DskipTests
    ```
 
-4. **Run examples**
+4. **Run examples** (Windows)
+   ```cmd
+   ./bin/run-examples.ps1
+   ```
+   Or on Linux/macOS:
+   ```bash
+   mvnw.cmd -pl pulsar-examples exec:java -D"exec.mainClass=ai.platon.pulsar.examples.agent.Browser4AgentKt"
+   ```
+
    Explore and run examples in the `pulsar-examples` module to see Browser4 in action.
 
 For Docker deployment, see our [Docker Hub repository](https://hub.docker.com/r/galaxyeye88/browser4).
@@ -120,7 +130,7 @@ var fields = session.extract(document, mapOf("title" to "#title"))
 
 // Interact with the page
 var result = agent.act("scroll to the comment section")
-var content = driver.selectFirstTextOrNull("body")
+var content = driver.selectFirstTextOrNull("#comments")
 
 // Complex agent tasks
 result = agent.resolve("Search for 'smart phone', read the first four products, and give me a comparison.")
@@ -178,6 +188,38 @@ val links = LinkExtractors.fromResource("urls.txt")
 
 session.submitAll(links)
 ```
+---
+
+### Auto Extraction
+
+Automatic, large-scale, high-precision field discovery and extraction powered by self-/unsupervised machine learning — no LLM API calls, no tokens, deterministic and fast.
+
+**What it does:**
+- Learns every extractable field on item/detail pages (often dozens to hundreds) with high precision.
+
+**Why not just LLMs?**
+- LLM extraction adds latency, cost, and token limits.
+- ML-based auto extraction is local, reproducible, and scalable to 100k+ pages/day.
+- You can still combine both: use Auto Extraction for structured baseline + LLM for semantic enrichment.
+
+**Quick Commands (PulsarRPAPro):**
+```bash
+# Linux/macOS: harvest a page with diagnostic output
+java -jar exotic-standalone*.jar harvest https://www.hua.com/flower/ -diagnose -refresh
+```
+
+**Integration Status:**
+- Available today via the companion project [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro).
+- Native Browser4 API exposure is planned; follow releases for updates.
+
+**Key Advantages:**
+- High precision: >95% fields discovered; majority with >99% accuracy (indicative on tested domains).
+- Resilient to selector churn & HTML noise.
+- Zero external dependency (no API key) → cost-efficient at scale.
+- Explainable: generated selectors & SQL are transparent and auditable.
+
+(Coming soon: richer in-repo examples and direct API hooks.)
+
 ---
 
 ## 📦 Modules Overview

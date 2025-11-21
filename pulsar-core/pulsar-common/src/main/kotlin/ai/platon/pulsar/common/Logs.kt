@@ -168,6 +168,11 @@ fun warnForClose(target: Any, t: Throwable) = warnForClose(target, t, t.stringif
  * @param message the message to log
  * */
 fun warnForClose(target: Any, t: Throwable, message: String, vararg args: Any?) {
+    if (Thread.currentThread().isInterrupted) {
+        System.err.println("System is shutting down $message")
+        return
+    }
+
     var logger: Logger? = null
     try {
         logger = getLogger(target)

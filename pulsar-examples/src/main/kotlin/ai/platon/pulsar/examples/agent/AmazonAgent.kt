@@ -5,6 +5,12 @@ import ai.platon.pulsar.agentic.context.AgenticContexts
 suspend fun main() {
     val agent = AgenticContexts.getOrCreateAgent()
 
-    val problem = "打开 amazon.com，搜索 calabi-yau，打开前5个产品，对产品给出一个总结"
+    val problem = """
+        1. go to amazon.com
+        2. search for pens to draw on whiteboards
+        3. compare the first 4 ones
+        4. write the result to a markdown file
+        """.trimIndent()
+
     agent.resolve(problem)
 }

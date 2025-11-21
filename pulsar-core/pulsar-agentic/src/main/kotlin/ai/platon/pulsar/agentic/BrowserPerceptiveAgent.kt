@@ -94,7 +94,7 @@ open class BrowserPerceptiveAgent constructor(
     val maxSteps: Int = 100,
     config: AgentConfig = AgentConfig(maxSteps = maxSteps)
 ) : BrowserAgentActor(session, config) {
-    private val logger = getLogger(this)
+    private val logger = getLogger(BrowserPerceptiveAgent::class)
     private val slogger = StructuredAgentLogger(logger, config)
 
     protected val closed = AtomicBoolean(false)

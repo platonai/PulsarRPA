@@ -304,6 +304,9 @@ open class InteractiveBrowserEmulator(
         } catch (e: TimeoutCancellationException) {
             logger.warn("[Timeout] Coroutine was cancelled, thrown by [withTimeout] | {}", e.stringify())
             response = ForwardingResponse.crawlRetry(task.page, e)
+        } catch (e: InterruptedException) {
+            Thread.currentThread().interrupt()
+            response = ForwardingResponse.crawlRetry(task.page, e)
         } catch (e: Exception) {
             // handleException(e, task, driver)
             // Let the higher level to handle it

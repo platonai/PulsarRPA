@@ -14,12 +14,12 @@
     <parent>
         <groupId>ai.platon.pulsar</groupId>
         <artifactId>pulsar</artifactId>
-        <version>4.1.0-rc.1</version>
+        <version>4.1.0-rc.2</version>
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
     <artifactId>browser4-spa</artifactId>
-    <name>Pulsar Browser4</name>
+    <name>Browser4 SPA</name>
 
     <dependencies>
         <dependency>

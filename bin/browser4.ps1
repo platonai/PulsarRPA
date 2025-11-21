@@ -1,7 +1,5 @@
 #!/usr/bin/env pwsh
 
-echo "This script is deprecated, please use 'browser4.ps1' command instead."
-
 $ErrorActionPreference = "Stop"
 
 # 🔍 Find the first parent directory containing the VERSION file
@@ -11,9 +9,11 @@ while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
 }
 Set-Location $AppHome
 
-$UBERJAR = Join-Path $PWD "target\Browser4.jar"
+$TARGET = Join-Path $PWD "target"
+mkdir -f $TARGET
+$UBERJAR = Join-Path $TARGET "Browser4.jar"
 if (-not (Test-Path $UBERJAR)) {
-    $SERVER_HOME = Join-Path $AppHome "pulsar-app\pulsar-browser4"
+    $SERVER_HOME = Join-Path $AppHome "browser4\browser4-agents"
     Copy-Item (Join-Path $SERVER_HOME "target\Browser4.jar") -Destination $UBERJAR
 }
 
