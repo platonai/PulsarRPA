@@ -116,7 +116,7 @@ open class TextToAction(
                 val complete: ObserveResponseComplete = mapper.readValue(content)
                 ActionDescription(
                     instruction = instruction,
-                    isComplete = true,
+                    isComplete = complete.taskComplete,
                     errorCause = complete.errorCause,
                     summary = complete.summary,
                     nextSuggestions = complete.nextSuggestions ?: emptyList(),
