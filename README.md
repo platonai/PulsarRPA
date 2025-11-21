@@ -64,7 +64,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 2. **Configure your LLM API key**
 
-   Edit [application.properties](application.properties) and add your API key.
+   > Edit [application.properties](application.properties) and add your API key.
 
 3. **Build the project** (Windows)
    ```cmd
