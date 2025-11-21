@@ -22,10 +22,7 @@ go to https://news.ycombinator.com/news , open the 4-th articles in new tab
         """.lines().filter { it.isNotBlank() }
 
         val problem = problems[0]
-        // agent.resolve(problem)
-
-        val session = AgenticContexts.getOrCreateSession()
-        session.load("https://www.baidu.com/")
+        agent.resolve(problem)
     }
 }
 
