@@ -20,6 +20,7 @@
         - [工作流自动化](#工作流自动化)
         - [LLM + X-SQL](#llm--x-sql)
         - [高速并行处理](#高速并行处理)
+        - [自动抽取](#自动抽取)
     - [📦 模块概览](#-模块概览)
     - [📜 文档](#-文档)
     - [🔧 代理配置 - 解锁网站访问](#-代理配置---解锁网站访问)
@@ -29,15 +30,15 @@
 
 ## 🌟 项目介绍
 
-💖 **Browser4: 为 AI 自动化打造的闪电般快速、协程安全的浏览器引擎** 💖
+💖 **Browser4：为 AI 自动化打造的闪电般快速、协程安全的浏览器引擎** 💖
 
 ### ✨ 核心能力
 
-* 👽 **浏览器智能体** — 能够在浏览器中推理、规划和行动的自主智能体。
-* 🤖 **浏览器自动化** — 用于工作流、导航和数据提取的高性能自动化。
-* ⚡ **极致性能** — 完全协程安全；支持每台机器每天访问 100k+ 页面。
-* 🧠 **网页理解** — 深度理解动态、脚本驱动和交互式网页。
-* 📊 **数据提取 API** — 强大的 API，轻松提取结构化数据。
+* 👽 **浏览器智能体** — 能在浏览器中进行推理、规划并执行操作的自主智能体。
+* 🤖 **浏览器自动化** — 面向工作流、导航和数据提取的高性能自动化。
+* ⚡  **极致性能** — 完全协程安全；支持单机每天访问 100k+ 页面。
+* 🧠 **网页理解** — 深度理解动态、脚本驱动与交互式网页。
+* 📊 **数据提取 API** — 强大的接口，低成本获取结构化数据。
 
 ---
 
@@ -46,14 +47,14 @@
 🎬 YouTube:
 [![观看视频](https://img.youtube.com/vi/_BcryqWzVMI/0.jpg)](https://www.youtube.com/watch?v=_BcryqWzVMI)
 
-📺 哔哩哔哩:
+📺 哔哩哔哩：
 [https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
 
 ---
 
 ## 🚀 快速开始
 
-**前置要求**：Java 17+ 和 Maven 3.6+
+**前置要求**：Java 17+ 与 Maven 3.6+
 
 1. **克隆仓库**
    ```shell
@@ -61,22 +62,31 @@
    cd browser4
    ```
 
-2. **配置 LLM API 密钥**
-   编辑 [application.properties](application.properties) 并添加你的 API 密钥。
+2. **配置你的 LLM API 密钥**
+
+   编辑 [application.properties](application.properties) 并添加你的 API Key。
 
 3. **构建项目**（Windows）
    ```cmd
    mvnw.cmd -q -DskipTests
    ```
-   或者在 Linux/macOS 上：
+   或在 Linux/macOS 上：
    ```bash
    ./mvnw -q -DskipTests
    ```
 
-4. **运行示例**
-   浏览并运行 `pulsar-examples` 模块中的示例，体验 Browser4 的实际效果。
+4. **运行示例**（Windows）
+   ```cmd
+   ./bin/run-examples.ps1
+   ```
+   或在 Linux/macOS 上：
+   ```bash
+   mvnw.cmd -pl pulsar-examples exec:java -D"exec.mainClass=ai.platon.pulsar.examples.agent.Browser4AgentKt"
+   ```
 
-Docker 部署请查看我们的 [Docker Hub 仓库](https://hub.docker.com/r/galaxyeye88/browser4)。
+   在 `pulsar-examples` 模块中探索并运行示例，直观了解 Browser4 的能力。
+
+Docker 部署请参见我们的 [Docker Hub 仓库](https://hub.docker.com/r/galaxyeye88/browser4)。
 
 ---
 
@@ -84,7 +94,7 @@ Docker 部署请查看我们的 [Docker Hub 仓库](https://hub.docker.com/r/gal
 
 ### 浏览器智能体
 
-能够理解自然语言指令并执行复杂浏览器工作流的自主智能体。
+能理解自然语言指令并执行复杂浏览器工作流的自主智能体。
 
 ```kotlin
 val agent = AgenticContexts.getOrCreateAgent()
@@ -101,12 +111,12 @@ agent.resolve(problem)
 
 ### 工作流自动化
 
-底层浏览器自动化和数据提取，提供细粒度控制。
+低层级浏览器自动化与数据提取，提供细粒度控制。
 
-**功能特性:**
-- 直接和完整的 Chrome DevTools Protocol (CDP) 控制
+**特性：**
+- 直接且完整的 Chrome DevTools Protocol (CDP) 控制
 - 精确的元素交互（点击、滚动、输入）
-- 使用 CSS 选择器/XPath 快速提取数据
+- 基于 CSS 选择器/XPath 的快速数据提取
 
 ```kotlin
 val session = AgenticContexts.getOrCreateSession()
@@ -120,12 +130,12 @@ var fields = session.extract(document, mapOf("title" to "#title"))
 
 // 与页面交互
 var result = agent.act("scroll to the comment section")
-var content = driver.selectFirstTextOrNull("body")
+var content = driver.selectFirstTextOrNull("#comments")
 
 // 复杂的智能体任务
 result = agent.resolve("Search for 'smart phone', read the first four products, and give me a comparison.")
 
-// 捕获并提取当前状态
+// 捕获并基于当前状态提取
 page = session.capture(driver)
 document = session.parse(page)
 fields = session.extract(document, mapOf("ratings" to "#ratings"))
@@ -133,12 +143,12 @@ fields = session.extract(document, mapOf("ratings" to "#ratings"))
 
 ### LLM + X-SQL
 
-适用于具有多个实体和每个实体数百个字段的高复杂度数据提取管道。
+适用于高复杂度的数据抽取流水线，包含数十个实体与每个实体数百个字段。
 
-**优势:**
-- 与传统方法相比，提取 10 倍的实体数和 100 倍的字段数
+**优势：**
+- 相较传统方法，可多提取 10 倍实体与 100 倍字段
 - 结合 LLM 智能与精确的 CSS 选择器/XPath
-- 类 SQL 语法，易于理解和使用
+- 类 SQL 语法，上手友好
 
 ```kotlin
 val context = AgenticContexts.create()
@@ -158,12 +168,12 @@ println(ResultSetFormatter(rs, withHeader = true))
 
 ### 高速并行处理
 
-通过并行浏览器控制和智能资源优化实现极致吞吐量。
+通过并行浏览器控制与智能资源优化，获得极致吞吐。
 
-**性能:**
-- 每台机器每天访问 100,000+ 页面
+**性能：**
+- 单机每天访问 100,000+ 页面
 - 并发会话管理
-- 资源阻断以加快页面加载速度
+- 阻断无关资源，加速页面加载
 
 ```kotlin
 val args = "-refresh -dropContent -interactLevel fastest"
@@ -180,25 +190,57 @@ session.submitAll(links)
 ```
 ---
 
+### 自动抽取
+
+基于自/无监督机器学习的自动化、大规模、高精度字段发现与抽取——无需 LLM API 调用、无 Token 成本、确定性且高速。
+
+**它能做什么：**
+- 以高精度学习商品/详情页上的所有可抽取字段（通常从几十到上百）。
+
+**为何不只用 LLM？**
+- 仅依赖 LLM 的抽取会带来时延、成本与 Token 限制。
+- 基于 ML 的自动抽取本地可复现，且可扩展到 10 万+ 页/天。
+- 仍可结合两者：用自动抽取提供结构化基线 + LLM 做语义增强。
+
+**快捷命令（PulsarRPAPro）：**
+```bash
+# Linux/macOS：带诊断输出采集页面
+java -jar exotic-standalone*.jar harvest https://www.hua.com/flower/ -diagnose -refresh
+```
+
+**集成状态：**
+- 现已通过配套项目 [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro) 提供。
+- 计划提供 Browser4 原生 API；关注后续版本发布。
+
+**关键优势：**
+- 高精度：>95% 字段被发现；多数字段精度 >99%（基于测试域的指示性数据）。
+- 对选择器震荡与 HTML 噪声具备鲁棒性。
+- 零外部依赖（无需 API Key），规模化成本更优。
+- 可解释：生成的选择器与 SQL 透明可审计。
+
+（即将推出：更丰富的仓库内示例与直接 API 挂钩。）
+
+---
+
 ## 📦 模块概览
 
 | 模块 | 说明 |
 |--------|-------------|
 | `pulsar-core` | 核心引擎：会话、调度、DOM、浏览器控制 |
-| `pulsar-rest` | Spring Boot REST 层和命令端点 |
+| `pulsar-rest` | Spring Boot REST 层与命令端点 |
 | `pulsar-client` | 客户端 SDK / CLI 工具 |
-| `browser4-spa` | 用于浏览器智能体的单页应用 |
-| `browser4-agents` | 智能体和爬虫编排及产品打包 |
-| `pulsar-tests` | 重型集成和场景测试 |
-| `pulsar-tests-common` | 共享测试工具和固件 |
+| `browser4-spa` | 面向浏览器智能体的单页应用 |
+| `browser4-agents` | 智能体与爬虫编排及产品打包 |
+| `pulsar-tests` | 重型集成与场景测试 |
+| `pulsar-tests-common` | 共享测试工具与夹具 |
 
 ---
 
 ## 📜 文档
 
 * 🛠️ [配置指南](docs/config.md)
-* 📚 [从源码构建](docs/build.md)
-* 🧠 [专家指南](docs/advanced-guides.md)
+* 📚 [源码构建](docs/build.md)
+* 🧠 [进阶指南](docs/advanced-guides.md)
 
 ---
 
@@ -206,14 +248,14 @@ session.submitAll(links)
 
 <details>
 
-将环境变量 PROXY_ROTATION_URL 设置为代理服务提供的 URL：
+将环境变量 PROXY_ROTATION_URL 设置为代理服务提供的轮换 URL：
 
 ```shell
 export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 ```
 
-每次访问轮换 URL 时，它应返回包含一个或多个新代理 IP 的响应。
-请向您的代理提供商询问此类 URL。
+每次访问该轮换 URL，应返回包含一个或多个新鲜代理 IP 的响应。
+如需该类 URL，请联系你的代理服务商。
 
 </details>
 
@@ -222,39 +264,39 @@ export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 ## ✨ 功能特性
 
 ### AI 与智能体
-- 解决问题的自主浏览器智能体
+- 面向问题求解的自主浏览器智能体
 - 并行智能体会话
-- LLM 辅助的页面理解和提取
+- LLM 辅助的页面理解与抽取
 
 ### 浏览器自动化与 RPA
-- 基于工作流的浏览器操作
-- 精准的协程安全控制（滚动、点击、提取）
-- 灵活的事件处理器和生命周期管理
+- 基于工作流的浏览器动作
+- 协程安全的精确控制（滚动、点击、抽取）
+- 灵活的事件处理与生命周期管理
 
-### 数据提取与查询
-- 单行数据提取命令
-- 用于 DOM/内容的 X-SQL 扩展查询语言
-- 结构化+非结构化混合提取（LLM + 选择器）
+### 数据抽取与查询
+- 一行命令完成数据抽取
+- 面向 DOM/内容的 X-SQL 扩展查询语言
+- 结构化 + 非结构化的混合抽取（LLM + 选择器）
 
 ### 性能与可扩展性
 - 高效并行页面渲染
-- 抗封锁设计和智能重试
-- 在普通硬件上每天处理 100,000+ 页面（指示性）
+- 抗封锁设计与智能重试
+- 在普通硬件上达到 100,000+ 页/天（指示性）
 
-### 隐身与可靠性
-- 高级反机器人技术
-- IP 和配置文件轮换
-- 弹性调度和质量保证
+### 隐匿与可靠性
+- 先进的反机器人技术
+- IP 与配置文件轮换
+- 弹性调度与质量保证
 
 ### 开发者体验
 - 简单的 API 集成（REST、原生、文本命令）
 - 丰富的配置分层
-- 清晰的结构化日志和指标
+- 清晰的结构化日志与度量
 
 ### 存储与监控
-- 本地文件系统和 MongoDB 支持（可扩展）
-- 全面的日志和透明度
-- 详细的指标和生命周期可见性
+- 本地文件系统与 MongoDB 支持（可扩展）
+- 全面日志与透明度
+- 细致的指标与生命周期可观测性
 
 ---
 
@@ -264,7 +306,7 @@ export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 - 🌐 微博：[galaxyeye](https://weibo.com/galaxyeye)
 - 📧 邮箱：galaxyeye@live.cn, ivincent.zhang@gmail.com
 - 🐦 Twitter：galaxyeye8
-- 🌍 网站：[platon.ai](https://platon.ai)
+- 🌍 官网：[platon.ai](https://platon.ai)
 
 <div style="display: flex;">
   <img src="docs/images/wechat-author.png" width="300" height="365" alt="微信二维码" />
@@ -273,4 +315,3 @@ export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 ---
 
 > 英文文档请参阅 [English README](README.md)。
-
