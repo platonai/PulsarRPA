@@ -137,8 +137,8 @@ open class BrowserPerceptiveAgent constructor(
     /**
      * High-level problem resolution entry. Builds an ActionOptions and delegates to resolve(ActionOptions).
      */
-    override suspend fun resolve(problem: String): ActResult {
-        val opts = ActionOptions(action = problem)
+    override suspend fun run(task: String): ActResult {
+        val opts = ActionOptions(action = task)
         return resolve(opts)
     }
 
@@ -147,7 +147,7 @@ open class BrowserPerceptiveAgent constructor(
      * in the ActionOptions. Applies retry and timeout strategies; records structured traces but keeps
      * stateHistory focused on executed tool actions only.
      */
-    override suspend fun resolve(action: ActionOptions): ActResult {
+    override suspend fun run(action: ActionOptions): ActResult {
         if (isClosed) {
             return ActResult(false, "USER interrupted", action = action.action)
         }

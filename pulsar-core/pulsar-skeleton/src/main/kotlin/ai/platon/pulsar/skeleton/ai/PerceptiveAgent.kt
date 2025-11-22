@@ -224,7 +224,7 @@ interface PerceptiveAgent : AutoCloseable {
      * @return The final action result produced by the agent.
      */
     @Deprecated("Use task(task) instead", ReplaceWith("agent.run(task)"))
-    suspend fun resolve(problem: String): ActResult
+    suspend fun resolve(problem: String): ActResult = run(problem)
 
     /**
      * Run an autonomous loop (observe -> act -> ...) attempting to fulfill the user goal described
@@ -235,7 +235,7 @@ interface PerceptiveAgent : AutoCloseable {
      * @return The final action result for the resolution attempt.
      */
     @Deprecated("Use task(action) instead", ReplaceWith("agent.run(action)"))
-    suspend fun resolve(action: ActionOptions): ActResult
+    suspend fun resolve(action: ActionOptions): ActResult = run(action)
 
     /**
      * Convenience overload to observe by instruction string. Implementations typically create
