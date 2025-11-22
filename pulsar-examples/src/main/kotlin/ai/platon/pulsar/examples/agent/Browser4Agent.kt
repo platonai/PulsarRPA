@@ -6,7 +6,7 @@ suspend fun main() {
     val agent = AgenticContexts.getOrCreateAgent()
 
     val problem = """
-go to https://news.ycombinator.com/news , read top 3 articles and give me a summary
+go to https://news.ycombinator.com/news
         """.trimIndent()
 
     agent.resolve(problem)

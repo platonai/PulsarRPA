@@ -188,6 +188,14 @@ val links = LinkExtractors.fromResource("urls.txt")
 
 session.submitAll(links)
 ```
+
+🎬 YouTube:
+[![Watch the video](https://img.youtube.com/vi/_BcryqWzVMI/0.jpg)](https://www.youtube.com/watch?v=_BcryqWzVMI)
+
+📺 Bilibili:
+[https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
+
+
 ---
 
 ### Auto Extraction

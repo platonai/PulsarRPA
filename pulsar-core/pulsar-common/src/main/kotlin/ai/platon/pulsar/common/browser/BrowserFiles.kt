@@ -115,16 +115,23 @@ object BrowserFiles {
     @Throws(IOException::class)
     fun cleanOldestContextTmpDirs(expiry: Duration, recentNToKeep: Int = 10) {
         // Remove directories that have too many context directories
-        Files.walk(AppPaths.CONTEXT_TMP_DIR, 3)
+        val files = Files.walk(AppPaths.CONTEXT_TMP_DIR, 3)
             .filter { it !in cleanedUserDataDirs } // not processed
             .filter { it.toString().contains("cx.") } // context dir
             .filter { it.resolve(PID_FILE_NAME).exists() } // already launched
             .filter { it.resolve(PORT_FILE_NAME).notExists() } // already closed
             .toList()
             .toSet()
-            .sortedByDescending { Files.getLastModifiedTime(it) }  // newest first
-            .drop(recentNToKeep)  // drop the newest N context dirs, so them are not cleaned
-            .forEach { cleanUpContextDir(it, expiry) } // clean the rest
+
+        try {
+            files.sortedByDescending { Files.getLastModifiedTime(it) }  // newest first
+                .drop(recentNToKeep)  // drop the newest N context dirs, so them are not cleaned
+                .forEach { cleanUpContextDir(it, expiry) } // clean the rest
+        } catch (ignored: LinkageError) {
+            // This prevents NoClassDefFoundError when classes have been unloaded
+            // (e.g., when running via maven exec:java)
+            // ignored
+        }
     }
 
     /**

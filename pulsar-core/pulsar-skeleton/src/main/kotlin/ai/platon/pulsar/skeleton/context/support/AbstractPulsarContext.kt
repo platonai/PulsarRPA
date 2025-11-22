@@ -561,6 +561,10 @@ abstract class AbstractPulsarContext(
                 // When running via exec:java or other process starter,
                 // Pulsar-related classes are unloaded as the process exits.
                 // warnForClose("Exception while closing context | $this", e)
+            }  catch (ignored: LinkageError) {
+                // This prevents NoClassDefFoundError when classes have been unloaded
+                // (e.g., when running via maven exec:java)
+                // ignored
             } catch (t: Throwable) {
                 System.err.println("[Unexpected] Failed to close context | $this")
                 t.printStackTrace(System.err)
