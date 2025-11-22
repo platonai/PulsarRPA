@@ -18,13 +18,13 @@ class TaskScopedBrowserPerceptiveAgent(
     override val stateHistory: List<AgentState> get() = agent.stateHistory
     override val processTrace: List<ProcessTrace> get() = agent.processTrace
 
-    override suspend fun run(task: String): ActResult {
+    override suspend fun run(task: String): List<AgentState> {
         newContext()
         return agent.run(task)
     }
 
     // Every time call resolve, create a new BrowserPerceptiveAgent to do the job
-    override suspend fun run(action: ActionOptions): ActResult {
+    override suspend fun run(action: ActionOptions): List<AgentState> {
         newContext()
         return agent.run(action)
     }
@@ -59,6 +59,10 @@ class TaskScopedBrowserPerceptiveAgent(
 
     override suspend fun extract(options: ExtractOptions): ExtractResult {
         return agent.extract(options)
+    }
+
+    override suspend fun clearHistory() {
+        agent.clearHistory()
     }
 
     override fun close() {

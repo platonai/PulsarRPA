@@ -58,11 +58,11 @@ open class BrowserAgentActor(
         Files.createDirectories(baseDir)
     }
 
-    override suspend fun run(action: ActionOptions): ActResult {
+    override suspend fun run(action: ActionOptions): List<AgentState> {
         throw NotSupportedException("Not supported, use stateful agents instead, such as BrowserPerceptiveAgent, TaskScopedBrowserPerceptiveAgent, etc.")
     }
 
-    override suspend fun run(task: String): ActResult {
+    override suspend fun run(task: String): List<AgentState> {
         throw NotSupportedException("Not supported, use stateful agents instead, such as BrowserPerceptiveAgent, TaskScopedBrowserPerceptiveAgent, etc.")
     }
 
@@ -368,6 +368,10 @@ open class BrowserAgentActor(
         }
 
         return null
+    }
+
+    override suspend fun clearHistory() {
+        stateManager.clearHistory()
     }
 
     override fun close() {

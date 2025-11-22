@@ -1,22 +1,22 @@
 [ {
   "domain" : "agent",
-  "method" : "resolve",
+  "method" : "run",
   "arguments" : [ {
-    "name" : "problem",
+    "name" : "task",
     "type" : "String",
     "defaultValue" : ""
   } ],
-  "returnType" : "ActResult",
-  "description" : "High-level problem resolution entry. Implementations should construct an [ActionOptions] from the raw problem string and delegate to [resolve] with the options."
+  "returnType" : "List<AgentState>",
+  "description" : "High-level problem resolution entry. Implementations should construct an [ActionOptions] from the raw problem string and delegate to [run] with the options."
 }, {
   "domain" : "agent",
-  "method" : "resolve",
+  "method" : "run",
   "arguments" : [ {
     "name" : "action",
     "type" : "ActionOptions",
     "defaultValue" : ""
   } ],
-  "returnType" : "ActResult",
+  "returnType" : "List<AgentState>",
   "description" : "Run an autonomous loop (observe -> act -> ...) attempting to fulfill the user goal described in the provided [ActionOptions]. Implementations may apply retry and timeout strategies; they should record structured traces while keeping [stateHistory] focused on executed tool actions only."
 }, {
   "domain" : "agent",

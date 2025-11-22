@@ -199,12 +199,12 @@ interface PerceptiveAgent : AutoCloseable {
 
     /**
      * High-level problem resolution entry. Implementations should construct an [ActionOptions]
-     * from the raw problem string and delegate to [resolve] with the options.
+     * from the raw problem string and delegate to [run] with the options.
      *
-     * @param problem The user goal or instruction to fulfill.
+     * @param task The user goal or instruction to fulfill.
      * @return The final action result produced by the agent.
      */
-    suspend fun resolve(problem: String): ActResult
+    suspend fun run(task: String): List<AgentState>
 
     /**
      * Run an autonomous loop (observe -> act -> ...) attempting to fulfill the user goal described
@@ -214,7 +214,7 @@ interface PerceptiveAgent : AutoCloseable {
      * @param action The action options describing the user goal and context.
      * @return The final action result for the resolution attempt.
      */
-    suspend fun resolve(action: ActionOptions): ActResult
+    suspend fun run(action: ActionOptions): List<AgentState>
 
     /**
      * Convenience overload to observe by instruction string. Implementations typically create

@@ -72,8 +72,8 @@ class FusedActs {
 
         // 1) Use the page's search box (enter text and submit)
         log.info("[STEP ${++step}] Action: find the search box, type 'web scraping' and submit the form")
-        result = agent.run("find the search box, type 'web scraping' and submit the form (RESULTS will display in the same page)")
-        result("action result", result)
+        var history = agent.run("find the search box, type 'web scraping' and submit the form (RESULTS will display in the same page)")
+        result("action history", history.last())
 
         log.info("[STEP ${++step}] Captures the live page and parse after search form submission")
         page = session.capture(driver)
@@ -96,13 +96,15 @@ class FusedActs {
 
         // 3) Scroll to bottom (triggers infinite scroll loading extra items on mock page)
         log.info("[STEP ${++step}] Action: scroll to the bottom of the page and wait for new content to load")
-        result = agent.run("scroll to the bottom of the page and wait for new content to load")
-        result("action result", result)
+        agent.clearHistory()
+        history = agent.run("scroll to the bottom of the page and wait for new content to load")
+        result("action history", history.last())
 
         // 4) Open the first comment thread
         log.info("[STEP ${++step}] Action: search for 'calabi-yau' on amazon")
-        result = agent.run("goto https://www.amazon.com/dp/B08PP5MSVB , search for 'calabi-yau' and submit the form")
-        result("action result", result)
+        agent.clearHistory()
+        history = agent.run("goto https://www.amazon.com/dp/B08PP5MSVB , search for 'calabi-yau' and submit the form")
+        result("action history", history.last())
 
         // 5) Navigate back
         log.info("[STEP ${++step}] Action: navigate back")
@@ -116,8 +118,9 @@ class FusedActs {
 
         // 7) Extract specific data after interactions
         log.info("[STEP ${++step}] Action: extract article titles and their hrefs from the main list")
-        result = agent.run("goto https://en.cppreference.com/index.html , extract first 10 articles with there titles and hrefs from the main list")
-        result("action result", result)
+        agent.clearHistory()
+        history = agent.run("goto https://en.cppreference.com/index.html , extract first 10 articles with there titles and hrefs from the main list")
+        result("action history", history.last())
 
         // 5) Navigate back
         log.info("[STEP ${++step}] Action: navigate back")
