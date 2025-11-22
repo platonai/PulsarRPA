@@ -58,6 +58,8 @@ class TestWebSiteAccess {
 
     protected val interactiveUrl get() = "$generatedAssetsBaseURL/interactive-1.html"
 
+    protected val interactiveUrl2 get() = "$generatedAssetsBaseURL/interactive-2.html"
+
     protected val ttaBaseURL get() = "$generatedAssetsBaseURL/tta"
 
     protected val ttaUrl1 get() = "$ttaBaseURL/interactive-1.html"

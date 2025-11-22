@@ -27,6 +27,7 @@ driver.waitForSelector(selector: String, timeoutMillis: Long = 3000)
 driver.exists(selector: String): Boolean
 driver.isVisible(selector: String): Boolean
 driver.focus(selector: String)
+driver.hover(selector: String)
 driver.click(selector: String)                         // focus on an element with [selector] and click it
 driver.click(selector: String, modifier: String)       // focus on an element with [selector] and click it with modifier pressed
 driver.fill(selector: String, text: String)

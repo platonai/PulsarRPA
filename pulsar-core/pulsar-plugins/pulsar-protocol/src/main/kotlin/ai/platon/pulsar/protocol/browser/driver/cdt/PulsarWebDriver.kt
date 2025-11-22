@@ -346,6 +346,7 @@ class PulsarWebDriver(
 
     @Throws(WebDriverException::class)
     override suspend fun hover(selector: String) {
+        bringToFront()
         driverHelper.invokeOnElement(selector, "hover", scrollIntoView = true) { node ->
             emulator.hover(node, position = "center")
         }

@@ -98,6 +98,7 @@ class WebDriverToolExecutor: AbstractToolExecutor() {
 
             // Interactions
             "focus" -> { validateArgs(args, allowed("selector"), setOf("selector"), functionName); driver.focus(paramString(args, "selector", functionName)!!) }
+            "hover" -> { validateArgs(args, allowed("selector"), setOf("selector"), functionName); driver.hover(paramString(args, "selector", functionName)!!) }
             "type" -> { validateArgs(args, allowed("selector", "text"), setOf("selector", "text"), functionName); driver.type(paramString(args, "selector", functionName)!!, paramString(args, "text", functionName)!!) }
             "fill" -> { validateArgs(args, allowed("selector", "text"), setOf("selector", "text"), functionName); driver.fill(paramString(args, "selector", functionName)!!, paramString(args, "text", functionName)!!) }
             "press" -> { validateArgs(args, allowed("selector", "key"), setOf("selector", "key"), functionName); driver.press(paramString(args, "selector", functionName)!!, paramString(args, "key", functionName)!!) }

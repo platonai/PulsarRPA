@@ -75,6 +75,8 @@ May be combined:
 - WebDriver.scrollBy returns a wrong value ✅
 - scroll 后，highlight 绘制错误 ✅
 - no AI tool to extract links, attributes and properties
+- add xpath support for workflow ✅
+- add driver.hover(selector)
 
 ## Features
 

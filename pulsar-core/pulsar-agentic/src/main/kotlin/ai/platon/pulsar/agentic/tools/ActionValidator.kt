@@ -45,7 +45,7 @@ class ActionValidator(
         return validationCache.getOrPut(cacheKey) {
             when (toolCall.method) {
                 "open", "navigateTo" -> validateNavigateTo(toolCall.arguments)
-                "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "focus", "scrollTo",
+                "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "focus", "hover", "scrollTo",
                 "type", "isHidden", "visible", "isChecked", "bringToFront",
                 "selectFirstTextOrNull", "selectTextAll", "selectFirstAttributeOrNull", "selectAttributes", "selectAttributeAll", "selectImages",
                 "evaluate", "clickablePoint", "boundingBox" -> validateElementAction(toolCall.arguments)
