@@ -775,12 +775,9 @@ open class BrowserPerceptiveAgent constructor(
         runCatching {
             val ts = Instant.now().toEpochMilli()
             val path = baseDir.resolve("session-${ts}.log")
-            slogger.info(
-                "🧾💾 Persisting execution transcript", context,
-                mapOf("path" to path.toUri())
-            )
+            slogger.info("🧾💾 Persisting execution transcript", context)
             val sb = StringBuilder()
-            sb.appendLine("SESSION_ID: ${uuid}")
+            sb.appendLine("SESSION_ID: $uuid")
             sb.appendLine("TIMESTAMP: ${Instant.now()}")
             sb.appendLine("INSTRUCTION: $instruction")
             sb.appendLine("RESPONSE_STATE: ${finalResp.state}")
@@ -904,7 +901,8 @@ open class BrowserPerceptiveAgent constructor(
         logger.info("✅ task.complete sid={} step={} complete={}", sid.take(8), step, true)
         stateManager.addTrace(context.agentState, event = "complete", message = "#${step} complete")
 
-        logger.info("Agent files: \n{}", fs.listOSFiles().joinToString("\n") { it.toUri().toString() })
+        val files = fs.listOSFiles().filterNot { it.fileName.toString().contains("todolist.md") }
+        logger.info("Agent files: \n{}", files.joinToString("\n") { it.toUri().toString() })
 
         if (config.enableTodoWrites) {
             runCatching { todo.onTaskCompletion(context.instruction) }
