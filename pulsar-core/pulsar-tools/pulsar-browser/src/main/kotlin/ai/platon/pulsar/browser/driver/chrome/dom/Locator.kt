@@ -58,7 +58,9 @@ open class Locator(
             val trimmed = selector.trim()
             val parts = trimmed.split(':')
             if (parts.size == 1) {
-                return Locator(Type.CSS_PATH, parts[0])
+                return if (parts[0].startsWith("//")) {
+                    Locator(Type.XPATH, parts[0])
+                } else Locator(Type.CSS_PATH, parts[0])
             }
 
             val type = Type.parse(parts[0]) ?: return null
