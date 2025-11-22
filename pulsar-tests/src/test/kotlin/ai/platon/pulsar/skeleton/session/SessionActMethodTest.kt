@@ -76,7 +76,7 @@ class SessionActMethodTest : TextToActionTestBase() {
      */
     @Test
     fun testSearchActionShowsResults() = runBlocking {
-        agent.resolve("search for 'browser'")
+        agent.run("search for 'browser'")
         val appeared = waitUntil { driver.selectFirstTextOrNull("#searchResults")?.contains("browser") == true }
         assertTrue(appeared, "Search results should appear and contain query text 'browser'")
     }
@@ -140,7 +140,7 @@ class SessionActMethodTest : TextToActionTestBase() {
      */
     @Test
     fun testExtractArticleTitles() = runBlocking {
-        agent.resolve("extract article titles and their hrefs from the main list")
+        agent.run("extract article titles and their hrefs from the main list")
         val history = agent.stateHistory.joinToString("\n")
         printlnPro(history)
         assertTrue(

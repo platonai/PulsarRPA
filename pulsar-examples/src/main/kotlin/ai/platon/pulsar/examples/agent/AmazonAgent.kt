@@ -12,5 +12,5 @@ suspend fun main() {
         4. write the result to a markdown file
         """.trimIndent()
 
-    agent.resolve(problem)
+    agent.run(problem)
 }

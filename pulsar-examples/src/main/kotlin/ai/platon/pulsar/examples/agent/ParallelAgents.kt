@@ -25,6 +25,6 @@ go to https://news.ycombinator.com/news , open the 4-th articles in new tab
 
     val iterator = Iterators.cycle(problems)
     agents.map { it to iterator.next() }
-        .map { (agent, problem) -> scope.launch { agent.resolve(problem) } }
+        .map { (agent, problem) -> scope.launch { agent.run(problem) } }
         .joinAll()
 }

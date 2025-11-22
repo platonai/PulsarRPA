@@ -61,10 +61,10 @@ class AgentToolExecutor : AbstractToolExecutor() {
                     agent.extract(paramString(args, "instruction", functionName)!!)
                 }
             }
-            // agent.resolve(problem: String)
+            // agent.run(problem: String)
             "resolve" -> {
                 validateArgs(args, allowed = setOf("problem"), required = setOf("problem"), functionName)
-                agent.resolve(paramString(args, "problem", functionName)!!)
+                agent.run(paramString(args, "problem", functionName)!!)
             }
             // Signal completion; just return true
             "done" -> {

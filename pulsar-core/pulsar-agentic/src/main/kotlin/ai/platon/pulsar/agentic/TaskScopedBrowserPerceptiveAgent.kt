@@ -20,13 +20,13 @@ class TaskScopedBrowserPerceptiveAgent(
 
     override suspend fun resolve(problem: String): ActResult {
         newContext()
-        return agent.resolve(problem)
+        return agent.run(problem)
     }
 
     // Every time call resolve, create a new BrowserPerceptiveAgent to do the job
     override suspend fun resolve(action: ActionOptions): ActResult {
         newContext()
-        return agent.resolve(action)
+        return agent.run(action)
     }
 
     override suspend fun observe(instruction: String): List<ObserveResult> {

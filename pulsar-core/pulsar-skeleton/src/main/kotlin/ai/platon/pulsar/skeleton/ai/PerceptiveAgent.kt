@@ -201,9 +201,29 @@ interface PerceptiveAgent : AutoCloseable {
      * High-level problem resolution entry. Implementations should construct an [ActionOptions]
      * from the raw problem string and delegate to [resolve] with the options.
      *
+     * @param task The user goal or instruction to fulfill.
+     * @return The final action result produced by the agent.
+     */
+    suspend fun run(task: String): ActResult
+
+    /**
+     * Run an autonomous loop (observe -> act -> ...) attempting to fulfill the user goal described
+     * in the provided [ActionOptions]. Implementations may apply retry and timeout strategies; they
+     * should record structured traces while keeping [stateHistory] focused on executed tool actions only.
+     *
+     * @param action The action options describing the user goal and context.
+     * @return The final action result for the resolution attempt.
+     */
+    suspend fun run(action: ActionOptions): ActResult
+
+    /**
+     * High-level problem resolution entry. Implementations should construct an [ActionOptions]
+     * from the raw problem string and delegate to [resolve] with the options.
+     *
      * @param problem The user goal or instruction to fulfill.
      * @return The final action result produced by the agent.
      */
+    @Deprecated("Use task(task) instead", ReplaceWith("agent.run(task)"))
     suspend fun resolve(problem: String): ActResult
 
     /**
@@ -214,6 +234,7 @@ interface PerceptiveAgent : AutoCloseable {
      * @param action The action options describing the user goal and context.
      * @return The final action result for the resolution attempt.
      */
+    @Deprecated("Use task(action) instead", ReplaceWith("agent.run(action)"))
     suspend fun resolve(action: ActionOptions): ActResult
 
     /**

@@ -99,14 +99,14 @@ Autonomous agents that understand natural language instructions and execute comp
 ```kotlin
 val agent = AgenticContexts.getOrCreateAgent()
 
-val problem = """
+val task = """
     1. go to amazon.com
     2. search for pens to draw on whiteboards
     3. compare the first 4 ones
     4. write the result to a markdown file
     """
 
-agent.resolve(problem)
+agent.run(task)
 ```
 
 ### Workflow Automation
@@ -133,7 +133,7 @@ var result = agent.act("scroll to the comment section")
 var content = driver.selectFirstTextOrNull("#comments")
 
 // Complex agent tasks
-result = agent.resolve("Search for 'smart phone', read the first four products, and give me a comparison.")
+result = agent.run("Search for 'smart phone', read the first four products, and give me a comparison.")
 
 // Capture and extract from current state
 page = session.capture(driver)
@@ -165,6 +165,12 @@ from load_and_select('https://www.amazon.com/dp/B08PP5MSVB -i 1s -njr 3', 'body'
 val rs = context.executeQuery(sql)
 println(ResultSetFormatter(rs, withHeader = true))
 ```
+
+Example code:
+
+* [X-SQL to scrape 100+ fields from an Amazon's product page](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
+* [X-SQLs to crawl all types of Amazon webpages](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
+
 
 ### High-Speed Parallel Processing
 
