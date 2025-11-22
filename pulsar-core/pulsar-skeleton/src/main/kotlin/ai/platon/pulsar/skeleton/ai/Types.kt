@@ -229,7 +229,7 @@ data class AgentState constructor(
             .joinToString("\n") { (k, s) -> "\t- $k: ${Strings.compactInline(s)}" }
 
         val state = if (success) """✨OK""" else "💔FAIL"
-        val event0 = event ?: method
+        val event0 = event ?: method ?: ""
 
         if (isComplete == true) {
             return """$state, event=$event0, isComplete=true 🎉"""

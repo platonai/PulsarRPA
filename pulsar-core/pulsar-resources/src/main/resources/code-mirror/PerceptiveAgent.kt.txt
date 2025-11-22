@@ -288,4 +288,9 @@ interface PerceptiveAgent : AutoCloseable {
      * @return The extraction result.
      */
     suspend fun extract(options: ExtractOptions): ExtractResult
+
+    /**
+     * Clear history so that new tasks remain unaffected by previous ones.
+     * */
+    suspend fun clearHistory()
 }

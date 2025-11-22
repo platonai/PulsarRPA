@@ -24,7 +24,7 @@ class Acts {
         result("action result", history.last())
 
         agent.clearHistory()
-        history = agent.run("goto https://en.cppreference.com/index.html , extract top 20 articles with there titles and hrefs from the main list")
+        history = agent.run("goto https://en.cppreference.com/index.html , extract top 20 articles' titles from the main list")
         result("action result", history.last())
 
         agent.processTrace.forEach { println("""🚩$it""") }

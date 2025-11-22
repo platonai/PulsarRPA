@@ -290,7 +290,7 @@ interface PerceptiveAgent : AutoCloseable {
     suspend fun extract(options: ExtractOptions): ExtractResult
 
     /**
-     * Clear history so the new tasks are not effected by the old tasks.
+     * Clear history so that new tasks remain unaffected by previous ones.
      * */
     suspend fun clearHistory()
 }
