@@ -74,6 +74,24 @@ class MicroToNanoTreeHelper constructor(
         }
     }
 
+    fun toNanoTreeUnfiltered(): NanoDOMTree {
+        return toNanoTreeUnfilteredRecursive(microTree)
+    }
+
+    private fun toNanoTreeUnfilteredRecursive(microNode: MicroDOMTreeNode): NanoDOMTree {
+        // Create the current node from the micro node
+        val root = newNode(microNode) ?: return NanoDOMTree()
+
+        // Recursively create child nano nodes, filter out empty placeholders
+        val childNanoList = microNode.children?.map { toNanoTreeUnfilteredRecursive(it) }
+
+        return if (childNanoList.isNullOrEmpty()) {
+            root
+        } else {
+            root.copy(children = childNanoList)
+        }
+    }
+
     private fun newNode(n: MicroDOMTreeNode?): NanoDOMTree? {
         val o = n?.originalNode ?: return null
 

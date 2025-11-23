@@ -4,6 +4,10 @@ import ai.platon.pulsar.agentic.context.AgenticContexts
 
 suspend fun main() {
     val agent = AgenticContexts.getOrCreateAgent()
-    val task = "go to https://news.ycombinator.com/news"
+
+    val task = """
+go to https://news.ycombinator.com/news , read top 3 articles and give me a summary
+        """.trimIndent()
+
     agent.run(task)
 }

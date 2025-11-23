@@ -106,7 +106,7 @@ val problem = """
     4. write the result to a markdown file
     """
 
-agent.resolve(problem)
+agent.run(problem)
 ```
 
 ### 工作流自动化
@@ -133,7 +133,7 @@ var result = agent.act("scroll to the comment section")
 var content = driver.selectFirstTextOrNull("#comments")
 
 // 复杂的智能体任务
-result = agent.resolve("Search for 'smart phone', read the first four products, and give me a comparison.")
+result = agent.run("Search for 'smart phone', read the first four products, and give me a comparison.")
 
 // 捕获并基于当前状态提取
 page = session.capture(driver)

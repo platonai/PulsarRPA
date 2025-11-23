@@ -303,4 +303,100 @@ class DOMStateBuilderTest {
             assertTrue(result.selectorMap.containsKey("hash:node-$i"), "selectorMap should contain element hash for node-$i")
         }
     }
+
+    @Test
+    fun `test href and navigation attributes are preserved in NanoDOMTree`() {
+        // Create an anchor node with href attribute
+        val anchorNode = DOMTreeNodeEx(
+            nodeId = 1,
+            backendNodeId = 101,
+            nodeName = "A",
+            attributes = mapOf(
+                "href" to "https://example.com",
+                "target" to "_blank",
+                "rel" to "noopener",
+                "title" to "Example Link"
+            ),
+            snapshotNode = SnapshotNodeEx(
+                bounds = DOMRect(10.0, 20.0, 100.0, 30.0)
+            )
+        )
+
+        // Create an img node with src attribute
+        val imgNode = DOMTreeNodeEx(
+            nodeId = 2,
+            backendNodeId = 102,
+            nodeName = "IMG",
+            attributes = mapOf(
+                "src" to "https://example.com/image.png",
+                "alt" to "Example Image"
+            ),
+            snapshotNode = SnapshotNodeEx(
+                bounds = DOMRect(10.0, 60.0, 200.0, 150.0)
+            )
+        )
+
+        // Create a form node with action attribute
+        val formNode = DOMTreeNodeEx(
+            nodeId = 3,
+            backendNodeId = 103,
+            nodeName = "FORM",
+            attributes = mapOf(
+                "action" to "/submit",
+                "method" to "POST"
+            ),
+            snapshotNode = SnapshotNodeEx(
+                bounds = DOMRect(10.0, 220.0, 300.0, 100.0)
+            )
+        )
+
+        val rootOriginal = DOMTreeNodeEx(
+            nodeId = 0,
+            nodeName = "DIV",
+            children = listOf(anchorNode, imgNode, formNode)
+        )
+
+        val root = TinyNode(
+            originalNode = rootOriginal,
+            children = listOf(
+                TinyNode(originalNode = anchorNode),
+                TinyNode(originalNode = imgNode),
+                TinyNode(originalNode = formNode)
+            )
+        )
+
+        // Build the DOM state (uses default attributes from DefaultIncludeAttributes)
+        val result = DOMStateBuilder.build(root)
+
+        // Convert to NanoDOMTree
+        val nanoTree = result.microTree.toNanoTreeUnfiltered()
+        val json = DOMSerializer.toJson(nanoTree)
+        val tree = mapper.readTree(json)
+
+        // Verify anchor node has href attribute
+        val anchorChild = tree.get("children").get(0)
+        val anchorAttrs = anchorChild.get("attributes")
+        assertNotNull(anchorAttrs, "Anchor node should have attributes")
+        assertTrue(anchorAttrs.has("href"), "Anchor node should have 'href' attribute")
+        assertEquals("https://example.com", anchorAttrs.get("href").asText())
+        assertTrue(anchorAttrs.has("target"), "Anchor node should have 'target' attribute")
+        assertEquals("_blank", anchorAttrs.get("target").asText())
+        assertTrue(anchorAttrs.has("rel"), "Anchor node should have 'rel' attribute")
+        assertEquals("noopener", anchorAttrs.get("rel").asText())
+
+        // Verify img node has src attribute
+        val imgChild = tree.get("children").get(1)
+        val imgAttrs = imgChild.get("attributes")
+        assertNotNull(imgAttrs, "Img node should have attributes")
+        assertTrue(imgAttrs.has("src"), "Img node should have 'src' attribute")
+        assertEquals("https://example.com/image.png", imgAttrs.get("src").asText())
+        assertTrue(imgAttrs.has("alt"), "Img node should have 'alt' attribute")
+
+        // Verify form node has action attribute
+        val formChild = tree.get("children").get(2)
+        val formAttrs = formChild.get("attributes")
+        assertNotNull(formAttrs, "Form node should have attributes")
+        assertTrue(formAttrs.has("action"), "Form node should have 'action' attribute")
+        assertEquals("/submit", formAttrs.get("action").asText())
+    }
 }
