@@ -1,4 +1,4 @@
-package ai.platon.pulsar.skeleton.ai
+package ai.platon.pulsar.agentic
 
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx

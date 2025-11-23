@@ -12,7 +12,7 @@ import ai.platon.pulsar.common.ai.llm.PromptTemplate
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.serialize.json.Pson
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
-import ai.platon.pulsar.skeleton.ai.AgentState
+import ai.platon.pulsar.agentic.AgentState
 import java.time.LocalDate
 import java.util.*
 

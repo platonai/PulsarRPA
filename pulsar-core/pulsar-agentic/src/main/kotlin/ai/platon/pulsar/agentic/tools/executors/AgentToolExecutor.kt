@@ -1,9 +1,8 @@
 package ai.platon.pulsar.agentic.tools.executors
 
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.printlnPro
-import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
-import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
+import ai.platon.pulsar.agentic.PerceptiveAgent
+import ai.platon.pulsar.agentic.ExtractionSchema
 import kotlin.reflect.KClass
 
 class AgentToolExecutor : AbstractToolExecutor() {

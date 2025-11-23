@@ -2,8 +2,7 @@ package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
-import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
-import ai.platon.pulsar.skeleton.ai.ToolCallSpec
+import ai.platon.pulsar.agentic.ToolCallSpec
 import ai.platon.pulsar.skeleton.common.llm.LLMUtils
 
 object SourceCodeToToolCallSpec {

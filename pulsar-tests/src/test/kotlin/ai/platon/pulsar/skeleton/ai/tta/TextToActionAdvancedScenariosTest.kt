@@ -2,7 +2,7 @@ package ai.platon.pulsar.skeleton.ai.tta
 
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.ai.ActionDescription
+import ai.platon.pulsar.agentic.ActionDescription
 import ai.platon.pulsar.util.server.EnableMockServerApplication
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue

@@ -1,8 +1,7 @@
 package ai.platon.pulsar.skeleton.session
 
 import ai.platon.pulsar.common.printlnPro
-import ai.platon.pulsar.skeleton.PulsarSettings
-import ai.platon.pulsar.skeleton.ai.ActionOptions
+import ai.platon.pulsar.agentic.ActionOptions
 import ai.platon.pulsar.skeleton.ai.tta.TextToActionTestBase
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.util.server.EnableMockServerApplication

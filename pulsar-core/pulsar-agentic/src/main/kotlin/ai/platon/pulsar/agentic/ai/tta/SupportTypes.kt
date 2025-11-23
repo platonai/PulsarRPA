@@ -2,9 +2,9 @@ package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.agentic.ai.AgentMessageList
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
-import ai.platon.pulsar.skeleton.ai.ActionDescription
-import ai.platon.pulsar.skeleton.ai.AgentState
-import ai.platon.pulsar.skeleton.ai.DetailedActResult
+import ai.platon.pulsar.agentic.ActionDescription
+import ai.platon.pulsar.agentic.AgentState
+import ai.platon.pulsar.agentic.DetailedActResult
 
 data class AgentResponseAction(
     val domain: String? = null,

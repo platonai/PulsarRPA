@@ -4,8 +4,8 @@ import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
-import ai.platon.pulsar.skeleton.ai.ActionDescription
-import ai.platon.pulsar.skeleton.ai.AgentState
+import ai.platon.pulsar.agentic.ActionDescription
+import ai.platon.pulsar.agentic.AgentState
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

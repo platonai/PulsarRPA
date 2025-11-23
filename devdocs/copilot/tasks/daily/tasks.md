@@ -6,45 +6,11 @@ Read root README-AI.md and `devdocs/copilot/test-guide.md` for guidelines
 
 ## docs & comments
 
-- generate detailed comments for DomService and ChromeCdpDomService
-
 ## feature
-
-### refine `ClickableElementDetector`
-
-- `ClickableElementDetectorTest` for basic tests
-- `ClickableElementDetectorE2ETest` for e2e
-  - use real page `interactive-dynamic.html`
-  - read `interactive-dynamic.html` to design the tests
-  - write tests with the same pattern with `ChromeDomServiceIsScrollableTest`
-
-### implement ChromeCdpDomService#buildBrowserState
-
-### When serialize object to json in pulsar-browser module, always Round to two decimal places
 
 ### override suspend fun act(observe: ObserveResult): ActResult
 
 - function call 中有一些参数需要提前传入，或者要求 LLM 留空
-
-## Failed tests 🚩
-
-
-
-## Tool Call Upgrading Automatically  🚩
-
-1. update MiniWebDriver.kt from WebDriver.kt
-2. update ToolCallExecutor
-3. update ActionValidator
-
-## Testable Tool Calls
-
-Ensure all expressions in tool call specification can be correctly executed.
-
-1. test against interactive-dynamic.html
-2. generate kotlin expressions for each tool call
-3. call `ToolCallExecutor.execute()` to execute each kotlin expression
-4. check the web page to ensure the tool call is called as expected
-
 
 ## PageStateTracker
 
@@ -72,19 +38,13 @@ May be combined:
 
 ## Bugs
 
-- WebDriver.scrollBy returns a wrong value ✅
-- scroll 后，highlight 绘制错误 ✅
-- no AI tool to extract links, attributes and properties
-- add xpath support for workflow ✅
 - add driver.hover(selector) ✅
-- ChatModel as a primary interface for user
 
 ## Features
 
 - add tool: hover
 - test todolist.md, `write todolist.md with 5 steps, and then replace the plan with 7 steps, all steps are mock steps for test`
+- ChatModel as a primary interface for user
 
 ## Notes
-
-- 增加对 AbstractWebDriver 中所有 js 方法的测试，在PulsarWebDriverMockSiteTests中测试 🚩
 

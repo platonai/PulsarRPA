@@ -1,7 +1,7 @@
 package ai.platon.pulsar.examples.agent
 
 import ai.platon.pulsar.agentic.context.AgenticContexts
-import ai.platon.pulsar.skeleton.ai.ActionOptions
+import ai.platon.pulsar.agentic.ActionOptions
 
 suspend fun main() {
     val agent = AgenticContexts.getOrCreateAgent()

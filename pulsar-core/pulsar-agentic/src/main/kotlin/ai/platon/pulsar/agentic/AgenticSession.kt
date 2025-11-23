@@ -6,9 +6,6 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.ql.SessionConfig
 import ai.platon.pulsar.ql.h2.AbstractH2SQLSession
 import ai.platon.pulsar.ql.h2.H2SessionDelegate
-import ai.platon.pulsar.skeleton.ai.ActionDescription
-import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
-import ai.platon.pulsar.skeleton.ai.ToolCallResult
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
 import ai.platon.pulsar.skeleton.session.AbstractPulsarSession
 import ai.platon.pulsar.skeleton.session.PulsarSession

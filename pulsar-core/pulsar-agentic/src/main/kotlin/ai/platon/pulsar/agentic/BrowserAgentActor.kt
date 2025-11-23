@@ -9,8 +9,6 @@ import ai.platon.pulsar.agentic.ai.agent.detail.PageStateTracker
 import ai.platon.pulsar.agentic.ai.tta.ContextToAction
 import ai.platon.pulsar.agentic.tools.AgentToolManager
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.skeleton.ai.*
-import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
@@ -47,6 +45,7 @@ open class BrowserAgentActor(
     protected val stateManager by lazy { AgentStateManager(this, pageStateTracker) }
 
     override val uuid get() = _uuid
+    override val companionSession: AgenticSession get() = session
     override val stateHistory: List<AgentState> get() = stateManager.stateHistory
     override val processTrace: List<ProcessTrace> get() = stateManager.processTrace
 

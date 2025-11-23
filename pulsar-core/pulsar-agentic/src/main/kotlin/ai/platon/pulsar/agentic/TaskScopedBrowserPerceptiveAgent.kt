@@ -1,7 +1,5 @@
 package ai.platon.pulsar.agentic
 
-import ai.platon.pulsar.skeleton.ai.*
-import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import java.util.*
 
 /**

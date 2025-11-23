@@ -4,10 +4,10 @@ import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.agentic.AgentConfig
 import ai.platon.pulsar.agentic.BrowserPerceptiveAgent
 import ai.platon.pulsar.common.printlnPro
-import ai.platon.pulsar.skeleton.ai.ActionOptions
-import ai.platon.pulsar.skeleton.ai.ExtractOptions
-import ai.platon.pulsar.skeleton.ai.ObserveOptions
-import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
+import ai.platon.pulsar.agentic.ActionOptions
+import ai.platon.pulsar.agentic.ExtractOptions
+import ai.platon.pulsar.agentic.ObserveOptions
+import ai.platon.pulsar.agentic.ExtractionSchema
 import ai.platon.pulsar.util.TestHelper
 import ai.platon.pulsar.util.server.EnableMockServerApplication
 import com.fasterxml.jackson.databind.ObjectMapper

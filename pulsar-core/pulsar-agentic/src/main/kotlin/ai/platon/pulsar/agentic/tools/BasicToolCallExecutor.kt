@@ -1,13 +1,12 @@
 package ai.platon.pulsar.agentic.tools
 
-import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.tools.executors.BrowserToolExecutor
 import ai.platon.pulsar.agentic.tools.executors.ToolExecutor
 import ai.platon.pulsar.agentic.tools.executors.WebDriverToolExecutor
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
-import ai.platon.pulsar.skeleton.ai.TcEvaluate
-import ai.platon.pulsar.skeleton.ai.ToolCall
+import ai.platon.pulsar.agentic.PerceptiveAgent
+import ai.platon.pulsar.agentic.TcEvaluate
+import ai.platon.pulsar.agentic.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import javax.script.ScriptEngineManager

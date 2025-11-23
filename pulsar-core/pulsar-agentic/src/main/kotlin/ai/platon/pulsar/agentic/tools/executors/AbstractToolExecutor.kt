@@ -3,8 +3,8 @@ package ai.platon.pulsar.agentic.tools.executors
 import ai.platon.pulsar.agentic.common.SimpleKotlinParser
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.skeleton.ai.TcEvaluate
-import ai.platon.pulsar.skeleton.ai.ToolCall
+import ai.platon.pulsar.agentic.TcEvaluate
+import ai.platon.pulsar.agentic.ToolCall
 import kotlin.reflect.KClass
 
 interface ToolExecutor {

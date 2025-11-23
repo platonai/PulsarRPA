@@ -1,6 +1,14 @@
 package ai.platon.pulsar.agentic.ai.agent.detail
 
+import ai.platon.pulsar.agentic.ActionOptions
+import ai.platon.pulsar.agentic.AgentState
 import ai.platon.pulsar.agentic.BrowserAgentActor
+import ai.platon.pulsar.agentic.DetailedActResult
+import ai.platon.pulsar.agentic.ObserveElement
+import ai.platon.pulsar.agentic.ObserveOptions
+import ai.platon.pulsar.agentic.ProcessTrace
+import ai.platon.pulsar.agentic.ToolCall
+import ai.platon.pulsar.agentic.ToolCallResult
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
@@ -8,7 +16,6 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
-import ai.platon.pulsar.skeleton.ai.*
 import kotlinx.coroutines.withTimeout
 import java.lang.ref.WeakReference
 import java.nio.file.Path

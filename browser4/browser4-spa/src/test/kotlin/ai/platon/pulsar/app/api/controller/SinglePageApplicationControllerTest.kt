@@ -5,11 +5,11 @@ import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.rest.api.entities.NavigateRequest
 import ai.platon.pulsar.rest.api.entities.ScreenshotRequest
-import ai.platon.pulsar.skeleton.ai.ActResult
-import ai.platon.pulsar.skeleton.ai.ActionOptions
-import ai.platon.pulsar.skeleton.ai.ExtractOptions
-import ai.platon.pulsar.skeleton.ai.ExtractResult
-import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
+import ai.platon.pulsar.agentic.ActResult
+import ai.platon.pulsar.agentic.ActionOptions
+import ai.platon.pulsar.agentic.ExtractOptions
+import ai.platon.pulsar.agentic.ExtractResult
+import ai.platon.pulsar.agentic.ExtractionSchema
 import ai.platon.pulsar.test.TestResourceUtil.Companion.PRODUCT_DETAIL_URL
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat

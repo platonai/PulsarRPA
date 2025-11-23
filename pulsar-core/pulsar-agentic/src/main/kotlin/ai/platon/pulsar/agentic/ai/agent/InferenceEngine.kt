@@ -10,9 +10,9 @@ import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.BrowserChatModel
-import ai.platon.pulsar.skeleton.ai.ActionDescription
-import ai.platon.pulsar.skeleton.ai.AgentState
-import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
+import ai.platon.pulsar.agentic.ActionDescription
+import ai.platon.pulsar.agentic.AgentState
+import ai.platon.pulsar.agentic.ExtractionSchema
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper

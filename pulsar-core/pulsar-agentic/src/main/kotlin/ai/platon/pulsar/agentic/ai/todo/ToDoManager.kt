@@ -4,8 +4,8 @@ import ai.platon.pulsar.agentic.AgentConfig
 import ai.platon.pulsar.agentic.ai.agent.detail.StructuredAgentLogger
 import ai.platon.pulsar.agentic.common.AgentFileSystem
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.skeleton.ai.ObserveElement
-import ai.platon.pulsar.skeleton.ai.ToolCall
+import ai.platon.pulsar.agentic.ObserveElement
+import ai.platon.pulsar.agentic.ToolCall
 import java.time.Instant
 import java.time.LocalDateTime
 import java.util.UUID

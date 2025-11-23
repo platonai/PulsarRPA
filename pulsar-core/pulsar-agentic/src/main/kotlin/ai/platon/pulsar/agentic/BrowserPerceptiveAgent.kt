@@ -9,7 +9,6 @@ import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
-import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import kotlinx.coroutines.*

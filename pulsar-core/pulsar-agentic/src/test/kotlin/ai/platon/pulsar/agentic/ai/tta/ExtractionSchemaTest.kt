@@ -1,13 +1,12 @@
 package ai.platon.pulsar.agentic.ai.tta
 
-import ai.platon.pulsar.skeleton.ai.support.ExtractionField
-import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
+import ai.platon.pulsar.agentic.ExtractionField
+import ai.platon.pulsar.agentic.ExtractionSchema
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertNotNull
 import kotlin.test.assertEquals
 
 class ExtractionSchemaTest {
