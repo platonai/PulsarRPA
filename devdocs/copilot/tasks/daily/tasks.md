@@ -76,7 +76,8 @@ May be combined:
 - scroll 后，highlight 绘制错误 ✅
 - no AI tool to extract links, attributes and properties
 - add xpath support for workflow ✅
-- add driver.hover(selector)
+- add driver.hover(selector) ✅
+- ChatModel as a primary interface for user
 
 ## Features
 

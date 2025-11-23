@@ -66,22 +66,18 @@
 
    编辑 [application.properties](application.properties) 并添加你的 API Key。
 
-3. **构建项目**（Windows）
-   ```cmd
-   mvnw.cmd -q -DskipTests
-   ```
-   或在 Linux/macOS 上：
-   ```bash
+3. **构建项目**
+   ```shell
    ./mvnw -q -DskipTests
    ```
 
-4. **运行示例**（Windows）
-   ```cmd
-   ./bin/run-examples.ps1
+4. **运行示例**
+   ```shell
+   ./mvnw -pl pulsar-examples exec:java -D"exec.mainClass=ai.platon.pulsar.examples.agent.Browser4AgentKt"
    ```
-   或在 Linux/macOS 上：
-   ```bash
-   mvnw.cmd -pl pulsar-examples exec:java -D"exec.mainClass=ai.platon.pulsar.examples.agent.Browser4AgentKt"
+   如有乱码问题：
+   ```shell
+   ./bin/run-examples.ps1
    ```
 
    在 `pulsar-examples` 模块中探索并运行示例，直观了解 Browser4 的能力。
