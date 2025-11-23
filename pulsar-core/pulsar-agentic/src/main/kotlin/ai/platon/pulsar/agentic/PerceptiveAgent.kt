@@ -1,7 +1,6 @@
 package ai.platon.pulsar.agentic
 
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.skeleton.session.PulsarSession
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.JsonNode
 import com.google.common.annotations.Beta
@@ -185,8 +184,7 @@ data class ObserveResult constructor(
 interface PerceptiveAgent : AutoCloseable {
     val uuid: UUID
 
-    @get:Beta
-    val companionSession: PulsarSession
+    val session: AgenticSession
 
     /**
      * The agent state history exists to give the AI agent a concise, sequential memory of what has been done.

@@ -1,18 +1,20 @@
 package ai.platon.pulsar.agentic
 
+import com.google.common.annotations.Beta
 import java.util.*
 
 /**
  * An agent delegate that creates a new agent every time starts a new resolve loop.
  * */
 class TaskScopedBrowserPerceptiveAgent(
-    val session: AgenticSession
+    override val session: AgenticSession
 ) : PerceptiveAgent {
     private val historyAgents = mutableListOf<PerceptiveAgent>()
 
     private var agent: PerceptiveAgent = ObserveActBrowserAgent(session)
 
     override val uuid: UUID = UUID.randomUUID()
+
     override val stateHistory: List<AgentState> get() = agent.stateHistory
     override val processTrace: List<ProcessTrace> get() = agent.processTrace
 

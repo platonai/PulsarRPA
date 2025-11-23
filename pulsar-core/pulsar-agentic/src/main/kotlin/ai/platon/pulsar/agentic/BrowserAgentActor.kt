@@ -20,7 +20,7 @@ import java.time.Instant
 import java.util.*
 
 open class BrowserAgentActor(
-    val session: AgenticSession,
+    override val session: AgenticSession,
     val config: AgentConfig
 ) : PerceptiveAgent {
     private val logger = getLogger(BrowserAgentActor::class)
@@ -45,7 +45,6 @@ open class BrowserAgentActor(
     protected val stateManager by lazy { AgentStateManager(this, pageStateTracker) }
 
     override val uuid get() = _uuid
-    override val companionSession: AgenticSession get() = session
     override val stateHistory: List<AgentState> get() = stateManager.stateHistory
     override val processTrace: List<ProcessTrace> get() = stateManager.processTrace
 
