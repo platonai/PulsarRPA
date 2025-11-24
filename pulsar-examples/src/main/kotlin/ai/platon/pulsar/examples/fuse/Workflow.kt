@@ -22,7 +22,7 @@ suspend fun main() {
     var result = agent.act("search for 'browser' (RESULTS will display in the same page)")
     var content = driver.selectFirstTextOrNull("body")
     content = driver.selectFirstTextOrNull("body")
-    result = agent.resolve("find the search box, type 'web scraping' and submit the form (RESULTS will display in the same page)")
+    var history = agent.run("find the search box, type 'web scraping' and submit the form (RESULTS will display in the same page)")
     page = session.capture(driver)
     document = session.parse(page)
     fields = session.extract(document, mapOf("title" to "#title"))
@@ -33,11 +33,10 @@ suspend fun main() {
     content = driver.selectFirstTextOrNull("body")
 
     // 3) Scroll to bottom (triggers infinite scroll loading extra items on mock page)
-    result = agent.resolve("scroll to the bottom of the page and wait for new content to load")
+    history = agent.run("scroll to the bottom of the page and wait for new content to load")
 
     // 4) Open the first comment thread
-    result =
-        agent.resolve("goto https://www.amazon.com/dp/B08PP5MSVB , search for 'calabi-yau' and submit the form")
+    history = agent.run("goto https://www.amazon.com/dp/B08PP5MSVB , search for 'calabi-yau' and submit the form")
 
     // 5) Navigate back
     result = agent.act("navigate back")
@@ -46,8 +45,7 @@ suspend fun main() {
     result = agent.act("navigate forward")
 
     // 7) Extract specific data after interactions
-    result =
-        agent.resolve("goto https://en.cppreference.com/index.html , extract first 10 articles with there titles and hrefs from the main list")
+    history = agent.run("goto https://en.cppreference.com/index.html , extract first 10 articles with there titles and hrefs from the main list")
 
     // 5) Navigate back
     result = agent.act("navigate back")
