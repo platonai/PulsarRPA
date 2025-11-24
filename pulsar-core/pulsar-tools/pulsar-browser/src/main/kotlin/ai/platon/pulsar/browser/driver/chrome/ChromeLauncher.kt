@@ -251,7 +251,7 @@ class ChromeLauncher constructor(
                 Runtimes.destroyProcess(p, options.shutdownWaitTime)
             }
 
-            if (Thread.interrupted()) {
+            if (Thread.currentThread().isInterrupted) {
                 return
             }
 
