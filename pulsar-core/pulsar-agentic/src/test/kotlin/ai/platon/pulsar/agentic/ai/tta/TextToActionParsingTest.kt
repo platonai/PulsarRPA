@@ -42,7 +42,7 @@ class TextToActionParsingTest {
         assertEquals("#submit", ad.toolCall!!.arguments["selector"])
         assertFalse(ad.isComplete)
         assertNull(ad.summary)
-        assertTrue(ad.nextSuggestions.isEmpty())
+        assertTrue(ad.nextSuggestions?.isEmpty() == true)
     }
 
     @Test
