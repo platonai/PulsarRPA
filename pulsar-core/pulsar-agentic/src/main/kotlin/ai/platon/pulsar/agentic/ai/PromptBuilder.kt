@@ -96,7 +96,6 @@ class PromptBuilder() {
 - 按键操作（如"按回车"），用press方法（参数为"A"/"Enter"/"Space"）。特殊键首字母大写。不要模拟点击屏幕键盘上的按键
 - 仅对特殊按键（如 Enter、Tab、Escape）进行首字母大写
 - 注意：用户难以区分按钮和链接
-- 当页面视口数超过5时，除非用户明确要求，不要逐屏阅读，因为逐屏阅读非常慢
 - 若预期元素缺失，尝试刷新页面、滚动或返回上一页
 - 若向字段输入内容：1. 无需先滚动和聚焦（工具内部处理）2. 可能需1) 回车 2) 显式搜索按钮 3) 下拉选项以完成操作。
 - 若填写输入框后操作序列中断，通常是因为页面发生了变化（例如输入框下方弹出了建议选项）
@@ -233,7 +232,7 @@ class ExtractionSchema(val fields: List<ExtractionField>)
 
 在每一步，你的输入将包括：
 1. `## 智能体历史`：按时间顺序的事件流，包含你之前的动作及其结果。
-2. `## 智能体状态`：当前的 <user_request>、<file_system> 摘要、<todo_contents> 和 <agent_history> 摘要。
+2. `## 智能体状态`：当前的 <user_request>、<file_system> 摘要、<todo_contents> 和 `## 智能体历史` 摘要。
 3. `## 浏览器状态`：当前 URL、打开的标签页、可交互元素的索引及可见页面内容。
 4. `## 视觉信息`：浏览器截图。如果你之前使用过截图，这里将包含截图。
 
@@ -347,7 +346,7 @@ $A11Y_TREE_NOTE_CONTENT
 
 - 如需输入，直接输入，无需点击、滚动或聚焦，工具层处理
 - 屏幕阅读规则：默认逐屏阅读，屏幕视觉内容是推理的最终依据
-- 当视口数超过5时，除非用户要求，不要逐屏阅读，而是滚动到网页底部保证网页完全加载，然后使用全文提取工具`driver.textContent()`提取网页内容进行分析
+  - 处理阅读理解、网页摘要等任务时，优先考虑全文处理工具（driver.textContent/agent.summarize/agent.extract），避免连续滚动超过5次。
 - 不要在一步中尝试多条不同路径。始终为每一步设定一个明确目标。重要的是在下一步你能看到动作是否成功，因此不要链式调用会多次改变浏览器状态的动作，例如：
    - 不要使用 click 然后再 navigateTo，因为你无法确认 click 是否成功。
    - 不要连续使用 switchTab，因为你看不到中间状态。
@@ -377,10 +376,10 @@ $A11Y_TREE_NOTE_CONTENT
 
 ### 推理指南
 
-- 基于 <agent_history> 推理，以追踪朝向 <user_request> 的进展与上下文。
-- 分析 <agent_history> 中最近的 `nextGoal` 与 `evaluationPreviousGoal`，并明确说明你之前尝试达成的目标。
-- 分析所有相关的 <agent_history>、`## 浏览器状态` 和截图以了解当前状态。
-- 明确判断上一步动作的成功/失败/不确定性。不要仅仅因为上一步在 <agent_history> 中显示已执行就认为成功。例如，你可能记录了 “动作 1/1：在元素 3 中输入 '2025-05-05'”，但输入实际上可能失败。始终使用 `## 视觉信息`（截图）作为主要事实依据；如果截图不可用，则备选使用 `## 浏览器状态`。若预期变化缺失，请将上一步标记为失败（或不确定），并制定恢复计划。
+- 基于 `## 智能体历史` 推理，以追踪朝向 <user_request> 的进展与上下文。
+- 分析 `## 智能体历史` 中最近的 `nextGoal` 与 `evaluationPreviousGoal`，并明确说明你之前尝试达成的目标。
+- 分析所有相关的 `## 智能体历史`、`## 浏览器状态` 和截图以了解当前状态。
+- 明确判断上一步动作的成功/失败/不确定性。不要仅仅因为上一步在 `## 智能体历史` 中显示已执行就认为成功。例如，你可能记录了 “动作 1/1：在元素 3 中输入 '2025-05-05'”，但输入实际上可能失败。始终使用 `## 视觉信息`（截图）作为主要事实依据；如果截图不可用，则备选使用 `## 浏览器状态`。若预期变化缺失，请将上一步标记为失败（或不确定），并制定恢复计划。
 - 如果 `todolist.md` 为空且任务是多步的，使用文件工具在 `todolist.md` 中生成分步计划。
 - 分析 `todolist.md` 以指导并追踪进展。
 - 如果有任何 `todolist.md` 项已完成，请在文件中将其标记为完成。
@@ -798,7 +797,7 @@ $historyJsonList
         val message = """
 ## 智能体状态
 
-当前的 <user_request>、<file_system> 摘要、<todo_contents> 和 <agent_history> 摘要。
+当前的 <user_request>、<file_system> 摘要、<todo_contents> 和 `## 智能体历史` 摘要。
 
 ---
 
@@ -1172,10 +1171,6 @@ ${nanoTree.lazyJson}
 
     fun buildSummaryPrompt(goal: String, stateHistory: AgentHistory): Pair<String, String> {
         val system = "你是总结助理，请基于执行轨迹对原始目标进行总结，输出 JSON。"
-
-//        val history = stateHistory.withIndex().joinToString("\n") {
-//            "${it.index}.\t🚩 ${it.value}"
-//        }
 
         val history = stateHistory.states.joinToString("\n") { Pson.toJson(it) }
 

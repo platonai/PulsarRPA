@@ -919,7 +919,11 @@ open class BrowserPerceptiveAgent constructor(
         stateManager.addTrace(context.agentState, event = "complete", message = "#${step} complete")
 
         val files = fs.listOSFiles().filterNot { it.fileName.toString().contains("todolist.md") }
-        logger.info("Agent files: \n{}", files.joinToString("\n") { it.toUri().toString() })
+        if (files.isNotEmpty()) {
+            logger.info("Agent files: \n{}", files.joinToString("\n") { it.toUri().toString() })
+        } else {
+            logger.info("No files used by this agent")
+        }
 
         if (config.enableTodoWrites) {
             runCatching { todo.onTaskCompletion(context.instruction) }
@@ -935,11 +939,20 @@ open class BrowserPerceptiveAgent constructor(
         logger.info("✅ agent.done sid={} steps={} dur={}", cxtIn.sid, cxtIn.step, executionTime)
 
         val result = generateFinalSummary(instruction, cxtIn)
-        stateManager.addToHistory(result.context.agentState)
 
         val summary = result.modelResponse
         val context = result.context
         val ok = summary.state != ResponseState.OTHER
+
+        val agentState = result.context.agentState.also {
+            it.instruction = instruction
+            it.isComplete = true
+            it.domain = "summary"
+            it.event = "summary"
+            it.method = "summary"
+            it.step = context.step
+        }
+//        stateManager.addToHistory(agentState)
 
         return ActResult(
             success = ok,

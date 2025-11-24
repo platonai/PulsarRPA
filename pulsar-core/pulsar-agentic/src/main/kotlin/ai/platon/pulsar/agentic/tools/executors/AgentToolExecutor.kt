@@ -71,8 +71,7 @@ class AgentToolExecutor : AbstractToolExecutor() {
                 agent.run(paramString(args, "task", functionName)!!)
             }
             "summarize" -> {
-                validateArgs(
-                    args, allowed = setOf("instruction", "schema"), required = setOf(), functionName)
+                validateArgs(args, allowed = setOf("instruction", "selector"), required = setOf(), functionName)
                 val instruction = paramString(args, "instruction", functionName)
                 val selector = paramString(args, "selector", functionName)
                 agent.summarize(instruction, selector)

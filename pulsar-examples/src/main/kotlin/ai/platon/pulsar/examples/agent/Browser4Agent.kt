@@ -6,9 +6,9 @@ suspend fun main() {
     val agent = AgenticContexts.getOrCreateAgent()
 
     val task = """
-        1. go to https://news.ycombinator.com/news
-        2. search for browser
-        3. read top 3 articles, give me a summary for each article
+        1. Navigate to https://news.ycombinator.com/news.
+        2. Search for the keyword "browser".
+        3. Read the top 3 results and summarize each one.
         """.trimIndent()
 
     val history = agent.run(task)

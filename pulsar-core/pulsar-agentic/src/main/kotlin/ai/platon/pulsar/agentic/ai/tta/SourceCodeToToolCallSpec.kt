@@ -46,8 +46,8 @@ object SourceCodeToToolCallSpec {
             val method = m.name
             // Use parsed return type; default to Unit when absent
             val returnType = m.returnType.ifBlank { "Unit" }
-            val desc = m.kdoc?.let { compactDoc(it) + "\n" }
-            toolCallSpecs += ToolCallSpec(domain, method, arguments, returnType, desc)
+            val description = m.kdoc
+            toolCallSpecs += ToolCallSpec(domain, method, arguments, returnType, description)
         }
 
         return toolCallSpecs
