@@ -66,22 +66,18 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
    > Edit [application.properties](application.properties) and add your API key.
 
-3. **Build the project** (Windows)
-   ```cmd
-   mvnw.cmd -q -DskipTests
-   ```
-   Or on Linux/macOS:
-   ```bash
+3. **Build the project**
+   ```shell
    ./mvnw -q -DskipTests
    ```
 
-4. **Run examples** (Windows)
-   ```cmd
-   ./bin/run-examples.ps1
+4. **Run examples**
+   ```shell
+   ./mvnw -pl pulsar-examples exec:java -D"exec.mainClass=ai.platon.pulsar.examples.agent.Browser4AgentKt"
    ```
-   Or on Linux/macOS:
-   ```bash
-   mvnw.cmd -pl pulsar-examples exec:java -D"exec.mainClass=ai.platon.pulsar.examples.agent.Browser4AgentKt"
+   If you have encoding problem on Windows:
+   ```shell
+   ./bin/run-examples.ps1
    ```
 
    Explore and run examples in the `pulsar-examples` module to see Browser4 in action.
@@ -99,14 +95,14 @@ Autonomous agents that understand natural language instructions and execute comp
 ```kotlin
 val agent = AgenticContexts.getOrCreateAgent()
 
-val problem = """
+val task = """
     1. go to amazon.com
     2. search for pens to draw on whiteboards
     3. compare the first 4 ones
     4. write the result to a markdown file
     """
 
-agent.resolve(problem)
+agent.run(task)
 ```
 
 ### Workflow Automation
@@ -114,7 +110,7 @@ agent.resolve(problem)
 Low-level browser automation & data extraction with fine-grained control.
 
 **Features:**
-- Direct and full Chrome DevTools Protocol (CDP) control
+- Direct and full Chrome DevTools Protocol (CDP) control, coroutine safe
 - Precise element interactions (click, scroll, input)
 - Fast data extraction using CSS selectors/XPath
 
@@ -133,7 +129,7 @@ var result = agent.act("scroll to the comment section")
 var content = driver.selectFirstTextOrNull("#comments")
 
 // Complex agent tasks
-result = agent.resolve("Search for 'smart phone', read the first four products, and give me a comparison.")
+var history = agent.run("Search for 'smart phone', read the first four products, and give me a comparison.")
 
 // Capture and extract from current state
 page = session.capture(driver)
@@ -166,6 +162,12 @@ val rs = context.executeQuery(sql)
 println(ResultSetFormatter(rs, withHeader = true))
 ```
 
+Example code:
+
+* [X-SQL to scrape 100+ fields from an Amazon's product page](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
+* [X-SQLs to crawl all types of Amazon webpages](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
+
+
 ### High-Speed Parallel Processing
 
 Achieve extreme throughput with parallel browser control and smart resource optimization.
@@ -188,6 +190,14 @@ val links = LinkExtractors.fromResource("urls.txt")
 
 session.submitAll(links)
 ```
+
+🎬 YouTube:
+[![Watch the video](https://img.youtube.com/vi/_BcryqWzVMI/0.jpg)](https://www.youtube.com/watch?v=_BcryqWzVMI)
+
+📺 Bilibili:
+[https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
+
+
 ---
 
 ### Auto Extraction

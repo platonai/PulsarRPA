@@ -3,7 +3,7 @@ package ai.platon.pulsar.examples.fuse
 import ai.platon.pulsar.agentic.context.AgenticContexts
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.printlnPro
-import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
+import ai.platon.pulsar.agentic.ExtractionSchema
 
 class Extract {
     private var stepNo = 0
@@ -27,7 +27,7 @@ class Extract {
         result("extract result", extractResult)
 
         action = "提取列表页文章数据：文章标题，评论信息"
-        val result = agent.resolve(action)
+        val result = agent.run(action)
         result("action result", result)
     }
 

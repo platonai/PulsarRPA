@@ -1,5 +1,6 @@
 package ai.platon.pulsar.agentic.ai
 
+import ai.platon.pulsar.agentic.AgentHistory
 import ai.platon.pulsar.agentic.ai.agent.ExtractParams
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
@@ -12,7 +13,7 @@ import ai.platon.pulsar.common.ai.llm.PromptTemplate
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.serialize.json.Pson
 import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
-import ai.platon.pulsar.skeleton.ai.AgentState
+import ai.platon.pulsar.agentic.AgentState
 import java.time.LocalDate
 import java.util.*
 
@@ -231,7 +232,7 @@ class ExtractionSchema(val fields: List<ExtractionField>)
 
 在每一步，你的输入将包括：
 1. `## 智能体历史`：按时间顺序的事件流，包含你之前的动作及其结果。
-2. `## 智能体状态`：当前的 <user_request>、<file_system> 摘要、<todo_contents> 和 <step_info> 摘要。
+2. `## 智能体状态`：当前的 <user_request>、<file_system> 摘要、<todo_contents> 和 `## 智能体历史` 摘要。
 3. `## 浏览器状态`：当前 URL、打开的标签页、可交互元素的索引及可见页面内容。
 4. `## 视觉信息`：浏览器截图。如果你之前使用过截图，这里将包含截图。
 
@@ -325,11 +326,11 @@ $A11Y_TREE_NOTE_CONTENT
 - 当达到允许的最大步骤数（`max_steps`）时，即使任务未完成也要完成。
 - 如果绝对无法继续，也要完成。
 
-`任务完成输出` 是你终止任务并与用户共享发现结果的机会。
+`## 任务完成输出` 是你终止任务并与用户共享发现结果的机会。
 - 仅当完整地、无缺失地完成 USER REQUEST 时，将 `success` 设为 `true`。
 - 如果有任何部分缺失、不完整或不确定，将 `success` 设为 `false`，并在 summary 字段中明确说明状态。
 - 如果用户要求特定格式（例如：“返回具有以下结构的 JSON”或“以指定格式返回列表”），确保在回答中使用正确的格式。
-- 如果用户要求结构化输出，`## 输出格式` 段落规定的 schema 将被修改。解决任务时必须考虑该 schema。
+- 如果用户要求结构化输出，`## 输出要求` 段落规定的 schema 将被修改。解决任务时必须考虑该 schema。
 
 ---
 
@@ -344,12 +345,10 @@ $A11Y_TREE_NOTE_CONTENT
 ## 效率指南
 
 - 如需输入，直接输入，无需点击、滚动或聚焦，工具层处理
-- 屏幕阅读规则
-  - 默认逐屏阅读，屏幕视觉内容是推理的最终依据
-  - 当视口数超过5屏时，除非用户要求，否则不要逐屏阅读，而是滚动到网页底部保证网页完全加载，然后使用全文提取工具`driver.textContent()`提取网页内容进行分析
+- 处理阅读理解、网页摘要等任务时，优先考虑全文处理工具（driver.textContent/agent.summarize/agent.extract），避免连续滚动超过5次。
 - 不要在一步中尝试多条不同路径。始终为每一步设定一个明确目标。重要的是在下一步你能看到动作是否成功，因此不要链式调用会多次改变浏览器状态的动作，例如：
-   - 不要使用 click 然后再 navigate，因为你无法确认 click 是否成功。
-   - 不要连续使用 switch，因为你看不到中间状态。
+   - 不要使用 click 然后再 navigateTo，因为你无法确认 click 是否成功。
+   - 不要连续使用 switchTab，因为你看不到中间状态。
    - 不要使用 input 然后立即 scroll，因为你无法验证 input 是否生效。
 
 ---
@@ -360,7 +359,7 @@ $A11Y_TREE_NOTE_CONTENT
 
 ### 推理模式
 
-为成功完成 <user_request> 请遵循以下推理模式：
+为成功完成 `<user_request>` 请遵循以下推理模式：
 
 ```
 <thinking>
@@ -376,16 +375,16 @@ $A11Y_TREE_NOTE_CONTENT
 
 ### 推理指南
 
-- 基于 <agent_history> 推理，以追踪朝向 <user_request> 的进展与上下文。
-- 分析 <agent_history> 中最近的 `nextGoal` 与 `evaluationPreviousGoal`，并明确说明你之前尝试达成的目标。
-- 分析所有相关的 <agent_history>、<browser_state> 和截图以了解当前状态。
-- 明确判断上一步动作的成功/失败/不确定性。不要仅仅因为上一步在 <agent_history> 中显示已执行就认为成功。例如，你可能记录了 “动作 1/1：在元素 3 中输入 '2025-05-05'”，但输入实际上可能失败。始终使用 <browser_vision>（截图）作为主要事实依据；如果截图不可用，则备选使用 <browser_state>。若预期变化缺失，请将上一步标记为失败（或不确定），并制定恢复计划。
+- 基于 `## 智能体历史` 推理，以追踪朝向 <user_request> 的进展与上下文。
+- 分析 `## 智能体历史` 中最近的 `nextGoal` 与 `evaluationPreviousGoal`，并明确说明你之前尝试达成的目标。
+- 分析所有相关的 `## 智能体历史`、`## 浏览器状态` 和截图以了解当前状态。
+- 明确判断上一步动作的成功/失败/不确定性。不要仅仅因为上一步在 `## 智能体历史` 中显示已执行就认为成功。例如，你可能记录了 “动作 1/1：在元素 3 中输入 '2025-05-05'”，但输入实际上可能失败。始终使用 `## 视觉信息`（截图）作为主要事实依据；如果截图不可用，则备选使用 `## 浏览器状态`。若预期变化缺失，请将上一步标记为失败（或不确定），并制定恢复计划。
 - 如果 `todolist.md` 为空且任务是多步的，使用文件工具在 `todolist.md` 中生成分步计划。
 - 分析 `todolist.md` 以指导并追踪进展。
 - 如果有任何 `todolist.md` 项已完成，请在文件中将其标记为完成。
 - 分析你是否陷入了重复无进展的状态；若是，考虑替代方法，例如滚动以获取更多上下文、使用发送键（`press`）直接模拟按键，或换用不同页面。
 - 决定应存储在记忆中的简明、可操作的上下文以供后续推理使用。
-- 在准备结束时，按<output_done>格式输出。
+- 在准备结束时，按`## 任务完成输出`格式输出。
 - 始终关注 <user_request>。仔细分析所需的具体步骤和信息，例如特定筛选条件、表单字段等，确保当前轨迹与用户请求一致。
 
 ---
@@ -423,20 +422,23 @@ $A11Y_TREE_NOTE_CONTENT
 
 ---
 
-## 输出格式
+## 输出要求
 
 - 输出严格使用下面两种 JSON 格式之一
 - 仅输出 JSON 内容，无多余文字
 
-1. 动作输出格式(<output_act>)
+1. 动作输出
+## 输出要求
 
 - 最多一个元素
 - arguments 必须按工具方法声明顺序排列
 
+输出格式：
 ${buildObserveResultSchema(true)}
 
-2. 任务完成输出格式(<output_done>):
+2. 任务完成输出
 
+输出格式：
 $TASK_COMPLETE_SCHEMA
 
 ---
@@ -474,13 +476,13 @@ $TASK_COMPLETE_SCHEMA
 
 ---
 
-## 输出
+## 输出要求
 
 - 仅输出 JSON 内容，无多余文字
 - domain 取值 driver
 - method 和 arguments 遵循 `## 工具列表` 的函数表达式
 
-动作输出格式：
+输出格式：
 {{OUTPUT_SCHEMA_ACT}}
 
 ---
@@ -576,12 +578,12 @@ $TOOL_CALL_RULE_CONTENT
 
 ---
 
-## 输出格式
-(<output_act>)
+## 输出要求
 
 - 输出严格使用下面 JSON 格式，仅输出 JSON 内容，无多余文字
 - 最多一个元素，domain & method 字段不得为空
 
+输出格式:
 {{OUTPUT_SCHEMA_PLACEHOLDER}}
 
 ---
@@ -685,7 +687,7 @@ $AGENT_GUIDE_SYSTEM_PROMPT
     }
 
     fun buildResolveMessageListStart(
-        context: ExecutionContext, stateHistory: List<AgentState>,
+        context: ExecutionContext, stateHistory: AgentHistory,
         messages: AgentMessageList,
     ): AgentMessageList {
         val instruction = context.instruction
@@ -751,7 +753,8 @@ $userInstructions
         return SimpleMessage(role = "system", content = content)
     }
 
-    fun buildAgentStateHistoryMessage(history: List<AgentState>): String {
+    fun buildAgentStateHistoryMessage(agentHistory: AgentHistory): String {
+        val history = agentHistory.states
         if (history.isEmpty()) {
             return ""
         }
@@ -770,16 +773,17 @@ $userInstructions
             )
         }
 
-        val historyJson = result
+        val historyJsonList = result
             .map { compactAgentState(it) }
             .joinToString("\n") { pulsarObjectMapper().writeValueAsString(it) }
 
         val msg = """
 ## 智能体历史
-<agent_history>
 (仅保留 $totalSize 步骤)
 
-$historyJson
+<agent_history>
+$historyJsonList
+</agent_history>
 
 ---
 
@@ -792,7 +796,7 @@ $historyJson
         val message = """
 ## 智能体状态
 
-当前的 <user_request>、<file_system> 摘要、<todo_contents> 和 <step_info> 摘要。
+当前的 <user_request>、<file_system> 摘要、<todo_contents> 和 `## 智能体历史` 摘要。
 
 ---
 
@@ -804,7 +808,6 @@ $historyJson
     fun buildBrowserVisionInfo(): String {
         val visionInfo = """
 ## 视觉信息
-<browser_vision>
 
 - 在推理中利用图像来评估你的进展。
 - 当不确定或想获取更多信息时使用截图。
@@ -863,7 +866,7 @@ $lastModelMessage
 # 当前任务
 
 ## 用户输入
-(<user_request>)
+<user_request>
 
 $userRequest
 
@@ -936,7 +939,7 @@ ${nanoTree.lazyJson}
 
 ---
 
-## 输出
+## 输出要求
 你必须返回一个严格符合以下JSON Schema的有效JSON对象。不要包含任何额外说明。
 
 ${schema.toJsonSchema()}
@@ -1100,8 +1103,8 @@ $newTabsJson
 ## 浏览器状态
 
 <browser_state>
-
 ${browserState.lazyJson}
+</browser_state>
 
 $newTabsMessage
 
@@ -1165,14 +1168,10 @@ ${nanoTree.lazyJson}
         return instruction
     }
 
-    fun buildSummaryPrompt(goal: String, stateHistory: List<AgentState>): Pair<String, String> {
+    fun buildSummaryPrompt(goal: String, stateHistory: AgentHistory): Pair<String, String> {
         val system = "你是总结助理，请基于执行轨迹对原始目标进行总结，输出 JSON。"
 
-//        val history = stateHistory.withIndex().joinToString("\n") {
-//            "${it.index}.\t🚩 ${it.value}"
-//        }
-
-        val history = stateHistory.joinToString("\n") { Pson.toJson(it) }
+        val history = stateHistory.states.joinToString("\n") { Pson.toJson(it) }
 
         val user = """
 ## 原始目标
@@ -1186,7 +1185,7 @@ $history
 
 ---
 
-## 输出
+## 输出要求
 
 严格输出 JSON，无多余文字：
 

@@ -11,7 +11,7 @@ import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
-import ai.platon.pulsar.skeleton.ai.ActionDescription
+import ai.platon.pulsar.agentic.ActionDescription
 import java.nio.file.Files
 
 open class ContextToAction(

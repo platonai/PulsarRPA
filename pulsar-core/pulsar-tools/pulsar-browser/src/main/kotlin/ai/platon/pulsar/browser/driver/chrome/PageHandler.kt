@@ -113,6 +113,12 @@ class PageHandler(
         return nodeId != null && nodeId > 0
     }
 
+    @Deprecated("Use resolveSelector instead", ReplaceWith("resolveSelector(selector)"))
+    @Throws(ChromeDriverException::class)
+    suspend fun querySelector(selector: String): NodeRef? {
+        return resolveSelector(selector)
+    }
+
     /**
      * Queries for an element using a CSS selector or backend node ID.
      *
@@ -123,12 +129,6 @@ class PageHandler(
      * @param selector CSS selector or "backend:nodeId" format
      * @return nodeId or null if not found
      */
-    @Deprecated("Use resolveSelector instead", ReplaceWith("resolveSelector(selector)"))
-    @Throws(ChromeDriverException::class)
-    suspend fun querySelector(selector: String): NodeRef? {
-        return resolveSelector(selector)
-    }
-
     @Throws(ChromeDriverException::class)
     suspend fun resolveSelector(selector: String): NodeRef? {
         return try {
@@ -173,6 +173,8 @@ class PageHandler(
         val nodeRef = when (locator.type) {
             // For CSS_PATH type, use querySelectorOrNull to resolve the selector.
             Locator.Type.CSS_PATH -> resolveCSSSelector0(selector)
+
+            Locator.Type.XPATH -> resolveXPath(locator.selector)
 
             // For BACKEND_NODE_ID type, parse the backend node ID and resolve it.
             Locator.Type.BACKEND_NODE_ID -> {
@@ -412,12 +414,17 @@ class PageHandler(
                         } catch (e) { return false; }
                     }
                 """.trimIndent()
-                runtimeAPI?.callFunctionOn(functionDeclaration, objectId = objectId, returnByValue = true,
-                    userGesture = true, awaitPromise = true)
+                runtimeAPI?.callFunctionOn(
+                    functionDeclaration, objectId = objectId, returnByValue = true,
+                    userGesture = true, awaitPromise = true
+                )
                 true
             } finally {
                 // Always release to avoid leaks
-                try { runtimeAPI?.releaseObject(objectId) } catch (_: Exception) { }
+                try {
+                    runtimeAPI?.releaseObject(objectId)
+                } catch (_: Exception) {
+                }
             }
         } catch (e: Exception) {
             // swallow and indicate failure; caller will fallback
@@ -528,7 +535,10 @@ class PageHandler(
         return try {
             runtimeAPI?.callFunctionOn(functionDeclaration, objectId = oid, returnByValue = true)
         } finally {
-            try { runtimeAPI?.releaseObject(oid) } catch (_: Exception) { }
+            try {
+                runtimeAPI?.releaseObject(oid)
+            } catch (_: Exception) {
+            }
         }
     }
 
@@ -559,6 +569,89 @@ class PageHandler(
             null
         } catch (e: Exception) {
             logger.warn("Unexpected exception from domAPI?.querySelector ", e)
+            null
+        }
+
+        if (nodeId == null || nodeId == 0) {
+            return null
+        }
+
+        val node = try {
+            domAPI?.describeNode(nodeId, null, null, null, null)
+        } catch (e: Exception) {
+            logger.warn("Exception from domAPI?.describeNode ", e)
+            null
+        }
+
+        node ?: return null
+
+        if (node.nodeId == 0 && node.backendNodeId == 0) {
+            logger.info("Both nodeId and backendNodeId are not found (value: 0)")
+            return null
+        }
+
+        return resolveNode(node.nodeId, node.backendNodeId)
+    }
+
+    /**
+     * Resolves an XPath expression to a NodeRef.
+     *
+     * Uses DOM.performSearch and DOM.getSearchResults to locate the node,
+     * then describes and resolves it to obtain stable node identifiers.
+     *
+     * @param xpath The XPath expression to resolve.
+     * @return A NodeRef containing the resolved node identifiers, or null if not found.
+     * @throws ChromeDriverException If an unexpected CDP error occurs.
+     */
+    @Throws(ChromeDriverException::class)
+    private suspend fun resolveXPath(xpath: String): NodeRef? {
+        val selector = "#preferencesSection"
+        val r = domAPI?.performSearch(selector)
+        println("resultCount for selector: " + r?.resultCount)
+
+        val xpath2 = "//*[@id='preferencesSection']/h2"
+        val r2 = domAPI?.performSearch(xpath2, true)
+        println("resultCount for xpath2: " + r2?.resultCount)
+
+        val xpath3 = "//*[@id=preferencesSection]/h2"
+        val r3 = domAPI?.performSearch(xpath3, true)
+        println("resultCount for xpath3: " + r3?.resultCount)
+
+        var node = resolveXPath1(xpath)
+
+        println("nodeId: " + node?.nodeId)
+
+        return node
+    }
+
+    @Throws(ChromeDriverException::class)
+    private suspend fun resolveXPath1(xpath: String): NodeRef? {
+        require(xpath.startsWith("//"))
+
+        val nodeId = try {
+            domAPI?.getDocument()?.nodeId ?: return null
+
+            val searchResult = domAPI?.performSearch(xpath, true) ?: return null
+            val nodeId = if (searchResult.resultCount > 0) {
+                // Only retrieve the first matching node if results exist
+                val results = domAPI?.getSearchResults(searchResult.searchId, fromIndex = 0, toIndex = 1)
+                // Clean up search results to avoid resource leak
+                try { domAPI?.discardSearchResults(searchResult.searchId) } catch (_: Exception) { }
+                results?.firstOrNull()
+            } else {
+                null
+            }
+            nodeId
+        } catch (e: CDPReturnError) {
+            // code: -3200 message: "Could not find node with given id"
+            // code: -32000 message: "Invalid search result range" (when toIndex > resultCount)
+            // These exceptions are expected when element not found
+            if (e.errorCode != -3200L && e.errorCode != -32000L) {
+                logger.warn("Exception from domAPI?.performSearch/getSearchResults | {} {} | {}", e.errorCode, e.errorMessage, e.brief())
+            }
+            null
+        } catch (e: Exception) {
+            logger.warn("Unexpected exception from domAPI?.performSearch/getSearchResults ", e)
             null
         }
 

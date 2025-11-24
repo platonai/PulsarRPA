@@ -2,8 +2,7 @@ package ai.platon.pulsar.agentic.ai.tta
 
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
-import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
-import ai.platon.pulsar.skeleton.ai.ToolCallSpec
+import ai.platon.pulsar.agentic.ToolCallSpec
 import ai.platon.pulsar.skeleton.common.llm.LLMUtils
 
 object SourceCodeToToolCallSpec {
@@ -47,8 +46,8 @@ object SourceCodeToToolCallSpec {
             val method = m.name
             // Use parsed return type; default to Unit when absent
             val returnType = m.returnType.ifBlank { "Unit" }
-            val desc = m.kdoc?.let { compactDoc(it) }
-            toolCallSpecs += ToolCallSpec(domain, method, arguments, returnType, desc)
+            val description = m.kdoc
+            toolCallSpecs += ToolCallSpec(domain, method, arguments, returnType, description)
         }
 
         return toolCallSpecs
@@ -125,7 +124,9 @@ object SourceCodeToToolCallSpec {
                 kdocBuf.appendLine(line)
                 if (line.contains("*/")) {
                     inKDoc = false
-                    pendingKDoc = cleanupKDoc(kdocBuf.toString())
+                    // 2025/11/24: do not clean currently, may improve later
+                    pendingKDoc = kdocBuf.toString()
+                    // pendingKDoc = cleanupKDoc(kdocBuf.toString())
                 }
                 continue
             }

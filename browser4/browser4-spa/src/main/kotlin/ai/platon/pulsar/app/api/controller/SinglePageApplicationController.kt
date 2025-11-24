@@ -12,10 +12,10 @@ import ai.platon.pulsar.common.warnUnexpected
 import ai.platon.pulsar.rest.api.entities.CommandStatus
 import ai.platon.pulsar.rest.api.entities.NavigateRequest
 import ai.platon.pulsar.rest.api.entities.ScreenshotRequest
-import ai.platon.pulsar.skeleton.ai.ActResult
-import ai.platon.pulsar.skeleton.ai.ActionOptions
-import ai.platon.pulsar.skeleton.ai.ExtractOptions
-import ai.platon.pulsar.skeleton.ai.ExtractResult
+import ai.platon.pulsar.agentic.ActResult
+import ai.platon.pulsar.agentic.ActionOptions
+import ai.platon.pulsar.agentic.ExtractOptions
+import ai.platon.pulsar.agentic.ExtractResult
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import org.springframework.http.MediaType

@@ -4,12 +4,12 @@ import ai.platon.pulsar.agentic.ai.agent.detail.*
 import ai.platon.pulsar.agentic.ai.todo.ToDoManager
 import ai.platon.pulsar.agentic.tools.ActionValidator
 import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.external.ResponseState
-import ai.platon.pulsar.skeleton.ai.*
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import kotlinx.coroutines.*
@@ -137,9 +137,10 @@ open class BrowserPerceptiveAgent constructor(
     /**
      * High-level problem resolution entry. Builds an ActionOptions and delegates to resolve(ActionOptions).
      */
-    override suspend fun resolve(problem: String): ActResult {
-        val opts = ActionOptions(action = problem)
-        return resolve(opts)
+    override suspend fun run(task: String): AgentHistory {
+        val opts = ActionOptions(action = task)
+        run(opts)
+        return stateHistory
     }
 
     /**
@@ -147,19 +148,20 @@ open class BrowserPerceptiveAgent constructor(
      * in the ActionOptions. Applies retry and timeout strategies; records structured traces but keeps
      * stateHistory focused on executed tool actions only.
      */
-    override suspend fun resolve(action: ActionOptions): ActResult {
+    override suspend fun run(action: ActionOptions): AgentHistory {
         if (isClosed) {
-            return ActResult(false, "USER interrupted", action = action.action)
+            return stateHistory
         }
 
-        return try {
-            val result = withContext(agentScope.coroutineContext) { resolveInCoroutine(action) }
-            result.result
+        try {
+            withContext(agentScope.coroutineContext) { resolveInCoroutine(action) }
         } catch (_: CancellationException) {
-            ActResult(false, "USER interrupted", action = action.action)
+            logger.info("Cancelled due to cancellation")
         } finally {
             stateManager.writeProcessTrace()
         }
+
+        return stateHistory
     }
 
     /**
@@ -264,7 +266,7 @@ open class BrowserPerceptiveAgent constructor(
             runCatching { agentJob.cancel(CancellationException("USER interrupted via close()")) }
             // Best-effort trace for visibility; avoid throwing
             runCatching {
-                val last = stateHistory.lastOrNull()
+                val last = stateHistory.states.lastOrNull()
                 stateManager.addTrace(last, emptyMap(), event = "userClose", message = "🛑 USER CLOSE")
             }
         }
@@ -274,7 +276,7 @@ open class BrowserPerceptiveAgent constructor(
      * Returns a concise summary of the latest agent state; if no history exists, returns a placeholder text.
      */
     override fun toString(): String {
-        return stateHistory.lastOrNull()?.toString() ?: "(no history)"
+        return stateHistory.states.lastOrNull()?.toString() ?: "(no history)"
     }
 
     protected data class ResolveResult(
@@ -336,7 +338,9 @@ open class BrowserPerceptiveAgent constructor(
         } finally {
             // clear history so the next task will have a clean operation trace for summary.
             // but we do not clear process trace which will be kept to trace all operations and states.
-            stateManager.clearHistory()
+            // 20251122: DO NOT CLEAR HISTORY, is you want to run new task with a new context, use TaskScopedBrowserPerceptiveAgent
+            // instead.
+            // stateManager.clearHistory()
         }
     }
 
@@ -429,7 +433,8 @@ open class BrowserPerceptiveAgent constructor(
         val driver = activeDriver
         val url = driver.url()
         if (url.isBlank() || url == "about:blank") {
-            driver.navigateTo(AppConstants.SEARCH_ENGINE_URL)
+            val searchURL = if (AppContext.isCN) AppConstants.SEARCH_ENGINE_URL else AppConstants.SEARCH_ENGINE_EN_URL
+            driver.navigateTo(searchURL)
         }
 
         // Only wait for DOM settle just before collection DOM tree data
@@ -458,25 +463,26 @@ open class BrowserPerceptiveAgent constructor(
             val action = initActionOptions.copy(fromResolve = true)
 
             while (!isClosed && context.step < config.maxSteps) {
+                val stepResult: StepProcessingResult
                 try {
                     context = prepareStep(action, context, consecutiveNoOps)
 
-                    val stepResult = step(action, context, consecutiveNoOps)
+                    stepResult = step(action, context, consecutiveNoOps)
 
                     context = stepResult.context
                     consecutiveNoOps = stepResult.consecutiveNoOps
-
-                    if (stepResult.shouldStop) {
-                        break
-                    }
                 } finally {
                     stateManager.addToHistory(context.agentState)
                 }
+
+                if (stepResult.shouldStop) {
+                    break
+                }
             }
 
-            val result = buildFinalActResult(initContext.instruction, context, startTime)
+            val actResult = buildFinalActResult(initContext.instruction, context, startTime)
 
-            return ResolveResult(context, result)
+            return ResolveResult(context, actResult)
         } catch (_: CancellationException) {
             logger.info("""🛑 [USER interrupted] sid={} steps={}""", context.sid, context.step)
             val result = ActResult(success = false, message = "USER interrupted", action = initContext.instruction)
@@ -722,8 +728,8 @@ open class BrowserPerceptiveAgent constructor(
     protected fun performMemoryCleanup(context: ExecutionContext) {
         try {
             synchronized(stateManager) {
-                if (stateHistory.size > config.maxHistorySize) {
-                    val toRemove = stateHistory.size - config.maxHistorySize + 10
+                if (stateHistory.states.size > config.maxHistorySize) {
+                    val toRemove = stateHistory.states.size - config.maxHistorySize + 10
                     stateManager.clearUpHistory(toRemove)
                 }
             }
@@ -734,7 +740,7 @@ open class BrowserPerceptiveAgent constructor(
         }
     }
 
-    protected suspend fun summarize(goal: String, ctxIn: ExecutionContext): ModelResponse {
+    protected suspend fun summarize(goal: String, ctxIn: ExecutionContext): SummarizeResult {
         val step = ctxIn.step + 1
         val context = stateManager.buildExecutionContext(goal, step, event = "summary", baseContext = ctxIn)
         stateManager.setActiveContext(context)
@@ -747,27 +753,38 @@ open class BrowserPerceptiveAgent constructor(
                 "📝✅ Summary generated successfully", context,
                 mapOf("responseLength" to response.content.length, "responseState" to response.state)
             )
-            response
+            SummarizeResult(context, response)
         } catch (e: Exception) {
             slogger.logError("📝❌ Summary generation failed", e, context.sessionId)
-            ModelResponse("Failed to generate summary: ${e.message}", ResponseState.OTHER)
+            SummarizeResult(
+                context,
+                modelResponse = ModelResponse("Failed to generate summary: ${e.message}", ResponseState.OTHER)
+            )
         }
     }
 
-    protected suspend fun generateFinalSummary(instruction: String, context: ExecutionContext): ModelResponse {
+    data class SummarizeResult(
+        val context: ExecutionContext,
+        val modelResponse: ModelResponse
+    )
+
+    protected suspend fun generateFinalSummary(instruction: String, context: ExecutionContext): SummarizeResult {
         return try {
-            val summary = summarize(instruction, context)
+            val result = summarize(instruction, context)
             stateManager.addTrace(
                 context.agentState,
-                mapOf("summaryPreview" to summary.content.take(200)),
+                mapOf("summaryPreview" to result.modelResponse.content.take(200)),
                 event = "final",
                 message = "🧾 FINAL"
             )
-            persistTranscript(instruction, summary, context)
-            summary
+            persistTranscript(instruction, result.modelResponse, context)
+            result
         } catch (e: Exception) {
             logger.error("📝❌ agent.summary.fail sid={} msg={}", context.sid, e.message, e)
-            ModelResponse("Failed to generate summary: ${e.message}", ResponseState.OTHER)
+            SummarizeResult(
+                context = context,
+                ModelResponse("Failed to generate summary: ${e.message}", ResponseState.OTHER)
+            )
         }
     }
 
@@ -775,17 +792,14 @@ open class BrowserPerceptiveAgent constructor(
         runCatching {
             val ts = Instant.now().toEpochMilli()
             val path = baseDir.resolve("session-${ts}.log")
-            slogger.info(
-                "🧾💾 Persisting execution transcript", context,
-                mapOf("path" to path.toUri())
-            )
+            slogger.info("🧾💾 Persisting execution transcript", context)
             val sb = StringBuilder()
-            sb.appendLine("SESSION_ID: ${uuid}")
+            sb.appendLine("SESSION_ID: $uuid")
             sb.appendLine("TIMESTAMP: ${Instant.now()}")
             sb.appendLine("INSTRUCTION: $instruction")
             sb.appendLine("RESPONSE_STATE: ${finalResp.state}")
             sb.appendLine("EXECUTION_HISTORY:")
-            stateHistory.forEach { sb.appendLine(it) }
+            stateHistory.states.forEach { sb.appendLine(it) }
             sb.appendLine()
             sb.appendLine("FINAL_SUMMARY:")
             sb.appendLine(finalResp.content)
@@ -859,7 +873,7 @@ open class BrowserPerceptiveAgent constructor(
             currentStep = context.step,
             instruction = context.instruction,
             targetUrl = context.targetUrl,
-            recentStateHistory = stateHistory.takeLast(20).map { AgentStateSnapshot.from(it) },
+            recentStateHistory = stateHistory.states.takeLast(20).map { AgentStateSnapshot.from(it) },
             totalSteps = performanceMetrics.totalSteps,
             successfulActions = performanceMetrics.successfulActions,
             failedActions = performanceMetrics.failedActions,
@@ -899,12 +913,22 @@ open class BrowserPerceptiveAgent constructor(
 
         require(action.isComplete) { "Required action.isComplete" }
         // require(context.agentState.isComplete) { "Required context.agentState.isComplete" }
-        context.agentState.isComplete = true
+        context.agentState.also {
+            it.isComplete = true
+            it.summary = action.summary
+            it.keyFindings = action.keyFindings
+            it.nextSuggestions = action.nextSuggestions
+        }
 
         logger.info("✅ task.complete sid={} step={} complete={}", sid.take(8), step, true)
         stateManager.addTrace(context.agentState, event = "complete", message = "#${step} complete")
 
-        logger.info("Agent files: \n{}", fs.listOSFiles().joinToString("\n") { it.toUri().toString() })
+        val files = fs.listOSFiles().filterNot { it.fileName.toString().contains("todolist.md") }
+        if (files.isNotEmpty()) {
+            logger.info("Agent files: \n{}", files.joinToString("\n") { it.toUri().toString() })
+        } else {
+            logger.info("No files used by this agent")
+        }
 
         if (config.enableTodoWrites) {
             runCatching { todo.onTaskCompletion(context.instruction) }
@@ -913,23 +937,33 @@ open class BrowserPerceptiveAgent constructor(
     }
 
     private suspend fun buildFinalActResult(
-        instruction: String, context: ExecutionContext, startTime: Instant
+        instruction: String, cxtIn: ExecutionContext, startTime: Instant
     ): ActResult {
-        context.agentState.event = "summary"
-
         val executionTime = Duration.between(startTime, Instant.now())
 
-        if (closed.get()) {
-            logger.info("""🛑 [USER interrupted] sid={} steps={} dur={}""", context.sid, context.step, executionTime)
-            return ActResult(success = false, message = "USER interrupted", action = instruction)
-        }
+        logger.info("✅ agent.done sid={} steps={} dur={}", cxtIn.sid, cxtIn.step, executionTime)
 
-        logger.info("✅ agent.done sid={} steps={} dur={}", context.sid, context.step, executionTime)
-        val summary = generateFinalSummary(instruction, context)
+        val result = generateFinalSummary(instruction, cxtIn)
+
+        val summary = result.modelResponse
+        val context = result.context
         val ok = summary.state != ResponseState.OTHER
+
+        val agentState = result.context.agentState.also {
+            it.instruction = instruction
+            it.isComplete = true
+            it.domain = "summary"
+            it.event = "summary"
+            it.method = "summary"
+            it.step = context.step
+        }
+//        stateManager.addToHistory(agentState)
+
         return ActResult(
             success = ok,
-            message = summary.content, action = instruction, result = context.agentState.toolCallResult
+            message = summary.content,
+            action = context.instruction,
+            result = context.agentState.toolCallResult
         )
     }
 

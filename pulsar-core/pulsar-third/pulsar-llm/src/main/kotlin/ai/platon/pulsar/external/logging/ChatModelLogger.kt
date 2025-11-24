@@ -68,7 +68,7 @@ class ChatModelLogger : AutoCloseable {
             sb.append(";;REQUEST ID: ${pair.id}\n")
             sb.append(";;TIMESTAMP: ${pair.timestamp}\n")
 
-            if (enableSystemMessages) {
+            if (counter.get() > 1 && enableSystemMessages) {
                 sb.append(";;SYSTEM MESSAGE:\n${pair.systemMessage}\n")
             }
 

@@ -10,9 +10,9 @@ import ai.platon.pulsar.browser.driver.chrome.dom.DomService
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.BrowserChatModel
-import ai.platon.pulsar.skeleton.ai.ActionDescription
-import ai.platon.pulsar.skeleton.ai.AgentState
-import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
+import ai.platon.pulsar.agentic.ActionDescription
+import ai.platon.pulsar.agentic.AgentState
+import ai.platon.pulsar.agentic.ExtractionSchema
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -269,6 +269,24 @@ class InferenceEngine(
         }
 
         return actionDescription
+    }
+
+    suspend fun summary(instruction: String?, textContent: String): String {
+        val messages = AgentMessageList()
+
+        if (instruction.isNullOrBlank()) {
+            messages.addUser("对下述文本给出一个总结。")
+        } else {
+            messages.addUser("根据用户指令，对下述文本给出一个总结。")
+            messages.addUser("""<user_request>$instruction</user_request>""")
+        }
+        messages.addUser("\n\n$textContent\n\n".trimIndent())
+
+        val response = cta.generateResponseRaw(messages)
+
+        // TODO: count token usage
+
+        return response.content
     }
 
     private fun safeJsonPreview(raw: String, limit: Int = 2000): String {

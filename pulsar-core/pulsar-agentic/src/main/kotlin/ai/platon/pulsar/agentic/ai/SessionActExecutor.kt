@@ -6,9 +6,8 @@ import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor
 import ai.platon.pulsar.agentic.tools.executors.BrowserToolExecutor
 import ai.platon.pulsar.agentic.tools.executors.WebDriverToolExecutor
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.skeleton.ai.ActionDescription
-import ai.platon.pulsar.skeleton.ai.AgentState
-import ai.platon.pulsar.skeleton.ai.ToolCallResult
+import ai.platon.pulsar.agentic.ActionDescription
+import ai.platon.pulsar.agentic.ToolCallResult
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 
 internal class SessionActExecutor(

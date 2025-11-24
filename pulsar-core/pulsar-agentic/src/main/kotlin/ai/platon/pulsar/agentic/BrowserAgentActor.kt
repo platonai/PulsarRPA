@@ -9,8 +9,6 @@ import ai.platon.pulsar.agentic.ai.agent.detail.PageStateTracker
 import ai.platon.pulsar.agentic.ai.tta.ContextToAction
 import ai.platon.pulsar.agentic.tools.AgentToolManager
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.skeleton.ai.*
-import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import com.fasterxml.jackson.databind.node.JsonNodeFactory
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
@@ -22,7 +20,7 @@ import java.time.Instant
 import java.util.*
 
 open class BrowserAgentActor(
-    val session: AgenticSession,
+    override val session: AgenticSession,
     val config: AgentConfig
 ) : PerceptiveAgent {
     private val logger = getLogger(BrowserAgentActor::class)
@@ -47,7 +45,7 @@ open class BrowserAgentActor(
     protected val stateManager by lazy { AgentStateManager(this, pageStateTracker) }
 
     override val uuid get() = _uuid
-    override val stateHistory: List<AgentState> get() = stateManager.stateHistory
+    override val stateHistory: AgentHistory get() = stateManager.stateHistory
     override val processTrace: List<ProcessTrace> get() = stateManager.processTrace
 
     val activeDriver get() = session.getOrCreateBoundDriver()
@@ -58,11 +56,11 @@ open class BrowserAgentActor(
         Files.createDirectories(baseDir)
     }
 
-    override suspend fun resolve(action: ActionOptions): ActResult {
+    override suspend fun run(action: ActionOptions): AgentHistory {
         throw NotSupportedException("Not supported, use stateful agents instead, such as BrowserPerceptiveAgent, TaskScopedBrowserPerceptiveAgent, etc.")
     }
 
-    override suspend fun resolve(problem: String): ActResult {
+    override suspend fun run(task: String): AgentHistory {
         throw NotSupportedException("Not supported, use stateful agents instead, such as BrowserPerceptiveAgent, TaskScopedBrowserPerceptiveAgent, etc.")
     }
 
@@ -207,17 +205,16 @@ open class BrowserAgentActor(
     }
 
     override suspend fun observe(options: ObserveOptions): List<ObserveResult> {
-//        val ctx = options.getContext()
-//        val context = if (ctx == null) {
-//            val instruction = promptBuilder.initObserveUserInstruction(options.instruction).instruction?.content
-//            stateManager.buildInitExecutionContext(options.copy(instruction = instruction), "observe")
-//        } else ctx
-
         val context = stateManager.getOrCreateActiveContext(options)
 
         val result = doObserveActObserve(options, context, options.fromResolve)
 
         return result.observeResults
+    }
+
+    override suspend fun summarize(instruction: String?, selector: String?): String {
+        val textContent = activeDriver.textContent(selector) ?: return "(no text content)"
+        return inference.summary(instruction, textContent)
     }
 
     data class ObserveActResult(
@@ -368,6 +365,10 @@ open class BrowserAgentActor(
         }
 
         return null
+    }
+
+    override suspend fun clearHistory() {
+        stateManager.clearHistory()
     }
 
     override fun close() {

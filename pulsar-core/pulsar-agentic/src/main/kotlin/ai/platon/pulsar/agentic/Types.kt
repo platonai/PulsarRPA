@@ -1,4 +1,4 @@
-package ai.platon.pulsar.skeleton.ai
+package ai.platon.pulsar.agentic
 
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.DOMTreeNodeEx
@@ -139,6 +139,7 @@ data class ObserveElement constructor(
     val currentPageContentSummary: String? = null,
     val evaluationPreviousGoal: String? = null,
     val nextGoal: String? = null,
+    val thinking: String? = null,
 
     val modelResponse: String? = null,
 
@@ -195,12 +196,22 @@ data class AgentState constructor(
     var evaluationPreviousGoal: String? = null,
     // AI: the next goal to archive
     var nextGoal: String? = null,
+    // AI: thinking
+    var thinking: String? = null,
     // if is complete method
     var isComplete: Boolean? = null,
     // timestamp
     var timestamp: Instant = Instant.now(),
     // The last exception
     var exception: Exception? = null,
+
+    // AI: completion summary
+    var summary: String? = null,
+    // AI: completion key findings
+    var keyFindings: List<String>? = null,
+    // AI: completion next suggestions
+    var nextSuggestions: List<String>? = null,
+
     @JsonIgnore
     var actionDescription: ActionDescription? = null,
     @JsonIgnore
@@ -210,36 +221,73 @@ data class AgentState constructor(
 ) {
     // the url to handle in this step
     val url: String get() = browserUseState.browserState.url
-    val success: Boolean get() = exception == null
+    val isSuccess: Boolean get() = exception == null
+    val isDone: Boolean get() = isComplete == true
+    val hasErrors: Boolean get() = exception != null
 
     override fun toString(): String {
         if (step == 0) {
             return "step=0, N/A"
         }
 
-        val summary = listOf(
-            "description" to description,
-            "pageContentSummary" to currentPageContentSummary,
-            "screenshotContentSummary" to screenshotContentSummary,
-            "evaluationPreviousGoal" to evaluationPreviousGoal,
-            "nextGoal" to nextGoal,
-            "exception" to exception?.compactedBrief(),
-        )
-            .filter { it.second != null }
-            .joinToString("\n") { (k, s) -> "\t- $k: ${Strings.compactInline(s)}" }
-
-        val state = if (success) """✨OK""" else "💔FAIL"
-        val event0 = event ?: method
+        val state = if (isSuccess) """✨OK""" else "💔FAIL"
+        val event0 = event ?: method ?: ""
 
         if (isComplete == true) {
-            return """$state, event=$event0, isComplete=true 🎉"""
+            val ident = "    - "
+            return buildString {
+                appendLine("""$state, isComplete=true 🎉""")
+                appendLine("summary: \n$summary")
+                if (keyFindings != null) {
+                    appendLine("keyFindings: \n" + keyFindings?.joinToString("\n$ident", ident))
+                }
+                if (nextGoal != null) {
+                    appendLine("nextSuggestions: \n" + nextSuggestions?.joinToString("\n$ident", ident))
+                }
+            }
         } else {
+            val finalSummary = listOf(
+                "description" to description,
+                "pageContentSummary" to currentPageContentSummary,
+                "screenshotContentSummary" to screenshotContentSummary,
+                "evaluationPreviousGoal" to evaluationPreviousGoal,
+                "nextGoal" to nextGoal,
+                "exception" to exception?.compactedBrief(),
+            )
+                .filter { it.second != null }
+                .joinToString("\n") { (k, s) -> "\t- $k: ${Strings.compactInline(s)}" }
+
             val pseudoExpression = actionDescription?.pseudoExpression
             val resultPreview = toolCallResult?.evaluate?.preview ?: "(absent)"
             val toolCallState = if (toolCallResult?.success == true) "✅OK" else "❌FAIL"
-            return "$state, event=$event0, tool=`$pseudoExpression`, resultPreview=`$resultPreview`, $toolCallState\n$summary"
+            return "$state, event=$event0, tool=`$pseudoExpression`, resultPreview=`$resultPreview`, $toolCallState\n$finalSummary"
         }
     }
+}
+
+data class AgentHistory(
+    val states: MutableList<AgentState> = mutableListOf(),
+) {
+    val size get() = states.size
+
+    val finalResult get() = states.lastOrNull()
+    val isDone get() = finalResult?.isComplete == true
+    val isSuccess get() = finalResult?.isSuccess == true
+    val totalSteps get() = states.size
+    val hasErrors get() = states.any { it.hasErrors }
+    val actionHistory get() = states.map { it.actionDescription }
+    val actionResults get() = states.map { it.toolCallResult }
+
+    val urls get() = states.map { it.url }
+    val modelOutputs get() = states.map { it.actionDescription?.modelResponse?.content }
+    val modelThoughts get() = states.map { it.actionDescription?.observeElement }
+
+    fun isEmpty() = states.isEmpty()
+    fun isNotEmpty() = states.isNotEmpty()
+    fun first() = states.first()
+    fun last() = states.last()
+    fun firstOrNull() = states.firstOrNull()
+    fun lastOrNull() = states.lastOrNull()
 }
 
 /**
@@ -270,9 +318,13 @@ data class ActionDescription constructor(
      * */
     val summary: String? = null,
     /**
+     * AI: a summary about this task
+     * */
+    val keyFindings: List<String>? = null,
+    /**
      * AI: next suggestions
      * */
-    val nextSuggestions: List<String> = emptyList(),
+    val nextSuggestions: List<String>? = null,
     /**
      * AI: model response
      * */
@@ -317,10 +369,13 @@ data class ActionDescription constructor(
                 method = ele.method?.ifBlank { null },
                 arguments = ele.arguments?.takeIf { it.isNotEmpty() },
                 description = ele.description ?: "(No comment ...)",
+
                 screenshotContentSummary = ele.screenshotContentSummary,
                 currentPageContentSummary = ele.currentPageContentSummary,
                 evaluationPreviousGoal = ele.evaluationPreviousGoal,
                 nextGoal = ele.nextGoal,
+                thinking = ele.thinking,
+
                 backendNodeId = ele.backendNodeId,
                 observeElement = ele,
                 agentState = agentState,

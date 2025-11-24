@@ -12,7 +12,7 @@ suspend fun main() {
     val agents = IntRange(1, 5).map { AgenticContexts.createAgent(profileMode = BrowserProfileMode.TEMPORARY) }
     val scope = CoroutineScope(Dispatchers.Default)
 
-    val problems = """
+    val tasks = """
 打开百度查找厦门岛旅游景点，给出一个总结
 go to https://news.ycombinator.com/news , read top 3 articles and give me a summary
 go to amazon.com, search for pens to draw on whiteboards, compare the first 4 ones (read detail), write the result to a markdown file.
@@ -23,8 +23,8 @@ go to https://news.ycombinator.com/news , search for browser and read top 5 arti
 go to https://news.ycombinator.com/news , open the 4-th articles in new tab
         """.lines().filter { it.isNotBlank() }
 
-    val iterator = Iterators.cycle(problems)
+    val iterator = Iterators.cycle(tasks)
     agents.map { it to iterator.next() }
-        .map { (agent, problem) -> scope.launch { agent.resolve(problem) } }
+        .map { (agent, task) -> scope.launch { agent.run(task) } }
         .joinAll()
 }

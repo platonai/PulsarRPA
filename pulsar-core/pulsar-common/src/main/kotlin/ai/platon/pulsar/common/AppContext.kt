@@ -6,6 +6,7 @@ import org.apache.commons.lang3.SystemUtils
 import java.net.InetAddress
 import java.nio.file.Files
 import java.nio.file.Paths
+import java.util.Locale
 import java.util.concurrent.atomic.AtomicReference
 
 object AppContext {
@@ -21,6 +22,8 @@ object AppContext {
      * */
     val isProd get() = System.getenv("ENV").equals("prod", true)
 
+    val isCN get() = Locale.getDefault().language.equals("zh", ignoreCase = true)
+
     /**
      * The node id in the cluster.
      * */
@@ -32,7 +35,7 @@ object AppContext {
      * The number of processors available to the Java virtual machine
      */
     val NCPU get() = Runtime.getRuntime().availableProcessors()
-    
+
     /**
      * Gets the host name for this IP address.
      * If this InetAddress was created with a host name, this host name will be remembered and returned;
@@ -40,12 +43,12 @@ object AppContext {
      * system configured name lookup service.
      * */
     val HOST_NAME: String get() = InetAddress.getLocalHost().hostName
-    
+
     /**
      * The name of the current user
      * */
     val USER_NAME: String get() = SystemUtils.USER_NAME
-    
+
     /**
      * The java.io.tmpdir System Property. Default temp file path.
      * Defaults to null if the runtime does not have security access to read this property or the property does not exist.
@@ -155,22 +158,22 @@ object AppContext {
      * Start the application.
      * */
     fun start() = state.set(State.RUNNING)
-    
+
     fun shouldTerminate() {
         if (state.get() != State.TERMINATED) {
             state.set(State.TERMINATING)
         }
     }
-    
+
     fun terminate() {
         if (state.get() == State.TERMINATED) {
             return
         }
         state.set(State.TERMINATING)
     }
-    
+
     fun endTermination() = state.set(State.TERMINATED)
-    
+
     private fun sniffVersion(): String {
         var version = System.getProperty("app.version")
         if (version == null) {

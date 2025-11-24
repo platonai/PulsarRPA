@@ -1169,7 +1169,7 @@ interface WebDriver : Closeable {
      *
      * @return The text content of the document.
      * */
-    suspend fun textContent(): String?
+    suspend fun textContent(selector: String? = null): String?
 
     suspend fun extract(fields: Map<String, String>): Map<String, String?>
 

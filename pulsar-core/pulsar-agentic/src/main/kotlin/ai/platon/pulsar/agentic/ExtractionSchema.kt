@@ -1,4 +1,4 @@
-package ai.platon.pulsar.skeleton.ai.support
+package ai.platon.pulsar.agentic
 
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.ObjectMapper

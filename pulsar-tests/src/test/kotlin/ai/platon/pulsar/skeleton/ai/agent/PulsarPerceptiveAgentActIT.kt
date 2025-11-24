@@ -3,7 +3,7 @@ package ai.platon.pulsar.skeleton.ai.agent
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.agentic.BrowserPerceptiveAgent
 import ai.platon.pulsar.common.printlnPro
-import ai.platon.pulsar.skeleton.ai.ActionOptions
+import ai.platon.pulsar.agentic.ActionOptions
 import ai.platon.pulsar.util.TestHelper
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach

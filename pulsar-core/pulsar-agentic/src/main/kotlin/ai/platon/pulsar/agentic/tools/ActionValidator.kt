@@ -2,7 +2,7 @@ package ai.platon.pulsar.agentic.tools
 
 import ai.platon.pulsar.browser.driver.chrome.dom.FBNLocator
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.skeleton.ai.ToolCall
+import ai.platon.pulsar.agentic.ToolCall
 import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 
@@ -45,7 +45,7 @@ class ActionValidator(
         return validationCache.getOrPut(cacheKey) {
             when (toolCall.method) {
                 "open", "navigateTo" -> validateNavigateTo(toolCall.arguments)
-                "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "focus", "scrollTo",
+                "click", "fill", "press", "check", "uncheck", "exists", "isVisible", "focus", "hover", "scrollTo",
                 "type", "isHidden", "visible", "isChecked", "bringToFront",
                 "selectFirstTextOrNull", "selectTextAll", "selectFirstAttributeOrNull", "selectAttributes", "selectAttributeAll", "selectImages",
                 "evaluate", "clickablePoint", "boundingBox" -> validateElementAction(toolCall.arguments)

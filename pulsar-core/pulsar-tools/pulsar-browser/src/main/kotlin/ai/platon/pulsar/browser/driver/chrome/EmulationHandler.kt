@@ -703,17 +703,61 @@ class EmulationHandler(
         click0(node, count, position, modifier, delayMillis = delayMillis)
     }
 
+    /**
+     * Hovers over the specified node.
+     * Ensures the last step moves from outside the element to inside it for proper hover state triggering.
+     *
+     * @param node The node to hover over
+     * @param position The position within the element ("left", "center", or "right")
+     */
     suspend fun hover(node: NodeRef, position: String = "center") {
-        val point = getInteractPoint(node, position) ?: return
-        // Smoothly move the mouse to trigger hover state
-        mouse?.moveTo(point, steps = 5, delayMillis = 40)
+        val m = mouse ?: return
+        val p = pageAPI
+        val d = domAPI
+        if (p == null || d == null) {
+            return
+        }
+
+        // Use fixed offset for hover to ensure consistent behavior
+        val point = getInteractPoint(node, position, useRandomOffset = false) ?: return
+
+        // Get bounding box to calculate a point outside the element
+        val clickableDOM = ClickableDOM(p, d, node, null)
+        val box = runCatching { clickableDOM.boundingBox() }
+            .onFailure { logger.warn("Failed to get bounding box for hover", it) }
+            .getOrNull()
+
+        // Calculate a point outside the element
+        val outsidePoint = if (box != null && box.width > 0 && box.height > 0) {
+            // Move to a point that's above and to the left of the element
+            val margin = 50.0
+            val x0 = (box.x - margin).coerceAtLeast(0.0)
+            val y0 = (box.y - margin).coerceAtLeast(0.0)
+            PointD(x0, y0)
+        } else {
+            // Fallback: use a point offset from the target
+            val offset = 100.0
+            val x0 = if (point.x > offset) point.x - offset else point.x + offset
+            val y0 = if (point.y > offset) point.y - offset else point.y + offset
+            PointD(x0, y0)
+        }
+
+        // Calculate steps for smooth movement to the outside point
+        val stepSize = 500.0
+        val steps1 = abs(m.currentX - outsidePoint.x) / stepSize
+        val steps2 = abs(m.currentY - outsidePoint.y) / stepSize
+        val steps = max(1, max(steps1, steps2).toInt())
+
+        // Move to outside point, then move into the element to trigger hover
+        m.moveTo(outsidePoint, steps = steps, delayMillis = 40)
+        m.moveTo(point, steps = 1, delayMillis = 40)
     }
 
     private suspend fun click0(
         node: NodeRef, count: Int, position: String = "center", modifier: String? = null,
         delayMillis: Long = 100
     ) {
-        val point = getInteractPoint(node, position) ?: return
+        val point = getInteractPoint(node, position, useRandomOffset = true) ?: return
 
         if (modifier != null) {
             clickWithModifiers(point, modifier, count, delayMillis = delayMillis)
@@ -722,11 +766,11 @@ class EmulationHandler(
         }
     }
 
-    private suspend fun getInteractPoint(node: NodeRef, position: String = "center"): PointD? {
-        val deltaX = 4.0 + Random.nextInt(4)
+    private suspend fun getInteractPoint(node: NodeRef, position: String = "center", useRandomOffset: Boolean = true): PointD? {
+        val deltaX = if (useRandomOffset) 4.0 + Random.nextInt(4) else 0.0
         val deltaY = 4.0
         val offset = OffsetD(deltaX, deltaY)
-        val minDeltaX = 2.0
+        val minDeltaX = 1.0
 
         val p = pageAPI
         val d = domAPI

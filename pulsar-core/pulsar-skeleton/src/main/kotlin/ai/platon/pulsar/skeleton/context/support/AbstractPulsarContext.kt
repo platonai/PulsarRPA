@@ -235,7 +235,7 @@ abstract class AbstractPulsarContext(
             url.takeIf { it.contains("://") } ?: String(Base64.getUrlDecoder().decode(url))
         } catch (e: IllegalArgumentException) {
             logger.warn("Invalid URL, will goto the default search engine {}", Strings.compactInline(url))
-            AppConstants.SEARCH_ENGINE_URL
+            if (AppContext.isCN) AppConstants.SEARCH_ENGINE_URL else AppConstants.SEARCH_ENGINE_EN_URL
         }
 
         val link = Hyperlink(url0, "", href = url0)
@@ -561,6 +561,10 @@ abstract class AbstractPulsarContext(
                 // When running via exec:java or other process starter,
                 // Pulsar-related classes are unloaded as the process exits.
                 // warnForClose("Exception while closing context | $this", e)
+            }  catch (ignored: LinkageError) {
+                // This prevents NoClassDefFoundError when classes have been unloaded
+                // (e.g., when running via maven exec:java)
+                // ignored
             } catch (t: Throwable) {
                 System.err.println("[Unexpected] Failed to close context | $this")
                 t.printStackTrace(System.err)

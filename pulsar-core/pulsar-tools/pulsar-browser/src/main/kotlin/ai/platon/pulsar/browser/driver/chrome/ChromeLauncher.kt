@@ -243,15 +243,16 @@ class ChromeLauncher constructor(
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             // delete the port file to indicate that the chrome process can be killed and the resources can be cleaned up
-            portPath.deleteIfExists()
+            Files.deleteIfExists(portPath)
 
             val p = process ?: return
             this.process = null
             if (p.isAlive) {
                 Runtimes.destroyProcess(p, options.shutdownWaitTime)
-                // TODO: java.lang.IllegalStateException: Shutdown in progress
-//                kotlin.runCatching { shutdownHookRegistry.remove(shutdownHookThread) }
-//                        .onFailure { logger.warn("Unexpected exception", it) }
+            }
+
+            if (Thread.currentThread().isInterrupted) {
+                return
             }
 
             BrowserFiles.runCatching {
@@ -355,18 +356,18 @@ class ChromeLauncher constructor(
 
             port
         } catch (e: IllegalStateException) {
-            shutdownHookRegistry.remove(shutdownHookThread)
             close()
             throw ChromeLaunchException("IllegalStateException while trying to launch chrome", e)
         } catch (e: IOException) {
-            // Unsubscribe from registry on exceptions.
-            shutdownHookRegistry.remove(shutdownHookThread)
             close()
             throw ChromeLaunchException("IOException while trying to start chrome", e)
         } catch (e: Exception) {
             // Close the process if failed to start, it throws nothing by design.
             close()
             throw e
+        } finally {
+            // Unsubscribe from registry on exceptions.
+            shutdownHookRegistry.remove(shutdownHookThread)
         }
     }
 

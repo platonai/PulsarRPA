@@ -1,8 +1,6 @@
 package ai.platon.pulsar.agentic.support
 
 import ai.platon.pulsar.agentic.common.SimpleKotlinParser
-import ai.platon.pulsar.skeleton.ai.ToolCall
-import ai.platon.pulsar.agentic.tools.BasicToolCallExecutor
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

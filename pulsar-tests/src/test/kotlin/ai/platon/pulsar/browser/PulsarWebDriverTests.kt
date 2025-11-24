@@ -2,8 +2,11 @@ package ai.platon.pulsar.browser
 
 import ai.platon.pulsar.WebDriverTestBase
 import ai.platon.pulsar.common.printlnPro
+import ai.platon.pulsar.common.sleep
+import ai.platon.pulsar.common.sleepSeconds
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 
 class PulsarWebDriverTests : WebDriverTestBase() {
@@ -42,6 +45,40 @@ class PulsarWebDriverTests : WebDriverTestBase() {
 
         assertEquals(200.0, scrollY, 1.0)
         assertEquals(200.0, driver.evaluate("window.scrollY", 200.0), 1.0)
+    }
+
+    @Test
+    fun `test hover`() = runEnhancedWebDriverTest(interactiveUrl2, browser) { driver ->
+        // First scroll to ensure the element is in view and page is in a stable state
+        driver.scrollToTop()
+        driver.delay(300)
+
+        var n = 0
+        while (n++ < 5) {
+            // Move mouse away from the card to ensure it's not in hover state
+            driver.moveMouseTo(10.0, 10.0)
+            driver.delay(200)
+
+            // Use getBoundingClientRect which IS affected by transform
+            val rect1 = driver.evaluate(
+                "JSON.stringify(document.querySelector('.hover-card').getBoundingClientRect())",
+                "{}"
+            )
+
+            driver.hover(".hover-card")
+            driver.delay(500)
+
+            val rect2 = driver.evaluate(
+                "JSON.stringify(document.querySelector('.hover-card').getBoundingClientRect())",
+                "{}"
+            )
+
+            println("Iteration $n:")
+            println("  Before hover: $rect1")
+            println("  After hover:  $rect2")
+            sleepSeconds(2)
+            assertNotEquals(rect1, rect2)
+        }
     }
 
     @Test

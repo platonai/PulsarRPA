@@ -15,15 +15,16 @@ import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.external.BrowserChatModel
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
-import ai.platon.pulsar.skeleton.ai.ActionDescription
-import ai.platon.pulsar.skeleton.ai.AgentState
-import ai.platon.pulsar.skeleton.ai.ObserveElement
-import ai.platon.pulsar.skeleton.ai.ToolCall
+import ai.platon.pulsar.agentic.ActionDescription
+import ai.platon.pulsar.agentic.AgentState
+import ai.platon.pulsar.agentic.ObserveElement
+import ai.platon.pulsar.agentic.ToolCall
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonElement
+import com.mxgraph.io.graphml.mxGraphMlKey
 import java.nio.file.Files
 
 open class TextToAction(
@@ -119,7 +120,8 @@ open class TextToAction(
                     isComplete = complete.taskComplete,
                     errorCause = complete.errorCause,
                     summary = complete.summary,
-                    nextSuggestions = complete.nextSuggestions ?: emptyList(),
+                    keyFindings = complete.keyFindings,
+                    nextSuggestions = complete.nextSuggestions,
                     modelResponse = modelResponse
                 )
             }
@@ -142,9 +144,9 @@ open class TextToAction(
 
         val modelError = when {
             heading20.contains("[{\"elements") -> errorMessage
-            heading20.contains("<output_act>") -> errorMessage
-            tailing20.contains("</output_act>") -> errorMessage
-            tailing20.contains("<output_act>") -> errorMessage
+            heading20.contains("output_act") -> errorMessage
+            tailing20.contains("/output_act") -> errorMessage
+            tailing20.contains("output_act") -> errorMessage
             else -> null
         }
 
@@ -290,6 +292,7 @@ open class TextToAction(
                 currentPageContentSummary = ele.currentPageContentSummary,
                 evaluationPreviousGoal = ele.evaluationPreviousGoal,
                 nextGoal = ele.nextGoal,
+                thinking = ele.thinking,
 
                 toolCall = ToolCall(
                     domain = ele.domain ?: "",

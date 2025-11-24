@@ -1,9 +1,10 @@
 package ai.platon.pulsar.agentic.tools.executors
 
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.common.printlnPro
-import ai.platon.pulsar.skeleton.ai.PerceptiveAgent
-import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
+import ai.platon.pulsar.agentic.PerceptiveAgent
+import ai.platon.pulsar.agentic.ExtractionSchema
+import ai.platon.pulsar.agentic.ai.tta.SourceCodeToToolCallSpec
+import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug.summarize
 import kotlin.reflect.KClass
 
 class AgentToolExecutor : AbstractToolExecutor() {
@@ -13,10 +14,14 @@ class AgentToolExecutor : AbstractToolExecutor() {
 
     override val targetClass: KClass<*> = PerceptiveAgent::class
 
+    init {
+        SourceCodeToToolCallSpec.perceptiveAgentToolCallList.associateByTo(toolCallSpecs) { it.method }
+    }
+
     override fun help(method: String): String {
         return when (method) {
             "extract" -> extractHelp()
-            else -> ""
+            else -> toolCallSpecs[method]?.description ?: ""
         }
     }
 
@@ -61,10 +66,15 @@ class AgentToolExecutor : AbstractToolExecutor() {
                     agent.extract(paramString(args, "instruction", functionName)!!)
                 }
             }
-            // agent.resolve(problem: String)
-            "resolve" -> {
-                validateArgs(args, allowed = setOf("problem"), required = setOf("problem"), functionName)
-                agent.resolve(paramString(args, "problem", functionName)!!)
+            "run" -> {
+                validateArgs(args, allowed = setOf("task"), required = setOf("task"), functionName)
+                agent.run(paramString(args, "task", functionName)!!)
+            }
+            "summarize" -> {
+                validateArgs(args, allowed = setOf("instruction", "selector"), required = setOf(), functionName)
+                val instruction = paramString(args, "instruction", functionName, required = false)
+                val selector = paramString(args, "selector", functionName, required = false)
+                agent.summarize(instruction, selector)
             }
             // Signal completion; just return true
             "done" -> {

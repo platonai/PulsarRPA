@@ -1,9 +1,9 @@
-package ai.platon.pulsar.skeleton.ai
+package ai.platon.pulsar.agentic
 
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.JsonNode
+import com.google.common.annotations.Beta
 import java.util.*
 
 /**
@@ -141,11 +141,12 @@ data class ObserveOptions(
     // from `resolve` loop or not
     val fromResolve: Boolean = false,
 
-    // internal
+    // internal, deprecated
     @get:JsonIgnore
     val agentState: AgentState? = null,
-    // internal
+    // internal, deprecated
     @get:JsonIgnore
+    @Deprecated("deprecated")
     val additionalContext: MutableMap<String, Any> = mutableMapOf(),
 )
 
@@ -166,12 +167,21 @@ data class ObserveResult constructor(
     val currentPageContentSummary: String? = null,
     val evaluationPreviousGoal: String? = null,
     val nextGoal: String? = null,
+    val thinking: String? = null,
+
+    // AI: completion summary
+    var summary: String? = null,
+    // AI: completion key findings
+    var keyFindings: String? = null,
+    // AI: completion next suggestions
+    var nextSuggestions: List<String>? = null,
 
     val backendNodeId: Int? = null,
 
     val observeElement: ObserveElement? = null,
 
     // internal
+    @Deprecated("deprecated")
     val additionalContext: MutableMap<String, Any> = mutableMapOf(),
 
     // internal
@@ -184,13 +194,15 @@ data class ObserveResult constructor(
 interface PerceptiveAgent : AutoCloseable {
     val uuid: UUID
 
+    val session: AgenticSession
+
     /**
      * The agent state history exists to give the AI agent a concise, sequential memory of what has been done.
      * This helps the model select the next step and summarize outcomes.
      * For this to work well, the history should reflect only the agent’s actual, single-step actions
      * with clear success/failure signals and the observation context that impacted/was impacted by the action.
      * */
-    val stateHistory: List<AgentState>
+    val stateHistory: AgentHistory
 
     /**
      * The process trace.
@@ -199,12 +211,12 @@ interface PerceptiveAgent : AutoCloseable {
 
     /**
      * High-level problem resolution entry. Implementations should construct an [ActionOptions]
-     * from the raw problem string and delegate to [resolve] with the options.
+     * from the raw problem string and delegate to [run] with the options.
      *
-     * @param problem The user goal or instruction to fulfill.
+     * @param task The user goal or instruction to fulfill.
      * @return The final action result produced by the agent.
      */
-    suspend fun resolve(problem: String): ActResult
+    suspend fun run(task: String): AgentHistory
 
     /**
      * Run an autonomous loop (observe -> act -> ...) attempting to fulfill the user goal described
@@ -214,7 +226,7 @@ interface PerceptiveAgent : AutoCloseable {
      * @param action The action options describing the user goal and context.
      * @return The final action result for the resolution attempt.
      */
-    suspend fun resolve(action: ActionOptions): ActResult
+    suspend fun run(action: ActionOptions): AgentHistory
 
     /**
      * Convenience overload to observe by instruction string. Implementations typically create
@@ -234,6 +246,19 @@ interface PerceptiveAgent : AutoCloseable {
      * @return A list of observation results; empty if nothing actionable is found.
      */
     suspend fun observe(options: ObserveOptions): List<ObserveResult>
+
+    /**
+     * Summarize text captured from the current page or a specific element and return a natural-language synopsis.
+     *
+     * Passing an [instruction] tailors the tone or focus of the summary; when null, the agent relies on a
+     * default summarization prompt. Supplying a [selector] scopes the extraction to a particular DOM element;
+     * leaving it null lets the implementation infer a sensible region (for example, the main article body).
+     *
+     * @param instruction Optional guidance for how the summary should be written.
+     * @param selector Optional locator limiting which element's text is summarized.
+     * @return The generated summary text.
+     */
+    suspend fun summarize(instruction: String? = null, selector: String? = null): String
 
     /**
      * Convenience wrapper building [ActionOptions] from a raw action string and delegating to [act].
@@ -288,4 +313,9 @@ interface PerceptiveAgent : AutoCloseable {
      * @return The extraction result.
      */
     suspend fun extract(options: ExtractOptions): ExtractResult
+
+    /**
+     * Clear history so that new tasks remain unaffected by previous ones.
+     * */
+    suspend fun clearHistory()
 }

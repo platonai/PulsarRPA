@@ -1,32 +1,31 @@
 package ai.platon.pulsar.agentic
 
-import ai.platon.pulsar.skeleton.ai.*
-import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import java.util.*
 
 /**
  * An agent delegate that creates a new agent every time starts a new resolve loop.
  * */
 class TaskScopedBrowserPerceptiveAgent(
-    val session: AgenticSession
+    override val session: AgenticSession
 ) : PerceptiveAgent {
     private val historyAgents = mutableListOf<PerceptiveAgent>()
 
     private var agent: PerceptiveAgent = ObserveActBrowserAgent(session)
 
     override val uuid: UUID = UUID.randomUUID()
-    override val stateHistory: List<AgentState> get() = agent.stateHistory
+
+    override val stateHistory: AgentHistory get() = agent.stateHistory
     override val processTrace: List<ProcessTrace> get() = agent.processTrace
 
-    override suspend fun resolve(problem: String): ActResult {
+    override suspend fun run(task: String): AgentHistory {
         newContext()
-        return agent.resolve(problem)
+        return agent.run(task)
     }
 
     // Every time call resolve, create a new BrowserPerceptiveAgent to do the job
-    override suspend fun resolve(action: ActionOptions): ActResult {
+    override suspend fun run(action: ActionOptions): AgentHistory {
         newContext()
-        return agent.resolve(action)
+        return agent.run(action)
     }
 
     override suspend fun observe(instruction: String): List<ObserveResult> {
@@ -59,6 +58,14 @@ class TaskScopedBrowserPerceptiveAgent(
 
     override suspend fun extract(options: ExtractOptions): ExtractResult {
         return agent.extract(options)
+    }
+
+    override suspend fun summarize(instruction: String?, selector: String?): String {
+        return agent.summarize(instruction, selector)
+    }
+
+    override suspend fun clearHistory() {
+        agent.clearHistory()
     }
 
     override fun close() {

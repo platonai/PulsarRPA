@@ -1,6 +1,15 @@
 package ai.platon.pulsar.agentic.ai.agent.detail
 
+import ai.platon.pulsar.agentic.ActionOptions
+import ai.platon.pulsar.agentic.AgentHistory
+import ai.platon.pulsar.agentic.AgentState
 import ai.platon.pulsar.agentic.BrowserAgentActor
+import ai.platon.pulsar.agentic.DetailedActResult
+import ai.platon.pulsar.agentic.ObserveElement
+import ai.platon.pulsar.agentic.ObserveOptions
+import ai.platon.pulsar.agentic.ProcessTrace
+import ai.platon.pulsar.agentic.ToolCall
+import ai.platon.pulsar.agentic.ToolCallResult
 import ai.platon.pulsar.browser.driver.chrome.dom.model.BrowserUseState
 import ai.platon.pulsar.browser.driver.chrome.dom.model.SnapshotOptions
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
@@ -8,7 +17,6 @@ import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
-import ai.platon.pulsar.skeleton.ai.*
 import kotlinx.coroutines.withTimeout
 import java.lang.ref.WeakReference
 import java.nio.file.Path
@@ -23,7 +31,7 @@ class AgentStateManager(
     // for non-logback logs
     val auxLogDir: Path get() = AppPaths.detectAuxiliaryLogDir().resolve("agent")
 
-    private val _stateHistory = mutableListOf<AgentState>()
+    private val _stateHistory = AgentHistory()
     private val _processTrace = mutableListOf<ProcessTrace>()
     private val config get() = agent.config
 
@@ -34,7 +42,7 @@ class AgentStateManager(
     private val contexts: MutableList<ExecutionContext> = mutableListOf()
 
     val driver get() = agent.activeDriver as PulsarWebDriver
-    val stateHistory: List<AgentState> get() = _stateHistory
+    val stateHistory: AgentHistory get() = _stateHistory
     val processTrace: List<ProcessTrace> get() = _processTrace
 
     suspend fun getOrCreateActiveContext(action: ActionOptions, event: String): ExecutionContext {
@@ -216,7 +224,7 @@ class AgentStateManager(
         exception: Exception? = null
     ) {
         val agentState = requireNotNull(context.agentState)
-        val computedStep = agentState.step.takeIf { it > 0 } ?: ((stateHistory.lastOrNull()?.step ?: 0) + 1)
+        val computedStep = agentState.step.takeIf { it > 0 } ?: ((stateHistory.states.lastOrNull()?.step ?: 0) + 1)
 
         agentState.apply {
             step = computedStep
@@ -224,10 +232,13 @@ class AgentStateManager(
             method = toolCall.method
             this.description = description
             this.exception = exception
+
             screenshotContentSummary = observeElement.screenshotContentSummary
             currentPageContentSummary = observeElement.currentPageContentSummary
             evaluationPreviousGoal = observeElement.evaluationPreviousGoal
             nextGoal = observeElement.nextGoal
+            thinking = observeElement.thinking
+
             this.toolCallResult = toolCallResult
         }
     }
@@ -242,13 +253,14 @@ class AgentStateManager(
 //            agentState = state.toString()
 //        )
 
+        val history = _stateHistory.states
         synchronized(this) {
-            _stateHistory.add(state)
-            if (_stateHistory.size > config.maxHistorySize * 2) {
+            history.add(state)
+            if (history.size > config.maxHistorySize * 2) {
                 // Keep the latest maxHistorySize entries
-                val remaining = _stateHistory.takeLast(config.maxHistorySize)
-                _stateHistory.clear()
-                _stateHistory.addAll(remaining)
+                val remaining = history.takeLast(config.maxHistorySize)
+                history.clear()
+                history.addAll(remaining)
             }
             // _processTrace.add(trace)
         }
@@ -295,11 +307,12 @@ class AgentStateManager(
     fun clearUpHistory(toRemove: Int) {
         synchronized(this) {
             if (toRemove > 0) {
-                val safeToRemove = toRemove.coerceAtMost(_stateHistory.size)
+                val history = _stateHistory.states
+                val safeToRemove = toRemove.coerceAtMost(history.size)
                 if (safeToRemove > 0) {
-                    val remaining = _stateHistory.drop(safeToRemove)
-                    _stateHistory.clear()
-                    _stateHistory.addAll(remaining)
+                    val remaining = history.drop(safeToRemove)
+                    history.clear()
+                    history.addAll(remaining)
                 }
             }
         }
@@ -307,7 +320,7 @@ class AgentStateManager(
 
     fun clearHistory() {
         synchronized(this) {
-            _stateHistory.clear()
+            _stateHistory.states.clear()
         }
     }
 
@@ -316,9 +329,10 @@ class AgentStateManager(
      */
     fun removeLastIfStep(step: Int) {
         synchronized(this) {
-            val last = _stateHistory.lastOrNull()
+            val history = _stateHistory.states
+            val last = history.lastOrNull()
             if (last != null && last.step >= step) {
-                _stateHistory.removeAt(_stateHistory.size - 1)
+                history.removeAt(history.size - 1)
             }
         }
     }

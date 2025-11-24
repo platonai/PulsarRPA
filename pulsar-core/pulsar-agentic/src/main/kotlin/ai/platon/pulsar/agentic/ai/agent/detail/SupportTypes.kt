@@ -1,11 +1,18 @@
 package ai.platon.pulsar.agentic.ai.agent.detail
 
+import ai.platon.pulsar.agentic.ActResult
+import ai.platon.pulsar.agentic.ActionDescription
+import ai.platon.pulsar.agentic.ActionOptions
 import ai.platon.pulsar.agentic.AgentConfig
+import ai.platon.pulsar.agentic.AgentHistory
+import ai.platon.pulsar.agentic.AgentState
+import ai.platon.pulsar.agentic.DetailedActResult
+import ai.platon.pulsar.agentic.ObserveOptions
+import ai.platon.pulsar.agentic.ObserveResult
 import ai.platon.pulsar.agentic.ai.agent.ExtractParams
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.skeleton.ai.*
-import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
+import ai.platon.pulsar.agentic.ExtractionSchema
 import java.lang.ref.WeakReference
 import java.time.Instant
 import java.util.*
@@ -79,7 +86,7 @@ data class ExecutionContext constructor(
     var targetUrl: String? = null,
 
     val agentState: AgentState,
-    val stateHistory: List<AgentState>,
+    val stateHistory: AgentHistory,
 
     val config: AgentConfig,
 

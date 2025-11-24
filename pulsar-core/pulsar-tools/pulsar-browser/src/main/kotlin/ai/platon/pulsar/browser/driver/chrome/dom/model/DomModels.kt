@@ -59,6 +59,7 @@ object StaticAttributes {
     )
 }
 
+
 /**
  * Default attributes to include in LLM serialization.
  */
@@ -73,6 +74,13 @@ object DefaultIncludeAttributes {
         "invalid", "valuemin", "valuemax", "valuenow", "keyshortcuts",
         "haspopup", "multiselectable", "required", "valuetext", "level",
         "busy", "live", "ax_name"
+    )
+
+    val MORE_ATTRIBUTES = listOf(
+        // Navigation and linking attributes
+        "href", "src", "action", "target", "rel", "download",
+        // Identification and styling
+        "class",
     )
 }
 
@@ -505,6 +513,8 @@ data class MicroDOMTreeNode(
 
     private val seenChunks = mutableListOf<Pair<Double, Double>>()
 
+    val links = mutableListOf<String>()
+
     fun toJson() = Pson.toJson(this)
 
     fun hasSeen(startY: Double, endY: Double): Boolean {
@@ -537,6 +547,11 @@ data class MicroDOMTreeNode(
         MicroDOMTreeNodeHelper(this, true).toInteractiveDOMTreeNodeList()
 
     fun toNanoTree(): NanoDOMTree = toNanoTreeInRange(0.0, 1000000.0)
+
+    fun toNanoTreeUnfiltered(): NanoDOMTree {
+        val helper = MicroToNanoTreeHelper(this, seenChunks)
+        return helper.toNanoTreeUnfiltered()
+    }
 
     /**
      * Rendering data corresponding to a specific viewport slice of the page.
@@ -610,15 +625,18 @@ data class NanoDOMTreeNode(
 
 typealias NanoDOMTree = NanoDOMTreeNode
 
-data class DOMState(
+data class DOMState constructor(
     val microTree: MicroDOMTree,
     val interactiveNodes: List<MicroDOMTreeNode> = listOf(),
     val frameIds: List<String> = listOf(),
     val selectorMap: Map<String, DOMTreeNodeEx> = mapOf(),
-    val locatorMap: LocatorMap = LocatorMap(),
+    val locatorMap: LocatorMap = LocatorMap()
 ) {
     @get:JsonIgnore
-    val nanoTreeLazyJson: String get() = microTree.toNanoTreeInRange().lazyJson
+    val nanoTreeLazyJson: String get() = microTree.toNanoTree().lazyJson
+
+    @get:JsonIgnore
+    val nanoTree get() = microTree.toNanoTree()
 
     fun getAbsoluteFBNLocator(locator: String?): FBNLocator? {
         if (locator == null) return null
