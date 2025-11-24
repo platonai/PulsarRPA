@@ -45,7 +45,7 @@ open class BrowserAgentActor(
     protected val stateManager by lazy { AgentStateManager(this, pageStateTracker) }
 
     override val uuid get() = _uuid
-    override val stateHistory: List<AgentState> get() = stateManager.stateHistory
+    override val stateHistory: AgentHistory get() = stateManager.stateHistory
     override val processTrace: List<ProcessTrace> get() = stateManager.processTrace
 
     val activeDriver get() = session.getOrCreateBoundDriver()
@@ -56,11 +56,11 @@ open class BrowserAgentActor(
         Files.createDirectories(baseDir)
     }
 
-    override suspend fun run(action: ActionOptions): List<AgentState> {
+    override suspend fun run(action: ActionOptions): AgentHistory {
         throw NotSupportedException("Not supported, use stateful agents instead, such as BrowserPerceptiveAgent, TaskScopedBrowserPerceptiveAgent, etc.")
     }
 
-    override suspend fun run(task: String): List<AgentState> {
+    override suspend fun run(task: String): AgentHistory {
         throw NotSupportedException("Not supported, use stateful agents instead, such as BrowserPerceptiveAgent, TaskScopedBrowserPerceptiveAgent, etc.")
     }
 

@@ -290,6 +290,7 @@ open class TextToAction(
                 currentPageContentSummary = ele.currentPageContentSummary,
                 evaluationPreviousGoal = ele.evaluationPreviousGoal,
                 nextGoal = ele.nextGoal,
+                thinking = ele.thinking,
 
                 toolCall = ToolCall(
                     domain = ele.domain ?: "",

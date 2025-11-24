@@ -6,7 +6,9 @@ suspend fun main() {
     val agent = AgenticContexts.getOrCreateAgent()
 
     val task = """
-        go to https://news.ycombinator.com/news , read top 3 articles and give me a summary
+        1. go to https://news.ycombinator.com/news
+        2. search for browser
+        3. read top 3 articles and give me a summary
         """.trimIndent()
 
     agent.run(task)

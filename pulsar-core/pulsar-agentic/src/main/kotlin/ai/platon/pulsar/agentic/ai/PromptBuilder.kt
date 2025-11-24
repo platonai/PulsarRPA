@@ -1,5 +1,6 @@
 package ai.platon.pulsar.agentic.ai
 
+import ai.platon.pulsar.agentic.AgentHistory
 import ai.platon.pulsar.agentic.ai.agent.ExtractParams
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
@@ -685,7 +686,7 @@ $AGENT_GUIDE_SYSTEM_PROMPT
     }
 
     fun buildResolveMessageListStart(
-        context: ExecutionContext, stateHistory: List<AgentState>,
+        context: ExecutionContext, stateHistory: AgentHistory,
         messages: AgentMessageList,
     ): AgentMessageList {
         val instruction = context.instruction
@@ -751,7 +752,8 @@ $userInstructions
         return SimpleMessage(role = "system", content = content)
     }
 
-    fun buildAgentStateHistoryMessage(history: List<AgentState>): String {
+    fun buildAgentStateHistoryMessage(agentHistory: AgentHistory): String {
+        val history = agentHistory.states
         if (history.isEmpty()) {
             return ""
         }
@@ -1165,14 +1167,14 @@ ${nanoTree.lazyJson}
         return instruction
     }
 
-    fun buildSummaryPrompt(goal: String, stateHistory: List<AgentState>): Pair<String, String> {
+    fun buildSummaryPrompt(goal: String, stateHistory: AgentHistory): Pair<String, String> {
         val system = "你是总结助理，请基于执行轨迹对原始目标进行总结，输出 JSON。"
 
 //        val history = stateHistory.withIndex().joinToString("\n") {
 //            "${it.index}.\t🚩 ${it.value}"
 //        }
 
-        val history = stateHistory.joinToString("\n") { Pson.toJson(it) }
+        val history = stateHistory.states.joinToString("\n") { Pson.toJson(it) }
 
         val user = """
 ## 原始目标

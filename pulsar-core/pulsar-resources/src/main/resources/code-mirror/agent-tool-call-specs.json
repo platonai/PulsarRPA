@@ -102,4 +102,10 @@
   } ],
   "returnType" : "ExtractResult",
   "description" : "Structured extraction entry point. Implementations should build a rich prompt with the DOM snapshot and optional JSON schema to produce a structured [JsonNode] payload."
+}, {
+  "domain" : "agent",
+  "method" : "clearHistory",
+  "arguments" : [ ],
+  "returnType" : "Unit",
+  "description" : "Clear history so that new tasks remain unaffected by previous ones."
 } ]

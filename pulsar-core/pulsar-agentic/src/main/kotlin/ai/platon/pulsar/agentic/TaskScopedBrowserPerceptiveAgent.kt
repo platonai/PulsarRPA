@@ -15,16 +15,16 @@ class TaskScopedBrowserPerceptiveAgent(
 
     override val uuid: UUID = UUID.randomUUID()
 
-    override val stateHistory: List<AgentState> get() = agent.stateHistory
+    override val stateHistory: AgentHistory get() = agent.stateHistory
     override val processTrace: List<ProcessTrace> get() = agent.processTrace
 
-    override suspend fun run(task: String): List<AgentState> {
+    override suspend fun run(task: String): AgentHistory {
         newContext()
         return agent.run(task)
     }
 
     // Every time call resolve, create a new BrowserPerceptiveAgent to do the job
-    override suspend fun run(action: ActionOptions): List<AgentState> {
+    override suspend fun run(action: ActionOptions): AgentHistory {
         newContext()
         return agent.run(action)
     }

@@ -1,9 +1,9 @@
-package ai.platon.pulsar.skeleton.ai
+package ai.platon.pulsar.agentic
 
 import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.skeleton.ai.support.ExtractionSchema
 import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.databind.JsonNode
+import com.google.common.annotations.Beta
 import java.util.*
 
 /**
@@ -184,13 +184,15 @@ data class ObserveResult constructor(
 interface PerceptiveAgent : AutoCloseable {
     val uuid: UUID
 
+    val session: AgenticSession
+
     /**
      * The agent state history exists to give the AI agent a concise, sequential memory of what has been done.
      * This helps the model select the next step and summarize outcomes.
      * For this to work well, the history should reflect only the agent’s actual, single-step actions
      * with clear success/failure signals and the observation context that impacted/was impacted by the action.
      * */
-    val stateHistory: List<AgentState>
+    val stateHistory: AgentHistory
 
     /**
      * The process trace.
@@ -204,7 +206,7 @@ interface PerceptiveAgent : AutoCloseable {
      * @param task The user goal or instruction to fulfill.
      * @return The final action result produced by the agent.
      */
-    suspend fun run(task: String): List<AgentState>
+    suspend fun run(task: String): AgentHistory
 
     /**
      * Run an autonomous loop (observe -> act -> ...) attempting to fulfill the user goal described
@@ -214,7 +216,7 @@ interface PerceptiveAgent : AutoCloseable {
      * @param action The action options describing the user goal and context.
      * @return The final action result for the resolution attempt.
      */
-    suspend fun run(action: ActionOptions): List<AgentState>
+    suspend fun run(action: ActionOptions): AgentHistory
 
     /**
      * Convenience overload to observe by instruction string. Implementations typically create

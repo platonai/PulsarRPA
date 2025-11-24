@@ -139,6 +139,7 @@ data class ObserveElement constructor(
     val currentPageContentSummary: String? = null,
     val evaluationPreviousGoal: String? = null,
     val nextGoal: String? = null,
+    val thinking: String? = null,
 
     val modelResponse: String? = null,
 
@@ -210,7 +211,9 @@ data class AgentState constructor(
 ) {
     // the url to handle in this step
     val url: String get() = browserUseState.browserState.url
-    val success: Boolean get() = exception == null
+    val isSuccess: Boolean get() = exception == null
+    val isDone: Boolean get() = isComplete == true
+    val hasErrors: Boolean get() = exception != null
 
     override fun toString(): String {
         if (step == 0) {
@@ -228,7 +231,7 @@ data class AgentState constructor(
             .filter { it.second != null }
             .joinToString("\n") { (k, s) -> "\t- $k: ${Strings.compactInline(s)}" }
 
-        val state = if (success) """✨OK""" else "💔FAIL"
+        val state = if (isSuccess) """✨OK""" else "💔FAIL"
         val event0 = event ?: method ?: ""
 
         if (isComplete == true) {
@@ -240,6 +243,26 @@ data class AgentState constructor(
             return "$state, event=$event0, tool=`$pseudoExpression`, resultPreview=`$resultPreview`, $toolCallState\n$summary"
         }
     }
+}
+
+data class AgentHistory(
+    val states: MutableList<AgentState> = mutableListOf(),
+) {
+    val size get() = states.size
+
+    val finalResult get() = states.lastOrNull()
+    val isDone get() = finalResult?.isComplete == true
+    val isSuccess get() = finalResult?.isSuccess == true
+    val totalSteps get() = states.size
+    val hasErrors get() = states.any { it.hasErrors }
+    val actionHistory get() = states.map { it.actionDescription }
+    val actionResults get() = states.map { it.toolCallResult }
+
+    val urls get() = states.map { it.url }
+    val modelOutputs get() = states.map { it.actionDescription?.modelResponse?.content }
+    val modelThoughts get() = states.map { it.actionDescription?.observeElement }
+
+    fun isEmpty() = states.isEmpty()
 }
 
 /**

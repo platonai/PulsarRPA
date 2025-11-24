@@ -136,7 +136,7 @@ open class BrowserPerceptiveAgent constructor(
     /**
      * High-level problem resolution entry. Builds an ActionOptions and delegates to resolve(ActionOptions).
      */
-    override suspend fun run(task: String): List<AgentState> {
+    override suspend fun run(task: String): AgentHistory {
         val opts = ActionOptions(action = task)
         run(opts)
         return stateHistory
@@ -147,7 +147,7 @@ open class BrowserPerceptiveAgent constructor(
      * in the ActionOptions. Applies retry and timeout strategies; records structured traces but keeps
      * stateHistory focused on executed tool actions only.
      */
-    override suspend fun run(action: ActionOptions): List<AgentState> {
+    override suspend fun run(action: ActionOptions): AgentHistory {
         if (isClosed) {
             return stateHistory
         }
@@ -265,7 +265,7 @@ open class BrowserPerceptiveAgent constructor(
             runCatching { agentJob.cancel(CancellationException("USER interrupted via close()")) }
             // Best-effort trace for visibility; avoid throwing
             runCatching {
-                val last = stateHistory.lastOrNull()
+                val last = stateHistory.states.lastOrNull()
                 stateManager.addTrace(last, emptyMap(), event = "userClose", message = "🛑 USER CLOSE")
             }
         }
@@ -275,7 +275,7 @@ open class BrowserPerceptiveAgent constructor(
      * Returns a concise summary of the latest agent state; if no history exists, returns a placeholder text.
      */
     override fun toString(): String {
-        return stateHistory.lastOrNull()?.toString() ?: "(no history)"
+        return stateHistory.states.lastOrNull()?.toString() ?: "(no history)"
     }
 
     protected data class ResolveResult(
@@ -726,8 +726,8 @@ open class BrowserPerceptiveAgent constructor(
     protected fun performMemoryCleanup(context: ExecutionContext) {
         try {
             synchronized(stateManager) {
-                if (stateHistory.size > config.maxHistorySize) {
-                    val toRemove = stateHistory.size - config.maxHistorySize + 10
+                if (stateHistory.states.size > config.maxHistorySize) {
+                    val toRemove = stateHistory.states.size - config.maxHistorySize + 10
                     stateManager.clearUpHistory(toRemove)
                 }
             }
@@ -797,7 +797,7 @@ open class BrowserPerceptiveAgent constructor(
             sb.appendLine("INSTRUCTION: $instruction")
             sb.appendLine("RESPONSE_STATE: ${finalResp.state}")
             sb.appendLine("EXECUTION_HISTORY:")
-            stateHistory.forEach { sb.appendLine(it) }
+            stateHistory.states.forEach { sb.appendLine(it) }
             sb.appendLine()
             sb.appendLine("FINAL_SUMMARY:")
             sb.appendLine(finalResp.content)
@@ -871,7 +871,7 @@ open class BrowserPerceptiveAgent constructor(
             currentStep = context.step,
             instruction = context.instruction,
             targetUrl = context.targetUrl,
-            recentStateHistory = stateHistory.takeLast(20).map { AgentStateSnapshot.from(it) },
+            recentStateHistory = stateHistory.states.takeLast(20).map { AgentStateSnapshot.from(it) },
             totalSteps = performanceMetrics.totalSteps,
             successfulActions = performanceMetrics.successfulActions,
             failedActions = performanceMetrics.failedActions,

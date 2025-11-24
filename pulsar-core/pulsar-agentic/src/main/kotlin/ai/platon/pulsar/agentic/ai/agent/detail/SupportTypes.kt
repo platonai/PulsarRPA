@@ -4,6 +4,7 @@ import ai.platon.pulsar.agentic.ActResult
 import ai.platon.pulsar.agentic.ActionDescription
 import ai.platon.pulsar.agentic.ActionOptions
 import ai.platon.pulsar.agentic.AgentConfig
+import ai.platon.pulsar.agentic.AgentHistory
 import ai.platon.pulsar.agentic.AgentState
 import ai.platon.pulsar.agentic.DetailedActResult
 import ai.platon.pulsar.agentic.ObserveOptions
@@ -85,7 +86,7 @@ data class ExecutionContext constructor(
     var targetUrl: String? = null,
 
     val agentState: AgentState,
-    val stateHistory: List<AgentState>,
+    val stateHistory: AgentHistory,
 
     val config: AgentConfig,
 
