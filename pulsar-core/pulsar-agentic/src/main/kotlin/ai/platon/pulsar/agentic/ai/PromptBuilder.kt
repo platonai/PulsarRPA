@@ -330,7 +330,7 @@ $A11Y_TREE_NOTE_CONTENT
 - 仅当完整地、无缺失地完成 USER REQUEST 时，将 `success` 设为 `true`。
 - 如果有任何部分缺失、不完整或不确定，将 `success` 设为 `false`，并在 summary 字段中明确说明状态。
 - 如果用户要求特定格式（例如：“返回具有以下结构的 JSON”或“以指定格式返回列表”），确保在回答中使用正确的格式。
-- 如果用户要求结构化输出，`## 输出格式` 段落规定的 schema 将被修改。解决任务时必须考虑该 schema。
+- 如果用户要求结构化输出，`## 输出要求` 段落规定的 schema 将被修改。解决任务时必须考虑该 schema。
 
 ---
 
@@ -423,22 +423,24 @@ $A11Y_TREE_NOTE_CONTENT
 
 ---
 
-## 输出格式
+## 输出要求
 
 - 输出严格使用下面两种 JSON 格式之一
 - 仅输出 JSON 内容，无多余文字
 
-1. 动作输出格式
-<output_act_tag />
+1. 动作输出
+## 输出要求
 
 - 最多一个元素
 - arguments 必须按工具方法声明顺序排列
 
+输出格式：
 ${buildObserveResultSchema(true)}
 
-2. 任务完成输出格式:
+2. 任务完成输出
 <output_done_tag />
 
+输出格式：
 $TASK_COMPLETE_SCHEMA
 
 ---
@@ -476,13 +478,13 @@ $TASK_COMPLETE_SCHEMA
 
 ---
 
-## 输出
+## 输出要求
 
 - 仅输出 JSON 内容，无多余文字
 - domain 取值 driver
 - method 和 arguments 遵循 `## 工具列表` 的函数表达式
 
-动作输出格式：
+输出格式：
 {{OUTPUT_SCHEMA_ACT}}
 
 ---
@@ -578,12 +580,12 @@ $TOOL_CALL_RULE_CONTENT
 
 ---
 
-## 输出格式
-(<output_act_tag />)
+## 输出要求
 
 - 输出严格使用下面 JSON 格式，仅输出 JSON 内容，无多余文字
 - 最多一个元素，domain & method 字段不得为空
 
+输出格式:
 {{OUTPUT_SCHEMA_PLACEHOLDER}}
 
 ---
@@ -940,7 +942,7 @@ ${nanoTree.lazyJson}
 
 ---
 
-## 输出
+## 输出要求
 你必须返回一个严格符合以下JSON Schema的有效JSON对象。不要包含任何额外说明。
 
 ${schema.toJsonSchema()}
@@ -1190,7 +1192,7 @@ $history
 
 ---
 
-## 输出
+## 输出要求
 
 严格输出 JSON，无多余文字：
 

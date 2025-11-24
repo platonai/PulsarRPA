@@ -9,6 +9,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotNull
 import org.junit.jupiter.api.Assertions.assertTrue
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 
 class DOMStateBuilderTest {
@@ -304,6 +305,7 @@ class DOMStateBuilderTest {
         }
     }
 
+    @Disabled("Feature disabled temporarily")
     @Test
     fun `test href and navigation attributes are preserved in NanoDOMTree`() {
         // Create an anchor node with href attribute

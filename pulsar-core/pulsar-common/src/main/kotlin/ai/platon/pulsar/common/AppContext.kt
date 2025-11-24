@@ -22,7 +22,7 @@ object AppContext {
      * */
     val isProd get() = System.getenv("ENV").equals("prod", true)
 
-    val isCN get() = Locale.getDefault().language == "cn"
+    val isCN get() = Locale.getDefault().language.equals("zh", ignoreCase = true)
 
     /**
      * The node id in the cluster.

@@ -142,9 +142,9 @@ open class TextToAction(
 
         val modelError = when {
             heading20.contains("[{\"elements") -> errorMessage
-            heading20.contains("<output_act>") -> errorMessage
-            tailing20.contains("</output_act>") -> errorMessage
-            tailing20.contains("<output_act>") -> errorMessage
+            heading20.contains("output_act") -> errorMessage
+            tailing20.contains("/output_act") -> errorMessage
+            tailing20.contains("output_act") -> errorMessage
             else -> null
         }
 
