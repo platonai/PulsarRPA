@@ -3,6 +3,7 @@ package ai.platon.pulsar.agentic.tools.executors
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.agentic.PerceptiveAgent
 import ai.platon.pulsar.agentic.ExtractionSchema
+import ai.platon.pulsar.agentic.ai.tta.SourceCodeToToolCallSpec
 import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug.summarize
 import kotlin.reflect.KClass
 
@@ -13,11 +14,14 @@ class AgentToolExecutor : AbstractToolExecutor() {
 
     override val targetClass: KClass<*> = PerceptiveAgent::class
 
+    init {
+        SourceCodeToToolCallSpec.perceptiveAgentToolCallList.associateByTo(toolCallSpecs) { it.method }
+    }
+
     override fun help(method: String): String {
         return when (method) {
             "extract" -> extractHelp()
-            "summarize" -> "Extract textContent and generate a summary. Use selector to specify the element to extract textContent"
-            else -> ""
+            else -> toolCallSpecs[method]?.description ?: ""
         }
     }
 

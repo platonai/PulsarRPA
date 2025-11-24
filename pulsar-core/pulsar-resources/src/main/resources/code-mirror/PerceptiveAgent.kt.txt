@@ -241,12 +241,16 @@ interface PerceptiveAgent : AutoCloseable {
     suspend fun observe(options: ObserveOptions): List<ObserveResult>
 
     /**
-     * Extract the text content and generate a summary.
+     * Summarize text captured from the current page or a specific element and return a natural-language synopsis.
      *
-     * @param instruction Instruction to guide the LLM how to generate the summary.
-     * @param selector The selector of the element to extract text content from.
-     * @return The summary.
-     * */
+     * Passing an [instruction] tailors the tone or focus of the summary; when null, the agent relies on a
+     * default summarization prompt. Supplying a [selector] scopes the extraction to a particular DOM element;
+     * leaving it null lets the implementation infer a sensible region (for example, the main article body).
+     *
+     * @param instruction Optional guidance for how the summary should be written.
+     * @param selector Optional locator limiting which element's text is summarized.
+     * @return The generated summary text.
+     */
     suspend fun summarize(instruction: String? = null, selector: String? = null): String
 
     /**

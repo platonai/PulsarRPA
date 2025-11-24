@@ -46,7 +46,7 @@ object SourceCodeToToolCallSpec {
             val method = m.name
             // Use parsed return type; default to Unit when absent
             val returnType = m.returnType.ifBlank { "Unit" }
-            val desc = m.kdoc?.let { compactDoc(it) }
+            val desc = m.kdoc?.let { compactDoc(it) + "\n" }
             toolCallSpecs += ToolCallSpec(domain, method, arguments, returnType, desc)
         }
 
@@ -124,7 +124,9 @@ object SourceCodeToToolCallSpec {
                 kdocBuf.appendLine(line)
                 if (line.contains("*/")) {
                     inKDoc = false
-                    pendingKDoc = cleanupKDoc(kdocBuf.toString())
+                    // 2025/11/24: do not clean currently, may improve later
+                    pendingKDoc = kdocBuf.toString()
+                    // pendingKDoc = cleanupKDoc(kdocBuf.toString())
                 }
                 continue
             }

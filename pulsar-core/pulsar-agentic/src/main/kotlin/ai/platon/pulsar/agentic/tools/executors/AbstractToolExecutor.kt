@@ -1,10 +1,11 @@
 package ai.platon.pulsar.agentic.tools.executors
 
+import ai.platon.pulsar.agentic.TcEvaluate
+import ai.platon.pulsar.agentic.ToolCall
+import ai.platon.pulsar.agentic.ToolCallSpec
 import ai.platon.pulsar.agentic.common.SimpleKotlinParser
 import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.agentic.TcEvaluate
-import ai.platon.pulsar.agentic.ToolCall
 import kotlin.reflect.KClass
 
 interface ToolExecutor {
@@ -25,6 +26,20 @@ abstract class AbstractToolExecutor : ToolExecutor {
 
     private val logger = getLogger(this)
     private val simpleParser = SimpleKotlinParser()
+
+    protected val toolCallSpecs = mutableMapOf<String, ToolCallSpec>()
+
+    override fun help(): String {
+        return toolCallSpecs.values.mapNotNull { it.description }.joinToString("\n")
+    }
+
+    override fun help(method: String): String {
+        val spec = toolCallSpecs[method] ?: return ""
+        return """
+            ${spec.description}
+            ${spec.expression}
+        """.trimIndent()
+    }
 
     override suspend fun execute(tc: ToolCall, target: Any): TcEvaluate {
         val objectName = tc.domain
@@ -56,14 +71,6 @@ abstract class AbstractToolExecutor : ToolExecutor {
 
     @Throws(IllegalArgumentException::class)
     abstract suspend fun execute(objectName: String, functionName: String, args: Map<String, Any?>, target: Any): Any?
-
-    override fun help(): String {
-        return "system.help(domain: String, method: String): String"
-    }
-
-    override fun help(method: String): String {
-        return "system.help(domain: String, method: String): String"
-    }
 
     // ---------------- Shared helpers for named parameter executors ----------------
     protected fun validateArgs(
