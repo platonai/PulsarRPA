@@ -1,6 +1,5 @@
 package ai.platon.pulsar.agentic
 
-import com.google.common.annotations.Beta
 import java.util.*
 
 /**
@@ -59,6 +58,10 @@ class TaskScopedBrowserPerceptiveAgent(
 
     override suspend fun extract(options: ExtractOptions): ExtractResult {
         return agent.extract(options)
+    }
+
+    override suspend fun summarize(instruction: String?, selector: String?): String {
+        return agent.summarize(instruction, selector)
     }
 
     override suspend fun clearHistory() {

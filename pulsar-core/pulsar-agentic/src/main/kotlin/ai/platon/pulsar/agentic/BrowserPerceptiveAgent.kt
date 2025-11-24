@@ -4,6 +4,7 @@ import ai.platon.pulsar.agentic.ai.agent.detail.*
 import ai.platon.pulsar.agentic.ai.todo.ToDoManager
 import ai.platon.pulsar.agentic.tools.ActionValidator
 import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
+import ai.platon.pulsar.common.AppContext
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
@@ -432,7 +433,8 @@ open class BrowserPerceptiveAgent constructor(
         val driver = activeDriver
         val url = driver.url()
         if (url.isBlank() || url == "about:blank") {
-            driver.navigateTo(AppConstants.SEARCH_ENGINE_URL)
+            val searchURL = if (AppContext.isCN) AppConstants.SEARCH_ENGINE_URL else AppConstants.SEARCH_ENGINE_EN_URL
+            driver.navigateTo(searchURL)
         }
 
         // Only wait for DOM settle just before collection DOM tree data

@@ -3,6 +3,7 @@ package ai.platon.pulsar.agentic.tools.executors
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.agentic.PerceptiveAgent
 import ai.platon.pulsar.agentic.ExtractionSchema
+import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug.summarize
 import kotlin.reflect.KClass
 
 class AgentToolExecutor : AbstractToolExecutor() {
@@ -15,6 +16,7 @@ class AgentToolExecutor : AbstractToolExecutor() {
     override fun help(method: String): String {
         return when (method) {
             "extract" -> extractHelp()
+            "summarize" -> "Extract textContent and generate a summary. Use selector to specify the element to extract textContent"
             else -> ""
         }
     }
@@ -60,10 +62,16 @@ class AgentToolExecutor : AbstractToolExecutor() {
                     agent.extract(paramString(args, "instruction", functionName)!!)
                 }
             }
-            // agent.run(problem: String)
-            "resolve" -> {
-                validateArgs(args, allowed = setOf("problem"), required = setOf("problem"), functionName)
-                agent.run(paramString(args, "problem", functionName)!!)
+            "run" -> {
+                validateArgs(args, allowed = setOf("task"), required = setOf("task"), functionName)
+                agent.run(paramString(args, "task", functionName)!!)
+            }
+            "summarize" -> {
+                validateArgs(
+                    args, allowed = setOf("instruction", "schema"), required = setOf(), functionName)
+                val instruction = paramString(args, "instruction", functionName)
+                val selector = paramString(args, "selector", functionName)
+                agent.summarize(instruction, selector)
             }
             // Signal completion; just return true
             "done" -> {

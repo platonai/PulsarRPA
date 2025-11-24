@@ -55,8 +55,10 @@ fs.replaceContent(filename: String, oldStr: String, newStr: String): String
 
 // domain: agent
 agent.extract(instruction: String, schema: String): String // Extract data with given JSON schema
+agent.summarize(instruction: String?, selector: String?): String // Extract textContent and generate a summary
 
 // domain: system
+system.help(domain: String): String                        // get help for tool calls in a domain
 system.help(domain: String, method: String): String        // get help for a tool call
 
     """

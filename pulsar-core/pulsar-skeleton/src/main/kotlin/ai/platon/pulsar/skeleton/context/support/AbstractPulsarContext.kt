@@ -235,7 +235,7 @@ abstract class AbstractPulsarContext(
             url.takeIf { it.contains("://") } ?: String(Base64.getUrlDecoder().decode(url))
         } catch (e: IllegalArgumentException) {
             logger.warn("Invalid URL, will goto the default search engine {}", Strings.compactInline(url))
-            AppConstants.SEARCH_ENGINE_URL
+            if (AppContext.isCN) AppConstants.SEARCH_ENGINE_URL else AppConstants.SEARCH_ENGINE_EN_URL
         }
 
         val link = Hyperlink(url0, "", href = url0)

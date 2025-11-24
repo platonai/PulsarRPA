@@ -773,7 +773,11 @@
 }, {
   "domain" : "driver",
   "method" : "textContent",
-  "arguments" : [ ],
+  "arguments" : [ {
+    "name" : "selector",
+    "type" : "String?",
+    "defaultValue" : "null"
+  } ],
   "returnType" : "String?",
   "description" : "Returns the document's text content. If the document does not exist, returns null."
 }, {

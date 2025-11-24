@@ -40,6 +40,20 @@
   "description" : "Observe the page given an instruction and options, returning zero or more [ObserveResult] objects describing candidate elements and potential actions. When `returnAction=true`, implementations may include an actionable method/arguments in the result."
 }, {
   "domain" : "agent",
+  "method" : "summarize",
+  "arguments" : [ {
+    "name" : "instruction",
+    "type" : "String?",
+    "defaultValue" : "null"
+  }, {
+    "name" : "selector",
+    "type" : "String?",
+    "defaultValue" : "null"
+  } ],
+  "returnType" : "String",
+  "description" : "Extract the text content and generate a summary."
+}, {
+  "domain" : "agent",
   "method" : "act",
   "arguments" : [ {
     "name" : "action",

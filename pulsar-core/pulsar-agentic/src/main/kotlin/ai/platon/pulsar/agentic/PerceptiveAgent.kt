@@ -241,6 +241,15 @@ interface PerceptiveAgent : AutoCloseable {
     suspend fun observe(options: ObserveOptions): List<ObserveResult>
 
     /**
+     * Extract the text content and generate a summary.
+     *
+     * @param instruction Instruction to guide the LLM how to generate the summary.
+     * @param selector The selector of the element to extract text content from.
+     * @return The summary.
+     * */
+    suspend fun summarize(instruction: String? = null, selector: String? = null): String
+
+    /**
      * Convenience wrapper building [ActionOptions] from a raw action string and delegating to [act].
      *
      * @param action The action to execute.

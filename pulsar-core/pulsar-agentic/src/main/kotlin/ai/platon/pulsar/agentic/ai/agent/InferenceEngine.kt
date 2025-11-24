@@ -271,6 +271,24 @@ class InferenceEngine(
         return actionDescription
     }
 
+    suspend fun summary(instruction: String?, textContent: String): String {
+        val messages = AgentMessageList()
+
+        if (instruction.isNullOrBlank()) {
+            messages.addUser("对下述文本给出一个总结。")
+        } else {
+            messages.addUser("根据用户指令，对下述文本给出一个总结。")
+            messages.addUser("""<user_request>$instruction</user_request>""")
+        }
+        messages.addUser("\n\n$textContent\n\n".trimIndent())
+
+        val response = cta.generateResponseRaw(messages)
+
+        // TODO: count token usage
+
+        return response.content
+    }
+
     private fun safeJsonPreview(raw: String, limit: Int = 2000): String {
         return Strings.compactInline(raw, limit)
     }

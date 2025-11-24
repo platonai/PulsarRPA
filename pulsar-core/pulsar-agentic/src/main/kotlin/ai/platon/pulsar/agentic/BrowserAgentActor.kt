@@ -212,6 +212,11 @@ open class BrowserAgentActor(
         return result.observeResults
     }
 
+    override suspend fun summarize(instruction: String?, selector: String?): String {
+        val textContent = activeDriver.textContent(selector) ?: return "(no text content)"
+        return inference.summary(instruction, textContent)
+    }
+
     data class ObserveActResult(
         val observeResults: List<ObserveResult>,
         val actionDescription: ActionDescription,
