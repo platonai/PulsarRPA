@@ -166,6 +166,7 @@ data class ObserveResult constructor(
     val currentPageContentSummary: String? = null,
     val evaluationPreviousGoal: String? = null,
     val nextGoal: String? = null,
+    val thinking: String? = null,
 
     val backendNodeId: Int? = null,
 

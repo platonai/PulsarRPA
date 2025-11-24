@@ -11,5 +11,6 @@ suspend fun main() {
         3. read top 3 articles and give me a summary
         """.trimIndent()
 
-    agent.run(task)
+    val history = agent.run(task)
+    println(history)
 }

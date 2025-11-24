@@ -232,10 +232,13 @@ class AgentStateManager(
             method = toolCall.method
             this.description = description
             this.exception = exception
+
             screenshotContentSummary = observeElement.screenshotContentSummary
             currentPageContentSummary = observeElement.currentPageContentSummary
             evaluationPreviousGoal = observeElement.evaluationPreviousGoal
             nextGoal = observeElement.nextGoal
+            thinking = observeElement.thinking
+
             this.toolCallResult = toolCallResult
         }
     }

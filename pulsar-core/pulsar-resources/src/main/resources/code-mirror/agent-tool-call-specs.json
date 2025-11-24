@@ -6,7 +6,7 @@
     "type" : "String",
     "defaultValue" : ""
   } ],
-  "returnType" : "List<AgentState>",
+  "returnType" : "AgentHistory",
   "description" : "High-level problem resolution entry. Implementations should construct an [ActionOptions] from the raw problem string and delegate to [run] with the options."
 }, {
   "domain" : "agent",
@@ -16,7 +16,7 @@
     "type" : "ActionOptions",
     "defaultValue" : ""
   } ],
-  "returnType" : "List<AgentState>",
+  "returnType" : "AgentHistory",
   "description" : "Run an autonomous loop (observe -> act -> ...) attempting to fulfill the user goal described in the provided [ActionOptions]. Implementations may apply retry and timeout strategies; they should record structured traces while keeping [stateHistory] focused on executed tool actions only."
 }, {
   "domain" : "agent",

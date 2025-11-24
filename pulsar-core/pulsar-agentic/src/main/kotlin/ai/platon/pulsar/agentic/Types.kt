@@ -196,6 +196,8 @@ data class AgentState constructor(
     var evaluationPreviousGoal: String? = null,
     // AI: the next goal to archive
     var nextGoal: String? = null,
+    // AI: thinking
+    var thinking: String? = null,
     // if is complete method
     var isComplete: Boolean? = null,
     // timestamp
@@ -340,10 +342,13 @@ data class ActionDescription constructor(
                 method = ele.method?.ifBlank { null },
                 arguments = ele.arguments?.takeIf { it.isNotEmpty() },
                 description = ele.description ?: "(No comment ...)",
+
                 screenshotContentSummary = ele.screenshotContentSummary,
                 currentPageContentSummary = ele.currentPageContentSummary,
                 evaluationPreviousGoal = ele.evaluationPreviousGoal,
                 nextGoal = ele.nextGoal,
+                thinking = ele.thinking,
+
                 backendNodeId = ele.backendNodeId,
                 observeElement = ele,
                 agentState = agentState,
