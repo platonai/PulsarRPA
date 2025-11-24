@@ -8,33 +8,35 @@
 
 [English](README.md) | 简体中文 | [中国镜像](https://gitee.com/platonai_galaxyeye/Browser4)
 
+> 本文件已与英文版 README 同步（同步日期：2025-11-25），如有差异请以英文版为准。
+
 <!-- TOC -->
 **目录**
-- [🤖 Browser4](#-browser4)
-    - [🌟 项目介绍](#-项目介绍)
-        - [✨ 核心能力](#-核心能力)
-    - [🎥 演示视频](#-演示视频)
-    - [🚀 快速开始](#-快速开始)
-    - [💡 使用示例](#-使用示例)
-        - [浏览器智能体](#浏览器智能体)
-        - [工作流自动化](#工作流自动化)
-        - [LLM + X-SQL](#llm--x-sql)
-        - [高速并行处理](#高速并行处理)
-        - [自动抽取](#自动抽取)
-    - [📦 模块概览](#-模块概览)
-    - [📜 文档](#-文档)
-    - [🔧 代理配置 - 解锁网站访问](#-代理配置---解锁网站访问)
-    - [✨ 功能特性](#-功能特性)
-    - [🤝 支持与社区](#-支持与社区)
+- 🤖 Browser4
+    - 🌟 项目介绍
+        - ✨ 核心能力
+    - 🎥 演示视频
+    - 🚀 快速开始
+    - 💡 使用示例
+        - 浏览器智能体
+        - 工作流自动化
+        - LLM + X-SQL
+        - 高速并行处理
+        - 自动抽取
+    - 📦 模块概览
+    - 📜 文档
+    - 🔧 代理配置 - 解锁网站访问
+    - ✨ 功能特性
+    - 🤝 支持与社区
 <!-- /TOC -->
 
 ## 🌟 项目介绍
 
-💖 **Browser4：为 AI 自动化打造的闪电般快速、协程安全的浏览器引擎** 💖
+💖 **Browser4：为 AI 自动化打造的闪电般快速、协程安全 (coroutine-safe) 的浏览器引擎** 💖
 
 ### ✨ 核心能力
 
-* 👽 **浏览器智能体** — 能在浏览器中进行推理、规划并执行操作的自主智能体。
+* 👽 **浏览器智能体 (Browser Agents)** — 能在浏览器中进行推理、规划并执行操作的自主智能体。
 * 🤖 **浏览器自动化** — 面向工作流、导航和数据提取的高性能自动化。
 * ⚡  **极致性能** — 完全协程安全；支持单机每天访问 100k+ 页面。
 * 🧠 **网页理解** — 深度理解动态、脚本驱动与交互式网页。
@@ -66,16 +68,24 @@
 
    编辑 [application.properties](application.properties) 并添加你的 API Key。
 
-3. **构建项目**
+3. **构建项目（Linux/macOS）**
    ```shell
    ./mvnw -q -DskipTests
    ```
+   **Windows (cmd)**：
+   ```shell
+   mvnw.cmd -q -DskipTests
+   ```
 
-4. **运行示例**
+4. **运行示例（Linux/macOS）**
    ```shell
    ./mvnw -pl pulsar-examples exec:java -D"exec.mainClass=ai.platon.pulsar.examples.agent.Browser4AgentKt"
    ```
-   如有乱码问题：
+   **Windows (cmd)**：
+   ```shell
+   mvnw.cmd -pl pulsar-examples exec:java -D"exec.mainClass=ai.platon.pulsar.examples.agent.Browser4AgentKt"
+   ```
+   如有乱码问题（Windows）：
    ```shell
    ./bin/run-examples.ps1
    ```
@@ -95,14 +105,14 @@ Docker 部署请参见我们的 [Docker Hub 仓库](https://hub.docker.com/r/gal
 ```kotlin
 val agent = AgenticContexts.getOrCreateAgent()
 
-val problem = """
+val task = """
     1. go to amazon.com
     2. search for pens to draw on whiteboards
     3. compare the first 4 ones
     4. write the result to a markdown file
     """
 
-agent.run(problem)
+agent.run(task)
 ```
 
 ### 工作流自动化
@@ -110,9 +120,9 @@ agent.run(problem)
 低层级浏览器自动化与数据提取，提供细粒度控制。
 
 **特性：**
-- 直接且完整的 Chrome DevTools Protocol (CDP) 控制
+- 直接且完整的 Chrome DevTools Protocol (CDP) 控制，协程安全
 - 精确的元素交互（点击、滚动、输入）
-- 基于 CSS 选择器/XPath 的快速数据提取
+- 基于 CSS 选择器 / XPath 的快速数据提取
 
 ```kotlin
 val session = AgenticContexts.getOrCreateSession()
@@ -129,7 +139,7 @@ var result = agent.act("scroll to the comment section")
 var content = driver.selectFirstTextOrNull("#comments")
 
 // 复杂的智能体任务
-result = agent.run("Search for 'smart phone', read the first four products, and give me a comparison.")
+var history = agent.run("Search for 'smart phone', read the first four products, and give me a comparison.")
 
 // 捕获并基于当前状态提取
 page = session.capture(driver)
@@ -142,8 +152,8 @@ fields = session.extract(document, mapOf("ratings" to "#ratings"))
 适用于高复杂度的数据抽取流水线，包含数十个实体与每个实体数百个字段。
 
 **优势：**
-- 相较传统方法，可多提取 10 倍实体与 100 倍字段
-- 结合 LLM 智能与精确的 CSS 选择器/XPath
+- 相比传统方法，可多提取 10 倍实体与 100 倍字段
+- 结合 LLM 智能与精确 CSS 选择器 / XPath
 - 类 SQL 语法，上手友好
 
 ```kotlin
@@ -161,6 +171,10 @@ from load_and_select('https://www.amazon.com/dp/B08PP5MSVB -i 1s -njr 3', 'body'
 val rs = context.executeQuery(sql)
 println(ResultSetFormatter(rs, withHeader = true))
 ```
+
+示例代码：
+* [使用 X-SQL 从亚马逊商品页抓取 100+ 字段](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
+* [抓取多类型亚马逊页面的 X-SQL 集合](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 
 ### 高速并行处理
 
@@ -184,35 +198,49 @@ val links = LinkExtractors.fromResource("urls.txt")
 
 session.submitAll(links)
 ```
+
+🎬 YouTube:
+[![观看视频](https://img.youtube.com/vi/_BcryqWzVMI/0.jpg)](https://www.youtube.com/watch?v=_BcryqWzVMI)
+
+📺 哔哩哔哩：
+[https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
+
 ---
 
 ### 自动抽取
 
-基于自/无监督机器学习的自动化、大规模、高精度字段发现与抽取——无需 LLM API 调用、无 Token 成本、确定性且高速。
+基于自 / 无监督机器学习的自动化、大规模、高精度字段发现与抽取——无需 LLM API 调用、无 Token 成本、确定且快速。
 
 **它能做什么：**
-- 以高精度学习商品/详情页上的所有可抽取字段（通常从几十到上百）。
+- 以高精度学习商品 / 详情页上所有可抽取字段（通常从几十到上百）。
 
 **为何不只用 LLM？**
 - 仅依赖 LLM 的抽取会带来时延、成本与 Token 限制。
-- 基于 ML 的自动抽取本地可复现，且可扩展到 10 万+ 页/天。
-- 仍可结合两者：用自动抽取提供结构化基线 + LLM 做语义增强。
+- 基于 ML 的自动抽取本地可复现，且可扩展到 10 万+ 页 / 天。
+- 仍可结合二者：用自动抽取提供结构化基线 + LLM 做语义增强。
 
 **快捷命令（PulsarRPAPro）：**
 ```bash
-# Linux/macOS：带诊断输出采集页面
-java -jar exotic-standalone*.jar harvest https://www.hua.com/flower/ -diagnose -refresh
+# Linux/macOS：下载并演示采集（附诊断输出）
+curl -L -o PulsarRPAPro.jar https://github.com/platonai/PulsarRPAPro/releases/download/v3.0.0/PulsarRPAPro.jar
+# Windows (PowerShell)：
+Invoke-WebRequest -Uri https://github.com/platonai/PulsarRPAPro/releases/download/v3.0.0/PulsarRPAPro.jar -OutFile PulsarRPAPro.jar
 ```
+> 旧版 exotic-standalone*.jar 调用方式已弃用，示例已更新为最新发布包下载。
 
 **集成状态：**
 - 现已通过配套项目 [PulsarRPAPro](https://github.com/platonai/PulsarRPAPro) 提供。
 - 计划提供 Browser4 原生 API；关注后续版本发布。
 
 **关键优势：**
-- 高精度：>95% 字段被发现；多数字段精度 >99%（基于测试域的指示性数据）。
-- 对选择器震荡与 HTML 噪声具备鲁棒性。
+- 高精度：>95% 字段被发现；多数字段精度 >99%（指示性测试数据）。
+- 抗选择器震荡与 HTML 噪声。
 - 零外部依赖（无需 API Key），规模化成本更优。
 - 可解释：生成的选择器与 SQL 透明可审计。
+
+👽 利用机器学习智能体抽取数据：
+
+![Auto Extraction Result Snapshot](docs/assets/images/amazon.png)
 
 （即将推出：更丰富的仓库内示例与直接 API 挂钩。）
 
@@ -287,7 +315,7 @@ export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 ### 开发者体验
 - 简单的 API 集成（REST、原生、文本命令）
 - 丰富的配置分层
-- 清晰的结构化日志与度量
+- 清晰的结构化日志 (Structured Logging) 与指标
 
 ### 存储与监控
 - 本地文件系统与 MongoDB 支持（可扩展）
@@ -311,3 +339,15 @@ export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 ---
 
 > 英文文档请参阅 [English README](README.md)。
+
+---
+
+**术语速览（维护一致性）：**
+- Browser Agents：浏览器智能体（首次出现保留英文）
+- AgenticSession / AgenticContexts：保持英文
+- WebDriver：保持英文
+- Chrome DevTools Protocol (CDP)：Chrome DevTools 协议 (CDP)
+- X-SQL：保持英文
+- LLM：大语言模型 (LLM)
+- Structured Logging：结构化日志
+- Auto Extraction：自动抽取

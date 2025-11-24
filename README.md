@@ -214,8 +214,7 @@ Automatic, large-scale, high-precision field discovery and extraction powered by
 
 **Quick Commands (PulsarRPAPro):**
 ```bash
-# Linux/macOS: harvest a page with diagnostic output
-java -jar exotic-standalone*.jar harvest https://www.hua.com/flower/ -diagnose -refresh
+curl -L -o PulsarRPAPro.jar https://github.com/platonai/PulsarRPAPro/releases/download/v3.0.0/PulsarRPAPro.jar
 ```
 
 **Integration Status:**
@@ -227,6 +226,10 @@ java -jar exotic-standalone*.jar harvest https://www.hua.com/flower/ -diagnose -
 - Resilient to selector churn & HTML noise.
 - Zero external dependency (no API key) → cost-efficient at scale.
 - Explainable: generated selectors & SQL are transparent and auditable.
+
+👽 Extract data with machine learning agents:
+
+![Auto Extraction Result Snapshot](docs/assets/images/amazon.png)
 
 (Coming soon: richer in-repo examples and direct API hooks.)
 
