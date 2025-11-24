@@ -265,6 +265,11 @@ data class AgentHistory(
     val modelThoughts get() = states.map { it.actionDescription?.observeElement }
 
     fun isEmpty() = states.isEmpty()
+    fun isNotEmpty() = states.isNotEmpty()
+    fun first() = states.first()
+    fun last() = states.last()
+    fun firstOrNull() = states.firstOrNull()
+    fun lastOrNull() = states.lastOrNull()
 }
 
 /**

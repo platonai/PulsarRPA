@@ -59,16 +59,13 @@ object StaticAttributes {
     )
 }
 
+
 /**
  * Default attributes to include in LLM serialization.
  */
 object DefaultIncludeAttributes {
     val ATTRIBUTES = listOf(
-        // Navigation and linking attributes
-        "href", "src", "action", "target", "rel", "download",
-        // Identification and styling
-        "title", "type", "checked", "id", "name", "class", "role", "value",
-        // Form and input related
+        "title", "type", "checked", "id", "name", "role", "value",
         "placeholder", "data-date-format", "alt", "aria-label",
         "aria-expanded", "data-state", "aria-checked", "aria-valuemin",
         "aria-valuemax", "aria-valuenow", "aria-placeholder", "pattern",
@@ -83,7 +80,7 @@ object DefaultIncludeAttributes {
         // Navigation and linking attributes
         "href", "src", "action", "target", "rel", "download",
         // Identification and styling
-        "title", "type", "checked", "id", "name", "class", "role", "value",
+        "class",
     )
 }
 

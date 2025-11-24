@@ -110,7 +110,7 @@ agent.run(task)
 Low-level browser automation & data extraction with fine-grained control.
 
 **Features:**
-- Direct and full Chrome DevTools Protocol (CDP) control
+- Direct and full Chrome DevTools Protocol (CDP) control, coroutine safe
 - Precise element interactions (click, scroll, input)
 - Fast data extraction using CSS selectors/XPath
 
@@ -129,7 +129,7 @@ var result = agent.act("scroll to the comment section")
 var content = driver.selectFirstTextOrNull("#comments")
 
 // Complex agent tasks
-result = agent.run("Search for 'smart phone', read the first four products, and give me a comparison.")
+var history = agent.run("Search for 'smart phone', read the first four products, and give me a comparison.")
 
 // Capture and extract from current state
 page = session.capture(driver)

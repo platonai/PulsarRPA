@@ -487,10 +487,15 @@ abstract class AbstractWebDriver(
         return evaluateValue(js)?.toString()
     }
 
-    override suspend fun textContent(): String? {
+    @Throws(WebDriverException::class)
+    override suspend fun textContent(selector: String?): String? {
+        if (selector != null) {
+            return selectFirstTextOrNull(selector)
+        }
         return evaluateValue("document.body.textContent")?.toString()
     }
 
+    @Throws(WebDriverException::class)
     override suspend fun extract(fields: Map<String, String>): Map<String, String?> {
         return fields.entries.associate { it.key to selectFirstTextOrNull(it.value) }
     }

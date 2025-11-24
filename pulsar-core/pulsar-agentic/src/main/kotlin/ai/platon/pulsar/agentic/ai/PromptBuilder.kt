@@ -232,7 +232,7 @@ class ExtractionSchema(val fields: List<ExtractionField>)
 
 在每一步，你的输入将包括：
 1. `## 智能体历史`：按时间顺序的事件流，包含你之前的动作及其结果。
-2. `## 智能体状态`：当前的 <user_request>、<file_system> 摘要、<todo_contents> 和 <step_info> 摘要。
+2. `## 智能体状态`：当前的 <user_request>、<file_system> 摘要、<todo_contents> 和 <agent_history> 摘要。
 3. `## 浏览器状态`：当前 URL、打开的标签页、可交互元素的索引及可见页面内容。
 4. `## 视觉信息`：浏览器截图。如果你之前使用过截图，这里将包含截图。
 
@@ -345,12 +345,11 @@ $A11Y_TREE_NOTE_CONTENT
 ## 效率指南
 
 - 如需输入，直接输入，无需点击、滚动或聚焦，工具层处理
-- 屏幕阅读规则
-  - 默认逐屏阅读，屏幕视觉内容是推理的最终依据
-  - 当视口数超过5屏时，除非用户要求，否则不要逐屏阅读，而是滚动到网页底部保证网页完全加载，然后使用全文提取工具`driver.textContent()`提取网页内容进行分析
+- 屏幕阅读规则,默认逐屏阅读，屏幕视觉内容是推理的最终依据
+- 当视口数超过5屏时，除非用户要求，否则不要逐屏阅读，而是滚动到网页底部保证网页完全加载，然后使用全文提取工具`driver.textContent()`提取网页内容进行分析
 - 不要在一步中尝试多条不同路径。始终为每一步设定一个明确目标。重要的是在下一步你能看到动作是否成功，因此不要链式调用会多次改变浏览器状态的动作，例如：
-   - 不要使用 click 然后再 navigate，因为你无法确认 click 是否成功。
-   - 不要连续使用 switch，因为你看不到中间状态。
+   - 不要使用 click 然后再 navigateTo，因为你无法确认 click 是否成功。
+   - 不要连续使用 switchTab，因为你看不到中间状态。
    - 不要使用 input 然后立即 scroll，因为你无法验证 input 是否生效。
 
 ---
@@ -361,7 +360,7 @@ $A11Y_TREE_NOTE_CONTENT
 
 ### 推理模式
 
-为成功完成 <user_request> 请遵循以下推理模式：
+为成功完成 `<user_request>` 请遵循以下推理模式：
 
 ```
 <thinking>
@@ -386,7 +385,7 @@ $A11Y_TREE_NOTE_CONTENT
 - 如果有任何 `todolist.md` 项已完成，请在文件中将其标记为完成。
 - 分析你是否陷入了重复无进展的状态；若是，考虑替代方法，例如滚动以获取更多上下文、使用发送键（`press`）直接模拟按键，或换用不同页面。
 - 决定应存储在记忆中的简明、可操作的上下文以供后续推理使用。
-- 在准备结束时，按<output_done>格式输出。
+- 在准备结束时，按<output_done_tag />格式输出。
 - 始终关注 <user_request>。仔细分析所需的具体步骤和信息，例如特定筛选条件、表单字段等，确保当前轨迹与用户请求一致。
 
 ---
@@ -429,14 +428,16 @@ $A11Y_TREE_NOTE_CONTENT
 - 输出严格使用下面两种 JSON 格式之一
 - 仅输出 JSON 内容，无多余文字
 
-1. 动作输出格式(<output_act>)
+1. 动作输出格式
+<output_act_tag />
 
 - 最多一个元素
 - arguments 必须按工具方法声明顺序排列
 
 ${buildObserveResultSchema(true)}
 
-2. 任务完成输出格式(<output_done>):
+2. 任务完成输出格式:
+<output_done_tag />
 
 $TASK_COMPLETE_SCHEMA
 
@@ -578,7 +579,7 @@ $TOOL_CALL_RULE_CONTENT
 ---
 
 ## 输出格式
-(<output_act>)
+(<output_act_tag />)
 
 - 输出严格使用下面 JSON 格式，仅输出 JSON 内容，无多余文字
 - 最多一个元素，domain & method 字段不得为空
@@ -772,16 +773,17 @@ $userInstructions
             )
         }
 
-        val historyJson = result
+        val historyJsonList = result
             .map { compactAgentState(it) }
             .joinToString("\n") { pulsarObjectMapper().writeValueAsString(it) }
 
         val msg = """
 ## 智能体历史
-<agent_history>
 (仅保留 $totalSize 步骤)
 
-$historyJson
+<agent_history>
+$historyJsonList
+</agent_history>
 
 ---
 
@@ -794,7 +796,7 @@ $historyJson
         val message = """
 ## 智能体状态
 
-当前的 <user_request>、<file_system> 摘要、<todo_contents> 和 <step_info> 摘要。
+当前的 <user_request>、<file_system> 摘要、<todo_contents> 和 <agent_history> 摘要。
 
 ---
 
@@ -865,7 +867,7 @@ $lastModelMessage
 # 当前任务
 
 ## 用户输入
-(<user_request>)
+<user_request>
 
 $userRequest
 
@@ -1102,8 +1104,8 @@ $newTabsJson
 ## 浏览器状态
 
 <browser_state>
-
 ${browserState.lazyJson}
+</browser_state>
 
 $newTabsMessage
 

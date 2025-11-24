@@ -8,9 +8,9 @@ suspend fun main() {
     val task = """
         1. go to https://news.ycombinator.com/news
         2. search for browser
-        3. read top 3 articles and give me a summary
+        3. read top 3 articles and give me a summary, ignore comments
         """.trimIndent()
 
     val history = agent.run(task)
-    println(history)
+    println(history.finalResult)
 }

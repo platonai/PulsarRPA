@@ -205,12 +205,6 @@ open class BrowserAgentActor(
     }
 
     override suspend fun observe(options: ObserveOptions): List<ObserveResult> {
-//        val ctx = options.getContext()
-//        val context = if (ctx == null) {
-//            val instruction = promptBuilder.initObserveUserInstruction(options.instruction).instruction?.content
-//            stateManager.buildInitExecutionContext(options.copy(instruction = instruction), "observe")
-//        } else ctx
-
         val context = stateManager.getOrCreateActiveContext(options)
 
         val result = doObserveActObserve(options, context, options.fromResolve)

@@ -301,7 +301,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 assertTrue(agent.toString().contains("no history"))
 
                 // Manually add to history (simulating execution)
-                val history = agent.stateHistory as? MutableList
+                val history = agent.stateHistory.states
 
                 if (agent.stateHistory.isNotEmpty()) {
                     assertFalse(agent.toString().contains("no history"))

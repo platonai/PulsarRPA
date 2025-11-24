@@ -141,11 +141,12 @@ data class ObserveOptions(
     // from `resolve` loop or not
     val fromResolve: Boolean = false,
 
-    // internal
+    // internal, deprecated
     @get:JsonIgnore
     val agentState: AgentState? = null,
-    // internal
+    // internal, deprecated
     @get:JsonIgnore
+    @Deprecated("deprecated")
     val additionalContext: MutableMap<String, Any> = mutableMapOf(),
 )
 
@@ -173,6 +174,7 @@ data class ObserveResult constructor(
     val observeElement: ObserveElement? = null,
 
     // internal
+    @Deprecated("deprecated")
     val additionalContext: MutableMap<String, Any> = mutableMapOf(),
 
     // internal
