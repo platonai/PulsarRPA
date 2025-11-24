@@ -169,6 +169,13 @@ data class ObserveResult constructor(
     val nextGoal: String? = null,
     val thinking: String? = null,
 
+    // AI: completion summary
+    var summary: String? = null,
+    // AI: completion key findings
+    var keyFindings: String? = null,
+    // AI: completion next suggestions
+    var nextSuggestions: List<String> = emptyList(),
+
     val backendNodeId: Int? = null,
 
     val observeElement: ObserveElement? = null,

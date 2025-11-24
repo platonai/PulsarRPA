@@ -7,7 +7,8 @@ suspend fun main() {
 
     val task = """
         1. Navigate to https://news.ycombinator.com/news.
-        2. Read the top 3 results and summarize each one.
+        2. Search for the keyword "browser".
+        3. Read the top 3 results and summarize each one.
         """.trimIndent()
 
     val history = agent.run(task)

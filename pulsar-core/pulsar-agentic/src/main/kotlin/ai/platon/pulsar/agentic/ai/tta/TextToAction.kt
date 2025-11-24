@@ -24,6 +24,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonElement
+import com.mxgraph.io.graphml.mxGraphMlKey
 import java.nio.file.Files
 
 open class TextToAction(
@@ -119,6 +120,7 @@ open class TextToAction(
                     isComplete = complete.taskComplete,
                     errorCause = complete.errorCause,
                     summary = complete.summary,
+                    keyFindings = complete.keyFindings,
                     nextSuggestions = complete.nextSuggestions ?: emptyList(),
                     modelResponse = modelResponse
                 )

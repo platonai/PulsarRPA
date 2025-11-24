@@ -204,6 +204,14 @@ data class AgentState constructor(
     var timestamp: Instant = Instant.now(),
     // The last exception
     var exception: Exception? = null,
+
+    // AI: completion summary
+    var summary: String? = null,
+    // AI: completion key findings
+    var keyFindings: List<String>? = null,
+    // AI: completion next suggestions
+    var nextSuggestions: List<String>? = null,
+
     @JsonIgnore
     var actionDescription: ActionDescription? = null,
     @JsonIgnore
@@ -222,27 +230,32 @@ data class AgentState constructor(
             return "step=0, N/A"
         }
 
-        val summary = listOf(
-            "description" to description,
-            "pageContentSummary" to currentPageContentSummary,
-            "screenshotContentSummary" to screenshotContentSummary,
-            "evaluationPreviousGoal" to evaluationPreviousGoal,
-            "nextGoal" to nextGoal,
-            "exception" to exception?.compactedBrief(),
-        )
-            .filter { it.second != null }
-            .joinToString("\n") { (k, s) -> "\t- $k: ${Strings.compactInline(s)}" }
-
         val state = if (isSuccess) """✨OK""" else "💔FAIL"
         val event0 = event ?: method ?: ""
 
         if (isComplete == true) {
-            return """$state, event=$event0, isComplete=true 🎉"""
+            return """
+                $state, event=$event0, isComplete=true 🎉
+                summary: $summary
+                keyFindings: ${keyFindings ?: ""}
+                nextSuggestions: ${nextSuggestions ?: ""}
+                """.trimIndent()
         } else {
+            val finalSummary = listOf(
+                "description" to description,
+                "pageContentSummary" to currentPageContentSummary,
+                "screenshotContentSummary" to screenshotContentSummary,
+                "evaluationPreviousGoal" to evaluationPreviousGoal,
+                "nextGoal" to nextGoal,
+                "exception" to exception?.compactedBrief(),
+            )
+                .filter { it.second != null }
+                .joinToString("\n") { (k, s) -> "\t- $k: ${Strings.compactInline(s)}" }
+
             val pseudoExpression = actionDescription?.pseudoExpression
             val resultPreview = toolCallResult?.evaluate?.preview ?: "(absent)"
             val toolCallState = if (toolCallResult?.success == true) "✅OK" else "❌FAIL"
-            return "$state, event=$event0, tool=`$pseudoExpression`, resultPreview=`$resultPreview`, $toolCallState\n$summary"
+            return "$state, event=$event0, tool=`$pseudoExpression`, resultPreview=`$resultPreview`, $toolCallState\n$finalSummary"
         }
     }
 }
@@ -300,9 +313,13 @@ data class ActionDescription constructor(
      * */
     val summary: String? = null,
     /**
+     * AI: a summary about this task
+     * */
+    val keyFindings: List<String>? = null,
+    /**
      * AI: next suggestions
      * */
-    val nextSuggestions: List<String> = emptyList(),
+    val nextSuggestions: List<String>? = null,
     /**
      * AI: model response
      * */
