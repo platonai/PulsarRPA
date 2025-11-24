@@ -913,7 +913,12 @@ open class BrowserPerceptiveAgent constructor(
 
         require(action.isComplete) { "Required action.isComplete" }
         // require(context.agentState.isComplete) { "Required context.agentState.isComplete" }
-        context.agentState.isComplete = true
+        context.agentState.also {
+            it.isComplete = true
+            it.summary = action.summary
+            it.keyFindings = action.keyFindings
+            it.nextSuggestions = action.nextSuggestions
+        }
 
         logger.info("✅ task.complete sid={} step={} complete={}", sid.take(8), step, true)
         stateManager.addTrace(context.agentState, event = "complete", message = "#${step} complete")

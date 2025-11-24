@@ -72,8 +72,8 @@ class AgentToolExecutor : AbstractToolExecutor() {
             }
             "summarize" -> {
                 validateArgs(args, allowed = setOf("instruction", "selector"), required = setOf(), functionName)
-                val instruction = paramString(args, "instruction", functionName)
-                val selector = paramString(args, "selector", functionName)
+                val instruction = paramString(args, "instruction", functionName, required = false)
+                val selector = paramString(args, "selector", functionName, required = false)
                 agent.summarize(instruction, selector)
             }
             // Signal completion; just return true

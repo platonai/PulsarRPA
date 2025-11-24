@@ -234,12 +234,17 @@ data class AgentState constructor(
         val event0 = event ?: method ?: ""
 
         if (isComplete == true) {
-            return """
-                $state, event=$event0, isComplete=true 🎉
-                summary: $summary
-                keyFindings: ${keyFindings ?: ""}
-                nextSuggestions: ${nextSuggestions ?: ""}
-                """.trimIndent()
+            val ident = "    - "
+            return buildString {
+                appendLine("""$state, isComplete=true 🎉""")
+                appendLine("summary: \n$summary")
+                if (keyFindings != null) {
+                    appendLine("keyFindings: \n" + keyFindings?.joinToString("\n$ident", ident))
+                }
+                if (nextGoal != null) {
+                    appendLine("nextSuggestions: \n" + nextSuggestions?.joinToString("\n$ident", ident))
+                }
+            }
         } else {
             val finalSummary = listOf(
                 "description" to description,

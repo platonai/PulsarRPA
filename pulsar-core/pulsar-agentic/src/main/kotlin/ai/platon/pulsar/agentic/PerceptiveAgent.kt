@@ -174,7 +174,7 @@ data class ObserveResult constructor(
     // AI: completion key findings
     var keyFindings: String? = null,
     // AI: completion next suggestions
-    var nextSuggestions: List<String> = emptyList(),
+    var nextSuggestions: List<String>? = null,
 
     val backendNodeId: Int? = null,
 

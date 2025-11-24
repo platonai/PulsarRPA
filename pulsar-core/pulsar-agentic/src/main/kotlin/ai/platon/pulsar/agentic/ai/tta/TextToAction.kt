@@ -121,7 +121,7 @@ open class TextToAction(
                     errorCause = complete.errorCause,
                     summary = complete.summary,
                     keyFindings = complete.keyFindings,
-                    nextSuggestions = complete.nextSuggestions ?: emptyList(),
+                    nextSuggestions = complete.nextSuggestions,
                     modelResponse = modelResponse
                 )
             }
