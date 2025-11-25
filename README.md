@@ -290,7 +290,7 @@ Ask your proxy provider for such a URL.
 ### Data Extraction & Query
 - One-line data extraction commands
 - X-SQL extended query language for DOM/content
-- Structured + unstructured hybrid extraction (LLM + selectors)
+- Structured + unstructured hybrid extraction (LLM & ML & selectors)
 
 ### Performance & Scalability
 - High-efficiency parallel page rendering
