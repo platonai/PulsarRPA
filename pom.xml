@@ -260,15 +260,6 @@
                             <skipEmptyPackages>false</skipEmptyPackages>
                             <includeNonPublic>false</includeNonPublic>
 
-                            <!-- Short form list of sourceRoots, by default, set to ${project.compileSourceRoots} -->
-                            <sourceDirectories>
-                                <dir>${project.basedir}/src/main/java</dir>
-                                <dir>${project.basedir}/src/main/kotlin</dir>
-                            </sourceDirectories>
-
-                            <!-- Disable linking to online kotlin-stdlib documentation  -->
-                            <noStdlibLink>false</noStdlibLink>
-                            <noJdkLink>false</noJdkLink>
 
                             <!-- Allows to customize documentation generation options on a per-package basis -->
                             <perPackageOptions>
