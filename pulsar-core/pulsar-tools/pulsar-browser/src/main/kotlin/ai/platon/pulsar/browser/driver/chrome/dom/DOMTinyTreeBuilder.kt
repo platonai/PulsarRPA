@@ -51,17 +51,17 @@ class DOMTinyTreeBuilder(
     private var interactiveCounter = 1
 
     fun build(): TinyNode? {
-        val simplified = createTinyTree(root) ?: return null
-        val optimized = optimizeTree(simplified)
+        val tinyTree = createTinyTree(root) ?: return null
+        val optimized = optimizeTree(tinyTree)
         val filtered = if (enableBBoxFiltering) applyBoundingBoxFiltering(optimized) else optimized
         return assignInteractiveIndices(filtered)
     }
 
-    /** Create simplified tree with key decisions: skip disabled tags, include iframe/frame content, shadow DOM. */
+    /** Create tiny tree with key decisions: skip disabled tags, include iframe/frame content, shadow DOM. */
     private fun createTinyTree(node: DOMTreeNodeEx, depth: Int = 0): TinyNode? {
         return when (node.nodeType) {
             NodeType.DOCUMENT_NODE -> {
-                // Return first non-null simplified child among all children and shadow roots
+                // Return first non-null tiny tree child among all children and shadow roots
                 node.children.asSequence().mapNotNull { createTinyTree(it, depth + 1) }.firstOrNull()
                     ?: node.shadowRoots.asSequence().mapNotNull { createTinyTree(it, depth + 1) }.firstOrNull()
             }

@@ -1,12 +1,9 @@
-package ai.platon.pulsar.examples.fuse
+package ai.platon.pulsar.examples.agent
 
-import ai.platon.pulsar.agentic.context.AgenticContexts
-import ai.platon.pulsar.common.Strings
-import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.agentic.ExtractionSchema
+import ai.platon.pulsar.agentic.context.AgenticContexts
 
 class Extract {
-    private var stepNo = 0
     private val session = AgenticContexts.getOrCreateSession()
 
     suspend fun run() {
@@ -24,18 +21,11 @@ class Extract {
         """.trimIndent()
 
         var extractResult = agent.extract(action, ExtractionSchema.parse(schema))
-        result("extract result", extractResult)
+        println(extractResult.data)
 
         action = "提取列表页文章数据：文章标题，评论信息"
         val result = agent.run(action)
-        result("action result", result)
-    }
-
-    private fun result(label: String, value: Any?) {
-        val text = Strings.compactInline(value?.toString(), 2000)
-
-        val e = """🟢"""
-        printlnPro("$e [RESULT ${stepNo}] $label => $text")
+        println(result.finalResult)
     }
 }
 

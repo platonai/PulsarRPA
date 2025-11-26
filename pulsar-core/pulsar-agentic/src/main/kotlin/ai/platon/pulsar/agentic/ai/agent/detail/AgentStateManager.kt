@@ -187,8 +187,6 @@ class AgentStateManager(
     }
 
     suspend fun getAgentState(instruction: String, step: Int, prevAgentState: AgentState? = null): AgentState {
-        pageStateTracker.waitForDOMSettle()
-
         val browserUseState = getBrowserUseState()
         val agentState = AgentState(
             instruction = instruction,
@@ -338,6 +336,8 @@ class AgentStateManager(
     }
 
     private suspend fun getBrowserUseState(): BrowserUseState {
+        pageStateTracker.waitForDOMSettle()
+
         val snapshotOptions = SnapshotOptions(
             maxDepth = 1000,
             includeAX = true,

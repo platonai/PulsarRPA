@@ -280,7 +280,7 @@ data class AgentHistory(
 
     val urls get() = states.map { it.url }
     val modelOutputs get() = states.map { it.actionDescription?.modelResponse?.content }
-    val modelThoughts get() = states.map { it.actionDescription?.observeElement }
+    val modelThoughts get() = states.map { it.actionDescription?.observeElement?.thinking }
 
     fun isEmpty() = states.isEmpty()
     fun isNotEmpty() = states.isNotEmpty()
@@ -288,6 +288,10 @@ data class AgentHistory(
     fun last() = states.last()
     fun firstOrNull() = states.firstOrNull()
     fun lastOrNull() = states.lastOrNull()
+
+    override fun toString(): String {
+        return states.joinToString("\n") { it.toString() }
+    }
 }
 
 /**

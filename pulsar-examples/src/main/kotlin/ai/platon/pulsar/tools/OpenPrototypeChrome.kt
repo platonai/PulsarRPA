@@ -5,8 +5,7 @@ import ai.platon.pulsar.skeleton.common.options.LoadOptionDefaults.browser
 import kotlinx.coroutines.runBlocking
 
 fun main() {
-//    val browser = DefaultBrowserFactory().launchPrototypeBrowser()
-    val browser = DefaultBrowserFactory().launchDefaultBrowser()
+    val browser = DefaultBrowserFactory().launchPrototypeBrowser()
     val driver = browser.newDriver()
 
     runBlocking {
