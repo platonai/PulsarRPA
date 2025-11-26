@@ -36,10 +36,9 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 * 👽 **Browser Agents** — Autonomous agents that reason, plan, and act within the browser.
 * 🤖 **Browser Automation** — High-performance automation for workflows, navigation, and data extraction.
-* ⚙️Machine Learning Agent - Learns field structures across complex pages without consuming tokens.
+* ⚙️ **Machine Learning Agent** - Learns field structures across complex pages without consuming tokens.
 * ⚡  **Extreme Performance** — Fully coroutine-safe; supports 100k+ page visits per machine per day.
 * 🧠 **Web Understanding** — Deep understanding of dynamic, script-driven, and interactive web pages.
-* 📊 **Data Extraction APIs** — Robust APIs for extracting structured data with minimal effort.
 
 ---
 
