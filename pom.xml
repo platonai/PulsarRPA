@@ -257,7 +257,7 @@
                             <!-- Emit warnings about not documented members, applies globally, also can be overridden by packageOptions -->
                             <reportUndocumented>true</reportUndocumented>
                             <!-- Do not create index pages for empty packages -->
-                            <skipEmptyPackages>false</skipEmptyPackages>
+                            <skipEmptyPackages>true</skipEmptyPackages>
                             <includeNonPublic>false</includeNonPublic>
 
 
@@ -274,6 +274,9 @@
                                     <includeNonPublic>false</includeNonPublic>
                                 </packageOptions>
                             </perPackageOptions>
+                            <sourceDirectories>
+                                <dir>${project.basedir}/src/main/kotlin</dir>
+                            </sourceDirectories>
                         </configuration>
                     </plugin>
 
