@@ -7,6 +7,7 @@ import ai.platon.pulsar.rest.api.webdriver.dto.SubscriptionData
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.security.MessageDigest
+import java.util.Collections
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
@@ -29,7 +30,7 @@ class InMemoryStore {
         var status: String = "active", // active, paused, stopped
         val elements: MutableMap<String, ElementData> = ConcurrentHashMap(),
         val eventConfigs: MutableMap<String, EventConfigWithId> = ConcurrentHashMap(),
-        val events: MutableList<Event> = mutableListOf(),
+        val events: MutableList<Event> = Collections.synchronizedList(mutableListOf()),
         val subscriptions: MutableMap<String, SubscriptionData> = ConcurrentHashMap()
     )
 
@@ -199,9 +200,8 @@ class InMemoryStore {
      */
     fun addEvent(sessionId: String, event: Event): Boolean {
         val session = sessions[sessionId] ?: return false
-        synchronized(session.events) {
-            session.events.add(event)
-        }
+        // events is already a synchronized list, so direct add is thread-safe
+        session.events.add(event)
         return true
     }
 
@@ -212,7 +212,11 @@ class InMemoryStore {
      * @return List of events, or null if session not found.
      */
     fun getEvents(sessionId: String): List<Event>? {
-        return sessions[sessionId]?.events?.toList()
+        val events = sessions[sessionId]?.events ?: return null
+        // Synchronized iteration for thread safety with synchronizedList
+        synchronized(events) {
+            return events.toList()
+        }
     }
 
     /**

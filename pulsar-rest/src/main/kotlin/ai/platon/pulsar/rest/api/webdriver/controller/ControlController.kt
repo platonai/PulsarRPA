@@ -23,8 +23,21 @@ class ControlController(
 ) {
     private val logger = LoggerFactory.getLogger(ControlController::class.java)
 
+    companion object {
+        /** Maximum allowed delay in milliseconds to prevent resource exhaustion. */
+        private const val MAX_DELAY_MS = 30_000
+    }
+
     /**
      * Delays execution for a specified duration.
+     *
+     * Note: This is a mock implementation that uses Thread.sleep() for simplicity.
+     * In production, consider using async processing for better throughput.
+     *
+     * @param sessionId The session identifier.
+     * @param request The delay request containing duration in milliseconds.
+     * @param response The HTTP response to add headers.
+     * @return WebDriver-style response.
      */
     @PostMapping("/delay", consumes = [MediaType.APPLICATION_JSON_VALUE])
     fun delay(
@@ -39,9 +52,10 @@ class ControlController(
             return notFound("session not found", "No active session with id $sessionId")
         }
 
-        // Mock implementation - sleep for the requested duration
-        if (request.ms > 0 && request.ms <= 30000) {
-            Thread.sleep(request.ms.toLong())
+        // Mock implementation - sleep for the requested duration (capped for safety)
+        val delayMs = request.ms.coerceIn(0, MAX_DELAY_MS)
+        if (delayMs > 0) {
+            Thread.sleep(delayMs.toLong())
         }
 
         return ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
