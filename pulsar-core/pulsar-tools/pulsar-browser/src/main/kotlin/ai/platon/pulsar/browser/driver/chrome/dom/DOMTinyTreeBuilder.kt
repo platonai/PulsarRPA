@@ -100,6 +100,7 @@ class DOMTinyTreeBuilder(
                 val isScrollable = node.isScrollable == true
                 val hasShadowContent = node.shadowRoots.isNotEmpty()
                 val isShadowHost = hasShadowContent
+                val alwaysKeep = isAlwaysKeptControl(node)
 
                 // Force visible if has aria-/pseudo validation-like attributes
                 if (!isVisible && node.attributes.isNotEmpty()) {
@@ -108,7 +109,7 @@ class DOMTinyTreeBuilder(
                 }
 
                 // Include if meaningful
-                if (isVisible || isScrollable || node.children.isNotEmpty() || hasShadowContent) {
+                if (alwaysKeep || isVisible || isScrollable || node.children.isNotEmpty() || hasShadowContent) {
                     val children = (node.children + node.shadowRoots).mapNotNull { createTinyTree(it, depth + 1) }
                     return TinyNode(
                         originalNode = node,
@@ -148,7 +149,8 @@ class DOMTinyTreeBuilder(
         return if (isVisible ||
             newNode.originalNode.isScrollable == true ||
             newNode.originalNode.nodeType == NodeType.TEXT_NODE ||
-            newNode.children.isNotEmpty()) {
+            newNode.children.isNotEmpty() ||
+            isAlwaysKeptControl(newNode.originalNode)) {
             newNode
         } else null
     }
@@ -181,6 +183,7 @@ class DOMTinyTreeBuilder(
     private fun shouldExcludeChild(node: TinyNode, activeBounds: PropagatingBounds): Boolean {
         val original = node.originalNode
         if (original.nodeType == NodeType.TEXT_NODE) return false
+        if (isAlwaysKeptControl(original)) return false
         val childBounds = original.snapshotNode?.bounds ?: return false
         if (!isContained(childBounds, activeBounds.bounds, containmentThreshold)) return false
 
@@ -216,6 +219,23 @@ class DOMTinyTreeBuilder(
         val tag = node.nodeName.lowercase()
         val role = node.attributes["role"]
         return PROPAGATING_ELEMENTS.any { (t, r) -> (t == tag) && (r == null || r == role) }
+    }
+
+    private fun isAlwaysKeptControl(node: DOMTreeNodeEx): Boolean {
+        val tag = node.nodeName.lowercase()
+        if (tag == "a") return false
+        if (tag == "button" || tag == "select" || tag == "textarea") return true
+        if (tag == "input") {
+            val type = node.attributes["type"]?.lowercase()
+            if (type == "hidden") return false
+            return true
+        }
+        val role = node.attributes["role"]?.lowercase()
+        if (role in setOf("textbox", "searchbox", "combobox", "button", "switch", "slider", "spinbutton")) {
+            return true
+        }
+        val isContentEditable = node.attributes["contenteditable"]?.lowercase() == "true"
+        return isContentEditable
     }
 
     /** Assign interactive indices in DFS order to nodes that are visible + interactive and not excluded/ignored. */

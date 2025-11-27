@@ -5,8 +5,8 @@ import ai.platon.pulsar.agentic.context.AgenticContexts
 suspend fun main() {
     val agent = AgenticContexts.getOrCreateAgent()
 
-    val problem = """
-        Search for "milk, eggs, bread" on Instacart at the nearest store.
+    val task = """
+        Search for apple, eggs, bread one by one on Instacart at the nearest store.
 
         You will buy all of the items at the same store.
         For each item:
@@ -18,5 +18,5 @@ suspend fun main() {
         - Instacart: https://www.instacart.com/
         """.trimIndent()
 
-    agent.run(problem)
+    agent.run(task)
 }
