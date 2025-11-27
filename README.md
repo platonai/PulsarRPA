@@ -44,10 +44,10 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 ## 🎥 Demo Videos
 
 🎬 YouTube:
-[![Watch the video](https://img.youtube.com/vi/_BcryqWzVMI/0.jpg)](https://www.youtube.com/watch?v=_BcryqWzVMI)
+[![Watch the video](https://img.youtube.com/vi/rJzXNXH3Gwk/0.jpg)](https://youtu.be/rJzXNXH3Gwk)
 
 📺 Bilibili:
-[https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
+[https://www.bilibili.com/video/BV1fXUzBFE4L](https://www.bilibili.com/video/BV1fXUzBFE4L)
 
 ---
 
