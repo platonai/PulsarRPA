@@ -8,7 +8,6 @@ suspend fun main() {
 
     // Use local mock site instead of external site so actions are deterministic.
     val url = "http://localhost:18080/generated/tta/act/act-demo.html"
-    // one more short wait after potential start (shorter, less verbose)
     val starter = DemoSiteStarter()
     starter.start(url)
     session.registerClosable(starter)
