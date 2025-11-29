@@ -37,7 +37,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 * 👽 **Browser Agents** — Autonomous agents that reason, plan, and act within the browser.
 * 🤖 **Browser Automation** — High-performance automation for workflows, navigation, and data extraction.
 * ⚙️ **Machine Learning Agent** - Learns field structures across complex pages without consuming tokens.
-* ⚡  **Extreme Performance** — Fully coroutine-safe; supports 100k+ page visits per machine per day.
+* ⚡  **Extreme Performance** — Fully coroutine-safe; supports 100k+ ~ 200k page visits per machine per day.
 
 ---
 
@@ -208,7 +208,7 @@ Automatic, large-scale, high-precision field discovery and extraction powered by
 
 **Why not just LLMs?**
 - LLM extraction adds latency, cost, and token limits.
-- ML-based auto extraction is local, reproducible, and scalable to 100k+ pages/day.
+- ML-based auto extraction is local, reproducible, and scalable to 100k+ ~ 200k pages/day.
 - You can still combine both: use Auto Extraction for structured baseline + LLM for semantic enrichment.
 
 **Quick Commands (PulsarRPAPro):**
@@ -247,6 +247,10 @@ curl -L -o PulsarRPAPro.jar https://github.com/platonai/PulsarRPAPro/releases/do
 | `pulsar-tests-common` | Shared test utilities & fixtures |
 
 ---
+
+## 📜 SDK
+
+Python/Node.js SDKs are on the way.
 
 ## 📜 Documentation
 
