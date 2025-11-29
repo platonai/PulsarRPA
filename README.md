@@ -28,16 +28,36 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
     - [🤝 Support & Community](#-support--community)
 <!-- /TOC -->
 
-## 🌟 Introduction
+## 🤖 Browser4: The High-Performance Body for Your AI Agents
 
-💖 **Browser4: a lightning-fast, coroutine-safe browser engine for AI automation** 💖
+> **Bring your own Brain (LLM), we provide the Body.**
+> Browser4 is the infrastructure layer that empowers Artificial Intelligence to perceive, interact with, and survive on the World Wide Web.
 
-### ✨ Key Capabilities
+## 🌟 Why Browser4?
 
-* 👽 **Browser Agents** — Autonomous agents that reason, plan, and act within the browser.
-* 🤖 **Browser Automation** — High-performance automation for workflows, navigation, and data extraction.
-* ⚙️ **Machine Learning Agent** - Learns field structures across complex pages without consuming tokens.
-* ⚡  **Extreme Performance** — Fully coroutine-safe; supports 100k+ ~ 200k page visits per machine per day.
+While Python libraries are great for prototypes, **Browser4** (built on Kotlin/JVM) is engineered for **production-grade Agent Swarms**. We treat web automation not as a script, but as a simulation of human behavior at scale.
+
+We transform standard browser features into **Agent Capabilities**:
+
+* **🧠 Cognitive Perception (X-SQL & ML)**: Your Agent shouldn't struggle with CSS selectors. Browser4 provides **X-SQL** and **Zero-Shot ML Extraction**, allowing Agents to query the web like a database and "understand" page structures without burning expensive LLM tokens.
+* **🚀 Swarm Scalability**: Powered by **Kotlin Coroutines**, Browser4 allows you to run **thousands of concurrent Agent instances** on a single node with minimal resource overhead. Say goodbye to memory leaks and threading bottlenecks.
+* **🛡️ Survival Mode (Stealth)**: The web is hostile to bots. Browser4 equips your Agents with advanced **Anti-Detection** and **Fingerprint Management**, ensuring they can complete missions in the most restricted environments.
+* **🦾 Full-Duplex Control**: Through deep integration with **CDP (Chrome DevTools Protocol)**, Browser4 gives your Agent "God-mode" control over network traffic, rendering, and interaction—far beyond simple clicks and scrolls.
+
+## ⚡ Quick Example: Agentic Workflow
+
+```kotlin
+// Give your Agent a mission, not just a script.
+val agent = AgenticContexts.getOrCreateAgent()
+
+// The Agent plans, navigates, and executes using Browser4 as its hands and eyes.
+val result = agent.run("""
+    1. Go to amazon.com
+    2. Search for '4k monitors'
+    3. Analyze the top 5 results for price/performance ratio
+    4. Return the best option as JSON
+""")
+```
 
 ---
 
