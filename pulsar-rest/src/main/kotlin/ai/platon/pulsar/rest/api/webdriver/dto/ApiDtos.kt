@@ -278,3 +278,248 @@ data class SubscriptionData(
 data class SubscriptionResponse(
     val value: SubscriptionData
 )
+
+// ========== PerceptiveAgent DTOs ==========
+
+/**
+ * Request to run an agent task.
+ */
+data class AgentRunRequest(
+    val task: String,
+    val multiAct: Boolean = false,
+    val modelName: String? = null,
+    val variables: Map<String, String>? = null,
+    val domSettleTimeoutMs: Long? = null,
+    val timeoutMs: Long? = null
+)
+
+/**
+ * Result of an agent run operation.
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class AgentRunResult(
+    val success: Boolean,
+    val message: String = "",
+    val historySize: Int = 0,
+    val processTraceSize: Int = 0
+)
+
+/**
+ * Response for agent run.
+ */
+data class AgentRunResponse(
+    val value: AgentRunResult
+)
+
+/**
+ * Request to observe page.
+ */
+data class AgentObserveRequest(
+    val instruction: String? = null,
+    val modelName: String? = null,
+    val domSettleTimeoutMs: Long? = null,
+    val returnAction: Boolean? = null,
+    val drawOverlay: Boolean = true
+)
+
+/**
+ * Result of an observation.
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class ObserveResultDto(
+    val locator: String? = null,
+    val domain: String? = null,
+    val method: String? = null,
+    val arguments: Map<String, Any?>? = null,
+    val description: String? = null,
+    val screenshotContentSummary: String? = null,
+    val currentPageContentSummary: String? = null,
+    val nextGoal: String? = null,
+    val thinking: String? = null,
+    val summary: String? = null,
+    val keyFindings: String? = null,
+    val nextSuggestions: List<String>? = null
+)
+
+/**
+ * Response for agent observe.
+ */
+data class AgentObserveResponse(
+    val value: List<ObserveResultDto>
+)
+
+/**
+ * Request to execute an action.
+ */
+data class AgentActRequest(
+    val action: String,
+    val multiAct: Boolean = false,
+    val modelName: String? = null,
+    val variables: Map<String, String>? = null,
+    val domSettleTimeoutMs: Long? = null,
+    val timeoutMs: Long? = null
+)
+
+/**
+ * Result of an action execution.
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class ActResultDto(
+    val success: Boolean = false,
+    val message: String = "",
+    val action: String? = null,
+    val isComplete: Boolean = false,
+    val expression: String? = null
+)
+
+/**
+ * Response for agent act.
+ */
+data class AgentActResponse(
+    val value: ActResultDto
+)
+
+/**
+ * Schema definition for extraction.
+ */
+data class ExtractionSchemaDto(
+    val type: String = "object",
+    val properties: Map<String, Any>? = null,
+    val required: List<String>? = null
+)
+
+/**
+ * Request to extract data from page.
+ */
+data class AgentExtractRequest(
+    val instruction: String,
+    val schema: ExtractionSchemaDto? = null,
+    val modelName: String? = null,
+    val domSettleTimeoutMs: Long? = null,
+    val selector: String? = null
+)
+
+/**
+ * Result of an extraction.
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class ExtractResultDto(
+    val success: Boolean,
+    val message: String = "",
+    val data: Any? = null
+)
+
+/**
+ * Response for agent extract.
+ */
+data class AgentExtractResponse(
+    val value: ExtractResultDto
+)
+
+/**
+ * Request to summarize page content.
+ */
+data class AgentSummarizeRequest(
+    val instruction: String? = null,
+    val selector: String? = null
+)
+
+/**
+ * Response for agent summarize.
+ */
+data class AgentSummarizeResponse(
+    val value: String
+)
+
+/**
+ * Response for agent clear history.
+ */
+data class AgentClearHistoryResponse(
+    val value: Boolean
+)
+
+// ========== PulsarSession DTOs ==========
+
+/**
+ * Request to normalize a URL.
+ */
+data class NormalizeRequest(
+    val url: String,
+    val args: String? = null,
+    val toItemOption: Boolean = false
+)
+
+/**
+ * Result of URL normalization.
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class NormUrlResult(
+    val spec: String,
+    val url: String,
+    val args: String? = null,
+    val isNil: Boolean = false
+)
+
+/**
+ * Response for URL normalization.
+ */
+data class NormalizeResponse(
+    val value: NormUrlResult
+)
+
+/**
+ * Request to open a URL immediately.
+ */
+data class OpenRequest(
+    val url: String
+)
+
+/**
+ * Result of opening a URL.
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class WebPageResult(
+    val url: String,
+    val location: String? = null,
+    val contentType: String? = null,
+    val contentLength: Int = 0,
+    val protocolStatus: String? = null,
+    val isNil: Boolean = false
+)
+
+/**
+ * Response for opening a URL.
+ */
+data class OpenResponse(
+    val value: WebPageResult
+)
+
+/**
+ * Request to load a URL from storage or internet.
+ */
+data class LoadRequest(
+    val url: String,
+    val args: String? = null
+)
+
+/**
+ * Response for loading a URL.
+ */
+data class LoadResponse(
+    val value: WebPageResult
+)
+
+/**
+ * Request to submit a URL to the crawl pool.
+ */
+data class SubmitRequest(
+    val url: String,
+    val args: String? = null
+)
+
+/**
+ * Response for submitting a URL.
+ */
+data class SubmitResponse(
+    val value: Boolean
+)

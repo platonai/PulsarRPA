@@ -286,6 +286,206 @@ class WebDriverApiIntegrationTest {
         assertNotNull(response.headers["X-Request-Id"])
     }
 
+    // ========== Agent API Tests ==========
+
+    @Test
+    fun `should run agent task`() {
+        val sessionId = createSession()
+
+        val request = AgentRunRequest(task = "Find the login button and click it")
+        val entity = HttpEntity(request, jsonHeaders())
+        val response = restTemplate.postForEntity(
+            "$baseUrl/session/$sessionId/agent/run",
+            entity,
+            Map::class.java
+        )
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertNotNull(response.body)
+        assertTrue(response.body!!.containsKey("value"))
+
+        @Suppress("UNCHECKED_CAST")
+        val value = response.body!!["value"] as Map<String, Any?>
+        assertTrue(value.containsKey("success"))
+        assertTrue(value.containsKey("message"))
+    }
+
+    @Test
+    fun `should observe page with agent`() {
+        val sessionId = createSession()
+
+        val request = AgentObserveRequest(instruction = "Find interactive elements")
+        val entity = HttpEntity(request, jsonHeaders())
+        val response = restTemplate.postForEntity(
+            "$baseUrl/session/$sessionId/agent/observe",
+            entity,
+            Map::class.java
+        )
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertNotNull(response.body)
+        assertTrue(response.body!!.containsKey("value"))
+    }
+
+    @Test
+    fun `should execute agent action`() {
+        val sessionId = createSession()
+
+        val request = AgentActRequest(action = "Click the submit button")
+        val entity = HttpEntity(request, jsonHeaders())
+        val response = restTemplate.postForEntity(
+            "$baseUrl/session/$sessionId/agent/act",
+            entity,
+            Map::class.java
+        )
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertNotNull(response.body)
+
+        @Suppress("UNCHECKED_CAST")
+        val value = response.body!!["value"] as Map<String, Any?>
+        assertTrue(value.containsKey("success"))
+        assertTrue(value.containsKey("action"))
+    }
+
+    @Test
+    fun `should extract data with agent`() {
+        val sessionId = createSession()
+
+        val request = AgentExtractRequest(instruction = "Extract the page title and description")
+        val entity = HttpEntity(request, jsonHeaders())
+        val response = restTemplate.postForEntity(
+            "$baseUrl/session/$sessionId/agent/extract",
+            entity,
+            Map::class.java
+        )
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertNotNull(response.body)
+
+        @Suppress("UNCHECKED_CAST")
+        val value = response.body!!["value"] as Map<String, Any?>
+        assertTrue(value.containsKey("success"))
+        assertTrue(value.containsKey("data"))
+    }
+
+    @Test
+    fun `should summarize page with agent`() {
+        val sessionId = createSession()
+
+        val request = AgentSummarizeRequest(instruction = "Summarize the main content")
+        val entity = HttpEntity(request, jsonHeaders())
+        val response = restTemplate.postForEntity(
+            "$baseUrl/session/$sessionId/agent/summarize",
+            entity,
+            Map::class.java
+        )
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertNotNull(response.body)
+        assertTrue(response.body!!.containsKey("value"))
+    }
+
+    @Test
+    fun `should clear agent history`() {
+        val sessionId = createSession()
+
+        val response = restTemplate.postForEntity(
+            "$baseUrl/session/$sessionId/agent/clearHistory",
+            HttpEntity<String>(jsonHeaders()),
+            Map::class.java
+        )
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertNotNull(response.body)
+        assertEquals(true, response.body!!["value"])
+    }
+
+    // ========== PulsarSession API Tests ==========
+
+    @Test
+    fun `should normalize URL`() {
+        val sessionId = createSession()
+
+        val request = NormalizeRequest(url = "example.com", args = "-expire 1d")
+        val entity = HttpEntity(request, jsonHeaders())
+        val response = restTemplate.postForEntity(
+            "$baseUrl/session/$sessionId/normalize",
+            entity,
+            Map::class.java
+        )
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertNotNull(response.body)
+
+        @Suppress("UNCHECKED_CAST")
+        val value = response.body!!["value"] as Map<String, Any?>
+        assertTrue(value.containsKey("url"))
+        assertTrue(value.containsKey("spec"))
+        // Check that scheme was added
+        val normalizedUrl = value["url"] as String
+        assertTrue(normalizedUrl.startsWith("https://"))
+    }
+
+    @Test
+    fun `should open URL immediately`() {
+        val sessionId = createSession()
+
+        val request = OpenRequest(url = "https://example.com/page")
+        val entity = HttpEntity(request, jsonHeaders())
+        val response = restTemplate.postForEntity(
+            "$baseUrl/session/$sessionId/open",
+            entity,
+            Map::class.java
+        )
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertNotNull(response.body)
+
+        @Suppress("UNCHECKED_CAST")
+        val value = response.body!!["value"] as Map<String, Any?>
+        assertTrue(value.containsKey("url"))
+        assertEquals("https://example.com/page", value["url"])
+    }
+
+    @Test
+    fun `should load URL from storage or internet`() {
+        val sessionId = createSession()
+
+        val request = LoadRequest(url = "https://example.com", args = "-expire 1d")
+        val entity = HttpEntity(request, jsonHeaders())
+        val response = restTemplate.postForEntity(
+            "$baseUrl/session/$sessionId/load",
+            entity,
+            Map::class.java
+        )
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertNotNull(response.body)
+
+        @Suppress("UNCHECKED_CAST")
+        val value = response.body!!["value"] as Map<String, Any?>
+        assertTrue(value.containsKey("url"))
+        assertTrue(value.containsKey("protocolStatus"))
+    }
+
+    @Test
+    fun `should submit URL to crawl pool`() {
+        val sessionId = createSession()
+
+        val request = SubmitRequest(url = "https://example.com/to-crawl", args = "-expire 7d")
+        val entity = HttpEntity(request, jsonHeaders())
+        val response = restTemplate.postForEntity(
+            "$baseUrl/session/$sessionId/submit",
+            entity,
+            Map::class.java
+        )
+
+        assertEquals(HttpStatus.OK, response.statusCode)
+        assertNotNull(response.body)
+        assertEquals(true, response.body!!["value"])
+    }
+
     /**
      * Helper method to create a session and return the session ID.
      */

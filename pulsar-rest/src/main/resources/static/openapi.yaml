@@ -29,6 +29,10 @@ tags:
     description: Execution control (delay, pause, stop)
   - name: events
     description: Event configuration and subscription
+  - name: agent
+    description: AI-powered browser automation (PerceptiveAgent)
+  - name: pulsar
+    description: PulsarSession operations (normalize, open, load, submit)
 
 paths:
   /session:
@@ -829,6 +833,311 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  # ========== PerceptiveAgent Endpoints ==========
+  /session/{sessionId}/agent/run:
+    post:
+      tags:
+        - agent
+      summary: Run an autonomous agent task
+      description: |
+        Runs an autonomous loop (observe -> act -> ...) attempting to fulfill
+        the user goal described in the request.
+      operationId: agentRun
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentRunRequest'
+      responses:
+        '200':
+          description: Agent task completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentRunResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /session/{sessionId}/agent/observe:
+    post:
+      tags:
+        - agent
+      summary: Observe the page
+      description: |
+        Observes the page given an instruction and returns potential actions
+        that could be taken.
+      operationId: agentObserve
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentObserveRequest'
+      responses:
+        '200':
+          description: Observation results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentObserveResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /session/{sessionId}/agent/act:
+    post:
+      tags:
+        - agent
+      summary: Execute a single action
+      description: |
+        Executes a single observe->act cycle for the supplied action.
+      operationId: agentAct
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentActRequest'
+      responses:
+        '200':
+          description: Action result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentActResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /session/{sessionId}/agent/extract:
+    post:
+      tags:
+        - agent
+      summary: Extract structured data from the page
+      description: |
+        Extracts structured data from the page using an instruction and
+        optional JSON schema.
+      operationId: agentExtract
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentExtractRequest'
+      responses:
+        '200':
+          description: Extraction result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentExtractResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /session/{sessionId}/agent/summarize:
+    post:
+      tags:
+        - agent
+      summary: Summarize page content
+      description: |
+        Summarizes text captured from the current page or a specific element.
+      operationId: agentSummarize
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AgentSummarizeRequest'
+      responses:
+        '200':
+          description: Summary result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentSummarizeResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /session/{sessionId}/agent/clearHistory:
+    post:
+      tags:
+        - agent
+      summary: Clear agent history
+      description: |
+        Clears the agent's history so new tasks remain unaffected by previous ones.
+      operationId: agentClearHistory
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      responses:
+        '200':
+          description: History cleared
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentClearHistoryResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # ========== PulsarSession Endpoints ==========
+  /session/{sessionId}/normalize:
+    post:
+      tags:
+        - pulsar
+      summary: Normalize a URL
+      description: |
+        Normalizes a URL with optional load arguments. Returns the normalized URL
+        and parsed arguments.
+      operationId: normalize
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NormalizeRequest'
+      responses:
+        '200':
+          description: Normalized URL
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NormalizeResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /session/{sessionId}/open:
+    post:
+      tags:
+        - pulsar
+      summary: Open a URL immediately
+      description: |
+        Opens the URL immediately, bypassing the local cache and fetching
+        fresh content from the internet.
+      operationId: open
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenRequest'
+      responses:
+        '200':
+          description: Page opened
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OpenResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /session/{sessionId}/load:
+    post:
+      tags:
+        - pulsar
+      summary: Load a URL from storage or internet
+      description: |
+        Loads a page from local storage if it exists and meets the specified criteria.
+        Otherwise, fetches the page from the Internet. Supports expiration, page size
+        requirements, and other load options.
+      operationId: load
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoadRequest'
+      responses:
+        '200':
+          description: Page loaded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoadResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /session/{sessionId}/submit:
+    post:
+      tags:
+        - pulsar
+      summary: Submit a URL to the crawl pool
+      description: |
+        Submits a URL to the URL pool for asynchronous processing. This is a
+        non-blocking operation that returns immediately. The URL will be
+        processed later in the crawl loop.
+      operationId: submit
+      parameters:
+        - $ref: '#/components/parameters/sessionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SubmitRequest'
+      responses:
+        '200':
+          description: URL submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubmitResponse'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   parameters:
     sessionId:
@@ -1181,3 +1490,338 @@ components:
               type: array
               items:
                 type: string
+
+    # ========== PerceptiveAgent Schemas ==========
+    AgentRunRequest:
+      type: object
+      required:
+        - task
+      properties:
+        task:
+          type: string
+          description: The user goal or instruction to fulfill
+        multiAct:
+          type: boolean
+          default: false
+          description: Whether each act forms a new chained context
+        modelName:
+          type: string
+          description: Optional LLM model name to use
+        variables:
+          type: object
+          additionalProperties:
+            type: string
+          description: Extra variables for prompt/tool
+        domSettleTimeoutMs:
+          type: integer
+          format: int64
+          description: Timeout in ms to wait for DOM settling
+        timeoutMs:
+          type: integer
+          format: int64
+          description: Overall timeout in ms for this action
+
+    AgentRunResponse:
+      type: object
+      properties:
+        value:
+          type: object
+          properties:
+            success:
+              type: boolean
+            message:
+              type: string
+            historySize:
+              type: integer
+            processTraceSize:
+              type: integer
+
+    AgentObserveRequest:
+      type: object
+      properties:
+        instruction:
+          type: string
+          description: The observation instruction
+        modelName:
+          type: string
+          description: Optional LLM model name
+        domSettleTimeoutMs:
+          type: integer
+          format: int64
+        returnAction:
+          type: boolean
+          description: Whether to return actionable tool calls
+        drawOverlay:
+          type: boolean
+          default: true
+          description: Whether to highlight interactive elements
+
+    AgentObserveResponse:
+      type: object
+      properties:
+        value:
+          type: array
+          items:
+            $ref: '#/components/schemas/ObserveResult'
+
+    ObserveResult:
+      type: object
+      properties:
+        locator:
+          type: string
+          description: DOM node locator (frameIndex,backendNodeId)
+        domain:
+          type: string
+          description: Tool call domain (driver, browser, etc.)
+        method:
+          type: string
+          description: Tool call method (click, type, etc.)
+        arguments:
+          type: object
+          additionalProperties: true
+          description: Tool call arguments
+        description:
+          type: string
+        screenshotContentSummary:
+          type: string
+        currentPageContentSummary:
+          type: string
+        nextGoal:
+          type: string
+        thinking:
+          type: string
+        summary:
+          type: string
+        keyFindings:
+          type: string
+        nextSuggestions:
+          type: array
+          items:
+            type: string
+
+    AgentActRequest:
+      type: object
+      required:
+        - action
+      properties:
+        action:
+          type: string
+          description: The action command to execute
+        multiAct:
+          type: boolean
+          default: false
+        modelName:
+          type: string
+        variables:
+          type: object
+          additionalProperties:
+            type: string
+        domSettleTimeoutMs:
+          type: integer
+          format: int64
+        timeoutMs:
+          type: integer
+          format: int64
+
+    AgentActResponse:
+      type: object
+      properties:
+        value:
+          type: object
+          properties:
+            success:
+              type: boolean
+            message:
+              type: string
+            action:
+              type: string
+            isComplete:
+              type: boolean
+            expression:
+              type: string
+              description: The tool expression with parameters
+
+    AgentExtractRequest:
+      type: object
+      required:
+        - instruction
+      properties:
+        instruction:
+          type: string
+          description: The extraction instruction
+        schema:
+          $ref: '#/components/schemas/ExtractionSchema'
+        modelName:
+          type: string
+        domSettleTimeoutMs:
+          type: integer
+          format: int64
+        selector:
+          type: string
+          description: Optional CSS selector to scope extraction
+
+    ExtractionSchema:
+      type: object
+      properties:
+        type:
+          type: string
+          default: object
+        properties:
+          type: object
+          additionalProperties: true
+        required:
+          type: array
+          items:
+            type: string
+
+    AgentExtractResponse:
+      type: object
+      properties:
+        value:
+          type: object
+          properties:
+            success:
+              type: boolean
+            message:
+              type: string
+            data:
+              type: object
+              additionalProperties: true
+
+    AgentSummarizeRequest:
+      type: object
+      properties:
+        instruction:
+          type: string
+          description: Optional guidance for summarization
+        selector:
+          type: string
+          description: Optional CSS selector to limit which element to summarize
+
+    AgentSummarizeResponse:
+      type: object
+      properties:
+        value:
+          type: string
+          description: The generated summary text
+
+    AgentClearHistoryResponse:
+      type: object
+      properties:
+        value:
+          type: boolean
+          description: Whether history was cleared successfully
+
+    # ========== PulsarSession Schemas ==========
+    NormalizeRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          description: The URL to normalize
+        args:
+          type: string
+          description: Optional load arguments (e.g., "-expire 1d")
+        toItemOption:
+          type: boolean
+          default: false
+          description: Whether to convert to item load options
+
+    NormalizeResponse:
+      type: object
+      properties:
+        value:
+          type: object
+          properties:
+            spec:
+              type: string
+              description: The normalized URL specification
+            url:
+              type: string
+              description: The normalized URL
+            args:
+              type: string
+              description: Parsed arguments
+            isNil:
+              type: boolean
+              description: Whether the URL is nil/invalid
+
+    OpenRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          description: The URL to open immediately
+
+    OpenResponse:
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/WebPageResult'
+
+    LoadRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          description: The URL to load
+        args:
+          type: string
+          description: |
+            Optional load arguments. Examples:
+            - "-expire 1d" for 1 day expiration
+            - "-refresh" for forced refresh
+            - "-requireSize 100000" for minimum page size
+
+    LoadResponse:
+      type: object
+      properties:
+        value:
+          $ref: '#/components/schemas/WebPageResult'
+
+    SubmitRequest:
+      type: object
+      required:
+        - url
+      properties:
+        url:
+          type: string
+          description: The URL to submit to the crawl pool
+        args:
+          type: string
+          description: Optional load arguments for when the URL is processed
+
+    SubmitResponse:
+      type: object
+      properties:
+        value:
+          type: boolean
+          description: Whether the URL was submitted successfully
+
+    WebPageResult:
+      type: object
+      properties:
+        url:
+          type: string
+          description: The page URL
+        location:
+          type: string
+          description: The final location after redirects
+        contentType:
+          type: string
+          description: Content type of the page
+        contentLength:
+          type: integer
+          description: Content length in bytes
+        protocolStatus:
+          type: string
+          description: HTTP protocol status
+        isNil:
+          type: boolean
+          description: Whether the page is nil/invalid
