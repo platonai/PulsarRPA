@@ -1,16 +1,19 @@
 package ai.platon.pulsar.rest.api.webdriver.controller
 
 import ai.platon.pulsar.rest.api.webdriver.dto.*
+import ai.platon.pulsar.rest.api.webdriver.service.SessionManager
 import ai.platon.pulsar.rest.api.webdriver.store.InMemoryStore
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.UUID
 
 /**
  * Controller for WebDriver session management.
+ * Supports both mock mode (InMemoryStore) and real mode (SessionManager).
  */
 @RestController
 @CrossOrigin
@@ -18,9 +21,20 @@ import java.util.UUID
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
 class SessionController(
-    private val store: InMemoryStore
+    @Autowired(required = false) private val sessionManager: SessionManager?,
+    @Autowired(required = false) private val store: InMemoryStore?
 ) {
     private val logger = LoggerFactory.getLogger(SessionController::class.java)
+    
+    private val useRealSessions: Boolean = sessionManager != null
+
+    init {
+        if (useRealSessions) {
+            logger.info("SessionController initialized with real browser sessions")
+        } else {
+            logger.info("SessionController initialized with mock sessions")
+        }
+    }
 
     /**
      * Creates a new WebDriver session.
@@ -31,15 +45,25 @@ class SessionController(
         response: HttpServletResponse
     ): ResponseEntity<NewSessionResponse> {
         logger.debug("Creating new session with capabilities: {}", request?.capabilities)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
-        val session = store.createSession(request?.capabilities)
-        val responseBody = NewSessionResponse(
-            value = NewSessionResponse.SessionValue(
-                sessionId = session.sessionId,
-                capabilities = session.capabilities
+        val responseBody = if (useRealSessions) {
+            val session = sessionManager!!.createSession(request?.capabilities)
+            NewSessionResponse(
+                value = NewSessionResponse.SessionValue(
+                    sessionId = session.sessionId,
+                    capabilities = session.capabilities
+                )
             )
-        )
+        } else {
+            val session = store!!.createSession(request?.capabilities)
+            NewSessionResponse(
+                value = NewSessionResponse.SessionValue(
+                    sessionId = session.sessionId,
+                    capabilities = session.capabilities
+                )
+            )
+        }
         return ResponseEntity.ok(responseBody)
     }
 
@@ -52,19 +76,31 @@ class SessionController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Getting session: {}", sessionId)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
-        val session = store.getSession(sessionId)
-            ?: return notFound("session not found", "No active session with id $sessionId")
-
-        val responseBody = SessionDetails(
-            value = SessionDetails.SessionDetailsValue(
-                sessionId = session.sessionId,
-                url = session.url,
-                status = session.status,
-                capabilities = session.capabilities
+        val responseBody = if (useRealSessions) {
+            val session = sessionManager!!.getSession(sessionId)
+                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+            SessionDetails(
+                value = SessionDetails.SessionDetailsValue(
+                    sessionId = session.sessionId,
+                    url = session.url,
+                    status = session.status,
+                    capabilities = session.capabilities
+                )
             )
-        )
+        } else {
+            val session = store!!.getSession(sessionId)
+                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+            SessionDetails(
+                value = SessionDetails.SessionDetailsValue(
+                    sessionId = session.sessionId,
+                    url = session.url,
+                    status = session.status,
+                    capabilities = session.capabilities
+                )
+            )
+        }
         return ResponseEntity.ok(responseBody)
     }
 
@@ -77,28 +113,18 @@ class SessionController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Deleting session: {}", sessionId)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
-        val deleted = store.deleteSession(sessionId)
+        val deleted = if (useRealSessions) {
+            sessionManager!!.deleteSession(sessionId)
+        } else {
+            store!!.deleteSession(sessionId)
+        }
+        
         if (!deleted) {
-            return notFound("session not found", "No active session with id $sessionId")
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
         }
 
         return ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
-    }
-
-    private fun addRequestId(response: HttpServletResponse) {
-        response.addHeader("X-Request-Id", UUID.randomUUID().toString())
-    }
-
-    private fun notFound(error: String, message: String): ResponseEntity<Any> {
-        return ResponseEntity.status(404).body(
-            ErrorResponse(
-                value = ErrorResponse.ErrorValue(
-                    error = error,
-                    message = message
-                )
-            )
-        )
     }
 }
