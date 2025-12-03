@@ -11,7 +11,7 @@ import kotlin.test.assertTrue
 class ScrapeControllerTests : IntegrationTestBase() {
 
     protected val originUrl = "https://www.amazon.com/"
-    protected val productUrl = "https://www.amazon.com/dp/B0C1H26C46"
+    protected val productUrl = "https://www.amazon.com/dp/B08PP5MSVB"
 
     fun testScraping(url: String) {
         val result = scrape(url)
@@ -28,7 +28,7 @@ class ScrapeControllerTests : IntegrationTestBase() {
     @Test
     fun testScraping() {
         testScraping("https://www.amazon.com")
-        testScraping("https://www.amazon.com/dp/B0C1H26C46")
+        testScraping("https://www.amazon.com/dp/B08PP5MSVB")
 
         testScraping("https://www.jd.com/")
         testScraping("https://www.ebay.com/")
@@ -37,6 +37,6 @@ class ScrapeControllerTests : IntegrationTestBase() {
     @Test
     fun testLLMScraping() {
         testLLMScraping("https://www.amazon.com")
-        testLLMScraping("https://www.amazon.com/dp/B0C1H26C46")
+        testLLMScraping("https://www.amazon.com/dp/B08PP5MSVB")
     }
 }

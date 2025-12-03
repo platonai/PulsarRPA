@@ -130,8 +130,8 @@ class TestCases {
     @Test
     fun testSplitUrlArgs() {
         assertTrue { LoadOptionDefaults.storeContent }
-//        val configuredUrl = "https://www.amazon.com/dp/B0C1H26C46 -prst --expires PT1S --auto-flush --fetch-mode NATIVE --browser NONE"
-        val configuredUrl = "https://www.amazon.com/dp/B0C1H26C46"
+//        val configuredUrl = "https://www.amazon.com/dp/B08PP5MSVB -prst --expires PT1S --auto-flush --fetch-mode NATIVE --browser NONE"
+        val configuredUrl = "https://www.amazon.com/dp/B08PP5MSVB"
         val (url, args) = splitUrlArgs(configuredUrl)
         assertEquals(configuredUrl, url)
         assertEquals("", args)

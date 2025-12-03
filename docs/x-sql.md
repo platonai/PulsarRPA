@@ -21,7 +21,7 @@ select
   dom_first_text(dom, '#price tr td:contains(List Price) ~ td') as listprice,
   dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
   str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-from load_and_select('https://www.amazon.com/dp/B0C1H26C46   -i 1d -njr 3', 'body');
+from load_and_select('https://www.amazon.com/dp/B08PP5MSVB   -i 1d -njr 3', 'body');
 ```
 
 PulsarRPA primarily extends the functionality of the H2 database by registering User-Defined Functions (UDFs) and making other enhancements.
@@ -75,7 +75,7 @@ Here is an example of how to use this function:
 select
   dom_base_uri(dom)
 from
-  load_and_select('https://www.amazon.com/dp/B0C1H26C46',  'body', 1, 10);
+  load_and_select('https://www.amazon.com/dp/B08PP5MSVB',  'body', 1, 10);
 ```
 
 ## DOM Functions
@@ -97,7 +97,7 @@ This function returns the URI of the HTML document.
 Here is an example of how to use this function:
 
 ```sql
-select dom_base_uri(dom) from load_and_select('https://www.amazon.com/dp/B0C1H26C46',  'body');
+select dom_base_uri(dom) from load_and_select('https://www.amazon.com/dp/B08PP5MSVB',  'body');
 ```
 
 ## DOM Selection Functions
@@ -180,5 +180,5 @@ Here is an example of how to use this function:
 select
   str_substring_after(dom_first_text(dom, '#price'), '$') as Price
 from
-  load_and_select('https://www.amazon.com/dp/B0C1H26C46',  'body');
+  load_and_select('https://www.amazon.com/dp/B08PP5MSVB',  'body');
 ```

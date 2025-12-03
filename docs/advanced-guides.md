@@ -77,7 +77,7 @@ curl -X POST --location "http://localhost:8182/api/x/e" -H "Content-Type: text/p
       dom_base_uri(dom) as url,
       dom_first_text(dom, '#productTitle') as title,
       dom_first_slim_html(dom, 'img:expr(width > 400)') as img
-  from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
+  from load_and_select('https://www.amazon.com/dp/B08PP5MSVB', 'body');
 "
 ```
 

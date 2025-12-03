@@ -10,7 +10,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 
 class LLMFunctionsTest : TestBase() {
-    val url = "https://www.amazon.com/dp/B0C1H26C46"
+    val url = "https://www.amazon.com/dp/B08PP5MSVB"
     val sql = """
   select
       llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,

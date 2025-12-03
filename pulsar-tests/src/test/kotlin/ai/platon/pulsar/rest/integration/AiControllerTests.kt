@@ -52,7 +52,7 @@ class AiControllerTests : IntegrationTestBase() {
     @Test
     fun testChatAboutPages() {
         testChat("https://www.amazon.com")
-        testChat("https://www.amazon.com/dp/B0C1H26C46")
+        testChat("https://www.amazon.com/dp/B08PP5MSVB")
 
         testChat("https://www.jd.com/")
         testChat("https://www.ebay.com/")
@@ -60,6 +60,6 @@ class AiControllerTests : IntegrationTestBase() {
 
     @Test
     fun testExtractPages() {
-        testExtract("https://www.amazon.com/dp/B0C1H26C46")
+        testExtract("https://www.amazon.com/dp/B08PP5MSVB")
     }
 }

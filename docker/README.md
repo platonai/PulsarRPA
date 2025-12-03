@@ -22,7 +22,7 @@ docker run -p 8182:8182 \
 curl -X POST "http://localhost:8182/api/ai/command" \
   -H "Content-Type: text/plain" \
   -d '
-    Go to https://www.amazon.com/dp/B0C1H26C46
+    Go to https://www.amazon.com/dp/B08PP5MSVB
     
     After browser launch: clear browser cookies.
     After page load: scroll to the middle.

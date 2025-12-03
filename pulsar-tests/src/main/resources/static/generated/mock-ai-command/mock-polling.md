@@ -6,7 +6,7 @@
 curl -X POST "http://localhost:8182/api/ai/command" \
   -H "Content-Type: text/plain" \
   -d '
-    Go to https://www.amazon.com/dp/B0C1H26C46
+    Go to https://www.amazon.com/dp/B08PP5MSVB
     
     After browser launch: clear browser cookies.
     After page load: scroll to the middle.
@@ -23,7 +23,7 @@ curl -X POST "http://localhost:8182/api/ai/command" \
 curl -X POST "http://localhost:8182/api/ai/command" \
   -H "Content-Type: application/json" \
   -d '{
-    "url": "https://www.amazon.com/dp/B0C1H26C46",
+    "url": "https://www.amazon.com/dp/B08PP5MSVB",
     "onBrowserLaunchedActions": ["clear browser cookies"],
     "onPageReadyActions": ["click #title", "scroll to the middle"],
     "pageSummaryPrompt": "Provide a brief introduction of this product.",
