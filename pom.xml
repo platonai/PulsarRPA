@@ -208,7 +208,6 @@
                             <autoVersionSubmodules>true</autoVersionSubmodules>
                             <preparationGoals>clean verify</preparationGoals>
                             <completionGoals>clean</completionGoals>
-                            <goals>deploy nexus-staging:release</goals>
                             <pushChanges>false</pushChanges>
                             <localCheckout>true</localCheckout>
                             <checkModificationExcludes>
@@ -663,14 +662,6 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
-            <!-- Skip maven-deploy-plugin to use nexus-staging-maven-plugin -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 
@@ -918,7 +909,6 @@
         <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
         <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
-        <nexus-staging-maven-plugin.version>1.7.0</nexus-staging-maven-plugin.version>
         <checksum-maven-plugin.version>1.11</checksum-maven-plugin.version>
         <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
         <license-maven-plugin.version>4.3</license-maven-plugin.version>
