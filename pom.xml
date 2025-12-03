@@ -60,13 +60,9 @@
     </ciManagement>
 
     <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
         <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <id>central</id>
+            <url>https://central.sonatype.com/api/v1/publisher</url>
         </repository>
     </distributionManagement>
 
@@ -172,8 +168,8 @@
             </properties>
             <build>
                 <plugins>
-                    <!--用于�?Maven 项目中收集和生成 Java 代码的测试覆盖率报告 -->
-                    <!-- instructions covered ratio is expected minimum is 0.70 -->
+                    <!--用于 Maven 项目中收集和生成 Java 代码的测试覆盖率报告 -->
+                    <!-- instruction covered ratio is expected minimum is 0.70 -->
                     <plugin>
                         <groupId>org.jacoco</groupId>
                         <artifactId>jacoco-maven-plugin</artifactId>
@@ -435,20 +431,6 @@
                         </configuration>
                     </plugin>
 
-                    <!-- Nexus staging -->
-                    <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>${nexus-staging-maven-plugin.version}</version>
-                        <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>false</autoReleaseAfterClose>
-                            <stagingProgressTimeoutMinutes>15</stagingProgressTimeoutMinutes>
-                            <stagingProgressPauseDurationSeconds>10</stagingProgressPauseDurationSeconds>
-                        </configuration>
-                        <extensions>true</extensions>
-                    </plugin>
                 </plugins>
             </build>
         </profile>
@@ -941,6 +923,11 @@
         <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
         <license-maven-plugin.version>4.3</license-maven-plugin.version>
         <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
+        <dokka.version>1.9.20</dokka.version>
+
+        <kotlin.version>2.2.20</kotlin.version>
+        <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>
+        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
     </properties>
 
 </project>
