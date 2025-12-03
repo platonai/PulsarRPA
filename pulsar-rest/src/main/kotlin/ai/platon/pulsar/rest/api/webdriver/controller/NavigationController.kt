@@ -1,13 +1,15 @@
 package ai.platon.pulsar.rest.api.webdriver.controller
 
 import ai.platon.pulsar.rest.api.webdriver.dto.*
+import ai.platon.pulsar.rest.api.webdriver.service.SessionManager
 import ai.platon.pulsar.rest.api.webdriver.store.InMemoryStore
 import jakarta.servlet.http.HttpServletResponse
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.UUID
 
 /**
  * Controller for page navigation operations.
@@ -19,9 +21,12 @@ import java.util.UUID
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
 class NavigationController(
-    private val store: InMemoryStore
+    @Autowired(required = false) private val sessionManager: SessionManager?,
+    @Autowired(required = false) private val store: InMemoryStore?
 ) {
     private val logger = LoggerFactory.getLogger(NavigationController::class.java)
+    
+    private val useRealSessions: Boolean = sessionManager != null
 
     /**
      * Navigates to a URL.
@@ -33,13 +38,29 @@ class NavigationController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} navigating to: {}", sessionId, request.url)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
-        if (!store.sessionExists(sessionId)) {
-            return notFound("session not found", "No active session with id $sessionId")
+        if (useRealSessions) {
+            val session = sessionManager!!.getSession(sessionId)
+                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+            
+            try {
+                // Use real PulsarSession to load the page
+                runBlocking {
+                    session.pulsarSession.load(request.url)
+                }
+                sessionManager.setSessionUrl(sessionId, request.url)
+            } catch (e: Exception) {
+                logger.error("Error navigating to URL: {}", e.message, e)
+                return ControllerUtils.errorResponse("navigation error", "Failed to navigate: ${e.message}")
+            }
+        } else {
+            if (!store!!.sessionExists(sessionId)) {
+                return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+            }
+            store.setSessionUrl(sessionId, request.url)
         }
-
-        store.setSessionUrl(sessionId, request.url)
+        
         return ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
     }
 
@@ -51,13 +72,23 @@ class NavigationController(
         @PathVariable sessionId: String,
         response: HttpServletResponse
     ): ResponseEntity<Any> {
-        logger.debug("Getting current URL for session: {}", sessionId)
-        addRequestId(response)
+        logger.debug("Session {} getting current URL", sessionId)
+        ControllerUtils.addRequestId(response)
 
-        val session = store.getSession(sessionId)
-            ?: return notFound("session not found", "No active session with id $sessionId")
-
-        return ResponseEntity.ok(UrlResponse(value = session.url))
+        val url = if (useRealSessions) {
+            val session = sessionManager!!.getSession(sessionId)
+                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+            
+            // Return the stored URL from session
+            session.url ?: "about:blank"
+        } else {
+            if (!store!!.sessionExists(sessionId)) {
+                return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+            }
+            store.getSession(sessionId)?.url ?: "about:blank"
+        }
+        
+        return ResponseEntity.ok(WebDriverResponse(value = url))
     }
 
     /**
@@ -68,14 +99,23 @@ class NavigationController(
         @PathVariable sessionId: String,
         response: HttpServletResponse
     ): ResponseEntity<Any> {
-        logger.debug("Getting document URI for session: {}", sessionId)
-        addRequestId(response)
+        logger.debug("Session {} getting document URI", sessionId)
+        ControllerUtils.addRequestId(response)
 
-        val session = store.getSession(sessionId)
-            ?: return notFound("session not found", "No active session with id $sessionId")
-
-        // In a mock implementation, document URI is the same as URL
-        return ResponseEntity.ok(UrlResponse(value = session.url))
+        val uri = if (useRealSessions) {
+            val session = sessionManager!!.getSession(sessionId)
+                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+            
+            // For now, return the current URL (in real implementation, this could be different from URL)
+            session.url ?: "about:blank"
+        } else {
+            if (!store!!.sessionExists(sessionId)) {
+                return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+            }
+            store.getSession(sessionId)?.url ?: "about:blank"
+        }
+        
+        return ResponseEntity.ok(WebDriverResponse(value = uri))
     }
 
     /**
@@ -86,37 +126,37 @@ class NavigationController(
         @PathVariable sessionId: String,
         response: HttpServletResponse
     ): ResponseEntity<Any> {
-        logger.debug("Getting base URI for session: {}", sessionId)
-        addRequestId(response)
+        logger.debug("Session {} getting base URI", sessionId)
+        ControllerUtils.addRequestId(response)
 
-        val session = store.getSession(sessionId)
-            ?: return notFound("session not found", "No active session with id $sessionId")
-
-        // Extract base URI from URL (mock implementation)
-        val baseUri = session.url?.let { url ->
-            try {
-                val uri = java.net.URI(url)
-                "${uri.scheme}://${uri.host}${if (uri.port > 0) ":${uri.port}" else ""}"
-            } catch (e: Exception) {
-                url
+        val baseUri = if (useRealSessions) {
+            val session = sessionManager!!.getSession(sessionId)
+                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+            
+            // Extract base URI from current URL (protocol + host)
+            session.url?.let { url ->
+                try {
+                    val uri = java.net.URI(url)
+                    "${uri.scheme}://${uri.host}${if (uri.port > 0 && uri.port != 80 && uri.port != 443) ":${uri.port}" else ""}"
+                } catch (e: Exception) {
+                    url
+                }
+            } ?: "about:blank"
+        } else {
+            if (!store!!.sessionExists(sessionId)) {
+                return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
             }
+            val url = store.getSession(sessionId)?.url
+            url?.let {
+                try {
+                    val uri = java.net.URI(it)
+                    "${uri.scheme}://${uri.host}${if (uri.port > 0 && uri.port != 80 && uri.port != 443) ":${uri.port}" else ""}"
+                } catch (e: Exception) {
+                    it
+                }
+            } ?: "about:blank"
         }
-
-        return ResponseEntity.ok(UrlResponse(value = baseUri))
-    }
-
-    private fun addRequestId(response: HttpServletResponse) {
-        response.addHeader("X-Request-Id", UUID.randomUUID().toString())
-    }
-
-    private fun notFound(error: String, message: String): ResponseEntity<Any> {
-        return ResponseEntity.status(404).body(
-            ErrorResponse(
-                value = ErrorResponse.ErrorValue(
-                    error = error,
-                    message = message
-                )
-            )
-        )
+        
+        return ResponseEntity.ok(WebDriverResponse(value = baseUri))
     }
 }

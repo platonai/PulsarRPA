@@ -35,4 +35,22 @@ object ControllerUtils {
             )
         )
     }
+    
+    /**
+     * Creates a 500 Internal Server Error response with WebDriver-style error format.
+     *
+     * @param error The error code.
+     * @param message The error message.
+     * @return A 500 ResponseEntity with the error details.
+     */
+    fun errorResponse(error: String, message: String): ResponseEntity<Any> {
+        return ResponseEntity.status(500).body(
+            ErrorResponse(
+                value = ErrorResponse.ErrorValue(
+                    error = error,
+                    message = message
+                )
+            )
+        )
+    }
 }
