@@ -21,7 +21,7 @@
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar</artifactId>
     <packaging>pom</packaging>
-    <version>3.0.16-SNAPSHOT</version>
+    <version>3.0.16</version>
 
     <name>Pulsar RPA</name>
     <description>Engage and automate web interactions at scale.</description>
@@ -923,11 +923,6 @@
         <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
         <license-maven-plugin.version>4.3</license-maven-plugin.version>
         <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
-        <dokka.version>1.9.20</dokka.version>
-
-        <kotlin.version>2.2.20</kotlin.version>
-        <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>
-        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
     </properties>
 
 </project>
