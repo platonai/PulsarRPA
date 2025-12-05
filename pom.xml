@@ -589,12 +589,14 @@
                     <skip>true</skip>
                 </configuration>
             </plugin>
-            <!-- Skip maven-deploy-plugin to use nexus-staging-maven-plugin -->
+
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>${central-publishing-maven-plugin.version}</version>
+                <extensions>true</extensions>
                 <configuration>
-                    <skip>true</skip>
+                    <publishingServerId>central</publishingServerId>
                 </configuration>
             </plugin>
         </plugins>
@@ -922,7 +924,8 @@
         <checksum-maven-plugin.version>1.11</checksum-maven-plugin.version>
         <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
         <license-maven-plugin.version>4.3</license-maven-plugin.version>
-        <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
+        <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
+
         <dokka.version>1.9.20</dokka.version>
 
         <kotlin.version>2.2.20</kotlin.version>
