@@ -133,7 +133,6 @@
                 <module>pulsar-rest</module>
 
                 <module>pulsar-tests</module>
-                <module>pulsar-all</module>
 
                 <module>pulsar-client</module>
                 <module>pulsar-app</module>
@@ -247,7 +246,6 @@
                 <module>pulsar-rest</module>
 
                 <module>pulsar-tests</module>
-                <module>pulsar-all</module>
 
                 <module>pulsar-client</module>
                 <module>pulsar-app</module>
