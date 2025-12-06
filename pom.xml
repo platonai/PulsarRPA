@@ -107,8 +107,6 @@
 
         <module>pulsar-client</module>
         <module>pulsar-tests</module>
-
-        <module>pulsar-app</module>
     </modules>
 
     <profiles>
