@@ -20,7 +20,6 @@
     <artifactId>pulsar-dom</artifactId>
 
     <name>Pulsar DOM</name>
-    <url>http://pulsar.platon.ai</url>
 
     <dependencies>
         <dependency>
