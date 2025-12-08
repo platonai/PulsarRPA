@@ -28,9 +28,11 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
     - [🤝 Support & Community](#-support--community)
 <!-- /TOC -->
 
-## 🌟 Introduction
 
-💖 **Browser4: a lightning-fast, coroutine-safe browser engine for AI automation** 💖
+## 🤖 Browser4: The High-Performance Body for Your AI Agents
+
+> **Bring your own Brain (LLM), we provide the Body.**
+> Browser4 is the infrastructure layer that empowers Artificial Intelligence to perceive, interact with, and survive on the World Wide Web.
 
 ### ✨ Key Capabilities
 
@@ -38,6 +40,21 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 * 🤖 **Browser Automation** — High-performance automation for workflows, navigation, and data extraction.
 * ⚙️ **Machine Learning Agent** - Learns field structures across complex pages without consuming tokens.
 * ⚡  **Extreme Performance** — Fully coroutine-safe; supports 100k+ ~ 200k page visits per machine per day.
+
+## ⚡ Quick Example: Agentic Workflow
+
+```kotlin
+// Give your Agent a mission, not just a script.
+val agent = AgenticContexts.getOrCreateAgent()
+
+// The Agent plans, navigates, and executes using Browser4 as its hands and eyes.
+val result = agent.run("""
+    1. Go to amazon.com
+    2. Search for '4k monitors'
+    3. Analyze the top 5 results for price/performance ratio
+    4. Return the best option as JSON
+""")
+```
 
 ---
 
@@ -247,6 +264,10 @@ curl -L -o PulsarRPAPro.jar https://github.com/platonai/PulsarRPAPro/releases/do
 | `pulsar-tests-common` | Shared test utilities & fixtures |
 
 ---
+
+## 📜 SDK
+
+Python/Node.js SDKs are on the way.
 
 ## 📜 Documentation
 

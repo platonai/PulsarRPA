@@ -66,26 +66,18 @@
 
 2. **配置你的 LLM API 密钥**
 
-   编辑 [application.properties](application.properties) 并添加你的 API Key。
+   > 编辑 [application.properties](application.properties) 并添加你的 API Key。
 
-3. **构建项目（Linux/macOS）**
+3. **构建项目**
    ```shell
    ./mvnw -q -DskipTests
    ```
-   **Windows (cmd)**：
-   ```shell
-   mvnw.cmd -q -DskipTests
-   ```
 
-4. **运行示例（Linux/macOS）**
+4. **运行示例**
    ```shell
    ./mvnw -pl pulsar-examples exec:java -D"exec.mainClass=ai.platon.pulsar.examples.agent.Browser4AgentKt"
    ```
-   **Windows (cmd)**：
-   ```shell
-   mvnw.cmd -pl pulsar-examples exec:java -D"exec.mainClass=ai.platon.pulsar.examples.agent.Browser4AgentKt"
-   ```
-   如有乱码问题（Windows）：
+   如果在 Windows 上遇到编码问题：
    ```shell
    ./bin/run-examples.ps1
    ```
