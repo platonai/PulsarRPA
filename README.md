@@ -39,7 +39,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 * 👽 **Browser Agents** — Autonomous agents that reason, plan, and act within the browser.
 * 🤖 **Browser Automation** — High-performance automation for workflows, navigation, and data extraction.
 * ⚙️ **Machine Learning Agent** - Learns field structures across complex pages without consuming tokens.
-* ⚡  **Extreme Performance** — Fully coroutine-safe; supports 100k+ page visits per machine per day.
+* ⚡  **Extreme Performance** — Fully coroutine-safe; supports 100k ~ 200k page visits per machine per day.
 
 ## ⚡ Quick Example: Agentic Workflow
 
