@@ -30,7 +30,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 ## 🌟 Introduction
 
-💖 **Browser4: a lightning-fast, coroutine-safe browser engine for AI automation** 💖
+💖 **Browser4: a lightning-fast, coroutine-safe browser engine for your AI** 💖
 
 ### ✨ Key Capabilities
 
@@ -67,7 +67,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 3. **Build the project**
    ```shell
-   ./mvnw -q -DskipTests
+   ./mvnw -DskipTests
    ```
 
 4. **Run examples**
