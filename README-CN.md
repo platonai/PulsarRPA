@@ -221,6 +221,7 @@ session.submitAll(links)
 
 **功能：**
 - 自动学习详情页可抽取的全部字段（往往几十到上百个），且准确率极高。
+- 当 browser4 获得 10K stars 后，开源全部代码。
 
 **为何不只用 LLM？**
 - LLM 抽取会带来延迟、成本与 Token 限制。

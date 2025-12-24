@@ -222,6 +222,7 @@ Automatic, large-scale, high-precision field discovery and extraction powered by
 
 **What it does:**
 - Learns every extractable field on item/detail pages (often dozens to hundreds) with high precision.
+- Open source when browser4 has 10K stars on GitHub.
 
 **Why not just LLMs?**
 - LLM extraction adds latency, cost, and token limits.
