@@ -313,6 +313,31 @@ data class DOMTreeNodeEx constructor(
         return sb.toString().replace(Regex("\\s+"), " ").trim()
     }
 
+    fun slimHTML(): String {
+        val tagName = nodeName.lowercase()
+        val sb = StringBuilder()
+
+        sb.append("<").append(tagName)
+
+        // Include meaningful attributes
+        if (attributes.isNotEmpty()) {
+            DefaultIncludeAttributes.ATTRIBUTES.forEach { key ->
+                attributes[key]?.let {
+                    sb.append(" ").append(key).append("=\"").append(it).append("\"")
+                }
+            }
+        }
+
+        sb.append(">")
+
+        // Recurse into descendants
+        children.forEach { sb.append(it.slimHTML()) }
+
+        sb.append("</").append(tagName).append(">")
+
+        return sb.toString()
+    }
+
     /**
      * Build a best-effort CSS selector for this node.
      * Strategy:
