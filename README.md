@@ -28,43 +28,26 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
     - [🤝 Support & Community](#-support--community)
 <!-- /TOC -->
 
+## 🌟 Introduction
 
-## 🤖 Browser4: The High-Performance Body for Your AI Agents
-
-> **Bring your own Brain (LLM), we provide the Body.**
-> Browser4 is the infrastructure layer that empowers Artificial Intelligence to perceive, interact with, and survive on the World Wide Web.
+💖 **Browser4: a lightning-fast, coroutine-safe browser engine for your AI** 💖
 
 ### ✨ Key Capabilities
 
 * 👽 **Browser Agents** — Autonomous agents that reason, plan, and act within the browser.
 * 🤖 **Browser Automation** — High-performance automation for workflows, navigation, and data extraction.
 * ⚙️ **Machine Learning Agent** - Learns field structures across complex pages without consuming tokens.
-* ⚡  **Extreme Performance** — Fully coroutine-safe; supports 100k ~ 200k page visits per machine per day.
-
-## ⚡ Quick Example: Agentic Workflow
-
-```kotlin
-// Give your Agent a mission, not just a script.
-val agent = AgenticContexts.getOrCreateAgent()
-
-// The Agent plans, navigates, and executes using Browser4 as its hands and eyes.
-val result = agent.run("""
-    1. Go to amazon.com
-    2. Search for '4k monitors'
-    3. Analyze the top 5 results for price/performance ratio
-    4. Return the best option as JSON
-""")
-```
+* ⚡  **Extreme Performance** — Fully coroutine-safe; supports 100k+ page visits per machine per day.
 
 ---
 
 ## 🎥 Demo Videos
 
 🎬 YouTube:
-[![Watch the video](https://img.youtube.com/vi/rJzXNXH3Gwk/0.jpg)](https://youtu.be/rJzXNXH3Gwk)
+[![Watch the video](https://img.youtube.com/vi/_BcryqWzVMI/0.jpg)](https://www.youtube.com/watch?v=_BcryqWzVMI)
 
 📺 Bilibili:
-[https://www.bilibili.com/video/BV1fXUzBFE4L](https://www.bilibili.com/video/BV1fXUzBFE4L)
+[https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
 
 ---
 
@@ -84,7 +67,7 @@ val result = agent.run("""
 
 3. **Build the project**
    ```shell
-   ./mvnw -q -DskipTests
+   ./mvnw -DskipTests
    ```
 
 4. **Run examples**
@@ -222,11 +205,10 @@ Automatic, large-scale, high-precision field discovery and extraction powered by
 
 **What it does:**
 - Learns every extractable field on item/detail pages (often dozens to hundreds) with high precision.
-- Open source when browser4 has 10K stars on GitHub.
 
 **Why not just LLMs?**
 - LLM extraction adds latency, cost, and token limits.
-- ML-based auto extraction is local, reproducible, and scalable to 100k+ ~ 200k pages/day.
+- ML-based auto extraction is local, reproducible, and scalable to 100k+ pages/day.
 - You can still combine both: use Auto Extraction for structured baseline + LLM for semantic enrichment.
 
 **Quick Commands (PulsarRPAPro):**
@@ -265,10 +247,6 @@ curl -L -o PulsarRPAPro.jar https://github.com/platonai/PulsarRPAPro/releases/do
 | `pulsar-tests-common` | Shared test utilities & fixtures |
 
 ---
-
-## 📜 SDK
-
-Python/Node.js SDKs are on the way.
 
 ## 📜 Documentation
 
