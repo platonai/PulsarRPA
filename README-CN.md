@@ -47,10 +47,10 @@
 ## 🎥 演示视频
 
 🎬 YouTube:
-[![观看视频](https://img.youtube.com/vi/_BcryqWzVMI/0.jpg)](https://www.youtube.com/watch?v=_BcryqWzVMI)
+[![Watch the video](https://img.youtube.com/vi/rJzXNXH3Gwk/0.jpg)](https://youtu.be/rJzXNXH3Gwk)
 
-📺 哔哩哔哩：
-[https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
+📺 Bilibili:
+[https://www.bilibili.com/video/BV1fXUzBFE4L](https://www.bilibili.com/video/BV1fXUzBFE4L)
 
 ---
 
@@ -200,9 +200,9 @@ session.submitAll(links)
 ```
 
 🎬 YouTube:
-[![观看视频](https://img.youtube.com/vi/_BcryqWzVMI/0.jpg)](https://www.youtube.com/watch?v=_BcryqWzVMI)
+[![Watch the video](https://img.youtube.com/vi/_BcryqWzVMI/0.jpg)](https://www.youtube.com/watch?v=_BcryqWzVMI)
 
-📺 哔哩哔哩：
+📺 Bilibili:
 [https://www.bilibili.com/video/BV1kM2rYrEFC](https://www.bilibili.com/video/BV1kM2rYrEFC)
 
 ---
@@ -215,9 +215,9 @@ session.submitAll(links)
 - 以高精度学习商品 / 详情页上所有可抽取字段（通常从几十到上百）。
 
 **为何不只用 LLM？**
-- 仅依赖 LLM 的抽取会带来时延、成本与 Token 限制。
-- 基于 ML 的自动抽取本地可复现，且可扩展到 10 万+ 页 / 天。
-- 仍可结合二者：用自动抽取提供结构化基线 + LLM 做语义增强。
+- LLM 抽取会带来延迟、成本与 Token 限制。
+- 本地 ML 抽取可复现，可扩展至每日 10~20 万页面。
+- 也可组合使用：ML 提供结构化基线，LLM 负责语义增强。
 
 **快捷命令（PulsarRPAPro）：**
 ```bash
@@ -259,6 +259,10 @@ Invoke-WebRequest -Uri https://github.com/platonai/PulsarRPAPro/releases/downloa
 | `pulsar-tests-common` | 共享测试工具与夹具 |
 
 ---
+
+## 📜 SDK
+
+Python / Node.js SDK 正在筹备中。
 
 ## 📜 文档
 
