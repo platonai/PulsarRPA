@@ -59,11 +59,11 @@ open class BrowserSettings constructor(
         }
 
         @JvmStatic
-        fun overrideBrowserContextMode(ic: ImmutableConfig, conf: MutableConfig? = null): Companion {
-            val modeString = ic[BROWSER_CONTEXT_MODE]?.uppercase()
-            val browserType = ic.getEnum(BROWSER_TYPE, BrowserType.DEFAULT)
+        fun overrideBrowserContextMode(sourceConf: ImmutableConfig, targetConf: MutableConfig? = null): Companion {
+            val modeString = sourceConf[BROWSER_CONTEXT_MODE]?.uppercase()
+            val browserType = sourceConf.getEnum(BROWSER_TYPE, BrowserType.DEFAULT)
             val mode = BrowserProfileMode.fromString(modeString)
-            return withBrowserContextMode(mode, browserType, conf)
+            return withBrowserContextMode(mode, browserType, targetConf)
         }
 
         @JvmStatic
@@ -99,9 +99,6 @@ open class BrowserSettings constructor(
             return this
         }
 
-        @JvmStatic
-        fun withSystemDefaultBrowser(conf: MutableConfig? = null) = withSystemDefaultBrowserInternal(BrowserType.PULSAR_CHROME, conf)
-
         private fun withSystemDefaultBrowserInternal(browserType: BrowserType, conf: MutableConfig? = null): Companion {
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.SystemDefaultPrivacyAgentGenerator"
             if (conf == null) {
@@ -112,9 +109,6 @@ open class BrowserSettings constructor(
             withBrowser(browserType, conf).maxBrowserContexts(1, conf).maxOpenTabs(50).withSPA(conf)
             return BrowserSettings
         }
-
-        @JvmStatic
-        fun withDefaultBrowser(conf: MutableConfig? = null) = withDefaultBrowserInternal(BrowserType.PULSAR_CHROME, conf)
 
         private fun withDefaultBrowserInternal(browserType: BrowserType, conf: MutableConfig? = null): Companion {
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.DefaultPrivacyAgentGenerator"
@@ -127,9 +121,6 @@ open class BrowserSettings constructor(
             return BrowserSettings
         }
 
-        @JvmStatic
-        fun withPrototypeBrowser(conf: MutableConfig? = null) = withPrototypeBrowserInternal(BrowserType.PULSAR_CHROME, conf)
-
         private fun withPrototypeBrowserInternal(browserType: BrowserType, conf: MutableConfig? = null): Companion {
             val clazz = "ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrototypePrivacyAgentGenerator"
             if (conf == null) {
@@ -140,9 +131,6 @@ open class BrowserSettings constructor(
             withBrowser(browserType, conf).maxBrowserContexts(1, conf).maxOpenTabs(50).withSPA(conf)
             return BrowserSettings
         }
-
-        @JvmStatic
-        fun withSequentialBrowsers(conf: MutableConfig? = null): Companion = withSequentialBrowsersInternal(BrowserType.PULSAR_CHROME, 10, conf)
 
         fun withSequentialBrowsers(maxAgents: Int, conf: MutableConfig? = null): Companion {
             return withSequentialBrowsersInternal(BrowserType.PULSAR_CHROME, maxAgents, conf)
