@@ -1,7 +1,5 @@
 package ai.platon.pulsar.examples.sites.topEc.chinese.login.taobao
 
-import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.event.impl.LoginHandler
 import ai.platon.pulsar.skeleton.session.PulsarSession
@@ -22,8 +20,6 @@ class TaobaoLoginHandler(
 )
 
 fun main() {
-    PulsarSettings.withSystemDefaultBrowser()
-
     val portalUrl = "https://s.taobao.com/search?spm=a21bo.jianhua.201867-main.24.5af911d9wFOWsc&q=收纳"
     val args = "-i 1s -ii 5m -ol a[href~=detail] -ignoreFailure"
 

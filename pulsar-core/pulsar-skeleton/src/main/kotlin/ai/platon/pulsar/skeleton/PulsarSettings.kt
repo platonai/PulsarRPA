@@ -7,10 +7,7 @@ import ai.platon.pulsar.browser.common.InteractSettings
 import ai.platon.pulsar.common.browser.BrowserProfileMode
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.InteractLevel
-import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_OPEN_TABS
-import ai.platon.pulsar.common.config.CapabilityTypes.LLM_API_KEY
-import ai.platon.pulsar.common.config.CapabilityTypes.LLM_NAME
-import ai.platon.pulsar.common.config.CapabilityTypes.LLM_PROVIDER
+import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.config.MutableConfig
 
 /**
@@ -98,6 +95,9 @@ data class PulsarSettings(
         /**
          * Use the system's default Chrome browser, so Browser4 visits websites just like you do.
          * Any change to the browser will be kept.
+         *
+         * No longer supported by Chrome since v143.
+         * See https://github.com/platonai/Browser4/issues/162
          * */
         @JvmStatic
         @JvmOverloads
@@ -106,6 +106,9 @@ data class PulsarSettings(
         /**
          * Use the system's default browser with the given type, so Browser4 visits websites just like you do.
          * Any change to the browser will be kept.
+         *
+         * No longer supported by Chrome since v143.
+         * See https://github.com/platonai/Browser4/issues/162
          * */
         @JvmStatic
         @JvmOverloads

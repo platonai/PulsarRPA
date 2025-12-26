@@ -1,14 +1,10 @@
 package ai.platon.pulsar.examples.sites.topEc.chinese.login.tmall
 
-import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.examples.sites.topEc.chinese.login.taobao.TaobaoLoginHandler
-import ai.platon.pulsar.skeleton.PulsarSettings
+import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.session.PulsarSession
 
 fun main() {
-    PulsarSettings.withSystemDefaultBrowser()
-
     val portalUrl = "https://list.tmall.com/search_product.htm?q=大家电"
     val args = "-i 1s -ii 5m -ol a[href~=detail] -ignoreFailure"
 

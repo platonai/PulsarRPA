@@ -1,7 +1,5 @@
 package ai.platon.pulsar.examples.sites.topEc.chinese.login.s1688
 
-import ai.platon.pulsar.browser.common.BrowserSettings
-import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.event.impl.LoginHandler
 import ai.platon.pulsar.skeleton.session.PulsarSession
@@ -32,8 +30,6 @@ class S1688Crawler(
 }
 
 fun main() {
-    PulsarSettings.withSystemDefaultBrowser()
-
     S1688Crawler().crawl()
     PulsarContexts.await()
 }
