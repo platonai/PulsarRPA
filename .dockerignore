@@ -12,7 +12,6 @@
 **/*.tmp
 **/*.temp
 **/*.bak
-**/target
 
 *.xlsx
 *.db
@@ -26,14 +25,7 @@ logs
 submodules
 extracted
 
-.dockerignore
-Dockerfile
-
-!docs/development/maven
-
 */target/**
-!**/src/main/java/com/github/kklisura/cdt/protocol/v2023/commands/Target.java
-!**/src/main/java/**
 
 **/application-private.yml
 application-private.yml
@@ -46,12 +38,8 @@ docker/browser4/Dockerfile
 
 !docs/development/maven
 
-# 包含 src 目录下的 target 目录
-!**/src/**/target
-
 强调包含所有源文件
-!**/src/main/java/**
-!**/src/main/kotlin/**
+!**/src/*
 
 !pulsar-app/pulsar-browser4/target/Browser4.jar
 
