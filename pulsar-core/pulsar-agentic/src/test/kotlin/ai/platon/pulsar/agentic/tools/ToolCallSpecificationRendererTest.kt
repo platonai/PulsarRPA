@@ -24,7 +24,7 @@ class ToolCallSpecificationRendererTest {
     }
 
     @Test
-    fun `render should include custom tool specs after registration`() {
+    fun `render should keep ToolSpecification verbatim and append custom tools`() {
         val executor = DbToolExecutor()
         val specs = listOf(
             ToolCallSpec(
@@ -40,6 +40,12 @@ class ToolCallSpecificationRendererTest {
 
         val rendered = ToolCallSpecificationRenderer.render(includeCustomDomains = true)
 
+        // Built-in specification should be present verbatim
+        assertTrue(rendered.contains("// domain: driver"), rendered)
+        assertTrue(rendered.contains("driver.reload()"), rendered)
+
+        // Custom section appended
+        assertTrue(rendered.contains("// CustomTool"), rendered)
         assertTrue(rendered.contains("db.query("), rendered)
         assertTrue(rendered.contains("sql:"), rendered)
     }
@@ -54,7 +60,7 @@ class ToolCallSpecificationRendererTest {
             args: Map<String, Any?>,
             target: Any
         ): Any? {
-            return "ok"
+            return null
         }
     }
 }

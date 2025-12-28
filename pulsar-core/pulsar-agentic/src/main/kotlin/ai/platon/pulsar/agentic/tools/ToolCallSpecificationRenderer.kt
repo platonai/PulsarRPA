@@ -1,84 +1,73 @@
 package ai.platon.pulsar.agentic.tools
 
 import ai.platon.pulsar.agentic.ToolCallSpec
-import ai.platon.pulsar.agentic.ai.tta.SourceCodeToToolCallSpec
 
 /**
- * Renders tool-call specifications (signatures) into a prompt-friendly string so the LLM can
- * perceive which tools are available.
+ * Renders tool-call specifications (signatures) into a prompt-friendly string.
+ *
+ * Built-in tools are emitted verbatim from [ToolSpecification.TOOL_CALL_SPECIFICATION] (no parsing/re-rendering),
+ * and then an optional "CustomTool" section is appended for runtime-registered tools.
  */
 object ToolCallSpecificationRenderer {
 
     /**
-     * Render built-in tool-call specs (driver/agent) plus optional custom tool-call specs.
-     *
-     * Custom tool-call specs must be registered via [CustomToolRegistry.register] either by:
-     * - executor implementing [ToolCallSpecificationProvider], or
-     * - passing specs explicitly: register(executor, specs)
+     * Render built-in tool-call specs from [ToolSpecification.TOOL_CALL_SPECIFICATION] (verbatim)
+     * plus optional custom tool-call specs.
      */
     fun render(
         includeCustomDomains: Boolean = true,
         customDomainFilter: ((String) -> Boolean)? = null,
     ): String {
-        val builtIn = buildList {
-            addAll(SourceCodeToToolCallSpec.webDriverToolCallList)
-            addAll(SourceCodeToToolCallSpec.perceptiveAgentToolCallList)
+        val builtIn = ToolSpecification.TOOL_CALL_SPECIFICATION.trimEnd()
+
+        if (!includeCustomDomains) {
+            return builtIn
         }
 
-        val custom = if (!includeCustomDomains) {
-            emptyList()
-        } else {
-            CustomToolRegistry.instance.getAllDomains()
-                .asSequence()
-                .filter { customDomainFilter?.invoke(it) ?: true }
-                .flatMap { CustomToolRegistry.instance.getToolCallSpecifications(it).asSequence() }
-                .toList()
+        val customSpecs = CustomToolRegistry.instance.getAllDomains()
+            .asSequence()
+            .filter { customDomainFilter?.invoke(it) ?: true }
+            .flatMap { CustomToolRegistry.instance.getToolCallSpecifications(it).asSequence() }
+            .toList()
+
+        if (customSpecs.isEmpty()) {
+            return builtIn
         }
 
-        return (builtIn + custom)
-            .distinctBy { spec -> distinctKey(spec) }
+        val custom = renderCustomTools(customSpecs)
+
+        return buildString {
+            append(builtIn)
+            append("\n\n")
+            append("// CustomTool\n")
+            append(custom)
+        }.trimEnd()
+    }
+
+    /**
+     * Render a list of [ToolCallSpec] into kotlin-like signatures.
+     */
+    fun render(specs: List<ToolCallSpec>): String {
+        return specs
+            .asSequence()
+            .distinctBy { distinctKey(it) }
             .sortedWith(compareBy<ToolCallSpec>({ it.domain }, { it.method }, { it.arguments.size }))
             .joinToString("\n") { renderSpec(it) }
     }
 
-    fun render(specs: List<ToolCallSpec>): String = specs
-        .distinctBy { distinctKey(it) }
-        .sortedWith(compareBy<ToolCallSpec>({ it.domain }, { it.method }, { it.arguments.size }))
-        .joinToString("\n") { renderSpec(it) }
-
-    private fun renderSpec(spec: ToolCallSpec): String {
-        val args = spec.arguments.joinToString(prefix = "(", postfix = ")") { renderArg(it) }
-        return "${spec.domain}.${spec.method}$args"
+    private fun renderCustomTools(specs: List<ToolCallSpec>): String {
+        // Custom specs are rendered using our structured format so the model can see the signature.
+        return render(specs)
     }
 
-    private fun renderArg(arg: Any?): String {
-        if (arg == null) return ""
-
-        // Fast path: our canonical arg type
-        if (arg is ToolCallSpec.Arg) {
-            return arg.expression
-        }
-
-        // Compatibility path: some generated specs may carry a different Arg type with the same fields.
-        // We try to read (name, type, defaultValue) reflectively to keep a kotlin-like signature.
-        return runCatching {
-            val kClass = arg::class
-            val name = kClass.members.firstOrNull { it.name == "name" }?.call(arg) as? String
-            val type = kClass.members.firstOrNull { it.name == "type" }?.call(arg) as? String
-            val defaultValue = kClass.members.firstOrNull { it.name == "defaultValue" }?.call(arg)
-
-            if (!name.isNullOrBlank() && !type.isNullOrBlank()) {
-                if (defaultValue != null) "$name: $type = $defaultValue" else "$name: $type"
-            } else {
-                arg.toString()
-            }
-        }.getOrElse {
-            arg.toString()
-        }
+    private fun renderSpec(spec: ToolCallSpec): String {
+        val args = spec.arguments.joinToString(prefix = "(", postfix = ")") { it.expression }
+        val returnPart = spec.returnType.takeIf { it.isNotBlank() && it != "Unit" }?.let { ": $it" } ?: ""
+        return "${spec.domain}.${spec.method}$args$returnPart".trim()
     }
 
     private fun distinctKey(spec: ToolCallSpec): String {
-        val argsKey = spec.arguments.joinToString(",") { renderArg(it) }
+        val argsKey = spec.arguments.joinToString(",") { it.expression }
         return "${spec.domain}.${spec.method}($argsKey):${spec.returnType}".trim()
     }
 }
