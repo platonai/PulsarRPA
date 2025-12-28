@@ -46,10 +46,10 @@ class ControlController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} delaying for {} ms", sessionId, request.ms)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
         if (!store.sessionExists(sessionId)) {
-            return notFound("session not found", "No active session with id $sessionId")
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
         }
 
         // Mock implementation - sleep for the requested duration (capped for safety)
@@ -70,11 +70,11 @@ class ControlController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} pausing", sessionId)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
         val updated = store.setSessionStatus(sessionId, "paused")
         if (!updated) {
-            return notFound("session not found", "No active session with id $sessionId")
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
         }
 
         return ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
@@ -89,28 +89,13 @@ class ControlController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} stopping", sessionId)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
         val updated = store.setSessionStatus(sessionId, "stopped")
         if (!updated) {
-            return notFound("session not found", "No active session with id $sessionId")
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
         }
 
         return ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
-    }
-
-    private fun addRequestId(response: HttpServletResponse) {
-        response.addHeader("X-Request-Id", UUID.randomUUID().toString())
-    }
-
-    private fun notFound(error: String, message: String): ResponseEntity<Any> {
-        return ResponseEntity.status(404).body(
-            ErrorResponse(
-                value = ErrorResponse.ErrorValue(
-                    error = error,
-                    message = message
-                )
-            )
-        )
     }
 }

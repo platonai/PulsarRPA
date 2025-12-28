@@ -26,7 +26,7 @@ class AgentController(
     @Autowired(required = false) private val store: InMemoryStore?
 ) {
     private val logger = LoggerFactory.getLogger(AgentController::class.java)
-    
+
     private val useRealSessions: Boolean = sessionManager != null
 
     /**
@@ -45,13 +45,13 @@ class AgentController(
         val result = if (useRealSessions) {
             val session = sessionManager!!.getSession(sessionId)
                 ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            
+
             try {
                 // Use real PerceptiveAgent.run
                 val history = runBlocking {
                     session.agent.run(request.task)
                 }
-                
+
                 AgentRunResult(
                     success = !history.hasErrors,
                     message = if (history.hasErrors) "Agent task has errors" else "Agent task completed",
@@ -97,13 +97,13 @@ class AgentController(
         val result = if (useRealSessions) {
             val session = sessionManager!!.getSession(sessionId)
                 ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            
+
             try {
                 // Use real PerceptiveAgent.observe
                 val observeResults = runBlocking {
                     session.agent.observe(request.instruction ?: "")
                 }
-                
+
                 // Convert to DTOs
                 val observations = observeResults.map { observeResult ->
                     ObserveResultDto(
@@ -114,7 +114,7 @@ class AgentController(
                         description = observeResult.description
                     )
                 }
-                
+
                 observations
             } catch (e: Exception) {
                 logger.error("Error observing page: {}", e.message, e)
@@ -152,13 +152,13 @@ class AgentController(
         val result = if (useRealSessions) {
             val session = sessionManager!!.getSession(sessionId)
                 ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            
+
             try {
                 // Use real PerceptiveAgent.act
                 val actResult = runBlocking {
                     session.agent.act(request.action)
                 }
-                
+
                 ActResultDto(
                     success = actResult.success,
                     message = actResult.message ?: (if (actResult.success) "Action executed successfully" else "Action failed"),
@@ -204,13 +204,13 @@ class AgentController(
         val result = if (useRealSessions) {
             val session = sessionManager!!.getSession(sessionId)
                 ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            
+
             try {
                 // Use real PerceptiveAgent.extract
                 val extractResult = runBlocking {
                     session.agent.extract(request.instruction)
                 }
-                
+
                 ExtractResultDto(
                     success = extractResult.success,
                     data = extractResult.data,
@@ -253,7 +253,7 @@ class AgentController(
         val summary = if (useRealSessions) {
             val session = sessionManager!!.getSession(sessionId)
                 ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            
+
             try {
                 // Use real PerceptiveAgent.summarize
                 runBlocking {
@@ -290,7 +290,7 @@ class AgentController(
         val success = if (useRealSessions) {
             val session = sessionManager!!.getSession(sessionId)
                 ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            
+
             try {
                 // Use real PerceptiveAgent.clearHistory
                 runBlocking {
@@ -308,7 +308,7 @@ class AgentController(
             // Mock always returns success
             true
         }
-        
-        return ResponseEntity.ok(WebDriverResponse(value = success))
+
+        return ResponseEntity.ok(AgentClearHistoryResponse(value = success))
     }
 }

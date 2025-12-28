@@ -486,6 +486,45 @@ class WebDriverApiIntegrationTest {
         assertEquals(true, response.body!!["value"])
     }
 
+    @Test
+    fun `should return consistent error format and request id for selector exists when session missing`() {
+        val selectorRequest = SelectorRef(selector = "#missing")
+        val selectorEntity = HttpEntity(selectorRequest, jsonHeaders())
+
+        val response = restTemplate.postForEntity(
+            "$baseUrl/session/non-existent-session-id/selectors/exists",
+            selectorEntity,
+            Map::class.java
+        )
+
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        assertNotNull(response.headers["X-Request-Id"], "X-Request-Id header should be present")
+        assertNotNull(response.body)
+
+        @Suppress("UNCHECKED_CAST")
+        val value = response.body!!["value"] as Map<String, Any?>
+        assertTrue(value.containsKey("error"))
+        assertTrue(value.containsKey("message"))
+    }
+
+    @Test
+    fun `should return consistent error format and request id for element click when session missing`() {
+        val response = restTemplate.postForEntity(
+            "$baseUrl/session/non-existent-session-id/element/any/click",
+            HttpEntity<String>(jsonHeaders()),
+            Map::class.java
+        )
+
+        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        assertNotNull(response.headers["X-Request-Id"], "X-Request-Id header should be present")
+        assertNotNull(response.body)
+
+        @Suppress("UNCHECKED_CAST")
+        val value = response.body!!["value"] as Map<String, Any?>
+        assertTrue(value.containsKey("error"))
+        assertTrue(value.containsKey("message"))
+    }
+
     /**
      * Helper method to create a session and return the session ID.
      */

@@ -33,12 +33,12 @@ class ElementController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} finding element using {}: {}", sessionId, request.using, request.value)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
         // Convert WebDriver strategy to selector
         val selector = convertToSelector(request.using, request.value)
         val element = store.getOrCreateElement(sessionId, selector, "css")
-            ?: return notFound("session not found", "No active session with id $sessionId")
+            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
         return ResponseEntity.ok(ElementResponse(value = ElementRef(elementId = element.elementId)))
     }
@@ -53,11 +53,11 @@ class ElementController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} finding elements using {}: {}", sessionId, request.using, request.value)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
         val selector = convertToSelector(request.using, request.value)
         val element = store.getOrCreateElement(sessionId, selector, "css")
-            ?: return notFound("session not found", "No active session with id $sessionId")
+            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
         // Mock implementation returns a single element
         return ResponseEntity.ok(ElementsResponse(value = listOf(ElementRef(elementId = element.elementId))))
@@ -73,14 +73,14 @@ class ElementController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} clicking element: {}", sessionId, elementId)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
         if (!store.sessionExists(sessionId)) {
-            return notFound("session not found", "No active session with id $sessionId")
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
         }
 
         val element = store.getElement(sessionId, elementId)
-            ?: return notFound("no such element", "Element with id $elementId not found")
+            ?: return ControllerUtils.notFound("no such element", "Element with id $elementId not found")
 
         // Mock implementation - just log the click
         logger.debug("Clicked element: {}", element.selector)
@@ -98,14 +98,14 @@ class ElementController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} sending keys to element: {}", sessionId, elementId)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
         if (!store.sessionExists(sessionId)) {
-            return notFound("session not found", "No active session with id $sessionId")
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
         }
 
         val element = store.getElement(sessionId, elementId)
-            ?: return notFound("no such element", "Element with id $elementId not found")
+            ?: return ControllerUtils.notFound("no such element", "Element with id $elementId not found")
 
         // Mock implementation - update element text
         element.text = request.text
@@ -123,14 +123,14 @@ class ElementController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} getting attribute {} from element: {}", sessionId, name, elementId)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
         if (!store.sessionExists(sessionId)) {
-            return notFound("session not found", "No active session with id $sessionId")
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
         }
 
         val element = store.getElement(sessionId, elementId)
-            ?: return notFound("no such element", "Element with id $elementId not found")
+            ?: return ControllerUtils.notFound("no such element", "Element with id $elementId not found")
 
         // Mock implementation - return from attributes map or generate mock value
         val value = element.attributes[name] ?: "mock-$name-value"
@@ -147,14 +147,14 @@ class ElementController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} getting text from element: {}", sessionId, elementId)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
         if (!store.sessionExists(sessionId)) {
-            return notFound("session not found", "No active session with id $sessionId")
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
         }
 
         val element = store.getElement(sessionId, elementId)
-            ?: return notFound("no such element", "Element with id $elementId not found")
+            ?: return ControllerUtils.notFound("no such element", "Element with id $elementId not found")
 
         return ResponseEntity.ok(TextResponse(value = element.text))
     }
@@ -172,20 +172,5 @@ class ElementController(
             "tag name" -> value
             else -> value
         }
-    }
-
-    private fun addRequestId(response: HttpServletResponse) {
-        response.addHeader("X-Request-Id", UUID.randomUUID().toString())
-    }
-
-    private fun notFound(error: String, message: String): ResponseEntity<Any> {
-        return ResponseEntity.status(404).body(
-            ErrorResponse(
-                value = ErrorResponse.ErrorValue(
-                    error = error,
-                    message = message
-                )
-            )
-        )
     }
 }

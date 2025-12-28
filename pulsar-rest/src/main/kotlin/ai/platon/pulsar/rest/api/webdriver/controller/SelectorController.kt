@@ -1,14 +1,17 @@
 package ai.platon.pulsar.rest.api.webdriver.controller
 
 import ai.platon.pulsar.rest.api.webdriver.dto.*
+import ai.platon.pulsar.rest.api.webdriver.service.SessionManager
 import ai.platon.pulsar.rest.api.webdriver.store.InMemoryStore
+import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
 import jakarta.servlet.http.HttpServletResponse
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 import java.util.Base64
-import java.util.UUID
 
 /**
  * Controller for selector-first element operations.
@@ -20,9 +23,12 @@ import java.util.UUID
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
 class SelectorController(
+    @Autowired(required = false) private val sessionManager: SessionManager?,
     private val store: InMemoryStore
 ) {
     private val logger = LoggerFactory.getLogger(SelectorController::class.java)
+
+    private val useRealSessions: Boolean = sessionManager != null
 
     /**
      * Checks if an element matching the selector exists.
@@ -34,10 +40,29 @@ class SelectorController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} checking selector exists: {}", sessionId, request.selector)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
+
+        if (useRealSessions) {
+            val managed = sessionManager!!.getSession(sessionId)
+                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+
+            return try {
+                val exists = runBlocking {
+                    val driver = managed.pulsarSession.getOrCreateBoundDriver()
+                    driver.exists(request.selector)
+                }
+                ResponseEntity.ok(ExistsResponse(value = ExistsResponse.ExistsValue(exists = exists)))
+            } catch (e: WebDriverException) {
+                logger.error("Selector exists check failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message)
+                ControllerUtils.errorResponse("webdriver error", e.message ?: "WebDriver error")
+            } catch (e: Exception) {
+                logger.error("Selector exists check failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message, e)
+                ControllerUtils.errorResponse("internal error", e.message ?: "Internal error")
+            }
+        }
 
         if (!store.sessionExists(sessionId)) {
-            return notFound("session not found", "No active session with id $sessionId")
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
         }
 
         // Mock implementation always returns true for demonstration
@@ -54,10 +79,44 @@ class SelectorController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} waiting for selector: {} (timeout: {}ms)", sessionId, request.selector, request.timeout)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
+
+        if (useRealSessions) {
+            val managed = sessionManager!!.getSession(sessionId)
+                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+
+            val timeoutMillis = request.timeout.toLong().coerceAtLeast(0)
+
+            return try {
+                val remainingMillis = runBlocking {
+                    val driver = managed.pulsarSession.getOrCreateBoundDriver()
+                    driver.waitForSelector(request.selector, timeoutMillis)
+                }
+
+                if (remainingMillis <= 0L) {
+                    // OpenAPI defines 408 for waitFor timeout.
+                    return ResponseEntity.status(408).body(
+                        ErrorResponse(
+                            value = ErrorResponse.ErrorValue(
+                                error = "timeout",
+                                message = "Timeout waiting for selector '${request.selector}'"
+                            )
+                        )
+                    )
+                }
+
+                ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
+            } catch (e: WebDriverException) {
+                logger.error("Wait for selector failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message)
+                ControllerUtils.errorResponse("webdriver error", e.message ?: "WebDriver error")
+            } catch (e: Exception) {
+                logger.error("Wait for selector failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message, e)
+                ControllerUtils.errorResponse("internal error", e.message ?: "Internal error")
+            }
+        }
 
         if (!store.sessionExists(sessionId)) {
-            return notFound("session not found", "No active session with id $sessionId")
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
         }
 
         // Mock implementation - immediately returns success
@@ -74,10 +133,10 @@ class SelectorController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} finding element by selector: {}", sessionId, request.selector)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
         val element = store.getOrCreateElement(sessionId, request.selector, request.strategy)
-            ?: return notFound("session not found", "No active session with id $sessionId")
+            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
         return ResponseEntity.ok(ElementResponse(value = ElementRef(elementId = element.elementId)))
     }
@@ -92,10 +151,10 @@ class SelectorController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} finding elements by selector: {}", sessionId, request.selector)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
         val element = store.getOrCreateElement(sessionId, request.selector, request.strategy)
-            ?: return notFound("session not found", "No active session with id $sessionId")
+            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
         // Mock implementation returns a single element
         return ResponseEntity.ok(ElementsResponse(value = listOf(ElementRef(elementId = element.elementId))))
@@ -111,13 +170,19 @@ class SelectorController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} clicking selector: {}", sessionId, request.selector)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
-        if (!store.sessionExists(sessionId)) {
-            return notFound("session not found", "No active session with id $sessionId")
+        if (useRealSessions) {
+            sessionManager!!.getSession(sessionId)
+                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+            // TODO(real): call WebDriver.click
+            return ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
         }
 
-        // Mock implementation - creates element reference and returns success
+        if (!store.sessionExists(sessionId)) {
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        }
+
         store.getOrCreateElement(sessionId, request.selector, request.strategy)
         return ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
     }
@@ -132,13 +197,19 @@ class SelectorController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} filling selector: {} with value: {}", sessionId, request.selector, request.value)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
-        if (!store.sessionExists(sessionId)) {
-            return notFound("session not found", "No active session with id $sessionId")
+        if (useRealSessions) {
+            sessionManager!!.getSession(sessionId)
+                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+            // TODO(real): call WebDriver.fill
+            return ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
         }
 
-        // Mock implementation
+        if (!store.sessionExists(sessionId)) {
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        }
+
         store.getOrCreateElement(sessionId, request.selector, request.strategy)
         return ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
     }
@@ -153,13 +224,19 @@ class SelectorController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} pressing key: {} on selector: {}", sessionId, request.key, request.selector)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
-        if (!store.sessionExists(sessionId)) {
-            return notFound("session not found", "No active session with id $sessionId")
+        if (useRealSessions) {
+            sessionManager!!.getSession(sessionId)
+                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+            // TODO(real): call WebDriver.press
+            return ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
         }
 
-        // Mock implementation
+        if (!store.sessionExists(sessionId)) {
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        }
+
         store.getOrCreateElement(sessionId, request.selector, request.strategy)
         return ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
     }
@@ -174,10 +251,10 @@ class SelectorController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} getting outerHtml for selector: {}", sessionId, request.selector)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
         val element = store.getOrCreateElement(sessionId, request.selector, request.strategy)
-            ?: return notFound("session not found", "No active session with id $sessionId")
+            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
         return ResponseEntity.ok(HtmlResponse(value = element.outerHtml))
     }
@@ -192,29 +269,20 @@ class SelectorController(
         response: HttpServletResponse
     ): ResponseEntity<Any> {
         logger.debug("Session {} taking screenshot of selector: {}", sessionId, request.selector)
-        addRequestId(response)
+        ControllerUtils.addRequestId(response)
 
-        if (!store.sessionExists(sessionId)) {
-            return notFound("session not found", "No active session with id $sessionId")
+        if (useRealSessions) {
+            sessionManager!!.getSession(sessionId)
+                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+            // TODO(real): call WebDriver.screenshot
+            return ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
         }
 
-        // Mock implementation - returns a small placeholder base64 PNG
+        if (!store.sessionExists(sessionId)) {
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        }
+
         val mockPng = Base64.getEncoder().encodeToString("mock-screenshot-data".toByteArray())
         return ResponseEntity.ok(ScreenshotResponse(value = mockPng))
-    }
-
-    private fun addRequestId(response: HttpServletResponse) {
-        response.addHeader("X-Request-Id", UUID.randomUUID().toString())
-    }
-
-    private fun notFound(error: String, message: String): ResponseEntity<Any> {
-        return ResponseEntity.status(404).body(
-            ErrorResponse(
-                value = ErrorResponse.ErrorValue(
-                    error = error,
-                    message = message
-                )
-            )
-        )
     }
 }
