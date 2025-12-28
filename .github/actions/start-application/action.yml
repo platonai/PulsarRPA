@@ -64,7 +64,7 @@ runs:
       shell: bash
       run: |
         echo "::group::Pre-start Validation"
-        
+
         # Check if image exists
         if ! docker image inspect "${{ inputs.image_name }}:${{ inputs.version }}" > /dev/null 2>&1; then
           echo "❌ Docker image not found: ${{ inputs.image_name }}:${{ inputs.version }}"
@@ -72,22 +72,21 @@ runs:
           docker images | grep "${{ inputs.image_name }}" || echo "No matching images found"
           exit 1
         fi
-        
-        # Check if network exists
+
+        # Ensure network exists (idempotent)
         if ! docker network inspect "${{ inputs.network_name }}" > /dev/null 2>&1; then
-          echo "❌ Docker network not found: ${{ inputs.network_name }}"
-          echo "Available networks:"
-          docker network ls
-          exit 1
+          echo "ℹ️ Docker network not found, creating: ${{ inputs.network_name }}"
+          docker network create "${{ inputs.network_name }}" > /dev/null
+          echo "✅ Docker network created: ${{ inputs.network_name }}"
         fi
-        
+
         # Check if port is available
         if netstat -ln | grep ":${{ inputs.service_port }}" > /dev/null 2>&1; then
           echo "⚠️ Port ${{ inputs.service_port }} appears to be in use"
           echo "Port usage:"
           netstat -ln | grep ":${{ inputs.service_port }}" || true
         fi
-        
+
         echo "✅ Pre-start validation completed"
         echo "::endgroup::"
 
@@ -95,7 +94,7 @@ runs:
       shell: bash
       run: |
         echo "::group::Container Cleanup"
-        
+
         # Remove existing container if it exists
         if docker ps -a --filter "name=${{ inputs.container_name }}" --format "{{.Names}}" | grep -q "^${{ inputs.container_name }}$"; then
           echo "🧹 Removing existing container: ${{ inputs.container_name }}"
@@ -105,7 +104,7 @@ runs:
         else
           echo "✅ No existing container to remove"
         fi
-        
+
         echo "::endgroup::"
 
     - name: Start Application Container
@@ -113,9 +112,9 @@ runs:
       shell: bash
       run: |
         echo "::group::Starting Application Container"
-        
+
         start_time=$(date +%s)
-        
+
         echo "🚀 Starting application container..."
         echo "📋 Container Configuration:"
         echo "  - Image: ${{ inputs.image_name }}:${{ inputs.version }}"
@@ -124,22 +123,22 @@ runs:
         echo "  - Port: ${{ inputs.service_port }}"
         echo "  - Memory Limit: ${{ inputs.memory_limit || 'none' }}"
         echo "  - CPU Limit: ${{ inputs.cpu_limit || 'none' }}"
-        
+
         # Build docker run command
         run_cmd="docker run -d"
         run_cmd="$run_cmd --name ${{ inputs.container_name }}"
         run_cmd="$run_cmd --network ${{ inputs.network_name }}"
         run_cmd="$run_cmd -p ${{ inputs.service_port }}:${{ inputs.service_port }}"
-        
+
         # Add resource limits if specified
         if [ -n "${{ inputs.memory_limit }}" ]; then
           run_cmd="$run_cmd --memory ${{ inputs.memory_limit }}"
         fi
-        
+
         if [ -n "${{ inputs.cpu_limit }}" ]; then
           run_cmd="$run_cmd --cpus ${{ inputs.cpu_limit }}"
         fi
-        
+
         # Add standard environment variables
         run_cmd="$run_cmd -e DEEPSEEK_API_KEY=${{ inputs.deepseek_api_key }}"
         run_cmd="$run_cmd -e PROXY_ROTATION_URL=${{ inputs.proxy_rotation_url }}"
@@ -150,7 +149,7 @@ runs:
         run_cmd="$run_cmd -e BROWSER_DISPLAY_MODE=HEADLESS"
         run_cmd="$run_cmd -e SERVER_PORT=${{ inputs.service_port }}"
         run_cmd="$run_cmd -e SERVER_ADDRESS=0.0.0.0"
-        
+
         # Add additional environment variables
         if [ -n "${{ inputs.additional_env_vars }}" ]; then
           echo "📋 Additional environment variables:"
@@ -161,16 +160,16 @@ runs:
             fi
           done
         fi
-        
+
         # Add image
         run_cmd="$run_cmd ${{ inputs.image_name }}:${{ inputs.version }}"
-        
+
         echo ""
         echo "🚀 Executing: $run_cmd"
-        
+
         # Start container
         container_id=$($run_cmd)
-        
+
         if [ -n "$container_id" ]; then
           echo "✅ Container started successfully"
           echo "Container ID: $container_id"
@@ -179,7 +178,7 @@ runs:
           echo "❌ Failed to start container"
           exit 1
         fi
-        
+
         echo "::endgroup::"
 
     - name: Monitor Container Startup
@@ -187,27 +186,27 @@ runs:
       shell: bash
       run: |
         echo "::group::Container Startup Monitoring"
-        
+
         startup_start=$(date +%s)
         timeout_seconds=${{ inputs.startup_timeout }}
-        
+
         echo "⏳ Monitoring container startup (timeout: ${timeout_seconds}s)..."
-        
+
         # Wait for container to be running
         attempt=1
         max_attempts=$((timeout_seconds / 2))
-        
+
         while [ $attempt -le $max_attempts ]; do
           current_time=$(date +%s)
           elapsed=$((current_time - startup_start))
-          
+
           if [ $elapsed -ge $timeout_seconds ]; then
             echo "❌ Container startup timeout after ${elapsed} seconds"
             break
           fi
-          
+
           container_status=$(docker inspect "${{ inputs.container_name }}" --format '{{.State.Status}}' 2>/dev/null || echo "not_found")
-          
+
           case $container_status in
             "running")
               startup_time=$((current_time - startup_start))
@@ -229,11 +228,11 @@ runs:
               echo "⏳ Container status: $container_status (attempt $attempt/$max_attempts, ${elapsed}s elapsed)"
               ;;
           esac
-          
+
           sleep 2
           ((attempt++))
         done
-        
+
         # Final status check
         if ! docker ps --filter "name=${{ inputs.container_name }}" --filter "status=running" | grep -q "${{ inputs.container_name }}"; then
           echo "❌ Container failed to start or is not running"
@@ -244,7 +243,7 @@ runs:
           docker logs "${{ inputs.container_name }}" 2>&1 || true
           exit 1
         fi
-        
+
         echo "::endgroup::"
 
     - name: Container Information
@@ -252,44 +251,44 @@ runs:
       shell: bash
       run: |
         echo "::group::Container Information"
-        
+
         # Get container details
         container_id=$(docker ps --filter "name=${{ inputs.container_name }}" --format "{{.ID}}")
         ip_address=$(docker inspect "${{ inputs.container_name }}" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
-        
+
         echo "ip_address=$ip_address" >> $GITHUB_OUTPUT
-        
+
         echo "📊 Container Details:"
         echo "  - Name: ${{ inputs.container_name }}"
         echo "  - ID: $container_id"
         echo "  - IP Address: $ip_address"
         echo "  - Status: $(docker inspect "${{ inputs.container_name }}" --format '{{.State.Status}}')"
         echo "  - Started At: $(docker inspect "${{ inputs.container_name }}" --format '{{.State.StartedAt}}')"
-        
+
         # Show port mappings
         echo ""
         echo "🌐 Port Mappings:"
         docker port "${{ inputs.container_name }}" || echo "No port mappings found"
-        
+
         # Show resource usage
         echo ""
         echo "📊 Resource Usage:"
         docker stats --no-stream "${{ inputs.container_name }}" 2>/dev/null || echo "Resource stats not available"
-        
+
         # Show recent logs
         echo ""
         echo "📋 Recent Logs (last 20 lines):"
         docker logs --tail 20 "${{ inputs.container_name }}" 2>&1 || true
-        
+
         echo "::endgroup::"
 
     - name: Network Connectivity Test
       shell: bash
       run: |
         echo "::group::Network Connectivity Test"
-        
+
         echo "🔍 Testing network connectivity..."
-        
+
         # Test internal network connectivity
         echo "Testing MongoDB connection..."
         if docker exec "${{ inputs.container_name }}" nc -z mongodb 27017 2>/dev/null; then
@@ -297,14 +296,14 @@ runs:
         else
           echo "❌ MongoDB connection failed"
         fi
-        
+
         echo "Testing Redis connection..."
         if docker exec "${{ inputs.container_name }}" nc -z redis 6379 2>/dev/null; then
           echo "✅ Redis connection successful"
         else
           echo "❌ Redis connection failed"
         fi
-        
+
         # Test external port binding
         echo "Testing external port binding..."
         if curl -s --connect-timeout 5 "http://localhost:${{ inputs.service_port }}/" > /dev/null 2>&1; then
@@ -312,5 +311,5 @@ runs:
         else
           echo "⚠️ External port binding test inconclusive (service may not be ready yet)"
         fi
-        
+
         echo "::endgroup::"
