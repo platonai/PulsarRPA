@@ -29,6 +29,12 @@ extracted
 .dockerignore
 Dockerfile
 
+!docs/development/maven
+
+*/target/**
+!**/src/main/java/com/github/kklisura/cdt/protocol/v2023/commands/Target.java
+!**/src/main/java/**
+
 **/application-private.yml
 application-private.yml
 
