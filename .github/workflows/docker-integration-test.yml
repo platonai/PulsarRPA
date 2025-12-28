@@ -1,4 +1,4 @@
-name: Docker E2E Test
+name: Docker Integration Test (Deprecated)
 
 on:
   workflow_dispatch:
