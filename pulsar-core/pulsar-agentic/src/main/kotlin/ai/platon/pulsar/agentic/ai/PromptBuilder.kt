@@ -4,7 +4,7 @@ import ai.platon.pulsar.agentic.AgentHistory
 import ai.platon.pulsar.agentic.ai.agent.ExtractParams
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.agentic.ai.agent.detail.ExecutionContext
-import ai.platon.pulsar.agentic.tools.ToolSpecification
+import ai.platon.pulsar.agentic.tools.ToolCallSpecificationRenderer
 import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.model.TabState
 import ai.platon.pulsar.common.KStrings
@@ -278,7 +278,7 @@ class ExtractionSchema(val fields: List<ExtractionField>)
 ## 工具列表
 
 ```
-${ToolSpecification.TOOL_CALL_SPECIFICATION}
+${ToolCallSpecificationRenderer.render(includeCustomDomains = true)}
 ```
 
 $TOOL_CALL_RULE_CONTENT
@@ -571,7 +571,7 @@ $A11Y_TREE_NOTE_CONTENT
 ## 工具列表
 
 ```
-${ToolSpecification.TOOL_CALL_SPECIFICATION}
+${ToolCallSpecificationRenderer.render(includeCustomDomains = true)}
 ```
 
 $TOOL_CALL_RULE_CONTENT

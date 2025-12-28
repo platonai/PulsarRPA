@@ -14,6 +14,7 @@ import ai.platon.pulsar.skeleton.crawl.fetch.FetchTask
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserProfile
 import ai.platon.pulsar.common.printlnPro
+import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.PrivacyContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
@@ -37,7 +38,8 @@ class PrivacyContextManagerTests {
 
     @BeforeTest
     fun setup() {
-        BrowserSettings.maxBrowserContexts(6).maxOpenTabs(10).withSequentialBrowsers(15)
+        PulsarSettings.maxBrowserContexts(6).maxOpenTabs(10)
+        BrowserSettings.withSequentialBrowsers(15)
         driverPoolManager = DefaultWebDriverPoolManager(conf)
     }
 

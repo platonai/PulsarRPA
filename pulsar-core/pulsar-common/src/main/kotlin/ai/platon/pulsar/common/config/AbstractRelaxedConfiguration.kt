@@ -18,19 +18,13 @@ import java.time.Instant
  * - `PORT` → `port`
  *
  * Property source precedence:
- * - With Spring `Environment`:
- *   1) in-memory/local overrides
- *   2) command-line arguments
- *   3) Java system properties
- *   4) OS environment variables
- *   5) Spring config files (`application.properties`/`application.yml`)
- *   6) in-memory/local overrides
- *   7) local config files under `${PULSAR_DATA_HOME}/config/conf-enabled`
- * - Without Spring `Environment`:
- *   1) in-memory/local overrides
- *   2) Java system properties
- *   3) OS environment variables
- *   4) local config files under `${PULSAR_DATA_HOME}/config/conf-enabled`
+ * 1. Dynamic/in-memory overrides
+ * 2. Spring Environment (if available)
+ * 3. Java System Properties
+ * 4. Java Environment Variables
+ * 5. Local file configuration
+ *    1. Spring Boot `application-private.properties`/`application.properties` even without Spring Environment
+ *    2. Files in `${PULSAR_DATA_HOME}/config/conf-enabled`
  *
  * Naming conventions:
  * - Set: keys normalized to `dot.separated.kebab-case` (e.g., `server.servlet.context-path`).
@@ -140,10 +134,13 @@ abstract class AbstractRelaxedConfiguration {
      * Retrieves a property value using the exact name provided, without applying relaxed binding rules.
      *
      * This method checks property sources in the following order:
-     * 1. Spring Environment (if available)
-     * 2. Java System Properties
-     * 3. Java Environment Variables
-     * 4. Local file configuration
+     * 1. Dynamic/in-memory overrides
+     * 2. Spring Environment (if available)
+     * 3. Java System Properties
+     * 4. Java Environment Variables
+     * 5. Local file configuration
+     *    1. Spring Boot `application-private.properties`/`application.properties` even without Spring Environment
+     *    2. Files in `${PULSAR_DATA_HOME}/config/conf-enabled`
      *
      * @param name The exact property name to look up
      * @return The property value, or null if not found
@@ -154,11 +151,17 @@ abstract class AbstractRelaxedConfiguration {
             return value
         }
 
-        return if (environment != null) {
-            environment?.getProperty(name) ?: multiSourceProperties.getPermanent(name)
-        } else {
-            System.getProperty(name) ?: System.getenv(name) ?: multiSourceProperties.getPermanent(name)
-        }
+//        return if (environment != null) {
+//            environment?.getProperty(name) ?: multiSourceProperties.getPermanent(name)
+//        } else {
+//            System.getProperty(name) ?: System.getenv(name) ?: multiSourceProperties.getPermanent(name)
+//        }
+
+        // Keep behavior consistent even when environment is null
+        return environment?.getProperty(name)
+            ?: System.getProperty(name)
+            ?: System.getenv(name)
+            ?: multiSourceProperties.getPermanent(name)
     }
 
     /**
@@ -175,10 +178,14 @@ abstract class AbstractRelaxedConfiguration {
      *
      * Browser4 resolves properties from multiple sources in the following order:
      *
-     * 1. 🔧 Java Environment Variables
-     * 2. ⚙️ Java System Properties
-     * 3. 📝 Spring Boot `application.properties`
-     * 4. 📁 Files in `${PULSAR_DATA_HOME}/config/conf-enabled`
+     * This method checks property sources in the following order:
+     * 1. Dynamic/in-memory overrides
+     * 2. Spring Environment (if available)
+     * 3. Java System Properties
+     * 4. Java Environment Variables
+     * 5. Local file configuration
+     *    1. Spring Boot `application-private.properties`/`application.properties` even without Spring Environment
+     *    2. Files in `${PULSAR_DATA_HOME}/config/conf-enabled`
      *
      * @param name The logical property name. Leading/trailing whitespace will be trimmed.
      * @return The resolved property value, or `null` if not found in any format.

@@ -19,12 +19,12 @@ import ai.platon.pulsar.agentic.ActionDescription
 import ai.platon.pulsar.agentic.AgentState
 import ai.platon.pulsar.agentic.ObserveElement
 import ai.platon.pulsar.agentic.ToolCall
+import ai.platon.pulsar.agentic.tools.ToolCallSpecificationRenderer
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonElement
-import com.mxgraph.io.graphml.mxGraphMlKey
 import java.nio.file.Files
 
 open class TextToAction(
@@ -52,7 +52,7 @@ open class TextToAction(
         val domState = domService.getDOMState(snapshotOptions = options)
         val browserUseState = domService.getBrowserUseState()
         val agentState = AgentState(1, "", browserUseState = browserUseState)
-        val toolCallExpressions = SourceCodeToToolCallSpec.webDriverToolCallList.joinToString("\n") { it.expression }
+        val toolCallExpressions = ToolCallSpecificationRenderer.render(includeCustomDomains = true)
 
         val promptTemplate = PromptTemplate(SINGLE_ACTION_GENERATION_PROMPT)
         val message = promptTemplate.render(

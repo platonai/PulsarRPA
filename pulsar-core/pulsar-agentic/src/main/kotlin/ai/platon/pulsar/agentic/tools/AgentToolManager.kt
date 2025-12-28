@@ -37,8 +37,49 @@ class AgentToolManager constructor(
 
     val executor = BasicToolCallExecutor(concreteExecutors)
 
+    /**
+     * Custom tool targets registry, mapping domain names to their corresponding target objects.
+     * Users can register custom targets here for their custom tool executors.
+     */
+    private val customTargets = mutableMapOf<String, Any>()
+
+    /**
+     * Register a custom target object for a specific domain.
+     * The target will be used when executing tool calls for the given domain.
+     *
+     * @param domain The domain name for the custom tool.
+     * @param target The target object to be used by the custom tool executor.
+     */
+    fun registerCustomTarget(domain: String, target: Any) {
+        customTargets[domain] = target
+        logger.info("✓ Registered custom target for domain: {}", domain)
+    }
+
+    /**
+     * Unregister a custom target for a specific domain.
+     *
+     * @param domain The domain to unregister.
+     * @return true if a target was removed, false otherwise.
+     */
+    fun unregisterCustomTarget(domain: String): Boolean {
+        val removed = customTargets.remove(domain)
+        if (removed != null) {
+            logger.info("✓ Unregistered custom target for domain: {}", domain)
+            return true
+        }
+        return false
+    }
+
     fun help(domain: String, method: String): String {
-        return concreteExecutors.firstOrNull { it.domain == domain }?.help(method) ?: ""
+        // Check built-in executors first
+        val builtInHelp = concreteExecutors.firstOrNull { it.domain == domain }?.help(method)
+        if (builtInHelp != null) {
+            return builtInHelp
+        }
+
+        // Check custom executors
+        val customExecutor = CustomToolRegistry.instance.get(domain)
+        return customExecutor?.help(method) ?: ""
     }
 
     @Throws(UnsupportedOperationException::class)
@@ -57,13 +98,27 @@ class AgentToolManager constructor(
         try {
             val tc = requireNotNull(actionDescription.toolCall) { "Tool call is required" }
 
+            // First try built-in tool domains
             val evaluate = when (tc.domain) {
                 "driver" -> executor.execute(tc, driver)
                 "browser" -> executor.execute(tc, driver.browser)
                 "fs" -> executor.execute(tc, fs)
                 "agent" -> executor.execute(tc, agent)
                 "system" -> executor.execute(tc, system)
-                else -> throw UnsupportedOperationException("❓ Unsupported domain: ${tc.domain} | $tc")
+                else -> {
+                    // Check if this is a custom tool domain
+                    val customExecutor = CustomToolRegistry.instance.get(tc.domain)
+                    if (customExecutor != null) {
+                        val target = customTargets[tc.domain]
+                            ?: throw UnsupportedOperationException(
+                                "❓ Custom domain '${tc.domain}' is registered but no target object is available. " +
+                                "Use registerCustomTarget() to provide the target object."
+                            )
+                        customExecutor.execute(tc, target)
+                    } else {
+                        throw UnsupportedOperationException("❓ Unsupported domain: ${tc.domain} | $tc")
+                    }
+                }
             }
 
             val tcResult = ToolCallResult(

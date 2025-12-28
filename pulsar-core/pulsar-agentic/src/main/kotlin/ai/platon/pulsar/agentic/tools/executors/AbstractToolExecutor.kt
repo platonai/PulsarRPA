@@ -13,7 +13,7 @@ interface ToolExecutor {
     val domain: String
     val targetClass: KClass<*>
 
-    suspend fun execute(tc: ToolCall, target: Any): TcEvaluate
+    suspend fun execute(tc: ToolCall, target: Any = Any()): TcEvaluate
 
     @Deprecated("Executing `expression` is deprecated")
     suspend fun execute(expression: String, target: Any): TcEvaluate

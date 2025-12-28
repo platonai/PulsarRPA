@@ -11,8 +11,6 @@ suspend fun main() {
         .withLLMName("ep-20250218132011-2scs8")
         .withLLMAPIKey(apiKey)
 
-    // Use the default browser which has an isolated profile
-    PulsarSettings.withSystemDefaultBrowser()
     // Create a pulsar session
     val session = PulsarContexts.createSession()
     // The main url we are playing with
