@@ -289,6 +289,19 @@ runs:
         df -h || true
         docker system df -v || docker system df || true
 
+        echo ""
+        echo "📦 /mnt usage (focused):"
+        df -h /mnt 2>/dev/null || true
+
+        echo ""
+        echo "📦 Largest directories under /mnt (>= 100MB):"
+        if [ -d /mnt ] && command -v du >/dev/null 2>&1; then
+          # -x: stay on one filesystem; -m: sizes in MB; -d 3: limit depth to keep output manageable.
+          du -x -m -d 3 /mnt 2>/dev/null | awk '$1 >= 100 {print}' | sort -nr | head -200 || true
+        else
+          echo "Skipping: /mnt not present or du unavailable"
+        fi
+
         echo "::endgroup::"
 
     - name: Image Information
