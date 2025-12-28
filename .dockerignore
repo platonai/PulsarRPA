@@ -29,6 +29,12 @@ extracted
 .dockerignore
 Dockerfile
 
+!docs/development/maven
+
+*/target/**
+!**/src/main/java/com/github/kklisura/cdt/protocol/v2023/commands/Target.java
+!**/src/main/java/**
+
 **/application-private.yml
 application-private.yml
 
@@ -48,3 +54,4 @@ docker/browser4/Dockerfile
 !**/src/main/kotlin/**
 
 !pulsar-app/pulsar-browser4/target/Browser4.jar
+

@@ -1,13 +1,13 @@
 services:
-  mongodb:
+  b4-mongodb:
     image: 'mongo:latest'
-    container_name: 'mongodb'
+    container_name: 'b4-mongodb'
     restart: always
     ports:
       - '27017:27017'
     command: ["mongod", "--bind_ip_all"]
     volumes:
-      - mongodb_data:/data/db
+      - b4_mongodb_data:/data/db
     networks:
       - backend
     healthcheck:
@@ -28,7 +28,7 @@ services:
     image: 'galaxyeye88/browser4:latest'
     container_name: 'browser4'
     depends_on:
-      mongodb:
+      b4-mongodb:
         condition: service_healthy
     environment:
       DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
@@ -63,4 +63,4 @@ networks:
     name: browser4_backend
 
 volumes:
-  mongodb_data:
+  b4_mongodb_data:
