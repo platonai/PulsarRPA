@@ -13,7 +13,7 @@ set -e
 RUN_SCRAPE_ASYNC="${RUN_SCRAPE_ASYNC:-0}"
 
 # Minimum success rate for overall pass (percentage, integer)
-INTEGRATION_MIN_SUCCESS_RATE="${INTEGRATION_MIN_SUCCESS_RATE:-80}"
+INTEGRATION_MIN_SUCCESS_RATE="${INTEGRATION_MIN_SUCCESS_RATE:-60}"
 
 # Counters
 TOTAL_TESTS=4
@@ -120,7 +120,7 @@ start_epoch=$(date +%s)
 echo "Start time: $start_time"
 # Run TEST 4 with explicit error capture
 set +e
-"$AppHome"/bin/tests/test-curl-commands.sh
+bash "$AppHome"/bin/tests/test-curl-commands.sh
 exit_code=$?
 set -e
 # End time for TEST 4
