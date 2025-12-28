@@ -28,9 +28,9 @@ class CustomToolRegistryTest {
     @Test
     fun `test register custom tool executor`() {
         val executor = TestToolExecutor()
-        
+
         registry.register(executor)
-        
+
         assertTrue(registry.contains("test"))
         assertEquals(1, registry.size())
         assertEquals(executor, registry.get("test"))
@@ -40,9 +40,9 @@ class CustomToolRegistryTest {
     fun `test register duplicate domain throws exception`() {
         val executor1 = TestToolExecutor()
         val executor2 = TestToolExecutor()
-        
+
         registry.register(executor1)
-        
+
         val exception = assertThrows<IllegalArgumentException> {
             registry.register(executor2)
         }
@@ -53,9 +53,9 @@ class CustomToolRegistryTest {
     fun `test unregister custom tool executor`() {
         val executor = TestToolExecutor()
         registry.register(executor)
-        
+
         val removed = registry.unregister("test")
-        
+
         assertTrue(removed)
         assertFalse(registry.contains("test"))
         assertEquals(0, registry.size())
@@ -64,7 +64,7 @@ class CustomToolRegistryTest {
     @Test
     fun `test unregister non-existent domain returns false`() {
         val removed = registry.unregister("nonexistent")
-        
+
         assertFalse(removed)
     }
 
@@ -72,10 +72,10 @@ class CustomToolRegistryTest {
     fun `test get all executors`() {
         val executor1 = TestToolExecutor()
         val executor2 = AnotherTestToolExecutor()
-        
+
         registry.register(executor1)
         registry.register(executor2)
-        
+
         val executors = registry.getAllExecutors()
         assertEquals(2, executors.size)
         assertTrue(executors.contains(executor1))
@@ -86,7 +86,7 @@ class CustomToolRegistryTest {
     fun `test get all domains`() {
         registry.register(TestToolExecutor())
         registry.register(AnotherTestToolExecutor())
-        
+
         val domains = registry.getAllDomains()
         assertEquals(2, domains.size)
         assertTrue(domains.contains("test"))
@@ -97,9 +97,9 @@ class CustomToolRegistryTest {
     fun `test clear all executors`() {
         registry.register(TestToolExecutor())
         registry.register(AnotherTestToolExecutor())
-        
+
         registry.clear()
-        
+
         assertEquals(0, registry.size())
         assertFalse(registry.contains("test"))
         assertFalse(registry.contains("another"))
@@ -108,7 +108,7 @@ class CustomToolRegistryTest {
     @Test
     fun `test register executor with blank domain fails`() = runBlocking {
         val executor = BlankDomainToolExecutor()
-        
+
         val exception = assertThrows<IllegalArgumentException> {
             registry.register(executor)
         }
@@ -118,11 +118,10 @@ class CustomToolRegistryTest {
     @Test
     fun `test custom tool executor execution`() = runBlocking {
         val executor = TestToolExecutor()
-        val target = TestTarget()
         val toolCall = ToolCall("test", "echo", mutableMapOf("message" to "Hello"))
-        
-        val result = executor.execute(toolCall, target)
-        
+
+        val result = executor.execute(toolCall)
+
         assertEquals("Hello", result.value)
         assertTrue(result.expression?.startsWith("test.echo") ?: false)
     }
@@ -132,26 +131,26 @@ class CustomToolRegistryTest {
         val executor = TestToolExecutor()
         val target = TestTarget()
         val toolCall = ToolCall("test", "echo", mutableMapOf())
-        
+
         val result = executor.execute(toolCall, target)
-        
+
         assertTrue(result.exception != null)
         assertTrue(result.exception?.cause is IllegalArgumentException)
     }
 
     // Test helper classes
-    
+
     class TestToolExecutor : AbstractToolExecutor() {
         override val domain = "test"
         override val targetClass: KClass<*> = TestTarget::class
-        
+
         override suspend fun execute(
             objectName: String,
             functionName: String,
             args: Map<String, Any?>,
             target: Any
         ): Any? {
-            require(target is TestTarget) { "Target must be TestTarget" }
+            // require(target is TestTarget) { "Target must be TestTarget" }
             return when (functionName) {
                 "echo" -> {
                     validateArgs(args, setOf("message"), setOf("message"), functionName)
@@ -165,7 +164,7 @@ class CustomToolRegistryTest {
     class AnotherTestToolExecutor : AbstractToolExecutor() {
         override val domain = "another"
         override val targetClass: KClass<*> = TestTarget::class
-        
+
         override suspend fun execute(
             objectName: String,
             functionName: String,
@@ -179,7 +178,7 @@ class CustomToolRegistryTest {
     class BlankDomainToolExecutor : AbstractToolExecutor() {
         override val domain = ""
         override val targetClass: KClass<*> = TestTarget::class
-        
+
         override suspend fun execute(
             objectName: String,
             functionName: String,

@@ -45,6 +45,7 @@ class CustomToolRegistry private constructor() {
     private val logger = getLogger(this)
 
     private val executors = ConcurrentHashMap<String, ToolExecutor>()
+    private val toolCallSpecs = ConcurrentHashMap<String, List<ai.platon.pulsar.agentic.ToolCallSpec>>()
 
     companion object {
         /**
@@ -56,6 +57,9 @@ class CustomToolRegistry private constructor() {
     /**
      * Register a custom tool executor for a specific domain.
      *
+     * If the executor also implements [ToolCallSpecificationProvider], its tool-call specs will be
+     * available for prompt injection.
+     *
      * @param executor The tool executor to register.
      * @throws IllegalArgumentException if an executor for this domain is already registered.
      */
@@ -66,12 +70,30 @@ class CustomToolRegistry private constructor() {
         if (executors.containsKey(domain)) {
             throw IllegalArgumentException(
                 "Tool executor for domain '$domain' is already registered. " +
-                "Use unregister() first if you want to replace it."
+                    "Use unregister() first if you want to replace it."
             )
         }
 
         executors[domain] = executor
+
+        val specs = (executor as? ToolCallSpecificationProvider)?.getToolCallSpecifications().orEmpty()
+        if (specs.isNotEmpty()) {
+            toolCallSpecs[domain] = specs
+        }
+
         logger.info("✓ Registered custom tool executor for domain: {}", domain)
+    }
+
+    /**
+     * Register a custom tool executor together with its prompt-visible tool-call specs.
+     *
+     * This is useful when the executor cannot (or doesn't want to) implement [ToolCallSpecificationProvider].
+     */
+    fun register(executor: ToolExecutor, specs: List<ai.platon.pulsar.agentic.ToolCallSpec>) {
+        register(executor)
+        if (specs.isNotEmpty()) {
+            toolCallSpecs[executor.domain] = specs
+        }
     }
 
     /**
@@ -82,6 +104,7 @@ class CustomToolRegistry private constructor() {
      */
     fun unregister(domain: String): Boolean {
         val removed = executors.remove(domain)
+        toolCallSpecs.remove(domain)
         if (removed != null) {
             logger.info("✓ Unregistered custom tool executor for domain: {}", domain)
             return true
@@ -128,10 +151,25 @@ class CustomToolRegistry private constructor() {
     }
 
     /**
+     * Get prompt-visible tool-call specs for a given domain.
+     */
+    fun getToolCallSpecifications(domain: String): List<ai.platon.pulsar.agentic.ToolCallSpec> {
+        return toolCallSpecs[domain].orEmpty()
+    }
+
+    /**
+     * Get all prompt-visible tool-call specs.
+     */
+    fun getAllToolCallSpecifications(): List<ai.platon.pulsar.agentic.ToolCallSpec> {
+        return toolCallSpecs.values.flatten()
+    }
+
+    /**
      * Clear all registered custom tool executors.
      */
     fun clear() {
         executors.clear()
+        toolCallSpecs.clear()
         logger.info("✓ Cleared all custom tool executors")
     }
 
