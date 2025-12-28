@@ -54,3 +54,4 @@ docker/browser4/Dockerfile
 !**/src/main/kotlin/**
 
 !pulsar-app/pulsar-browser4/target/Browser4.jar
+
