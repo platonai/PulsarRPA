@@ -16,7 +16,7 @@ Browser4 supports multiple configuration sources in order of precedence:
 
 Browser4 supports Spring Boot-style configuration files.
 
-A sample `application.properties` is located at the project root. For privacy, consider renaming it to `application-private.properties`.
+A sample `application.properties` is located at the project root. For privacy, recommend to renaming it to `application-private.properties`.
 
 #### For desktop usage:
 
@@ -46,12 +46,12 @@ For standard desktop usage:
 
 Linux/MacOS
 ```bash
-export VOLCENGINE_API_KEY=sk-yourdeepseekapikey
+export VOLCENGINE_API_KEY=sk-yourllmproviderapikey
 ```
 
 Windows (PowerShell)
 ```powershell
-$env:VOLCENGINE_API_KEY = "sk-yourdeepseekapikey"
+$env:VOLCENGINE_API_KEY = "sk-yourllmproviderapikey"
 ```
 
 If you want to use your daily used browser profile (remember closed the browser first):
@@ -91,7 +91,7 @@ $env:BROWSER_DISPLAY_MODE = "HEADLESS"
 Set configuration via command-line JVM args:
 
 ```
--Dvolcengine.api.key=sk-yourdeepseekapikey
+-Dvolcengine.api.key=sk-yourllmproviderapikey
 ```
 
 ---
