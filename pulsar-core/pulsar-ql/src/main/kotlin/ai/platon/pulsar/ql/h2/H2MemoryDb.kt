@@ -1,7 +1,5 @@
 package ai.platon.pulsar.ql.h2
 
-import ai.platon.pulsar.common.brief
-import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.warnInterruptible
 import org.h2.jdbc.JdbcSQLException
 import java.sql.Connection

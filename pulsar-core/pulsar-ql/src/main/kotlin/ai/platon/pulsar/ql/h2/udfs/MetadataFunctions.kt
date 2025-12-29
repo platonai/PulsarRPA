@@ -1,12 +1,13 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.persist.model.WebPageFormatter
+import ai.platon.pulsar.ql.common.annotation.H2Context
 import ai.platon.pulsar.ql.common.annotation.UDFGroup
 import ai.platon.pulsar.ql.common.annotation.UDFunction
 import ai.platon.pulsar.ql.h2.H2SessionFactory
-import ai.platon.pulsar.ql.common.annotation.H2Context
 import java.sql.Connection
 
+@Suppress("unused")
 @UDFGroup(namespace = "META")
 object MetadataFunctions {
 

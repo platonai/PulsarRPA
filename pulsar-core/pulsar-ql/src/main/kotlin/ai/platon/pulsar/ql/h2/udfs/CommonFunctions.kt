@@ -13,6 +13,7 @@ import java.sql.ResultSet
 import java.text.SimpleDateFormat
 import java.util.*
 
+@Suppress("unused")
 @UDFGroup
 object CommonFunctions {
 

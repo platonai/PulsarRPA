@@ -1,17 +1,18 @@
 package ai.platon.pulsar.ql.h2.udfs
 
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.ql.common.annotation.H2Context
 import ai.platon.pulsar.ql.common.annotation.UDFGroup
 import ai.platon.pulsar.ql.common.annotation.UDFunction
-import ai.platon.pulsar.ql.h2.H2SessionFactory
 import ai.platon.pulsar.ql.h2.DomToH2Queries
+import ai.platon.pulsar.ql.h2.H2SessionFactory
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import java.sql.Connection
 import java.sql.ResultSet
 import java.time.Duration
 
+@Suppress("unused")
 @UDFGroup(namespace = "META")
 object MetadataFunctionTables {
     private val volatileConfig = VolatileConfig()

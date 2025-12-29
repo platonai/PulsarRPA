@@ -7,6 +7,7 @@ import ai.platon.pulsar.ql.common.annotation.UDFunction
 import java.time.Instant
 import java.time.format.DateTimeFormatter
 
+@Suppress("unused")
 @UDFGroup(namespace = "TIME")
 object DateTimeFunctions {
     private val logger = getLogger(DateTimeFunctions::class)

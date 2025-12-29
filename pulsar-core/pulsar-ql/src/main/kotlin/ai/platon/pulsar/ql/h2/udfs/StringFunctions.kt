@@ -4,9 +4,6 @@ import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.ql.common.annotation.UDFGroup
 import ai.platon.pulsar.ql.common.annotation.UDFunction
 import org.apache.commons.lang3.StringUtils
-import org.apache.lucene.analysis.cn.smart.SmartChineseAnalyzer
-import org.apache.lucene.analysis.tokenattributes.CharTermAttribute
-import java.io.IOException
 import java.nio.charset.Charset
 import java.util.*
 
@@ -200,31 +197,5 @@ object StringFunctions {
     @JvmStatic
     fun getFirstFloatNumber(str: String?, defaultValue: Float): Float {
         return Strings.getFirstFloatNumber(str, defaultValue)
-    }
-
-    @UDFunction(description = "Chinese tokenizer")
-    @JvmStatic
-    @JvmOverloads
-    @Throws(IOException::class)
-    fun chineseTokenize(str: String?, sep: String = " "): String {
-        if (str.isNullOrBlank()) {
-            return ""
-        }
-
-        val analyzer = SmartChineseAnalyzer()
-
-        val sb = StringBuilder()
-
-        val tokenStream = analyzer.tokenStream("field", str)
-        val term = tokenStream.addAttribute(CharTermAttribute::class.java)
-        tokenStream.reset()
-        while (tokenStream.incrementToken()) {
-            sb.append(term.toString())
-            sb.append(sep)
-        }
-        tokenStream.end()
-        tokenStream.close()
-
-        return sb.toString()
     }
 }

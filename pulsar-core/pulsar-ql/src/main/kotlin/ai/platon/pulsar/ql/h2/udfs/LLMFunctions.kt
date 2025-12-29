@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger
 
 const val DATA_EXTRACTION_RULES_PLACEHOLDER = "{DATA_EXTRACTION_RULES}"
 
-val LLM_UDF_EXTRACT_PROMPT =
+const val LLM_UDF_EXTRACT_PROMPT =
     """
 Extract the specified fields from the given HTML content and return the result as a JSON object.
 
