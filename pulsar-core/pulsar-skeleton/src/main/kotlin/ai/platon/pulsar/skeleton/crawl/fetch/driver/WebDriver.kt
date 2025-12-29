@@ -385,7 +385,7 @@ interface WebDriver : Closeable {
 
     /**
      * Returns the source of the last loaded page. If the page has been modified after loading (for
-     * example, by Javascript) there is no guarantee that the returned text is that of the modified
+     * example, by JavaScript) there is no guarantee that the returned text is that of the modified
      * page.
      *
      * PageSource and outerHTML:
@@ -401,6 +401,12 @@ interface WebDriver : Closeable {
      */
     @Throws(WebDriverException::class)
     suspend fun pageSource(): String?
+
+    /**
+     * Returns the title of the current page.
+     * */
+    @Throws(WebDriverException::class)
+    suspend fun title(): String
 
     /**
      * Retrieve a nano version of the DOM tree, which is based on the accessibility tree, enhanced by DOM and document snapshot.

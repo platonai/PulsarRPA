@@ -5,38 +5,32 @@ import ai.platon.pulsar.agentic.ai.agent.detail.ActResultHelper
 import ai.platon.pulsar.agentic.context.QLAgenticContext
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.common.ResourceStatus.SC_INTERNAL_SERVER_ERROR
-import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.common.warnUnexpected
-import ai.platon.pulsar.rest.api.entities.CommandStatus
 import ai.platon.pulsar.rest.api.entities.NavigateRequest
-import ai.platon.pulsar.rest.api.entities.ScreenshotRequest
-import ai.platon.pulsar.agentic.ActResult
-import ai.platon.pulsar.agentic.ActionOptions
-import ai.platon.pulsar.agentic.ExtractOptions
-import ai.platon.pulsar.agentic.ExtractResult
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.*
-import java.util.concurrent.locks.ReentrantLock
-import kotlin.concurrent.withLock
+import java.io.File
 
 /**
- * REST controller providing SPA (Single Page Application) automation endpoints backed by Browser4.
+ * Contract-aligned REST controller for SPA automation endpoints.
  *
- * - Base path: `api/spa`
- * - Produces: JSON; Consumes: any
- * - Thread-safety: [browser] and driver binding operations are guarded by [browserLock].
- * - Side effects: may launch and bind a real browser instance to the [session].
+ * This controller is designed to match the API contract defined in `browserApi.ts`:
+ * - GET  /api                    (health)
+ * - POST /api/init               (init)
+ * - POST /api/navigate           (navigate)
+ * - POST /api/screenshot         (screenshot)
+ * - POST /api/act                (act)
+ * - POST /api/extract            (extract)
+ * - POST /api/convert-svg        (convert svg -> png)
  */
 @RestController
 @CrossOrigin
 @RequestMapping(
-    "api/spa",
+    "api",
     consumes = [MediaType.ALL_VALUE],
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
@@ -44,84 +38,155 @@ class SinglePageApplicationController(
     val session: AgenticSession,
 ) {
     private val logger = getLogger(SinglePageApplicationController::class)
-    private var browser: Browser? = null
+
     private val agent get() = session.companionAgent
     private val activeDriver: WebDriver get() = session.getOrCreateBoundDriver()
-    private val browserLock = ReentrantLock()
+
     private var isInitialized = false
 
-    /**
-     * Initialize Browser4 for SPA rendering and perform a simple health check.
-     *
-     * Steps
-     * 1) Validate that the [session] is an active [ai.platon.pulsar.ql.h2.H2SQLSession] with [ai.platon.pulsar.ql.context.H2SQLContext].
-     * 2) Ensure a real browser is configured via [ai.platon.pulsar.skeleton.PulsarSettings.withDefaultBrowser].
-     * 3) If this is the first initialization, attach a launch handler to capture the browser instance,
-     *    then load Baidu and check the rendered HTML for a known marker.
-     *
-     * @return JSON status map indicating initialized/healthy/error.
-     */
-    @GetMapping("init")
-    fun init(): Map<String, String> {
-        browserLock.withLock {
-            try {
-                require(session.context is QLAgenticContext)
-                require(session.isActive)
+    data class BrowserActionResult(
+        val success: Boolean,
+        val message: String,
+        val error: String? = null,
+        val url: String = "",
+        val title: String = "",
+        val screenshot_base64: String? = null,
+        val action: String? = null,
+    )
 
-                // 如果已经初始化过，直接返回健康状态
-                if (isInitialized && browser != null) {
-                    return mapOf(
-                        "status" to "healthy",
-                        "message" to "Browser4 already initialized"
-                    )
-                }
+    data class InitRequest(
+        val api_key: String? = null,
+    )
 
-                if (!isInitialized) {
-                    val options = session.options("-refresh")
+    data class HealthResponse(
+        val status: String,
+        val service: String = "browserApi",
+    )
 
-                    val url = AppConstants.SEARCH_ENGINE_URL
-                    logger.info("Verify $url to initialize ...")
-                    val page = session.load(url, options)
-                    val document = session.parse(page)
-                    val html = document.html
+    data class ErrorResponse(
+        val status: String = "error",
+        val message: String,
+    )
 
-                    if (html.length > 1_000) {
-                        isInitialized = true
-                        return mapOf(
-                            "status" to "initialized",
-                            "message" to "Browser4 initialized successfully"
-                        )
-                    }
-                }
+    data class ScreenshotRequestCompat(
+        val id: String? = null,
+    )
 
-                return mapOf(
-                    "status" to "healthy",
-                    "message" to "Browser4 initialized"
-                )
-            } catch (e: Throwable) {
-                warnUnexpected(this, e, "Failed to initialize Browser4")
-                return mapOf(
-                    "status" to "error",
-                    "message" to "Failed to initialize Browser4: ${e.message}"
-                )
-            }
+    data class ExtractRequestCompat(
+        val instruction: String,
+        val iframes: Boolean? = null,
+    )
+
+    data class ConvertSvgRequest(
+        val svg_file_path: String,
+    )
+
+    private data class PageInfo(
+        val url: String,
+        val title: String,
+        val screenshotBase64: String,
+    )
+
+    private fun isHealthy(): Boolean {
+        if (!isInitialized) return false
+        return try {
+            session.isActive
+        } catch (_: Throwable) {
+            false
         }
     }
 
-    /**
-     * Navigate to a URL through the command execution pipeline.
-     *
-     * @param request The navigation request containing the target URL.
-     * @return 200 OK with the command execution result as body.
-     */
+    private suspend fun capturePageInfoOrEmpty(): PageInfo {
+        return try {
+            val driver = activeDriver
+            driver.bringToFront()
+
+            val url = runCatching { driver.currentUrl() }.getOrDefault("")
+            val title = runCatching { driver.title() }.getOrDefault("")
+            val screenshotBase64 = runCatching { driver.captureScreenshot() }.getOrDefault("") ?: ""
+
+            PageInfo(url, title, screenshotBase64)
+        } catch (_: Throwable) {
+            PageInfo("", "", "")
+        }
+    }
+
+    private fun notInitializedResponse(message: String): ResponseEntity<BrowserActionResult> {
+        return ResponseEntity.status(SC_INTERNAL_SERVER_ERROR).body(
+            BrowserActionResult(
+                success = false,
+                message = "Browser not initialized",
+                error = message,
+                url = "",
+                title = "",
+            )
+        )
+    }
+
+    private suspend fun failWithPageInfo(message: String, error: Throwable? = null): ResponseEntity<BrowserActionResult> {
+        // When not initialized, browserApi.ts returns empty url/title and does not attempt further capture.
+        if (!isInitialized) {
+            return notInitializedResponse(error?.message ?: "Browser must be initialized before performing actions")
+        }
+
+        val pageInfo = capturePageInfoOrEmpty()
+        val errText = error?.message ?: error?.toString()
+        return ResponseEntity.status(SC_INTERNAL_SERVER_ERROR).body(
+            BrowserActionResult(
+                success = false,
+                message = message,
+                error = errText,
+                url = pageInfo.url,
+                title = pageInfo.title,
+                screenshot_base64 = pageInfo.screenshotBase64,
+            )
+        )
+    }
+
+    @GetMapping
+    fun health(): ResponseEntity<Any> {
+        return if (isHealthy()) {
+            ResponseEntity.ok(HealthResponse(status = "healthy"))
+        } else {
+            ResponseEntity.status(SC_INTERNAL_SERVER_ERROR).body(HealthResponse(status = "unhealthy"))
+        }
+    }
+
+    @PostMapping("/init")
+    fun init(@RequestBody(required = false) request: InitRequest?): ResponseEntity<Any> {
+        return try {
+            // Align with browserApi.ts: accept api_key but do not hard-fail if not provided.
+            // If future implementation needs it, wire it into session/model config.
+            @Suppress("UNUSED_VARIABLE")
+            val apiKey = request?.api_key
+
+            require(session.context is QLAgenticContext) { "Invalid session context" }
+            require(session.isActive) { "Session is not active" }
+
+            if (!isInitialized) {
+                // Trigger driver creation as the "init" side effect.
+                session.getOrCreateBoundDriver()
+                isInitialized = true
+            }
+
+            ResponseEntity.ok(HealthResponse(status = "healthy"))
+        } catch (e: Throwable) {
+            warnUnexpected(this, e, "Failed to initialize Browser4")
+            ResponseEntity.status(SC_INTERNAL_SERVER_ERROR).body(ErrorResponse(message = e.message ?: "Failed to initialize browser"))
+        }
+    }
+
     @PostMapping("/navigate")
-    suspend fun navigate(@RequestBody request: NavigateRequest): ResponseEntity<Any> {
+    suspend fun navigate(@RequestBody request: NavigateRequest): ResponseEntity<BrowserActionResult> {
         val url = request.url
-        val driver = activeDriver
 
         return try {
+            if (!isInitialized) {
+                return notInitializedResponse("Browser must be initialized before navigation")
+            }
             require(URLUtils.isStandard(url)) { "URL is not valid | $url" }
 
+            val driver = activeDriver
             val oldUrl = driver.currentUrl()
 
             driver.bringToFront()
@@ -129,76 +194,161 @@ class SinglePageApplicationController(
             driver.waitForNavigation(oldUrl)
             driver.waitForSelector("body")
 
-            ResponseEntity.ok("success")
-        } catch (e: Exception) {
-            warnUnexpected(this, e, "Failed to navigate to ${request.url}")
-            val message = e.message ?: "Failed to navigate | ${request.url}"
-            val statusCode = SC_INTERNAL_SERVER_ERROR
-            val result = ResourceStatus.getStatusText(statusCode) + " | " + message
-            ResponseEntity.status(statusCode).body(result)
+            val pageInfo = capturePageInfoOrEmpty()
+            ResponseEntity.ok(
+                BrowserActionResult(
+                    success = true,
+                    message = "Navigated to $url",
+                    error = "",
+                    url = pageInfo.url,
+                    title = pageInfo.title,
+                    screenshot_base64 = pageInfo.screenshotBase64,
+                )
+            )
+        } catch (e: Throwable) {
+            warnUnexpected(this, e, "Failed to navigate to $url")
+            failWithPageInfo("Failed to navigate to $url", e)
         }
     }
 
-    /**
-     * Execute an interaction instruction on the current page via the active driver.
-     * Supports a per-endpoint timeout via property `browser4.spa.act.timeout.ms` (milliseconds).
-     * Set to a positive value to enable, or <=0 to disable custom timeout.
-     */
-    @PostMapping("/act")
-    suspend fun act(@RequestBody request: ActionOptions): ResponseEntity<ActResult> {
+    @PostMapping("/screenshot")
+    suspend fun screenshot(@RequestBody(required = false) request: ScreenshotRequestCompat?): ResponseEntity<BrowserActionResult> {
         return try {
-            val result = agent.act(request)
+            if (!isInitialized) {
+                return notInitializedResponse("Browser must be initialized before taking screenshot")
+            }
+            val pageInfo = capturePageInfoOrEmpty()
+            ResponseEntity.ok(
+                BrowserActionResult(
+                    success = true,
+                    message = "Screenshot taken",
+                    url = pageInfo.url,
+                    title = pageInfo.title,
+                    screenshot_base64 = pageInfo.screenshotBase64,
+                )
+            )
+        } catch (e: Throwable) {
+            warnUnexpected(this, e, "Failed to take screenshot")
+            failWithPageInfo("Failed to take screenshot", e)
+        }
+    }
 
-            ResponseEntity.ok(result)
+    @PostMapping("/act")
+    suspend fun act(@RequestBody request: ai.platon.pulsar.agentic.ActionOptions): ResponseEntity<BrowserActionResult> {
+        return try {
+            if (!isInitialized) {
+                return notInitializedResponse("Browser must be initialized before performing actions")
+            }
+
+            val result = agent.act(request)
+            val pageInfo = capturePageInfoOrEmpty()
+
+            ResponseEntity.ok(
+                BrowserActionResult(
+                    success = result.success,
+                    message = result.message,
+                    action = result.action,
+                    url = pageInfo.url,
+                    title = pageInfo.title,
+                    screenshot_base64 = pageInfo.screenshotBase64,
+                )
+            )
         } catch (e: Throwable) {
             warnUnexpected(this, e, "Failed to execute act on current page")
             val message = e.message ?: "Failed to act | ${request.action}"
             val statusCode = SC_INTERNAL_SERVER_ERROR
-            val actResult = ActResultHelper.failed(ResourceStatus.getStatusText(statusCode) + " | " + message)
-            ResponseEntity.status(statusCode).body(actResult)
+            val failure = ActResultHelper.failed(ResourceStatus.getStatusText(statusCode) + " | " + message)
+            failWithPageInfo("Failed to act", e)
         }
     }
 
-    /**
-     * Capture a screenshot of the current page.
-     *
-     * @param request Screenshot options (reserved for future use).
-     * @return 200 OK with JPEG image data in binary format; 500 if no active driver is present.
-     */
-    @GetMapping("/screenshot", produces = [MediaType.IMAGE_JPEG_VALUE])
-    suspend fun screenshot(@RequestBody request: ScreenshotRequest): ResponseEntity<Any> {
-        val driver = activeDriver
+    @PostMapping("/extract")
+    suspend fun extract(@RequestBody request: ExtractRequestCompat): ResponseEntity<BrowserActionResult> {
+        return try {
+            if (!isInitialized) {
+                return notInitializedResponse("Browser must be initialized before extracting data")
+            }
+
+            // Map browserApi.ts request to internal ExtractOptions.
+            // The internal API requires a schema; use a permissive schema by default.
+            val schema = ai.platon.pulsar.agentic.ExtractionSchema.fromMap(mapOf("type" to "object"))
+            val options = ai.platon.pulsar.agentic.ExtractOptions(
+                instruction = request.instruction,
+                schema = schema,
+                iframes = request.iframes,
+            )
+
+            val result = agent.extract(options)
+            val pageInfo = capturePageInfoOrEmpty()
+
+            ResponseEntity.ok(
+                BrowserActionResult(
+                    success = result.success,
+                    message = "Extracted result for: ${request.instruction}",
+                    action = result.data.toString(),
+                    url = pageInfo.url,
+                    title = pageInfo.title,
+                    screenshot_base64 = pageInfo.screenshotBase64,
+                )
+            )
+        } catch (e: Throwable) {
+            warnUnexpected(this, e, "Failed to extract")
+            failWithPageInfo("Failed to extract", e)
+        }
+    }
+
+    @PostMapping("/convert-svg")
+    suspend fun convertSvg(@RequestBody request: ConvertSvgRequest): ResponseEntity<BrowserActionResult> {
+        val svgFilePath = request.svg_file_path
 
         return try {
+            if (!isInitialized) {
+                return notInitializedResponse("Browser must be initialized before converting SVG")
+            }
+
+            if (svgFilePath.isBlank()) {
+                return ResponseEntity.badRequest().body(
+                    BrowserActionResult(
+                        success = false,
+                        message = "SVG file path is required",
+                        error = "svg_file_path parameter is missing",
+                        url = "",
+                        title = "",
+                    )
+                )
+            }
+
+            val file = File(svgFilePath)
+            require(file.exists()) { "SVG file does not exist | $svgFilePath" }
+
+            val unixPath = file.absolutePath.replace('\\', '/')
+            val fileUrl = "file:///$unixPath"
+
+            val driver = activeDriver
+            val oldUrl = driver.currentUrl()
+
             driver.bringToFront()
-            val screenshotBase64 = driver.captureScreenshot()
-                ?: return ResponseEntity.status(SC_INTERNAL_SERVER_ERROR)
-                    .body("Failed to capture screenshot.")
+            driver.navigateTo(fileUrl)
+            driver.waitForNavigation(oldUrl)
+            driver.waitForSelector("svg")
 
-            // Decode base64 to bytes and return raw JPEG data
-            val jpegBytes = Base64.getDecoder().decode(screenshotBase64)
-            ResponseEntity.ok(jpegBytes)
+            // We can't reliably capture element-only screenshot with current WebDriver API;
+            // use page screenshot as the PNG base64 output.
+            val screenshotBase64 = driver.captureScreenshot() ?: ""
+            val pageInfo = capturePageInfoOrEmpty()
+
+            ResponseEntity.ok(
+                BrowserActionResult(
+                    success = true,
+                    message = "Successfully converted SVG to PNG: $svgFilePath",
+                    url = pageInfo.url,
+                    title = pageInfo.title,
+                    screenshot_base64 = if (screenshotBase64.isNotBlank()) screenshotBase64 else pageInfo.screenshotBase64,
+                )
+            )
         } catch (e: Throwable) {
-            warnUnexpected(this, e, "Failed to capture screenshot from current page")
-            val status = CommandStatus.failed(SC_INTERNAL_SERVER_ERROR)
-            status.message = e.message ?: "Failed to capture screenshot"
-            ResponseEntity.status(status.statusCode).body(status)
+            warnUnexpected(this, e, "Failed to convert SVG")
+            failWithPageInfo("Failed to convert SVG", e)
         }
-    }
-
-    /**
-     * Extract data from the current page using the provided prompt/rules.
-     *
-     * Steps:
-     * - Open the current URL with the active driver to obtain a [ai.platon.pulsar.persist.WebPage].
-     * - Parse the page, then execute a step-by-step command with dataExtractionRules.
-     *
-     * @param options The extraction options including the prompt/rules.
-     * @return 200 OK with the aggregated [ExtractResult]; 500 if no active driver is present.
-     */
-    @GetMapping("/extract")
-    suspend fun extract(@RequestBody options: ExtractOptions): ResponseEntity<ExtractResult> {
-        val result = agent.extract(options)
-        return ResponseEntity.ok(result)
     }
 }

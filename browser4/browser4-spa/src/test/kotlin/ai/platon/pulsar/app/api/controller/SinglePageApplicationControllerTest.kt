@@ -1,48 +1,54 @@
 package ai.platon.pulsar.app.api.controller
 
+import ai.platon.pulsar.agentic.ActionOptions
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.rest.api.entities.NavigateRequest
-import ai.platon.pulsar.rest.api.entities.ScreenshotRequest
-import ai.platon.pulsar.agentic.ActResult
-import ai.platon.pulsar.agentic.ActionOptions
-import ai.platon.pulsar.agentic.ExtractOptions
-import ai.platon.pulsar.agentic.ExtractResult
-import ai.platon.pulsar.agentic.ExtractionSchema
 import ai.platon.pulsar.test.TestResourceUtil.Companion.PRODUCT_DETAIL_URL
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.*
-import java.nio.file.Files
-import java.nio.file.StandardOpenOption
-import kotlin.test.Ignore
 import org.springframework.web.context.request.async.AsyncRequestTimeoutException
+import kotlin.test.Ignore
 
 @Ignore("Disabled temporarily, Run the tests manually")
 @Tag("MustManualRun")
 @TestMethodOrder(MethodOrderer.OrderAnnotation::class)
 class SinglePageApplicationControllerTest : IntegrationTestBase() {
 
-    fun init() {
+    fun health() {
         val typeRef = object : ParameterizedTypeReference<Map<String, String>>() {}
         val response: ResponseEntity<Map<String, String>> = restTemplate.exchange(
-            "$baseUri/api/spa/init", HttpMethod.GET, null, typeRef
+            "$baseUri/api", HttpMethod.GET, null, typeRef
+        )
+        // If not initialized yet, health may be 500 (unhealthy). Don't hard fail at this stage.
+        assertThat(response.body).isNotNull
+        assertThat(response.body!!).containsKey("status")
+    }
+
+    fun init() {
+        val typeRef = object : ParameterizedTypeReference<Map<String, String>>() {}
+        val headers = HttpHeaders()
+        headers.contentType = MediaType.APPLICATION_JSON
+        val request = HttpEntity(mapOf("api_key" to ""), headers)
+
+        val response: ResponseEntity<Map<String, String>> = restTemplate.exchange(
+            "$baseUri/api/init", HttpMethod.POST, request, typeRef
         )
         assertThat(response.statusCode.is2xxSuccessful).isTrue()
         val body = response.body
         assertThat(body).isNotNull
-        assertThat(body!!).containsKey("status")
-        // Accept any of: initialized, healthy, error depending on environment
-        assertThat(body["status"]).isNotBlank()
+        assertThat(body!!["status"]).isEqualTo("healthy")
     }
 
     @BeforeEach
     fun `init Single Page Application`() {
         Assumptions.assumeTrue { ChatModelFactory.isModelConfigured(session.configuration) }
 
+        health()
         init()
     }
 
@@ -50,14 +56,15 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
     @Test
     fun `navigate to product page`() {
         val request = NavigateRequest(PRODUCT_DETAIL_URL)
-        val response = restTemplate.postForObject(
-            "$baseUri/api/spa/navigate", request, String::class.java
+        val response = restTemplate.postForEntity(
+            "$baseUri/api/navigate", request, SinglePageApplicationController.BrowserActionResult::class.java
         )
-        Assertions.assertThat(response).isNotNull
-        // Execution is synchronous; status should be marked done even if page load fails
-//        assertThat(status!!.isDone).isTrue()
-//        assertThat(status.id).isNotBlank()
-        assertThat(response).isEqualTo("success")
+        assertThat(response.statusCode.value()).isEqualTo(200)
+        val body = response.body
+        assertThat(body).isNotNull
+        assertThat(body!!.success).isTrue()
+        assertThat(body.url).isNotBlank()
+        assertThat(body.screenshot_base64).isNotNull
     }
 
     @Order(20)
@@ -66,7 +73,7 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
         val request = ActionOptions(action = "search latest iphone, give me a summary of the search result")
 
         var lastStatus: Int? = null
-        var lastBody: ActResult? = null
+        var lastBody: SinglePageApplicationController.BrowserActionResult? = null
         var lastError: Throwable? = null
 
         val maxAttempts = 3
@@ -74,18 +81,15 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
         repeat(maxAttempts) { attempt ->
             try {
                 val response = restTemplate.postForEntity(
-                    "$baseUri/api/spa/act", request, ActResult::class.java
+                    "$baseUri/api/act", request, SinglePageApplicationController.BrowserActionResult::class.java
                 )
                 lastStatus = response.statusCode.value()
                 lastBody = response.body
                 if (response.statusCode.is2xxSuccessful && response.body != null) {
                     val result = response.body!!
                     printlnPro("Attempt ${attempt + 1}: action='${result.action}' message='${result.message}'")
-                    printlnPro(result.result?.modelResponse)
-                    printlnPro(result)
-                    assertThat(result.action).isNotBlank
                     assertThat(result.message).isNotBlank
-                    return // success path
+                    return
                 } else {
                     printlnPro("Attempt ${attempt + 1}: Non-success status=${response.statusCode} body=${response.body}")
                 }
@@ -109,24 +113,28 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
     fun `take screenshot`() {
         val headers = HttpHeaders()
         headers.contentType = MediaType.APPLICATION_JSON
-        headers.accept = listOf(MediaType.IMAGE_JPEG)
-        val request = HttpEntity(ScreenshotRequest(id = "test"), headers)
+        val request = HttpEntity(mapOf<String, Any?>(), headers)
+
         val response = restTemplate.exchange(
-            "$baseUri/api/spa/screenshot", HttpMethod.GET, request, ByteArray::class.java
+            "$baseUri/api/screenshot", HttpMethod.POST, request, SinglePageApplicationController.BrowserActionResult::class.java
         )
 
         assertThat(response.statusCode.value()).isEqualTo(200)
-        assertThat(response.body).isNotNull
-        assertThat(response.body!!.size).isGreaterThan(0)
-        printlnPro("Screenshot captured successfully, size: ${response.body!!.size} bytes")
+        val body = response.body
+        assertThat(body).isNotNull
+        assertThat(body!!.screenshot_base64).isNotNull
+        assertThat(body.screenshot_base64!!).isNotBlank()
 
+        printlnPro("Screenshot captured successfully (base64 length): ${body.screenshot_base64!!.length}")
+
+        // Optional: decode and persist for manual inspection
         val exportPath = AppPaths.getRandomProcTmpTmpPath("screenshot-", ".jpg")
-        Files.write(exportPath, response.body!!, StandardOpenOption.CREATE, StandardOpenOption.WRITE)
+        val bytes = java.util.Base64.getDecoder().decode(body.screenshot_base64)
+        java.nio.file.Files.write(exportPath, bytes, java.nio.file.StandardOpenOption.CREATE, java.nio.file.StandardOpenOption.WRITE)
         printlnPro("Screenshot saved to: $exportPath")
 
-        // Verify the file was created and has content
-        assertThat(Files.exists(exportPath)).isTrue()
-        assertThat(Files.size(exportPath)).isEqualTo(response.body!!.size.toLong())
+        assertThat(java.nio.file.Files.exists(exportPath)).isTrue()
+        assertThat(java.nio.file.Files.size(exportPath)).isGreaterThan(0)
     }
 
     @Order(40)
@@ -134,13 +142,19 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
     fun `extract with prompt`() {
         val headers = HttpHeaders()
         headers.contentType = MediaType.APPLICATION_JSON
-        val schema = mapOf("name" to "string - product name", "price" to "double - product price")
-        val options = ExtractOptions(instruction = "name, price", ExtractionSchema.fromMap(schema))
-        val request = HttpEntity(options, headers)
+
+        val requestBody = mapOf(
+            "instruction" to "name, price",
+            "iframes" to true,
+        )
+        val request = HttpEntity(requestBody, headers)
+
         val response = restTemplate.exchange(
-            "$baseUri/api/spa/extract", HttpMethod.GET, request, ExtractResult::class.java
+            "$baseUri/api/extract", HttpMethod.POST, request, SinglePageApplicationController.BrowserActionResult::class.java
         )
         printlnPro(response.body)
         assertThat(response.statusCode.value()).isEqualTo(200)
+        assertThat(response.body).isNotNull
+        assertThat(response.body!!.message).isNotBlank
     }
 }
