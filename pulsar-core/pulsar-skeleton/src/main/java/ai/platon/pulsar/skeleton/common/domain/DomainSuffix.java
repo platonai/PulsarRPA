@@ -33,7 +33,7 @@ package ai.platon.pulsar.skeleton.common.domain;
  *
  * @author Enis Soztutar &lt;enis.soz.pulsar@gmail.com&gt;
  * @see TopLevelDomain
- * @see domain-suffixes.xml
+ * @see `domain-suffixes.xml`
  */
 public class DomainSuffix {
 

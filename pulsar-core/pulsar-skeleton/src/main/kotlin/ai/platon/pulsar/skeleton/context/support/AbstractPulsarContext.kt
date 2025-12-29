@@ -3,7 +3,9 @@ package ai.platon.pulsar.skeleton.context.support
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.common.urls.*
+import ai.platon.pulsar.common.urls.DegenerateUrl
+import ai.platon.pulsar.common.urls.Hyperlink
+import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
@@ -17,11 +19,14 @@ import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.CombinedUrlNormalizer
 import ai.platon.pulsar.skeleton.common.urls.NormURL
 import ai.platon.pulsar.skeleton.context.PulsarContext
-import ai.platon.pulsar.skeleton.crawl.CrawlLoops
+import ai.platon.pulsar.skeleton.crawl.TaskLoops
 import ai.platon.pulsar.skeleton.crawl.common.FetchState
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
-import ai.platon.pulsar.skeleton.crawl.component.*
+import ai.platon.pulsar.skeleton.crawl.component.BatchFetchComponent
+import ai.platon.pulsar.skeleton.crawl.component.LoadComponent
+import ai.platon.pulsar.skeleton.crawl.component.ParseComponent
+import ai.platon.pulsar.skeleton.crawl.component.UpdateComponent
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
@@ -156,7 +161,7 @@ abstract class AbstractPulsarContext(
 
     override val globalCache: GlobalCache get() = globalCacheFactory.globalCache
 
-    override val crawlLoops: CrawlLoops get() = getBean()
+    override val taskLoops: TaskLoops get() = getBean()
 
     override val browserFactory: BrowserFactory get() = getBean()
 
@@ -500,7 +505,7 @@ abstract class AbstractPulsarContext(
     @Throws(InterruptedException::class)
     override fun await() {
         if (isActive) {
-            crawlLoops.await()
+            taskLoops.await()
         }
     }
 
@@ -603,7 +608,7 @@ abstract class AbstractPulsarContext(
 
     private fun startLoopIfNecessary() {
         if (isActive) {
-            crawlLoops.start()
+            taskLoops.start()
         }
     }
 }

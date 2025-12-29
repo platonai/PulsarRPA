@@ -3,12 +3,6 @@ package ai.platon.pulsar.boot.autoconfigure
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.context.AgenticContexts
 import ai.platon.pulsar.agentic.context.QLAgenticContext
-import ai.platon.pulsar.ql.context.H2SQLContext
-import ai.platon.pulsar.ql.context.SQLContext
-import ai.platon.pulsar.skeleton.crawl.CrawlLoops
-import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
-import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
-import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.springframework.context.ApplicationContext
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration

@@ -11,5 +11,5 @@ object GlobalEventHandlers {
      *
      * The more specific handlers has the opportunity to override the result of more general handlers.
      * */
-    val pageEventHandlers: PageEventHandlers? = null
+    var pageEventHandlers: PageEventHandlers? = null
 }

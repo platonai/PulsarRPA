@@ -1,6 +1,5 @@
 package ai.platon.pulsar.skeleton.crawl.protocol
 
-import ai.platon.pulsar.common.config.Configurable
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.skeleton.crawl.common.LazyConfigurable
 import com.google.common.io.Files

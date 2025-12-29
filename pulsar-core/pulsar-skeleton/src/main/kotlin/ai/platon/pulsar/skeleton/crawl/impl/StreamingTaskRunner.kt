@@ -9,7 +9,10 @@ import ai.platon.pulsar.common.config.CapabilityTypes.*
 import ai.platon.pulsar.common.emoji.PopularEmoji
 import ai.platon.pulsar.common.measure.ByteUnit
 import ai.platon.pulsar.common.proxy.*
-import ai.platon.pulsar.common.urls.*
+import ai.platon.pulsar.common.urls.CallableDegenerateUrl
+import ai.platon.pulsar.common.urls.DegenerateUrl
+import ai.platon.pulsar.common.urls.URLUtils
+import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.persist.AbstractWebPage
 import ai.platon.pulsar.persist.WebDBException
 import ai.platon.pulsar.persist.WebPage
@@ -97,7 +100,7 @@ private class GlobalCrawlState {
         get() = criticalWarning?.message?.let { "!!! WARNING !!! $it !!! ${Instant.now()}" } ?: ""
 }
 
-open class StreamingCrawler(
+open class StreamingTaskRunner(
     /**
      * The url sequence
      * */
@@ -110,7 +113,7 @@ open class StreamingCrawler(
      * Auto close or not
      * */
     autoClose: Boolean = true,
-) : AbstractCrawler(session, autoClose) {
+) : AbstractTaskRunner(session, autoClose) {
     companion object {
         private var globalState = GlobalCrawlState()
 
@@ -135,14 +138,14 @@ open class StreamingCrawler(
         }
 
         /**
-         * Reset the global state to the initial state. The global state is shared by all [StreamingCrawler]s.
+         * Reset the global state to the initial state. The global state is shared by all [StreamingTaskRunner]s.
          * */
         fun resetGlobalState() {
             globalState = GlobalCrawlState()
         }
 
         /**
-         * Clears all the illegal states shared by all [StreamingCrawler]s.
+         * Clears all the illegal states shared by all [StreamingTaskRunner]s.
          * Only when there is no illegal states set, the newly created crawler can work properly.
          * Other object scope data will keep unchanged, so we can still know what happened.
          * */
@@ -151,9 +154,9 @@ open class StreamingCrawler(
         }
     }
 
-    private val logger = getLogger(StreamingCrawler::class)
+    private val logger = getLogger(StreamingTaskRunner::class)
     private val tracer get() = logger.takeIf { it.isTraceEnabled }
-    private val taskLogger = getLogger(StreamingCrawler::class, ".Task")
+    private val taskLogger = getLogger(StreamingTaskRunner::class, ".Task")
     private val sessionConfig = session.sessionConfig
     private val context = session.context as AbstractPulsarContext
     private val globalCache get() = session.globalCache
@@ -315,7 +318,7 @@ open class StreamingCrawler(
     override fun report() {
         val sb = StringBuilder()
 
-        StreamingCrawler::class.memberProperties.filter { it.isAccessible }.forEach {
+        StreamingTaskRunner::class.memberProperties.filter { it.isAccessible }.forEach {
             sb.append(it.name).append(": ").append(it.get(this)).append("\n")
         }
 

@@ -1,10 +1,10 @@
 package ai.platon.pulsar.basic.component
 
-import ai.platon.pulsar.common.LinkExtractors
-import ai.platon.pulsar.skeleton.crawl.component.LoadComponent
-import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.basic.TestBase
+import ai.platon.pulsar.common.LinkExtractors
+import ai.platon.pulsar.common.printlnPro
+import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.skeleton.crawl.component.LoadComponent
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.collect
@@ -44,7 +44,7 @@ class LoadComponentTests: TestBase() {
     @BeforeEach
     fun clearResources() {
         session.globalCache.resetCaches()
-        session.context.crawlLoops.restart()
+        session.context.taskLoops.restart()
 
         session.delete(url)
         urls.forEach { session.delete(it) }

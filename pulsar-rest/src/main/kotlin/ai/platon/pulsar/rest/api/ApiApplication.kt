@@ -1,7 +1,7 @@
 package ai.platon.pulsar.rest.api
 
 import ai.platon.pulsar.boot.autoconfigure.PulsarContextInitializer
-import ai.platon.pulsar.skeleton.crawl.CrawlLoops
+import ai.platon.pulsar.skeleton.crawl.TaskLoops
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
 import org.springframework.boot.autoconfigure.SpringBootApplication
@@ -20,7 +20,7 @@ import org.springframework.context.annotation.ImportResource
 class ApiApplication(
     val globalCache: GlobalCache,
     val globalCacheFactory: GlobalCacheFactory,
-    val crawlLoops: CrawlLoops
+    val taskLoops: TaskLoops
 )
 
 fun main(args: Array<String>) {

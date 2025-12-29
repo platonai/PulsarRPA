@@ -3,7 +3,6 @@ package ai.platon.pulsar.skeleton.session
 import ai.platon.pulsar.common.CheckState
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.extractor.TextDocument
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.external.ModelResponse
@@ -159,22 +158,27 @@ interface PulsarSession : AutoCloseable {
      * The in-process unique id.
      * */
     val id: Long
+
     /**
      * The universally unique identifier (UUID). A UUID represents a 128-bit value.
      * */
     val uuid: String
+
     /**
      * A short descriptive display text.
      * */
     val display: String
+
     /**
      * Check if the session is active.
      * */
     val isActive: Boolean
+
     /**
      * The pulsar context which is used to create this session.
      * */
     val context: PulsarContext
+
     /**
      * The main configuration.
      *
@@ -198,26 +202,32 @@ interface PulsarSession : AutoCloseable {
      * The global page cache.
      * */
     val pageCache: PageCatch
+
     /**
      * The global document cache.
      * */
     val documentCache: DocumentCatch
+
     /**
      * The global cache.
      * */
     val globalCache: GlobalCache
+
     /**
      * The bound driver. If there is a bound driver, all subsequential actions that needed a driver use the bound one.
      * */
     val boundDriver: WebDriver?
+
     /**
      * The bound browser. If there is a bound browser, all subsequential actions that needed a browser use the bound one.
      * */
     val boundBrowser: Browser?
+
     /**
      * Disable page cache and document cache
      * */
     fun disablePDCache()
+
     /**
      * Register a closable object to the session.
      *
@@ -226,6 +236,7 @@ interface PulsarSession : AutoCloseable {
      * @see PulsarContext.registerClosable
      */
     fun registerClosable(closable: AutoCloseable)
+
     /**
      * Get a variable which is stored in this session
      *
@@ -233,6 +244,7 @@ interface PulsarSession : AutoCloseable {
      * @return The value of the variable
      * */
     fun data(name: String): Any?
+
     /**
      * Store a variable in this session
      *
@@ -240,26 +252,32 @@ interface PulsarSession : AutoCloseable {
      * @param value The value of the variable
      * */
     fun data(name: String, value: Any)
+
     /**
      * Get a property from the session scope.
      * */
     fun property(name: String): String?
+
     /**
      * Set a session scope property.
      * */
     fun property(name: String, value: String)
+
     /**
      * Create a new [LoadOptions] object with [args].
      * */
     fun options(args: String = ""): LoadOptions
+
     /**
      * Create a new [LoadOptions] object with [args] and [eventHandlers].
      * */
     fun options(args: String = "", eventHandlers: PageEventHandlers?): LoadOptions
+
     /**
      * Create a new [LoadOptions] object with [options].
      * */
     fun normalize(options: LoadOptions): LoadOptions
+
     /**
      * Normalize a url.
      *
@@ -267,6 +285,7 @@ interface PulsarSession : AutoCloseable {
      * @return The normalized url
      * */
     fun normalize(url: String): NormURL
+
     /**
      * Normalize a url.
      *
@@ -276,6 +295,7 @@ interface PulsarSession : AutoCloseable {
      * @return The normalized url
      * */
     fun normalize(url: String, args: String, toItemOption: Boolean = false): NormURL
+
     /**
      * Normalize a url.
      *
@@ -285,6 +305,7 @@ interface PulsarSession : AutoCloseable {
      * @return The normalized url
      * */
     fun normalize(url: String, options: LoadOptions, toItemOption: Boolean = false): NormURL
+
     /**
      * Normalize a url, return null if the url is invalid.
      *
@@ -294,6 +315,7 @@ interface PulsarSession : AutoCloseable {
      * @return The normalized url or null
      * */
     fun normalizeOrNull(url: String?, options: LoadOptions = options(), toItemOption: Boolean = false): NormURL?
+
     /**
      * Normalize urls, remove invalid ones.
      *
@@ -301,6 +323,7 @@ interface PulsarSession : AutoCloseable {
      * @return All normalized urls
      * */
     fun normalize(urls: Iterable<String>): List<NormURL>
+
     /**
      * Normalize urls, remove invalid ones.
      *
@@ -310,6 +333,7 @@ interface PulsarSession : AutoCloseable {
      * @return All normalized urls
      * */
     fun normalize(urls: Iterable<String>, args: String, toItemOption: Boolean = false): List<NormURL>
+
     /**
      * Normalize urls, remove invalid ones.
      *
@@ -319,6 +343,7 @@ interface PulsarSession : AutoCloseable {
      * @return All normalized urls
      * */
     fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean = false): List<NormURL>
+
     /**
      * Normalize a url, return `NormURL.NIL` if the url is invalid.
      *
@@ -326,6 +351,7 @@ interface PulsarSession : AutoCloseable {
      * @return The normalized url
      * */
     fun normalize(url: UrlAware): NormURL
+
     /**
      * Normalize a url, return `NormURL.NIL` if the url is invalid.
      *
@@ -335,6 +361,7 @@ interface PulsarSession : AutoCloseable {
      * @return The normalized url
      * */
     fun normalize(url: UrlAware, args: String, toItemOption: Boolean = false): NormURL
+
     /**
      * Normalize a url, return `NormURL.NIL` if the url is invalid.
      *
@@ -344,6 +371,7 @@ interface PulsarSession : AutoCloseable {
      * @return The normalized url
      * */
     fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean = false): NormURL
+
     /**
      * Normalize a url, return null if the url is invalid.
      *
@@ -353,6 +381,7 @@ interface PulsarSession : AutoCloseable {
      * @return The normalized url or null
      * */
     fun normalizeOrNull(url: UrlAware?, options: LoadOptions = options(), toItemOption: Boolean = false): NormURL?
+
     /**
      * Normalize urls, remove invalid ones.
      *
@@ -360,6 +389,7 @@ interface PulsarSession : AutoCloseable {
      * @return All normalized urls
      * */
     fun normalize(urls: Collection<UrlAware>): List<NormURL>
+
     /**
      * Normalize urls, remove invalid ones
      *
@@ -518,6 +548,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     fun open(url: String, eventHandlers: PageEventHandlers): WebPage
+
     /**
      * Open a url with webdriver.
      *
@@ -532,6 +563,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage loaded or NIL
      */
     suspend fun open(url: String, driver: WebDriver): WebPage
+
     /**
      * Open a url with page events and webdriver.
      *
@@ -572,10 +604,12 @@ interface PulsarSession : AutoCloseable {
      * Create the default driver and bind it to the session.
      */
     fun createBoundDriver(): WebDriver
+
     /**
      * Create the default driver and bind it to the session.
      */
     fun getOrCreateBoundDriver(): WebDriver
+
     /**
      * Bind a webdriver to the session.
      *
@@ -584,6 +618,7 @@ interface PulsarSession : AutoCloseable {
      * ```
      */
     fun bindDriver(driver: WebDriver)
+
     /**
      * Bind a browser to the session.
      *
@@ -1333,7 +1368,8 @@ interface PulsarSession : AutoCloseable {
      * */
     fun submit(url: UrlAware, options: LoadOptions): PulsarSession = throw NotImplementedError(
         "The signature submit(UrlAware, LoadOptions) is a confusing version, " +
-                "it's too complicated to handle events and should not be implemented.")
+                "it's too complicated to handle events and should not be implemented."
+    )
 
     /**
      * Submit urls to the URL pool, and they will be subsequently processed in the crawl loop.
@@ -1430,15 +1466,19 @@ interface PulsarSession : AutoCloseable {
      * No such version, it's too complicated to handle events
      * */
     fun submitAll(urls: Collection<UrlAware>, options: LoadOptions): PulsarSession =
-        throw NotImplementedError("The signature submitAll(Collection<UrlAware>, LoadOptions) is a confusing version, " +
-                "it's too complicated to handle events and should not be implemented.")
+        throw NotImplementedError(
+            "The signature submitAll(Collection<UrlAware>, LoadOptions) is a confusing version, " +
+                    "it's too complicated to handle events and should not be implemented."
+        )
 
     /**
      * No such confusing version
      * */
     fun loadOutPages(portalUrl: String): List<WebPage> =
-        throw NotImplementedError("The signature loadOutPages(String) is a confusing version and should not be " +
-                "implemented.")
+        throw NotImplementedError(
+            "The signature loadOutPages(String) is a confusing version and should not be " +
+                    "implemented."
+        )
 
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
@@ -1476,8 +1516,10 @@ interface PulsarSession : AutoCloseable {
      * A confusing version, it's too complicated to handle events and should not be implemented.
      */
     fun loadOutPages(portalUrl: UrlAware): List<WebPage> =
-        throw NotImplementedError("The signature loadOutPages(UrlAware) is a confusing version, it's too complicated to " +
-                "handle events and should not be implemented.")
+        throw NotImplementedError(
+            "The signature loadOutPages(UrlAware) is a confusing version, it's too complicated to " +
+                    "handle events and should not be implemented."
+        )
 
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option.
@@ -1515,8 +1557,10 @@ interface PulsarSession : AutoCloseable {
      * A confusing version, it's too complicated to handle events and should not be implemented.
      */
     fun loadOutPages(portalUrl: NormURL): List<WebPage> =
-        throw NotImplementedError("The signature loadOutPages(NormURL) is " +
-                "a confusing version, it's too complicated to handle events and should not be implemented.")
+        throw NotImplementedError(
+            "The signature loadOutPages(NormURL) is " +
+                    "a confusing version, it's too complicated to handle events and should not be implemented."
+        )
 
     /**
      * Load or fetch the portal page, and then load or fetch the out links selected by `-outLink` option asynchronously.
@@ -1657,6 +1701,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage containing the resource
      */
     fun loadResource(url: String, referrer: String): WebPage
+
     /**
      * Load a url as a resource without browser rendering.
      *
@@ -1673,6 +1718,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage containing the resource
      */
     fun loadResource(url: String, referrer: String, args: String): WebPage
+
     /**
      * Load a url as a resource without browser rendering.
      *
@@ -1708,6 +1754,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage containing the resource
      */
     suspend fun loadResourceDeferred(url: String, referrer: String): WebPage
+
     /**
      * Load a url as a resource without browser rendering.
      *
@@ -1727,6 +1774,7 @@ interface PulsarSession : AutoCloseable {
      * @return The webpage containing the resource
      */
     suspend fun loadResourceDeferred(url: String, referrer: String, args: String): WebPage
+
     /**
      * Load a url as a resource without browser rendering.
      *
@@ -1795,6 +1843,7 @@ interface PulsarSession : AutoCloseable {
      * @return The parsed HTML document
      * */
     fun loadDocument(url: String): FeaturedDocument
+
     /**
      * Load or fetch a webpage and parse it into an HTML document
      *
@@ -1807,6 +1856,7 @@ interface PulsarSession : AutoCloseable {
      * @return The parsed HTML document
      * */
     fun loadDocument(url: String, args: String): FeaturedDocument
+
     /**
      * Load or fetch a webpage and parse it into an HTML document
      *
@@ -1819,6 +1869,7 @@ interface PulsarSession : AutoCloseable {
      * @return The parsed HTML document
      * */
     fun loadDocument(url: String, options: LoadOptions): FeaturedDocument
+
     /**
      * Load or fetch a webpage and parse it into an HTML document
      *
@@ -1830,6 +1881,7 @@ interface PulsarSession : AutoCloseable {
      * @return The parsed HTML document
      * */
     fun loadDocument(url: UrlAware): FeaturedDocument
+
     /**
      * Load or fetch a webpage and parse it into an HTML document
      *
@@ -1842,6 +1894,7 @@ interface PulsarSession : AutoCloseable {
      * @return The parsed HTML document
      * */
     fun loadDocument(url: UrlAware, args: String): FeaturedDocument
+
     /**
      * Load or fetch a webpage and parse it into an HTML document
      *
@@ -1854,6 +1907,7 @@ interface PulsarSession : AutoCloseable {
      * @return The parsed HTML document
      * */
     fun loadDocument(url: UrlAware, options: LoadOptions): FeaturedDocument
+
     /**
      * Load or fetch a webpage and then parse it into an HTML document.
      *
@@ -1865,6 +1919,7 @@ interface PulsarSession : AutoCloseable {
      * @return The parsed HTML document
      * */
     fun loadDocument(url: NormURL): FeaturedDocument
+
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
@@ -1879,6 +1934,7 @@ interface PulsarSession : AutoCloseable {
      * @return All the extracted fields and their selectors
      * */
     fun extract(document: FeaturedDocument, fieldSelectors: Iterable<String>): Map<String, String?>
+
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
@@ -1893,7 +1949,12 @@ interface PulsarSession : AutoCloseable {
      * @param restrictSelector A CSS selector to locate a DOM where all fields are restricted to
      * @return All the extracted fields and their selectors
      * */
-    fun extract(document: FeaturedDocument, restrictSelector: String, fieldSelectors: Iterable<String>): List<Map<String, String?>>
+    fun extract(
+        document: FeaturedDocument,
+        restrictSelector: String,
+        fieldSelectors: Iterable<String>
+    ): List<Map<String, String?>>
+
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
@@ -1908,6 +1969,7 @@ interface PulsarSession : AutoCloseable {
      * @return All the extracted fields and their selectors
      * */
     fun extract(document: FeaturedDocument, fieldSelectors: Map<String, String>): Map<String, String?>
+
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
@@ -1922,7 +1984,11 @@ interface PulsarSession : AutoCloseable {
      * @param fieldSelectors The selectors to extract fields
      * @return All the extracted fields and their selectors
      * */
-    fun extract(document: FeaturedDocument, restrictSelector: String, fieldSelectors: Map<String, String>): List<Map<String, String?>>
+    fun extract(
+        document: FeaturedDocument,
+        restrictSelector: String,
+        fieldSelectors: Map<String, String>
+    ): List<Map<String, String?>>
 
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
@@ -1953,6 +2019,7 @@ interface PulsarSession : AutoCloseable {
      * @return All the extracted fields and their selectors
      * */
     fun scrape(url: String, options: LoadOptions, fieldSelectors: Iterable<String>): Map<String, String?>
+
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
@@ -1967,6 +2034,7 @@ interface PulsarSession : AutoCloseable {
      * @return All the extracted fields and their names
      * */
     fun scrape(url: String, args: String, fieldSelectors: Map<String, String>): Map<String, String?>
+
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
@@ -1981,6 +2049,7 @@ interface PulsarSession : AutoCloseable {
      * @return All the extracted fields and their names
      * */
     fun scrape(url: String, options: LoadOptions, fieldSelectors: Map<String, String>): Map<String, String?>
+
     /**
      * Load or fetch a webpage located by the given url, and then extract fields specified by
      * field selectors.
@@ -2085,7 +2154,11 @@ interface PulsarSession : AutoCloseable {
      * @param fieldSelectors CSS selectors to extract fields from out pages
      * @return All extracted fields. For each out page, fields extracted with their selectors are saved in a map.
      * */
-    fun scrapeOutPages(portalUrl: String, options: LoadOptions, fieldSelectors: Iterable<String>): List<Map<String, String?>>
+    fun scrapeOutPages(
+        portalUrl: String,
+        options: LoadOptions,
+        fieldSelectors: Iterable<String>
+    ): List<Map<String, String?>>
 
     /**
      * Load or fetch out pages specified by out link selector, and then extract fields specified by
@@ -2153,7 +2226,11 @@ interface PulsarSession : AutoCloseable {
      * @param fieldSelectors CSS selectors to extract fields from out pages
      * @return All extracted fields. For each out page, fields extracted with their names are saved in a map.
      * */
-    fun scrapeOutPages(portalUrl: String, options: LoadOptions, fieldSelectors: Map<String, String>): List<Map<String, String?>>
+    fun scrapeOutPages(
+        portalUrl: String,
+        options: LoadOptions,
+        fieldSelectors: Map<String, String>
+    ): List<Map<String, String?>>
 
     /**
      * Load or fetch out pages specified by out link selector, and then extract fields specified by
@@ -2194,83 +2271,43 @@ interface PulsarSession : AutoCloseable {
     ): List<Map<String, String?>>
 
     /**
-     * Harvest the content of a webpage using a web content extractor engine.
+     * Initiates a chat with the AI model using a general prompt.
+     * This method sends the provided prompt to the AI model without any additional context.
      *
-     * Available engines are "boilerpipe".
-     *
-     * ```kotlin
-     * val document = session.harvest("http://example.com", "-expire 1d")
-     * println(document.textContent)
-     * ```
-     *
-     * @param url The url to harvest
-     * @param args The load arguments
-     * @param engine The content extractor engine, default is "boilerpipe".
-     * @return The harvested text document
-     *
-     * @see [boilerpipe ](https://github.com/kohlschutter/boilerpipe)
-     * @see [boilerpipe-web](https://boilerpipe-web.appspot.com/)
-     * */
-    @Deprecated("Will be removed in a future release.")
-    fun harvest(url: String, args: String = "", engine: String = "boilerpipe"): TextDocument
-    /**
-     * Harvest the content of a webpage using a web content extractor engine.
-     *
-     * Available engines are "boilerpipe".
-     *
-     * ```kotlin
-     * val page = session.load("http://example.com")
-     * val document = session.harvest(page, "boilerpipe")
-     * println(document.textContent)
-     * ```
-     *
-     * @param page The webpage to harvest
-     * @param engine The content extractor engine, default is "boilerpipe".
-     * @return The harvested text document
-     *
-     * @see [boilerpipe ](https://github.com/kohlschutter/boilerpipe)
-     * @see [boilerpipe-web](https://boilerpipe-web.appspot.com/)
-     * */
-    @Deprecated("Will be removed in a future release.")
-    fun harvest(page: WebPage, engine: String = "boilerpipe"): TextDocument
-    /**
-      * Initiates a chat with the AI model using a general prompt.
-      * This method sends the provided prompt to the AI model without any additional context.
-      *
-      * @param prompt The prompt or query to be sent to the AI model.
-      * @return The response from the AI model encapsulated in a [ModelResponse] object.
-      */
+     * @param prompt The prompt or query to be sent to the AI model.
+     * @return The response from the AI model encapsulated in a [ModelResponse] object.
+     */
     suspend fun chat(prompt: String): ModelResponse
 
-     /**
-      * Initiates a chat with the AI model about a specific webpage.
-      * The method sends the provided prompt along with the HTML source code of the specified webpage to the AI model.
-      *
-      * @param prompt The prompt or query to be sent to the AI model.
-      * @param page The [WebPage] object containing the webpage's content to provide context for the chat.
-      * @return The response from the AI model encapsulated in a [ModelResponse] object.
-      */
-     suspend fun chat(prompt: String, page: WebPage): ModelResponse
+    /**
+     * Initiates a chat with the AI model about a specific webpage.
+     * The method sends the provided prompt along with the HTML source code of the specified webpage to the AI model.
+     *
+     * @param prompt The prompt or query to be sent to the AI model.
+     * @param page The [WebPage] object containing the webpage's content to provide context for the chat.
+     * @return The response from the AI model encapsulated in a [ModelResponse] object.
+     */
+    suspend fun chat(prompt: String, page: WebPage): ModelResponse
 
-     /**
-      * Initiates a chat with the AI model about a specific document.
-      * The method sends the provided prompt along with the text content of the specified document to the AI model.
-      *
-      * @param prompt The prompt or query to be sent to the AI model.
-      * @param document The [FeaturedDocument] object containing the document's text content to provide context for the chat.
-      * @return The response from the AI model encapsulated in a [ModelResponse] object.
-      */
-     suspend fun chat(prompt: String, document: FeaturedDocument): ModelResponse
+    /**
+     * Initiates a chat with the AI model about a specific document.
+     * The method sends the provided prompt along with the text content of the specified document to the AI model.
+     *
+     * @param prompt The prompt or query to be sent to the AI model.
+     * @param document The [FeaturedDocument] object containing the document's text content to provide context for the chat.
+     * @return The response from the AI model encapsulated in a [ModelResponse] object.
+     */
+    suspend fun chat(prompt: String, document: FeaturedDocument): ModelResponse
 
-     /**
-      * Initiates a chat with the AI model about a specific HTML element.
-      * The method sends the provided prompt along with the text content of the specified HTML element to the AI model.
-      *
-      * @param prompt The prompt or query to be sent to the AI model.
-      * @param element The [Element] object containing the HTML element's text content to provide context for the chat.
-      * @return The response from the AI model encapsulated in a [ModelResponse] object.
-      */
-     suspend fun chat(prompt: String, element: Element): ModelResponse
+    /**
+     * Initiates a chat with the AI model about a specific HTML element.
+     * The method sends the provided prompt along with the text content of the specified HTML element to the AI model.
+     *
+     * @param prompt The prompt or query to be sent to the AI model.
+     * @param element The [Element] object containing the HTML element's text content to provide context for the chat.
+     * @return The response from the AI model encapsulated in a [ModelResponse] object.
+     */
+    suspend fun chat(prompt: String, element: Element): ModelResponse
 
     /**
      * Exports the content of a webpage to a file.
@@ -2384,6 +2421,7 @@ interface PulsarSession : AutoCloseable {
      * @return Whether the page is persisted successfully
      * */
     fun persist(page: WebPage): Boolean
+
     /**
      * Delete a webpage from the storage
      *
@@ -2394,6 +2432,7 @@ interface PulsarSession : AutoCloseable {
      * @param url The url to delete
      * */
     fun delete(url: String)
+
     /**
      * Flush to the storage
      * */

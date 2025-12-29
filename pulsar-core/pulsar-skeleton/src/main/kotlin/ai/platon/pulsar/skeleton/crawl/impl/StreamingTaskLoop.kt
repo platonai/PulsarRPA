@@ -7,14 +7,13 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.warnForClose
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.context.support.AbstractPulsarContext
-import ai.platon.pulsar.skeleton.crawl.Crawler
+import ai.platon.pulsar.skeleton.crawl.TaskRunner
 import kotlinx.coroutines.*
 import org.slf4j.LoggerFactory
-import java.util.*
 import java.util.concurrent.ConcurrentSkipListMap
 import java.util.concurrent.CountDownLatch
 
-open class StreamingCrawlLoop(
+open class StreamingTaskLoop(
     /**
      * The unmodified configuration load from file
      * */
@@ -22,17 +21,17 @@ open class StreamingCrawlLoop(
     /**
      * The loop name
      * */
-    name: String = "StreamingCrawlLoop"
+    name: String = "StreamingTaskLoop"
 
-) : AbstractCrawlLoop(name, configuration) {
-    private val logger = LoggerFactory.getLogger(StreamingCrawlLoop::class.java)
+) : AbstractTaskLoop(name, configuration) {
+    private val logger = LoggerFactory.getLogger(StreamingTaskLoop::class.java)
 
     private val scope = CoroutineScope(Dispatchers.Default) + CoroutineName("sc")
     private var crawlJob: Job? = null
     private val started = CountDownLatch(1)
 
-    private lateinit var _crawler: StreamingCrawler
-    override val crawler: Crawler get() = _crawler
+    private lateinit var _taskRunner: StreamingTaskRunner
+    override val taskRunner: TaskRunner get() = _taskRunner
 
     private val urlFeeders = ConcurrentSkipListMap<String, UrlFeeder>()
 
@@ -47,21 +46,23 @@ open class StreamingCrawlLoop(
         logger.info("Crawl loop is created | #{} | {}@{}", id, name, hashCode())
     }
 
-    override val abstract: String get() {
-        return if (!isRunning) {
-            "[stopped] crawler: ${crawler.name}#${crawler.id}, urlPool: ${urlFeeder.urlPool} \n${urlFeeder.abstract}"
-        } else {
-            urlFeeder.abstract
+    override val abstract: String
+        get() {
+            return if (!isRunning) {
+                "[stopped] crawler: ${taskRunner.name}#${taskRunner.id}, urlPool: ${urlFeeder.urlPool} \n${urlFeeder.abstract}"
+            } else {
+                urlFeeder.abstract
+            }
         }
-    }
 
-    override val report: String get() {
-        return if (!isRunning) {
-            return "[stopped] crawler: ${crawler.name}#${crawler.id}, urlPool: ${urlFeeder.urlPool} \n${urlFeeder.report}"
-        } else {
-            urlFeeder.report
+    override val report: String
+        get() {
+            return if (!isRunning) {
+                "[stopped] crawler: ${taskRunner.name}#${taskRunner.id}, urlPool: ${urlFeeder.urlPool} \n${urlFeeder.report}"
+            } else {
+                urlFeeder.report
+            }
         }
-    }
 
     @Synchronized
     override fun start() {
@@ -80,7 +81,7 @@ open class StreamingCrawlLoop(
     @Synchronized
     override fun stop() {
         if (running.compareAndSet(true, false)) {
-            _crawler.close()
+            _taskRunner.close()
 
             // url feeder should be shared by all crawlers, so we should not clear it
             // _urlFeeder.clear()
@@ -109,7 +110,7 @@ open class StreamingCrawlLoop(
     @Throws(InterruptedException::class)
     override fun await() {
         started.await()
-        crawler.await()
+        taskRunner.await()
     }
 
     private fun start0() {
@@ -123,15 +124,15 @@ open class StreamingCrawlLoop(
         require(session.isActive) { "Expect session is active, actual ${session::class}#${session.id}" }
 
         // clear the global illegal states, so the newly created crawler can work properly
-        StreamingCrawler.clearIllegalState()
+        StreamingTaskRunner.clearIllegalState()
 
         val urls = urlFeeder.asSequence()
-        _crawler = StreamingCrawler(urls, session, autoClose = false)
+        _taskRunner = StreamingTaskRunner(urls, session, autoClose = false)
 
         crawlJob = scope.launch {
             supervisorScope {
                 started.countDown()
-                _crawler.run(this)
+                _taskRunner.run(this)
             }
         }
     }
@@ -155,7 +156,12 @@ open class StreamingCrawlLoop(
         urlFeeders.remove(feeder.id)
         urlFeeders[upgradedFeeder.id] = upgradedFeeder
 
-        logger.warn("The url feeder is upgraded, use the new one instead | #{} <- #{} | {}", upgradedFeeder.id, feeder.id, this)
+        logger.warn(
+            "The url feeder is upgraded, use the new one instead | #{} <- #{} | {}",
+            upgradedFeeder.id,
+            feeder.id,
+            this
+        )
 
         return upgradedFeeder
     }

@@ -5,19 +5,14 @@ import ai.platon.pulsar.common.collect.LocalFileUrlLoader
 import ai.platon.pulsar.common.collect.UrlTopic
 import ai.platon.pulsar.common.collect.collector.AbstractPriorityDataCollector
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
-import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.common.urls.Hyperlink
 import ai.platon.pulsar.common.urls.Hyperlinks
 import ai.platon.pulsar.common.urls.UrlAware
-import com.codahale.metrics.Gauge
-import com.google.common.collect.Iterators
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import org.slf4j.LoggerFactory
 import java.nio.file.Path
-import java.time.Instant
 import java.util.*
 import java.util.concurrent.atomic.AtomicBoolean
-import java.util.concurrent.atomic.AtomicInteger
 
 open class LocalFileHyperlinkCollector(
         /**
@@ -83,123 +78,5 @@ open class LocalFileHyperlinkCollector(
         }
 
         return this
-    }
-}
-
-open class CircularLocalFileHyperlinkCollector(
-        path: Path,
-        priority: Priority13 = Priority13.NORMAL
-): LocalFileHyperlinkCollector(path, priority.value) {
-
-    override var name: String = "CircularLFHC"
-
-    protected val iterator = Iterators.cycle(hyperlinks)
-
-    override fun collectTo(sink: MutableList<UrlAware>): Int {
-        beforeCollect()
-
-        var count = 0
-        if (hasMore() && iterator.hasNext()) {
-            count += collectTo(iterator.next(), sink)
-        }
-
-        return afterCollect(count)
-    }
-}
-
-open class PeriodicalLocalFileHyperlinkCollector(
-        path: Path,
-        val options: LoadOptions,
-        priority: Priority13 = Priority13.NORMAL,
-): CircularLocalFileHyperlinkCollector(path, priority) {
-    private val log = LoggerFactory.getLogger(PeriodicalLocalFileHyperlinkCollector::class.java)
-
-    companion object {
-
-        data class Counters(
-                var collects: Int = 0,
-                var collected: Int = 0,
-                var round: Int = 0
-        )
-
-        val globalCounters = Counters()
-
-        private val gauges = mapOf(
-                "collects" to Gauge { globalCounters.collects },
-                "collected" to Gauge { globalCounters.collected },
-                "round" to Gauge { globalCounters.round }
-        )
-
-        init {
-            MetricsSystem.reg.registerAll(this, gauges)
-        }
-    }
-
-    override var name: String = "PeriodicalLFHC"
-
-    private val position = AtomicInteger()
-    val uuid = UUID.randomUUID()
-    val counters = Counters()
-
-    var batchSize = 10
-
-    val startTimes = mutableMapOf<Int, Instant>()
-    val finishTimes = mutableMapOf<Int, Instant>()
-
-    val round get() = counters.round
-    var roundCollected = 0
-        private set
-    val startTime get() = startTimes[counters.round]?: Instant.EPOCH
-    val finishTime get() = finishTimes[counters.round]?: Instant.EPOCH
-    val expires get() = options.expires
-    val isStarted get() = counters.round > 0
-    val isExpired get() = isFinished && (startTime + expires < Instant.now())
-    val isFinished get() = position.get() >= hyperlinks.size
-
-    override fun hasMore() = (!isFinished || isExpired) && iterator.hasNext()
-
-    override fun collectTo(sink: MutableList<UrlAware>): Int {
-        beforeCollect()
-        ++counters.collects
-
-        resetIfNecessary()
-
-        var i = 0
-        var count = 0
-        while (i++ < batchSize && hasMore() && iterator.hasNext()) {
-            count += collectTo(iterator.next(), sink)
-            ++counters.collected
-            position.incrementAndGet()
-        }
-
-        if (isFinished) {
-            finishTimes[round] = Instant.now()
-        }
-
-        roundCollected += count
-
-        return afterCollect(count)
-    }
-
-    override fun toString(): String {
-        return "$name - round: $round collected: ${counters.collected} " +
-                "startTime: $startTime expires: $expires priority: $priority | ${super.toString()}"
-    }
-
-    private fun resetIfNecessary() {
-        if (isExpired) {
-            position.set(0)
-        }
-
-        if (position.get() == 0) {
-            ++counters.round
-            roundCollected = 0
-            startTimes[round] = Instant.now()
-
-            log.info("Round {} fetching {} hyperlinks in local file | {} {} | {}",
-                    round, hyperlinks.size,
-                    startTimes[round], expires,
-                    path)
-        }
     }
 }

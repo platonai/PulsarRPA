@@ -4,15 +4,15 @@ import ai.platon.pulsar.common.collect.UrlFeeder
 import ai.platon.pulsar.common.collect.collector.PriorityDataCollector
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.urls.UrlAware
-import ai.platon.pulsar.skeleton.crawl.CrawlLoop
-import ai.platon.pulsar.skeleton.crawl.Crawler
+import ai.platon.pulsar.skeleton.crawl.TaskLoop
+import ai.platon.pulsar.skeleton.crawl.TaskRunner
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicInteger
 
-abstract class AbstractCrawlLoop(
+abstract class AbstractTaskLoop(
     override val name: String,
     override val config: ImmutableConfig
-) : CrawlLoop {
+) : TaskLoop {
     companion object {
         private val ID_SUPPLIER = AtomicInteger()
     }
@@ -28,15 +28,16 @@ abstract class AbstractCrawlLoop(
      * The url feeder is used by the crawl loop to feed urls to the crawler.
      * */
     abstract override val urlFeeder: UrlFeeder
+
     /**
      * The shortcut for all collectors
      * */
     override val collectors: List<PriorityDataCollector<UrlAware>>
         get() = urlFeeder.collectors
 
-    abstract override val crawler: Crawler
+    abstract override val taskRunner: TaskRunner
 
-    override val display: String get() = "CrawlLoop#$id:$name"
+    override val display: String get() = "TaskLoop#$id:$name"
 
     override val abstract: String get() = urlFeeder.abstract
 

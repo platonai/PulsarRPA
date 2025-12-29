@@ -1,12 +1,15 @@
 package ai.platon.pulsar.skeleton.context.support
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.skeleton.crawl.CrawlLoops
-import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
-import ai.platon.pulsar.skeleton.crawl.component.*
-import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
-import ai.platon.pulsar.skeleton.crawl.impl.StreamingCrawlLoop
 import ai.platon.pulsar.persist.WebDb
+import ai.platon.pulsar.skeleton.crawl.TaskLoops
+import ai.platon.pulsar.skeleton.crawl.common.GlobalCacheFactory
+import ai.platon.pulsar.skeleton.crawl.component.BatchFetchComponent
+import ai.platon.pulsar.skeleton.crawl.component.LoadComponent
+import ai.platon.pulsar.skeleton.crawl.component.ParseComponent
+import ai.platon.pulsar.skeleton.crawl.component.UpdateComponent
+import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
+import ai.platon.pulsar.skeleton.crawl.impl.StreamingTaskLoop
 
 class ContextDefaults {
 
@@ -47,5 +50,5 @@ class ContextDefaults {
     /**
      * The default main loop
      * */
-    val crawlLoops = CrawlLoops(StreamingCrawlLoop(configuration))
+    val taskLoops = TaskLoops(StreamingTaskLoop(configuration))
 }

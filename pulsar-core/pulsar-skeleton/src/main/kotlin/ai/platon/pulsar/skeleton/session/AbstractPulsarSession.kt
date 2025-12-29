@@ -1,13 +1,10 @@
 package ai.platon.pulsar.skeleton.session
 
-import ai.platon.pulsar.boilerpipe.extractors.DefaultExtractor
-import ai.platon.pulsar.boilerpipe.sax.SAXInput
 import ai.platon.pulsar.common.*
 import ai.platon.pulsar.common.AppPaths.WEB_CACHE_DIR
 import ai.platon.pulsar.common.browser.BrowserProfileMode
 import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_CONTEXT_MODE
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.extractor.TextDocument
 import ai.platon.pulsar.common.urls.PlainUrl
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.common.urls.UrlAware
@@ -27,8 +24,6 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import org.jsoup.nodes.Element
 import org.slf4j.LoggerFactory
-import org.xml.sax.InputSource
-import java.io.StringReader
 import java.nio.ByteBuffer
 import java.nio.file.Path
 import java.time.Instant
@@ -523,12 +518,6 @@ abstract class AbstractPulsarSession(
             .toList()
     }
 
-    @Deprecated("Will be removed in a future release.")
-    override fun harvest(url: String, args: String, engine: String): TextDocument = harvest(load(url, args), engine)
-
-    @Deprecated("Will be removed in a future release.")
-    override fun harvest(page: WebPage, engine: String): TextDocument = harvest0(page, engine)
-
     override suspend fun chat(prompt: String): ModelResponse = context.chat(prompt)
 
     override suspend fun chat(prompt: String, page: WebPage) = chat(
@@ -614,34 +603,6 @@ abstract class AbstractPulsarSession(
         }
 
         return context.parse(page) ?: nil
-    }
-
-    @Deprecated("Will be removed in a future release.")
-    private fun harvest0(page: WebPage, engine: String) = harvest0(page.url, page.contentAsString, engine)
-
-    @Deprecated("Will be removed in a future release.")
-    private fun harvest0(url: String, html: String, engine: String) =
-        harvest0(url, InputSource(StringReader(html)), engine)
-
-    @Deprecated("Will be removed in a future release.")
-    private fun harvest0(url: String, inputSource: InputSource, engine: String): TextDocument {
-        if (engine != "boilerpipe") {
-            throw IllegalArgumentException("Unsupported engine: $engine")
-        }
-
-        val d = SAXInput().parse(url, inputSource)
-        val success = DefaultExtractor().process(d)
-        if (!success) {
-            return TextDocument(url)
-        }
-
-        return TextDocument(
-            url,
-            pageTitle = d.pageTitle,
-            contentTitle = d.contentTitle,
-            textContent = d.textContent,
-            additionalFields = d.fields.takeIf { it.isNotEmpty() }
-        )
     }
 
     private fun loadAndCache(normURL: NormURL): WebPage {

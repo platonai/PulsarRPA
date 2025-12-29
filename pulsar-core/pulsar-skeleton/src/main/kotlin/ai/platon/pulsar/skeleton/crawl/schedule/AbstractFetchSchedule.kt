@@ -10,12 +10,6 @@ import java.time.Duration
 import java.time.Instant
 import java.time.temporal.ChronoUnit
 
-/**
- * This class provides common methods for implementations of
- * [FetchSchedule].
- *
- * @author Andrzej Bialecki
- */
 abstract class AbstractFetchSchedule(
     val conf: ImmutableConfig,
     val messageWriter: MiscMessageWriter? = null,

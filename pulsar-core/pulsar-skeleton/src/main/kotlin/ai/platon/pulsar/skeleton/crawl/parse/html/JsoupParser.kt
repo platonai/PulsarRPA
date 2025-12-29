@@ -3,11 +3,11 @@ package ai.platon.pulsar.skeleton.crawl.parse.html
 import ai.platon.pulsar.common.config.AppConstants.PULSAR_DOCUMENT_NORMALIZED_URI
 import ai.platon.pulsar.common.config.AppConstants.PULSAR_META_INFORMATION_SELECTOR
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.skeleton.common.persist.ext.options
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.dom.FeaturedDocument
 import ai.platon.pulsar.dom.select.selectFirstOrNull
 import ai.platon.pulsar.persist.WebPage
+import ai.platon.pulsar.skeleton.common.persist.ext.options
 import org.jsoup.Jsoup
 import org.slf4j.LoggerFactory
 import java.io.IOException
@@ -17,8 +17,8 @@ import java.util.concurrent.atomic.AtomicInteger
  * Created by vincent on 16-9-14.
  */
 class JsoupParser(
-        private val page: WebPage,
-        private val conf: ImmutableConfig
+    private val page: WebPage,
+    private val conf: ImmutableConfig
 ) {
     companion object {
         val numJsoupParses = AtomicInteger()

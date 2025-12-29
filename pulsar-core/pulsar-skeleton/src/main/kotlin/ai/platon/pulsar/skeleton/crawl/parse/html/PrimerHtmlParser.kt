@@ -63,11 +63,11 @@ class PrimerHtmlParser(
             onWillParseHTMLDocument(page)
 
             val parseContext = primerParser.parseHTMLDocument(page)
-            
+
             parseFilters?.filter(parseContext)
-            
+
             checkHTMLRequirement(parseContext)
-            
+
             parseContext.document?.let { onHTMLDocumentParsed(page, it) }
 
             parseContext.parseResult
@@ -78,9 +78,6 @@ class PrimerHtmlParser(
         }
     }
 
-    /**
-     *
-     * */
     private fun onWillParseHTMLDocument(page: WebPage) {
         numHtmlParses.incrementAndGet()
 
@@ -109,13 +106,10 @@ class PrimerHtmlParser(
                 parseContext.parseResult = ParseResult.failed(ParseStatusCodes.FAILED_MISSING_PARTS, message)
             }
         }
-        
+
         return parseContext
     }
 
-    /**
-     *
-     * */
     private fun onHTMLDocumentParsed(page: WebPage, document: FeaturedDocument) {
         try {
             // The more specific handlers has the opportunity to override the result of more general handlers.

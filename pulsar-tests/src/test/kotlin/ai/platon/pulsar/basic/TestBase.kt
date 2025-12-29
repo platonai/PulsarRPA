@@ -5,7 +5,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.gora.FileBackendPageStore
-import ai.platon.pulsar.skeleton.crawl.CrawlLoops
+import ai.platon.pulsar.skeleton.crawl.TaskLoops
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -23,7 +23,7 @@ class TestBase {
     lateinit var session: PulsarSession
 
     @Autowired
-    lateinit var crawlLoops: CrawlLoops
+    lateinit var taskLoops: TaskLoops
 
     @Autowired
     lateinit var webDB: WebDb
@@ -31,6 +31,6 @@ class TestBase {
     val context get() = session.context
 
     val globalCache get() = session.globalCache
-    
+
     val isFileBackendPageStore get() = webDB.dataStorageFactory.getOrCreatePageStore() is FileBackendPageStore
 }

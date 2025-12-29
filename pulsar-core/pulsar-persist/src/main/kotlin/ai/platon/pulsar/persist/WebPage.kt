@@ -3,10 +3,8 @@ package ai.platon.pulsar.persist
 import ai.platon.pulsar.common.HtmlIntegrity
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.persist.metadata.FetchMode
 import ai.platon.pulsar.persist.metadata.OpenPageCategory
-import ai.platon.pulsar.persist.metadata.PageCategory
 import ai.platon.pulsar.persist.model.ActiveDOMMetadata
 import ai.platon.pulsar.persist.model.ActiveDOMStat
 import ai.platon.pulsar.persist.model.ActiveDOMStatus
@@ -17,7 +15,6 @@ import java.nio.ByteBuffer
 import java.time.Duration
 import java.time.Instant
 import java.time.ZoneId
-import java.util.function.Function
 
 /**
  * Represents a static web page in the Browser4 system. This interface provides methods to access and manipulate
@@ -399,7 +396,7 @@ interface WebPage : Comparable<WebPage> {
 
     var pageModelUpdateTime: Instant?
 
-    val pageModel: PageModel?
+    var pageModel: PageModel?
 
     /**
      * Retrieves the bean of the specified class type associated with the web page.

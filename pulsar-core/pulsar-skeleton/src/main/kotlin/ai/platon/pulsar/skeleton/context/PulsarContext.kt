@@ -10,7 +10,7 @@ import ai.platon.pulsar.persist.gora.generated.GWebPage
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.urls.NormURL
-import ai.platon.pulsar.skeleton.crawl.CrawlLoops
+import ai.platon.pulsar.skeleton.crawl.TaskLoops
 import ai.platon.pulsar.skeleton.crawl.common.GlobalCache
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
@@ -29,7 +29,7 @@ import kotlin.reflect.KClass
  * [PulsarContext] consists of a set of highly customizable components that provide
  * the core set of interfaces of the system and is used to create [PulsarSession].
  */
-interface PulsarContext: java.lang.AutoCloseable {
+interface PulsarContext : java.lang.AutoCloseable {
 
     /**
      * The context id
@@ -59,7 +59,13 @@ interface PulsarContext: java.lang.AutoCloseable {
     /**
      * The main loops
      * */
-    val crawlLoops: CrawlLoops
+    val taskLoops: TaskLoops
+
+    /**
+     * The main loops
+     * */
+    @Deprecated("Use taskLoops instead", ReplaceWith("taskLoops"))
+    val crawlLoops: TaskLoops get() = taskLoops
 
     /**
      * The browser factory.
@@ -115,7 +121,8 @@ interface PulsarContext: java.lang.AutoCloseable {
      * Launch the system default browser, the system default browser is your daily used browser.
      * */
     @Throws(BrowserLaunchException::class)
-    fun launchSystemDefaultBrowser(): Browser = browserFactory.launchSystemDefaultBrowser().also { registerClosable(it) }
+    fun launchSystemDefaultBrowser(): Browser =
+        browserFactory.launchSystemDefaultBrowser().also { registerClosable(it) }
 
     /**
      * Launch the default browser, notice, the default browser is not the one you used daily.
@@ -180,6 +187,7 @@ interface PulsarContext: java.lang.AutoCloseable {
      * @return All normalized urls, all invalid input urls are removed
      * */
     fun normalize(urls: Iterable<String>, options: LoadOptions, toItemOption: Boolean = false): List<NormURL>
+
     /**
      * Normalize a url.
      *
@@ -192,6 +200,7 @@ interface PulsarContext: java.lang.AutoCloseable {
      * @return The normalized url or NIL if the input url is invalid
      * */
     fun normalize(url: UrlAware, options: LoadOptions, toItemOption: Boolean = false): NormURL
+
     /**
      * Normalize a url, the url can be in one of the following forms:
      * 1. a normal url
@@ -209,6 +218,7 @@ interface PulsarContext: java.lang.AutoCloseable {
      * @return The normalized url or null if the input url is invalid
      * */
     fun normalizeOrNull(url: UrlAware?, options: LoadOptions, toItemOption: Boolean = false): NormURL?
+
     /**
      * Normalize urls, remove invalid ones
      *
@@ -218,6 +228,7 @@ interface PulsarContext: java.lang.AutoCloseable {
      * @return All normalized urls, all invalid input urls are removed
      * */
     fun normalize(urls: Collection<UrlAware>, options: LoadOptions, toItemOption: Boolean = false): List<NormURL>
+
     /**
      * Get a webpage from the storage
      *

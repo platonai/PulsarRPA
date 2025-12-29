@@ -5,8 +5,8 @@ import ai.platon.pulsar.common.event.AbstractEventEmitter
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.common.persist.ext.eventHandlers
-import ai.platon.pulsar.skeleton.crawl.Crawler
 import ai.platon.pulsar.skeleton.crawl.GlobalEventHandlers
+import ai.platon.pulsar.skeleton.crawl.TaskRunner
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableUrl
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import java.time.Duration
@@ -21,10 +21,10 @@ enum class CrawlEvents {
     loaded
 }
 
-abstract class AbstractCrawler(
+abstract class AbstractTaskRunner(
     val session: PulsarSession,
     val autoClose: Boolean = true
-): Crawler, AbstractEventEmitter<CrawlEvents>() {
+) : TaskRunner, AbstractEventEmitter<CrawlEvents>() {
     companion object {
         private val instanceSequencer = AtomicInteger()
     }

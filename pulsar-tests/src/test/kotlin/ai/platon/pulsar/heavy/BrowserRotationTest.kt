@@ -2,13 +2,13 @@ package ai.platon.pulsar.heavy
 
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.collect.UrlFeeder
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.skeleton.PulsarSettings
-import ai.platon.pulsar.skeleton.crawl.CrawlLoop
+import ai.platon.pulsar.skeleton.crawl.TaskLoop
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
-import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.AbstractWebDriver
 import kotlinx.coroutines.delay
 import org.junit.jupiter.api.AfterEach
@@ -66,7 +66,7 @@ class BrowserRotationTest : MassiveTestBase() {
         }
 
         session.context.await()
-        val feeder = session.context.getBean(CrawlLoop::class).urlFeeder as UrlFeeder
+        val feeder = session.context.getBean(TaskLoop::class).urlFeeder as UrlFeeder
         while (!Thread.currentThread().isInterrupted && feeder.isNotEmpty()) {
             sleepSeconds(1)
         }

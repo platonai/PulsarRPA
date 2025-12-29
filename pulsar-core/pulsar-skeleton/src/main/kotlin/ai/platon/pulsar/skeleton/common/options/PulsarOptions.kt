@@ -6,7 +6,6 @@ import com.beust.jcommander.JCommander
 import com.beust.jcommander.ParameterException
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
-import java.util.*
 import java.util.regex.Pattern
 import kotlin.system.exitProcess
 
@@ -82,9 +81,6 @@ open class PulsarOptions(
         }
     }
 
-    /**
-     * TODO: fix bug to handle overwriting boolean field with arity = 0, e.g. "-parse -parse"
-     * */
     private fun doParse() {
         registeredObjects.add(this)
 

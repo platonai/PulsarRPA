@@ -2,8 +2,8 @@ package ai.platon.pulsar.skeleton.crawl.common.options
 
 import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.common.options.OptionUtils
-import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.common.printlnPro
+import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.common.options.PulsarOptions
 import com.google.common.collect.Lists
 import kotlin.test.Test
@@ -76,44 +76,6 @@ class TestPulsarOptions {
             val args1 = OptionUtils.arity0ToArity1(args, search)
             assertTrue("$search true" in args1, args)
         }
-    }
-
-    companion object {
-        var args1 = "-i pt1s -p 2000 -d 1 -css body " +
-                "-amin 4 -amax 45 -umin 44 -umax 200 -ureg .+ " +
-                " -en article -ed body" +
-                " -Ftitle=#title -Fcontent=#content -Fauthor=#author -Fpublish_time=#publish_time" +
-                " -cn comments -cr #comments -ci .comment" +
-                " -FFauthor=.author -FFcontent=.content -FFpublish_time=.publish-time"
-
-        var args2 = "--fetch-interval 1s" +
-                " --fetch-priority 2000" +
-                " --depth 2 " +
-                //      " --seed-dom=body" +
-                //      " --seed-url=.+" +
-                //      " --seed-anchor=2,4" +
-                //      " --seed-sequence=100,1000" +
-                //      " --seed-fetch-interval=30m" +
-                " -log 4" +
-                " --restrict-css body" +
-                " --url-regex .+" +
-                " --url-min-length 44" +
-                " --url-max-length 200" +
-                " --anchor-min-length 4" +
-                " --anchor-max-length 45" +
-                " --entity-name article" +
-                " --entity-root body" +
-                " -Ftitle=#title -Fcontent=#content -Fauthor=#author -Fpublish_time=#publish_time" +
-                " --collection-name comments" +
-                " --collection-root #comments" +
-                " --collection-item .comment" +
-                " -FFauthor=.author -FFcontent=.content -FFpublish_time=.publish-time"
-
-        var argv = arrayOf("", "-i 1m -d 2 -e article -ed body -Ftitle=h2")
-
-        private val linkFilterCommandLine = "-amin 2 -amax 45 -umin 44 -umax 200 -ucon news -ureg .+news.+"
-
-        private val linkFilterCommandLine2 = "-amin 5 -amax 50 -umin 50 -umax 200"
     }
 }
 

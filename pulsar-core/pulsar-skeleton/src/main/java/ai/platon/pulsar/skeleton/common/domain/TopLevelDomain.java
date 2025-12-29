@@ -59,5 +59,4 @@ public class TopLevelDomain extends DomainSuffix {
     public enum Type {
         INFRASTRUCTURE, GENERIC, COUNTRY
     }
-
 }

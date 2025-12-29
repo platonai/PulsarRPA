@@ -31,7 +31,7 @@ class TestWebSiteAccess {
 
     val context get() = session.context
 
-    val crawlLoops get() = context.crawlLoops
+    val taskLoops get() = context.taskLoops
 
     val webDB get() = context.getBean(WebDb::class)
 

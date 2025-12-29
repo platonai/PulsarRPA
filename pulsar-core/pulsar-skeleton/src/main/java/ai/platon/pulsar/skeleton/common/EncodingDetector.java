@@ -36,32 +36,6 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/**
- * A simple class for detecting character encodings.
- * <p>
- * <p>
- * Broadly this encompasses two functions, which are distinctly separate:
- * <p>
- * <ol>
- * <li>Auto detecting a set of "clues" from input text.</li>
- * <li>Taking a set of clues and making a "best guess" as to the "real"
- * encoding.</li>
- * </ol>
- * </p>
- * <p>
- * <p>
- * A caller will often have some extra information about what the encoding might
- * be (e.g. from the HTTP header or HTML meta-tags, often wrong but still
- * potentially useful clues). The types of clues may differ from caller to
- * caller. Thus a typical calling sequence is:
- * <ul>
- * <li>Run step (1) to generate a set of auto-detected clues;</li>
- * <li>Combine these clues with the caller-dependent "extra clues" available;</li>
- * <li>Run step (2) to guess what the most probable answer is.</li>
- * </p>
- * <p>
- * TODO: Use Tika's EncodingDetector
- */
 public class EncodingDetector {
 
     public static final Logger LOG = LoggerFactory.getLogger(EncodingDetector.class);
@@ -95,16 +69,16 @@ public class EncodingDetector {
         DETECTABLES.add("text/xml");
         DETECTABLES.add("application/rss+xml");
         DETECTABLES.add("application/xhtml+xml");
-    /*
-     * the following map is not an alias mapping table, but maps character
-     * encodings which are often used in mislabelled documents to their correct
-     * encodings. For instance, there are a lot of documents labelled
-     * 'ISO-8859-1' which contain characters not covered by ISO-8859-1 but
-     * covered by windows-1252. Because windows-1252 is a superset of ISO-8859-1
-     * (sharing code points for the common part), it's better to treat
-     * ISO-8859-1 as synonymous with windows-1252 than to reject, as invalid,
-     * documents labelled as ISO-8859-1 that have characters outside ISO-8859-1.
-     */
+        /*
+         * the following map is not an alias mapping table, but maps character
+         * encodings which are often used in mislabelled documents to their correct
+         * encodings. For instance, there are a lot of documents labelled
+         * 'ISO-8859-1' which contain characters not covered by ISO-8859-1 but
+         * covered by windows-1252. Because windows-1252 is a superset of ISO-8859-1
+         * (sharing code points for the common part), it's better to treat
+         * ISO-8859-1 as synonymous with windows-1252 than to reject, as invalid,
+         * documents labelled as ISO-8859-1 that have characters outside ISO-8859-1.
+         */
         ALIASES.put("ISO-8859-1", "windows-1252");
         ALIASES.put("EUC-KR", "x-windows-949");
         ALIASES.put("x-EUC-CN", "GB18030");
@@ -364,23 +338,23 @@ public class EncodingDetector {
      * @return Guessed encoding or defaultValue
      */
     private String guessEncoding(String baseUrl, String defaultValue) {
-    /*
-     * This algorithm could be replaced by something more sophisticated; ideally
-     * we would gather a bunch of data on where various clues (autodetect, HTTP
-     * headers, HTML meta tags, etc.) disagree, tag each with the correct
-     * answer, and use machine learning/some statistical method to generate a
-     * better heuristic.
-     */
+        /*
+         * This algorithm could be replaced by something more sophisticated; ideally
+         * we would gather a bunch of data on where various clues (autodetect, HTTP
+         * headers, HTML meta tags, etc.) disagree, tag each with the correct
+         * answer, and use machine learning/some statistical method to generate a
+         * better heuristic.
+         */
 
         if (LOG.isTraceEnabled()) {
             findDisagreements(baseUrl, clues);
         }
 
-    /*
-     * Go down the list of encoding "clues". Use a clue if:
-     * 1. Has a confidence value which meets our confidence threshold, OR
-     * 2. Doesn't meet the threshold, but is the best try, since nothing else is available.
-     */
+        /*
+         * Go down the list of encoding "clues". Use a clue if:
+         * 1. Has a confidence value which meets our confidence threshold, OR
+         * 2. Doesn't meet the threshold, but is the best try, since nothing else is available.
+         */
         EncodingClue defaultClue = new EncodingClue(defaultValue, "default");
         EncodingClue bestClue = defaultClue;
 
