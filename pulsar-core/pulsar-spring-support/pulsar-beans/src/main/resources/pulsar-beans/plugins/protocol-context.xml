@@ -7,14 +7,7 @@
 
     <import resource="../proxy-context.xml"/>
 
-    <!-- Deprecated, Use BrowserSettings instead -->
-    <bean id="webDriverSettings" class="ai.platon.pulsar.protocol.browser.driver.WebDriverSettings">
-        <constructor-arg ref="conf"/>
-    </bean>
-
-    <!-- Deprecated, use browserFactory instead -->
-    <bean id="webDriverFactory" class="ai.platon.pulsar.protocol.browser.driver.WebDriverFactory">
-        <constructor-arg ref="browserManager"/>
+    <bean id="browserSettings" class="ai.platon.pulsar.protocol.browser.driver.BrowserSettings">
         <constructor-arg ref="conf"/>
     </bean>
 

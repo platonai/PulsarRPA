@@ -17,7 +17,6 @@ package ai.platon.pulsar.protocol.browser
 
 import ai.platon.pulsar.common.ObjectCache
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.protocol.browser.driver.WebDriverFactory
 import ai.platon.pulsar.protocol.browser.driver.WebDriverPoolManager
 import ai.platon.pulsar.protocol.browser.emulator.BrowserEmulator
 import ai.platon.pulsar.protocol.browser.emulator.IncognitoBrowserFetcher
@@ -30,11 +29,7 @@ import ai.platon.pulsar.protocol.browser.impl.BrowserManager
 import ai.platon.pulsar.protocol.browser.impl.DefaultBrowserFactory
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.BrowserFactory
 
-class DefaultBrowserManager(conf: ImmutableConfig): BrowserManager(DefaultBrowserFactory(conf), conf)
-
-@Deprecated("Use BrowserFactory instead")
-class DefaultWebDriverFactory(conf: ImmutableConfig)
-    : WebDriverFactory(DefaultBrowserManager(conf), conf)
+class DefaultBrowserManager(conf: ImmutableConfig) : BrowserManager(DefaultBrowserFactory(conf), conf)
 
 class DefaultWebDriverPoolManager(conf: ImmutableConfig) :
     WebDriverPoolManager(
@@ -44,12 +39,12 @@ class DefaultWebDriverPoolManager(conf: ImmutableConfig) :
     )
 
 class DefaultBrowserEmulator(
-        driverPoolManager: WebDriverPoolManager,
-        conf: ImmutableConfig
-): InteractiveBrowserEmulator(
-        driverPoolManager,
-        BrowserResponseHandlerImpl(conf),
-        conf
+    driverPoolManager: WebDriverPoolManager,
+    conf: ImmutableConfig
+) : InteractiveBrowserEmulator(
+    driverPoolManager,
+    BrowserResponseHandlerImpl(conf),
+    conf
 )
 
 class DefaultPrivacyManagedBrowserFetcher(
@@ -59,7 +54,7 @@ class DefaultPrivacyManagedBrowserFetcher(
     privacyManager: BrowserPrivacyManager,
     conf: ImmutableConfig,
     closeCascaded: Boolean = true
-): PrivacyManagedBrowserFetcher(
+) : PrivacyManagedBrowserFetcher(
     browserManager,
     browserFactory,
     privacyManager,
@@ -67,7 +62,10 @@ class DefaultPrivacyManagedBrowserFetcher(
     conf,
     closeCascaded
 ) {
-    constructor(conf: ImmutableConfig, driverPoolManager: WebDriverPoolManager = DefaultWebDriverPoolManager(conf)): this(
+    constructor(
+        conf: ImmutableConfig,
+        driverPoolManager: WebDriverPoolManager = DefaultWebDriverPoolManager(conf)
+    ) : this(
         driverPoolManager.browserManager,
         driverPoolManager.browserFactory,
         DefaultBrowserEmulator(driverPoolManager, conf),
@@ -80,7 +78,7 @@ class DefaultPrivacyManagedBrowserFetcher(
 class DefaultBrowserComponents(val conf: ImmutableConfig = ImmutableConfig.DEFAULT) {
 
     private val cache = ObjectCache.get(conf)
-    
+
     val incognitoBrowserFetcher: IncognitoBrowserFetcher = cache.computeIfAbsent<IncognitoBrowserFetcher> {
         DefaultPrivacyManagedBrowserFetcher(conf)
     }

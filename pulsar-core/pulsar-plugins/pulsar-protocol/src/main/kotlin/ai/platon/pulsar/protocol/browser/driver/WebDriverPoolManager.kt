@@ -52,10 +52,11 @@ open class WebDriverPoolManager(
     /**
      * The max number of drivers the pool can hold
      * */
-    private val poolCapacity: Int get() {
-        val c = immutableConfig.get(BROWSER_MAX_OPEN_TABS)?.toIntOrNull() ?: DEFAULT_BROWSER_MAX_OPEN_TABS
-        return c.coerceAtMost(50)
-    }
+    private val poolCapacity: Int
+        get() {
+            val c = immutableConfig.get(BROWSER_MAX_OPEN_TABS)?.toIntOrNull() ?: DEFAULT_BROWSER_MAX_OPEN_TABS
+            return c.coerceAtMost(50)
+        }
 
     val idleTimeout = Duration.ofMinutes(18)
 
@@ -79,6 +80,7 @@ open class WebDriverPoolManager(
     val numDyingDrivers get() = retiredDriverPools.values.sumOf { it.numCreated }
 
     val numClosedDrivers get() = closedDriverPools.size
+
     /**
      * Maximum allowed number of dying drives, if it's exceeded, the oldest driver pool should be closed.
      * Dying drivers are kept for diagnosis.
@@ -346,12 +348,14 @@ open class WebDriverPoolManager(
          * echo takeDriverPoolSnapshot >> /tmp/pulsar/pulsar-commands
          * */
         if (FileCommand.check("takeDriverPoolSnapshot")) {
-            logger.info("""
+            logger.info(
+                """
                 Driver pool manager:
                 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
                 ${buildStatusString()}
                 <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-            """.trimIndent())
+            """.trimIndent()
+            )
         }
     }
 
@@ -503,8 +507,10 @@ open class WebDriverPoolManager(
     private suspend fun runWithDriverPool(task: WebDriverTask, driverPool: LoadingWebDriverPool): FetchResult? {
         var driver: WebDriver? = null
         try {
-            driver = driverPool.poll(task.priority,
-                    task.volatileConfig, task.page.eventHandlers?.browseEventHandlers, task.page)
+            driver = driverPool.poll(
+                task.priority,
+                task.volatileConfig, task.page.eventHandlers?.browseEventHandlers, task.page
+            )
 
             return runWithDriver(task, driver)
         } finally {
