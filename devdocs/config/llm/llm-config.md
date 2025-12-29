@@ -19,8 +19,8 @@ You can configure the API key at runtime using JVM system properties.
 #### 💻 Linux / macOS:
 
 ```bash
-export DEEPSEEK_API_KEY="sk-your-deepseek-key"
-java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar Browser4.jar
+export VOLCENGINE_API_KEY="sk-your-deepseek-key"
+java -DVOLCENGINE_API_KEY=${VOLCENGINE_API_KEY} -jar Browser4.jar
 ````
 
 #### 🪟 Windows (PowerShell):
@@ -28,8 +28,8 @@ java -DDEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} -jar Browser4.jar
 ✅ **Option 1: Using Local (Script-Only) Variable**
 
 ```powershell
-$DEEPSEEK_API_KEY = "sk-your-deepseek-key"
-java -D"DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY" -jar Browser4.jar
+$VOLCENGINE_API_KEY = "sk-your-deepseek-key"
+java -D"VOLCENGINE_API_KEY=$VOLCENGINE_API_KEY" -jar Browser4.jar
 ```
 
 ⚠️ This sets a PowerShell *local variable*, which works **only inside PowerShell**, and is passed correctly because Java gets the interpolated string from PowerShell.
@@ -37,8 +37,8 @@ java -D"DEEPSEEK_API_KEY=$DEEPSEEK_API_KEY" -jar Browser4.jar
 ✅ **Option 2: Using Environment Variable (System-Wide)**
 
 ```powershell
-$env:DEEPSEEK_API_KEY = "sk-your-deepseek-key"
-java -D"DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY" -jar Browser4.jar
+$env:VOLCENGINE_API_KEY = "sk-your-deepseek-key"
+java -D"VOLCENGINE_API_KEY=$env:VOLCENGINE_API_KEY" -jar Browser4.jar
 ```
 
 ---
@@ -55,7 +55,7 @@ Browser4 supports Spring Boot–style property files. You can place your private
 #### 🔍 DeepSeek
 
 ```properties
-deepseek.api.key=sk-your-deepseek-key
+volcengine.api.key=sk-your-deepseek-key
 ```
 
 #### 📦 Doubao
@@ -86,7 +86,7 @@ Browser4 follows **Spring Boot configuration rules**, which means you can use co
 
 | Environment Variable Format | Properties File Format | Description |
 |----------------------------|----------------------|-------------|
-| `DEEPSEEK_API_KEY` | `deepseek.api.key` | DeepSeek API key |
+| `VOLCENGINE_API_KEY` | `volcengine.api.key` | DeepSeek API key |
 | `VOLCENGINE_API_KEY` | `volcengine.api.key` | VolcEngine (Doubao) API key |
 | `OPENAI_API_KEY` | `openai.api.key` | OpenAI API key |
 | `BROWSER_CONTEXT_MODE` | `browser.context.mode` | Browser context mode |
@@ -101,7 +101,7 @@ Browser4 follows **Spring Boot configuration rules**, which means you can use co
 
 | Variable              | Description                                               |
 |-----------------------|-----------------------------------------------------------|
-| `DEEPSEEK_API_KEY`    | DeepSeek API key                                          |
+| `VOLCENGINE_API_KEY`    | DeepSeek API key                                          |
 | `DEEPSEEK_MODEL_NAME` | DeepSeek model name (optional, default: `deepseek-chat`)  |
 
 ### Doubao (VolcEngine)

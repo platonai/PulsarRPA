@@ -82,11 +82,11 @@ function Test-Prerequisites {
     }
 
     # Check required environment variables early
-    if (-not $env:DEEPSEEK_API_KEY) {
-        Write-Host "⚠️  Environment variable DEEPSEEK_API_KEY is not set." -ForegroundColor Yellow
+    if (-not $env:VOLCENGINE_API_KEY) {
+        Write-Host "⚠️  Environment variable VOLCENGINE_API_KEY is not set." -ForegroundColor Yellow
         Write-Host "   Please set it before running this script, e.g.:" -ForegroundColor Yellow
-        Write-Host "   `$env:DEEPSEEK_API_KEY = 'your_api_key_here'" -ForegroundColor Yellow
-        throw "Environment variable DEEPSEEK_API_KEY is required."
+        Write-Host "   `$env:VOLCENGINE_API_KEY = 'your_api_key_here'" -ForegroundColor Yellow
+        throw "Environment variable VOLCENGINE_API_KEY is required."
     }
 
     Write-Host "✅ Prerequisites validation passed" -ForegroundColor Green
@@ -276,7 +276,7 @@ function Start-SingleContainer {
         $startArgs = @(
             "run", "--rm", "-d"
             "--name", $ContainerName
-            "-e", "DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY"
+            "-e", "VOLCENGINE_API_KEY=$env:VOLCENGINE_API_KEY"
             "-e", "PROXY_ROTATION_URL=$env:PROXY_ROTATION_URL"
             "-e", "BROWSER_DISPLAY_MODE=HEADLESS"
             "-e", "SERVER_PORT=8182"
@@ -426,7 +426,7 @@ catch {
     Write-Host "💡 Troubleshooting suggestions:" -ForegroundColor Yellow
     Write-Host "   1. Check Docker Desktop is running" -ForegroundColor Yellow
     Write-Host "   2. Verify port $Port is available" -ForegroundColor Yellow
-    Write-Host "   3. Ensure DEEPSEEK_API_KEY is set" -ForegroundColor Yellow
+    Write-Host "   3. Ensure VOLCENGINE_API_KEY is set" -ForegroundColor Yellow
     Write-Host "   4. Check Dockerfile exists: $Dockerfile" -ForegroundColor Yellow
 
     # Show logs for debugging

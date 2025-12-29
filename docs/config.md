@@ -6,7 +6,7 @@ Browser4 supports multiple configuration sources in order of precedence:
 
 1. 🔧 **Environment Variables**
 2. ⚙️ **JVM System Properties**
-3. 📝 **Spring Boot `application.properties` or `application.yml`**
+3. 📝 **Spring Boot `application.properties`**
 
 ---
 
@@ -22,7 +22,7 @@ A sample `application.properties` is located at the project root. For privacy, c
 
 ```properties
 # browser.context.mode=SYSTEM_DEFAULT # Optional: use your system's default browser profile
-deepseek.api.key=
+volcengine.api.key=
 ```
 
 #### [**Advanced**] For high-performance, parallel crawling:
@@ -46,12 +46,12 @@ For standard desktop usage:
 
 Linux/MacOS
 ```bash
-export DEEPSEEK_API_KEY=sk-yourdeepseekapikey
+export VOLCENGINE_API_KEY=sk-yourdeepseekapikey
 ```
 
 Windows (PowerShell)
 ```powershell
-$env:DEEPSEEK_API_KEY = "sk-yourdeepseekapikey"
+$env:VOLCENGINE_API_KEY = "sk-yourdeepseekapikey"
 ```
 
 If you want to use your daily used browser profile (remember closed the browser first):
@@ -91,7 +91,7 @@ $env:BROWSER_DISPLAY_MODE = "HEADLESS"
 Set configuration via command-line JVM args:
 
 ```
--Ddeepseek.api.key=sk-yourdeepseekapikey
+-Dvolcengine.api.key=sk-yourdeepseekapikey
 ```
 
 ---
@@ -104,7 +104,7 @@ For Docker deployments, use environment variables in the `docker run` command.
 
 ```bash
 docker run -d -p 8182:8182 \
-  -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} \
+  -e VOLCENGINE_API_KEY=${VOLCENGINE_API_KEY} \
   -e PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint \
   -e BROWSER_CONTEXT_MODE=SEQUENTIAL \
   -e BROWSER_CONTEXT_NUMBER=2 \
@@ -117,7 +117,7 @@ docker run -d -p 8182:8182 \
 
 ```powershell
 docker run -d -p 8182:8182 `
-  -e DEEPSEEK_API_KEY=$env:DEEPSEEK_API_KEY `
+  -e VOLCENGINE_API_KEY=$env:VOLCENGINE_API_KEY `
   -e PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint `
   -e BROWSER_CONTEXT_MODE=SEQUENTIAL `
   -e BROWSER_CONTEXT_NUMBER=2 `
@@ -126,17 +126,17 @@ docker run -d -p 8182:8182 `
   galaxyeye88/browser4:latest
 ```
 
-> ⚠️ **Note**: Docker users may need to warm up the before crawling to avoid bot detection, 
+> ⚠️ **Note**: Docker users may need to warm up the before crawling to avoid bot detection,
 > for example, visit the home page and open some arbitrary pages.
 
 ---
 
 ## ⚙️ Common Configuration Options
 
-* **`deepseek.api.key`**
+* **`volcengine.api.key`**
   Your DeepSeek API key. Check [LLM Configuration Guide](../docs/config/llm/llm-config.md) for more LLM providers.
 
-- **`browser.context.mode`** (`DEFAULT` | `SYSTEM_DEFAULT` | `PROTOTYPE` | `SEQUENTIAL` | `TEMPORARY`)  
+- **`browser.context.mode`** (`DEFAULT` | `SYSTEM_DEFAULT` | `PROTOTYPE` | `SEQUENTIAL` | `TEMPORARY`)
   Defines how the user data directory is assigned for each browser instance.
 
   - `DEFAULT`: Uses the default Browser4-managed user data directory.

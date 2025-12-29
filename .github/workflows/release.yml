@@ -123,7 +123,7 @@ jobs:
             --name ${{ env.CONTAINER_NAME }} \
             --network ${{ env.NETWORK_NAME }} \
             -p 8182:8182 \
-            -e DEEPSEEK_API_KEY=${{ secrets.DEEPSEEK_API_KEY }} \
+            -e VOLCENGINE_API_KEY=${{ secrets.VOLCENGINE_API_KEY }} \
             --health-cmd="curl -f http://localhost:8182/actuator/health || exit 1" \
             --health-interval=10s \
             --health-timeout=5s \
@@ -136,7 +136,7 @@ jobs:
 
           echo "✅ Container is healthy and ready for testing"
         env:
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          VOLCENGINE_API_KEY: ${{ secrets.VOLCENGINE_API_KEY }}
 
       - name: Run End to End Tests
         id: end-to-end-tests

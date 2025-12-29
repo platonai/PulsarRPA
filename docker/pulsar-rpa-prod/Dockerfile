@@ -45,13 +45,13 @@ RUN apk update && apk upgrade && \
     rm -rf /var/cache/apk/*
 
 # Build arguments for secrets (can be passed at build time)
-ARG DEEPSEEK_API_KEY
+ARG VOLCENGINE_API_KEY
 ARG PROXY_ROTATION_URL
 
 # Set environment variables
 # Ignore BROWSER_CONTEXT_NUMBER, BROWSER_MAX_OPEN_TABS if BROWSER_CONTEXT_MODE is set to DEFAULT
 ENV JAVA_OPTS="-Xms2G -Xmx10G -XX:+UseG1GC" \
-    DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} \
+    VOLCENGINE_API_KEY=${VOLCENGINE_API_KEY} \
     PROXY_ROTATION_URL=${PROXY_ROTATION_URL} \
     BROWSER_CONTEXT_MODE=DEFAULT \
     BROWSER_CONTEXT_NUMBER=2 \

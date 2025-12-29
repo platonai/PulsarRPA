@@ -47,7 +47,7 @@ jobs:
           version: ${{ github.sha }}
           container_name: ${{ env.CONTAINER_NAME }}
           network_name: ${{ env.NETWORK_NAME }}
-          deepseek_api_key: ${{ secrets.DEEPSEEK_API_KEY }}
+          deepseek_api_key: ${{ secrets.VOLCENGINE_API_KEY }}
           proxy_rotation_url: ${{ secrets.PROXY_ROTATION_URL }}
 
       - name: Health Check

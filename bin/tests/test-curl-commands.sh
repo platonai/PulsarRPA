@@ -91,7 +91,7 @@ check_server() {
   else
     log "${RED}[ERROR]${NC} Browser4 server not accessible at $PULSAR_BASE_URL"
     log "${CYAN}[HINT]${NC} Start Browser4 with:"
-    log "    ${BOLD}java -DDEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY} -jar Browser4.jar${NC}"
+    log "    ${BOLD}java -DVOLCENGINE_API_KEY=\${VOLCENGINE_API_KEY} -jar Browser4.jar${NC}"
     return 1
   fi
 }

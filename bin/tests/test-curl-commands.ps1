@@ -234,7 +234,7 @@ function Check-Server {
 
   Log "[ERROR] Browser4 server not accessible at $PULSAR_BASE_URL" -ForegroundColor Red
   Log "[HINT] Start Browser4 with:" -ForegroundColor Cyan
-  Log "    java -DDEEPSEEK_API_KEY=`${DEEPSEEK_API_KEY} -jar Browser4.jar" -ForegroundColor White
+  Log "    java -DVOLCENGINE_API_KEY=`${VOLCENGINE_API_KEY} -jar Browser4.jar" -ForegroundColor White
   return $false
 }
 

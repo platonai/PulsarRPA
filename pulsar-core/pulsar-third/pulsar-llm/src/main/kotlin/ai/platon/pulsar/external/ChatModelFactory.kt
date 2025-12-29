@@ -31,19 +31,19 @@ Simple guide to configure LLM:
 Make sure the environment variable is set:
 
 ```shell
-echo $DEEPSEEK_API_KEY # make sure the environment variable is set. DASHSCOPE_API_KEY/VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+echo $VOLCENGINE_API_KEY # make sure the environment variable is set. DASHSCOPE_API_KEY/VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
 ```
 
 Run Browser4 with the environment variable:
 
 ```shell
-java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar Browser4.jar
+java -D"VOLCENGINE_API_KEY=${VOLCENGINE_API_KEY}" -jar Browser4.jar
 ```
 
 Or run Browser4 with Docker:
 
 ```shell
-docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/browser4:latest
+docker run -d -p 8182:8182 -e VOLCENGINE_API_KEY=${VOLCENGINE_API_KEY} galaxyeye88/browser4:latest
 ```
 
 For more details, please refer to the [LLM configuration documentation]($$DOCUMENT_PATH)
@@ -51,7 +51,7 @@ For more details, please refer to the [LLM configuration documentation]($$DOCUME
 
     // 按顺序检查所有可能的API密钥配置
     val SUPPORTED_API_KEY_NAMES = listOf(
-        "DEEPSEEK_API_KEY",
+        "VOLCENGINE_API_KEY",
         "DASHSCOPE_API_KEY",
         "VOLCENGINE_API_KEY",
         "OPENAI_API_KEY"
@@ -107,8 +107,8 @@ For more details, please refer to the [LLM configuration documentation]($$DOCUME
 
         // Notice: all keys are transformed to dot.separated.kebab-case using KStrings.toDotSeparatedKebabCase(),
         // so the following keys are equal:
-        // - DEEPSEEK_API_KEY, deepseek.apiKey, deepseek.api-key
-        val deepseekAPIKey = conf["DEEPSEEK_API_KEY"]
+        // - VOLCENGINE_API_KEY, deepseek.apiKey, deepseek.api-key
+        val deepseekAPIKey = conf["VOLCENGINE_API_KEY"]
         if (deepseekAPIKey != null) {
             val modelName = conf["DEEPSEEK_MODEL_NAME"] ?: "deepseek-chat"
             val baseURL = conf["DEEPSEEK_BASE_URL"] ?: "https://api.deepseek.com/"

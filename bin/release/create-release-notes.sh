@@ -78,20 +78,20 @@ curl -L -o ${UBERJAR_FILE} ${REPO_URL}/releases/download/v${VERSION}/${UBERJAR_F
 #### 🚀 Run
 
 \`\`\`shell
-echo \$DEEPSEEK_API_KEY # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
-java -D"DEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY}" -jar Browser4.jar
+echo \$VOLCENGINE_API_KEY # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+java -D"VOLCENGINE_API_KEY=\${VOLCENGINE_API_KEY}" -jar Browser4.jar
 \`\`\`
 
-> 🔍 **Tip:** Make sure \`DEEPSEEK_API_KEY\` or other LLM API key is set in your environment, or AI features will not be available.
+> 🔍 **Tip:** Make sure \`VOLCENGINE_API_KEY\` or other LLM API key is set in your environment, or AI features will not be available.
 
-> 🔍 **Tip:** Windows PowerShell syntax: \`\$env:DEEPSEEK_API_KEY\` (environment variable) vs \`\$DEEPSEEK_API_KEY\` (script variable).
+> 🔍 **Tip:** Windows PowerShell syntax: \`\$env:VOLCENGINE_API_KEY\` (environment variable) vs \`\$VOLCENGINE_API_KEY\` (script variable).
 
 ### 🐳 Docker
 
 \`\`\`shell
 # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
-echo \$DEEPSEEK_API_KEY
-docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY} galaxyeye88/browser4:${VERSION}
+echo \$VOLCENGINE_API_KEY
+docker run -d -p 8182:8182 -e VOLCENGINE_API_KEY=\${VOLCENGINE_API_KEY} galaxyeye88/browser4:${VERSION}
 \`\`\`
 
 GitHub Container Registry:

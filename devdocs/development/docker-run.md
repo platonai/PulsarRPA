@@ -89,7 +89,7 @@ docker inspect galaxyeye88/browser4
 ### **9. 运行时环境变量（可选）**
 如果需要设置环境变量（如 API 密钥），可以使用 `-e` 参数：
 ```bash
-docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=your_api_key galaxyeye88/browser4
+docker run -d -p 8182:8182 -e VOLCENGINE_API_KEY=your_api_key galaxyeye88/browser4
 ```
 
 ### **10. 运行时配置文件（可选）**
