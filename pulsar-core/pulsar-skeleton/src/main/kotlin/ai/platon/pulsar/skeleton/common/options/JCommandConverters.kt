@@ -48,35 +48,6 @@ class FetchModeConverter : IStringConverter<FetchMode> {
     }
 }
 
-enum class ItemExtractor {
-    DEFAULT, BOILERPIPE;
-
-    override fun toString(): String {
-        return name.lowercase(Locale.getDefault())
-    }
-
-    companion object {
-        fun fromString(s: String?): ItemExtractor {
-            if (s.isNullOrEmpty()) {
-                return DEFAULT
-            }
-
-            return try {
-                valueOf(s.uppercase(Locale.getDefault()))
-            } catch (e: Throwable) {
-                DEFAULT
-            }
-
-        }
-    }
-}
-
-class ItemExtractorConverter : IStringConverter<ItemExtractor> {
-    override fun convert(value: String): ItemExtractor {
-        return ItemExtractor.fromString(value)
-    }
-}
-
 /**
  * Created by vincent on 17-4-7.
  * Copyright @ 2013-2023 Platon AI. All rights reserved
