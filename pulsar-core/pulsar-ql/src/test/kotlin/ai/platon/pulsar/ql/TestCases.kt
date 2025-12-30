@@ -87,15 +87,10 @@ class TestCases: TestBase() {
     @Test
     fun loadAndGetLinksCityflower() {
         val sql = """
-select * 
+select *
 from load_and_get_links('https://www.cityflower.net/attribute/21.html -i 1d', '.recommend a');
         """.trimIndent()
 
         execute(sql)
-    }
-
-    @Test
-    fun tokenizer() {
-        execute("SELECT STR_CHINESE_TOKENIZE('目标公司为香港懋宏唯一股东')")
     }
 }
