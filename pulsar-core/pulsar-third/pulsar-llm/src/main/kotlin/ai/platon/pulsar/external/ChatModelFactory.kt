@@ -108,12 +108,6 @@ For more details, please refer to the [LLM configuration documentation]($$DOCUME
         // Notice: all keys are transformed to dot.separated.kebab-case using KStrings.toDotSeparatedKebabCase(),
         // so the following keys are equal:
         // - VOLCENGINE_API_KEY, deepseek.apiKey, deepseek.api-key
-        val deepseekAPIKey = conf["VOLCENGINE_API_KEY"]
-        if (deepseekAPIKey != null) {
-            val modelName = conf["DEEPSEEK_MODEL_NAME"] ?: "deepseek-chat"
-            val baseURL = conf["DEEPSEEK_BASE_URL"] ?: "https://api.deepseek.com/"
-            return getOrCreateOpenAICompatibleModel(modelName, deepseekAPIKey, baseURL, conf)
-        }
 
         val dashscopeAPIKey = conf["DASHSCOPE_API_KEY"]
         if (dashscopeAPIKey != null) {
@@ -134,6 +128,13 @@ For more details, please refer to the [LLM configuration documentation]($$DOCUME
             val openaiBaseURL = conf["OPENAI_BASE_URL"] ?: "https://api.openai.com/v1"
             val openaiModelName = conf["OPENAI_MODEL_NAME"] ?: "gpt-4o"
             return getOrCreateOpenAICompatibleModel(openaiModelName, openaiAPIKey, openaiBaseURL, conf)
+        }
+
+        val deepseekAPIKey = conf["DEEPSEEK_API_KEY"]
+        if (deepseekAPIKey != null) {
+            val modelName = conf["DEEPSEEK_MODEL_NAME"] ?: "deepseek-chat"
+            val baseURL = conf["DEEPSEEK_BASE_URL"] ?: "https://api.deepseek.com/"
+            return getOrCreateOpenAICompatibleModel(modelName, deepseekAPIKey, baseURL, conf)
         }
 
         val documentPath = "https://github.com/platonai/browser4/blob/master/docs/config/llm/llm-config-advanced.md"

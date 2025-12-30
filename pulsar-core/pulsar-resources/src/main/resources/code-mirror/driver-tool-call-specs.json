@@ -107,7 +107,13 @@
   "method" : "pageSource",
   "arguments" : [ ],
   "returnType" : "String?",
-  "description" : "    /**\n     * Returns the source of the last loaded page. If the page has been modified after loading (for\n     * example, by Javascript) there is no guarantee that the returned text is that of the modified\n     * page.\n     *\n     * PageSource and outerHTML:\n     *\n     * - pageSource: returns document HTML markup, will support non-HTML document\n     * - outerHTML: returns document HTML markup, for HTML document only\n     *\n     * ```kotlin\n     * val pageSource = driver.pageSource()\n     * ```\n     *\n     * @return The source of the current page\n     */\n"
+  "description" : "    /**\n     * Returns the source of the last loaded page. If the page has been modified after loading (for\n     * example, by JavaScript) there is no guarantee that the returned text is that of the modified\n     * page.\n     *\n     * PageSource and outerHTML:\n     *\n     * - pageSource: returns document HTML markup, will support non-HTML document\n     * - outerHTML: returns document HTML markup, for HTML document only\n     *\n     * ```kotlin\n     * val pageSource = driver.pageSource()\n     * ```\n     *\n     * @return The source of the current page\n     */\n"
+}, {
+  "domain" : "driver",
+  "method" : "title",
+  "arguments" : [ ],
+  "returnType" : "String",
+  "description" : "    /**\n     * Returns the title of the current page.\n     * */\n"
 }, {
   "domain" : "driver",
   "method" : "nanoDOMTree",

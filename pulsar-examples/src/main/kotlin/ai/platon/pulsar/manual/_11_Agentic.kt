@@ -2,7 +2,7 @@ package ai.platon.pulsar.manual
 
 import ai.platon.pulsar.agentic.context.AgenticContexts
 
-class ProblemResolver {
+class AgentRunner {
     val agent = AgenticContexts.getOrCreateAgent()
 
     suspend fun run() {
@@ -19,4 +19,4 @@ go to https://news.ycombinator.com/news , read top 3 articles and give me a summ
     }
 }
 
-suspend fun main() = ProblemResolver().run()
+suspend fun main() = AgentRunner().run()
