@@ -6,6 +6,7 @@ import ai.platon.pulsar.browser.driver.chrome.dom.FBNLocator
 import ai.platon.pulsar.browser.driver.chrome.dom.LocatorMap
 import ai.platon.pulsar.browser.driver.chrome.dom.model.MicroDOMTreeNodeHelper.Companion.estimatedSize
 import ai.platon.pulsar.browser.driver.chrome.dom.util.CSSSelectorUtils
+import ai.platon.pulsar.browser.driver.chrome.dom.util.DOMUtils
 import ai.platon.pulsar.common.math.roundTo
 import ai.platon.pulsar.common.serialize.json.Pson
 import com.fasterxml.jackson.annotation.JsonIgnore
@@ -282,61 +283,9 @@ data class DOMTreeNodeEx constructor(
     val isInteractable: Boolean? = null,
     val interactiveIndex: Int? = null
 ) {
-    fun textContent(): String {
-        val sb = StringBuilder()
+    fun textContent(): String = DOMUtils.textContent(this)
 
-        fun appendToken(s: String?) {
-            val t = s?.trim()
-            if (!t.isNullOrEmpty()) {
-                if (sb.isNotEmpty()) sb.append(' ')
-                sb.append(t)
-            }
-        }
-
-        when (nodeType) {
-            NodeType.TEXT_NODE -> appendToken(nodeValue)
-            else -> {
-                // Prefer accessible name if present
-                appendToken(axNode?.name)
-                // Include meaningful attributes
-                if (attributes.isNotEmpty()) {
-                    DefaultIncludeAttributes.ATTRIBUTES.forEach { key ->
-                        attributes[key]?.let { appendToken(it) }
-                    }
-                }
-            }
-        }
-
-        // Recurse into descendants
-        children.forEach { appendToken(it.textContent()) }
-
-        return sb.toString().replace(Regex("\\s+"), " ").trim()
-    }
-
-    fun slimHTML(): String {
-        val tagName = nodeName.lowercase()
-        val sb = StringBuilder()
-
-        sb.append("<").append(tagName)
-
-        // Include meaningful attributes
-        if (attributes.isNotEmpty()) {
-            DefaultIncludeAttributes.ATTRIBUTES.forEach { key ->
-                attributes[key]?.let {
-                    sb.append(" ").append(key).append("=\"").append(it).append("\"")
-                }
-            }
-        }
-
-        sb.append(">")
-
-        // Recurse into descendants
-        children.forEach { sb.append(it.slimHTML()) }
-
-        sb.append("</").append(tagName).append(">")
-
-        return sb.toString()
-    }
+    fun slimHTML(): String = DOMUtils.slimHTML(this)
 
     /**
      * Build a best-effort CSS selector for this node.
