@@ -23,7 +23,7 @@ inputs:
     description: 'Service port (default: 8182)'
     required: false
     default: '8182'
-  deepseek_api_key:
+  volcengine_api_key:
     description: 'DeepSeek API key (required)'
     required: true
   proxy_rotation_url:
@@ -140,7 +140,7 @@ runs:
         fi
 
         # Add standard environment variables
-        run_cmd="$run_cmd -e VOLCENGINE_API_KEY=${{ inputs.deepseek_api_key }}"
+        run_cmd="$run_cmd -e VOLCENGINE_API_KEY=${{ inputs.volcengine_api_key }}"
         run_cmd="$run_cmd -e PROXY_ROTATION_URL=${{ inputs.proxy_rotation_url }}"
         run_cmd="$run_cmd -e gora.mongodb.servers=mongodb:27017"
         run_cmd="$run_cmd -e SPRING_DATA_MONGODB_URI=mongodb://mongodb:27017/browser4"
