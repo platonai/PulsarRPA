@@ -1,11 +1,15 @@
 package ai.platon.pulsar.protocol.browser.driver
 
-import ai.platon.pulsar.common.*
+import ai.platon.pulsar.common.AppContext
+import ai.platon.pulsar.common.brief
 import ai.platon.pulsar.common.config.AppConstants.DEFAULT_BROWSER_MAX_OPEN_TABS
-import ai.platon.pulsar.common.config.CapabilityTypes.*
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_DRIVER_POOL_IDLE_TIMEOUT
+import ai.platon.pulsar.common.config.CapabilityTypes.BROWSER_MAX_OPEN_TABS
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.MutableConfig
 import ai.platon.pulsar.common.config.VolatileConfig
+import ai.platon.pulsar.common.readable
+import ai.platon.pulsar.common.stringify
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.protocol.browser.emulator.WebDriverPoolExhaustedException
 import ai.platon.pulsar.protocol.browser.impl.BrowserManager
@@ -451,11 +455,11 @@ class LoadingWebDriverPool constructor(
 
     private fun logDriverOnline(driver: WebDriver) {
         require(driver is AbstractWebDriver)
-        val driverSettings = driver.browser.settings
+        val browserSettings = driver.browser.settings
         logger.trace(
             "The {}th web driver is active, browser: {} pageLoadStrategy: {} capacity: {}",
             numActive, driver.name,
-            driverSettings.pageLoadStrategy, capacity
+            browserSettings.pageLoadStrategy, capacity
         )
     }
 }

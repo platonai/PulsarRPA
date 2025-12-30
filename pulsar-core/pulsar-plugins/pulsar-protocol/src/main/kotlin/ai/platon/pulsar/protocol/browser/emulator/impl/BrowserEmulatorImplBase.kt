@@ -59,36 +59,36 @@ abstract class BrowserEmulatorImplBase(
 ) : AbstractEventEmitter<EmulateEvents>(), Parameterized, AutoCloseable {
     private val logger = getLogger(BrowserEmulatorImplBase::class)
     private val tracer = logger.takeIf { it.isTraceEnabled }
-    
+
     val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
     val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
-    
+
     /**
      * The maximum length of the page source, 8M by default.
      * */
     protected val maxPageSourceLength = immutableConfig.getInt(FETCH_MAX_CONTENT_LENGTH, 8 * FileUtils.ONE_MB.toInt())
-    
+
     private val registry = MetricsSystem.reg
     protected val pageSourceByteHistogram by lazy { registry.histogram(this, "hPageSourceBytes") }
     protected val pageSourceBytes by lazy { registry.meter(this, "pageSourceBytes") }
-    
+
     protected val meterNavigates by lazy { registry.meter(this, "navigates") }
     protected val counterJsEvaluates by lazy { registry.counter(this, "jsEvaluates") }
     protected val counterJsWaits by lazy { registry.counter(this, "jsWaits") }
     protected val counterCancels by lazy { registry.counter(this, "cancels") }
-    
+
     protected val closed = AtomicBoolean(false)
-    
+
     /**
      * Whether the emulator is active.
      * */
     val isActive get() = !closed.get() && AppContext.isActive
-    
+
     /**
      * Approximate number of exported web pages.
      * */
     private var exportCount = 0
-    
+
     /**
      * Create a response for the task.
      * */
@@ -96,10 +96,10 @@ abstract class BrowserEmulatorImplBase(
         if (!isActive) {
             return ForwardingResponse.canceled(task.page)
         }
-        
+
         val pageDatum = task.pageDatum
         val length = task.pageSource.length
-        
+
         pageDatum.pageCategory = responseHandler.pageCategorySniffer(pageDatum)
         pageDatum.protocolStatus = responseHandler.checkErrorPage(task.page, pageDatum.protocolStatus)
         pageDatum.lastBrowser = task.driver.browserType
@@ -109,7 +109,7 @@ abstract class BrowserEmulatorImplBase(
             task.pageSource = ""
             return createResponseWithDatum(task, pageDatum)
         }
-        
+
         val isLocalFile = URLUtils.isLocalFile(task.url)
         val ignoreDOMFeatures = isLocalFile || (task.driver as AbstractWebDriver).ignoreDOMFeatures
         // Check whether the source code of the page is intact.
@@ -124,12 +124,12 @@ abstract class BrowserEmulatorImplBase(
             }
             responseHandler.emit(BrowserResponseEvents.browseTimeout)
         }
-        
+
         pageDatum.headers.put(HttpHeaders.CONTENT_LENGTH, length.toString())
         if (integrity.isOK) {
             // Update page source, modify charset directive, do the caching stuff
             task.pageSource = responseHandler.normalizePageSource(task.url, task.pageSource).toString()
-            
+
             pageSourceByteHistogram.update(length)
             pageSourceBytes.mark(length.toLong())
         } else {
@@ -137,32 +137,32 @@ abstract class BrowserEmulatorImplBase(
             pageDatum.protocolStatus = responseHandler.createProtocolStatusForBrokenContent(task.fetchTask, integrity)
             logBrokenPage(task.fetchTask, task.pageSource, integrity)
         }
-        
+
         pageDatum.apply {
             lastBrowser = task.driver.browserType
             htmlIntegrity = integrity
             originalContentLength = task.originalContentLength
             content = task.pageSource.toByteArray(StandardCharsets.UTF_8)
         }
-        
+
         // Update headers, metadata, do the logging stuff
         return createResponseWithDatum(task, pageDatum)
     }
-    
+
     /**
      * Create a response with the page datum.
      * */
     open fun createResponseWithDatum(task: NavigateTask, pageDatum: PageDatum): ForwardingResponse {
         val headers = pageDatum.headers
-        
+
         // The page content's encoding is already converted to UTF-8 by Web driver
         val utf8 = StandardCharsets.UTF_8.name()
         require(utf8 == "UTF-8") { "UTF-8 is expected" }
-        
+
         headers.put(HttpHeaders.CONTENT_ENCODING, utf8)
         headers.put(HttpHeaders.Q_TRUSTED_CONTENT_ENCODING, utf8)
         headers.put(HttpHeaders.Q_RESPONSE_TIME, System.currentTimeMillis().toString())
-        
+
         val urls = pageDatum.activeDOMUrls
         if (urls != null) {
             pageDatum.baseURI = urls.baseURI
@@ -172,38 +172,38 @@ abstract class BrowserEmulatorImplBase(
                 // messageWriter?.debugRedirects(pageDatum.url, urls)
             }
         }
-        
+
         val driver = task.driver as AbstractWebDriver
         if (!driver.isMockedPageSource) {
             exportIfNecessary(task)
         }
-        
+
         return ForwardingResponse(task.page, pageDatum)
     }
-    
+
     /**
      * Close the emulator.
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-        
+
         }
     }
-    
+
     @Throws(NavigateTaskCancellationException::class)
     protected fun checkState() {
         if (!isActive) {
             throw NavigateTaskCancellationException("Emulator was closed")
         }
     }
-    
+
     /**
      * Check the task state.
      * */
     @Throws(NavigateTaskCancellationException::class)
     protected fun checkState(driver: WebDriver) {
         checkState()
-        
+
         require(driver is AbstractWebDriver)
         if (driver.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
@@ -211,31 +211,31 @@ abstract class BrowserEmulatorImplBase(
             throw WebDriverCancellationException("Web driver is canceled #${driver.id}", driver = driver)
         }
     }
-    
+
     /**
      * Check the task state.
      * */
     @Throws(NavigateTaskCancellationException::class, WebDriverCancellationException::class)
     protected fun checkState(task: FetchTask, driver: WebDriver) {
         checkState()
-        
+
         require(driver is AbstractWebDriver)
         if (driver.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
             // and all the running tasks should run again.
             throw WebDriverCancellationException("Web driver is canceled #${driver.id}", driver = driver)
         }
-        
+
         if (task.isCanceled) {
             // the task is canceled, so the navigation is stopped, the driver is closed, the privacy context is reset
             // and all the running tasks should run again.
             throw NavigateTaskCancellationException("Task #${task.batchTaskId}/${task.batchId} is canceled | ${task.url}")
         }
     }
-    
-    protected fun logBeforeNavigate(task: FetchTask, driverSettings: BrowserSettings) {
+
+    protected fun logBeforeNavigate(task: FetchTask, browserSettings: BrowserSettings) {
         if (logger.isTraceEnabled) {
-            val settings = driverSettings.interactSettings
+            val settings = browserSettings.interactSettings
             logger.trace(
                 "Navigate {}/{}/{} in [t{}]{} | {} | timeouts: {}/{}/{}",
                 task.batchTaskId, task.batchSize, task.id,
@@ -246,7 +246,7 @@ abstract class BrowserEmulatorImplBase(
             )
         }
     }
-    
+
     /**
      * Preprocess page content.
      * */
@@ -254,7 +254,7 @@ abstract class BrowserEmulatorImplBase(
         if (content == null) {
             return ""
         }
-        
+
         val length = content.length
         if (length > maxPageSourceLength) {
             /**
@@ -264,10 +264,10 @@ abstract class BrowserEmulatorImplBase(
             logger.warn("Too large page source: {}, truncate it to empty", Strings.compactFormat(length))
             return ""
         }
-        
+
         return content
     }
-    
+
     /**
      * Export the page if one of the following condition matches:
      * 1. The page is failed to fetch
@@ -280,7 +280,7 @@ abstract class BrowserEmulatorImplBase(
             logger.warn("Failed to export webpage | {} | \n{}", task.url, e.stringify())
         }
     }
-    
+
     /**
      * Export the page if one of the following condition matches:
      * 1. The page is failed to fetch
@@ -291,7 +291,7 @@ abstract class BrowserEmulatorImplBase(
             export0(pageSource, status, page)
             return
         }
-        
+
         if (pageSource.isEmpty()) {
             return
         }
@@ -314,20 +314,20 @@ abstract class BrowserEmulatorImplBase(
             }
         }
     }
-    
+
     private fun export0(pageSource: String, status: ProtocolStatus, page: WebPage): Path {
         val path = AppFiles.export(status, pageSource, page)
-        
+
         if (SystemUtils.IS_OS_WINDOWS) {
             // TODO: Issue 16 - https://github.com/platonai/browser4/issues/16
             // Not a good idea to create symbolic link on Windows, it requires administrator privilege
         } else {
             createSymbolicLink(path, page)
         }
-        
+
         return path
     }
-    
+
     private fun createSymbolicLink(path: Path, page: WebPage) {
         // Create a symbolic link with a url based, unique, shorter but less readable file name,
         // we can generate and refer to this path at any place
@@ -339,17 +339,17 @@ abstract class BrowserEmulatorImplBase(
             logger.warn(e.toString())
         }
     }
-    
+
     private fun logBrokenPage(task: FetchTask, pageSource: String, integrity: HtmlIntegrity) {
         if (!isActive) {
             return
         }
-        
+
         val proxyEntry = task.proxyEntry
         val domain = task.domain
         val link = AppPaths.uniqueSymbolicLinkForUri(task.url)
         val readableLength = Strings.compactFormat(pageSource.length)
-        
+
         if (proxyEntry != null) {
             val count = proxyEntry.servedDomains.count(domain)
             logger.warn(
@@ -365,7 +365,7 @@ abstract class BrowserEmulatorImplBase(
             )
         }
     }
-    
+
     protected suspend fun evaluate(
         interactTask: InteractTask, expressions: Iterable<String>, delayMillis: Long,
         bringToFront: Boolean = false, verbose: Boolean = false
@@ -378,12 +378,12 @@ abstract class BrowserEmulatorImplBase(
                 if (bringToFront && i % 2 == 0) {
                     interactTask.driver.bringToFront()
                 }
-                
+
                 evaluate(interactTask, expression, verbose)
                 delay(delayMillis)
             }
     }
-    
+
     protected suspend fun evaluate(
         interactTask: InteractTask, expression: String, verbose: Boolean
     ): Any? {
@@ -397,11 +397,11 @@ abstract class BrowserEmulatorImplBase(
         }
         return value
     }
-    
+
     @Throws(WebDriverCancellationException::class)
     protected suspend fun evaluate(interactTask: InteractTask, expression: String, delayMillis: Long = 0): Any? {
         if (!isActive) return null
-        
+
         counterJsEvaluates.inc()
         checkState(interactTask.navigateTask.fetchTask, interactTask.driver)
         val result = interactTask.driver.evaluate(expression)
