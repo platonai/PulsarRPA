@@ -4,12 +4,12 @@ import ai.platon.pulsar.boot.autoconfigure.test.PulsarTestContextInitializer
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.browser.BrowserProfileMode
 import ai.platon.pulsar.common.config.ImmutableConfig
+import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.rest.api.TestHelper.MOCK_PRODUCT_DETAIL_URL
 import ai.platon.pulsar.rest.api.common.MockEcServerTestBase
 import ai.platon.pulsar.rest.api.config.MockEcServerConfiguration
-import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.rest.api.entities.CommandRequest
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assumptions
@@ -232,7 +232,7 @@ class CommandServiceTest : MockEcServerTestBase() {
     fun `test executeCommand with uriExtractionRules in regex`() {
         val request = CommandRequest(
             MOCK_PRODUCT_DETAIL_URL,
-            uriExtractionRules = "Regex: http://localhost:8182/ec/dp/\\w+"
+            uriExtractionRules = "Regex: http://localhost:\\d+/ec/dp/\\w+"
         )
 
         val status = runBlocking { commandService.executeCommand(request) }
