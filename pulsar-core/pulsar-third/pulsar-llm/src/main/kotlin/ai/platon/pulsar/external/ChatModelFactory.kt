@@ -31,19 +31,19 @@ Simple guide to configure LLM:
 Make sure the environment variable is set:
 
 ```shell
-echo $VOLCENGINE_API_KEY # make sure the environment variable is set. DASHSCOPE_API_KEY/VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+echo $DEEPSEEK_API_KEY # make sure the environment variable is set. DASHSCOPE_API_KEY/VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
 ```
 
 Run Browser4 with the environment variable:
 
 ```shell
-java -D"VOLCENGINE_API_KEY=${VOLCENGINE_API_KEY}" -jar Browser4.jar
+java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar Browser4.jar
 ```
 
 Or run Browser4 with Docker:
 
 ```shell
-docker run -d -p 8182:8182 -e VOLCENGINE_API_KEY=${VOLCENGINE_API_KEY} galaxyeye88/browser4:latest
+docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/browser4:latest
 ```
 
 For more details, please refer to the [LLM configuration documentation]($$DOCUMENT_PATH)
@@ -51,7 +51,8 @@ For more details, please refer to the [LLM configuration documentation]($$DOCUME
 
     // 按顺序检查所有可能的API密钥配置
     val SUPPORTED_API_KEY_NAMES = listOf(
-        "VOLCENGINE_API_KEY",
+        "OPENROUTER_API_KEY",
+        "DEEPSEEK_API_KEY",
         "DASHSCOPE_API_KEY",
         "VOLCENGINE_API_KEY",
         "OPENAI_API_KEY"
@@ -105,42 +106,50 @@ For more details, please refer to the [LLM configuration documentation]($$DOCUME
             throw IllegalArgumentException("The LLM is not configured, see docs/config/llm/llm-config.md")
         }
 
+        // OPENROUTER_API_KEY=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
+        // MODEL_TO_USE=openrouter/google/gemini-flash-1.5
+        var apiKey = conf["OPENROUTER_API_KEY"]
+        if (apiKey != null) {
+            val modelName = conf["OPENROUTER_MODEL_NAME"] ?: "bytedance-seed/seed-1.6"
+            val baseURL = conf["OPENROUTER_BASE_URL"] ?: "https://openrouter.ai/api/v1"
+            return getOrCreateOpenAICompatibleModel(modelName, apiKey, baseURL, conf)
+        }
+
         // Notice: all keys are transformed to dot.separated.kebab-case using KStrings.toDotSeparatedKebabCase(),
         // so the following keys are equal:
-        // - VOLCENGINE_API_KEY, deepseek.apiKey, deepseek.api-key
-
-        val dashscopeAPIKey = conf["DASHSCOPE_API_KEY"]
-        if (dashscopeAPIKey != null) {
-            val modelName = conf["DASHSCOPE_MODEL_NAME"] ?: "qwen-plus"
-            val baseURL = conf["DASHSCOPE_BASE_URL"] ?: "https://dashscope.aliyuncs.com/compatible-mode/v1"
-            return getOrCreateOpenAICompatibleModel(modelName, dashscopeAPIKey, baseURL, conf)
-        }
-
-        val volcengineAPIKey = conf["VOLCENGINE_API_KEY"]
-        if (volcengineAPIKey != null) {
-            val modelName = conf["VOLCENGINE_MODEL_NAME"] ?: "doubao-1.5-pro-32k-250115"
-            val baseURL = conf["VOLCENGINE_BASE_URL"] ?: "https://ark.cn-beijing.volces.com/api/v3"
-            return getOrCreateOpenAICompatibleModel(modelName, volcengineAPIKey, baseURL, conf)
-        }
-
-        val openaiAPIKey = conf["OPENAI_API_KEY"]
-        if (openaiAPIKey != null) {
-            val openaiBaseURL = conf["OPENAI_BASE_URL"] ?: "https://api.openai.com/v1"
-            val openaiModelName = conf["OPENAI_MODEL_NAME"] ?: "gpt-4o"
-            return getOrCreateOpenAICompatibleModel(openaiModelName, openaiAPIKey, openaiBaseURL, conf)
-        }
-
-        val deepseekAPIKey = conf["DEEPSEEK_API_KEY"]
-        if (deepseekAPIKey != null) {
+        // - DEEPSEEK_API_KEY, deepseek.apiKey, deepseek.api-key
+        apiKey = conf["DEEPSEEK_API_KEY"]
+        if (apiKey != null) {
             val modelName = conf["DEEPSEEK_MODEL_NAME"] ?: "deepseek-chat"
             val baseURL = conf["DEEPSEEK_BASE_URL"] ?: "https://api.deepseek.com/"
-            return getOrCreateOpenAICompatibleModel(modelName, deepseekAPIKey, baseURL, conf)
+            return getOrCreateOpenAICompatibleModel(modelName, apiKey, baseURL, conf)
+        }
+
+        apiKey = conf["DASHSCOPE_API_KEY"]
+        if (apiKey != null) {
+            val modelName = conf["DASHSCOPE_MODEL_NAME"] ?: "qwen-plus"
+            val baseURL = conf["DASHSCOPE_BASE_URL"] ?: "https://dashscope.aliyuncs.com/compatible-mode/v1"
+            return getOrCreateOpenAICompatibleModel(modelName, apiKey, baseURL, conf)
+        }
+
+        apiKey = conf["VOLCENGINE_API_KEY"]
+        if (apiKey != null) {
+            val modelName = conf["VOLCENGINE_MODEL_NAME"] ?: "doubao-1.5-pro-32k-250115"
+            val baseURL = conf["VOLCENGINE_BASE_URL"] ?: "https://ark.cn-beijing.volces.com/api/v3"
+            return getOrCreateOpenAICompatibleModel(modelName, apiKey, baseURL, conf)
+        }
+
+        apiKey = conf["OPENAI_API_KEY"]
+        if (apiKey != null) {
+            val openaiBaseURL = conf["OPENAI_BASE_URL"] ?: "https://api.openai.com/v1"
+            val modelName = conf["OPENAI_MODEL_NAME"] ?: "gpt-4o"
+            return getOrCreateOpenAICompatibleModel(modelName, apiKey, openaiBaseURL, conf)
         }
 
         val documentPath = "https://github.com/platonai/browser4/blob/master/docs/config/llm/llm-config-advanced.md"
         val provider = requireNotNull(conf[LLM_PROVIDER]) { "$LLM_PROVIDER is not set, see $documentPath" }
         val modelName = requireNotNull(conf[LLM_NAME]) { "$LLM_NAME is not set, see $documentPath" }
-        val apiKey = requireNotNull(conf[LLM_API_KEY]) { "$LLM_API_KEY is not set, see $documentPath" }
+        apiKey = requireNotNull(conf[LLM_API_KEY]) { "$LLM_API_KEY is not set, see $documentPath" }
 
         return getOrCreate(provider, modelName, apiKey, conf)
     }
