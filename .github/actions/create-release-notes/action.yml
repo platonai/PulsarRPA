@@ -25,14 +25,14 @@ runs:
       shell: bash
       run: |
         echo "📝 Generating release notes..."
-        
+
         # Get previous tag for changelog
         PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-        
+
         # Get JAR size
         JAR_SIZE=$(stat -c%s "${{ inputs.jar_path }}" 2>/dev/null || echo 0)
         JAR_SIZE_HUMAN=$(numfmt --to=iec --suffix=B $JAR_SIZE)
-        
+
         # Get commit count and contributors
         if [ -n "$PREV_TAG" ]; then
           COMMIT_COUNT=$(git rev-list --count "$PREV_TAG"..HEAD 2>/dev/null || echo "0")
@@ -43,15 +43,15 @@ runs:
           CHANGELOG=$(git log --pretty=format:"- %s ([%h](https://github.com/${{ github.repository }}/commit/%H))" HEAD~10..HEAD)
           CHANGELOG_LINK="Initial release"
         fi
-        
+
         CONTRIBUTOR_COUNT=$(git shortlog -sn ${PREV_TAG:+$PREV_TAG..}HEAD | wc -l)
         BUILD_DATE=$(date -u +'%Y-%m-%d %H:%M:%S UTC')
-        
+
         # Create release notes
         cat > ${{ inputs.output_file }} << EOF
         # 🚀 Browser4 v${{ inputs.version }} Release Notes
 
-        **Release Date:** $BUILD_DATE  
+        **Release Date:** $BUILD_DATE
         **Java Version:** ${{ inputs.java_version }}
         **Built by:** @${{ github.actor }}
 
@@ -75,30 +75,30 @@ runs:
         ## 🚀 Quick Start
 
         ### 📥 Download & Run
-        
+
         #### 🧩 Download
-        
-        
+
+
         \`\`\`bash
         curl -L -o ${{ inputs.jar_name }} https://github.com/${{ github.repository }}/releases/download/v${{ inputs.version }}/${{ inputs.jar_name }}
         \`\`\`
-        
+
         #### 🚀 Run
-        
+
         \`\`\`shell
-        echo \$DEEPSEEK_API_KEY # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
-        java -D"DEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY}" -jar Browser4.jar
+        echo \$OPENROUTER_API_KEY # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+        java -D"OPENROUTER_API_KEY=\${OPENROUTER_API_KEY}" -jar Browser4.jar
         \`\`\`
-        
-        > 🔍 **Tip:** Make sure \`DEEPSEEK_API_KEY\` or other LLM API key is set in your environment, or AI features will not be available.
-        
-        > 🔍 **Tip:** Windows PowerShell syntax: \`\$env:DEEPSEEK_API_KEY\` (environment variable) vs \`\$DEEPSEEK_API_KEY\` (script variable).
+
+        > 🔍 **Tip:** Make sure \`OPENROUTER_API_KEY\` or other LLM API key is set in your environment, or AI features will not be available.
+
+        > 🔍 **Tip:** Windows PowerShell syntax: \`\$env:OPENROUTER_API_KEY\` (environment variable) vs \`\$OPENROUTER_API_KEY\` (script variable).
         ### 🐳 Docker
 
         \`\`\`shell
         # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
-        echo \$DEEPSEEK_API_KEY
-        docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=\${DEEPSEEK_API_KEY} galaxyeye88/browser4:${{ inputs.version }}
+        echo \$OPENROUTER_API_KEY
+        docker run -d -p 8182:8182 -e OPENROUTER_API_KEY=\${OPENROUTER_API_KEY} galaxyeye88/browser4:${{ inputs.version }}
         \`\`\`
 
         GitHub Container Registry:
@@ -114,5 +114,5 @@ runs:
 
         *Built with ❤️ by the Browser4 team*
         EOF
-        
+
         echo "✅ Release notes generated: ${{ inputs.output_file }}"

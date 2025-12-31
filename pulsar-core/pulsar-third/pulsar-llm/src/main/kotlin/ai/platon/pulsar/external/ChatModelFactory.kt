@@ -31,19 +31,19 @@ Simple guide to configure LLM:
 Make sure the environment variable is set:
 
 ```shell
-echo $DEEPSEEK_API_KEY # make sure the environment variable is set. DASHSCOPE_API_KEY/VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+echo $OPENROUTER_API_KEY # make sure the environment variable is set. DASHSCOPE_API_KEY/VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
 ```
 
 Run Browser4 with the environment variable:
 
 ```shell
-java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar Browser4.jar
+java -D"OPENROUTER_API_KEY=${OPENROUTER_API_KEY}" -jar Browser4.jar
 ```
 
 Or run Browser4 with Docker:
 
 ```shell
-docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/browser4:latest
+docker run -d -p 8182:8182 -e OPENROUTER_API_KEY=${OPENROUTER_API_KEY} galaxyeye88/browser4:latest
 ```
 
 For more details, please refer to the [LLM configuration documentation]($$DOCUMENT_PATH)
@@ -117,7 +117,7 @@ For more details, please refer to the [LLM configuration documentation]($$DOCUME
 
         // Notice: all keys are transformed to dot.separated.kebab-case using KStrings.toDotSeparatedKebabCase(),
         // so the following keys are equal:
-        // - DEEPSEEK_API_KEY, deepseek.apiKey, deepseek.api-key
+        // - OPENROUTER_API_KEY, deepseek.apiKey, deepseek.api-key
         apiKey = conf["DEEPSEEK_API_KEY"]
         if (apiKey != null) {
             val modelName = conf["DEEPSEEK_MODEL_NAME"] ?: "deepseek-chat"
