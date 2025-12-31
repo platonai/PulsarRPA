@@ -52,7 +52,10 @@ jobs:
         uses: ./.github/actions/verify-dependencies
         with:
           network_name: ${{ env.NETWORK_NAME }}
-          services_to_start: 'mongodb'
+          compose_file: './docker-compose.yml'
+          services_to_start: 'b4-mongodb'
+          mongodb_container: 'b4-mongodb'
+          mongodb_port: '27017'
           startup_timeout: '120'
           verify_network_connectivity: 'true'
 

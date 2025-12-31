@@ -33,7 +33,10 @@ jobs:
         uses: ./.github/actions/verify-dependencies
         with:
           network_name: ${{ env.NETWORK_NAME }}
-          services_to_start: 'mongodb'  # ✅ Only start MongoDB
+          compose_file: './docker-compose.yml'
+          services_to_start: 'b4-mongodb'
+          mongodb_container: 'b4-mongodb'
+          mongodb_port: '27017'
           startup_timeout: '120'
           verify_network_connectivity: 'true'
 
@@ -105,11 +108,11 @@ jobs:
         shell: bash
         run: |
           echo "::group::🧪 End to End Tests"
-          
+
           if [ -f "./bin/tests/run-e2e-test.sh" ]; then
             echo "✅ Found E2E test script"
             chmod +x ./bin/tests/run-e2e-test.sh
-          
+
             echo "🚀 Running E2E tests..."
             date
             echo "Application URL: http://localhost:8182"
@@ -129,7 +132,7 @@ jobs:
             echo "Skipping E2E tests..."
             echo "E2E_status=skipped" >> $GITHUB_OUTPUT
           fi
-          
+
           echo "::endgroup::"
 
       - name: Pipeline Summary
@@ -137,7 +140,7 @@ jobs:
         shell: bash
         run: |
           echo "::group::📊 Pipeline Summary"
-          
+
           echo "🎯 Pipeline Results:"
           echo "  - Setup: ${{ steps.setup.outcome }}"
           echo "  - Dependencies: ${{ steps.deps.outcome }}"
@@ -147,7 +150,7 @@ jobs:
           echo "  - Application: ${{ steps.app.outcome }}"
           echo "  - Health Check: ${{ steps.health.outcome }}"
           echo "  - Integration Tests: ${{ steps.integration-tests.outcome || 'skipped' }}"
-          
+
           echo ""
           echo "🌐 Infrastructure:"
           echo "  - Network: ${{ env.NETWORK_NAME }}"
@@ -155,12 +158,12 @@ jobs:
           echo "  - Image: browser4:${{ github.sha }}"
           echo "  - MongoDB: ${{ steps.deps.outputs.mongodb_status }}"
           echo "  - Redis: ${{ steps.deps.outputs.redis_status }}"
-          
+
           echo ""
           echo "📅 Completed at: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
           echo "👤 Triggered by: ${{ github.actor }}"
           echo "🌟 Commit: ${{ github.sha }}"
-          
+
           echo "::endgroup::"
 
       - name: Cleanup Resources
