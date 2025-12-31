@@ -91,7 +91,7 @@ $env:BROWSER_DISPLAY_MODE = "HEADLESS"
 Set configuration via command-line JVM args:
 
 ```
--Dvolcengine.api.key=sk-yourllmproviderapikey
+-D"volcengine.api.key=sk-yourllmproviderapikey"
 ```
 
 ---
@@ -133,8 +133,8 @@ docker run -d -p 8182:8182 `
 
 ## ⚙️ Common Configuration Options
 
-* **`volcengine.api.key`**
-  Your DeepSeek API key. Check [LLM Configuration Guide](../docs/config/llm/llm-config.md) for more LLM providers.
+* **`openrouter.api.key`**
+  Your OpenRouter API key. Check [LLM Configuration Guide](../docs/config/llm/llm-config.md) for more LLM providers.
 
 - **`browser.context.mode`** (`DEFAULT` | `SYSTEM_DEFAULT` | `PROTOTYPE` | `SEQUENTIAL` | `TEMPORARY`)
   Defines how the user data directory is assigned for each browser instance.

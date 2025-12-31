@@ -8,8 +8,10 @@ You can configure the API key at runtime using JVM system properties.
 
 ### 🌐 Built-in LLM Providers
 
+* OpenRouter
 * DeepSeek
-* Doubao (VolcEngine)
+* Doubao (ByteDance / VolcEngine)
+* Qwen (Alibaba)
 * OpenAI (and compatible providers)
 
 ---
@@ -19,7 +21,7 @@ You can configure the API key at runtime using JVM system properties.
 #### 💻 Linux / macOS:
 
 ```bash
-export VOLCENGINE_API_KEY="sk-your-deepseek-key"
+export VOLCENGINE_API_KEY="sk-your-api-key"
 java -DVOLCENGINE_API_KEY=${VOLCENGINE_API_KEY} -jar Browser4.jar
 ````
 
@@ -28,7 +30,7 @@ java -DVOLCENGINE_API_KEY=${VOLCENGINE_API_KEY} -jar Browser4.jar
 ✅ **Option 1: Using Local (Script-Only) Variable**
 
 ```powershell
-$VOLCENGINE_API_KEY = "sk-your-deepseek-key"
+$VOLCENGINE_API_KEY = "sk-your-api-key"
 java -D"VOLCENGINE_API_KEY=$VOLCENGINE_API_KEY" -jar Browser4.jar
 ```
 
@@ -37,7 +39,7 @@ java -D"VOLCENGINE_API_KEY=$VOLCENGINE_API_KEY" -jar Browser4.jar
 ✅ **Option 2: Using Environment Variable (System-Wide)**
 
 ```powershell
-$env:VOLCENGINE_API_KEY = "sk-your-deepseek-key"
+$env:VOLCENGINE_API_KEY = "sk-your-api-key"
 java -D"VOLCENGINE_API_KEY=$env:VOLCENGINE_API_KEY" -jar Browser4.jar
 ```
 
@@ -55,7 +57,7 @@ Browser4 supports Spring Boot–style property files. You can place your private
 #### 🔍 DeepSeek
 
 ```properties
-volcengine.api.key=sk-your-deepseek-key
+deepseek.api.key=sk-your-api-key
 ```
 
 #### 📦 Doubao
@@ -84,14 +86,14 @@ Browser4 follows **Spring Boot configuration rules**, which means you can use co
 
 **Important**: The following formats are **identical** and interchangeable:
 
-| Environment Variable Format | Properties File Format | Description |
-|----------------------------|----------------------|-------------|
-| `VOLCENGINE_API_KEY` | `volcengine.api.key` | DeepSeek API key |
-| `VOLCENGINE_API_KEY` | `volcengine.api.key` | VolcEngine (Doubao) API key |
-| `OPENAI_API_KEY` | `openai.api.key` | OpenAI API key |
-| `BROWSER_CONTEXT_MODE` | `browser.context.mode` | Browser context mode |
-| `BROWSER_MAX_OPEN_TABS` | `browser.max.active.tabs` | Max browser tabs |
-| `PROXY_ROTATION_URL` | `proxy.rotation.url` | Proxy rotation endpoint |
+| Environment Variable Format | Properties File Format    | Description                 |
+|-----------------------------|---------------------------|-----------------------------|
+| `OPENROUTER_API_KEY`        | `openrouter.api.key`      | OpenRouter API key          |
+| `VOLCENGINE_API_KEY`        | `volcengine.api.key`      | VolcEngine (Doubao) API key |
+| `OPENAI_API_KEY`            | `openai.api.key`          | OpenAI API key              |
+| `BROWSER_CONTEXT_MODE`      | `browser.context.mode`    | Browser context mode        |
+| `BROWSER_MAX_OPEN_TABS`     | `browser.max.active.tabs` | Max browser tabs            |
+| `PROXY_ROTATION_URL`        | `proxy.rotation.url`      | Proxy rotation endpoint     |
 
 > 💡 **Spring Boot Convention**: Environment variables use `UPPER_CASE_WITH_UNDERSCORES` while properties files use `lower.case.with.dots`. Both formats reference the same configuration value.
 
