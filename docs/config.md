@@ -22,7 +22,7 @@ A sample `application.properties` is located at the project root. For privacy, r
 
 ```properties
 # browser.context.mode=SYSTEM_DEFAULT # Optional: use your system's default browser profile
-volcengine.api.key=
+openrouter.api.key=
 ```
 
 #### [**Advanced**] For high-performance, parallel crawling:
@@ -46,12 +46,12 @@ For standard desktop usage:
 
 Linux/MacOS
 ```bash
-export VOLCENGINE_API_KEY=sk-yourllmproviderapikey
+export OPENROUTER_API_KEY=sk-yourllmproviderapikey
 ```
 
 Windows (PowerShell)
 ```powershell
-$env:VOLCENGINE_API_KEY = "sk-yourllmproviderapikey"
+$env:OPENROUTER_API_KEY = "sk-yourllmproviderapikey"
 ```
 
 If you want to use your daily used browser profile (remember closed the browser first):
@@ -91,7 +91,7 @@ $env:BROWSER_DISPLAY_MODE = "HEADLESS"
 Set configuration via command-line JVM args:
 
 ```
--D"volcengine.api.key=sk-yourllmproviderapikey"
+-D"openrouter.api.key=sk-yourllmproviderapikey"
 ```
 
 ---
@@ -104,7 +104,7 @@ For Docker deployments, use environment variables in the `docker run` command.
 
 ```bash
 docker run -d -p 8182:8182 \
-  -e VOLCENGINE_API_KEY=${VOLCENGINE_API_KEY} \
+  -e OPENROUTER_API_KEY=${OPENROUTER_API_KEY} \
   -e PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint \
   -e BROWSER_CONTEXT_MODE=SEQUENTIAL \
   -e BROWSER_CONTEXT_NUMBER=2 \
@@ -117,7 +117,7 @@ docker run -d -p 8182:8182 \
 
 ```powershell
 docker run -d -p 8182:8182 `
-  -e VOLCENGINE_API_KEY=$env:VOLCENGINE_API_KEY `
+  -e OPENROUTER_API_KEY=$env:OPENROUTER_API_KEY `
   -e PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint `
   -e BROWSER_CONTEXT_MODE=SEQUENTIAL `
   -e BROWSER_CONTEXT_NUMBER=2 `

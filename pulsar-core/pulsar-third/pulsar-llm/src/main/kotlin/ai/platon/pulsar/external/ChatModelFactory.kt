@@ -31,7 +31,7 @@ Simple guide to configure LLM:
 Make sure the environment variable is set:
 
 ```shell
-echo $OPENROUTER_API_KEY # make sure the environment variable is set. DASHSCOPE_API_KEY/VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+echo $OPENROUTER_API_KEY # make sure the environment variable is set. DASHSCOPE_API_KEY/OPENROUTER_API_KEY/OPENAI_API_KEY also supported.
 ```
 
 Run Browser4 with the environment variable:

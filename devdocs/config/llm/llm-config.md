@@ -21,8 +21,8 @@ You can configure the API key at runtime using JVM system properties.
 #### 💻 Linux / macOS:
 
 ```bash
-export VOLCENGINE_API_KEY="sk-your-api-key"
-java -DVOLCENGINE_API_KEY=${VOLCENGINE_API_KEY} -jar Browser4.jar
+export OPENROUTER_API_KEY="sk-yourllmproviderapikey"
+java -DOPENROUTER_API_KEY=${OPENROUTER_API_KEY} -jar Browser4.jar
 ````
 
 #### 🪟 Windows (PowerShell):
@@ -30,8 +30,8 @@ java -DVOLCENGINE_API_KEY=${VOLCENGINE_API_KEY} -jar Browser4.jar
 ✅ **Option 1: Using Local (Script-Only) Variable**
 
 ```powershell
-$VOLCENGINE_API_KEY = "sk-your-api-key"
-java -D"VOLCENGINE_API_KEY=$VOLCENGINE_API_KEY" -jar Browser4.jar
+$OPENROUTER_API_KEY = "sk-yourllmproviderapikey"
+java -D"OPENROUTER_API_KEY=$OPENROUTER_API_KEY" -jar Browser4.jar
 ```
 
 ⚠️ This sets a PowerShell *local variable*, which works **only inside PowerShell**, and is passed correctly because Java gets the interpolated string from PowerShell.
@@ -39,8 +39,8 @@ java -D"VOLCENGINE_API_KEY=$VOLCENGINE_API_KEY" -jar Browser4.jar
 ✅ **Option 2: Using Environment Variable (System-Wide)**
 
 ```powershell
-$env:VOLCENGINE_API_KEY = "sk-your-api-key"
-java -D"VOLCENGINE_API_KEY=$env:VOLCENGINE_API_KEY" -jar Browser4.jar
+$env:OPENROUTER_API_KEY = "sk-your-api-key"
+java -D"OPENROUTER_API_KEY=$env:OPENROUTER_API_KEY" -jar Browser4.jar
 ```
 
 ---
@@ -103,7 +103,7 @@ Browser4 follows **Spring Boot configuration rules**, which means you can use co
 
 | Variable              | Description                                               |
 |-----------------------|-----------------------------------------------------------|
-| `VOLCENGINE_API_KEY`    | DeepSeek API key                                          |
+| `DEEPSEEK_API_KEY`    | DeepSeek API key                                          |
 | `DEEPSEEK_MODEL_NAME` | DeepSeek model name (optional, default: `deepseek-chat`)  |
 
 ### Doubao (VolcEngine)

@@ -16,7 +16,7 @@ class PropertyNameStyleTest {
         "server.servlet.contextPath, server.servlet.context-path",
         "my.main-project.person.firstName, my.main-project.person.first-name",
 
-        "VOLCENGINE_API_KEY, volcengine.api.key",
+        "OPENROUTER_API_KEY, openrouter.api.key",
         "llm.apiKey, llm.api-key",
 
         "MY_CUSTOM_SETTING, my.custom.setting",

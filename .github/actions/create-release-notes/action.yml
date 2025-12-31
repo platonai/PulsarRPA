@@ -86,7 +86,7 @@ runs:
         #### 🚀 Run
 
         \`\`\`shell
-        echo \$OPENROUTER_API_KEY # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+        echo \$OPENROUTER_API_KEY # make sure LLM api key is set. OPENROUTER_API_KEY/OPENAI_API_KEY also supported.
         java -D"OPENROUTER_API_KEY=\${OPENROUTER_API_KEY}" -jar Browser4.jar
         \`\`\`
 
@@ -96,7 +96,7 @@ runs:
         ### 🐳 Docker
 
         \`\`\`shell
-        # make sure LLM api key is set. VOLCENGINE_API_KEY/OPENAI_API_KEY also supported.
+        # make sure LLM api key is set. OPENROUTER_API_KEY/OPENAI_API_KEY also supported.
         echo \$OPENROUTER_API_KEY
         docker run -d -p 8182:8182 -e OPENROUTER_API_KEY=\${OPENROUTER_API_KEY} galaxyeye88/browser4:${{ inputs.version }}
         \`\`\`

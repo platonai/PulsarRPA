@@ -10,11 +10,11 @@ docker build -t browser4-dev .
 
 ```bash
 docker run -p 8182:8182 \
-  -e VOLCENGINE_API_KEY=${VOLCENGINE_API_KEY} \
+  -e OPENROUTER_API_KEY=${OPENROUTER_API_KEY} \
   browser4-dev:latest
 ```
 
-> 💡 Please make sure you have set `VOLCENGINE_API_KEY` environment.
+> 💡 Please make sure you have set `OPENROUTER_API_KEY` environment.
 
 ## ✅ Test Browser4 API
 
@@ -37,14 +37,14 @@ curl -X POST "http://localhost:8182/api/ai/command" \
 
 ```bash
 docker run -d -p 8182:8182 \
-  -e VOLCENGINE_API_KEY=${VOLCENGINE_API_KEY} \
+  -e OPENROUTER_API_KEY=${OPENROUTER_API_KEY} \
   galaxyeye88/browser4:latest
 ```
 
 ## ⚙️ Run with Docker Compose
 
 ```bash
-export VOLCENGINE_API_KEY=your-api-key
+export OPENROUTER_API_KEY=your-api-key
 # export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 docker compose up -d
 ```
