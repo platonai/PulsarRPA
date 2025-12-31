@@ -102,7 +102,7 @@ inputs:
     default: '600'
 
   # Environment Variables
-  volcengine_api_key:
+  deepseek_api_key:
     description: 'DeepSeek API key'
     required: false
     default: ''
@@ -181,12 +181,12 @@ runs:
       shell: bash
       run: |
         echo "::group::🚀 Pipeline Initialization"
-
+        
         # Record start time
         START_TIME=$(date +%s)
         echo "start_time=$START_TIME" >> $GITHUB_OUTPUT
         echo "PIPELINE_START_TIME=$START_TIME" >> $GITHUB_ENV
-
+        
         echo "📋 Complete CI/CD Pipeline Configuration:"
         echo "  - Java Version: ${{ inputs.java_version }}"
         echo "  - Maven Profiles: ${{ inputs.maven_profiles }}"
@@ -197,7 +197,7 @@ runs:
         echo "  - Network: ${{ inputs.network_name }}"
         echo "  - Service Port: ${{ inputs.service_port }}"
         echo "  - Debug Mode: ${{ inputs.debug_mode }}"
-
+        
         # Set full image name
         if [ -n "${{ inputs.image_registry }}" ]; then
           FULL_IMAGE_NAME="${{ inputs.image_registry }}/${{ inputs.image_name }}"
@@ -205,7 +205,7 @@ runs:
           FULL_IMAGE_NAME="${{ inputs.image_name }}"
         fi
         echo "FULL_IMAGE_NAME=$FULL_IMAGE_NAME" >> $GITHUB_ENV
-
+        
         echo "🏁 Pipeline started at: $(date -u +'%Y-%m-%d %H:%M:%S UTC')"
         echo "::endgroup::"
 
@@ -257,7 +257,7 @@ runs:
         version: ${{ inputs.image_version }}
         container_name: ${{ inputs.container_name }}
         network_name: ${{ inputs.network_name }}
-        volcengine_api_key: ${{ inputs.volcengine_api_key }}
+        deepseek_api_key: ${{ inputs.deepseek_api_key }}
         proxy_rotation_url: ${{ inputs.proxy_rotation_url }}
 
     - name: Health Check
@@ -275,14 +275,14 @@ runs:
       shell: bash
       run: |
         echo "::group::🧪 Integration Tests"
-
+        
         SCRIPT_PATH="${{ inputs.integration_test_script }}"
         TIMEOUT_SECONDS="${{ inputs.integration_test_timeout }}"
-
+        
         if [ -f "$SCRIPT_PATH" ]; then
           echo "✅ Found integration test script: $SCRIPT_PATH"
           chmod +x "$SCRIPT_PATH"
-
+        
           echo "🚀 Running integration tests..."
           echo "📋 Configuration:"
           echo "  - Application URL: http://localhost:${{ inputs.service_port }}"
@@ -290,12 +290,12 @@ runs:
           echo "  - Container: ${{ inputs.container_name }}"
           echo "  - Timeout: ${TIMEOUT_SECONDS}s"
           echo "  - Script: $SCRIPT_PATH"
-
+        
           # Set environment variables for the test script
           export APPLICATION_URL="http://localhost:${{ inputs.service_port }}"
           export CONTAINER_NAME="${{ inputs.container_name }}"
           export NETWORK_NAME="${{ inputs.network_name }}"
-
+        
           # Run integration tests with timeout
           if timeout "$TIMEOUT_SECONDS" "$SCRIPT_PATH"; then
             echo "✅ Integration tests passed"
@@ -303,21 +303,21 @@ runs:
           else
             exit_code=$?
             echo "❌ Integration tests failed (exit code: $exit_code)"
-
+        
             if [ "${{ inputs.debug_mode }}" = "true" ]; then
               echo ""
               echo "🔍 Debug: Recent application logs:"
               docker logs --tail 50 "${{ inputs.container_name }}" 2>&1 | sed 's/^/    /' || true
-
+        
               echo ""
               echo "🔍 Debug: Container status:"
               docker ps -a --filter "name=${{ inputs.container_name }}" || true
-
+        
               echo ""
               echo "🔍 Debug: Network information:"
               docker network ls | grep "${{ inputs.network_name }}" || true
             fi
-
+        
             echo "integration_status=failed" >> $GITHUB_OUTPUT
             exit 1
           fi
@@ -326,7 +326,7 @@ runs:
           echo "Skipping integration tests..."
           echo "integration_status=skipped" >> $GITHUB_OUTPUT
         fi
-
+        
         echo "::endgroup::"
 
     - name: Pipeline Summary
@@ -335,16 +335,16 @@ runs:
       shell: bash
       run: |
         echo "::group::📊 Pipeline Summary"
-
+        
         # Calculate duration
         END_TIME=$(date +%s)
         DURATION=$((END_TIME - PIPELINE_START_TIME))
         echo "duration=$DURATION" >> $GITHUB_OUTPUT
-
+        
         # Determine overall status
         FAILED_STEPS=""
         OVERALL_STATUS="success"
-
+        
         # Check each step
         if [ "${{ steps.setup-env.outcome }}" = "failure" ]; then
           FAILED_STEPS="$FAILED_STEPS Setup"
@@ -378,9 +378,9 @@ runs:
           FAILED_STEPS="$FAILED_STEPS Integration-Tests"
           OVERALL_STATUS="failure"
         fi
-
+        
         echo "status=$OVERALL_STATUS" >> $GITHUB_OUTPUT
-
+        
         echo "🎯 Pipeline Results:"
         echo "  - Overall Status: $OVERALL_STATUS"
         echo "  - Duration: ${DURATION}s ($(date -d@$DURATION -u +%H:%M:%S))"
@@ -392,12 +392,12 @@ runs:
         echo "  - Start Application: ${{ steps.start-app.outcome }}"
         echo "  - Health Check: ${{ steps.health-check.outcome }}"
         echo "  - Integration Tests: ${{ steps.integration-tests.outcome || 'skipped' }}"
-
+        
         if [ -n "$FAILED_STEPS" ]; then
           echo ""
           echo "❌ Failed Steps:$FAILED_STEPS"
         fi
-
+        
         echo ""
         echo "🌐 Infrastructure:"
         echo "  - Network: ${{ inputs.network_name }}"
@@ -406,13 +406,13 @@ runs:
         echo "  - Service URL: http://localhost:${{ inputs.service_port }}"
         echo "  - MongoDB: ${{ steps.verify-deps.outputs.mongodb_status }}"
         echo "  - Redis: ${{ steps.verify-deps.outputs.redis_status }}"
-
+        
         echo ""
         echo "📊 Test Results:"
         echo "  - Unit Tests: ${{ steps.run-tests.outputs.test_status || 'skipped' }}"
         echo "  - Integration Tests: ${{ steps.integration-tests.outputs.integration_status }}"
         echo "  - Health Check: ${{ steps.health-check.outputs.health_status }}"
-
+        
         echo ""
         echo "📅 Pipeline Information:"
         echo "  - Started: $(date -d@$PIPELINE_START_TIME -u +'%Y-%m-%d %H:%M:%S UTC')"
@@ -420,7 +420,7 @@ runs:
         echo "  - Triggered by: ${{ github.actor }}"
         echo "  - Commit: ${{ github.sha }}"
         echo "  - Ref: ${{ github.ref }}"
-
+        
         if [ "$OVERALL_STATUS" = "success" ]; then
           echo ""
           echo "🎉 Pipeline completed successfully!"
@@ -428,7 +428,7 @@ runs:
           echo ""
           echo "⚠️ Pipeline completed with failures"
         fi
-
+        
         echo "::endgroup::"
 
     - name: Cleanup Resources
@@ -444,27 +444,27 @@ runs:
       shell: bash
       run: |
         echo "::group::🔍 Debug Information"
-
+        
         echo "📋 Debug Output for Failed Pipeline"
         echo ""
-
+        
         echo "🐳 Docker Status:"
         docker ps -a --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}\t{{.Image}}" || true
-
+        
         echo ""
         echo "🌐 Network Status:"
         docker network ls || true
-
+        
         echo ""
         echo "📦 Images:"
         docker images --format "table {{.Repository}}\t{{.Tag}}\t{{.Size}}\t{{.CreatedAt}}" | head -10 || true
-
+        
         echo ""
         echo "💾 Disk Usage:"
         df -h || true
-
+        
         echo ""
         echo "🔍 Application Logs (last 100 lines):"
         docker logs --tail 100 "${{ inputs.container_name }}" 2>&1 | sed 's/^/    /' || echo "Could not retrieve application logs"
-
+        
         echo "::endgroup::"

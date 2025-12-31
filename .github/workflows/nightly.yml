@@ -33,7 +33,10 @@ jobs:
         uses: ./.github/actions/verify-dependencies
         with:
           network_name: ${{ env.NETWORK_NAME }}
-          services_to_start: 'mongodb'  # ✅ Only start MongoDB
+          compose_file: './docker-compose.yml'
+          services_to_start: 'b4-mongodb'
+          mongodb_container: 'b4-mongodb'
+          mongodb_port: '27017'
           startup_timeout: '120'
           verify_network_connectivity: 'true'
 
@@ -88,7 +91,7 @@ jobs:
           version: ${{ github.sha }}
           container_name: ${{ env.CONTAINER_NAME }}
           network_name: ${{ env.NETWORK_NAME }}
-          volcengine_api_key: ${{ secrets.VOLCENGINE_API_KEY }}
+          deepseek_api_key: ${{ secrets.DEEPSEEK_API_KEY }}
           proxy_rotation_url: ${{ secrets.PROXY_ROTATION_URL }}
 
       - name: Health Check
