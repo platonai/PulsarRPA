@@ -25,10 +25,7 @@ import java.nio.channels.FileChannel
 import java.nio.channels.FileLockInterruptionException
 import java.nio.channels.OverlappingFileLockException
 import java.nio.charset.Charset
-import java.nio.file.Files
-import java.nio.file.NoSuchFileException
-import java.nio.file.Path
-import java.nio.file.StandardOpenOption
+import java.nio.file.*
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.concurrent.atomic.AtomicBoolean
@@ -71,6 +68,23 @@ class ChromeLauncher constructor(
             sleepSeconds(10)
             this.close()
         }
+    }
+
+    private fun clearProcessMarkers() {
+        runCatching {
+            fun backupIfExists(path: Path) {
+                if (Files.exists(path)) {
+                    val backup = path.resolveSibling("${path.fileName}.bak")
+                    Files.copy(path, backup, StandardCopyOption.REPLACE_EXISTING)
+                }
+            }
+
+            backupIfExists(portPath)
+            backupIfExists(pidPath)
+
+            Files.deleteIfExists(portPath)
+            Files.deleteIfExists(pidPath)
+        }.onFailure { logger.warn("Failed to delete process marker files | {}", it.message) }
     }
 
     /**
@@ -226,13 +240,14 @@ class ChromeLauncher constructor(
                 logger.warn("Destroy chrome launcher forcibly, pid: {} | {}", pid, userDataDir)
                 Runtimes.destroyProcessForcibly(pid)
             }
-            Files.deleteIfExists(portPath)
         } catch (e: NoSuchFileException) {
             logger.warn("NoSuchFileException | {}", e.message)
         } catch (e: IOException) {
             logger.warn("IOException | {}", e.message)
         } catch (t: Throwable) {
             warnInterruptible(this, t, "Failed to destroy chrome launcher forcibly | {}", userDataDir)
+        } finally {
+            clearProcessMarkers()
         }
     }
 
@@ -242,23 +257,24 @@ class ChromeLauncher constructor(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-            // delete the port file to indicate that the chrome process can be killed and the resources can be cleaned up
-            Files.deleteIfExists(portPath)
+            shutdownHookRegistry.remove(shutdownHookThread)
 
-            val p = process ?: return
+            val p = process
             this.process = null
-            if (p.isAlive) {
-                Runtimes.destroyProcess(p, options.shutdownWaitTime)
-            }
+            try {
+                if (p != null && p.isAlive) {
+                    Runtimes.destroyProcess(p, options.shutdownWaitTime)
+                }
+            } catch (t: Throwable) {
+                warnForClose(this, t)
+            } finally {
+                clearProcessMarkers()
 
-            if (Thread.currentThread().isInterrupted) {
-                return
+                BrowserFiles.runCatching {
+                    cleanUpContextTmpDir(temporaryUddExpiry)
+                    cleanOldestContextTmpDirs(120.seconds.toJavaDuration(), recentNToKeep)
+                }.onFailure { warnForClose(this, it) }
             }
-
-            BrowserFiles.runCatching {
-                cleanUpContextTmpDir(temporaryUddExpiry)
-                cleanOldestContextTmpDirs(120.seconds.toJavaDuration(), recentNToKeep)
-            }.onFailure { warnForClose(this, it) }
         }
     }
 
