@@ -91,7 +91,7 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
                     assertThat(result.message).isNotBlank
                     return
                 } else {
-                    printlnPro("Attempt ${attempt + 1}: Non-success status=${response.statusCode} body=${response.body}")
+                    printlnPro("Attempt ${attempt + 1}: Non-success status=${response.statusCode}")
                 }
             } catch (ex: AsyncRequestTimeoutException) {
                 lastError = ex
@@ -152,7 +152,7 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
         val response = restTemplate.exchange(
             "$baseUri/api/extract", HttpMethod.POST, request, SinglePageApplicationController.BrowserActionResult::class.java
         )
-        printlnPro(response.body)
+        // printlnPro(response.body)
         assertThat(response.statusCode.value()).isEqualTo(200)
         assertThat(response.body).isNotNull
         assertThat(response.body!!.message).isNotBlank
