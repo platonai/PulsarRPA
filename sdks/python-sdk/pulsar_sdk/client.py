@@ -49,7 +49,8 @@ class PulsarClient:
             payload = res.json()
         except ValueError:
             return res.content
-        return payload.get("value") if isinstance(payload, dict) else payload
+        # WebDriver responses typically wrap in { value: ... }
+        return payload.get("value") if isinstance(payload, dict) and "value" in payload else payload
 
     def create_session(self, capabilities: Optional[Dict[str, Any]] = None) -> str:
         value = self._request("POST", "/session", body={"capabilities": capabilities or {}})
@@ -68,6 +69,9 @@ class PulsarClient:
 
     def get(self, path: str, session_id: Optional[str] = None) -> Any:
         return self._request("GET", path, session_id=session_id)
+
+    def delete(self, path: str, session_id: Optional[str] = None) -> Any:
+        return self._request("DELETE", path, session_id=session_id)
 
     def close(self):
         self.session.close()

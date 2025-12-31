@@ -25,14 +25,18 @@ class WebDriver:
     # Selector-first helpers
     def exists(self, selector: str, strategy: str = "css") -> bool:
         value = self.client.post("/session/{sessionId}/selectors/exists", {"selector": selector, "strategy": strategy})
-        return bool(value.get("exists"))
+        if isinstance(value, dict):
+            return bool(value.get("exists"))
+        return bool(value)
 
     def wait_for(self, selector: str, strategy: str = "css", timeout: int = 30000) -> bool:
         value = self.client.post(
             "/session/{sessionId}/selectors/waitFor",
             {"selector": selector, "strategy": strategy, "timeout": timeout},
         )
-        return value is None or bool(getattr(value, "get", lambda _k, _d=None: None)("exists", True))
+        if value is None:
+            return True
+        return bool(value.get("exists")) if isinstance(value, dict) else bool(value)
 
     def find_element_by_selector(self, selector: str, strategy: str = "css") -> Dict[str, Any]:
         return self.client.post("/session/{sessionId}/selectors/element", {"selector": selector, "strategy": strategy})
@@ -60,7 +64,7 @@ class WebDriver:
             "/session/{sessionId}/selectors/outerHtml",
             {"selector": selector, "strategy": strategy},
         )
-        return value
+        return value.get("outerHtml") if isinstance(value, dict) else value
 
     def screenshot(self, selector: Optional[str] = None, strategy: str = "css") -> bytes:
         payload = {"strategy": strategy}

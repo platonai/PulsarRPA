@@ -1,4 +1,4 @@
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, List
 
 from .client import PulsarClient
 from .models import (
@@ -51,7 +51,9 @@ class AgenticSession:
             "/session/{sessionId}/agent/extract",
             {"instruction": "extract fields", "selectors": fields},
         )
-        return FieldsExtraction(fields=value if isinstance(value, dict) else {"result": value})
+        # Normalize to dict response
+        result_fields = value if isinstance(value, dict) else {"result": value}
+        return FieldsExtraction(fields=result_fields)
 
     # Agentic operations
     def run(self, instruction: str) -> AgentRunResult:
@@ -61,20 +63,22 @@ class AgenticSession:
         value = self.client.post(
             "/session/{sessionId}/agent/run", {"instruction": instruction}
         )
-        trace = value.get("trace") if isinstance(value, dict) else None
+        trace: Optional[List[str]] = value.get("trace") if isinstance(value, dict) else None
         if trace:
             self._process_trace.extend(trace)
-        return AgentRunResult(finalResult=value.get("finalResult") if isinstance(value, dict) else value, trace=trace)
+        final = value.get("finalResult") if isinstance(value, dict) else value
+        return AgentRunResult(finalResult=final, trace=trace)
 
     def act(self, action: str) -> AgentActResult:
         return self.agent_act(action)
 
     def agent_act(self, action: str) -> AgentActResult:
         value = self.client.post("/session/{sessionId}/agent/act", {"action": action})
-        trace = value.get("trace") if isinstance(value, dict) else None
+        trace: Optional[List[str]] = value.get("trace") if isinstance(value, dict) else None
         if trace:
             self._process_trace.extend(trace)
-        return AgentActResult(result=value.get("result") if isinstance(value, dict) else value, trace=trace)
+        result = value.get("result") if isinstance(value, dict) else value
+        return AgentActResult(result=result, trace=trace)
 
     def observe(self, instruction: str) -> AgentObservation:
         return self.agent_observe(instruction)
@@ -83,7 +87,7 @@ class AgenticSession:
         value = self.client.post(
             "/session/{sessionId}/agent/observe", {"instruction": instruction}
         )
-        return AgentObservation(observations=value)
+        return AgentObservation(observations=value.get("observations") if isinstance(value, dict) else value)
 
     def summarize(self, instruction: str, selector: Optional[str] = None) -> str:
         return self.agent_summarize(instruction, selector)
@@ -135,4 +139,3 @@ class AgenticSession:
 
 
 __all__ = ["AgenticSession"]
-
