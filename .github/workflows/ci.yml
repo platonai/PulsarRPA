@@ -91,6 +91,15 @@ jobs:
             echo "📊 Test Results: ${{ steps.run-tests.outputs.passed_count }} tests passed"
           fi
 
+      - name: Cleanup Docker system to free space
+        run: |
+          docker system prune -af
+          docker volume prune -f
+          rm -rf ~/.m2/repository  # If you no longer need Maven cache
+          sudo apt-get clean
+          sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo df -h
+
       - name: Build Docker Image
         id: build
         uses: ./.github/actions/docker-build
