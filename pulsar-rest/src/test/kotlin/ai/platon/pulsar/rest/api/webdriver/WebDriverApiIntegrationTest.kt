@@ -525,6 +525,36 @@ class WebDriverApiIntegrationTest {
         assertTrue(value.containsKey("message"))
     }
 
+    @Test
+    fun `waitFor selector with zero timeout should either succeed immediately in mock mode or return 408 in real mode`() {
+        val sessionId = createSession()
+
+        val request = WaitForRequest(selector = "#definitely-missing", timeout = 0)
+        val entity = HttpEntity(request, jsonHeaders())
+
+        val response = restTemplate.postForEntity(
+            "$baseUrl/session/$sessionId/selectors/waitFor",
+            entity,
+            Map::class.java
+        )
+
+        // Mock mode returns 200 immediately; real mode may return 408.
+        assertTrue(
+            response.statusCode == HttpStatus.OK || response.statusCode == HttpStatus.REQUEST_TIMEOUT,
+            "Expected 200 (mock) or 408 (real) but got ${response.statusCode}"
+        )
+
+        // In both cases the response should include request id.
+        assertNotNull(response.headers["X-Request-Id"], "X-Request-Id header should be present")
+
+        if (response.statusCode == HttpStatus.REQUEST_TIMEOUT) {
+            @Suppress("UNCHECKED_CAST")
+            val value = response.body!!["value"] as Map<String, Any?>
+            assertTrue(value.containsKey("error"))
+            assertTrue(value.containsKey("message"))
+        }
+    }
+
     /**
      * Helper method to create a session and return the session ID.
      */
