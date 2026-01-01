@@ -185,7 +185,8 @@ jobs:
           echo "🧹 Cleaning up Docker container..."
           docker stop ${{ env.CONTAINER_NAME }} 2>/dev/null || echo "Container already stopped"
           docker network rm ${{ env.NETWORK_NAME }} 2>/dev/null || echo "Network already removed"
-          docker system prune -af
+          # Preserve built images for later steps; prune only stopped containers and unused volumes
+          docker container prune -f
           docker volume prune -f
 
       - name: Build Browser4 JAR
