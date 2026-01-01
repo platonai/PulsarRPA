@@ -13,7 +13,7 @@ Set-Location $AppHome
 
 $UBERJAR = Join-Path $PWD "target\Browser4.jar"
 if (-not (Test-Path $UBERJAR)) {
-    $SERVER_HOME = Join-Path $AppHome "pulsar-app\pulsar-browser4"
+    $SERVER_HOME = Join-Path $AppHome "browser4/browser4-agents"
     Copy-Item (Join-Path $SERVER_HOME "target\Browser4.jar") -Destination $UBERJAR
 }
 

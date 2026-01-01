@@ -24,7 +24,7 @@ fi
 
 UBERJAR="$APP_HOME"/target/Browser4.jar
 if [ ! -f "$UBERJAR" ]; then
-  SERVER_HOME=$APP_HOME/pulsar-app/pulsar-browser4
+  SERVER_HOME=$APP_HOME/browser4/browser4-agents/
   cp "$SERVER_HOME"/target/Browser4.jar "$UBERJAR"
 fi
 

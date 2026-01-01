@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Release tag (e.g., v1.0.0)'
+        description: 'Release tag (e.g., v1.0.0, v1.0.0-rc.1)'
         required: true
         type: string
       skip_tests:
@@ -20,11 +20,11 @@ env:
   CONTAINER_NAME: browser4
   NETWORK_NAME: 'browser4_backend'
   DOCKER_USERNAME: galaxyeye88
-  PRODUCTION_JAR_MODULE_NAME: 'pulsar-browser4'
-  PRODUCTION_JAR_MODULE_PATH: 'pulsar-app/pulsar-browser4'
+  PRODUCTION_JAR_MODULE_NAME: 'browser4-agents'
+  PRODUCTION_JAR_MODULE_PATH: 'browser4/browser4-agents'
   PRODUCTION_JAR_NAME: 'Browser4.jar'
-  PRODUCTION_JAR_PATH: 'pulsar-app/pulsar-browser4/target/Browser4.jar'
-  JAVA_VERSION: '17'
+  PRODUCTION_JAR_PATH: 'browser4/browser4-agents/target/Browser4.jar'
+  JAVA_VERSION: '21'
   MAVEN_OPTS: '-Xmx3g -XX:+UseG1GC'
   MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
   MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}

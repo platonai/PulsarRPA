@@ -43,8 +43,8 @@ cd "$APP_HOME" || exit 1
 
 VERSION=$(head -n 1 "$APP_HOME/VERSION" | sed 's/-SNAPSHOT//')
 
-# If pulsar-app/pulsar-browser4/target/Browser4.jar exists, copy it to remote
-PULSAR_RPA_PATH="$APP_HOME/pulsar-app/pulsar-browser4/target/Browser4.jar"
+# If browser4/browser4-agents/target/Browser4.jar exists, copy it to remote
+PULSAR_RPA_PATH="$APP_HOME/browser4/browser4-agents/target/Browser4.jar"
 if [[ -f "$PULSAR_RPA_PATH" ]]; then
   DESTINATION_PATH="${REMOTE_USER}@${REMOTE_HOST}:${REMOTE_PATH}Browser4-${VERSION}.jar"
 

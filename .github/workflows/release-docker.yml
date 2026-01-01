@@ -1,10 +1,6 @@
-name: Release
+name: Release Docker Image
 
 on:
-  push:
-    tags:
-      - 'v[0-9]+.[0-9]+.[0-9]+'
-      - 'v[0-9]+.[0-9]+.[0-9]+-rc.[0-9]+'
   workflow_dispatch:
     inputs:
       tag:
@@ -176,112 +172,6 @@ jobs:
             echo "Skipping E2E tests..."
             echo "E2E_status=skipped" >> $GITHUB_OUTPUT
           fi
-
-          echo "::endgroup::"
-
-      - name: Cleanup Docker Container
-        if: always()
-        run: |
-          echo "🧹 Cleaning up Docker container..."
-          docker stop ${{ env.CONTAINER_NAME }} 2>/dev/null || echo "Container already stopped"
-          docker network rm ${{ env.NETWORK_NAME }} 2>/dev/null || echo "Network already removed"
-          # Preserve built images for later steps; prune only stopped containers and unused volumes
-          docker container prune -f
-          docker volume prune -f
-
-      - name: Build Browser4 JAR
-        if: success()
-        run: |
-          JAR_PATH=${{ env.PRODUCTION_JAR_PATH }}
-          JAR_NAME=${{ env.PRODUCTION_JAR_NAME }}
-          MODULE_NAME=${{ env.PRODUCTION_JAR_MODULE_NAME }}
-          MODULE_PATH=${{ env.PRODUCTION_JAR_MODULE_PATH }}
-
-          echo "=== Building Browser4 JAR ==="
-          ./mvnw package -rf :$MODULE_NAME -pl ${MODULE_PATH} -DskipTests=true -Dmaven.javadoc.skip=true
-
-          if [ ! -f "$JAR_PATH" ]; then
-            echo "❌ $JAR_NAME not found at $JAR_PATH"
-            echo "Available JARs:"
-            find . -name "*.jar" -type f | head -10
-            exit 1
-          fi
-          echo "✅ $JAR_NAME built successfully"
-
-      - name: Find and Validate JAR
-        id: get_uberjar
-        if: success()
-        run: |
-          JAR_PATH=${{ env.PRODUCTION_JAR_PATH }}
-          JAR_NAME=${{ env.PRODUCTION_JAR_NAME }}
-
-          echo "::group::📦 JAR Discovery and Validation"
-
-          if [ ! -f "$JAR_PATH" ]; then
-            echo "❌ JAR file not found: $JAR_PATH"
-            exit 1
-          fi
-
-          JAR_SIZE=$(stat -c%s "$JAR_PATH" 2>/dev/null || echo 0)
-          UBERJAR_FILE=$(basename "$JAR_PATH")
-
-          echo "✅ Selected JAR: $UBERJAR_FILE"
-          echo "📍 Path: $JAR_PATH"
-          echo "📏 Size: $JAR_SIZE bytes ($(numfmt --to=iec --suffix=B $JAR_SIZE))"
-
-          # Validate JAR is not empty
-          if [ "$JAR_SIZE" -lt 1000000 ]; then
-            echo "❌ JAR file seems too small (< 1MB): $JAR_SIZE bytes"
-            exit 1
-          fi
-
-          echo "uberjar_file=$UBERJAR_FILE" >> $GITHUB_OUTPUT
-          echo "uberjar_path=$JAR_PATH" >> $GITHUB_OUTPUT
-
-          echo "::endgroup::"
-
-      - name: Create Release Notes
-        uses: ./.github/actions/create-release-notes
-        id: release-notes
-        with:
-          version: ${{ env.VERSION }}
-          jar_name: ${{ steps.get_uberjar.outputs.uberjar_file }}
-          jar_path: ${{ steps.get_uberjar.outputs.uberjar_path }}
-          java_version: ${{ env.JAVA_VERSION }}+
-          output_file: release_notes.md
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: ${{ steps.get_uberjar.outputs.uberjar_path }}
-          name: "🚀 Browser4 ${{ env.VERSION }}"
-          body_path: release_notes.md
-          tag_name: ${{ env.TAG }}
-          draft: false
-          prerelease: ${{ env.IS_PRERELEASE }}
-          generate_release_notes: true
-          make_latest: ${{ env.IS_PRERELEASE == 'false' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Verify Release
-        run: |
-          echo "::group::✅ Release Verification"
-
-          JAR_SIZE=$(stat -c%s "${{ steps.get_uberjar.outputs.uberjar_path }}" 2>/dev/null || echo 0)
-
-          echo "🎉 Release ${{ env.VERSION }} created successfully!"
-          echo ""
-          echo "📦 Release Details:"
-          echo "  - Tag: ${{ env.TAG }}"
-          echo "  - JAR: ${{ steps.get_uberjar.outputs.uberjar_file }}"
-          echo "  - Size: $(numfmt --to=iec --suffix=B $JAR_SIZE)"
-          echo "  - Prerelease: ${{ env.IS_PRERELEASE }}"
-          echo ""
-          echo "🔗 Release URL: https://github.com/${{ github.repository }}/releases/tag/${{ env.TAG }}"
-          echo ""
-          echo "📥 Download Command:"
-          echo "wget https://github.com/${{ github.repository }}/releases/download/${{ env.TAG }}/${{ steps.get_uberjar.outputs.uberjar_file }}"
 
           echo "::endgroup::"
 
