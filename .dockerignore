@@ -41,5 +41,5 @@ docker/browser4/Dockerfile
 强调包含所有源文件
 !**/src/*
 
-!pulsar-app/pulsar-browser4/target/Browser4.jar
-
+!browser4/**/target/Browser4.jar
+!browser4/browser4-agents/target/Browser4.jar

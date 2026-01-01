@@ -65,9 +65,9 @@ fi
 exitCode=$?
 [ $exitCode -eq 0 ] && echo "Build successfully" || exit 1
 
-# Build pulsar-app/pulsar-browser4 but do not deploy the artifacts
-echo "Building pulsar-app/pulsar-browser4 ..."
-cd "$APP_HOME/pulsar-app/pulsar-browser4" || exit
+# Build browser4/browser4-agents/ but do not deploy the artifacts
+echo "Building browser4/browser4-agents/ ..."
+cd "$APP_HOME/browser4/browser4-agents/" || exit
 ./mvnw install -DskipTests=true -Dmaven.javadoc.skip=true
 
 exitCode=$?
