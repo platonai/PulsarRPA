@@ -104,7 +104,7 @@ jobs:
         run: |
           docker system prune -af
           docker volume prune -f
-          rm -rf ~/.m2/repository  # If you no longer need Maven cache
+          find ~/.m2/repository -mindepth 1 -maxdepth 1 ! -name ai -exec rm -rf {} +  # Preserve ~/.m2/repository/ai
           sudo apt-get clean
           sudo rm -rf /usr/share/dotnet /usr/local/lib/android /opt/ghc
           sudo df -h
