@@ -229,7 +229,7 @@ Automatic, large-scale, high-precision field discovery and extraction powered by
 
 **Quick Commands (PulsarRPAPro):**
 ```bash
-curl -L -o PulsarRPAPro.jar https://github.com/platonai/PulsarRPAPro/releases/download/v3.0.0/PulsarRPAPro.jar
+curl -L -o PulsarRPAPro.jar https://github.com/platonai/PulsarRPAPro/releases/download/v4.3.0/PulsarRPAPro.jar
 ```
 
 **Integration Status:**
@@ -347,3 +347,4 @@ Ask your proxy provider for such a URL.
 ---
 
 > For Chinese documentation, refer to [简体中文 README](README-CN.md).
+

@@ -222,9 +222,9 @@ session.submitAll(links)
 **快捷命令（PulsarRPAPro）：**
 ```bash
 # Linux/macOS：下载并演示采集（附诊断输出）
-curl -L -o PulsarRPAPro.jar https://github.com/platonai/PulsarRPAPro/releases/download/v3.0.0/PulsarRPAPro.jar
+curl -L -o PulsarRPAPro.jar https://github.com/platonai/PulsarRPAPro/releases/download/v4.3.0/PulsarRPAPro.jar
 # Windows (PowerShell)：
-Invoke-WebRequest -Uri https://github.com/platonai/PulsarRPAPro/releases/download/v3.0.0/PulsarRPAPro.jar -OutFile PulsarRPAPro.jar
+Invoke-WebRequest -Uri https://github.com/platonai/PulsarRPAPro/releases/download/v4.3.0/PulsarRPAPro.jar -OutFile PulsarRPAPro.jar
 ```
 > 旧版 exotic-standalone*.jar 调用方式已弃用，示例已更新为最新发布包下载。
 
@@ -355,3 +355,4 @@ export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 - LLM：大语言模型 (LLM)
 - Structured Logging：结构化日志
 - Auto Extraction：自动抽取
+
