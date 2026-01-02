@@ -201,9 +201,9 @@ jobs:
 #          distribution: 'temurin'
 #          java-version: ${{ env.JAVA_VERSION }}
 #          cache: maven
-#          server-id: 'ossrh'                        # Matches <id> in your pom.xml for OSSRH
-#          server-username: MAVEN_USERNAME
-#          server-password: MAVEN_PASSWORD
+#          server-id: 'central'                        # Matches <id> in your pom.xml for OSSRH
+#          server-username: CENTRAL_USERNAME
+#          server-password: CENTRAL_PASSWORD
 #          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}   # ASCII-armored (exported with --armor)
 #          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
 #
@@ -218,5 +218,5 @@ jobs:
 #            --show-version --errors
 #        env:
 #          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-#          MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-#          MAVEN_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+#          CENTRAL_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
+#          CENTRAL_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
