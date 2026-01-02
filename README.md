@@ -34,7 +34,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 ### ✨ Key Capabilities
 
-* 👽 **Browser Agents** — Autonomous agents that reason, plan, and act within the browser.
+* 👽 **Browser Agents** — Fully autonomous browser agents that reason, plan, and execute end-to-end tasks.
 * 🤖 **Browser Automation** — High-performance automation for workflows, navigation, and data extraction.
 * ⚙️ **Machine Learning Agent** - Learns field structures across complex pages without consuming tokens.
 * ⚡  **Extreme Performance** — Fully coroutine-safe; supports 100k ~ 200k page visits per machine per day.
@@ -182,13 +182,12 @@ Example code:
 * [X-SQL to scrape 100+ fields from an Amazon's product page](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 * [X-SQLs to crawl all types of Amazon webpages](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 
-
 ### High-Speed Parallel Processing
 
 Achieve extreme throughput with parallel browser control and smart resource optimization.
 
 **Performance:**
-- 100,000+ page visits per machine per day
+- 10k ~ 20k page visits per machine per day
 - Concurrent session management
 - Resource blocking for faster page loads
 
