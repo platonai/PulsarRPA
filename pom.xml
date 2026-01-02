@@ -91,24 +91,10 @@
         <module>pulsar-tests-common</module>
         <module>pulsar-tests</module>
         <module>pulsar-examples</module>
-        <!-- Benchmark / performance regression module (not published in release profile) -->
-        <module>pulsar-benchmarks</module>
         <module>browser4</module>
     </modules>
 
     <profiles>
-
-        <!-- Development profile -->
-        <profile>
-            <id>dev</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <skipTests>false</skipTests>
-                <maven.javadoc.skip>true</maven.javadoc.skip>
-            </properties>
-        </profile>
 
         <!-- CI profile -->
         <profile>
