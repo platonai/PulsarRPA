@@ -26,8 +26,6 @@ env:
   PRODUCTION_JAR_PATH: 'browser4/browser4-agents/target/Browser4.jar'
   JAVA_VERSION: '21'
   MAVEN_OPTS: '-Xmx3g -XX:+UseG1GC'
-  CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
-  CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
 
 jobs:
   build-and-release:
@@ -129,7 +127,7 @@ jobs:
           echo "=== Maven settings locations ==="
           ls -la ~/.m2/ || echo "~/.m2/ directory not found"
 
-      - name: Deploy to Sonatype OSSRH
+      - name: Deploy to Maven Central
         if: success()
         run: |
           echo "=== Deploying to Maven Central ==="
