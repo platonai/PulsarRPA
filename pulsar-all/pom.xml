@@ -97,5 +97,10 @@
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-ql</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>ai.platon.pulsar</groupId>
+            <artifactId>pulsar-agentic</artifactId>
+        </dependency>
     </dependencies>
 </project>

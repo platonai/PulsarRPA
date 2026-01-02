@@ -352,12 +352,6 @@
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-beans</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-ql-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -365,6 +359,17 @@
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-ql-common</artifactId>
                 <classifier>shaded</classifier>
+                <version>${project.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-beans</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-boot</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -379,7 +384,7 @@
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-boot</artifactId>
+                <artifactId>pulsar-agentic</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
