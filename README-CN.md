@@ -8,13 +8,14 @@
 
 [English](README.md) | 简体中文 | [中国镜像](https://gitee.com/platonai_galaxyeye/Browser4)
 
-> 本文件已与英文版 README 同步（同步日期：2025-11-25），如有差异请以英文版为准。
+> 本文件已与英文版 README 同步（同步日期：2026-01-02），如有差异请以英文版为准。
 
 <!-- TOC -->
 **目录**
 - 🤖 Browser4
     - 🌟 项目介绍
         - ✨ 核心能力
+        - ⚡ 快速示例：Agentic 工作流
     - 🎥 演示视频
     - 🚀 快速开始
     - 💡 使用示例
@@ -38,9 +39,24 @@
 
 * 👽 **浏览器智能体 (Browser Agents)** — 能在浏览器中进行推理、规划并执行操作的自主智能体。
 * 🤖 **浏览器自动化** — 面向工作流、导航和数据提取的高性能自动化。
-* ⚡  **极致性能** — 完全协程安全；支持单机每天访问 100k+ 页面。
-* 🧠 **网页理解** — 深度理解动态、脚本驱动与交互式网页。
-* 📊 **数据提取 API** — 强大的接口，低成本获取结构化数据。
+* ⚙️ **机器学习智能体** — 在复杂页面上学习字段结构，无需消耗 Token。
+* ⚡  **极致性能** — 完全协程安全；支持单机每天访问 100k ~ 200k 页面。
+* 🧬 **数据抽取** — 结合 LLM、ML 与选择器，在复杂页面中获取干净数据。
+
+## ⚡ 快速示例：Agentic 工作流
+
+```kotlin
+// 让你的智能体执行使命，而不是写脚本
+val agent = AgenticContexts.getOrCreateAgent()
+
+// 智能体规划、导航、执行，Browser4 充当“手”和“眼”
+val result = agent.run("""
+    1. Go to amazon.com
+    2. Search for '4k monitors'
+    3. Analyze the top 5 results for price/performance ratio
+    4. Return the best option as JSON
+""")
+```
 
 ---
 
@@ -74,7 +90,7 @@
    ```
    **Windows (cmd)**：
    ```shell
-   mvnw.cmd -q -DskipTests
+   mvnw.cmd -DskipTests
    ```
 
 4. **运行示例（Linux/macOS）**
