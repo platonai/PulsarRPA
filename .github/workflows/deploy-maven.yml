@@ -26,8 +26,6 @@ env:
   PRODUCTION_JAR_PATH: 'browser4/browser4-agents/target/Browser4.jar'
   JAVA_VERSION: '21'
   MAVEN_OPTS: '-Xmx3g -XX:+UseG1GC'
-  MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
-  MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
 
 jobs:
   build-and-release:
@@ -109,10 +107,10 @@ jobs:
           distribution: 'temurin'
           java-version: ${{ env.JAVA_VERSION }}
           cache: maven
-          server-id: 'ossrh'                        # Matches <id> in your pom.xml for OSSRH
-          server-username: MAVEN_USERNAME
-          server-password: MAVEN_PASSWORD
-          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}   # ASCII-armored (exported with --armor)
+          server-id: 'central'                        # Matches <id> in your pom.xml for maven
+          server-username: ${{ secrets.CENTRAL_USERNAME }}
+          server-password: ${{ secrets.CENTRAL_PASSWORD }}
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Debug Maven settings
@@ -129,7 +127,7 @@ jobs:
           echo "=== Maven settings locations ==="
           ls -la ~/.m2/ || echo "~/.m2/ directory not found"
 
-      - name: Deploy to Sonatype OSSRH
+      - name: Deploy to Maven Central
         if: success()
         run: |
           echo "=== Deploying to Maven Central ==="
@@ -140,5 +138,5 @@ jobs:
             --show-version --errors
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
-          MAVEN_USERNAME: ${{ secrets.SONATYPE_USERNAME }}
-          MAVEN_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
