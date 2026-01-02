@@ -269,11 +269,15 @@ class ChromeLauncher constructor(
                 warnForClose(this, t)
             } finally {
                 clearProcessMarkers()
+            }
 
+            try {
                 BrowserFiles.runCatching {
                     cleanUpContextTmpDir(temporaryUddExpiry)
                     cleanOldestContextTmpDirs(120.seconds.toJavaDuration(), recentNToKeep)
                 }.onFailure { warnForClose(this, it) }
+            } catch (t: Throwable) {
+                // ignored
             }
         }
     }
