@@ -134,7 +134,7 @@ val session = AgenticContexts.getOrCreateSession()
 val agent = session.companionAgent
 val driver = session.getOrCreateBoundDriver()
 
-// Open and parse a page
+// Open, capture and parse a page
 var page = session.open(url)
 var document = session.parse(page)
 var fields = session.extract(document, mapOf("title" to "#title"))
@@ -338,7 +338,7 @@ Ask your proxy provider for such a URL.
 - 🌐 Weibo: [galaxyeye](https://weibo.com/galaxyeye)
 - 📧 Email: galaxyeye@live.cn, ivincent.zhang@gmail.com
 - 🐦 Twitter: galaxyeye8
-- 🌍 Website: [platon.ai](https://platon.ai)
+- 🌍 Website: [browser4.io](https://browser4.io)
 
 <div style="display: flex;">
   <img src="docs/images/wechat-author.png" width="300" height="365" alt="WeChat QR Code" />

@@ -1,10 +1,10 @@
 AI 自动提取
 =
 
-Platon.ai 的目标是开发一套高效采集并阅读理解复杂网站的 AI，完整精确输出数据和知识。目前我们开源了“高效采集”这一部分，同时发布了一个“阅读理解
+Browser4.io 的目标是开发一套高效采集并阅读理解复杂网站的 AI，完整精确输出数据和知识。目前我们开源了“高效采集”这一部分，同时发布了一个“阅读理解
 **网页结构**并完整精确输出数据”的[预览版](https://github.com/platonai/PulsarRPAPro#run-auto-extract)，这个版本在不久的未来也会开源。
 
-Platon.ai 的算法能够 100% 无人干预将网页变成数据 -- 不需要配规则，甚至也不需要机器学习训练，它是无监督机器学习驱动的，像人一样去阅读理解互联网。
+Browser4.io 的算法能够 100% 无人干预将网页变成数据 -- 不需要配规则，甚至也不需要机器学习训练，它是无监督机器学习驱动的，像人一样去阅读理解互联网。
 
 我们将每个网页在浏览器中渲染后，计算出每个网页元素的一系列特征，包括视觉、几何、拓扑和语义特征。**一张网页可看作由很多个带属性的矩形组成的几何图形
 （Geometric graph），将所有网页压到一起，如同一捆报纸，万维网（WWW）可以被视作以三维流形为基空间的纤维丛。**
@@ -30,7 +30,7 @@ java -jar exotic-standalone*.jar arrange https://www.hua.com/flower/
 这样，原本需要手工编写几个甚至几十个正则表达式或者 CSS PATH 的网页抽取问题，现在只需要告诉系统列表页链接就行了，而满足这种要求的网页占据了互联网上
 绝大多数网页。
 
-最后，我们为爬虫系统和数据分析系统配备了 SQL 引擎，这样，我们可以仅仅使用一条 SQL 语句就实现监控一个网站栏目，实时提取关键数据。事实上，配备 SQL 
+最后，我们为爬虫系统和数据分析系统配备了 SQL 引擎，这样，我们可以仅仅使用一条 SQL 语句就实现监控一个网站栏目，实时提取关键数据。事实上，配备 SQL
 引擎后，互联网和本地数据库几乎就可以同等待了（除了互联网数据响应时间较久外）。
 
 <div style="text-align: center">
@@ -53,13 +53,13 @@ java -jar exotic-standalone*.jar arrange https://www.hua.com/flower/
 
 **参考文献：**
 
-- [WebFormer: The Web-page Transformer for Structure Information Extraction | Proceedings of the ACM Web Conference 2022](https://dl.acm.org/doi/pdf/10.1145/3485447.3512032) 
-- [OpenCeres for extract knowlege graph from Web](https://lunadong.com/publication/openCeres_naacl.pdf) 
+- [WebFormer: The Web-page Transformer for Structure Information Extraction | Proceedings of the ACM Web Conference 2022](https://dl.acm.org/doi/pdf/10.1145/3485447.3512032)
+- [OpenCeres for extract knowlege graph from Web](https://lunadong.com/publication/openCeres_naacl.pdf)
 - [FreeDOM: A Transferable Neural Architecture for Structured Information Extraction on Web Documents](https://arxiv.org/pdf/2010.10755)
 
 **相关文章**
 
-- [PlatonAI：Diffbot 如何工作？](https://zhuanlan.zhihu.com/p/76978950) 
+- [PlatonAI：Diffbot 如何工作？](https://zhuanlan.zhihu.com/p/76978950)
 - [PlatonAI：柏拉图如何工作？](https://zhuanlan.zhihu.com/p/76980563)
 
 ------
