@@ -18,7 +18,9 @@
     <version>0.0.1-SNAPSHOT</version>
 
     <name>Java Compatible Examples</name>
-    <description>Java Compatible Examples</description>
+    <description>
+        You can use this Kotlin project as a template for your own projects—feel free to copy and customize it.
+    </description>
 
     <build>
         <defaultGoal>package</defaultGoal>
@@ -33,13 +35,6 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring-boot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -48,22 +43,9 @@
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-agentic</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-        </dependency>
-
     </dependencies>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-
         <pulsar.version>4.3.0-SNAPSHOT</pulsar.version>
         <spring-boot.version>3.3.8</spring-boot.version>
     </properties>

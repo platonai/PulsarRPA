@@ -20,7 +20,7 @@ import java.util.stream.StreamSupport;
 
 public class JvmHighPerformanceCrawler {
     private final PulsarSession session;
-    
+
     public JvmHighPerformanceCrawler() throws Exception {
         session = PulsarContexts.getOrCreateSession();
     }
@@ -33,7 +33,7 @@ public class JvmHighPerformanceCrawler {
         String args = "-refresh -dropContent -interactLevel fastest";
 
         // Block non-essential resources to improve load speed.
-        // ⚠️ Be careful — blocking critical resources may break rendering or script execution.
+        // WARNING: Blocking critical resources may break rendering or script execution.
         List<String> blockingUrls = new BlockRule().getBlockingUrls();
 
         String resource = "seeds/amazon/best-sellers/leaf-categories.txt";
@@ -57,7 +57,7 @@ public class JvmHighPerformanceCrawler {
 
         session.submitAll(links);
     }
-    
+
     public static void main(String[] args) throws Exception {
         // Highly recommended to enable proxies, or you will be blocked by Amazon
         String proxyHubURL = "http://localhost:8192/api/proxies";

@@ -18,7 +18,9 @@
     <version>0.0.1-SNAPSHOT</version>
 
     <name>Browser4 Kotlin Examples</name>
-    <description>Browser4 Kotlin Examples</description>
+    <description>
+        You can use this Kotlin project as a template for your own projects—feel free to copy and customize it.
+    </description>
 
     <build>
         <defaultGoal>package</defaultGoal>
