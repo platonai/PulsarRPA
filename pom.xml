@@ -90,7 +90,9 @@
         <module>pulsar-client</module>
         <module>pulsar-tests-common</module>
         <module>pulsar-tests</module>
-        <module>pulsar-examples</module>
+        <module>pulsar-bom</module>
+        <module>browser4-examples</module>
+        <module>browser4-java-examples</module>
         <module>browser4</module>
     </modules>
 
@@ -931,4 +933,3 @@
     </properties>
 
 </project>
-

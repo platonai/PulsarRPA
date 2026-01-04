@@ -67,216 +67,181 @@
         </repository>
     </distributionManagement>
 
-    <profiles>
-        <!-- Release profile -->
-        <profile>
-            <id>release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-release-plugin</artifactId>
-                        <version>${maven-release-plugin.version}</version>
+    <build>
+        <defaultGoal>install</defaultGoal>
+
+        <plugins>
+            <!-- Attach sources -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>${maven-source-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- Help maven-source-plugin works with kotlin -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
+
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
                         <configuration>
-                            <tagNameFormat>v@{project.version}</tagNameFormat>
-                            <releaseProfiles>deploy</releaseProfiles>
-                            <autoVersionSubmodules>true</autoVersionSubmodules>
-                            <preparationGoals>clean verify</preparationGoals>
-                            <completionGoals>clean</completionGoals>
-                            <goals>deploy nexus-staging:release</goals>
-                            <pushChanges>false</pushChanges>
-                            <localCheckout>true</localCheckout>
-                            <checkModificationExcludes>
-                                <checkModificationExclude>pom.xml</checkModificationExclude>
-                            </checkModificationExcludes>
+                            <sources>
+                                <source>src/main/kotlin</source>
+                            </sources>
                         </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>com.commsen.maven</groupId>
-                        <artifactId>bom-helper-maven-plugin</artifactId>
-                        <version>0.4.0</version>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>deploy</id>
+                    </execution>
+                </executions>
+            </plugin>
 
-            <build>
-                <plugins>
-                    <!-- Attach sources -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <version>${maven-source-plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <goals>
-                                    <goal>jar-no-fork</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
+            <!-- Override parent pom's javadoc settings, skip generating javadoc, use kdoc instead -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>${maven-javadoc-plugin.version}</version>
+                <configuration>
+                    <skip>true</skip>
+                </configuration>
+            </plugin>
 
-                    <!-- Help maven-source-plugin works with kotlin -->
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <version>3.6.0</version>
+            <plugin>
+                <groupId>org.jetbrains.dokka</groupId>
+                <artifactId>dokka-maven-plugin</artifactId>
+                <version>${dokka.version}</version>
+                <executions>
+                    <execution>
+                        <!-- generate javadoc.jar before package gpg plugin can generate asc for it -->
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>dokka</goal>
+                            <goal>javadocJar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- Set to true to skip dokka task, default: false -->
+                    <skip>false</skip>
 
-                        <executions>
-                            <execution>
-                                <phase>generate-sources</phase>
-                                <goals>
-                                    <goal>add-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>src/main/kotlin</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
+                    <!-- Use default or set to custom path to cache directory to enable package-list caching. -->
+                    <!-- When set to default, caches stored in $USER_HOME/.cache/dokka -->
+                    <cacheRoot>default</cacheRoot>
 
-                    <!-- Override parent pom's javadoc settings, skip generating javadoc, use kdoc instead -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>${maven-javadoc-plugin.version}</version>
-                        <configuration>
-                            <skip>true</skip>
-                        </configuration>
-                    </plugin>
+                    <!-- Used for linking to JDK, default: 11 -->
+                    <jdkVersion>11</jdkVersion>
 
-                    <plugin>
-                        <groupId>org.jetbrains.dokka</groupId>
-                        <artifactId>dokka-maven-plugin</artifactId>
-                        <version>${dokka.version}</version>
-                        <executions>
-                            <execution>
-                                <!-- generate javadoc.jar before package gpg plugin can generate asc for it -->
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>dokka</goal>
-                                    <goal>javadocJar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <!-- Set to true to skip dokka task, default: false -->
-                            <skip>false</skip>
+                    <!-- Do not output deprecated members, applies globally, can be overridden by packageOptions -->
+                    <skipDeprecated>true</skipDeprecated>
+                    <!-- Emit warnings about not documented members, applies globally, also can be overridden by packageOptions -->
+                    <reportUndocumented>true</reportUndocumented>
+                    <!-- Do not create index pages for empty packages -->
+                    <skipEmptyPackages>false</skipEmptyPackages>
+                    <includeNonPublic>false</includeNonPublic>
 
-                            <!-- Use default or set to custom path to cache directory to enable package-list caching. -->
-                            <!-- When set to default, caches stored in $USER_HOME/.cache/dokka -->
-                            <cacheRoot>default</cacheRoot>
+                    <!-- Short form list of sourceRoots, by default, set to ${project.compileSourceRoots} -->
+                    <sourceDirectories>
+                        <dir>${project.basedir}/src/main/java</dir>
+                        <dir>${project.basedir}/src/main/kotlin</dir>
+                    </sourceDirectories>
 
-                            <!-- Used for linking to JDK, default: 11 -->
-                            <jdkVersion>11</jdkVersion>
+                    <!-- Disable linking to online kotlin-stdlib documentation  -->
+                    <noStdlibLink>false</noStdlibLink>
+                    <noJdkLink>false</noJdkLink>
 
-                            <!-- Do not output deprecated members, applies globally, can be overridden by packageOptions -->
-                            <skipDeprecated>true</skipDeprecated>
-                            <!-- Emit warnings about not documented members, applies globally, also can be overridden by packageOptions -->
+                    <!-- Allows to customize documentation generation options on a per-package basis -->
+                    <perPackageOptions>
+                        <packageOptions>
+                            <!-- Will match kotlin and all sub-packages of it -->
+                            <!-- <prefix>kotlin</prefix>-->
+
+                            <!-- All options are optional, default values are below: -->
+                            <skipDeprecated>false</skipDeprecated>
+                            <!-- Emit warnings about not documented members  -->
                             <reportUndocumented>true</reportUndocumented>
-                            <!-- Do not create index pages for empty packages -->
-                            <skipEmptyPackages>false</skipEmptyPackages>
                             <includeNonPublic>false</includeNonPublic>
+                        </packageOptions>
+                    </perPackageOptions>
+                </configuration>
+            </plugin>
 
-                            <!-- Short form list of sourceRoots, by default, set to ${project.compileSourceRoots} -->
-                            <sourceDirectories>
-                                <dir>${project.basedir}/src/main/java</dir>
-                                <dir>${project.basedir}/src/main/kotlin</dir>
-                            </sourceDirectories>
+            <!-- GPG signing -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>${maven-gpg-plugin.version}</version>
+                <configuration>
+                    <gpgArguments>
+                        <arg>--pinentry-mode</arg>
+                        <arg>loopback</arg>
+                    </gpgArguments>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>sign-artifacts</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
-                            <!-- Disable linking to online kotlin-stdlib documentation  -->
-                            <noStdlibLink>false</noStdlibLink>
-                            <noJdkLink>false</noJdkLink>
+            <!-- Calculate checksums -->
+            <plugin>
+                <groupId>net.nicoulaj.maven.plugins</groupId>
+                <artifactId>checksum-maven-plugin</artifactId>
+                <version>${checksum-maven-plugin.version}</version>
+                <executions>
+                    <execution>
+                        <id>source-release-checksum</id>
+                        <goals>
+                            <goal>files</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <algorithms>
+                        <algorithm>SHA-512</algorithm>
+                        <algorithm>SHA-256</algorithm>
+                    </algorithms>
+                    <csvSummary>false</csvSummary>
+                    <fileSets>
+                        <fileSet>
+                            <directory>${project.build.directory}</directory>
+                            <includes>
+                                <include>${project.artifactId}-${project.version}-sources.jar</include>
+                                <include>${project.artifactId}-${project.version}-javadoc.jar</include>
+                                <include>${project.artifactId}-${project.version}.jar</include>
+                            </includes>
+                        </fileSet>
+                    </fileSets>
+                    <failIfNoFiles>false</failIfNoFiles>
+                </configuration>
+            </plugin>
 
-                            <!-- Allows to customize documentation generation options on a per-package basis -->
-                            <perPackageOptions>
-                                <packageOptions>
-                                    <!-- Will match kotlin and all sub-packages of it -->
-                                    <!-- <prefix>kotlin</prefix>-->
-
-                                    <!-- All options are optional, default values are below: -->
-                                    <skipDeprecated>false</skipDeprecated>
-                                    <!-- Emit warnings about not documented members  -->
-                                    <reportUndocumented>true</reportUndocumented>
-                                    <includeNonPublic>false</includeNonPublic>
-                                </packageOptions>
-                            </perPackageOptions>
-                        </configuration>
-                    </plugin>
-
-                    <!-- GPG signing -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                        <version>${maven-gpg-plugin.version}</version>
-                        <configuration>
-                            <gpgArguments>
-                                <arg>--pinentry-mode</arg>
-                                <arg>loopback</arg>
-                            </gpgArguments>
-                        </configuration>
-                        <executions>
-                            <execution>
-                                <id>sign-artifacts</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>sign</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <!-- Calculate checksums -->
-                    <plugin>
-                        <groupId>net.nicoulaj.maven.plugins</groupId>
-                        <artifactId>checksum-maven-plugin</artifactId>
-                        <version>${checksum-maven-plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <id>source-release-checksum</id>
-                                <goals>
-                                    <goal>files</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <algorithms>
-                                <algorithm>SHA-512</algorithm>
-                                <algorithm>SHA-256</algorithm>
-                            </algorithms>
-                            <csvSummary>false</csvSummary>
-                            <fileSets>
-                                <fileSet>
-                                    <directory>${project.build.directory}</directory>
-                                    <includes>
-                                        <include>${project.artifactId}-${project.version}-sources.jar</include>
-                                        <include>${project.artifactId}-${project.version}-javadoc.jar</include>
-                                        <include>${project.artifactId}-${project.version}.jar</include>
-                                    </includes>
-                                </fileSet>
-                            </fileSets>
-                            <failIfNoFiles>false</failIfNoFiles>
-                        </configuration>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.sonatype.central</groupId>
-                        <artifactId>central-publishing-maven-plugin</artifactId>
-                        <version>${central-publishing-maven-plugin.version}</version>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <publishingServerId>central</publishingServerId>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-    </profiles>
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>${central-publishing-maven-plugin.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
     <dependencyManagement>
         <dependencies>
@@ -390,6 +355,11 @@
                 <version>${project.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-tests-common</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-tests</artifactId>
