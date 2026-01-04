@@ -14,10 +14,12 @@
 
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>browser4-spa</artifactId>
-    <version>4.3.0-SNAPSHOT</version>
+    <version>0.0.1-SNAPSHOT</version>
 
     <name>Browser4 SPA</name>
-    <description>Browser4 SPA</description>
+    <description>
+        Browser 4 Single Page Applications - can be used for general agents like Suna.
+    </description>
 
     <build>
         <defaultGoal>package</defaultGoal>
