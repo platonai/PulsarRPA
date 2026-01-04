@@ -6,7 +6,7 @@
 
 ---
 
-English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platonai_galaxyeye/Browser4)
+English | [简体中文](README.zh.md) | [中国镜像](https://gitee.com/platonai_galaxyeye/Browser4)
 
 <!-- TOC -->
 **Table of Contents**
@@ -346,5 +346,5 @@ Ask your proxy provider for such a URL.
 
 ---
 
-> For Chinese documentation, refer to [简体中文 README](README-CN.md).
+> For Chinese documentation, refer to [简体中文 README](README.zh.md).
 
