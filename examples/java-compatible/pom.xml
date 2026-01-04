@@ -14,11 +14,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>ai.platon.pulsar</groupId>
-    <artifactId>browser4-java-examples</artifactId>
+    <artifactId>java-compatible</artifactId>
     <version>0.0.1-SNAPSHOT</version>
 
-    <name>Browser4 Java Examples</name>
-    <description>Browser4 Java Examples</description>
+    <name>Java Compatible Examples</name>
+    <description>Java Compatible Examples</description>
 
     <build>
         <defaultGoal>package</defaultGoal>

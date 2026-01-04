@@ -383,6 +383,14 @@
                 <artifactId>kotlin-stdlib</artifactId>
                 <version>${kotlin.version}</version>
             </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -423,5 +431,6 @@
         <kotlin.version>2.2.20</kotlin.version>
         <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
+        <spring-boot.version>3.3.8</spring-boot.version>
     </properties>
 </project>

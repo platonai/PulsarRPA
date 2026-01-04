@@ -100,9 +100,10 @@
                 <activeByDefault>true</activeByDefault>
             </activation>
             <modules>
-                <module>browser4</module>
-                <module>browser4-examples</module>
-                <module>browser4-java-examples</module>
+                <module>browser4/browser4-agents</module>
+                <module>browser4/browser4-spa</module>
+                <module>examples/browser4-examples</module>
+                <module>examples/java-compatible</module>
             </modules>
         </profile>
 
