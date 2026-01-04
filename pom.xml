@@ -91,12 +91,20 @@
         <module>pulsar-tests-common</module>
         <module>pulsar-tests</module>
         <module>pulsar-bom</module>
-        <module>browser4-examples</module>
-        <module>browser4-java-examples</module>
-        <module>browser4</module>
     </modules>
 
     <profiles>
+        <profile>
+            <id>examples</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <modules>
+                <module>browser4</module>
+                <module>browser4-examples</module>
+                <module>browser4-java-examples</module>
+            </modules>
+        </profile>
 
         <!-- CI profile -->
         <profile>
@@ -171,12 +179,8 @@
 
                 <module>pulsar-tests-common</module>
                 <module>pulsar-tests</module>
-                <module>pulsar-all</module>
                 <module>pulsar-client</module>
                 <module>pulsar-bom</module>
-                <module>pulsar-examples</module>
-
-                <module>browser4</module>
             </modules>
 
             <build>
@@ -342,20 +346,6 @@
                             <publishingServerId>central</publishingServerId>
                         </configuration>
                     </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
-            <id>OS-WIN</id>
-            <activation>
-                <os>
-                    <family>windows</family>
-                </os>
-            </activation>
-            <build>
-                <plugins>
-
                 </plugins>
             </build>
         </profile>
