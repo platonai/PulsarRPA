@@ -1,8 +1,8 @@
 package ai.platon.pulsar.examples.advanced
 
 import ai.platon.pulsar.common.ResourceLoader
+import ai.platon.pulsar.manual.PRODUCT_DETAIL_URL
 import ai.platon.pulsar.skeleton.context.PulsarContexts
-import ai.platon.pulsar.test.TestResourceUtil.Companion.PRODUCT_DETAIL_URL
 
 fun main() {
     val scripts = listOf("custom-js/custom-scripts.js").map { ResourceLoader.readString(it) }

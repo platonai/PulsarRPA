@@ -65,18 +65,10 @@
             <artifactId>pulsar-agentic</artifactId>
         </dependency>
 
+        <!-- Only for demo server starter -->
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
             <artifactId>pulsar-tests-common</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
         </dependency>
     </dependencies>
 

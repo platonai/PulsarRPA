@@ -8,7 +8,6 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.common.url.CompletableListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.common.url.ParsableHyperlink
-import ai.platon.pulsar.test.TestResourceUtil
 
 /**
  * Demonstrates various URLs in Browser4.
@@ -21,7 +20,7 @@ fun main() {
     // Create a pulsar session
     val session = PulsarContexts.createSession()
     // The main url we are playing with
-    val url = TestResourceUtil.PRODUCT_DETAIL_URL
+    val url = PRODUCT_DETAIL_URL
 
     //
     // 1. PlainUrl

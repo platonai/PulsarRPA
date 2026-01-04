@@ -2,7 +2,6 @@ package ai.platon.pulsar.manual
 
 import ai.platon.pulsar.skeleton.PulsarSettings
 import ai.platon.pulsar.skeleton.context.PulsarContexts
-import ai.platon.pulsar.test.TestResourceUtil
 
 /**
  * Demonstrates the usage of load options.
@@ -15,7 +14,7 @@ fun main() {
     // Create a pulsar session
     val session = PulsarContexts.createSession()
     // The main url we are playing with
-    val url = TestResourceUtil.PRODUCT_DETAIL_URL
+    val url = PRODUCT_DETAIL_URL
 
     // Load a page, or fetch it if the expiry time exceeds.
     //

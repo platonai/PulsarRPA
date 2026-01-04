@@ -8,7 +8,6 @@ import ai.platon.pulsar.skeleton.context.PulsarContexts
 import ai.platon.pulsar.skeleton.crawl.common.url.ListenableHyperlink
 import ai.platon.pulsar.skeleton.crawl.event.impl.DefaultPageEventHandlers
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.test.TestResourceUtil
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
@@ -117,7 +116,7 @@ class PrintFlowEventHandlers: DefaultPageEventHandlers() {
 fun main() {
     PulsarSettings.withDefaultBrowser()
 
-    val url = TestResourceUtil.PRODUCT_DETAIL_URL
+    val url = PRODUCT_DETAIL_URL
     val session = PulsarContexts.createSession()
     val link = ListenableHyperlink(url, "", args = "-refresh -parse", eventHandlers = PrintFlowEventHandlers())
 

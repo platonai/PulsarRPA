@@ -5,7 +5,6 @@ import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.context.PulsarContexts.createSession
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.session.PulsarSession
-import ai.platon.pulsar.test.TestResourceUtil
 import org.slf4j.LoggerFactory
 
 internal class RPACrawler(private val session: PulsarSession = createSession()) {
@@ -54,7 +53,7 @@ internal class RPACrawler(private val session: PulsarSession = createSession()) 
 fun main() {
     PulsarSettings.withDefaultBrowser()
 
-    val url = TestResourceUtil.PRODUCT_DETAIL_URL
+    val url = PRODUCT_DETAIL_URL
     val args = "-refresh -parse"
     val session = createSession()
     val crawler = RPACrawler(session)

@@ -4,7 +4,6 @@ import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.context.AgenticContexts
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
-import ai.platon.pulsar.test.TestResourceUtil
 import org.slf4j.LoggerFactory
 
 internal class WebDriverDemo(private val session: AgenticSession = AgenticContexts.createSession()) {
@@ -109,7 +108,7 @@ internal class WebDriverDemo(private val session: AgenticSession = AgenticContex
  * Demonstrates how to use a web driver to interact with the page.
  * */
 fun main() {
-    val url = TestResourceUtil.PRODUCT_DETAIL_URL
+    val url = PRODUCT_DETAIL_URL
     val args = "-refresh -parse"
     // Set the system to work with single page applications (SPA)
     val session = AgenticContexts.createSession()
