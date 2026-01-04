@@ -76,10 +76,7 @@
 
     <properties>
         <kotlin.version>2.2.20</kotlin.version>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-
-        <pulsar.version>4.3.0-SNAPSHOT</pulsar.version>
         <spring-boot.version>3.3.8</spring-boot.version>
+        <pulsar.version>4.3.0-SNAPSHOT</pulsar.version>
     </properties>
 </project>
