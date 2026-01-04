@@ -33,6 +33,13 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -50,6 +57,7 @@
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
         </dependency>
+
     </dependencies>
 
     <properties>
@@ -57,5 +65,6 @@
         <maven.compiler.target>17</maven.compiler.target>
 
         <pulsar.version>4.3.0-SNAPSHOT</pulsar.version>
+        <spring-boot.version>3.3.8</spring-boot.version>
     </properties>
 </project>
