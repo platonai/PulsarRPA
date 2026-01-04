@@ -95,18 +95,18 @@ val result = agent.run("""
 
 4. **运行示例（Linux/macOS）**
    ```shell
-   ./mvnw -pl pulsar-examples exec:java -D"exec.mainClass=ai.platon.pulsar.examples.agent.Browser4AgentKt"
+   ./mvnw -pl browser4-examples exec:java -D"exec.mainClass=ai.platon.pulsar.examples.agent.Browser4AgentKt"
    ```
    **Windows (cmd)**：
    ```shell
-   mvnw.cmd -pl pulsar-examples exec:java -D"exec.mainClass=ai.platon.pulsar.examples.agent.Browser4AgentKt"
+   mvnw.cmd -pl examples/browser4-examples exec:java -D"exec.mainClass=ai.platon.pulsar.examples.agent.Browser4AgentKt"
    ```
    如有乱码问题（Windows）：
    ```shell
    ./bin/run-examples.ps1
    ```
 
-   在 `pulsar-examples` 模块中探索并运行示例，直观了解 Browser4 的能力。
+   在 `browser4-examples` 模块中探索并运行示例，直观了解 Browser4 的能力。
 
 Docker 部署请参见我们的 [Docker Hub 仓库](https://hub.docker.com/r/galaxyeye88/browser4)。
 

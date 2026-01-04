@@ -10,5 +10,5 @@ $env:JAVA_TOOL_OPTIONS = "-Dfile.encoding=UTF-8"
 ./mvnw.cmd `
   -D"file.encoding=UTF-8" `
   -D"exec.mainClass=ai.platon.pulsar.examples.agent.Browser4AgentKt" `
-  -pl pulsar-examples `
+  -pl examples/browser4-examples `
   exec:java

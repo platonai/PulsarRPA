@@ -88,14 +88,14 @@ val result = agent.run("""
 
 4. **Run examples**
    ```shell
-   ./mvnw -pl pulsar-examples exec:java -D"exec.mainClass=ai.platon.pulsar.examples.agent.Browser4AgentKt"
+   ./mvnw -pl examples/browser4-examples exec:java -D"exec.mainClass=ai.platon.pulsar.examples.agent.Browser4AgentKt"
    ```
    If you have encoding problem on Windows:
    ```shell
    ./bin/run-examples.ps1
    ```
 
-   Explore and run examples in the `pulsar-examples` module to see Browser4 in action.
+   Explore and run examples in the `browser4-examples` module to see Browser4 in action.
 
 For Docker deployment, see our [Docker Hub repository](https://hub.docker.com/r/galaxyeye88/browser4).
 
