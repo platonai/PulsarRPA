@@ -10,8 +10,6 @@ import java.util.*
 /**
  * Request for chat
  *
- * @see [ai.platon.pulsar.rest.api.controller.AiController.chatBackward]
- *
  * @property url The page url
  * @property prompt The prompt, e.g. "Tell me something about the page"
  * @property args The load arguments

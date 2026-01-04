@@ -11,8 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 @CrossOrigin
 @RequestMapping("/")
 class DefaultController(
-    val session: PulsarSession,
-    val coreMetrics: CoreMetrics
+    val session: PulsarSession
 ) {
     @GetMapping("health")
     fun health(): Map<String, String> {

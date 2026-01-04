@@ -26,7 +26,7 @@ class ApiApplication(
 fun main(args: Array<String>) {
     runApplication<ApiApplication>(*args) {
         addInitializers(PulsarContextInitializer())
-        setAdditionalProfiles("rest")
+        setAdditionalProfiles("rest", "private", "advanced")
         setLogStartupInfo(true)
     }
 }
