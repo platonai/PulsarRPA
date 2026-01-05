@@ -37,7 +37,7 @@ English | [简体中文](README.zh.md) | [中国镜像](https://gitee.com/platon
 * 👽 **Browser Agents** — Fully autonomous browser agents that reason, plan, and execute end-to-end tasks.
 * 🤖 **Browser Automation** — High-performance automation for workflows, navigation, and data extraction.
 * ⚙️ **Machine Learning Agent** - Learns field structures across complex pages without consuming tokens.
-* ⚡  **Extreme Performance** — Fully coroutine-safe; supports 100k ~ 200k page visits per machine per day.
+* ⚡  **Extreme Performance** — Fully coroutine-safe; supports 100k ~ 200k complex page visits per machine per day.
 * 🧬 **Data Extraction** — Hybrid of LLM, ML, and selectors for clean data across chaotic pages.
 
 ## ⚡ Quick Example: Agentic Workflow
@@ -125,6 +125,7 @@ agent.run(task)
 Low-level browser automation & data extraction with fine-grained control.
 
 **Features:**
+- Both live DOM access and offline snapshot parsing
 - Direct and full Chrome DevTools Protocol (CDP) control, coroutine safe
 - Precise element interactions (click, scroll, input)
 - Fast data extraction using CSS selectors/XPath
@@ -134,21 +135,28 @@ val session = AgenticContexts.getOrCreateSession()
 val agent = session.companionAgent
 val driver = session.getOrCreateBoundDriver()
 
-// Open, capture and parse a page
+// Load the initial page referenced by your input URL
 var page = session.open(url)
+
+// Drive the browser with natural-language instructions
+agent.act("scroll to the comment section")
+// Read the first matching comment node directly from the live DOM
+val content = driver.selectFirstTextOrNull("#comments")
+
+// Snapshot the page to an in-memory document for offline parsing
 var document = session.parse(page)
+// Map CSS selectors to structured fields in one call
 var fields = session.extract(document, mapOf("title" to "#title"))
 
-// Interact with the page
-var result = agent.act("scroll to the comment section")
-var content = driver.selectFirstTextOrNull("#comments")
+// Let the companion agent execute a multi-step navigation/search flow
+val history = agent.run(
+  "Go to amazon.com, search for 'smart phone', open the product page with the highest ratings"
+)
 
-// Complex agent tasks
-var history = agent.run("Search for 'smart phone', read the first four products, and give me a comparison.")
-
-// Capture and extract from current state
+// Capture the updated browser state back into a PageSnapshot
 page = session.capture(driver)
 document = session.parse(page)
+// Extract additional attributes from the captured snapshot
 fields = session.extract(document, mapOf("ratings" to "#ratings"))
 ```
 
