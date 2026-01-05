@@ -7,9 +7,9 @@ branding:
 
 inputs:
   maven_profiles:
-    description: 'Maven profiles to activate (comma-separated, default: all-modules)'
+    description: 'Maven profiles to activate (comma-separated)'
     required: false
-    default: 'all-modules'
+    default: ''
   skip_tests:
     description: 'Skip tests during build (default: true)'
     required: false
