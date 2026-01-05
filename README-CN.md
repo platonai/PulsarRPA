@@ -285,6 +285,7 @@ Python / Node.js SDK 正在筹备中。
 * 🛠️ [配置指南](docs/config.md)
 * 📚 [源码构建](docs/build.md)
 * 🧠 [进阶指南](docs/advanced-guides.md)
+* 🤖 [AI 编程产品指导](docs/zh/ai-products-guidance-cn.md) - 支持 Cursor、Windsurf、Cline、Aider、GitHub Copilot
 
 ---
 

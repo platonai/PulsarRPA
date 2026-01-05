@@ -273,6 +273,7 @@ Python/Node.js SDKs are on the way.
 * 🛠️ [Configuration Guide](docs/config.md)
 * 📚 [Build from Source](docs/build.md)
 * 🧠 [Expert Guide](docs/advanced-guides.md)
+* 🤖 [AI Programming Products Guidance](docs/ai-products-guidance.md) - Support for Cursor, Windsurf, Cline, Aider, GitHub Copilot
 
 ---
 
