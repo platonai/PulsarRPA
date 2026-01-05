@@ -45,7 +45,6 @@ jobs:
         if: success()
         uses: ./.github/actions/maven-build
         with:
-          maven_profiles: 'all-modules'
           skip_tests: ${{ inputs.skip_tests || 'true' }}
           timeout_minutes: '15'
 

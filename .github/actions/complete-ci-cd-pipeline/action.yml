@@ -16,7 +16,7 @@ inputs:
   maven_profiles:
     description: 'Maven profiles to activate'
     required: false
-    default: 'all-modules'
+    default: ''
   skip_tests:
     description: 'Skip unit tests during build'
     default: false

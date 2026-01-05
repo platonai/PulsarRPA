@@ -83,7 +83,6 @@ Function Invoke-MavenBuild
 
 # Execute Maven package in the application home directory
 $MvnOptions += 'install'
-$AdditionalMvnArgs += '-Pall-modules'
 
 $MvnOptions += $AdditionalMvnArgs
 Invoke-MavenBuild -Directory $AppHome -MvnOptions $MvnOptions

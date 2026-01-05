@@ -7,9 +7,9 @@ branding:
 
 inputs:
   maven_profiles:
-    description: 'Maven profiles to activate (default: all-modules)'
+    description: 'Maven profiles to activate'
     required: false
-    default: 'all-modules'
+    default: ''
   test_excludes:
     description: 'Test patterns to exclude (Surefire format)'
     required: false
