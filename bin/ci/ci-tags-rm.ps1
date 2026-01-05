@@ -10,7 +10,7 @@
 
 param(
     [string]$remote = "origin",
-    [string]$pattern = "v[0-9]+.[0-9]+.[0-9]+-ci.[0-9]+"
+    [string]$pattern = ".*-ci.*"
 )
 
 # 🔍 Find the first parent directory containing the VERSION file
@@ -44,13 +44,19 @@ function Confirm-And-Remove-CITags {
     $tags = Get-MatchingTags $pattern
     if ($tags) {
         Write-Host "Found CI tags to potentially remove: $($tags -join ', ')"
+        $removeAll = $false
         foreach ($tag in $tags) {
-            $confirm = Read-Host "Do you want to remove tag '$tag' from local and '$remote'? (y/N)"
-            if ($confirm -match '^(y|yes)$') {
-                Remove-Tag $tag $remote
-            } else {
-                Write-Host "Skipped removing tag '$tag'."
+            if (-not $removeAll) {
+                $confirm = Read-Host "Do you want to remove tag '$tag' from local and '$remote'? (y/N/all)"
+                if ($confirm -match '^(all)$') {
+                    Write-Host "Removing all remaining CI tags without further prompts."
+                    $removeAll = $true
+                } elseif ($confirm -notmatch '^(y|yes)$') {
+                    Write-Host "Skipped removing tag '$tag'."
+                    continue
+                }
             }
+            Remove-Tag $tag $remote
         }
     } else {
         Write-Host "No matching tags found to remove."
