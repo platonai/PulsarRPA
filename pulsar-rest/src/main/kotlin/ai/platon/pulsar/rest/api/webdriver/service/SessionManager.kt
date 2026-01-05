@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.skeleton.context.PulsarContext
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.stereotype.Service
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -17,8 +18,10 @@ import java.util.concurrent.TimeUnit
 /**
  * Manages WebDriver sessions with real PulsarSession and AgenticSession instances.
  * Handles session lifecycle, cleanup, and browser integration.
+ * Only active when PulsarContext is available (production mode).
  */
 @Service
+@ConditionalOnBean(PulsarContext::class)
 class SessionManager(
     private val pulsarContext: PulsarContext
 ) {
@@ -169,7 +172,7 @@ class SessionManager(
      *
      * @return Number of active sessions.
      */
-    fun getSessionCount(): Int {
+    fun getActiveSessionCount(): Int {
         return sessions.size
     }
     

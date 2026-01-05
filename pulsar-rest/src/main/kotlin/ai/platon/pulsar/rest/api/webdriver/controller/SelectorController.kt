@@ -289,6 +289,25 @@ class SelectorController(
         logger.debug("Session {} getting outerHtml for selector: {}", sessionId, request.selector)
         ControllerUtils.addRequestId(response)
 
+        if (useRealSessions) {
+            val managed = sessionManager!!.getSession(sessionId)
+                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+
+            return try {
+                val html = runBlocking {
+                    val driver = managed.pulsarSession.getOrCreateBoundDriver()
+                    driver.outerHTML(request.selector)
+                }
+                ResponseEntity.ok(HtmlResponse(value = html))
+            } catch (e: WebDriverException) {
+                logger.error("Get outerHtml failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message)
+                ControllerUtils.errorResponse("webdriver error", e.message ?: "WebDriver error")
+            } catch (e: Exception) {
+                logger.error("Get outerHtml failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message, e)
+                ControllerUtils.errorResponse("internal error", e.message ?: "Internal error")
+            }
+        }
+
         val element = store.getOrCreateElement(sessionId, request.selector, request.strategy)
             ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 

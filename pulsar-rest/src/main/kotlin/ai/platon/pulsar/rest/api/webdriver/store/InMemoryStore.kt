@@ -247,4 +247,13 @@ class InMemoryStore {
     fun sessionExists(sessionId: String): Boolean {
         return sessions.containsKey(sessionId)
     }
+
+    /**
+     * Gets the count of active sessions.
+     *
+     * @return Number of active sessions.
+     */
+    fun getActiveSessionCount(): Int {
+        return sessions.size
+    }
 }
