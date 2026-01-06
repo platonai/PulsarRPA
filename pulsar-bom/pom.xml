@@ -53,19 +53,19 @@
         <tag>HEAD</tag>
     </scm>
 
-    <repositories>
-        <repository>
-            <id>Central</id>
-            <url>https://repo1.maven.org/maven2/</url>
-        </repository>
-    </repositories>
-
     <distributionManagement>
         <repository>
             <id>central</id>
             <url>https://central.sonatype.com/api/v1/publisher</url>
         </repository>
     </distributionManagement>
+
+    <repositories>
+        <repository>
+            <id>Central</id>
+            <url>https://repo1.maven.org/maven2/</url>
+        </repository>
+    </repositories>
 
     <profiles>
         <profile>
@@ -312,6 +312,7 @@
         <!-- Plugin versions -->
         <!-- Overrides ai.platon:platon -->
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
+        <version.maven-clean-plugin>3.2.0</version.maven-clean-plugin>
         <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
         <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
         <maven-deploy-plugin.version>3.1.1</maven-deploy-plugin.version>
@@ -326,11 +327,6 @@
         <dokka.version>1.9.20</dokka.version>
         <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
 
-        <junit5.version>5.12.1</junit5.version>
-        <surefire.excludedGroups>
-            TimeConsumingTest,ExternalServiceTest,IntegrationTest,E2ETest,HeavyTest,
-            TestInfraCheck,SkippableLowerLevelTest
-        </surefire.excludedGroups>
         <kotlin.version>2.2.20</kotlin.version>
         <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
