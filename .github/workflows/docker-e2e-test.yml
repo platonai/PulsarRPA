@@ -35,6 +35,13 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set up JDK ${{ env.JAVA_VERSION }} For Deployment
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: maven
+
       - name: Build Docker Image
         id: build
         uses: ./.github/actions/docker-build
