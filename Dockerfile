@@ -18,13 +18,7 @@ RUN ls -la && ls -la bin && find . -name "*.sh" -exec chmod +x {} \;
 
 # Build the application with Maven cache mount
 RUN --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests -Dmaven.javadoc.skip=true -B -V && \
-    echo "Build browser4 base completed successfully"
-
-# Build the application with Maven cache mount
-RUN cd browser4/browser4-agents && \
-    --mount=type=cache,target=/root/.m2 mvn clean package -DskipTests -Dmaven.javadoc.skip=true -B -V && \
-    echo "Build browser4 completed successfully" \
-    cd ../..
+    echo "Build completed successfully"
 
 # Copy JAR for use in the next stage with better error handling
 RUN JAR_FILE=$(find . -name "Browser4*.jar" -type f | head -n 1) && \
