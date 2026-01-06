@@ -22,6 +22,8 @@ env:
   DEPENDENCY_SERVICES: 'b4-mongodb'
   MONGODB_CONTAINER: 'b4-mongodb'
   MONGODB_PORT: '27017'
+  JAVA_VERSION: '17'
+  MAVEN_OPTS: '-Xmx3g -XX:+UseG1GC'
 
 jobs:
   ci-build:
