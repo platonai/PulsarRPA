@@ -37,12 +37,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }} For Deployment
-        uses: actions/setup-java@v4
+      - name: Setup Environment
+        id: setup
+        uses: ./.github/actions/setup-environment
         with:
-          distribution: 'temurin'
-          java-version: ${{ env.JAVA_VERSION }}
-          cache: maven
+          java_version: ${{ env.JAVA_VERSION }}
+
+      - name: Verify Dependencies
+        id: deps
+        uses: ./.github/actions/verify-dependencies
+        with:
+          network_name: ${{ env.NETWORK_NAME }}
+          compose_file: ${{ env.DOCKER_COMPOSE_FILE }}
+          services_to_start: ${{ env.DEPENDENCY_SERVICES }}
+          mongodb_container: ${{ env.MONGODB_CONTAINER }}
+          mongodb_port: ${{ env.MONGODB_PORT }}
+          startup_timeout: '120'
+          verify_network_connectivity: 'true'
+
+      - name: Maven Build
+        id: build-maven
+        uses: ./.github/actions/maven-build
+        with:
+          skip_tests: ${{ inputs.skip_tests || 'true' }}
+          timeout_minutes: '15'
 
       - name: Build Docker Image
         id: build

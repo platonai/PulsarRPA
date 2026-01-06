@@ -32,6 +32,8 @@ env:
   DEPENDENCY_SERVICES: 'b4-mongodb'
   MONGODB_CONTAINER: 'b4-mongodb'
   MONGODB_PORT: '27017'
+  JAVA_VERSION: '17'
+  MAVEN_OPTS: '-Xmx3g -XX:+UseG1GC'
 
 jobs:
   ci-build:
@@ -49,7 +51,7 @@ jobs:
         id: setup
         uses: ./.github/actions/setup-environment
         with:
-          java_version: '17'
+          java_version: ${{ env.JAVA_VERSION }}
 
       - name: Verify Dependencies
         id: deps
