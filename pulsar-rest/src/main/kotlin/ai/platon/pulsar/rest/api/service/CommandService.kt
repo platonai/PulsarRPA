@@ -29,6 +29,7 @@ import reactor.core.publisher.FluxSink
 import java.nio.file.Files
 import java.time.Instant
 import java.util.concurrent.ConcurrentSkipListMap
+import java.util.concurrent.Executors
 import kotlin.io.path.writeText
 
 @Service
@@ -47,7 +48,8 @@ class CommandService(
     private val commandStatusCache = ConcurrentSkipListMap<String, CommandStatus>()
 
     // Create a dedicated dispatcher for long-running command operations
-    private val commandDispatcher = Dispatchers.IO.limitedParallelism(10) // Adjust number based on your server capacity
+    private val scrapingExecutor = Executors.newFixedThreadPool(10)
+    private val commandDispatcher = scrapingExecutor.asCoroutineDispatcher()
 
     private val commanderScope: CoroutineScope = CoroutineScope(
         commandDispatcher + SupervisorJob() + CoroutineName("commander")
