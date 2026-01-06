@@ -891,6 +891,10 @@
             SkippableLowerLevelTest,TestInfraCheck,MustManualRun
         </surefire.excludedGroups>
 
+        <spring-boot.version>3.5.9</spring-boot.version>
+        <!-- Use the one induced by spring-boot -->
+        <spring.version>6.2.5</spring.version>
+
         <ktor.version>3.3.1</ktor.version>
         <okhttp.version>5.2.1</okhttp.version>
         <junit5.version>5.12.1</junit5.version>
