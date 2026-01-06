@@ -156,7 +156,7 @@
                             <autoVersionSubmodules>true</autoVersionSubmodules>
                             <preparationGoals>clean verify</preparationGoals>
                             <completionGoals>clean</completionGoals>
-                            <goals>deploy nexus-staging:release</goals>
+                            <goals>deploy</goals>
                             <pushChanges>false</pushChanges>
                             <localCheckout>true</localCheckout>
                             <checkModificationExcludes>
