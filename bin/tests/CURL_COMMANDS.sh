@@ -6,10 +6,10 @@
 
 # System Health Checks (Quick tests first)
 CURL_DESC_HEALTH_CHECK="Health Check Endpoint"
-CURL_CMD_HEALTH_CHECK='curl -X GET "http://localhost:8182/api/health"'
+CURL_CMD_HEALTH_CHECK='curl -X GET "http://localhost:8182/actuator/health"'
 
 CURL_DESC_QUERY_PARAMS="Query Parameters Test"
-CURL_CMD_QUERY_PARAMS='curl -X GET "http://localhost:8182/api/health?details=true"'
+CURL_CMD_QUERY_PARAMS='curl -X GET "http://localhost:8182/actuator/health?details=true"'
 
 CURL_DESC_WEBUI="WebUI Command Interface"
 CURL_CMD_WEBUI='
@@ -18,7 +18,7 @@ curl -X GET "http://localhost:8182/command.html"
 
 CURL_DESC_CUSTOM_HEADERS="Custom Headers Test"
 read -r -d '' CURL_CMD_CUSTOM_HEADERS << 'EOF'
-curl -X GET "http://localhost:8182/api/health" -H "Accept: application/json" -H "User-Agent: Browser4-Test-Suite/1.0"
+curl -X GET "http://localhost:8182/actuator/health" -H "Accept: application/json" -H "User-Agent: Browser4-Test-Suite/1.0"
 EOF
 
 # Simple Data Extraction Tests

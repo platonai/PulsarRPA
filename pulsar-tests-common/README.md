@@ -20,13 +20,13 @@ Utility singleton to start/stop the mock site inside tests or example code.
 - Idempotent start (safe to call multiple times)
 - Optional port override (use 0 for a random free port)
 - Exposes `port()` and `baseUrl()`
-- Readiness probe with HTTP polling (first `/api/health`, fallback `/`)
+- Readiness probe with HTTP polling (first `/actuator/health`, fallback `/`)
 - Simple restart API
 
 ### Typical usage (Kotlin)
 ```kotlin
 val ctx = MockSiteLauncher.start(port = 8080)
-val ready = MockSiteLauncher.awaitReady() // probes /api/health then /
+val ready = MockSiteLauncher.awaitReady() // probes /actuator/health then /
 println("Mock site at: ${MockSiteLauncher.baseUrl()}")
 // ... run actions ...
 MockSiteLauncher.stop()
@@ -34,12 +34,12 @@ MockSiteLauncher.stop()
 Override health path with JVM property: `-Dmock.site.healthPath=/custom/health`.
 
 ### Auto-start in examples
-`SessionInstructionsExample` (in `browser4-examples`) auto-starts the mock site if unreachable and `-Ddemo.autoStart=true` (default true). It also probes `/api/health` before falling back.
+`SessionInstructionsExample` (in `browser4-examples`) auto-starts the mock site if unreachable and `-Ddemo.autoStart=true` (default true). It also probes `/actuator/health` before falling back.
 
 System properties:
 - `demo.url`        : Override full demo page URL (default points to localhost:8080 demo page)
 - `demo.autoStart`  : Auto-start when unreachable (true/false, default true)
-- `mock.site.healthPath` : Custom health probe path for launcher (default `/api/health`)
+- `mock.site.healthPath` : Custom health probe path for launcher (default `/actuator/health`)
 
 ## MockSiteBoot (standalone main)
 Command line launcher with a main() entry point.
@@ -66,7 +66,7 @@ Pass `--block` (program args) to keep the process alive if needed.
 A lightweight reusable probe extracted from example code so any demo/test can wait for the mock (or custom) site to be ready.
 
 ### Key points
-- Tries health endpoint first (default `/api/health` or overridden by `mock.site.healthPath` JVM property)
+- Tries health endpoint first (default `/actuator/health` or overridden by `mock.site.healthPath` JVM property)
 - Falls back to `/` if health path fails (unless disabled)
 - Configurable timeout, interval, verbosity, connect/read timeouts
 - Returns `true` on first 2xx/3xx response
@@ -83,7 +83,7 @@ val ok = DemoSiteProber.wait(
     DemoSiteProber.Options(
         timeout = Duration.ofSeconds(6),
         interval = Duration.ofMillis(300),
-        healthPath = "/api/health",
+        healthPath = "/actuator/health",
         fallbackRoot = true,
         verbose = true
     )

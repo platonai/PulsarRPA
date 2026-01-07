@@ -82,7 +82,7 @@ substitute_urls() {
 
 check_server() {
   log "${BLUE}[INFO]${NC} Checking Browser4 server at $PULSAR_BASE_URL..."
-  if curl -s --connect-timeout 5 --max-time 10 "$PULSAR_BASE_URL/api/health" >/dev/null 2>&1; then
+  if curl -s --connect-timeout 5 --max-time 10 "$PULSAR_BASE_URL/actuator/health" >/dev/null 2>&1; then
     log "${GREEN}[SUCCESS]${NC} Browser4 server is healthy and responding"
     return 0
   elif curl -s --connect-timeout 5 --max-time 10 "$PULSAR_BASE_URL/" >/dev/null 2>&1; then

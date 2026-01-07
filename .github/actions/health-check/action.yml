@@ -11,9 +11,9 @@ inputs:
     required: false
     default: '8182'
   health_endpoint:
-    description: 'Health endpoint (default: /api/health)'
+    description: 'Health endpoint (default: /actuator/health)'
     required: false
-    default: '/api/health'
+    default: '/actuator/health'
   timeout_minutes:
     description: 'Timeout in minutes (default: 3)'
     required: false

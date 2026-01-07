@@ -59,7 +59,7 @@ RETRY_COUNT=0
 MAX_RETRIES=$((HEALTH_CHECK_TIMEOUT/2))
 
 # Wait until the actuator health endpoint is ready
-until check_health "http://localhost:$PORT/api/health" || [ $RETRY_COUNT -eq $MAX_RETRIES ]; do
+until check_health "http://localhost:$PORT/actuator/health" || [ $RETRY_COUNT -eq $MAX_RETRIES ]; do
     echo "Waiting for Pulsar RPA service to be ready (actuator)... ($((RETRY_COUNT+1))/$MAX_RETRIES)"
     sleep 2
     RETRY_COUNT=$((RETRY_COUNT+1))

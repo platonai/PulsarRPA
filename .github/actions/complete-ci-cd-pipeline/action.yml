@@ -75,7 +75,7 @@ inputs:
   health_endpoint:
     description: 'Health check endpoint'
     required: false
-    default: '/api/health'
+    default: '/actuator/health'
   health_timeout_minutes:
     description: 'Health check timeout in minutes'
     required: false

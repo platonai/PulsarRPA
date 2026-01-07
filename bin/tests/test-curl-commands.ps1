@@ -11,10 +11,10 @@
 
 # System Health Checks (Quick tests first)
 $CURL_DESC_HEALTH_CHECK = "Health Check Endpoint"
-$CURL_CMD_HEALTH_CHECK = 'curl -X GET "http://localhost:8182/api/health"'
+$CURL_CMD_HEALTH_CHECK = 'curl -X GET "http://localhost:8182/actuator/health"'
 
 $CURL_DESC_QUERY_PARAMS = "Query Parameters Test"
-$CURL_CMD_QUERY_PARAMS = 'curl -X GET "http://localhost:8182/api/health?details=true"'
+$CURL_CMD_QUERY_PARAMS = 'curl -X GET "http://localhost:8182/actuator/health?details=true"'
 
 $CURL_DESC_WEBUI = "WebUI Command Interface"
 $CURL_CMD_WEBUI = @'
@@ -23,7 +23,7 @@ curl -X GET "http://localhost:8182/command.html"
 
 $CURL_DESC_CUSTOM_HEADERS = "Custom Headers Test"
 $CURL_CMD_CUSTOM_HEADERS = @'
-curl -X GET "http://localhost:8182/api/health" -H "Accept: application/json" -H "User-Agent: Browser4-Test-Suite/1.0"
+curl -X GET "http://localhost:8182/actuator/health" -H "Accept: application/json" -H "User-Agent: Browser4-Test-Suite/1.0"
 '@
 
 # Simple Data Extraction Tests
@@ -217,7 +217,7 @@ function Check-Server {
   Log "[INFO] Checking Browser4 server at $PULSAR_BASE_URL..." -ForegroundColor Blue
 
   try {
-    $response = Invoke-WebRequest -Uri "$PULSAR_BASE_URL/api/health" -TimeoutSec 5 -ErrorAction SilentlyContinue
+    $response = Invoke-WebRequest -Uri "$PULSAR_BASE_URL/actuator/health" -TimeoutSec 5 -ErrorAction SilentlyContinue
     if ($response.StatusCode -ge 200 -and $response.StatusCode -lt 300) {
       Log "[SUCCESS] Browser4 server is healthy and responding" -ForegroundColor Green
       return $true

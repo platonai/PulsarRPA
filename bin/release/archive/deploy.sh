@@ -76,7 +76,7 @@ log() {
 
 # Function to wait for service to be ready
 wait_for_service() {
-    local url="http://localhost:$SERVICE_PORT/api/health"
+    local url="http://localhost:$SERVICE_PORT/actuator/health"
     local start_time=$(date +%s)
     local end_time=$((start_time + MAX_WAIT_TIME))
 
