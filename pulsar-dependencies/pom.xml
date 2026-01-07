@@ -1,0 +1,917 @@
+<!--  Licensed to the Apache Software Foundation (ASF) under one or more contributor
+    license agreements. See the NOTICE file distributed with this work for additional
+    information regarding copyright ownership. The ASF licenses this file to
+    you under the Apache License, Version 2.0 (the "License"); you may not use
+    this file except in compliance with the License. You may obtain a copy of
+    the License at http://www.apache.org/licenses/LICENSE-2.0 Unless required
+    by applicable law or agreed to in writing, software distributed under the
+    License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS
+    OF ANY KIND, either express or implied. See the License for the specific
+    language governing permissions and limitations under the License.  -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- From apache: "Most projects will want to override some of these settings." -->
+    <!-- for more information, see the documentation of this POM: http://maven.apache.org/pom/asf/ -->
+
+    <groupId>ai.platon</groupId>
+    <artifactId>pulsar-dependencies</artifactId>
+    <name>Pulsar Dependencies</name>
+    <version>4.1.0</version>
+    <packaging>pom</packaging>
+
+    <description>Pulsar Dependencies</description>
+
+    <url>https://platon.ai</url>
+    <inceptionYear>2014</inceptionYear>
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+    <organization>
+        <name>The Platon AI Web Data Engine</name>
+        <url>http://platon.ai</url>
+    </organization>
+    <developers>
+        <developer>
+            <name>Vincent Zhang</name>
+            <email>ivincent.zhang@gmail.com</email>
+            <organization>platon.ai</organization>
+            <timezone>+8</timezone>
+        </developer>
+    </developers>
+    <issueManagement>
+        <system>GitHub</system>
+        <url>http://www.github.com/platonai</url>
+    </issueManagement>
+    <scm>
+        <connection>scm:git:https://github.com/platonai/platon.git</connection>
+        <developerConnection>scm:git:https://github.com/platonai/platon.git</developerConnection>
+        <url>https://github.com/platonai/platon.git</url>
+        <tag>v4.0.3-SNAPSHOT</tag>
+    </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>central</id>
+            <url>https://central.sonatype.com/api/v1/publisher</url>
+        </repository>
+    </distributionManagement>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Begin apache-30.pom -->
+            <dependency>
+                <groupId>org.apache.maven.plugin-tools</groupId>
+                <artifactId>maven-plugin-annotations</artifactId>
+                <version>${version.maven-plugin-tools}</version>
+            </dependency>
+            <!-- End apache-30.pom -->
+
+            <dependency>
+                <groupId>io.netty</groupId>
+                <artifactId>netty-bom</artifactId>
+                <version>${netty.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-bom</artifactId>
+                <version>${kotlin.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-serialization</artifactId>
+                <version>${kotlin.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-common</artifactId>
+                <version>${hadoop.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hadoop</groupId>
+                <artifactId>hadoop-annotations</artifactId>
+                <version>${hadoop.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>*</artifactId>
+                        <groupId>*</groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hbase</groupId>
+                <artifactId>hbase-common</artifactId>
+                <version>${hbase.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>*</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!--
+            [WARNING] The artifact
+            mysql:mysql-connector-java:jar:8.0.33
+            has been relocated to
+            com.mysql:mysql-connector-j:jar:8.0.33:
+            MySQL Connector/J artifacts moved to reverse-DNS compliant Maven 2+ coordinates.
+            -->
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <scope>runtime</scope>
+                <version>${mysql.driver.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>protobuf-java</artifactId>
+                        <groupId>com.google.protobuf</groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <!-- TODO: This artifact was moved to: jakarta.servlet » jakarta.servlet-api -->
+            <dependency>
+                <groupId>javax.servlet</groupId>
+                <artifactId>javax.servlet-api</artifactId>
+                <version>${javax.servlet-api.version}</version>
+                <scope>provided</scope>
+            </dependency>
+
+            <!--  Html  -->
+            <dependency>
+                <groupId>org.jodd</groupId>
+                <artifactId>jodd-core</artifactId>
+                <version>${jodd-trove4j-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.sourceforge.nekohtml</groupId>
+                <artifactId>nekohtml</artifactId>
+                <version>${nekohtml.version}</version>
+            </dependency>
+            <!-- TODO: This artifact was moved to: net.sf.trove4j » core -->
+            <dependency>
+                <groupId>net.sf.trove4j</groupId>
+                <artifactId>trove4j</artifactId>
+                <version>${trove4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>net.sf.trove4j</groupId>
+                <artifactId>core</artifactId>
+                <version>${trove4j-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>jtidy</groupId>
+                <artifactId>jtidy</artifactId>
+                <version>4aug2000r7-dev</version>
+            </dependency>
+            <!--  for EncodingDetector  -->
+            <!-- International Components for Unicode for Java (ICU4J) is a mature, widely used Java library providing
+            Unicode and Globalization support -->
+            <dependency>
+                <groupId>com.ibm.icu</groupId>
+                <artifactId>icu4j</artifactId>
+                <version>${icu4j.version}</version>
+            </dependency>
+            <!-- https://mvnrepository.com/artifact/xerces/xercesImpl -->
+            <!-- Xerces2 provides high performance, fully compliant XML parsers -->
+            <dependency>
+                <groupId>xerces</groupId>
+                <artifactId>xercesImpl</artifactId>
+                <version>${xercesImpl.version}</version>
+            </dependency>
+            <!--  Tika for general document parsers  -->
+            <dependency>
+                <groupId>org.apache.tika</groupId>
+                <artifactId>tika-core</artifactId>
+                <version>${tika.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.tika</groupId>
+                <artifactId>tika-parser-html-module</artifactId>
+                <version>${tika.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.tika</groupId>
+                <artifactId>tika-parsers</artifactId>
+                <version>${tika.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.jsoup</groupId>
+                        <artifactId>jsoup</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <!-- Persist -->
+            <!-- TODO: This artifact was moved to: jakarta.persistence » jakarta.persistence-api -->
+            <dependency>
+                <groupId>javax.persistence</groupId>
+                <artifactId>javax.persistence-api</artifactId>
+                <version>${javax.persistence-api.version}</version>
+            </dependency>
+            <!-- TODO: check the dependency tree -->
+            <dependency>
+                <groupId>org.hibernate</groupId>
+                <artifactId>hibernate-core</artifactId>
+                <version>${hibernate.version}</version>
+            </dependency>
+            <!--  Spring  -->
+            <!--  https://mvnrepository.com/artifact/org.springframework/spring-core  -->
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-framework-bom</artifactId>
+                <version>${spring.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.springframework.data</groupId>
+                <artifactId>spring-data-bom</artifactId>
+                <version>${spring-data.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>dev.langchain4j</groupId>
+                <artifactId>langchain4j-bom</artifactId>
+                <version>${langchain4j.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!--  Apache commons  -->
+            <!-- managed by spring-boot-dependencies -->
+            <!--            <dependency>-->
+            <!--                <groupId>commons-codec</groupId>-->
+            <!--                <artifactId>commons-codec</artifactId>-->
+            <!--                <version>${commons-codec.version}</version>-->
+            <!--            </dependency>-->
+            <!--  Utility dependencies  -->
+            <!-- managed by spring-boot-dependencies -->
+            <!--            <dependency>-->
+            <!--                <groupId>commons-lang</groupId>-->
+            <!--                <artifactId>commons-lang</artifactId>-->
+            <!--                <version>${commons-lang.version}</version>-->
+            <!--            </dependency>-->
+            <!-- managed by spring-boot-dependencies -->
+            <!--            <dependency>-->
+            <!--                <groupId>org.apache.commons</groupId>-->
+            <!--                <artifactId>commons-lang3</artifactId>-->
+            <!--                <version>${commons-lang3.version}</version>-->
+            <!--            </dependency>-->
+            <dependency>
+                <groupId>commons-io</groupId>
+                <artifactId>commons-io</artifactId>
+                <version>${commons-io.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-text</artifactId>
+                <version>${commons-text.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-math3</artifactId>
+                <version>${commons-math3.version}</version>
+            </dependency>
+            <!--  Required by org.apache.hadoop.conf.Configuration  -->
+            <dependency>
+                <groupId>commons-configuration</groupId>
+                <artifactId>commons-configuration</artifactId>
+                <version>${commons-configuration.version}</version>
+            </dependency>
+            <!--  Required by org.apache.hadoop.conf.Configuration  -->
+            <dependency>
+                <groupId>commons-collections</groupId>
+                <artifactId>commons-collections</artifactId>
+                <version>${commons-collections.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-collections4</artifactId>
+                <version>${commons-collections4.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-logging</groupId>
+                <artifactId>commons-logging</artifactId>
+                <version>${commons-logging.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-compress</artifactId>
+                <version>${commons-compress.version}</version>
+            </dependency>
+
+            <!-- Spreadsheet, CSV, etc -->
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi</artifactId>
+                <version>${poi.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.poi</groupId>
+                <artifactId>poi-ooxml</artifactId>
+                <version>${poi-ooxml.version}</version>
+            </dependency>
+
+            <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-numbers-bom -->
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons-numbers-bom</artifactId>
+                <version>${commons-numbers-bom.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+
+
+            <!-- https://haifengl.github.io/ -->
+            <!-- Smile is a fast and comprehensive machine learning engine. -->
+            <!--
+            Why SMILE instead of Spark? Because we need a built, lightweight, fast, minimal dependent library in Scent
+            project. We also have a spark based ML project.
+             -->
+            <dependency>
+                <groupId>com.github.haifengl</groupId>
+                <artifactId>smile-base</artifactId>
+                <version>${smile.version}</version>
+                <!-- exclude slf4j -->
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.github.haifengl</groupId>
+                <artifactId>smile-core</artifactId>
+                <version>${smile.version}</version>
+                <!-- exclude slf4j -->
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>com.github.haifengl</groupId>
+                <artifactId>smile-plot</artifactId>
+                <version>${smile.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.github.haifengl</groupId>
+                <artifactId>smile-kotlin</artifactId>
+                <version>${smile.version}</version>
+            </dependency>
+
+            <!-- Java Predictive Model Markup Language -->
+            <dependency>
+                <groupId>org.jpmml</groupId>
+                <artifactId>pmml-agent</artifactId>
+                <version>${pmml.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jpmml</groupId>
+                <artifactId>pmml-model-jackson</artifactId>
+                <version>${pmml.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jpmml</groupId>
+                <artifactId>pmml-evaluator-metro</artifactId>
+                <version>${pmml.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jpmml</groupId>
+                <artifactId>pmml-evaluator-testing</artifactId>
+                <version>${pmml.version}</version>
+            </dependency>
+
+            <!-- managed by spring-boot-dependencies -->
+            <!--            <dependency>-->
+            <!--                <groupId>com.fasterxml.jackson</groupId>-->
+            <!--                <artifactId>jackson-bom</artifactId>-->
+            <!--                <version>${jackson-bom.version}</version>-->
+            <!--                <type>pom</type>-->
+            <!--                <scope>import</scope>-->
+            <!--            </dependency>-->
+            <dependency>
+                <groupId>xml-apis</groupId>
+                <artifactId>xml-apis</artifactId>
+                <version>${xml-apis.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.guava</groupId>
+                <artifactId>guava</artifactId>
+                <version>${guava.version}</version>
+            </dependency>
+
+            <!-- managed by spring-boot-dependencies -->
+            <!--            <dependency>-->
+            <!--                <groupId>com.google.code.gson</groupId>-->
+            <!--                <artifactId>gson</artifactId>-->
+            <!--                <version>${gson.version}</version>-->
+            <!--            </dependency>-->
+
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>dataframe-core</artifactId>
+                <version>${dataframe.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>dataframe-excel</artifactId>
+                <version>${dataframe.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>dataframe-bom</artifactId>
+                <version>${dataframe.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpcore</artifactId>
+                <version>${httptrove4j-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.httpcomponents</groupId>
+                <artifactId>httpclient</artifactId>
+                <version>${httpclient.version}</version>
+                <!-- commons-logging excluding is required by spring-boot -->
+                <exclusions>
+                    <exclusion>
+                        <groupId>commons-logging</groupId>
+                        <artifactId>commons-logging</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+
+            <dependency>
+                <groupId>javax.websocket</groupId>
+                <artifactId>javax.websocket-api</artifactId>
+                <version>${websocket.api.version}</version>
+            </dependency>
+
+            <!--  NLP  -->
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-core</artifactId>
+                <version>${lucene.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-analyzers-common</artifactId>
+                <version>${lucene.version}</version>
+            </dependency>
+            <!--  https://mvnrepository.com/artifact/org.apache.lucene/lucene-analyzers-smartcn  -->
+            <dependency>
+                <groupId>org.apache.lucene</groupId>
+                <artifactId>lucene-analyzers-smartcn</artifactId>
+                <version>${lucene.version}</version>
+            </dependency>
+            <!--  First introduced for hyperlink graph computing  -->
+            <dependency>
+                <groupId>org.jgrapht</groupId>
+                <artifactId>jgrapht-core</artifactId>
+                <version>${jgrapht.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.jgrapht</groupId>
+                <artifactId>jgrapht-ext</artifactId>
+                <version>${jgrapht.version}</version>
+            </dependency>
+            <!--
+                Hamcrest is a framework for writing matcher objects allowing ‘match�?rules to be defined declaratively.
+              -->
+            <dependency>
+                <groupId>org.hamcrest</groupId>
+                <artifactId>hamcrest-all</artifactId>
+                <version>${hamcrest-all.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <!--
+                The Jakarta-ORO Java classes are a set of text-processing Java classes
+                that provide Perl5 compatible regular expressions.
+                As of 2010-09-01, the ORO project is retired.
+             -->
+            <dependency>
+                <groupId>oro</groupId>
+                <artifactId>oro</artifactId>
+                <version>${oro.version}</version>
+            </dependency>
+            <!--  Commander line parser  -->
+            <dependency>
+                <groupId>com.beust</groupId>
+                <artifactId>jcommander</artifactId>
+                <version>${jcommander.version}</version>
+            </dependency>
+            <!--  Expression  -->
+            <dependency>
+                <groupId>com.udojava</groupId>
+                <artifactId>EvalEx</artifactId>
+                <version>${EvalEx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.nield</groupId>
+                <artifactId>kotlin-statistics</artifactId>
+                <version>${kotlin-statistics.version}</version>
+            </dependency>
+
+            <!--  Logging, Tracking, Metrics  -->
+            <!--  System monitor  -->
+            <dependency>
+                <groupId>com.github.oshi</groupId>
+                <artifactId>oshi-core</artifactId>
+                <version>${oshi-trove4j-core.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-core</artifactId>
+                <version>${metrics.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-jmx</artifactId>
+                <version>${metrics.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-json</artifactId>
+                <version>${metrics.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.dropwizard.metrics</groupId>
+                <artifactId>metrics-graphite</artifactId>
+                <version>${metrics.version}</version>
+            </dependency>
+
+
+
+
+            <dependency>
+                <groupId>org.nibor.autolink</groupId>
+                <artifactId>autolink</artifactId>
+                <version>${autolink.version}</version>
+            </dependency>
+
+
+
+
+            <!-- managed by spring-boot-dependencies -->
+            <!--            <dependency>-->
+            <!--                <groupId>org.slf4j</groupId>-->
+            <!--                <artifactId>slf4j-bom</artifactId>-->
+            <!--                <version>${slf4j.version}</version>-->
+            <!--                <type>pom</type>-->
+            <!--                <scope>import</scope>-->
+            <!--            </dependency>-->
+            <!--            <dependency>-->
+            <!--                <groupId>ch.qos.logback</groupId>-->
+            <!--                <artifactId>logback-core</artifactId>-->
+            <!--                <version>${logback.version}</version>-->
+            <!--            </dependency>-->
+            <!--            <dependency>-->
+            <!--                <groupId>ch.qos.logback</groupId>-->
+            <!--                <artifactId>logback-classic</artifactId>-->
+            <!--                <version>${logback.version}</version>-->
+            <!--            </dependency>-->
+            <!--            <dependency>-->
+            <!--                <groupId>org.apache.logging.log4j</groupId>-->
+            <!--                <artifactId>log4j-api</artifactId>-->
+            <!--                <version>${log4j.version}</version>-->
+            <!--            </dependency>-->
+            <!--            <dependency>-->
+            <!--                <groupId>org.apache.logging.log4j</groupId>-->
+            <!--                <artifactId>log4j-core</artifactId>-->
+            <!--                <version>${log4j.version}</version>-->
+            <!--            </dependency>-->
+            <!--  Testing  -->
+            <dependency>
+                <groupId>com.google.code.findbugs</groupId>
+                <artifactId>jsr305</artifactId>
+                <version>${jsr305.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.perf4j</groupId>
+                <artifactId>perf4j</artifactId>
+                <version>${perf4j.version}</version>
+            </dependency>
+            <!--  junit 5  -->
+            <dependency>
+                <groupId>org.junit</groupId>
+                <artifactId>junit-bom</artifactId>
+                <version>${junit5.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!-- managed by spring-boot-dependencies -->
+            <!--            <dependency>-->
+            <!--                <groupId>org.mockito</groupId>-->
+            <!--                <artifactId>mockito-core</artifactId>-->
+            <!--                <version>${mockito.version}</version>-->
+            <!--                <scope>test</scope>-->
+            <!--            </dependency>-->
+            <dependency>
+                <groupId>org.mockito.kotlin</groupId>
+                <artifactId>mockito-kotlin</artifactId>
+                <version>${mockito-kotlin.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+
+            <dependency>
+                <groupId>io.mockk</groupId>
+                <artifactId>mockk</artifactId>
+                <version>${mockk.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <!-- Platon dependency -->
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-h2</artifactId>
+                <version>${pulsar-h2.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-jsoup</artifactId>
+                <version>${pulsar-jsoup.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <properties>
+        <!-- Probably generated by IDE -->
+
+
+
+
+
+
+
+        <!-- .......................... -->
+        <!-- Begin apache-30            -->
+        <!-- .......................... -->
+
+        <!-- The following are copied from apache-30.pom -->
+        <!-- set versions of common plugins for reproducibility, ordered alphabetically -->
+        <!-- 1.6.7 -> 1.7.0 -->
+        <distMgmtReleasesName>Apache Release Distribution Repository</distMgmtReleasesName>
+        <distMgmtReleasesUrl>https://repository.apache.org/service/local/staging/deploy/maven2</distMgmtReleasesUrl>
+        <distMgmtSnapshotsName>Apache Development Snapshot Repository</distMgmtSnapshotsName>
+        <distMgmtSnapshotsUrl>https://repository.apache.org/content/repositories/snapshots</distMgmtSnapshotsUrl>
+        <organization.logo>https://www.apache.org/images/asf_logo_wide_2016.png</organization.logo>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <sourceReleaseAssemblyDescriptor>source-release</sourceReleaseAssemblyDescriptor>
+        <gpg.useagent>true</gpg.useagent>
+        <minimalMavenBuildVersion>3.2.5</minimalMavenBuildVersion>
+        <minimalJavaBuildVersion>1.8</minimalJavaBuildVersion>
+        <maven.compiler.source>${maven.compiler.target}</maven.compiler.source>
+        <maven.compiler.target>1.7</maven.compiler.target>
+        <!-- Maven Surefire Plugin is a primary tool used in Maven projects for executing tests. It supports various
+testing frameworks such as JUnit (including JUnit 5), TestNG, and more. -->
+        <surefire.version>3.3.0</surefire.version>
+        <maven.plugin.tools.version>3.9.0</maven.plugin.tools.version><!-- for m-plugin-p and maven-plugin-annotations -->
+        <assembly.tarLongFileMode>posix</assembly.tarLongFileMode>
+
+        <version.maven-fluido-skin>1.11.2</version.maven-fluido-skin>
+        <project.build.outputTimestamp>2023-06-11T16:41:23Z</project.build.outputTimestamp>
+
+        <version.apache-rat-plugin>0.15</version.apache-rat-plugin>
+        <version.apache-resource-bundles>1.5</version.apache-resource-bundles>
+        <version.checksum-maven-plugin>1.11</version.checksum-maven-plugin>
+        <version.maven-antrun-plugin>3.1.0</version.maven-antrun-plugin>
+        <version.maven-assembly-plugin>3.6.0</version.maven-assembly-plugin>
+        <version.maven-clean-plugin>3.2.0</version.maven-clean-plugin>
+        <version.maven-compiler-plugin>3.11.0</version.maven-compiler-plugin>
+        <version.maven-dependency-plugin>3.6.0</version.maven-dependency-plugin>
+        <version.maven-deploy-plugin>3.1.1</version.maven-deploy-plugin>
+        <version.maven-ear-plugin>3.3.0</version.maven-ear-plugin>
+        <version.maven-enforcer-plugin>3.3.0</version.maven-enforcer-plugin>
+        <version.maven-gpg-plugin>3.1.0</version.maven-gpg-plugin>
+        <version.maven-help-plugin>3.4.0</version.maven-help-plugin>
+        <version.maven-install-plugin>3.1.1</version.maven-install-plugin>
+        <version.maven-invoker-plugin>3.5.1</version.maven-invoker-plugin>
+        <version.maven-jar-plugin>3.3.0</version.maven-jar-plugin>
+        <version.maven-javadoc-plugin>3.5.0</version.maven-javadoc-plugin>
+        <version.maven-plugin-tools>${maven.plugin.tools.version}</version.maven-plugin-tools>
+        <version.maven-project-info-reports-plugin>3.4.5</version.maven-project-info-reports-plugin>
+        <version.maven-release-plugin>3.0.1</version.maven-release-plugin>
+        <version.maven-remote-resources-plugin>3.1.0</version.maven-remote-resources-plugin>
+        <version.maven-resources-plugin>3.3.1</version.maven-resources-plugin>
+        <version.maven-scm-plugin>2.0.1</version.maven-scm-plugin>
+        <version.maven-scm-publish-plugin>3.2.1</version.maven-scm-publish-plugin>
+        <version.maven-shade-plugin>3.4.1</version.maven-shade-plugin>
+        <version.maven-site-plugin>3.12.1</version.maven-site-plugin>
+        <version.maven-source-plugin>3.3.0</version.maven-source-plugin>
+        <version.maven-surefire>${surefire.version}</version.maven-surefire>
+        <version.maven-war-plugin>3.3.2</version.maven-war-plugin>
+        <!-- .......................... -->
+        <!-- End apache-30              -->
+        <!-- .......................... -->
+
+        <version.maven-exec-plugin>3.5.0</version.maven-exec-plugin>
+        <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
+
+        <!--  Java  -->
+        <javac.src.version>17</javac.src.version>
+        <javac.target.version>17</javac.target.version>
+        <!--  Kotlin  -->
+        <!-- supported languageVersion: 1.8, 1.9, 2.0, etc -->
+        <!--        <kotlin.compiler.languageVersion>1.9</kotlin.compiler.languageVersion>-->
+        <!-- Target version of the generated JVM bytecode, 1.8, 9, 10, ..., 21, default 1.8 -->
+        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
+
+        <kotlin.version>1.9.25</kotlin.version>
+        <!--        <kotlin.version>2.0.21</kotlin.version>-->
+        <kotlin.coroutine.version>1.8.1</kotlin.coroutine.version>
+        <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
+
+        <dokka.version>1.9.10</dokka.version>
+
+        <!-- Apache common libraries -->
+        <!-- managed by spring-boot-dependencies -->
+        <!--        <commons-lang.version>2.6</commons-lang.version>-->
+        <commons-io.version>2.16.1</commons-io.version>
+        <commons-codec.version>1.17.0</commons-codec.version>
+        <commons-text.version>1.11.0</commons-text.version>
+        <!-- managed by spring-boot-dependencies -->
+        <!--        <commons-lang3.version>3.12.0</commons-lang3.version>-->
+        <commons-math3.version>3.6.1</commons-math3.version>
+        <commons-numbers-bom.version>1.1</commons-numbers-bom.version>
+        <commons-configuration.version>1.6</commons-configuration.version>
+        <commons-collections.version>3.2.2</commons-collections.version>
+        <commons-collections4.version>4.4</commons-collections4.version>
+        <commons-logging.version>1.3.2</commons-logging.version>
+        <commons-compress.version>1.26.2</commons-compress.version>
+
+        <poi-ooxml.version>5.3.0</poi-ooxml.version>
+        <poi.version>5.3.0</poi.version>
+
+        <oshi-trove4j-core.version>6.6.1</oshi-trove4j-core.version>
+
+        <xercesImpl.version>2.12.2</xercesImpl.version>
+        <trove4j-core.version>3.0.3</trove4j-core.version>
+        <icu4j.version>75.1</icu4j.version>
+        <trove4j.version>3.0.3</trove4j.version>
+        <jodd-trove4j-core.version>3.5.2</jodd-trove4j-core.version>
+
+        <kotlin-statistics.version>1.2.1</kotlin-statistics.version>
+
+        <!--  Gora Serialization  -->
+        <!--
+            Gora 0.8 supports:
+            Apache Avro 1.8.1
+            Apache Hadoop 2.5.2
+            Apache HBase 1.2.3
+            Apache Spark 1.4.1
+
+            Gora 0.9 supports:
+            Apache Avro 1.8.2
+            Apache Hadoop 2.5.2
+            Apache HBase 2.1.1
+            Apache Spark 2.2.1
+
+            See more at: http://gora.apache.org/
+          -->
+        <gora.version>0.9</gora.version>
+        <!-- Required by gora-0.9 -->
+        <avro.version>1.8.2</avro.version>
+        <!-- 2.5.2 suggested, but 2.7.2 is a correct version, we will consider using a shaded gora -->
+        <hadoop.version>2.7.2</hadoop.version>
+
+        <!--  HTML parsing  -->
+        <xerces.version>2.11.0</xerces.version>
+        <nekohtml.version>1.9.22</nekohtml.version>
+        <tika.version>2.9.0</tika.version>
+
+        <mysql.driver.version>8.0.33</mysql.driver.version>
+
+        <!--  Persistence  -->
+        <javax.persistence-api.version>2.2</javax.persistence-api.version>
+        <hibernate.version>5.4.29.Final</hibernate.version>
+        <!-- Required by hibernate, spring-boot-starter-test, correct the version -->
+        <!-- managed by spring-boot-dependencies -->
+        <!--        <byte-buddy.version>1.14.18</byte-buddy.version>-->
+        <!-- Spring  -->
+        <!--
+            Spring Framework Versions (2023.08.06):
+
+            * 5.3.x is the final feature branch of the 5th generation, with long-term support provided on JDK 8, JDK 11,
+        JDK 17 and the Java EE 8 level.
+            * 6.0.x is the main production line as of November 2022. This new generation of the framework comes with a
+            JDK 17 and Jakarta EE 9 baseline.
+            * 6.1.x is the upcoming feature branch (November 2023).
+
+            JDK Version Range:
+
+            * Spring Framework 6.1.x: JDK 17-23
+            * Spring Framework 6.0.x: JDK 17-21
+            * Spring Framework 5.3.x: JDK 8-21 (as of 5.3.26)
+
+            @see https://github.com/spring-projects/spring-framework/wiki/Spring-Framework-Versions
+            -->
+        <!--
+        Upgrade spring-boot from 2.7.18 to 3.3.1, for the reasons:
+        1. GraalVM Native Images support, see https://docs.spring.io/spring-boot/reference/packaging/native-image/index.html
+         -->
+        <spring-boot.version>3.3.8</spring-boot.version>
+        <!-- Use the one induced by spring-boot -->
+        <spring.version>6.1.16</spring.version>
+
+        <spring-data.version>2024.0.2</spring-data.version>
+
+        <!-- Web server -->
+        <httptrove4j-core.version>4.4.15</httptrove4j-core.version>
+        <httpclient.version>4.5.13</httpclient.version>
+        <!-- Java Servlet is the foundation web specification in the Java Enterprise Platform. Developers can build
+        web applications using the Servlet API to interact with the request/response workflow. -->
+        <!-- https://mvnrepository.com/artifact/javax.servlet/javax.servlet-api/4.0.1 -->
+        <!-- TODO: This artifact was moved to: jakarta.servlet » jakarta.servlet-api -->
+        <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
+
+        <netty.version>4.1.111.Final</netty.version>
+        <!-- required by pulsar-browser -->
+        <websocket.api.version>1.1</websocket.api.version>
+
+        <xml-apis.version>1.3.04</xml-apis.version>
+        <oro.version>2.0.8</oro.version>
+        <EvalEx.version>2.0</EvalEx.version>
+        <jsr305.version>3.0.0</jsr305.version>
+        <jcommander.version>1.82</jcommander.version>
+        <!-- Google core libraries for Java, include Multimaps, etc  -->
+        <!-- guava-32.1.3-jre has compatibility problem with kotlin-1.9.20,
+            kotlin contains the source code of com.google.common.collect.ImmutableMap,
+            which conflicts with guava-32.1.3-jre.
+        -->
+        <!-- <guava.version>32.1.3-jre</guava.version>-->
+        <guava.version>33.2.1-jre</guava.version>
+        <dataframe.version>0.13.1</dataframe.version>
+        <jgrapht.version>1.0.1</jgrapht.version>
+
+        <!-- ML -->
+        <smile.version>3.1.1</smile.version>
+        <pmml.version>1.6.4</pmml.version>
+
+        <!-- NLP -->
+        <!-- TODO: figure out the reason why we need to override the default 8.1.1, seems it's caused by a dependency issue -->
+        <lucene.version>7.3.1</lucene.version>
+
+        <!-- AI -->
+        <langchain4j.version>0.36.2</langchain4j.version>
+
+        <!--  Misc Dependencies  -->
+        <autolink.version>0.11.0</autolink.version>
+
+        <!--  Logging And Testing Dependencies, always keep consistent with spring-boot-starter-logging -->
+        <!-- Managed by spring-boot-dependencies -->
+        <!--        <slf4j.version>2.0.13</slf4j.version>-->
+        <!--        <logback.version>1.5.6</logback.version>-->
+        <!--        <log4j.version>2.23.1</log4j.version>-->
+        <perf4j.version>0.9.16</perf4j.version>
+
+        <!--  metrics analyze  -->
+        <oshi.version>6.4.13</oshi.version>
+        <metrics.version>4.2.12</metrics.version>
+
+        <!--  Matchers that can be combined to create flexible expressions of intent  -->
+        <hamcrest-all.version>1.3</hamcrest-all.version>
+        <org.hamcrest.version>1.3</org.hamcrest.version>
+        <!-- Mockito is a popular and widely-used mocking framework for unit testing in Java. -->
+        <!-- managed by spring-boot-dependencies -->
+        <!--        <mockito.version>5.12.0</mockito.version>-->
+        <mockito-kotlin.version>5.4.0</mockito-kotlin.version>
+        <!-- MockK is a powerful and flexible mocking library designed specifically for Kotlin. -->
+        <mockk.version>1.13.12</mockk.version>
+        <junit5.version>5.10.3</junit5.version>
+
+        <!-- Pulsar dependency -->
+        <pulsar-h2.version>1.4.196</pulsar-h2.version>
+        <pulsar-jsoup.version>1.14.3</pulsar-jsoup.version>
+    </properties>
+</project>

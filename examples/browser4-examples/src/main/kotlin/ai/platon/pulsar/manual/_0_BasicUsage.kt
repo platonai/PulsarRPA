@@ -103,6 +103,4 @@ fun main() {
 
     // Wait until all tasks are done.
     PulsarContexts.await()
-
-    readlnOrNull()
 }

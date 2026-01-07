@@ -12,10 +12,17 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+<!--    <parent>-->
+<!--        <groupId>ai.platon</groupId>-->
+<!--        <artifactId>platon</artifactId>-->
+<!--        <version>4.0.3</version>-->
+<!--    </parent>-->
+
     <parent>
         <groupId>ai.platon</groupId>
         <artifactId>platon</artifactId>
-        <version>4.0.3</version>
+        <version>4.1.0</version>
+        <relativePath>pulsar-parent</relativePath>
     </parent>
 
     <groupId>ai.platon.pulsar</groupId>
@@ -601,6 +608,14 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>ai.platon</groupId>
+                <artifactId>pulsar-dependencies</artifactId>
+                <version>4.1.0</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
             <!-- Internal Dependencies -->
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
@@ -751,12 +766,6 @@
                 <groupId>dev.langchain4j</groupId>
                 <artifactId>langchain4j-bom</artifactId>
                 <version>${langchain4j.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.nibor.autolink</groupId>
-                <artifactId>autolink</artifactId>
-                <version>${autolink.version}</version>
             </dependency>
 
             <dependency>
