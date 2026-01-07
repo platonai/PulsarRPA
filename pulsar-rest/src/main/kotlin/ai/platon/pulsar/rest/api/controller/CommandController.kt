@@ -7,6 +7,7 @@ import ai.platon.pulsar.rest.api.service.CommandService
 import ai.platon.pulsar.rest.api.service.ConversationService
 import ai.platon.pulsar.skeleton.crawl.event.impl.PageEventHandlersFactory
 import kotlinx.coroutines.runBlocking
+import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.http.codec.ServerSentEvent
@@ -24,15 +25,17 @@ class CommandController(
     val conversationService: ConversationService,
     val commandService: CommandService,
 ) {
+    private val logger = LoggerFactory.getLogger(javaClass)
+
     /**
      * Execute a command with structured JSON input and output.
      *
      * @param request The structured command request
      * @return Structured command response
      * */
-    @PostMapping("/")
+    @PostMapping(value = ["", "/"])
     fun submitCommand(@RequestBody request: CommandRequest): ResponseEntity<Any> {
-        print("...................")
+        // logger.info("Hit CommandController.submitCommand | async={} | url={}", request.isAsync(), request.url)
 
         val eventHandlers = PageEventHandlersFactory.create()
         val response = when {
