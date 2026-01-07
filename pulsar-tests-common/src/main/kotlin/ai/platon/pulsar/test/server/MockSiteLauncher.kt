@@ -119,14 +119,14 @@ object MockSiteLauncher : Closeable {
     }
 
     /**
-     * Wait until the health endpoint (default "/actuator/health") responds with a 2xx/3xx status or timeout reached.
+     * Wait until the health endpoint (default "/api/health") responds with a 2xx/3xx status or timeout reached.
      * Falls back to root "/" if health path not available.
      * @return true if ready, false if timed out.
      */
     fun awaitReady(
         timeout: Duration = Duration.ofSeconds(10),
         interval: Duration = Duration.ofMillis(300),
-        healthPath: String = System.getProperty("mock.site.healthPath", "/actuator/health")
+        healthPath: String = System.getProperty("mock.site.healthPath", "/api/health")
     ): Boolean {
         val port = boundPort ?: return false
         val healthUrl = URL("http://localhost:$port$healthPath")

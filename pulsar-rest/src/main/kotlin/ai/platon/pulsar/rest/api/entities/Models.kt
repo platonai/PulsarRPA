@@ -157,6 +157,14 @@ data class CommandRequest(
         return !onBrowserLaunchedActions.isNullOrEmpty() || !onPageReadyActions.isNullOrEmpty()
     }
 
+    fun isAsync(): Boolean {
+        return when {
+            async == true -> true
+            mode?.lowercase() == "async" -> true
+            else -> false
+        }
+    }
+
     fun enhanceArgs(): String {
         val minimalSize = 100 // minimal page size required
         val args = if (hasAction()) {

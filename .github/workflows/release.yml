@@ -133,7 +133,7 @@ jobs:
             --network ${{ env.NETWORK_NAME }} \
             -p 8182:8182 \
             -e OPENROUTER_API_KEY=${{ secrets.OPENROUTER_API_KEY }} \
-            --health-cmd="curl -f http://localhost:8182/actuator/health || exit 1" \
+            --health-cmd="curl -f http://localhost:8182/api/health || exit 1" \
             --health-interval=10s \
             --health-timeout=5s \
             --health-retries=5 \

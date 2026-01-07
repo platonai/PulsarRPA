@@ -24,7 +24,7 @@ class CommandControllerTest : ScrapeControllerTestBase() {
         val request = CommandRequest(url,
             "",
             pageSummaryPrompt = "Summarize the product.",
-            mode = "sync",
+            async = false
         )
 
         val status = restTemplate.postForObject("$baseUri/api/commands", request, CommandStatus::class.java)
@@ -55,7 +55,7 @@ class CommandControllerTest : ScrapeControllerTestBase() {
             "",
             pageSummaryPrompt = "Summarize the product.",
             dataExtractionRules = "product name, ratings, price",
-            mode = "sync",
+            async = false
         )
 
         val status = restTemplate.postForObject("$baseUri/api/commands", request, CommandStatus::class.java)
@@ -79,7 +79,7 @@ class CommandControllerTest : ScrapeControllerTestBase() {
         val request = CommandRequest(
             MOCK_PRODUCT_DETAIL_URL,
             xsql = sqlTemplate,
-            mode = "sync",
+            async = false
         )
         val status = restTemplate.postForObject("$baseUri/api/commands", request, CommandStatus::class.java)
         printlnPro(prettyPulsarObjectMapper().writeValueAsString(status))

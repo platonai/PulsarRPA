@@ -282,7 +282,7 @@ function Start-SingleContainer {
             "-e", "SERVER_PORT=8182"
             "-e", "SERVER_ADDRESS=0.0.0.0"
             "-p", "${Port}:8182"
-            "--health-cmd=curl -f http://localhost:8182/actuator/health || exit 1"
+            "--health-cmd=curl -f http://localhost:8182/api/health || exit 1"
             "--health-interval=10s"
             "--health-timeout=5s"
             "--health-retries=3"
@@ -313,7 +313,7 @@ function Wait-ForHealthy {
 
     $maxRetries = [math]::Floor($HealthCheckTimeout / 2)
     $healthEndpoints = @(
-        "http://localhost:${Port}/actuator/health",
+        "http://localhost:${Port}/api/health",
         "http://localhost:${Port}/api/system/health"
     )
 

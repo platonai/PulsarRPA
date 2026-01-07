@@ -12,7 +12,7 @@ import java.time.Instant
  * Reusable utility to wait for a demo/mock site to become available.
  *
  * Features:
- *  - Tries a health endpoint first (default /actuator/health) then falls back to root / (optional)
+ *  - Tries a health endpoint first (default /api/health) then falls back to root / (optional)
  *  - Configurable timeouts & intervals
  *  - Returns true if any probe gets a 2xx/3xx response
  *
@@ -24,7 +24,7 @@ class DemoSiteStarter: AutoCloseable {
     data class Options(
         val timeout: Duration = Duration.ofSeconds(12),
         val interval: Duration = Duration.ofMillis(500),
-        val healthPath: String = System.getProperty("mock.site.healthPath", "/actuator/health"),
+        val healthPath: String = System.getProperty("mock.site.healthPath", "/api/health"),
         val fallbackRoot: Boolean = true,
         val connectTimeoutMillis: Int = 1200,
         val readTimeoutMillis: Int = 1800,

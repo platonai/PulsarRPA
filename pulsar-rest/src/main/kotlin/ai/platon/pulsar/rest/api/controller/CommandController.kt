@@ -32,11 +32,11 @@ class CommandController(
      * */
     @PostMapping("/")
     fun submitCommand(@RequestBody request: CommandRequest): ResponseEntity<Any> {
-        val async = request.async ?: (request.mode?.lowercase() == "async")
+        print("...................")
 
         val eventHandlers = PageEventHandlersFactory.create()
         val response = when {
-            async -> commandService.submitAsync(request, eventHandlers)
+            request.isAsync() -> commandService.submitAsync(request, eventHandlers)
             else -> runBlocking { commandService.executeSync(request, eventHandlers) }
         }
 
@@ -60,13 +60,20 @@ class CommandController(
         val request = runBlocking { conversationService.normalizePlainCommand(plainCommand) }
             ?: return ResponseEntity.badRequest().body("Invalid plain command: $plainCommand")
 
-        val async = async ?: (mode?.lowercase() == "async")
+        fun isAsync(): Boolean {
+            return when {
+                async == true -> true
+                mode?.lowercase() == "async" -> true
+                else -> false
+            }
+        }
+
         request.mode = mode?.lowercase()
-        request.async = async
+        request.async = isAsync()
 
         val eventHandlers = PageEventHandlersFactory.create()
         val response = when {
-            async -> commandService.submitAsync(request, eventHandlers)
+            request.isAsync() -> commandService.submitAsync(request, eventHandlers)
             else -> runBlocking { commandService.executeSync(request, eventHandlers) }
         }
 

@@ -1,6 +1,5 @@
 package ai.platon.pulsar.rest.api.controller
 
-import ai.platon.pulsar.skeleton.crawl.CoreMetrics
 import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.springframework.web.bind.annotation.CrossOrigin
 import org.springframework.web.bind.annotation.GetMapping
