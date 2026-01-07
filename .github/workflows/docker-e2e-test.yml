@@ -82,7 +82,7 @@ jobs:
         uses: ./.github/actions/health-check
         with:
           service_port: '8182'
-          timeout_minutes: '5'
+          timeout_minutes: '3'
           container_name: ${{ env.CONTAINER_NAME }}
 
       - name: Run End to End Tests
