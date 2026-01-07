@@ -37,7 +37,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 * 👽 **Browser Agents** — Fully autonomous browser agents that reason, plan, and execute end-to-end tasks.
 * 🤖 **Browser Automation** — High-performance automation for workflows, navigation, and data extraction.
 * ⚙️ **Machine Learning Agent** - Learns field structures across complex pages without consuming tokens.
-* ⚡  **Extreme Performance** — Fully coroutine-safe; supports 100k ~ 200k page visits per machine per day.
+* ⚡  **Extreme Performance** — Fully coroutine-safe; supports 100k ~ 200k complex page visits per machine per day.
 * 🧬 **Data Extraction** — Hybrid of LLM, ML, and selectors for clean data across chaotic pages.
 
 ## ⚡ Quick Example: Agentic Workflow
@@ -187,7 +187,7 @@ Example code:
 Achieve extreme throughput with parallel browser control and smart resource optimization.
 
 **Performance:**
-- 10k ~ 20k page visits per machine per day
+- 10k ~ 20k complex page visits per machine per day
 - Concurrent session management
 - Resource blocking for faster page loads
 
@@ -313,7 +313,7 @@ Ask your proxy provider for such a URL.
 ### Performance & Scalability
 - High-efficiency parallel page rendering
 - Block-resistant design & smart retries
-- 100,000+ pages/day on modest hardware (indicative)
+- 100,000+ complex pages/day on modest hardware (indicative)
 
 ### Stealth & Reliability
 - Advanced anti-bot techniques
@@ -337,7 +337,7 @@ Ask your proxy provider for such a URL.
 - 💬 WeChat: galaxyeye
 - 🌐 Weibo: [galaxyeye](https://weibo.com/galaxyeye)
 - 📧 Email: galaxyeye@live.cn, ivincent.zhang@gmail.com
-- 🐦 Twitter: galaxyeye8
+- 🐦 Twitter: [galaxyeye8](https://x.com/galaxyeye8)
 - 🌍 Website: [browser4.io](https://browser4.io)
 
 <div style="display: flex;">
