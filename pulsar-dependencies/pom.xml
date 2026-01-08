@@ -608,8 +608,7 @@
         <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>
         <kotlin-statistics.version>1.2.1</kotlin-statistics.version>
 
-        <spring-boot.version>3.5.9</spring-boot.version>
-        <spring-data.version>2024.0.2</spring-data.version>
+        <spring-boot.version>4.0.1</spring-boot.version>
 
         <!-- Pulsar dependency -->
         <pulsar-h2.version>1.4.196</pulsar-h2.version>
