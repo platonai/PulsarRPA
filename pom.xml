@@ -85,6 +85,7 @@
     <!-- Default active modules. The main goal is to allow the user to run PulsarApplication
      with a single click in the IDE right after opening the project. -->
     <modules>
+        <module>pulsar-parent</module>
         <module>pulsar-dependencies</module>
         <module>pulsar-core</module>
         <module>pulsar-rest</module>
