@@ -777,49 +777,50 @@
                 <artifactId>ktor-serialization-kotlinx-json-jvm</artifactId>
                 <version>${ktor.version}</version>
             </dependency>
-            <!-- https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp-bom -->
-            <dependency>
-                <groupId>com.squareup.okhttp3</groupId>
-                <artifactId>okhttp-bom</artifactId>
-                <version>${okhttp.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
 
-            <dependency>
-                <groupId>org.jetbrains.kotlinx</groupId>
-                <artifactId>kotlinx-coroutines-bom</artifactId>
-                <version>${kotlin.coroutine.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-bom</artifactId>
-                <version>${kotlin.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-serialization</artifactId>
-                <version>${kotlin.version}</version>
-            </dependency>
+<!--            &lt;!&ndash; https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp-bom &ndash;&gt;-->
+<!--            <dependency>-->
+<!--                <groupId>com.squareup.okhttp3</groupId>-->
+<!--                <artifactId>okhttp-bom</artifactId>-->
+<!--                <version>${okhttp.version}</version>-->
+<!--                <type>pom</type>-->
+<!--                <scope>import</scope>-->
+<!--            </dependency>-->
 
-            <dependency>
-                <groupId>org.junit</groupId>
-                <artifactId>junit-bom</artifactId>
-                <version>${junit5.version}</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring-boot.version}</version>
-                <scope>import</scope>
-                <type>pom</type>
-            </dependency>
+<!--            <dependency>-->
+<!--                <groupId>org.jetbrains.kotlinx</groupId>-->
+<!--                <artifactId>kotlinx-coroutines-bom</artifactId>-->
+<!--                <version>${kotlin.coroutine.version}</version>-->
+<!--                <type>pom</type>-->
+<!--                <scope>import</scope>-->
+<!--            </dependency>-->
+<!--            <dependency>-->
+<!--                <groupId>org.jetbrains.kotlin</groupId>-->
+<!--                <artifactId>kotlin-bom</artifactId>-->
+<!--                <version>${kotlin.version}</version>-->
+<!--                <type>pom</type>-->
+<!--                <scope>import</scope>-->
+<!--            </dependency>-->
+<!--            <dependency>-->
+<!--                <groupId>org.jetbrains.kotlin</groupId>-->
+<!--                <artifactId>kotlin-serialization</artifactId>-->
+<!--                <version>${kotlin.version}</version>-->
+<!--            </dependency>-->
+
+<!--            <dependency>-->
+<!--                <groupId>org.junit</groupId>-->
+<!--                <artifactId>junit-bom</artifactId>-->
+<!--                <version>${junit5.version}</version>-->
+<!--                <scope>import</scope>-->
+<!--                <type>pom</type>-->
+<!--            </dependency>-->
+<!--            <dependency>-->
+<!--                <groupId>org.springframework.boot</groupId>-->
+<!--                <artifactId>spring-boot-dependencies</artifactId>-->
+<!--                <version>${spring-boot.version}</version>-->
+<!--                <scope>import</scope>-->
+<!--                <type>pom</type>-->
+<!--            </dependency>-->
 
             <!-- MockBean and SpyBean, but for MockK instead of Mockito -->
             <!-- Be careful to keep consistent with spring-boot -->
@@ -895,17 +896,12 @@
             SkippableLowerLevelTest,TestInfraCheck,MustManualRun
         </surefire.excludedGroups>
 
-        <spring-boot.version>3.5.9</spring-boot.version>
-        <!-- Use the one induced by spring-boot -->
-        <spring.version>6.2.5</spring.version>
-
         <ktor.version>3.3.1</ktor.version>
-        <okhttp.version>5.2.1</okhttp.version>
+
         <junit5.version>5.12.1</junit5.version>
         <mockk.version>1.14.6</mockk.version>
         <springmockk.version>4.0.2</springmockk.version>
         <mockito-junit-jupiter.version>5.20.0</mockito-junit-jupiter.version>
-
 
         <version.maven-exec-plugin>3.6.1</version.maven-exec-plugin>
         <!-- Plugin versions -->
@@ -919,7 +915,6 @@
         <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
         <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
         <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
-        <nexus-staging-maven-plugin.version>1.7.0</nexus-staging-maven-plugin.version>
         <checksum-maven-plugin.version>1.11</checksum-maven-plugin.version>
         <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
         <license-maven-plugin.version>4.3</license-maven-plugin.version>

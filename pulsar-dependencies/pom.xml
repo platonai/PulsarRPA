@@ -77,6 +77,22 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp-bom</artifactId>
+                <version>${okhttp.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.jetbrains.kotlinx</groupId>
+                <artifactId>kotlinx-coroutines-bom</artifactId>
+                <version>${kotlin.coroutine.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-bom</artifactId>
@@ -726,11 +742,14 @@ testing frameworks such as JUnit (including JUnit 5), TestNG, and more. -->
         <!--        <kotlin.compiler.languageVersion>1.9</kotlin.compiler.languageVersion>-->
         <!-- Target version of the generated JVM bytecode, 1.8, 9, 10, ..., 21, default 1.8 -->
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
+        <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
 
         <kotlin.version>2.2.20</kotlin.version>
         <!--        <kotlin.version>2.0.21</kotlin.version>-->
-        <kotlin.coroutine.version>1.8.1</kotlin.coroutine.version>
-        <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
+        <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>
+
+        <kotlin-statistics.version>1.2.1</kotlin-statistics.version>
+
 
         <dokka.version>1.9.10</dokka.version>
 
@@ -760,8 +779,6 @@ testing frameworks such as JUnit (including JUnit 5), TestNG, and more. -->
         <icu4j.version>75.1</icu4j.version>
         <trove4j.version>3.0.3</trove4j.version>
         <jodd-trove4j-core.version>3.5.2</jodd-trove4j-core.version>
-
-        <kotlin-statistics.version>1.2.1</kotlin-statistics.version>
 
         <!--  Gora Serialization  -->
         <!--
@@ -820,9 +837,7 @@ testing frameworks such as JUnit (including JUnit 5), TestNG, and more. -->
         Upgrade spring-boot from 2.7.18 to 3.3.1, for the reasons:
         1. GraalVM Native Images support, see https://docs.spring.io/spring-boot/reference/packaging/native-image/index.html
          -->
-        <spring-boot.version>3.3.8</spring-boot.version>
-        <!-- Use the one induced by spring-boot -->
-        <spring.version>6.1.16</spring.version>
+        <spring-boot.version>3.5.9</spring-boot.version>
 
         <spring-data.version>2024.0.2</spring-data.version>
 
@@ -836,6 +851,7 @@ testing frameworks such as JUnit (including JUnit 5), TestNG, and more. -->
         <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
 
         <netty.version>4.1.111.Final</netty.version>
+        <okhttp.version>5.2.1</okhttp.version>
         <!-- required by pulsar-browser -->
         <websocket.api.version>1.1</websocket.api.version>
 
