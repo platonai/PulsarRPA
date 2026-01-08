@@ -604,7 +604,7 @@
         <mockito-junit-jupiter.version>5.20.0</mockito-junit-jupiter.version>
 
         <!--  Kotlin  -->
-        <kotlin.version>2.2.20</kotlin.version>
+        <kotlin.version>2.2.21</kotlin.version>
         <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>
         <kotlin-statistics.version>1.2.1</kotlin-statistics.version>
 
