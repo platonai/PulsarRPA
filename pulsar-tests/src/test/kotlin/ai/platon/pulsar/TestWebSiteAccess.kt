@@ -9,7 +9,7 @@ import ai.platon.pulsar.util.server.EnableMockServerApplication
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
+import org.springframework.test.web.servlet.client.RestTestClient
 
 @SpringBootTest(
     classes = [EnableMockServerApplication::class],
@@ -27,7 +27,7 @@ class TestWebSiteAccess {
     var port: Int = 18080
 
     @Autowired
-    lateinit var restTemplate: TestRestTemplate
+    lateinit var rest: RestTestClient
 
     val context get() = session.context
 
