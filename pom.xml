@@ -627,8 +627,8 @@
     <properties>
 
         <surefire.excludedGroups>
-            TimeConsumingTest,ExternalServiceTest,IntegrationTest,E2ETest,HeavyTest,
-            SkippableLowerLevelTest,TestInfraCheck,MustManualRun,OptionalTest
+            TimeConsumingTest,ExternalResourceDependent,IntegrationTest,E2ETest,HeavyTest,
+            SkippableLowerLevelTest,TestInfraCheck,MustManuallyRun,OptionalTest
         </surefire.excludedGroups>
 
         <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>

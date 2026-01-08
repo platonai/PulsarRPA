@@ -129,7 +129,7 @@ class TestManual : TestBase() {
      * A simple Web page monitor, monitoring news
      * */
     @Test
-    @Tag("MustManualRun")
+    @Tag("MustManuallyRun")
     fun monitorNewsColumnForQQ() {
         val portal = "https://news.qq.com/ch/world"
 
@@ -147,7 +147,7 @@ class TestManual : TestBase() {
      * A simple Web page monitor, monitoring news
      * */
     @Test
-    @Tag("MustManualRun")
+    @Tag("MustManuallyRun")
     fun monitorNewsColumnForCnHuBei() {
         val portal = "http://news.cnhubei.com/"
 
@@ -164,7 +164,7 @@ class TestManual : TestBase() {
      * A simple Web page monitor, monitoring products
      * */
     @Test
-    @Tag("MustManualRun")
+    @Tag("MustManuallyRun")
     @Ignore("TimeConsumingTest")
     fun monitorProductColumn2() {
         execute("SELECT DOM, TOP, LEFT, WIDTH, HEIGHT, IMG, A, SIBLING, DOM_TEXT(DOM), DOM_FIRST_HREF(DOM) " +

@@ -20,7 +20,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @Disabled("Run PlaywrightDriverTest manually")
-@Tag("MustManualRun")
+@Tag("MustManuallyRun")
 @Tag("OptionalTest")
 class PlaywrightDriverTest {
 
