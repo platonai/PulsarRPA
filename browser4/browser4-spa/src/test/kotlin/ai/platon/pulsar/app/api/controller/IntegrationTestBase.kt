@@ -6,16 +6,10 @@ import ai.platon.pulsar.boot.autoconfigure.PulsarContextConfiguration
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.browser.BrowserProfileMode
 import ai.platon.pulsar.common.config.ImmutableConfig
-import org.apache.hc.client5.http.classic.HttpClient
-import org.apache.hc.client5.http.config.RequestConfig
-import org.apache.hc.client5.http.impl.classic.HttpClients
-import org.apache.hc.core5.util.Timeout
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.context.annotation.Import
-import org.springframework.http.HttpStatus
-import org.springframework.http.ResponseEntity
 import org.springframework.test.web.servlet.client.RestTestClient
 import kotlin.test.BeforeTest
 import kotlin.test.assertTrue
@@ -41,7 +35,7 @@ class IntegrationTestBase {
     val baseUri get() = String.format("http://%s:%d", hostname, serverPort)
 
     // Build a RestTestClient bound to the running server on demand
-    private val rest get() = RestTestClient.bindToServer().baseUrl(baseUri).build()
+    protected val client get() = RestTestClient.bindToServer().baseUrl(baseUri).build()
 
     @BeforeTest
     fun setup() {

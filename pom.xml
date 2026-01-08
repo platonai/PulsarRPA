@@ -228,7 +228,7 @@
                             <cacheRoot>default</cacheRoot>
 
                             <!-- Used for linking to JDK, default: 11 -->
-                            <jdkVersion>11</jdkVersion>
+                            <jdkVersion>${javaVersion}</jdkVersion>
 
                             <!-- Do not output deprecated members, applies globally, can be overridden by packageOptions -->
                             <skipDeprecated>true</skipDeprecated>
@@ -396,45 +396,6 @@
                     <jvmTarget>${kotlin.compiler.jvmTarget}</jvmTarget>
                 </configuration>
             </plugin>
-            <!--  java  -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>${version.maven-compiler-plugin}</version>
-                <executions>
-                    <!--  Replacing default-compile as it is treated specially by maven  -->
-                    <execution>
-                        <id>default-compile</id>
-                        <phase>none</phase>
-                    </execution>
-                    <!--  Replacing default-testCompile as it is treated specially by maven  -->
-                    <execution>
-                        <id>default-testCompile</id>
-                        <phase>none</phase>
-                    </execution>
-                    <execution>
-                        <id>java-compile</id>
-                        <phase>compile</phase>
-                        <goals>
-                            <goal>compile</goal>
-                        </goals>
-                    </execution>
-                    <execution>
-                        <id>java-test-compile</id>
-                        <phase>test-compile</phase>
-                        <goals>
-                            <goal>testCompile</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <verbose>true</verbose>
-                    <fork>true</fork>
-                    <source>${javaVersion}</source>
-                    <target>${javaVersion}</target>
-                </configuration>
-            </plugin>
-
 
             <plugin>
                 <groupId>org.owasp</groupId>
