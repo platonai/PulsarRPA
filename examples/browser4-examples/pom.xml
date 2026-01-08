@@ -76,7 +76,7 @@
 
     <properties>
         <kotlin.version>2.2.20</kotlin.version>
-        <spring-boot.version>3.3.8</spring-boot.version>
+        <spring-boot.version>3.5.9</spring-boot.version>
         <pulsar.version>4.3.0-SNAPSHOT</pulsar.version>
     </properties>
 </project>
