@@ -627,19 +627,20 @@
 
         <surefire.excludedGroups>
             TimeConsumingTest,ExternalServiceTest,IntegrationTest,E2ETest,HeavyTest,
-            SkippableLowerLevelTest,TestInfraCheck,MustManualRun
+            SkippableLowerLevelTest,TestInfraCheck,MustManualRun,OptionalTest
         </surefire.excludedGroups>
 
         <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
-
         <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
 
-        <javaVersion>17</javaVersion>
-        <maven.compiler.release>${javaVersion}</maven.compiler.release>
-        <kotlin.version>2.2.21</kotlin.version>
-        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
         <dokka.version>1.9.10</dokka.version>
 
+        <javaVersion>17</javaVersion>
+        <kotlinVersion>2.2.21</kotlinVersion>
+
+        <kotlin.version>${kotlinVersion}</kotlin.version>
+        <maven.compiler.release>${javaVersion}</maven.compiler.release>
+        <kotlin.compiler.jvmTarget>${javaVersion}</kotlin.compiler.jvmTarget>
     </properties>
 
 </project>

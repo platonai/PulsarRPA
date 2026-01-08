@@ -126,7 +126,7 @@ under the License.
         <surefire.version>3.5.4</surefire.version>
         <assembly.tarLongFileMode>posix</assembly.tarLongFileMode>
 
-        <project.build.outputTimestamp>2026-01-05T2:16:58Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2026-01-03T12:11:14Z</project.build.outputTimestamp>
 
         <version.apache-rat-plugin>0.16.1</version.apache-rat-plugin>
         <version.apache-resource-bundles>1.7</version.apache-resource-bundles>
