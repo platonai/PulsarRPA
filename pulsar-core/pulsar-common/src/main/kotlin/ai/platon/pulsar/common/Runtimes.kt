@@ -155,16 +155,25 @@ object Runtimes {
     }
 
     fun destroyProcessForcibly(pid: Int) {
-        if (pid <= 0) {
+        if (pid <= 0) return
+
+        try {
+            ProcessHandle.of(pid.toLong()).ifPresent { handle ->
+                destroyChildProcess(handle)
+                if (handle.isAlive) handle.destroy()
+                if (handle.isAlive) handle.destroyForcibly()
+            }
             return
-        } else if (SystemUtils.IS_OS_WINDOWS) {
-            exec("taskkill /F /PID $pid")
-        } else if (SystemUtils.IS_OS_LINUX) {
-            exec("kill -9 $pid")
-        } else {
-            // TODO: more OS support
-            exec("kill -9 $pid")
+        } catch (e: Exception) {
+            logger.debug("ProcessHandle kill failed for pid {}", pid, e)
         }
+
+        val command = when {
+            SystemUtils.IS_OS_WINDOWS -> "taskkill /F /PID $pid"
+            SystemUtils.IS_OS_LINUX || SystemUtils.IS_OS_MAC -> "kill -9 $pid"
+            else -> "kill -9 $pid"
+        }
+        runCatching { exec(command) }.onFailure { logger.warn("Failed to forcibly kill pid {}", pid, it) }
     }
 
     fun destroyProcessForcibly(namePattern: String) {
