@@ -11,9 +11,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- From apache: "Most projects will want to override some of these settings." -->
-    <!-- for more information, see the documentation of this POM: http://maven.apache.org/pom/asf/ -->
-
     <groupId>ai.platon</groupId>
     <artifactId>platon</artifactId>
     <name>Platon Parent</name>

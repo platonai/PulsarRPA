@@ -747,7 +747,7 @@ testing frameworks such as JUnit (including JUnit 5), TestNG, and more. -->
         <!-- Target version of the generated JVM bytecode, 1.8, 9, 10, ..., 21, default 1.8 -->
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
 
-        <kotlin.version>1.9.25</kotlin.version>
+        <kotlin.version>2.2.20</kotlin.version>
         <!--        <kotlin.version>2.0.21</kotlin.version>-->
         <kotlin.coroutine.version>1.8.1</kotlin.coroutine.version>
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
@@ -814,7 +814,7 @@ testing frameworks such as JUnit (including JUnit 5), TestNG, and more. -->
 
         <!--  Persistence  -->
         <javax.persistence-api.version>2.2</javax.persistence-api.version>
-        <hibernate.version>5.4.29.Final</hibernate.version>
+
         <!-- Required by hibernate, spring-boot-starter-test, correct the version -->
         <!-- managed by spring-boot-dependencies -->
         <!--        <byte-buddy.version>1.14.18</byte-buddy.version>-->
