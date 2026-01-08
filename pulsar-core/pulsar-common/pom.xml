@@ -183,6 +183,8 @@
     </dependencies>
 
     <properties>
+        <javac.src.version>11</javac.src.version>
+        <javac.target.version>11</javac.target.version>
         <stax2-api.version>4.2.1</stax2-api.version>
         <woodstox-core-asl.version>4.4.1</woodstox-core-asl.version>
     </properties>
