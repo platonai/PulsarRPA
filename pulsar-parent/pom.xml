@@ -11,6 +11,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <parent>
+        <groupId>org.apache</groupId>
+        <artifactId>apache</artifactId>
+        <version>36</version>
+    </parent>
+
     <groupId>ai.platon</groupId>
     <artifactId>platon</artifactId>
     <name>Platon Parent</name>
@@ -198,193 +204,193 @@
 
 
 
-                <!-- !!! -->
-                <!-- The following are copied from apache-30.pom -->
-                <!-- set versions of common plugins for reproducibility, ordered alphabetically -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-antrun-plugin</artifactId>
-                    <version>${version.maven-antrun-plugin}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-assembly-plugin</artifactId>
-                    <version>${version.maven-assembly-plugin}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-clean-plugin</artifactId>
-                    <version>${version.maven-clean-plugin}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-dependency-plugin</artifactId>
-                    <version>${version.maven-dependency-plugin}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-deploy-plugin</artifactId>
-                    <version>${version.maven-deploy-plugin}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-ear-plugin</artifactId>
-                    <version>${version.maven-ear-plugin}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>${version.maven-enforcer-plugin}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>${version.maven-surefire}</version>
-                </plugin>
+<!--                &lt;!&ndash; !!! &ndash;&gt;-->
+<!--                &lt;!&ndash; The following are copied from apache-30.pom &ndash;&gt;-->
+<!--                &lt;!&ndash; set versions of common plugins for reproducibility, ordered alphabetically &ndash;&gt;-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-antrun-plugin</artifactId>-->
+<!--                    <version>${version.maven-antrun-plugin}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-assembly-plugin</artifactId>-->
+<!--                    <version>${version.maven-assembly-plugin}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-clean-plugin</artifactId>-->
+<!--                    <version>${version.maven-clean-plugin}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-dependency-plugin</artifactId>-->
+<!--                    <version>${version.maven-dependency-plugin}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-deploy-plugin</artifactId>-->
+<!--                    <version>${version.maven-deploy-plugin}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-ear-plugin</artifactId>-->
+<!--                    <version>${version.maven-ear-plugin}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-enforcer-plugin</artifactId>-->
+<!--                    <version>${version.maven-enforcer-plugin}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-failsafe-plugin</artifactId>-->
+<!--                    <version>${version.maven-surefire}</version>-->
+<!--                </plugin>-->
 
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-gpg-plugin</artifactId>
-                    <version>${version.maven-gpg-plugin}</version>
-                    <configuration>
-                        <gpgArguments>
-                            <arg>--digest-algo=SHA512</arg>
-                        </gpgArguments>
-                    </configuration>
-                    <executions>
-                        <execution>
-                            <id>sign-artifacts</id>
-                            <phase>verify</phase>
-                            <goals>
-                                <goal>sign</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-help-plugin</artifactId>
-                    <version>${version.maven-help-plugin}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-install-plugin</artifactId>
-                    <version>${version.maven-install-plugin}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-invoker-plugin</artifactId>
-                    <version>${version.maven-invoker-plugin}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-jar-plugin</artifactId>
-                    <version>${version.maven-jar-plugin}</version>
-                    <configuration>
-                        <archive>
-                            <manifest>
-                                <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                            </manifest>
-                        </archive>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>${version.maven-javadoc-plugin}</version>
-                    <configuration>
-                        <notimestamp>true</notimestamp><!-- avoid noise for svn/gitpubsub -->
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-plugin-plugin</artifactId>
-                    <version>${version.maven-plugin-tools}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-plugin-report-plugin</artifactId>
-                    <version>${version.maven-plugin-tools}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-project-info-reports-plugin</artifactId>
-                    <version>${version.maven-project-info-reports-plugin}</version>
-                    <configuration>
-                        <pluginManagementExcludes>
-                            <exclude>org.eclipse.m2e:lifecycle-mapping</exclude>
-                        </pluginManagementExcludes>
-                    </configuration>
-                </plugin>
-                <!-- START SNIPPET: release-plugin-configuration -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>${version.maven-release-plugin}</version>
-                    <configuration>
-                        <useReleaseProfile>false</useReleaseProfile>
-                        <goals>deploy</goals>
-                        <releaseProfiles>platon-release</releaseProfiles>
-                    </configuration>
-                </plugin>
-                <!-- END SNIPPET: release-plugin-configuration -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-remote-resources-plugin</artifactId>
-                    <version>${version.maven-remote-resources-plugin}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-resources-plugin</artifactId>
-                    <version>${version.maven-resources-plugin}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-scm-plugin</artifactId>
-                    <version>${version.maven-scm-plugin}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-scm-publish-plugin</artifactId>
-                    <version>${version.maven-scm-publish-plugin}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-site-plugin</artifactId>
-                    <version>${version.maven-site-plugin}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-source-plugin</artifactId>
-                    <version>${version.maven-source-plugin}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-plugin</artifactId>
-                    <version>${version.maven-surefire}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-surefire-report-plugin</artifactId>
-                    <version>${version.maven-surefire}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-war-plugin</artifactId>
-                    <version>${version.maven-war-plugin}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-shade-plugin</artifactId>
-                    <version>${version.maven-shade-plugin}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.rat</groupId>
-                    <artifactId>apache-rat-plugin</artifactId>
-                    <version>${version.apache-rat-plugin}</version>
-                </plugin>
-                <!-- The above are copied from apache-30.pom -->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-gpg-plugin</artifactId>-->
+<!--                    <version>${version.maven-gpg-plugin}</version>-->
+<!--                    <configuration>-->
+<!--                        <gpgArguments>-->
+<!--                            <arg>&#45;&#45;digest-algo=SHA512</arg>-->
+<!--                        </gpgArguments>-->
+<!--                    </configuration>-->
+<!--                    <executions>-->
+<!--                        <execution>-->
+<!--                            <id>sign-artifacts</id>-->
+<!--                            <phase>verify</phase>-->
+<!--                            <goals>-->
+<!--                                <goal>sign</goal>-->
+<!--                            </goals>-->
+<!--                        </execution>-->
+<!--                    </executions>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-help-plugin</artifactId>-->
+<!--                    <version>${version.maven-help-plugin}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-install-plugin</artifactId>-->
+<!--                    <version>${version.maven-install-plugin}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-invoker-plugin</artifactId>-->
+<!--                    <version>${version.maven-invoker-plugin}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-jar-plugin</artifactId>-->
+<!--                    <version>${version.maven-jar-plugin}</version>-->
+<!--                    <configuration>-->
+<!--                        <archive>-->
+<!--                            <manifest>-->
+<!--                                <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>-->
+<!--                                <addDefaultImplementationEntries>true</addDefaultImplementationEntries>-->
+<!--                            </manifest>-->
+<!--                        </archive>-->
+<!--                    </configuration>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-javadoc-plugin</artifactId>-->
+<!--                    <version>${version.maven-javadoc-plugin}</version>-->
+<!--                    <configuration>-->
+<!--                        <notimestamp>true</notimestamp>&lt;!&ndash; avoid noise for svn/gitpubsub &ndash;&gt;-->
+<!--                    </configuration>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-plugin-plugin</artifactId>-->
+<!--                    <version>${version.maven-plugin-tools}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-plugin-report-plugin</artifactId>-->
+<!--                    <version>${version.maven-plugin-tools}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-project-info-reports-plugin</artifactId>-->
+<!--                    <version>${version.maven-project-info-reports-plugin}</version>-->
+<!--                    <configuration>-->
+<!--                        <pluginManagementExcludes>-->
+<!--                            <exclude>org.eclipse.m2e:lifecycle-mapping</exclude>-->
+<!--                        </pluginManagementExcludes>-->
+<!--                    </configuration>-->
+<!--                </plugin>-->
+<!--                &lt;!&ndash; START SNIPPET: release-plugin-configuration &ndash;&gt;-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-release-plugin</artifactId>-->
+<!--                    <version>${version.maven-release-plugin}</version>-->
+<!--                    <configuration>-->
+<!--                        <useReleaseProfile>false</useReleaseProfile>-->
+<!--                        <goals>deploy</goals>-->
+<!--                        <releaseProfiles>platon-release</releaseProfiles>-->
+<!--                    </configuration>-->
+<!--                </plugin>-->
+<!--                &lt;!&ndash; END SNIPPET: release-plugin-configuration &ndash;&gt;-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-remote-resources-plugin</artifactId>-->
+<!--                    <version>${version.maven-remote-resources-plugin}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-resources-plugin</artifactId>-->
+<!--                    <version>${version.maven-resources-plugin}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-scm-plugin</artifactId>-->
+<!--                    <version>${version.maven-scm-plugin}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-scm-publish-plugin</artifactId>-->
+<!--                    <version>${version.maven-scm-publish-plugin}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-site-plugin</artifactId>-->
+<!--                    <version>${version.maven-site-plugin}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-source-plugin</artifactId>-->
+<!--                    <version>${version.maven-source-plugin}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-surefire-plugin</artifactId>-->
+<!--                    <version>${version.maven-surefire}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-surefire-report-plugin</artifactId>-->
+<!--                    <version>${version.maven-surefire}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-war-plugin</artifactId>-->
+<!--                    <version>${version.maven-war-plugin}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.maven.plugins</groupId>-->
+<!--                    <artifactId>maven-shade-plugin</artifactId>-->
+<!--                    <version>${version.maven-shade-plugin}</version>-->
+<!--                </plugin>-->
+<!--                <plugin>-->
+<!--                    <groupId>org.apache.rat</groupId>-->
+<!--                    <artifactId>apache-rat-plugin</artifactId>-->
+<!--                    <version>${version.apache-rat-plugin}</version>-->
+<!--                </plugin>-->
+<!--                &lt;!&ndash; The above are copied from apache-30.pom &ndash;&gt;-->
             </plugins>
         </pluginManagement>
 
@@ -396,163 +402,6 @@
         </plugins>
     </build>
 
-    <profiles>
-        <!-- Copy from apache-30.pom -->
-        <!-- https://github.com/apache/maven-apache-parent/blob/apache-30/pom.xml -->
-        <!-- START SNIPPET: release-profile -->
-        <profile>
-            <id>platon-release</id>
-            <build>
-                <plugins>
-                    <!-- Create a source-release artifact that contains the fully buildable
-                         project directory source structure. This is the artifact which is
-                         the official subject of any release vote. -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <dependencies>
-                            <dependency>
-                                <groupId>org.apache.apache.resources</groupId>
-                                <artifactId>apache-source-release-assembly-descriptor</artifactId>
-                                <version>${version.apache-resource-bundles}</version>
-                            </dependency>
-                        </dependencies>
-                        <executions>
-                            <execution>
-                                <id>source-release-assembly</id>
-                                <phase>package</phase>
-                                <goals>
-                                    <goal>single</goal>
-                                </goals>
-                                <configuration>
-                                    <runOnlyAtExecutionRoot>true</runOnlyAtExecutionRoot>
-                                    <descriptorRefs>
-                                        <descriptorRef>${sourceReleaseAssemblyDescriptor}</descriptorRef>
-                                    </descriptorRefs>
-                                    <tarLongFileMode>${assembly.tarLongFileMode}</tarLongFileMode>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <!-- We want to deploy the artifact to a staging location for perusal -->
-                    <plugin>
-                        <inherited>true</inherited>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-deploy-plugin</artifactId>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <goals>
-                                    <goal>jar-no-fork</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-javadoc-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-javadocs</id>
-                                <goals>
-                                    <goal>jar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <!-- We want to sign the artifact, the POM, and all attached artifacts -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-gpg-plugin</artifactId>
-                    </plugin>
-                    <!-- calculate checksums of source release for Apache dist area -->
-                    <plugin>
-                        <groupId>net.nicoulaj.maven.plugins</groupId>
-                        <artifactId>checksum-maven-plugin</artifactId>
-                        <version>${version.checksum-maven-plugin}</version>
-                        <executions>
-                            <execution>
-                                <id>source-release-checksum</id>
-                                <goals>
-                                    <goal>artifacts</goal>
-                                </goals>
-                                <!-- execute prior to maven-gpg-plugin:sign due to https://github.com/nicoulaj/checksum-maven-plugin/issues/112 -->
-                                <phase>post-integration-test</phase>
-                                <configuration>
-                                    <algorithms>
-                                        <algorithm>SHA-512</algorithm>
-                                    </algorithms>
-                                    <!-- https://maven.apache.org/apache-resource-bundles/#source-release-assembly-descriptor -->
-                                    <includeClassifiers>source-release</includeClassifiers>
-                                    <excludeMainArtifact>true</excludeMainArtifact>
-                                    <csvSummary>false</csvSummary>
-                                    <!-- attach SHA-512 checksum as well to upload to Maven Staging Repo,
-                                         as this eases uploading from stage to dist and doesn't do harm in Maven Central -->
-                                    <attachChecksums>true</attachChecksums>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <plugin>
-                        <groupId>org.sonatype.central</groupId>
-                        <artifactId>central-publishing-maven-plugin</artifactId>
-                        <version>${central-publishing-maven-plugin.version}</version>
-                        <extensions>true</extensions>
-                        <configuration>
-                            <publishingServerId>central</publishingServerId>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <!-- END SNIPPET: release-profile -->
-        <profile>
-            <id>only-eclipse</id>
-            <activation>
-                <property>
-                    <name>m2e.version</name>
-                </property>
-            </activation>
-            <build>
-                <pluginManagement>
-                    <plugins>
-                        <!-- Disable execution of some plugins in m2e (https://www.eclipse.org/m2e/documentation/m2e-execution-not-covered.html) -->
-                        <plugin>
-                            <groupId>org.eclipse.m2e</groupId>
-                            <artifactId>lifecycle-mapping</artifactId>
-                            <version>1.0.0</version><!-- as this is an artificial artifact only use in a profile (https://bugs.eclipse.org/bugs/show_bug.cgi?id=367870#c18) -->
-                            <configuration>
-                                <lifecycleMappingMetadata>
-                                    <pluginExecutions>
-                                        <pluginExecution>
-                                            <!-- no native m2e support yet (https://issues.apache.org/jira/browse/MRRESOURCES-85) -->
-                                            <pluginExecutionFilter>
-                                                <groupId>org.apache.maven.plugins</groupId>
-                                                <artifactId>maven-remote-resources-plugin</artifactId>
-                                                <versionRange>[0,)</versionRange>
-                                                <goals>
-                                                    <goal>process</goal>
-                                                </goals>
-                                            </pluginExecutionFilter>
-                                            <action>
-                                                <ignore />
-                                            </action>
-                                        </pluginExecution>
-                                    </pluginExecutions>
-                                </lifecycleMappingMetadata>
-                            </configuration>
-                        </plugin>
-                    </plugins>
-                </pluginManagement>
-            </build>
-        </profile>
-    </profiles>
-
     <properties>
         <!-- Probably generated by IDE -->
 
@@ -562,67 +411,67 @@
 
 
 
-        <!-- .......................... -->
-        <!-- Begin apache-30            -->
-        <!-- .......................... -->
+<!--        &lt;!&ndash; .......................... &ndash;&gt;-->
+<!--        &lt;!&ndash; Begin apache-30            &ndash;&gt;-->
+<!--        &lt;!&ndash; .......................... &ndash;&gt;-->
 
-        <!-- The following are copied from apache-30.pom -->
-        <!-- set versions of common plugins for reproducibility, ordered alphabetically -->
-        <!-- 1.6.7 -> 1.7.0 -->
-        <distMgmtReleasesName>Apache Release Distribution Repository</distMgmtReleasesName>
-        <distMgmtReleasesUrl>https://repository.apache.org/service/local/staging/deploy/maven2</distMgmtReleasesUrl>
-        <distMgmtSnapshotsName>Apache Development Snapshot Repository</distMgmtSnapshotsName>
-        <distMgmtSnapshotsUrl>https://repository.apache.org/content/repositories/snapshots</distMgmtSnapshotsUrl>
-        <organization.logo>https://www.apache.org/images/asf_logo_wide_2016.png</organization.logo>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <sourceReleaseAssemblyDescriptor>source-release</sourceReleaseAssemblyDescriptor>
-        <gpg.useagent>true</gpg.useagent>
-        <minimalMavenBuildVersion>3.2.5</minimalMavenBuildVersion>
-        <minimalJavaBuildVersion>1.8</minimalJavaBuildVersion>
-        <maven.compiler.source>${maven.compiler.target}</maven.compiler.source>
-        <maven.compiler.target>1.7</maven.compiler.target>
-        <!-- Maven Surefire Plugin is a primary tool used in Maven projects for executing tests. It supports various
-testing frameworks such as JUnit (including JUnit 5), TestNG, and more. -->
-        <surefire.version>3.3.0</surefire.version>
-        <maven.plugin.tools.version>3.9.0</maven.plugin.tools.version><!-- for m-plugin-p and maven-plugin-annotations -->
-        <assembly.tarLongFileMode>posix</assembly.tarLongFileMode>
+<!--        &lt;!&ndash; The following are copied from apache-30.pom &ndash;&gt;-->
+<!--        &lt;!&ndash; set versions of common plugins for reproducibility, ordered alphabetically &ndash;&gt;-->
+<!--        &lt;!&ndash; 1.6.7 -> 1.7.0 &ndash;&gt;-->
+<!--        <distMgmtReleasesName>Apache Release Distribution Repository</distMgmtReleasesName>-->
+<!--        <distMgmtReleasesUrl>https://repository.apache.org/service/local/staging/deploy/maven2</distMgmtReleasesUrl>-->
+<!--        <distMgmtSnapshotsName>Apache Development Snapshot Repository</distMgmtSnapshotsName>-->
+<!--        <distMgmtSnapshotsUrl>https://repository.apache.org/content/repositories/snapshots</distMgmtSnapshotsUrl>-->
+<!--        <organization.logo>https://www.apache.org/images/asf_logo_wide_2016.png</organization.logo>-->
+<!--        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>-->
+<!--        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>-->
+<!--        <sourceReleaseAssemblyDescriptor>source-release</sourceReleaseAssemblyDescriptor>-->
+<!--        <gpg.useagent>true</gpg.useagent>-->
+<!--        <minimalMavenBuildVersion>3.2.5</minimalMavenBuildVersion>-->
+<!--        <minimalJavaBuildVersion>1.8</minimalJavaBuildVersion>-->
+<!--        <maven.compiler.source>${maven.compiler.target}</maven.compiler.source>-->
+<!--        <maven.compiler.target>1.7</maven.compiler.target>-->
+<!--        &lt;!&ndash; Maven Surefire Plugin is a primary tool used in Maven projects for executing tests. It supports various-->
+<!--testing frameworks such as JUnit (including JUnit 5), TestNG, and more. &ndash;&gt;-->
+<!--        <surefire.version>3.3.0</surefire.version>-->
+<!--        <maven.plugin.tools.version>3.9.0</maven.plugin.tools.version>&lt;!&ndash; for m-plugin-p and maven-plugin-annotations &ndash;&gt;-->
+<!--        <assembly.tarLongFileMode>posix</assembly.tarLongFileMode>-->
 
-        <version.maven-fluido-skin>1.11.2</version.maven-fluido-skin>
-        <project.build.outputTimestamp>2023-06-11T16:41:23Z</project.build.outputTimestamp>
+<!--        <version.maven-fluido-skin>1.11.2</version.maven-fluido-skin>-->
+<!--        <project.build.outputTimestamp>2023-06-11T16:41:23Z</project.build.outputTimestamp>-->
 
-        <version.apache-rat-plugin>0.15</version.apache-rat-plugin>
-        <version.apache-resource-bundles>1.5</version.apache-resource-bundles>
-        <version.checksum-maven-plugin>1.11</version.checksum-maven-plugin>
-        <version.maven-antrun-plugin>3.1.0</version.maven-antrun-plugin>
-        <version.maven-assembly-plugin>3.6.0</version.maven-assembly-plugin>
-        <version.maven-clean-plugin>3.2.0</version.maven-clean-plugin>
-        <version.maven-compiler-plugin>3.11.0</version.maven-compiler-plugin>
-        <version.maven-dependency-plugin>3.6.0</version.maven-dependency-plugin>
-        <version.maven-deploy-plugin>3.1.1</version.maven-deploy-plugin>
-        <version.maven-ear-plugin>3.3.0</version.maven-ear-plugin>
-        <version.maven-enforcer-plugin>3.3.0</version.maven-enforcer-plugin>
-        <version.maven-gpg-plugin>3.1.0</version.maven-gpg-plugin>
-        <version.maven-help-plugin>3.4.0</version.maven-help-plugin>
-        <version.maven-install-plugin>3.1.1</version.maven-install-plugin>
-        <version.maven-invoker-plugin>3.5.1</version.maven-invoker-plugin>
-        <version.maven-jar-plugin>3.3.0</version.maven-jar-plugin>
-        <version.maven-javadoc-plugin>3.5.0</version.maven-javadoc-plugin>
-        <version.maven-plugin-tools>${maven.plugin.tools.version}</version.maven-plugin-tools>
-        <version.maven-project-info-reports-plugin>3.4.5</version.maven-project-info-reports-plugin>
-        <version.maven-release-plugin>3.0.1</version.maven-release-plugin>
-        <version.maven-remote-resources-plugin>3.1.0</version.maven-remote-resources-plugin>
-        <version.maven-resources-plugin>3.3.1</version.maven-resources-plugin>
-        <version.maven-scm-plugin>2.0.1</version.maven-scm-plugin>
-        <version.maven-scm-publish-plugin>3.2.1</version.maven-scm-publish-plugin>
-        <version.maven-shade-plugin>3.4.1</version.maven-shade-plugin>
-        <version.maven-site-plugin>3.12.1</version.maven-site-plugin>
-        <version.maven-source-plugin>3.3.0</version.maven-source-plugin>
-        <version.maven-surefire>${surefire.version}</version.maven-surefire>
-        <version.maven-war-plugin>3.3.2</version.maven-war-plugin>
-        <!-- .......................... -->
-        <!-- End apache-30              -->
-        <!-- .......................... -->
+<!--        <version.apache-rat-plugin>0.15</version.apache-rat-plugin>-->
+<!--        <version.apache-resource-bundles>1.5</version.apache-resource-bundles>-->
+<!--        <version.checksum-maven-plugin>1.11</version.checksum-maven-plugin>-->
+<!--        <version.maven-antrun-plugin>3.1.0</version.maven-antrun-plugin>-->
+<!--        <version.maven-assembly-plugin>3.6.0</version.maven-assembly-plugin>-->
+<!--        <version.maven-clean-plugin>3.2.0</version.maven-clean-plugin>-->
+<!--        <version.maven-compiler-plugin>3.11.0</version.maven-compiler-plugin>-->
+<!--        <version.maven-dependency-plugin>3.6.0</version.maven-dependency-plugin>-->
+<!--        <version.maven-deploy-plugin>3.1.1</version.maven-deploy-plugin>-->
+<!--        <version.maven-ear-plugin>3.3.0</version.maven-ear-plugin>-->
+<!--        <version.maven-enforcer-plugin>3.3.0</version.maven-enforcer-plugin>-->
+<!--        <version.maven-gpg-plugin>3.1.0</version.maven-gpg-plugin>-->
+<!--        <version.maven-help-plugin>3.4.0</version.maven-help-plugin>-->
+<!--        <version.maven-install-plugin>3.1.1</version.maven-install-plugin>-->
+<!--        <version.maven-invoker-plugin>3.5.1</version.maven-invoker-plugin>-->
+<!--        <version.maven-jar-plugin>3.3.0</version.maven-jar-plugin>-->
+<!--        <version.maven-javadoc-plugin>3.5.0</version.maven-javadoc-plugin>-->
+<!--        <version.maven-plugin-tools>${maven.plugin.tools.version}</version.maven-plugin-tools>-->
+<!--        <version.maven-project-info-reports-plugin>3.4.5</version.maven-project-info-reports-plugin>-->
+<!--        <version.maven-release-plugin>3.0.1</version.maven-release-plugin>-->
+<!--        <version.maven-remote-resources-plugin>3.1.0</version.maven-remote-resources-plugin>-->
+<!--        <version.maven-resources-plugin>3.3.1</version.maven-resources-plugin>-->
+<!--        <version.maven-scm-plugin>2.0.1</version.maven-scm-plugin>-->
+<!--        <version.maven-scm-publish-plugin>3.2.1</version.maven-scm-publish-plugin>-->
+<!--        <version.maven-shade-plugin>3.4.1</version.maven-shade-plugin>-->
+<!--        <version.maven-site-plugin>3.12.1</version.maven-site-plugin>-->
+<!--        <version.maven-source-plugin>3.3.0</version.maven-source-plugin>-->
+<!--        <version.maven-surefire>${surefire.version}</version.maven-surefire>-->
+<!--        <version.maven-war-plugin>3.3.2</version.maven-war-plugin>-->
+<!--        &lt;!&ndash; .......................... &ndash;&gt;-->
+<!--        &lt;!&ndash; End apache-30              &ndash;&gt;-->
+<!--        &lt;!&ndash; .......................... &ndash;&gt;-->
 
         <version.maven-exec-plugin>3.5.0</version.maven-exec-plugin>
         <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>

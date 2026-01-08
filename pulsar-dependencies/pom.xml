@@ -474,6 +474,16 @@
             </dependency>
             <dependency>
                 <groupId>io.ktor</groupId>
+                <artifactId>ktor-client-cio-jvm</artifactId>
+                <version>${ktor.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.ktor</groupId>
+                <artifactId>ktor-client-websockets</artifactId>
+                <version>${ktor.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.ktor</groupId>
                 <artifactId>ktor-client-cio</artifactId>
                 <version>${ktor.version}</version>
             </dependency>

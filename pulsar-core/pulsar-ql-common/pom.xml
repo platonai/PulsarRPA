@@ -126,8 +126,4 @@
         </dependency>
     </dependencies>
 
-    <properties>
-        <javac.src.version>17</javac.src.version>
-        <javac.target.version>17</javac.target.version>
-    </properties>
 </project>

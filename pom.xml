@@ -22,7 +22,7 @@
         <groupId>ai.platon</groupId>
         <artifactId>platon</artifactId>
         <version>4.1.0</version>
-        <relativePath>pulsar-parent</relativePath>
+        <relativePath>pulsar-parent/pom.xml</relativePath>
     </parent>
 
     <groupId>ai.platon.pulsar</groupId>
