@@ -223,12 +223,6 @@
                 <artifactId>javax.persistence-api</artifactId>
                 <version>${javax.persistence-api.version}</version>
             </dependency>
-            <!-- TODO: check the dependency tree -->
-            <dependency>
-                <groupId>org.hibernate</groupId>
-                <artifactId>hibernate-core</artifactId>
-                <version>${hibernate.version}</version>
-            </dependency>
             <!--  Spring  -->
             <!--  https://mvnrepository.com/artifact/org.springframework/spring-core  -->
             <dependency>
