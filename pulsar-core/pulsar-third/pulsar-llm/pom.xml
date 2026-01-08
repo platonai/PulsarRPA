@@ -31,9 +31,11 @@
         <!-- OpenAI model is the default, many LLM providers keep compatible OpenAI API -->
         <dependency>
             <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-open-ai</artifactId>
-            <version>${langchain4j.version}</version>
-            <scope>provided</scope>
         </dependency>
 
         <dependency>

@@ -223,27 +223,13 @@
                 <artifactId>javax.persistence-api</artifactId>
                 <version>${javax.persistence-api.version}</version>
             </dependency>
-            <!--  Spring  -->
-            <!--  https://mvnrepository.com/artifact/org.springframework/spring-core  -->
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-framework-bom</artifactId>
-                <version>${spring.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.data</groupId>
-                <artifactId>spring-data-bom</artifactId>
-                <version>${spring-data.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
 
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
                 <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
 
             <dependency>
@@ -873,11 +859,10 @@ testing frameworks such as JUnit (including JUnit 5), TestNG, and more. -->
         <pmml.version>1.6.4</pmml.version>
 
         <!-- NLP -->
-        <!-- TODO: figure out the reason why we need to override the default 8.1.1, seems it's caused by a dependency issue -->
         <lucene.version>7.3.1</lucene.version>
 
         <!-- AI -->
-        <langchain4j.version>0.36.2</langchain4j.version>
+        <langchain4j.version>1.5.0</langchain4j.version>
 
         <!--  Misc Dependencies  -->
         <autolink.version>0.11.0</autolink.version>

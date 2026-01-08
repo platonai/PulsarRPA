@@ -762,13 +762,6 @@
                 <scope>test</scope>
             </dependency>
 
-
-            <dependency>
-                <groupId>dev.langchain4j</groupId>
-                <artifactId>langchain4j-bom</artifactId>
-                <version>${langchain4j.version}</version>
-            </dependency>
-
             <dependency>
                 <groupId>io.ktor</groupId>
                 <artifactId>ktor-client-core</artifactId>
@@ -912,7 +905,7 @@
         <mockk.version>1.14.6</mockk.version>
         <springmockk.version>4.0.2</springmockk.version>
         <mockito-junit-jupiter.version>5.20.0</mockito-junit-jupiter.version>
-        <langchain4j.version>1.5.0</langchain4j.version>
+
 
         <version.maven-exec-plugin>3.6.1</version.maven-exec-plugin>
         <!-- Plugin versions -->
