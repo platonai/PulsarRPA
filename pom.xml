@@ -149,34 +149,6 @@
             </build>
         </profile>
 
-        <!-- Release profile -->
-        <profile>
-            <id>release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-release-plugin</artifactId>
-                        <version>${maven-release-plugin.version}</version>
-                        <configuration>
-                            <tagNameFormat>v@{project.version}</tagNameFormat>
-                            <releaseProfiles>deploy</releaseProfiles>
-                            <autoVersionSubmodules>true</autoVersionSubmodules>
-                            <preparationGoals>clean verify</preparationGoals>
-                            <completionGoals>clean</completionGoals>
-                            <goals>deploy</goals>
-                            <pushChanges>false</pushChanges>
-                            <localCheckout>true</localCheckout>
-                            <checkModificationExcludes>
-                                <checkModificationExclude>pom.xml</checkModificationExclude>
-                            </checkModificationExcludes>
-                        </configuration>
-                    </plugin>
-
-                </plugins>
-            </build>
-        </profile>
-
         <!-- Deployment profile -->
         <profile>
             <id>deploy</id>
@@ -297,7 +269,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>${maven-gpg-plugin.version}</version>
                         <configuration>
                             <gpgArguments>
                                 <arg>--pinentry-mode</arg>
@@ -319,7 +290,6 @@
                     <plugin>
                         <groupId>net.nicoulaj.maven.plugins</groupId>
                         <artifactId>checksum-maven-plugin</artifactId>
-                        <version>${checksum-maven-plugin.version}</version>
                         <executions>
                             <execution>
                                 <id>source-release-checksum</id>
@@ -407,7 +377,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>${maven-surefire-plugin.version}</version>
                 <configuration>
                     <!--
 
@@ -644,24 +613,14 @@
             SkippableLowerLevelTest,TestInfraCheck,MustManualRun
         </surefire.excludedGroups>
 
-
-        <!-- Plugin versions -->
-        <!-- Overrides ai.platon:platon -->
-        <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
-        <version.maven-clean-plugin>3.3.2</version.maven-clean-plugin>
-        <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
-        <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
-        <maven-deploy-plugin.version>3.1.1</maven-deploy-plugin.version>
-        <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
-        <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
-        <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
-        <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
-        <checksum-maven-plugin.version>1.11</checksum-maven-plugin.version>
         <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
-        <license-maven-plugin.version>4.3</license-maven-plugin.version>
-        <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
-        <dokka.version>1.9.20</dokka.version>
+
         <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
+
+        <javaVersion>17</javaVersion>
+        <kotlin.version>2.2.20</kotlin.version>
+        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
+        <dokka.version>1.9.10</dokka.version>
 
     </properties>
 
