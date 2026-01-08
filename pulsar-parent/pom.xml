@@ -146,7 +146,7 @@
                             <option>all-open:annotation=javax.persistence.Embeddable</option>
                             <option>all-open:annotation=javax.persistence.MappedSuperclass</option>
                         </pluginOptions>
-                        <jvmTarget>${javac.target.version}</jvmTarget>
+                        <jvmTarget>${javaVersion}</jvmTarget>
                     </configuration>
                 </plugin>
                 <!--  java  -->
@@ -183,8 +183,8 @@
                     <configuration>
                         <verbose>true</verbose>
                         <fork>true</fork>
-                        <source>${javac.src.version}</source>
-                        <target>${javac.target.version}</target>
+                        <source>${javaVersion}</source>
+                        <target>${javaVersion}</target>
                     </configuration>
                 </plugin>
 
@@ -411,73 +411,73 @@
 
 
 
-<!--        &lt;!&ndash; .......................... &ndash;&gt;-->
-<!--        &lt;!&ndash; Begin apache-30            &ndash;&gt;-->
-<!--        &lt;!&ndash; .......................... &ndash;&gt;-->
+        <!-- .......................... -->
+        <!-- Begin apache-36            -->
+        <!-- .......................... -->
 
-<!--        &lt;!&ndash; The following are copied from apache-30.pom &ndash;&gt;-->
-<!--        &lt;!&ndash; set versions of common plugins for reproducibility, ordered alphabetically &ndash;&gt;-->
-<!--        &lt;!&ndash; 1.6.7 -> 1.7.0 &ndash;&gt;-->
+        <!-- The following are copied from apache-36.pom -->
+        <!-- set versions of common plugins for reproducibility, ordered alphabetically -->
+        <!-- 1.6.7 -> 1.7.0 -->
+<!--        <distMgmtReleasesId>apache.releases.https</distMgmtReleasesId>-->
 <!--        <distMgmtReleasesName>Apache Release Distribution Repository</distMgmtReleasesName>-->
 <!--        <distMgmtReleasesUrl>https://repository.apache.org/service/local/staging/deploy/maven2</distMgmtReleasesUrl>-->
+<!--        <distMgmtSnapshotsId>apache.snapshots.https</distMgmtSnapshotsId>-->
 <!--        <distMgmtSnapshotsName>Apache Development Snapshot Repository</distMgmtSnapshotsName>-->
 <!--        <distMgmtSnapshotsUrl>https://repository.apache.org/content/repositories/snapshots</distMgmtSnapshotsUrl>-->
 <!--        <organization.logo>https://www.apache.org/images/asf_logo_wide_2016.png</organization.logo>-->
 <!--        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>-->
 <!--        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>-->
 <!--        <sourceReleaseAssemblyDescriptor>source-release</sourceReleaseAssemblyDescriptor>-->
+<!--        <resourceBundleArtifact>apache-jar-resource-bundle</resourceBundleArtifact>-->
 <!--        <gpg.useagent>true</gpg.useagent>-->
-<!--        <minimalMavenBuildVersion>3.2.5</minimalMavenBuildVersion>-->
-<!--        <minimalJavaBuildVersion>1.8</minimalJavaBuildVersion>-->
-<!--        <maven.compiler.source>${maven.compiler.target}</maven.compiler.source>-->
-<!--        <maven.compiler.target>1.7</maven.compiler.target>-->
-<!--        &lt;!&ndash; Maven Surefire Plugin is a primary tool used in Maven projects for executing tests. It supports various-->
-<!--testing frameworks such as JUnit (including JUnit 5), TestNG, and more. &ndash;&gt;-->
-<!--        <surefire.version>3.3.0</surefire.version>-->
-<!--        <maven.plugin.tools.version>3.9.0</maven.plugin.tools.version>&lt;!&ndash; for m-plugin-p and maven-plugin-annotations &ndash;&gt;-->
+<!--        &lt;!&ndash; java version used to to set maven.compiler.* &ndash;&gt;-->
+<!--        <javaVersion>8</javaVersion>-->
+<!--        <minimalMavenBuildVersion>3.9</minimalMavenBuildVersion>-->
+<!--        <minimalJavaBuildVersion>${javaVersion}</minimalJavaBuildVersion>-->
+<!--        &lt;!&ndash; for surefire, failsafe and surefire-report &ndash;&gt;-->
+<!--        <surefire.version>3.5.4</surefire.version>-->
 <!--        <assembly.tarLongFileMode>posix</assembly.tarLongFileMode>-->
 
-<!--        <version.maven-fluido-skin>1.11.2</version.maven-fluido-skin>-->
-<!--        <project.build.outputTimestamp>2023-06-11T16:41:23Z</project.build.outputTimestamp>-->
+<!--        <project.build.outputTimestamp>2026-01-03T12:11:14Z</project.build.outputTimestamp>-->
 
-<!--        <version.apache-rat-plugin>0.15</version.apache-rat-plugin>-->
-<!--        <version.apache-resource-bundles>1.5</version.apache-resource-bundles>-->
+<!--        <version.apache-rat-plugin>0.16.1</version.apache-rat-plugin>-->
+<!--        <version.apache-resource-bundles>1.7</version.apache-resource-bundles>-->
 <!--        <version.checksum-maven-plugin>1.11</version.checksum-maven-plugin>-->
-<!--        <version.maven-antrun-plugin>3.1.0</version.maven-antrun-plugin>-->
-<!--        <version.maven-assembly-plugin>3.6.0</version.maven-assembly-plugin>-->
-<!--        <version.maven-clean-plugin>3.2.0</version.maven-clean-plugin>-->
-<!--        <version.maven-compiler-plugin>3.11.0</version.maven-compiler-plugin>-->
-<!--        <version.maven-dependency-plugin>3.6.0</version.maven-dependency-plugin>-->
-<!--        <version.maven-deploy-plugin>3.1.1</version.maven-deploy-plugin>-->
-<!--        <version.maven-ear-plugin>3.3.0</version.maven-ear-plugin>-->
-<!--        <version.maven-enforcer-plugin>3.3.0</version.maven-enforcer-plugin>-->
-<!--        <version.maven-gpg-plugin>3.1.0</version.maven-gpg-plugin>-->
-<!--        <version.maven-help-plugin>3.4.0</version.maven-help-plugin>-->
-<!--        <version.maven-install-plugin>3.1.1</version.maven-install-plugin>-->
-<!--        <version.maven-invoker-plugin>3.5.1</version.maven-invoker-plugin>-->
-<!--        <version.maven-jar-plugin>3.3.0</version.maven-jar-plugin>-->
-<!--        <version.maven-javadoc-plugin>3.5.0</version.maven-javadoc-plugin>-->
-<!--        <version.maven-plugin-tools>${maven.plugin.tools.version}</version.maven-plugin-tools>-->
-<!--        <version.maven-project-info-reports-plugin>3.4.5</version.maven-project-info-reports-plugin>-->
-<!--        <version.maven-release-plugin>3.0.1</version.maven-release-plugin>-->
-<!--        <version.maven-remote-resources-plugin>3.1.0</version.maven-remote-resources-plugin>-->
-<!--        <version.maven-resources-plugin>3.3.1</version.maven-resources-plugin>-->
-<!--        <version.maven-scm-plugin>2.0.1</version.maven-scm-plugin>-->
-<!--        <version.maven-scm-publish-plugin>3.2.1</version.maven-scm-publish-plugin>-->
-<!--        <version.maven-shade-plugin>3.4.1</version.maven-shade-plugin>-->
-<!--        <version.maven-site-plugin>3.12.1</version.maven-site-plugin>-->
-<!--        <version.maven-source-plugin>3.3.0</version.maven-source-plugin>-->
+<!--        <version.maven-antrun-plugin>3.2.0</version.maven-antrun-plugin>-->
+<!--        <version.maven-assembly-plugin>3.8.0</version.maven-assembly-plugin>-->
+<!--        <version.maven-clean-plugin>3.5.0</version.maven-clean-plugin>-->
+<!--        <version.maven-checkstyle-plugin>3.6.0</version.maven-checkstyle-plugin>-->
+<!--        <version.maven-compiler-plugin>3.14.1</version.maven-compiler-plugin>-->
+<!--        <version.maven-dependency-plugin>3.9.0</version.maven-dependency-plugin>-->
+<!--        <version.maven-deploy-plugin>3.1.4</version.maven-deploy-plugin>-->
+<!--        <version.maven-ear-plugin>3.4.0</version.maven-ear-plugin>-->
+<!--        <version.maven-enforcer-plugin>3.6.2</version.maven-enforcer-plugin>-->
+<!--        <version.maven-fluido-skin>2.1.0</version.maven-fluido-skin>-->
+<!--        <version.maven-gpg-plugin>3.2.8</version.maven-gpg-plugin>-->
+<!--        <version.maven-help-plugin>3.5.1</version.maven-help-plugin>-->
+<!--        <version.maven-install-plugin>3.1.4</version.maven-install-plugin>-->
+<!--        <version.maven-invoker-plugin>3.9.1</version.maven-invoker-plugin>-->
+<!--        <version.maven-jar-plugin>3.5.0</version.maven-jar-plugin>-->
+<!--        <version.maven-javadoc-plugin>3.12.0</version.maven-javadoc-plugin>-->
+<!--        <version.maven-plugin-tools>3.15.2</version.maven-plugin-tools>-->
+<!--        <version.maven-project-info-reports-plugin>3.9.0</version.maven-project-info-reports-plugin>-->
+<!--        <version.maven-release-plugin>3.3.1</version.maven-release-plugin>-->
+<!--        <version.maven-remote-resources-plugin>3.3.0</version.maven-remote-resources-plugin>-->
+<!--        <version.maven-resources-plugin>3.4.0</version.maven-resources-plugin>-->
+<!--        <version.maven-scm-plugin>2.2.1</version.maven-scm-plugin>-->
+<!--        <version.maven-scm-publish-plugin>3.3.0</version.maven-scm-publish-plugin>-->
+<!--        <version.maven-shade-plugin>3.6.1</version.maven-shade-plugin>-->
+<!--        <version.maven-site-plugin>3.21.0</version.maven-site-plugin>-->
+<!--        <version.maven-source-plugin>3.4.0</version.maven-source-plugin>-->
 <!--        <version.maven-surefire>${surefire.version}</version.maven-surefire>-->
-<!--        <version.maven-war-plugin>3.3.2</version.maven-war-plugin>-->
-<!--        &lt;!&ndash; .......................... &ndash;&gt;-->
-<!--        &lt;!&ndash; End apache-30              &ndash;&gt;-->
-<!--        &lt;!&ndash; .......................... &ndash;&gt;-->
+<!--        <version.maven-war-plugin>3.5.1</version.maven-war-plugin>-->
+        <!-- .......................... -->
+        <!-- End apache-36              -->
+        <!-- .......................... -->
 
-        <version.maven-exec-plugin>3.5.0</version.maven-exec-plugin>
         <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
 
-        <javac.src.version>17</javac.src.version>
-        <javac.target.version>17</javac.target.version>
+        <javaVersion>17</javaVersion>
         <kotlin.version>2.2.20</kotlin.version>
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
         <dokka.version>1.9.10</dokka.version>

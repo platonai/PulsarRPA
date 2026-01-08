@@ -62,14 +62,6 @@
 
     <dependencyManagement>
         <dependencies>
-            <!-- Begin apache-30.pom -->
-            <dependency>
-                <groupId>org.apache.maven.plugin-tools</groupId>
-                <artifactId>maven-plugin-annotations</artifactId>
-                <version>${version.maven-plugin-tools}</version>
-            </dependency>
-            <!-- End apache-30.pom -->
-
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>okhttp-bom</artifactId>
@@ -106,47 +98,6 @@
                     <exclusion>
                         <groupId>*</groupId>
                         <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.hadoop</groupId>
-                <artifactId>hadoop-annotations</artifactId>
-                <version>${hadoop.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <artifactId>*</artifactId>
-                        <groupId>*</groupId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>org.apache.hbase</groupId>
-                <artifactId>hbase-common</artifactId>
-                <version>${hbase.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>*</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <!--
-            [WARNING] The artifact
-            mysql:mysql-connector-java:jar:8.0.33
-            has been relocated to
-            com.mysql:mysql-connector-j:jar:8.0.33:
-            MySQL Connector/J artifacts moved to reverse-DNS compliant Maven 2+ coordinates.
-            -->
-            <dependency>
-                <groupId>mysql</groupId>
-                <artifactId>mysql-connector-java</artifactId>
-                <scope>runtime</scope>
-                <version>${mysql.driver.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <artifactId>protobuf-java</artifactId>
-                        <groupId>com.google.protobuf</groupId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -248,26 +199,6 @@
                 <scope>import</scope>
             </dependency>
 
-            <!--  Apache commons  -->
-            <!-- managed by spring-boot-dependencies -->
-            <!--            <dependency>-->
-            <!--                <groupId>commons-codec</groupId>-->
-            <!--                <artifactId>commons-codec</artifactId>-->
-            <!--                <version>${commons-codec.version}</version>-->
-            <!--            </dependency>-->
-            <!--  Utility dependencies  -->
-            <!-- managed by spring-boot-dependencies -->
-            <!--            <dependency>-->
-            <!--                <groupId>commons-lang</groupId>-->
-            <!--                <artifactId>commons-lang</artifactId>-->
-            <!--                <version>${commons-lang.version}</version>-->
-            <!--            </dependency>-->
-            <!-- managed by spring-boot-dependencies -->
-            <!--            <dependency>-->
-            <!--                <groupId>org.apache.commons</groupId>-->
-            <!--                <artifactId>commons-lang3</artifactId>-->
-            <!--                <version>${commons-lang3.version}</version>-->
-            <!--            </dependency>-->
             <dependency>
                 <groupId>commons-io</groupId>
                 <artifactId>commons-io</artifactId>
@@ -332,79 +263,6 @@
                 <scope>import</scope>
             </dependency>
 
-
-
-            <!-- https://haifengl.github.io/ -->
-            <!-- Smile is a fast and comprehensive machine learning engine. -->
-            <!--
-            Why SMILE instead of Spark? Because we need a built, lightweight, fast, minimal dependent library in Scent
-            project. We also have a spark based ML project.
-             -->
-            <dependency>
-                <groupId>com.github.haifengl</groupId>
-                <artifactId>smile-base</artifactId>
-                <version>${smile.version}</version>
-                <!-- exclude slf4j -->
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>com.github.haifengl</groupId>
-                <artifactId>smile-core</artifactId>
-                <version>${smile.version}</version>
-                <!-- exclude slf4j -->
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.slf4j</groupId>
-                        <artifactId>*</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <dependency>
-                <groupId>com.github.haifengl</groupId>
-                <artifactId>smile-plot</artifactId>
-                <version>${smile.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.github.haifengl</groupId>
-                <artifactId>smile-kotlin</artifactId>
-                <version>${smile.version}</version>
-            </dependency>
-
-            <!-- Java Predictive Model Markup Language -->
-            <dependency>
-                <groupId>org.jpmml</groupId>
-                <artifactId>pmml-agent</artifactId>
-                <version>${pmml.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jpmml</groupId>
-                <artifactId>pmml-model-jackson</artifactId>
-                <version>${pmml.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jpmml</groupId>
-                <artifactId>pmml-evaluator-metro</artifactId>
-                <version>${pmml.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jpmml</groupId>
-                <artifactId>pmml-evaluator-testing</artifactId>
-                <version>${pmml.version}</version>
-            </dependency>
-
-            <!-- managed by spring-boot-dependencies -->
-            <!--            <dependency>-->
-            <!--                <groupId>com.fasterxml.jackson</groupId>-->
-            <!--                <artifactId>jackson-bom</artifactId>-->
-            <!--                <version>${jackson-bom.version}</version>-->
-            <!--                <type>pom</type>-->
-            <!--                <scope>import</scope>-->
-            <!--            </dependency>-->
             <dependency>
                 <groupId>xml-apis</groupId>
                 <artifactId>xml-apis</artifactId>
@@ -415,13 +273,6 @@
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
             </dependency>
-
-            <!-- managed by spring-boot-dependencies -->
-            <!--            <dependency>-->
-            <!--                <groupId>com.google.code.gson</groupId>-->
-            <!--                <artifactId>gson</artifactId>-->
-            <!--                <version>${gson.version}</version>-->
-            <!--            </dependency>-->
 
             <dependency>
                 <groupId>org.jetbrains.kotlinx</groupId>
@@ -597,35 +448,6 @@
 
 
 
-
-            <!-- managed by spring-boot-dependencies -->
-            <!--            <dependency>-->
-            <!--                <groupId>org.slf4j</groupId>-->
-            <!--                <artifactId>slf4j-bom</artifactId>-->
-            <!--                <version>${slf4j.version}</version>-->
-            <!--                <type>pom</type>-->
-            <!--                <scope>import</scope>-->
-            <!--            </dependency>-->
-            <!--            <dependency>-->
-            <!--                <groupId>ch.qos.logback</groupId>-->
-            <!--                <artifactId>logback-core</artifactId>-->
-            <!--                <version>${logback.version}</version>-->
-            <!--            </dependency>-->
-            <!--            <dependency>-->
-            <!--                <groupId>ch.qos.logback</groupId>-->
-            <!--                <artifactId>logback-classic</artifactId>-->
-            <!--                <version>${logback.version}</version>-->
-            <!--            </dependency>-->
-            <!--            <dependency>-->
-            <!--                <groupId>org.apache.logging.log4j</groupId>-->
-            <!--                <artifactId>log4j-api</artifactId>-->
-            <!--                <version>${log4j.version}</version>-->
-            <!--            </dependency>-->
-            <!--            <dependency>-->
-            <!--                <groupId>org.apache.logging.log4j</groupId>-->
-            <!--                <artifactId>log4j-core</artifactId>-->
-            <!--                <version>${log4j.version}</version>-->
-            <!--            </dependency>-->
             <!--  Testing  -->
             <dependency>
                 <groupId>com.google.code.findbugs</groupId>
@@ -646,13 +468,6 @@
                 <scope>import</scope>
             </dependency>
 
-            <!-- managed by spring-boot-dependencies -->
-            <!--            <dependency>-->
-            <!--                <groupId>org.mockito</groupId>-->
-            <!--                <artifactId>mockito-core</artifactId>-->
-            <!--                <version>${mockito.version}</version>-->
-            <!--                <scope>test</scope>-->
-            <!--            </dependency>-->
             <dependency>
                 <groupId>org.mockito.kotlin</groupId>
                 <artifactId>mockito-kotlin</artifactId>
@@ -706,68 +521,6 @@
 
 
 
-        <!-- .......................... -->
-        <!-- Begin apache-30            -->
-        <!-- .......................... -->
-
-        <!-- The following are copied from apache-30.pom -->
-        <!-- set versions of common plugins for reproducibility, ordered alphabetically -->
-        <!-- 1.6.7 -> 1.7.0 -->
-        <distMgmtReleasesName>Apache Release Distribution Repository</distMgmtReleasesName>
-        <distMgmtReleasesUrl>https://repository.apache.org/service/local/staging/deploy/maven2</distMgmtReleasesUrl>
-        <distMgmtSnapshotsName>Apache Development Snapshot Repository</distMgmtSnapshotsName>
-        <distMgmtSnapshotsUrl>https://repository.apache.org/content/repositories/snapshots</distMgmtSnapshotsUrl>
-        <organization.logo>https://www.apache.org/images/asf_logo_wide_2016.png</organization.logo>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <sourceReleaseAssemblyDescriptor>source-release</sourceReleaseAssemblyDescriptor>
-        <gpg.useagent>true</gpg.useagent>
-        <minimalMavenBuildVersion>3.2.5</minimalMavenBuildVersion>
-        <minimalJavaBuildVersion>1.8</minimalJavaBuildVersion>
-        <maven.compiler.source>${maven.compiler.target}</maven.compiler.source>
-        <maven.compiler.target>1.7</maven.compiler.target>
-        <!-- Maven Surefire Plugin is a primary tool used in Maven projects for executing tests. It supports various
-testing frameworks such as JUnit (including JUnit 5), TestNG, and more. -->
-        <surefire.version>3.3.0</surefire.version>
-        <maven.plugin.tools.version>3.9.0</maven.plugin.tools.version><!-- for m-plugin-p and maven-plugin-annotations -->
-        <assembly.tarLongFileMode>posix</assembly.tarLongFileMode>
-
-        <version.maven-fluido-skin>1.11.2</version.maven-fluido-skin>
-        <project.build.outputTimestamp>2023-06-11T16:41:23Z</project.build.outputTimestamp>
-
-        <version.apache-rat-plugin>0.15</version.apache-rat-plugin>
-        <version.apache-resource-bundles>1.5</version.apache-resource-bundles>
-        <version.checksum-maven-plugin>1.11</version.checksum-maven-plugin>
-        <version.maven-antrun-plugin>3.1.0</version.maven-antrun-plugin>
-        <version.maven-assembly-plugin>3.6.0</version.maven-assembly-plugin>
-        <version.maven-clean-plugin>3.2.0</version.maven-clean-plugin>
-        <version.maven-compiler-plugin>3.11.0</version.maven-compiler-plugin>
-        <version.maven-dependency-plugin>3.6.0</version.maven-dependency-plugin>
-        <version.maven-deploy-plugin>3.1.1</version.maven-deploy-plugin>
-        <version.maven-ear-plugin>3.3.0</version.maven-ear-plugin>
-        <version.maven-enforcer-plugin>3.3.0</version.maven-enforcer-plugin>
-        <version.maven-gpg-plugin>3.1.0</version.maven-gpg-plugin>
-        <version.maven-help-plugin>3.4.0</version.maven-help-plugin>
-        <version.maven-install-plugin>3.1.1</version.maven-install-plugin>
-        <version.maven-invoker-plugin>3.5.1</version.maven-invoker-plugin>
-        <version.maven-jar-plugin>3.3.0</version.maven-jar-plugin>
-        <version.maven-javadoc-plugin>3.5.0</version.maven-javadoc-plugin>
-        <version.maven-plugin-tools>${maven.plugin.tools.version}</version.maven-plugin-tools>
-        <version.maven-project-info-reports-plugin>3.4.5</version.maven-project-info-reports-plugin>
-        <version.maven-release-plugin>3.0.1</version.maven-release-plugin>
-        <version.maven-remote-resources-plugin>3.1.0</version.maven-remote-resources-plugin>
-        <version.maven-resources-plugin>3.3.1</version.maven-resources-plugin>
-        <version.maven-scm-plugin>2.0.1</version.maven-scm-plugin>
-        <version.maven-scm-publish-plugin>3.2.1</version.maven-scm-publish-plugin>
-        <version.maven-shade-plugin>3.4.1</version.maven-shade-plugin>
-        <version.maven-site-plugin>3.12.1</version.maven-site-plugin>
-        <version.maven-source-plugin>3.3.0</version.maven-source-plugin>
-        <version.maven-surefire>${surefire.version}</version.maven-surefire>
-        <version.maven-war-plugin>3.3.2</version.maven-war-plugin>
-        <!-- .......................... -->
-        <!-- End apache-30              -->
-        <!-- .......................... -->
-
         <version.maven-exec-plugin>3.5.0</version.maven-exec-plugin>
         <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
 
@@ -782,11 +535,9 @@ testing frameworks such as JUnit (including JUnit 5), TestNG, and more. -->
         <kotlin.compiler.incremental>true</kotlin.compiler.incremental>
 
         <kotlin.version>2.2.20</kotlin.version>
-        <!--        <kotlin.version>2.0.21</kotlin.version>-->
         <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>
 
         <kotlin-statistics.version>1.2.1</kotlin-statistics.version>
-
 
         <dokka.version>1.9.10</dokka.version>
 
@@ -817,25 +568,6 @@ testing frameworks such as JUnit (including JUnit 5), TestNG, and more. -->
         <trove4j.version>3.0.3</trove4j.version>
         <jodd-trove4j-core.version>3.5.2</jodd-trove4j-core.version>
 
-        <!--  Gora Serialization  -->
-        <!--
-            Gora 0.8 supports:
-            Apache Avro 1.8.1
-            Apache Hadoop 2.5.2
-            Apache HBase 1.2.3
-            Apache Spark 1.4.1
-
-            Gora 0.9 supports:
-            Apache Avro 1.8.2
-            Apache Hadoop 2.5.2
-            Apache HBase 2.1.1
-            Apache Spark 2.2.1
-
-            See more at: http://gora.apache.org/
-          -->
-        <gora.version>0.9</gora.version>
-        <!-- Required by gora-0.9 -->
-        <avro.version>1.8.2</avro.version>
         <!-- 2.5.2 suggested, but 2.7.2 is a correct version, we will consider using a shaded gora -->
         <hadoop.version>2.7.2</hadoop.version>
 
@@ -844,36 +576,9 @@ testing frameworks such as JUnit (including JUnit 5), TestNG, and more. -->
         <nekohtml.version>1.9.22</nekohtml.version>
         <tika.version>2.9.0</tika.version>
 
-        <mysql.driver.version>8.0.33</mysql.driver.version>
-
         <!--  Persistence  -->
         <javax.persistence-api.version>2.2</javax.persistence-api.version>
 
-        <!-- Required by hibernate, spring-boot-starter-test, correct the version -->
-        <!-- managed by spring-boot-dependencies -->
-        <!--        <byte-buddy.version>1.14.18</byte-buddy.version>-->
-        <!-- Spring  -->
-        <!--
-            Spring Framework Versions (2023.08.06):
-
-            * 5.3.x is the final feature branch of the 5th generation, with long-term support provided on JDK 8, JDK 11,
-        JDK 17 and the Java EE 8 level.
-            * 6.0.x is the main production line as of November 2022. This new generation of the framework comes with a
-            JDK 17 and Jakarta EE 9 baseline.
-            * 6.1.x is the upcoming feature branch (November 2023).
-
-            JDK Version Range:
-
-            * Spring Framework 6.1.x: JDK 17-23
-            * Spring Framework 6.0.x: JDK 17-21
-            * Spring Framework 5.3.x: JDK 8-21 (as of 5.3.26)
-
-            @see https://github.com/spring-projects/spring-framework/wiki/Spring-Framework-Versions
-            -->
-        <!--
-        Upgrade spring-boot from 2.7.18 to 3.3.1, for the reasons:
-        1. GraalVM Native Images support, see https://docs.spring.io/spring-boot/reference/packaging/native-image/index.html
-         -->
         <spring-boot.version>3.5.9</spring-boot.version>
 
         <spring-data.version>2024.0.2</spring-data.version>
@@ -897,19 +602,10 @@ testing frameworks such as JUnit (including JUnit 5), TestNG, and more. -->
         <EvalEx.version>2.0</EvalEx.version>
         <jsr305.version>3.0.0</jsr305.version>
         <jcommander.version>1.82</jcommander.version>
-        <!-- Google core libraries for Java, include Multimaps, etc  -->
-        <!-- guava-32.1.3-jre has compatibility problem with kotlin-1.9.20,
-            kotlin contains the source code of com.google.common.collect.ImmutableMap,
-            which conflicts with guava-32.1.3-jre.
-        -->
-        <!-- <guava.version>32.1.3-jre</guava.version>-->
+
         <guava.version>33.2.1-jre</guava.version>
         <dataframe.version>0.13.1</dataframe.version>
         <jgrapht.version>1.0.1</jgrapht.version>
-
-        <!-- ML -->
-        <smile.version>3.1.1</smile.version>
-        <pmml.version>1.6.4</pmml.version>
 
         <!-- NLP -->
         <lucene.version>7.3.1</lucene.version>
@@ -920,11 +616,6 @@ testing frameworks such as JUnit (including JUnit 5), TestNG, and more. -->
         <!--  Misc Dependencies  -->
         <autolink.version>0.11.0</autolink.version>
 
-        <!--  Logging And Testing Dependencies, always keep consistent with spring-boot-starter-logging -->
-        <!-- Managed by spring-boot-dependencies -->
-        <!--        <slf4j.version>2.0.13</slf4j.version>-->
-        <!--        <logback.version>1.5.6</logback.version>-->
-        <!--        <log4j.version>2.23.1</log4j.version>-->
         <perf4j.version>0.9.16</perf4j.version>
 
         <!--  metrics analyze  -->

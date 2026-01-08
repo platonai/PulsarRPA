@@ -323,7 +323,6 @@
 
         <ktor.version>2.3.11</ktor.version>
         <springmockk.version>4.0.2</springmockk.version>
-        <version.maven-exec-plugin>3.6.1</version.maven-exec-plugin>
 
         <langchain4j.version>1.5.0</langchain4j.version>
 
