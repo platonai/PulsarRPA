@@ -105,13 +105,14 @@ under the License.
     </repositories>
 
     <properties>
-        <distMgmtReleasesId>apache.releases.https</distMgmtReleasesId>
-        <distMgmtReleasesName>Apache Release Distribution Repository</distMgmtReleasesName>
-        <distMgmtReleasesUrl>https://repository.apache.org/service/local/staging/deploy/maven2</distMgmtReleasesUrl>
-        <distMgmtSnapshotsId>apache.snapshots.https</distMgmtSnapshotsId>
-        <distMgmtSnapshotsName>Apache Development Snapshot Repository</distMgmtSnapshotsName>
-        <distMgmtSnapshotsUrl>https://repository.apache.org/content/repositories/snapshots</distMgmtSnapshotsUrl>
-        <organization.logo>https://www.apache.org/images/asf_logo_wide_2016.png</organization.logo>
+<!--        <distMgmtReleasesId>apache.releases.https</distMgmtReleasesId>-->
+<!--        <distMgmtReleasesName>Apache Release Distribution Repository</distMgmtReleasesName>-->
+<!--        <distMgmtReleasesUrl>https://repository.apache.org/service/local/staging/deploy/maven2</distMgmtReleasesUrl>-->
+<!--        <distMgmtSnapshotsId>apache.snapshots.https</distMgmtSnapshotsId>-->
+<!--        <distMgmtSnapshotsName>Apache Development Snapshot Repository</distMgmtSnapshotsName>-->
+<!--        <distMgmtSnapshotsUrl>https://repository.apache.org/content/repositories/snapshots</distMgmtSnapshotsUrl>-->
+<!--        <organization.logo>https://www.apache.org/images/asf_logo_wide_2016.png</organization.logo>-->
+
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <sourceReleaseAssemblyDescriptor>source-release</sourceReleaseAssemblyDescriptor>
@@ -125,7 +126,7 @@ under the License.
         <surefire.version>3.5.4</surefire.version>
         <assembly.tarLongFileMode>posix</assembly.tarLongFileMode>
 
-        <project.build.outputTimestamp>2026-01-03T12:11:14Z</project.build.outputTimestamp>
+        <project.build.outputTimestamp>2026-01-05T2:16:58Z</project.build.outputTimestamp>
 
         <version.apache-rat-plugin>0.16.1</version.apache-rat-plugin>
         <version.apache-resource-bundles>1.7</version.apache-resource-bundles>
