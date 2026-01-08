@@ -505,11 +505,6 @@
                         </systemProperties>
                     </configuration>
                 </plugin>
-                <plugin>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-maven-plugin</artifactId>
-                    <version>${spring-boot.version}</version>
-                </plugin>
             </plugins>
         </pluginManagement>
 
@@ -575,13 +570,13 @@
                     <useModulePath>false</useModulePath>
                 </configuration>
 
-                <dependencies>
-                    <dependency>
-                        <groupId>org.junit.jupiter</groupId>
-                        <artifactId>junit-jupiter-engine</artifactId>
-                        <version>${junit5.version}</version>
-                    </dependency>
-                </dependencies>
+<!--                <dependencies>-->
+<!--                    <dependency>-->
+<!--                        <groupId>org.junit.jupiter</groupId>-->
+<!--                        <artifactId>junit-jupiter-engine</artifactId>-->
+<!--                        <version>${junit5.version}</version>-->
+<!--                    </dependency>-->
+<!--                </dependencies>-->
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -762,21 +757,21 @@
                 <scope>test</scope>
             </dependency>
 
-            <dependency>
-                <groupId>io.ktor</groupId>
-                <artifactId>ktor-client-core</artifactId>
-                <version>${ktor.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.ktor</groupId>
-                <artifactId>ktor-client-cio</artifactId>
-                <version>${ktor.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>io.ktor</groupId>
-                <artifactId>ktor-serialization-kotlinx-json-jvm</artifactId>
-                <version>${ktor.version}</version>
-            </dependency>
+<!--            <dependency>-->
+<!--                <groupId>io.ktor</groupId>-->
+<!--                <artifactId>ktor-client-core</artifactId>-->
+<!--                <version>${ktor.version}</version>-->
+<!--            </dependency>-->
+<!--            <dependency>-->
+<!--                <groupId>io.ktor</groupId>-->
+<!--                <artifactId>ktor-client-cio</artifactId>-->
+<!--                <version>${ktor.version}</version>-->
+<!--            </dependency>-->
+<!--            <dependency>-->
+<!--                <groupId>io.ktor</groupId>-->
+<!--                <artifactId>ktor-serialization-kotlinx-json-jvm</artifactId>-->
+<!--                <version>${ktor.version}</version>-->
+<!--            </dependency>-->
 
 <!--            &lt;!&ndash; https://mvnrepository.com/artifact/com.squareup.okhttp3/okhttp-bom &ndash;&gt;-->
 <!--            <dependency>-->
@@ -822,27 +817,27 @@
 <!--                <type>pom</type>-->
 <!--            </dependency>-->
 
-            <!-- MockBean and SpyBean, but for MockK instead of Mockito -->
-            <!-- Be careful to keep consistent with spring-boot -->
-            <!-- MockK for Kotlin-friendly mocking -->
-            <dependency>
-                <groupId>io.mockk</groupId>
-                <artifactId>mockk</artifactId>
-                <version>${mockk.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>io.mockk</groupId>
-                <artifactId>mockk-jvm</artifactId>
-                <version>${mockk.version}</version>
-                <scope>test</scope>
-            </dependency>
-            <dependency>
-                <groupId>com.ninja-squad</groupId>
-                <artifactId>springmockk</artifactId>
-                <version>${springmockk.version}</version>
-                <scope>test</scope>
-            </dependency>
+<!--            &lt;!&ndash; MockBean and SpyBean, but for MockK instead of Mockito &ndash;&gt;-->
+<!--            &lt;!&ndash; Be careful to keep consistent with spring-boot &ndash;&gt;-->
+<!--            &lt;!&ndash; MockK for Kotlin-friendly mocking &ndash;&gt;-->
+<!--            <dependency>-->
+<!--                <groupId>io.mockk</groupId>-->
+<!--                <artifactId>mockk</artifactId>-->
+<!--                <version>${mockk.version}</version>-->
+<!--                <scope>test</scope>-->
+<!--            </dependency>-->
+<!--            <dependency>-->
+<!--                <groupId>io.mockk</groupId>-->
+<!--                <artifactId>mockk-jvm</artifactId>-->
+<!--                <version>${mockk.version}</version>-->
+<!--                <scope>test</scope>-->
+<!--            </dependency>-->
+<!--            <dependency>-->
+<!--                <groupId>com.ninja-squad</groupId>-->
+<!--                <artifactId>springmockk</artifactId>-->
+<!--                <version>${springmockk.version}</version>-->
+<!--                <scope>test</scope>-->
+<!--            </dependency>-->
         </dependencies>
     </dependencyManagement>
 
@@ -873,12 +868,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.mockito</groupId>
-            <artifactId>mockito-junit-jupiter</artifactId>
-            <version>${mockito-junit-jupiter.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.openjdk.jmh</groupId>
             <artifactId>jmh-core</artifactId>
             <version>1.37</version>
@@ -888,20 +877,16 @@
 
     <properties>
         <!-- Build properties -->
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+<!--        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>-->
+<!--        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>-->
 
         <surefire.excludedGroups>
             TimeConsumingTest,ExternalServiceTest,IntegrationTest,E2ETest,HeavyTest,
             SkippableLowerLevelTest,TestInfraCheck,MustManualRun
         </surefire.excludedGroups>
 
-        <ktor.version>3.3.1</ktor.version>
+<!--        <ktor.version>3.3.1</ktor.version>-->
 
-        <junit5.version>5.12.1</junit5.version>
-        <mockk.version>1.14.6</mockk.version>
-        <springmockk.version>4.0.2</springmockk.version>
-        <mockito-junit-jupiter.version>5.20.0</mockito-junit-jupiter.version>
 
         <version.maven-exec-plugin>3.6.1</version.maven-exec-plugin>
         <!-- Plugin versions -->
@@ -922,8 +907,6 @@
         <dokka.version>1.9.20</dokka.version>
         <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
 
-        <kotlin.version>2.2.20</kotlin.version>
-        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
     </properties>
 
 </project>

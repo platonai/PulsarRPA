@@ -627,6 +627,10 @@ testing frameworks such as JUnit (including JUnit 5), TestNG, and more. -->
         <version.maven-exec-plugin>3.5.0</version.maven-exec-plugin>
         <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
 
+        <javac.src.version>17</javac.src.version>
+        <javac.target.version>17</javac.target.version>
+        <kotlin.version>2.2.20</kotlin.version>
+        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
         <dokka.version>1.9.10</dokka.version>
     </properties>
 </project>

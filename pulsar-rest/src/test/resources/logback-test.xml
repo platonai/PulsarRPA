@@ -93,7 +93,4 @@
     <logger name="org.apache.zookeeper" level="ERROR"/>
     <logger name="org.apache.solr" level="ERROR"/>
 
-    <logger name="io.netty" level="INFO"/>
-    <logger name="io.netty.handler.logging" level="INFO"/>
-
 </configuration>
