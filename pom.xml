@@ -184,6 +184,8 @@
                 <deploy-active>true</deploy-active>
             </properties>
             <modules>
+                <module>pulsar-parent</module>
+                <module>pulsar-dependencies</module>
                 <module>pulsar-core</module>
 
                 <module>pulsar-tests-common</module>
