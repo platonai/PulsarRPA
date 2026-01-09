@@ -137,25 +137,7 @@ class CommandService(
      */
     suspend fun executeAgentCommand(plainCommand: String): CommandStatus {
         val status = createCachedCommandStatus()
-        try {
-            status.refresh(ResourceStatus.SC_PROCESSING)
-            val agent = session.companionAgent
-            val history = agent.run(plainCommand)
-            val finalState = history.finalResult
-
-            // AgentState has 'summary' for the final result message
-            val resultSummary = finalState?.summary ?: finalState?.description ?: ""
-            status.message = resultSummary
-            status.ensureCommandResult().pageSummary = resultSummary
-            status.refresh(ResourceStatus.SC_OK)
-        } catch (e: Exception) {
-            logger.error("Failed to execute agent command: {}", plainCommand, e)
-            status.failed(ResourceStatus.SC_EXPECTATION_FAILED)
-            status.message = e.message
-        } finally {
-            status.done()
-        }
-
+        executeAgentCommandInternal(plainCommand, status)
         return status
     }
 
