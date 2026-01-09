@@ -49,34 +49,27 @@ jobs:
 
       - name: Update versions
         run: |
-          echo "📝 Updating version to ${{ github.event.inputs.version }}..."
-          
-          # Update VERSION file
-          echo "${{ github.event.inputs.version }}" > VERSION
-          
-          # Run the version update script
-          chmod +x bin/release/update-versions.sh
-          
-          # Temporarily set VERSION env for the script
-          export VERSION="${{ github.event.inputs.version }}"
-          
-          # The script expects SNAPSHOT_VERSION in VERSION file, so we need to adjust
-          # Let's manually do what the script does since we're setting a release version
-          SNAPSHOT_VERSION="${{ github.event.inputs.version }}-SNAPSHOT"
           VERSION="${{ github.event.inputs.version }}"
+          echo "📝 Updating version to $VERSION..."
           
-          echo "Replacing $SNAPSHOT_VERSION with $VERSION in project files..."
+          # Read current version (likely a SNAPSHOT version)
+          CURRENT_VERSION=$(head -n 1 VERSION)
           
-          # Replace version in pom.xml, README files, etc.
+          # Write target release version to VERSION file
+          echo "$VERSION" > VERSION
+          
+          # Replace version in project files
+          # Use the same pattern as bin/release/update-versions.sh
           for FILE_PATTERN in 'pom.xml' 'llm-config.md' 'README.md' 'README.zh.md'; do
             find . -maxdepth 8 -name "$FILE_PATTERN" -type f | while read FILE; do
               if [ -f "$FILE" ]; then
-                sed -i "s/$SNAPSHOT_VERSION/$VERSION/g" "$FILE"
+                # Replace SNAPSHOT version with release version
+                sed -i "s/$CURRENT_VERSION/$VERSION/g" "$FILE"
               fi
             done
           done
           
-          echo "✅ Version updated to $VERSION"
+          echo "✅ Version updated from $CURRENT_VERSION to $VERSION"
 
       - name: Commit version changes
         run: |

@@ -247,18 +247,21 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
+          TAG="${{ env.TAG }}"
+          VERSION="${{ env.VERSION }}"
+          
           # Fetch and checkout main
           git fetch origin main
           git checkout main
           git pull origin main
           
           # Merge the tag
-          git merge --no-ff ${{ env.TAG }} -m "chore: release ${{ env.VERSION }}"
+          git merge --no-ff "$TAG" -m "chore: release $VERSION"
           
           # Push to main
           git push origin main
           
-          echo "✅ Successfully merged ${{ env.TAG }} to main"
+          echo "✅ Successfully merged $TAG to main"
 
       - name: Build Browser4 JAR
         if: success()
