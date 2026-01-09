@@ -64,8 +64,8 @@ while read -r line; do
     data="${data#"${data%%[![:space:]]*}"}"  # 去除前导空白
     echo "SSE update: $data"
 
-    # 检查是否已完成（兼容 isDone: true 与 done: true）
-    if [[ "$data" =~ isDone.*true ]] || [[ "$response" =~ done.*true ]]; then
+    # 检查是否已完成（兼容 "done" : true 与 "isDone" : true）
+    if [[ "$data" =~ isDone.*true ]] || [[ "$data" =~ done.*true ]]; then
       isDone=1
       sleep 1 # 等待一秒以确保所有数据都已接收
     fi
