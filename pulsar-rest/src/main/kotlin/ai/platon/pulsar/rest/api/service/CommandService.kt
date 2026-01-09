@@ -82,7 +82,9 @@ class CommandService(
      */
     suspend fun executePlainCommandSync(plainCommand: String): CommandStatus {
         if (plainCommand.isBlank()) {
-            return CommandStatus.failed(ResourceStatus.SC_BAD_REQUEST)
+            val status = createCachedCommandStatus()
+            status.failed(ResourceStatus.SC_BAD_REQUEST)
+            return status
         }
 
         val request = conversationService.normalizePlainCommand(plainCommand)
