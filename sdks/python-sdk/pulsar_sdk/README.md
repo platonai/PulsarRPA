@@ -1,45 +1,57 @@
-# Pulsar Browser Python SDK (draft)
+# Pulsar SDK Package
 
-Thin hand-written client over the Browser4 OpenAPI (`openapi/openapi.yaml`). Mirrors key Kotlin surfaces (`WebDriver`, `AgenticSession`, `FusedActs`).
+This package provides the core Browser4 Python SDK implementation.
 
-## Install (editable)
+## Modules
 
-```bash
-pip install -e .[dev]
-```
+### `client.py`
+Low-level HTTP client for Browser4 API communication.
 
-## Quick start
+### `models.py`
+Data models matching Kotlin interfaces:
+- `WebPage` - Loaded page result
+- `NormURL` - Normalized URL with arguments
+- `AgentRunResult` - Agent run operation result
+- `AgentActResult` - Agent action result
+- `AgentObservation` / `ObserveResult` - Page observation results
+- `ExtractionResult` - AI extraction result
+- `PageSnapshot` - Captured page state
+- `FieldsExtraction` - CSS selector extraction result
+- `PageEventHandlers` - Event handlers placeholder
+
+### `webdriver.py`
+WebDriver-compatible browser control:
+- Navigation (navigate_to, go_back, go_forward, reload)
+- Element interaction (click, fill, type, press, hover, focus)
+- Scrolling (scroll_down, scroll_up, scroll_to, scroll_to_bottom, scroll_to_top)
+- Selection (exists, wait_for_selector, select_first_text, select_text_all)
+- Screenshots (capture_screenshot)
+- Script execution (execute_script, evaluate)
+
+### `agentic_session.py`
+Session management with AI-powered automation:
+- `PulsarSession` - Page loading and extraction (open, load, submit, normalize, extract, scrape)
+- `AgenticSession` - AI-powered actions (act, run, observe, summarize, agent_extract)
+
+## Usage
 
 ```python
 from pulsar_sdk import PulsarClient, AgenticSession
 
 client = PulsarClient(base_url="http://localhost:8182")
-session_id = client.create_session()
+client.create_session()
 session = AgenticSession(client)
 
-# WebDriver-like navigation
-session.driver.navigate_to("https://example.com")
-print(session.driver.get_current_url())
+# Navigation and extraction
+page = session.open("https://example.com")
+fields = session.extract(page, {"title": "h1"})
 
-# Agentic actions (observe/act/run)
-run_result = session.run("scroll to the bottom of the page")
-print(run_result.finalResult)
-
-# Extract fields via agent/extract
-page = session.capture()
-fields = session.extract(page.html, {"title": "title"})
-print(fields.fields)
+# AI-powered actions
+result = session.act("click the search button")
+history = session.run("search for 'python'")
 
 session.close()
 ```
 
-## API coverage
-- WebDriver: navigation (url/baseUri/documentUri), selector-first exists/wait/click/fill/press/outerHtml/screenshot, element find(s) + click/send_keys/get_attribute/get_text, execute sync/async script, control (delay/pause/stop), events (configs/list/get/subscribe).
-- AgenticSession: normalize/open/load/submit, parse (local), extract (agent/extract), agent run/act/observe/summarize/clearHistory, capture fallback via open(current_url), driver getter and Kotlin-style aliases.
-- Models: lightweight dataclasses for agent results, page snapshots, field extraction.
-
-## Notes / gaps
-- No dedicated `capture` or local DOM parse endpoint in OpenAPI; `capture` re-opens the current URL to refresh HTML.
-- Auth headers can be injected via `PulsarClient(default_headers=...)`.
-- Extend models if your deployment returns richer trace/span metadata.
+See the parent README.md for comprehensive documentation.
 
