@@ -195,7 +195,7 @@ Example code:
 Achieve extreme throughput with parallel browser control and smart resource optimization.
 
 **Performance:**
-- 10k ~ 20k page visits per machine per day
+- 10k ~ 20k complex page visits per machine per day
 - Concurrent session management
 - Resource blocking for faster page loads
 
@@ -323,7 +323,7 @@ Ask your proxy provider for such a URL.
 ### Performance & Scalability
 - High-efficiency parallel page rendering
 - Block-resistant design & smart retries
-- 100,000+ pages/day on modest hardware (indicative)
+- 100,000+ complex pages/day on modest hardware (indicative)
 
 ### Stealth & Reliability
 - Advanced anti-bot techniques
@@ -347,7 +347,7 @@ Ask your proxy provider for such a URL.
 - 💬 WeChat: galaxyeye
 - 🌐 Weibo: [galaxyeye](https://weibo.com/galaxyeye)
 - 📧 Email: galaxyeye@live.cn, ivincent.zhang@gmail.com
-- 🐦 Twitter: galaxyeye8
+- 🐦 Twitter: [galaxyeye8](https://x.com/galaxyeye8)
 - 🌍 Website: [browser4.io](https://browser4.io)
 
 <div style="display: flex;">
