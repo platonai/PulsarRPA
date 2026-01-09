@@ -12,6 +12,7 @@ import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.context.annotation.Import
 import org.springframework.http.ResponseEntity
 import org.springframework.test.web.servlet.client.RestTestClient
+import org.springframework.test.web.servlet.client.expectBody
 import kotlin.test.BeforeTest
 import kotlin.test.assertTrue
 
@@ -42,7 +43,7 @@ class IntegrationTestBase {
         client.get().uri(path)
             .exchange()
             .expectStatus().is2xxSuccessful
-            .expectBody(String::class.java)
+            .expectBody<String>()
             .returnResult()
             .let { result -> ResponseEntity(result.responseBody!!, result.responseHeaders, result.status) }
 

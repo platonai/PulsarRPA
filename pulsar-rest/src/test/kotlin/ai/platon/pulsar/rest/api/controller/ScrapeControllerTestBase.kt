@@ -52,9 +52,6 @@ open class ScrapeControllerTestBase : IntegrationTestBase() {
 
     @Test
     fun `When say hello then returns hello`() {
-        assertThat(
-            // client.getForObject("$baseUri/api/system/hello", String::class.java)
-            getHtml("/api/system/hello").body
-        ).contains("hello")
+        assertThat(getHtml("/api/system/hello").body).contains("hello")
     }
 }

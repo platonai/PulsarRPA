@@ -6,17 +6,13 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.rest.api.entities.ScrapeResponse
 import ai.platon.pulsar.skeleton.session.PulsarSession
-import org.apache.hc.client5.http.classic.HttpClient
-import org.apache.hc.client5.http.config.RequestConfig
-import org.apache.hc.client5.http.impl.classic.HttpClients
-import org.apache.hc.core5.util.Timeout
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.context.annotation.Import
-import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.test.web.servlet.client.RestTestClient
+import org.springframework.test.web.servlet.client.expectBody
 import kotlin.test.BeforeTest
 import kotlin.test.assertTrue
 
@@ -38,7 +34,15 @@ class IntegrationTestBase {
     val baseUri get() = String.format("http://%s:%d", hostname, serverPort)
 
     // Build a RestTestClient bound to the running server on demand
-    private val rest get() = RestTestClient.bindToServer().baseUrl(baseUri).build()
+    protected val client get() = RestTestClient.bindToServer().baseUrl(baseUri).build()
+
+    protected fun getHtml(path: String): ResponseEntity<String> =
+        client.get().uri(path)
+            .exchange()
+            .expectStatus().is2xxSuccessful
+            .expectBody<String>()
+            .returnResult()
+            .let { result -> ResponseEntity(result.responseBody!!, result.responseHeaders, result.status) }
 
     @BeforeTest
     fun setup() {
@@ -50,7 +54,7 @@ class IntegrationTestBase {
      * */
     fun scrape(url: String): ScrapeResponse? {
         val sql = "select dom_base_uri(dom) as url from load_and_select('$url', ':root')"
-        return rest.post().uri("/api/x/e")
+        return client.post().uri("/api/x/e")
             .body(sql)
             .exchange()
             .expectStatus().is2xxSuccessful
@@ -64,7 +68,7 @@ class IntegrationTestBase {
      * */
     fun llmScrape(url: String): ScrapeResponse? {
         val sql = "select llm_extract(dom, 'Title, Price, Description') as llm_extracted_fields from load_and_select('$url', 'body')"
-        val uuid = rest.post().uri("/api/x/s")
+        val uuid = client.post().uri("/api/x/s")
             .body(sql)
             .exchange()
             .expectStatus().is2xxSuccessful
@@ -79,7 +83,7 @@ class IntegrationTestBase {
         var tick = 0
         val timeout = 60
 
-        var response: ScrapeResponse = rest.get().uri("/api/x/status?uuid=$uuid")
+        var response: ScrapeResponse = client.get().uri("/api/x/status?uuid=$uuid")
             .exchange()
             .expectStatus().is2xxSuccessful
             .expectBody(ScrapeResponse::class.java)
@@ -88,7 +92,7 @@ class IntegrationTestBase {
 
         while (!response.isDone && ++tick < timeout) {
             sleepSeconds(1)
-            response = rest.get().uri("/api/x/status?uuid=$uuid")
+            response = client.get().uri("/api/x/status?uuid=$uuid")
                 .exchange()
                 .expectStatus().is2xxSuccessful
                 .expectBody(ScrapeResponse::class.java)
