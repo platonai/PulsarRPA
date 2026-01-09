@@ -287,5 +287,58 @@ class CommandServiceTest : MockEcServerTestBase() {
         assertNotNull(status.commandResult?.pageSummary)
         assertNotNull(status.commandResult?.fields)
     }
+
+    @Test
+    fun `test executePlainCommandSync with URL-based command`() {
+        // A command with URL should be handled by the standard flow
+        val plainCommand = """
+            Visit $MOCK_PRODUCT_DETAIL_URL
+            Summarize the product.
+        """.trimIndent()
+
+        val status = runBlocking { commandService.executePlainCommandSync(plainCommand) }
+        printlnPro(prettyPulsarObjectMapper().writeValueAsString(status))
+        assertNotNull(status)
+
+        // The command should complete (either successfully or with expected status)
+        assertTrue { status.isDone }
+    }
+
+    @Test
+    fun `test executePlainCommandSync with blank command returns bad request`() {
+        val status = runBlocking { commandService.executePlainCommandSync("") }
+        assertNotNull(status)
+        assertTrue { status.isDone }
+        assertTrue { status.statusCode == 400 }
+    }
+
+    @Test
+    fun `test submitPlainCommandAsync with URL-based command`() {
+        // A command with URL should be handled by the standard async flow
+        val plainCommand = """
+            Visit $MOCK_PRODUCT_DETAIL_URL
+            Summarize the product.
+        """.trimIndent()
+
+        val statusId = runBlocking { commandService.submitPlainCommandAsync(plainCommand) }
+        assertNotNull(statusId)
+        assertTrue { statusId.isNotBlank() }
+
+        // Verify we can retrieve the status
+        val status = commandService.getStatus(statusId)
+        assertNotNull(status)
+    }
+
+    @Test
+    fun `test submitPlainCommandAsync with blank command`() {
+        val statusId = runBlocking { commandService.submitPlainCommandAsync("") }
+        assertNotNull(statusId)
+
+        // Even blank commands should have a status
+        val status = commandService.getStatus(statusId)
+        assertNotNull(status)
+        assertTrue { status.isDone }
+        assertTrue { status.statusCode == 400 }
+    }
 }
 
