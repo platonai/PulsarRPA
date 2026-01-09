@@ -3,7 +3,6 @@ package ai.platon.pulsar.skeleton.common.options
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.browser.InteractLevel
 import ai.platon.pulsar.common.config.VolatileConfig
-import ai.platon.pulsar.common.serialize.json.pulsarObjectMapper
 import ai.platon.pulsar.persist.metadata.FetchMode
 import com.beust.jcommander.Parameter
 import com.fasterxml.jackson.core.JsonGenerator
