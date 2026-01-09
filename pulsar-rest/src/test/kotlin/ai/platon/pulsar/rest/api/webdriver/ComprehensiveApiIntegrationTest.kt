@@ -682,8 +682,8 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     fun `should normalize URL without scheme`() {
         val sessionId = createSession()
 
-        // Use the base URL from interactiveUrl without scheme
-        val urlWithoutScheme = interactiveUrl.removePrefix("http://")
+        // Use the base URL from interactiveUrl without scheme (handles both http:// and https://)
+        val urlWithoutScheme = interactiveUrl.replaceFirst(Regex("^https?://"), "")
         val request = NormalizeRequest(url = urlWithoutScheme, args = "-expire 1d")
         val response = postJson("/session/$sessionId/normalize", request).returnResult(Map::class.java)
 
