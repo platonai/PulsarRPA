@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.test.web.servlet.client.RestTestClient
+import org.springframework.test.web.servlet.client.expectBody
 
 @Tag("TestInfraCheck")
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -24,7 +25,7 @@ class EcommerceControllerTest {
         rest.get().uri(path)
             .exchange()
             .expectStatus().is2xxSuccessful
-            .expectBody(String::class.java)
+            .expectBody<String>()
             .returnResult()
             .let { result -> ResponseEntity(result.responseBody!!, result.responseHeaders, result.status) }
 
