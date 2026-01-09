@@ -615,7 +615,7 @@ interface BrowseEventHandlers {
  * ```kotlin
  * val handlers = DefaultPageEventHandlers()
  * handlers.loadEventHandlers.onLoaded.addLast { page ->
- *     println("Loaded: \${page.url}")
+ *     println("Loaded: ${page.url}")
  * }
  * val link = ListenableHyperlink(url, args = "-parse", eventHandlers = handlers)
  * session.submit(link)
@@ -638,8 +638,8 @@ interface BrowseEventHandlers {
  * ```
  *
  * ## Implementation Classes
- * - [DefaultPageEventHandlers][ai.platon.pulsar.skeleton.crawl.event.impl.DefaultPageEventHandlers] - Standard implementation with default behaviors
- * - [AbstractPageEventHandlers][ai.platon.pulsar.skeleton.crawl.event.AbstractPageEventHandlers] - Base class for custom implementations
+ * - `DefaultPageEventHandlers` - Standard implementation with default behaviors
+ * - `AbstractPageEventHandlers` - Base class for custom implementations
  *
  * @see LoadEventHandlers for load-phase events
  * @see BrowseEventHandlers for browser interaction events
