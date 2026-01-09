@@ -1,11 +1,10 @@
-package ai.platon.pulsar
+package ai.platon.pulsar.rest.util.server
 
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.test.TestResourceUtil
-import ai.platon.pulsar.util.server.EnableMockServerApplication
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.test.context.SpringBootTest
@@ -26,13 +25,11 @@ class TestWebSiteAccess {
     @Value($$"${server.port}")
     var port: Int = 18080
 
+    protected val baseURL get() = "http://127.0.0.1:$port"
+
+    protected val client get() = RestTestClient.bindToServer().baseUrl(baseURL).build()
+
     val context get() = session.context
-
-    val taskLoops get() = context.taskLoops
-
-    val webDB get() = context.getBean(WebDb::class)
-
-    val globalCache get() = session.globalCache
 
     protected val logger = getLogger(this)
 //    protected val warnUpUrl = "https://www.amazon.com/"
@@ -42,8 +39,6 @@ class TestWebSiteAccess {
     protected val e2eProductUrl = TestResourceUtil.PRODUCT_DETAIL_URL
 
     protected val resourceUrl2 = "https://www.amazon.com/robots.txt"
-
-    protected val baseURL get() = "http://127.0.0.1:$port"
 
     protected val assetsBaseURL get() = "http://127.0.0.1:$port/assets"
 

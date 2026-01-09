@@ -1,16 +1,14 @@
 package ai.platon.pulsar.rest.api.webdriver
 
 import ai.platon.pulsar.rest.api.webdriver.dto.*
+import ai.platon.pulsar.rest.util.server.TestWebSiteAccess
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.test.web.servlet.client.RestTestClient
 
 /**
  * Integration tests for WebDriver-compatible API endpoints.
@@ -19,38 +17,40 @@ import org.springframework.http.MediaType
     classes = [WebDriverTestApplication::class],
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
-class WebDriverApiIntegrationTest {
+class WebDriverApiIntegrationTest: TestWebSiteAccess() {
 
-    @LocalServerPort
-    var port: Int = 0
+    private fun postJson(path: String, body: Any?): RestTestClient.ResponseSpec {
+        return client.post()
+            .uri(path)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(body ?: "")
+            .exchange()
+    }
 
-    @Autowired
-    lateinit var restTemplate: TestRestTemplate
+    private fun getJson(path: String): RestTestClient.ResponseSpec {
+        return client.get()
+            .uri(path)
+            .exchange()
+    }
 
-    private val baseUrl: String
-        get() = "http://localhost:$port"
-
-    private fun jsonHeaders(): HttpHeaders {
-        return HttpHeaders().apply {
-            contentType = MediaType.APPLICATION_JSON
-        }
+    private fun deleteJson(path: String): RestTestClient.ResponseSpec {
+        return client.delete()
+            .uri(path)
+            .exchange()
     }
 
     @Test
     fun `should create session and return sessionId`() {
         val request = NewSessionRequest(capabilities = mapOf("browserName" to "chrome"))
-        val entity = HttpEntity(request, jsonHeaders())
 
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session", request)
+        val result = response.returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, result.status)
+        assertNotNull(result.responseBody)
 
-        val body = response.body!!
+        @Suppress("UNCHECKED_CAST")
+        val body = result.responseBody as Map<String, Any?>
         assertTrue(body.containsKey("value"))
 
         @Suppress("UNCHECKED_CAST")
@@ -62,33 +62,25 @@ class WebDriverApiIntegrationTest {
     @Test
     fun `should navigate to URL after session creation`() {
         // Create session
-        val createRequest = NewSessionRequest()
-        val createEntity = HttpEntity(createRequest, jsonHeaders())
-        val createResponse = restTemplate.postForEntity(
-            "$baseUrl/session",
-            createEntity,
-            Map::class.java
-        )
+        val createResponse = postJson("/session", NewSessionRequest())
+        val createResult = createResponse.returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, createResponse.statusCode)
+        assertEquals(HttpStatus.OK, createResult.status)
 
         @Suppress("UNCHECKED_CAST")
-        val sessionValue = createResponse.body!!["value"] as Map<String, Any?>
+        val createBody = createResult.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val sessionValue = createBody["value"] as Map<String, Any?>
         val sessionId = sessionValue["sessionId"] as String
 
         // Navigate to URL
         val navRequest = SetUrlRequest(url = "https://example.com")
-        val navEntity = HttpEntity(navRequest, jsonHeaders())
-        val navResponse = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/url",
-            navEntity,
-            Map::class.java
-        )
+        val navResponse = postJson("/session/$sessionId/url", navRequest)
+        val navResult = navResponse.returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, navResponse.statusCode)
-        assertNotNull(navResponse.body)
+        assertEquals(HttpStatus.OK, navResult.status)
         // value can be null for success responses
-        assertTrue(navResponse.body!!.containsKey("value") || navResponse.statusCode == HttpStatus.OK)
+        assertTrue((navResult.responseBody as? Map<*, *>)?.containsKey("value") == true || navResult.status == HttpStatus.OK)
     }
 
     @Test
@@ -98,19 +90,18 @@ class WebDriverApiIntegrationTest {
 
         // Check selector exists
         val selectorRequest = SelectorRef(selector = "#main-content")
-        val selectorEntity = HttpEntity(selectorRequest, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/selectors/exists",
-            selectorEntity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/selectors/exists", selectorRequest)
+        val result = response.returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
-        assertTrue(response.body!!.containsKey("value"))
+        assertEquals(HttpStatus.OK, result.status)
+        assertNotNull(result.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = result.responseBody as Map<String, Any?>
+        assertTrue(body.containsKey("value"))
+
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("exists"))
     }
 
@@ -121,19 +112,18 @@ class WebDriverApiIntegrationTest {
 
         // Find element
         val selectorRequest = SelectorRef(selector = ".product-title")
-        val selectorEntity = HttpEntity(selectorRequest, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/selectors/element",
-            selectorEntity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/selectors/element", selectorRequest)
+        val result = response.returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
-        assertTrue(response.body!!.containsKey("value"))
+        assertEquals(HttpStatus.OK, result.status)
+        assertNotNull(result.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = result.responseBody as Map<String, Any?>
+        assertTrue(body.containsKey("value"))
+
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         // Check for WebDriver element reference key
         assertTrue(value.containsKey("element-6066-11e4-a52e-4f735466cecf"))
     }
@@ -145,31 +135,26 @@ class WebDriverApiIntegrationTest {
 
         // Click selector
         val selectorRequest = SelectorRef(selector = "button.submit")
-        val selectorEntity = HttpEntity(selectorRequest, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/selectors/click",
-            selectorEntity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/selectors/click", selectorRequest)
+        val result = response.returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, result.status)
         // value can be null for success responses
-        assertTrue(response.body!!.containsKey("value") || response.statusCode == HttpStatus.OK)
+        assertTrue((result.responseBody as? Map<*, *>)?.containsKey("value") == true || result.status == HttpStatus.OK)
     }
 
     @Test
     fun `should return 404 for non-existent session`() {
-        val response = restTemplate.getForEntity(
-            "$baseUrl/session/non-existent-session-id",
-            Map::class.java
-        )
+        val response = getJson("/session/non-existent-session-id")
+        val result = response.returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.NOT_FOUND, result.status)
+        assertNotNull(result.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = result.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("error"))
     }
 
@@ -179,15 +164,13 @@ class WebDriverApiIntegrationTest {
         val sessionId = createSession()
 
         // Delete session
-        restTemplate.delete("$baseUrl/session/$sessionId")
+        deleteJson("/session/$sessionId")
 
         // Verify session is gone
-        val response = restTemplate.getForEntity(
-            "$baseUrl/session/$sessionId",
-            Map::class.java
-        )
+        val response = getJson("/session/$sessionId")
+        val result = response.returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        assertEquals(HttpStatus.NOT_FOUND, result.status)
     }
 
     @Test
@@ -197,22 +180,18 @@ class WebDriverApiIntegrationTest {
 
         // Navigate to URL
         val navRequest = SetUrlRequest(url = "https://example.com/page")
-        val navEntity = HttpEntity(navRequest, jsonHeaders())
-        restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/url",
-            navEntity,
-            Map::class.java
-        )
+        postJson("/session/$sessionId/url", navRequest)
 
         // Get current URL
-        val response = restTemplate.getForEntity(
-            "$baseUrl/session/$sessionId/url",
-            Map::class.java
-        )
+        val response = getJson("/session/$sessionId/url")
+        val result = response.returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
-        assertEquals("https://example.com/page", response.body!!["value"])
+        assertEquals(HttpStatus.OK, result.status)
+        assertNotNull(result.responseBody)
+
+        @Suppress("UNCHECKED_CAST")
+        val body = result.responseBody as Map<String, Any?>
+        assertEquals("https://example.com/page", body["value"])
     }
 
     @Test
@@ -222,17 +201,12 @@ class WebDriverApiIntegrationTest {
 
         // Execute script
         val scriptRequest = ScriptRequest(script = "return document.title;")
-        val scriptEntity = HttpEntity(scriptRequest, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/execute/sync",
-            scriptEntity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/execute/sync", scriptRequest)
+        val result = response.returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, result.status)
         // value can be null for success responses
-        assertTrue(response.body!!.containsKey("value") || response.statusCode == HttpStatus.OK)
+        assertTrue((result.responseBody as? Map<*, *>)?.containsKey("value") == true || result.status == HttpStatus.OK)
     }
 
     @Test
@@ -242,48 +216,39 @@ class WebDriverApiIntegrationTest {
 
         // Create event config
         val eventRequest = EventConfig(eventType = "click", enabled = true)
-        val eventEntity = HttpEntity(eventRequest, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/event-configs",
-            eventEntity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/event-configs", eventRequest)
+        val result = response.returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, result.status)
+        assertNotNull(result.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = result.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("configId"))
         assertEquals("click", value["eventType"])
     }
 
     @Test
     fun `should serve openapi yaml`() {
-        val response = restTemplate.getForEntity(
-            "$baseUrl/openapi.yaml",
-            String::class.java
-        )
+        val response = client.get()
+            .uri("/openapi.yaml")
+            .exchange()
+            .returnResult(String::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
-        assertTrue(response.body!!.contains("openapi:"))
-        assertTrue(response.body!!.contains("Browser4 WebDriver-Compatible API"))
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
+        assertTrue(response.responseBody!!.contains("openapi:"))
+        assertTrue(response.responseBody!!.contains("Browser4 WebDriver-Compatible API"))
     }
 
     @Test
     fun `should include X-Request-Id header in responses`() {
-        val request = NewSessionRequest()
-        val entity = HttpEntity(request, jsonHeaders())
+        val response = postJson("/session", NewSessionRequest()).returnResult(Map::class.java)
 
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session",
-            entity,
-            Map::class.java
-        )
-
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.headers["X-Request-Id"])
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseHeaders["X-Request-Id"])
     }
 
     // ========== Agent API Tests ==========
@@ -293,19 +258,17 @@ class WebDriverApiIntegrationTest {
         val sessionId = createSession()
 
         val request = AgentRunRequest(task = "Find the login button and click it")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/agent/run",
-            entity,
-            Map::class.java
-        )
+        val result = postJson("/session/$sessionId/agent/run", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
-        assertTrue(response.body!!.containsKey("value"))
+        assertEquals(HttpStatus.OK, result.status)
+        assertNotNull(result.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = result.responseBody as Map<String, Any?>
+        assertTrue(body.containsKey("value"))
+
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("success"))
         assertTrue(value.containsKey("message"))
     }
@@ -315,16 +278,14 @@ class WebDriverApiIntegrationTest {
         val sessionId = createSession()
 
         val request = AgentObserveRequest(instruction = "Find interactive elements")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/agent/observe",
-            entity,
-            Map::class.java
-        )
+        val result = postJson("/session/$sessionId/agent/observe", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
-        assertTrue(response.body!!.containsKey("value"))
+        assertEquals(HttpStatus.OK, result.status)
+        assertNotNull(result.responseBody)
+
+        @Suppress("UNCHECKED_CAST")
+        val body = result.responseBody as Map<String, Any?>
+        assertTrue(body.containsKey("value"))
     }
 
     @Test
@@ -332,18 +293,15 @@ class WebDriverApiIntegrationTest {
         val sessionId = createSession()
 
         val request = AgentActRequest(action = "Click the submit button")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/agent/act",
-            entity,
-            Map::class.java
-        )
+        val result = postJson("/session/$sessionId/agent/act", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, result.status)
+        assertNotNull(result.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = result.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("success"))
         assertTrue(value.containsKey("action"))
     }
@@ -353,18 +311,15 @@ class WebDriverApiIntegrationTest {
         val sessionId = createSession()
 
         val request = AgentExtractRequest(instruction = "Extract the page title and description")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/agent/extract",
-            entity,
-            Map::class.java
-        )
+        val result = postJson("/session/$sessionId/agent/extract", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, result.status)
+        assertNotNull(result.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = result.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("success"))
         assertTrue(value.containsKey("data"))
     }
@@ -374,31 +329,32 @@ class WebDriverApiIntegrationTest {
         val sessionId = createSession()
 
         val request = AgentSummarizeRequest(instruction = "Summarize the main content")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/agent/summarize",
-            entity,
-            Map::class.java
-        )
+        val result = postJson("/session/$sessionId/agent/summarize", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
-        assertTrue(response.body!!.containsKey("value"))
+        assertEquals(HttpStatus.OK, result.status)
+        assertNotNull(result.responseBody)
+
+        @Suppress("UNCHECKED_CAST")
+        val body = result.responseBody as Map<String, Any?>
+        assertTrue(body.containsKey("value"))
     }
 
     @Test
     fun `should clear agent history`() {
         val sessionId = createSession()
 
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/agent/clearHistory",
-            HttpEntity<String>(jsonHeaders()),
-            Map::class.java
-        )
+        val result = client.post()
+            .uri("/session/$sessionId/agent/clearHistory")
+            .contentType(MediaType.APPLICATION_JSON)
+            .exchange()
+            .returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
-        assertEquals(true, response.body!!["value"])
+        assertEquals(HttpStatus.OK, result.status)
+        assertNotNull(result.responseBody)
+
+        @Suppress("UNCHECKED_CAST")
+        val body = result.responseBody as Map<String, Any?>
+        assertEquals(true, body["value"])
     }
 
     // ========== PulsarSession API Tests ==========
@@ -408,18 +364,15 @@ class WebDriverApiIntegrationTest {
         val sessionId = createSession()
 
         val request = NormalizeRequest(url = "example.com", args = "-expire 1d")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/normalize",
-            entity,
-            Map::class.java
-        )
+        val result = postJson("/session/$sessionId/normalize", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, result.status)
+        assertNotNull(result.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = result.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("url"))
         assertTrue(value.containsKey("spec"))
         // Check that scheme was added
@@ -432,18 +385,15 @@ class WebDriverApiIntegrationTest {
         val sessionId = createSession()
 
         val request = OpenRequest(url = "https://example.com/page")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/open",
-            entity,
-            Map::class.java
-        )
+        val result = postJson("/session/$sessionId/open", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, result.status)
+        assertNotNull(result.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = result.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("url"))
         assertEquals("https://example.com/page", value["url"])
     }
@@ -453,18 +403,15 @@ class WebDriverApiIntegrationTest {
         val sessionId = createSession()
 
         val request = LoadRequest(url = "https://example.com", args = "-expire 1d")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/load",
-            entity,
-            Map::class.java
-        )
+        val result = postJson("/session/$sessionId/load", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, result.status)
+        assertNotNull(result.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = result.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("url"))
         assertTrue(value.containsKey("protocolStatus"))
     }
@@ -474,53 +421,51 @@ class WebDriverApiIntegrationTest {
         val sessionId = createSession()
 
         val request = SubmitRequest(url = "https://example.com/to-crawl", args = "-expire 7d")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/submit",
-            entity,
-            Map::class.java
-        )
+        val result = postJson("/session/$sessionId/submit", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
-        assertEquals(true, response.body!!["value"])
+        assertEquals(HttpStatus.OK, result.status)
+        assertNotNull(result.responseBody)
+
+        @Suppress("UNCHECKED_CAST")
+        val body = result.responseBody as Map<String, Any?>
+        assertEquals(true, body["value"])
     }
 
     @Test
     fun `should return consistent error format and request id for selector exists when session missing`() {
         val selectorRequest = SelectorRef(selector = "#missing")
-        val selectorEntity = HttpEntity(selectorRequest, jsonHeaders())
 
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/non-existent-session-id/selectors/exists",
-            selectorEntity,
-            Map::class.java
-        )
+        val response = postJson("/session/non-existent-session-id/selectors/exists", selectorRequest)
+        val result = response.returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
-        assertNotNull(response.headers["X-Request-Id"], "X-Request-Id header should be present")
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.NOT_FOUND, result.status)
+        assertNotNull(result.responseHeaders["X-Request-Id"], "X-Request-Id header should be present")
+        assertNotNull(result.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = result.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("error"))
         assertTrue(value.containsKey("message"))
     }
 
     @Test
     fun `should return consistent error format and request id for element click when session missing`() {
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/non-existent-session-id/element/any/click",
-            HttpEntity<String>(jsonHeaders()),
-            Map::class.java
-        )
+        val response = client.post()
+            .uri("/session/non-existent-session-id/element/any/click")
+            .contentType(MediaType.APPLICATION_JSON)
+            .exchange()
+            .returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
-        assertNotNull(response.headers["X-Request-Id"], "X-Request-Id header should be present")
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.NOT_FOUND, response.status)
+        assertNotNull(response.responseHeaders["X-Request-Id"], "X-Request-Id header should be present")
+        assertNotNull(response.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("error"))
         assertTrue(value.containsKey("message"))
     }
@@ -530,26 +475,22 @@ class WebDriverApiIntegrationTest {
         val sessionId = createSession()
 
         val request = WaitForRequest(selector = "#definitely-missing", timeout = 0)
-        val entity = HttpEntity(request, jsonHeaders())
-
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/selectors/waitFor",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/selectors/waitFor", request).returnResult(Map::class.java)
 
         // Mock mode returns 200 immediately; real mode may return 408.
         assertTrue(
-            response.statusCode == HttpStatus.OK || response.statusCode == HttpStatus.REQUEST_TIMEOUT,
-            "Expected 200 (mock) or 408 (real) but got ${response.statusCode}"
+            response.status == HttpStatus.OK || response.status == HttpStatus.REQUEST_TIMEOUT,
+            "Expected 200 (mock) or 408 (real) but got ${response.status}"
         )
 
         // In both cases the response should include request id.
-        assertNotNull(response.headers["X-Request-Id"], "X-Request-Id header should be present")
+        assertNotNull(response.responseHeaders["X-Request-Id"], "X-Request-Id header should be present")
 
-        if (response.statusCode == HttpStatus.REQUEST_TIMEOUT) {
+        if (response.status == HttpStatus.REQUEST_TIMEOUT) {
             @Suppress("UNCHECKED_CAST")
-            val value = response.body!!["value"] as Map<String, Any?>
+            val body = response.responseBody as Map<String, Any?>
+            @Suppress("UNCHECKED_CAST")
+            val value = body["value"] as Map<String, Any?>
             assertTrue(value.containsKey("error"))
             assertTrue(value.containsKey("message"))
         }
@@ -559,16 +500,12 @@ class WebDriverApiIntegrationTest {
      * Helper method to create a session and return the session ID.
      */
     private fun createSession(): String {
-        val request = NewSessionRequest()
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session",
-            entity,
-            Map::class.java
-        )
+        val result = postJson("/session", NewSessionRequest()).returnResult(Map::class.java)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = result.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         return value["sessionId"] as String
     }
 }

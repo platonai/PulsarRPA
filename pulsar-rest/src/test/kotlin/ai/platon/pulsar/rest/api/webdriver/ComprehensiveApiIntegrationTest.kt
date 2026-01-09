@@ -1,18 +1,15 @@
 package ai.platon.pulsar.rest.api.webdriver
 
 import ai.platon.pulsar.rest.api.webdriver.dto.*
+import ai.platon.pulsar.rest.util.server.TestWebSiteAccess
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.client.TestRestTemplate
 import org.springframework.boot.test.web.server.LocalServerPort
-import org.springframework.http.HttpEntity
-import org.springframework.http.HttpHeaders
-import org.springframework.http.HttpMethod
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
+import org.springframework.test.web.servlet.client.RestTestClient
 
 /**
  * Comprehensive integration tests for all WebDriver API endpoints.
@@ -23,36 +20,39 @@ import org.springframework.http.MediaType
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ComprehensiveApiIntegrationTest {
+class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
 
-    @LocalServerPort
-    var port: Int = 0
+    private fun postJson(path: String, body: Any?): RestTestClient.ResponseSpec {
+        return client.post()
+            .uri(path)
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(body ?: "")
+            .exchange()
+    }
 
-    @Autowired
-    lateinit var restTemplate: TestRestTemplate
+    private fun getJson(path: String): RestTestClient.ResponseSpec {
+        return client.get()
+            .uri(path)
+            .exchange()
+    }
 
-    private val baseUrl: String
-        get() = "http://localhost:$port"
-
-    private fun jsonHeaders(): HttpHeaders {
-        return HttpHeaders().apply {
-            contentType = MediaType.APPLICATION_JSON
-        }
+    private fun deleteJson(path: String): RestTestClient.ResponseSpec {
+        return client.delete()
+            .uri(path)
+            .exchange()
     }
 
     // ==================== Health Endpoints ====================
 
     @Test
     fun `should return health status with mode and active sessions`() {
-        val response = restTemplate.getForEntity(
-            "$baseUrl/health",
-            Map::class.java
-        )
+        val response = getJson("/health").returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
-        val body = response.body!!
+        @Suppress("UNCHECKED_CAST")
+        val body = response.responseBody as Map<String, Any?>
         assertEquals("UP", body["status"])
         assertTrue(body.containsKey("mode"))
         assertTrue(body["mode"] in listOf("mock", "real"))
@@ -61,30 +61,26 @@ class ComprehensiveApiIntegrationTest {
 
     @Test
     fun `should return readiness status`() {
-        val response = restTemplate.getForEntity(
-            "$baseUrl/health/ready",
-            Map::class.java
-        )
+        val response = getJson("/health/ready").returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
-        val body = response.body!!
+        @Suppress("UNCHECKED_CAST")
+        val body = response.responseBody as Map<String, Any?>
         assertEquals(true, body["ready"])
         assertTrue(body.containsKey("mode"))
     }
 
     @Test
     fun `should return liveness status`() {
-        val response = restTemplate.getForEntity(
-            "$baseUrl/health/live",
-            Map::class.java
-        )
+        val response = getJson("/health/live").returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
-        val body = response.body!!
+        @Suppress("UNCHECKED_CAST")
+        val body = response.responseBody as Map<String, Any?>
         assertEquals(true, body["live"])
     }
 
@@ -99,19 +95,16 @@ class ComprehensiveApiIntegrationTest {
                 "platformName" to "linux"
             )
         )
-        val entity = HttpEntity(request, jsonHeaders())
 
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("sessionId"))
         assertTrue(value.containsKey("capabilities"))
     }
@@ -120,16 +113,15 @@ class ComprehensiveApiIntegrationTest {
     fun `should get session details`() {
         val sessionId = createSession()
 
-        val response = restTemplate.getForEntity(
-            "$baseUrl/session/$sessionId",
-            Map::class.java
-        )
+        val response = getJson("/session/$sessionId").returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("sessionId"))
         assertEquals(sessionId, value["sessionId"])
     }
@@ -142,23 +134,17 @@ class ComprehensiveApiIntegrationTest {
 
         // Navigate
         val navRequest = SetUrlRequest(url = "https://example.com/test-page")
-        val navEntity = HttpEntity(navRequest, jsonHeaders())
-        val navResponse = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/url",
-            navEntity,
-            Map::class.java
-        )
+        val navResponse = postJson("/session/$sessionId/url", navRequest).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, navResponse.statusCode)
+        assertEquals(HttpStatus.OK, navResponse.status)
 
         // Get current URL
-        val urlResponse = restTemplate.getForEntity(
-            "$baseUrl/session/$sessionId/url",
-            Map::class.java
-        )
+        val urlResponse = getJson("/session/$sessionId/url").returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, urlResponse.statusCode)
-        assertEquals("https://example.com/test-page", urlResponse.body!!["value"])
+        assertEquals(HttpStatus.OK, urlResponse.status)
+        @Suppress("UNCHECKED_CAST")
+        val urlBody = urlResponse.responseBody as Map<String, Any?>
+        assertEquals("https://example.com/test-page", urlBody["value"])
     }
 
     @Test
@@ -168,14 +154,13 @@ class ComprehensiveApiIntegrationTest {
         // Navigate first
         navigateToUrl(sessionId, "https://example.com/page")
 
-        val response = restTemplate.getForEntity(
-            "$baseUrl/session/$sessionId/documentUri",
-            Map::class.java
-        )
+        val response = getJson("/session/$sessionId/documentUri").returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
-        val documentUri = response.body!!["value"] as String
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
+        @Suppress("UNCHECKED_CAST")
+        val body = response.responseBody as Map<String, Any?>
+        val documentUri = body["value"] as String
         assertTrue(documentUri.isNotBlank())
     }
 
@@ -186,14 +171,13 @@ class ComprehensiveApiIntegrationTest {
         // Navigate first
         navigateToUrl(sessionId, "https://example.com/path/page")
 
-        val response = restTemplate.getForEntity(
-            "$baseUrl/session/$sessionId/baseUri",
-            Map::class.java
-        )
+        val response = getJson("/session/$sessionId/baseUri").returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
-        val baseUri = response.body!!["value"] as String
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
+        @Suppress("UNCHECKED_CAST")
+        val body = response.responseBody as Map<String, Any?>
+        val baseUri = body["value"] as String
         assertTrue(baseUri.startsWith("https://"))
     }
 
@@ -204,18 +188,15 @@ class ComprehensiveApiIntegrationTest {
         val sessionId = createSession()
 
         val request = SelectorRef(selector = ".product-item")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/selectors/elements",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/selectors/elements", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as List<Map<String, Any?>>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as List<Map<String, Any?>>
         assertTrue(value.isNotEmpty())
         // Check that each element has a WebDriver element reference
         value.forEach { elem ->
@@ -228,16 +209,11 @@ class ComprehensiveApiIntegrationTest {
         val sessionId = createSession()
 
         val request = WaitForRequest(selector = "#dynamic-element", timeout = 1000)
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/selectors/waitFor",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/selectors/waitFor", request).returnResult(Map::class.java)
 
         // Should succeed in mock mode or timeout in real mode
         assertTrue(
-            response.statusCode == HttpStatus.OK || response.statusCode == HttpStatus.REQUEST_TIMEOUT
+            response.status == HttpStatus.OK || response.status == HttpStatus.REQUEST_TIMEOUT
         )
     }
 
@@ -246,15 +222,10 @@ class ComprehensiveApiIntegrationTest {
         val sessionId = createSession()
 
         val request = FillRequest(selector = "input[name='username']", value = "testuser")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/selectors/fill",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/selectors/fill", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
     }
 
     @Test
@@ -262,15 +233,10 @@ class ComprehensiveApiIntegrationTest {
         val sessionId = createSession()
 
         val request = PressRequest(selector = "input[name='search']", key = "Enter")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/selectors/press",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/selectors/press", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
     }
 
     @Test
@@ -278,19 +244,16 @@ class ComprehensiveApiIntegrationTest {
         val sessionId = createSession()
 
         val request = SelectorRef(selector = "#main-content")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/selectors/outerHtml",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/selectors/outerHtml", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
+        @Suppress("UNCHECKED_CAST")
+        val body = response.responseBody as Map<String, Any?>
         // Response is HtmlResponse(value = String)
-        assertTrue(response.body!!.containsKey("value"))
-        val html = response.body!!["value"] as String?
+        assertTrue(body.containsKey("value"))
+        val html = body["value"] as String?
         assertNotNull(html)
         assertTrue(html!!.isNotBlank())
     }
@@ -300,19 +263,16 @@ class ComprehensiveApiIntegrationTest {
         val sessionId = createSession()
 
         val request = SelectorRef(selector = "#header")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/selectors/screenshot",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/selectors/screenshot", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
+        @Suppress("UNCHECKED_CAST")
+        val body = response.responseBody as Map<String, Any?>
         // Response is ScreenshotResponse(value = String)
-        assertTrue(response.body!!.containsKey("value"))
-        val screenshot = response.body!!["value"] as String?
+        assertTrue(body.containsKey("value"))
+        val screenshot = body["value"] as String?
         assertNotNull(screenshot)
         assertTrue(screenshot!!.isNotBlank())
     }
@@ -324,18 +284,15 @@ class ComprehensiveApiIntegrationTest {
         val sessionId = createSession()
 
         val request = FindElementRequest(using = "css selector", value = ".login-button")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/element",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/element", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("element-6066-11e4-a52e-4f735466cecf"))
     }
 
@@ -344,18 +301,15 @@ class ComprehensiveApiIntegrationTest {
         val sessionId = createSession()
 
         val request = FindElementRequest(using = "css selector", value = ".item")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/elements",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/elements", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as List<Map<String, Any?>>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as List<Map<String, Any?>>
         assertTrue(value.isNotEmpty())
     }
 
@@ -364,13 +318,9 @@ class ComprehensiveApiIntegrationTest {
         val sessionId = createSession()
         val elementId = getElementId(sessionId, "button.submit")
 
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/element/$elementId/click",
-            HttpEntity<String>(jsonHeaders()),
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/element/$elementId/click", "").returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals(HttpStatus.OK, response.status)
     }
 
     @Test
@@ -379,14 +329,9 @@ class ComprehensiveApiIntegrationTest {
         val elementId = getElementId(sessionId, "input[name='email']")
 
         val request = SendKeysRequest(text = "test@example.com")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/element/$elementId/value",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/element/$elementId/value", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals(HttpStatus.OK, response.status)
     }
 
     @Test
@@ -394,15 +339,14 @@ class ComprehensiveApiIntegrationTest {
         val sessionId = createSession()
         val elementId = getElementId(sessionId, "a.link")
 
-        val response = restTemplate.getForEntity(
-            "$baseUrl/session/$sessionId/element/$elementId/attribute/href",
-            Map::class.java
-        )
+        val response = getJson("/session/$sessionId/element/$elementId/attribute/href").returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
+        @Suppress("UNCHECKED_CAST")
+        val body = response.responseBody as Map<String, Any?>
         // In mock mode, may return null or a mock value
-        assertTrue(response.body!!.containsKey("value"))
+        assertTrue(body.containsKey("value"))
     }
 
     @Test
@@ -410,14 +354,13 @@ class ComprehensiveApiIntegrationTest {
         val sessionId = createSession()
         val elementId = getElementId(sessionId, "h1.title")
 
-        val response = restTemplate.getForEntity(
-            "$baseUrl/session/$sessionId/element/$elementId/text",
-            Map::class.java
-        )
+        val response = getJson("/session/$sessionId/element/$elementId/text").returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
-        assertTrue(response.body!!.containsKey("value"))
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
+        @Suppress("UNCHECKED_CAST")
+        val body = response.responseBody as Map<String, Any?>
+        assertTrue(body.containsKey("value"))
     }
 
     // ==================== Script Execution ====================
@@ -430,15 +373,10 @@ class ComprehensiveApiIntegrationTest {
             script = "return document.title;",
             args = emptyList()
         )
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/execute/sync",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/execute/sync", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
     }
 
     @Test
@@ -449,15 +387,10 @@ class ComprehensiveApiIntegrationTest {
             script = "var callback = arguments[arguments.length - 1]; setTimeout(function(){ callback('done'); }, 100);",
             args = emptyList()
         )
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/execute/async",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/execute/async", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
     }
 
     @Test
@@ -468,14 +401,10 @@ class ComprehensiveApiIntegrationTest {
             script = "return arguments[0] + arguments[1];",
             args = listOf(5, 10)
         )
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/execute/sync",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/execute/sync", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
     }
 
     // ==================== Control Operations ====================
@@ -485,17 +414,12 @@ class ComprehensiveApiIntegrationTest {
         val sessionId = createSession()
 
         val request = DelayRequest(ms = 100)
-        val entity = HttpEntity(request, jsonHeaders())
-        
+
         val startTime = System.currentTimeMillis()
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/control/delay",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/control/delay", request).returnResult(Map::class.java)
         val duration = System.currentTimeMillis() - startTime
 
-        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals(HttpStatus.OK, response.status)
         // Verify that some delay occurred
         assertTrue(duration >= 90, "Expected at least 90ms delay, but got ${duration}ms")
     }
@@ -506,18 +430,13 @@ class ComprehensiveApiIntegrationTest {
 
         // Request delay longer than maximum
         val request = DelayRequest(ms = 60_000)
-        val entity = HttpEntity(request, jsonHeaders())
-        
+
         val startTime = System.currentTimeMillis()
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/control/delay",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/control/delay", request).returnResult(Map::class.java)
         val duration = System.currentTimeMillis() - startTime
 
         // Should succeed but cap the delay at MAX_DELAY_MS (30s)
-        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals(HttpStatus.OK, response.status)
         assertTrue(duration < 35_000, "Delay should be capped at 30s")
     }
 
@@ -525,26 +444,18 @@ class ComprehensiveApiIntegrationTest {
     fun `should pause session`() {
         val sessionId = createSession()
 
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/control/pause",
-            HttpEntity<String>(jsonHeaders()),
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/control/pause", "").returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals(HttpStatus.OK, response.status)
     }
 
     @Test
     fun `should stop session`() {
         val sessionId = createSession()
 
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/control/stop",
-            HttpEntity<String>(jsonHeaders()),
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/control/stop", "").returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
+        assertEquals(HttpStatus.OK, response.status)
     }
 
     // ==================== Events Operations ====================
@@ -557,16 +468,15 @@ class ComprehensiveApiIntegrationTest {
         createEventConfig(sessionId, "click")
         createEventConfig(sessionId, "load")
 
-        val response = restTemplate.getForEntity(
-            "$baseUrl/session/$sessionId/event-configs",
-            Map::class.java
-        )
+        val response = getJson("/session/$sessionId/event-configs").returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as List<Map<String, Any?>>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as List<Map<String, Any?>>
         assertTrue(value.size >= 2)
     }
 
@@ -574,16 +484,15 @@ class ComprehensiveApiIntegrationTest {
     fun `should get events from session`() {
         val sessionId = createSession()
 
-        val response = restTemplate.getForEntity(
-            "$baseUrl/session/$sessionId/events",
-            Map::class.java
-        )
+        val response = getJson("/session/$sessionId/events").returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as List<Any>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as List<Any>
         // Should return list of events (may be empty)
         assertNotNull(value)
     }
@@ -593,18 +502,15 @@ class ComprehensiveApiIntegrationTest {
         val sessionId = createSession()
 
         val request = SubscribeRequest(eventTypes = listOf("click", "load"))
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/events/subscribe",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/events/subscribe", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("subscriptionId"))
     }
 
@@ -617,18 +523,15 @@ class ComprehensiveApiIntegrationTest {
         val request = AgentRunRequest(
             task = "Navigate to the login page, find the username field, fill it with 'admin', and click the login button"
         )
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/agent/run",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/agent/run", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("success"))
         assertTrue(value.containsKey("message"))
     }
@@ -640,20 +543,17 @@ class ComprehensiveApiIntegrationTest {
         val request = AgentObserveRequest(
             instruction = "Identify all clickable buttons and links on the page"
         )
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/agent/observe",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/agent/observe", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
-        // Response is AgentObserveResponse(value = List<ObserveResultDto>)
-        assertTrue(response.body!!.containsKey("value"))
         @Suppress("UNCHECKED_CAST")
-        val observations = response.body!!["value"] as List<Map<String, Any?>>
+        val body = response.responseBody as Map<String, Any?>
+        // Response is AgentObserveResponse(value = List<ObserveResultDto>)
+        assertTrue(body.containsKey("value"))
+        @Suppress("UNCHECKED_CAST")
+        val observations = body["value"] as List<Map<String, Any?>>
         assertTrue(observations.isNotEmpty())
         // Check structure of first observation
         val first = observations[0]
@@ -667,18 +567,15 @@ class ComprehensiveApiIntegrationTest {
         val request = AgentActRequest(
             action = "Click the 'Add to Cart' button"
         )
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/agent/act",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/agent/act", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("success"))
         assertTrue(value.containsKey("action"))
     }
@@ -690,18 +587,15 @@ class ComprehensiveApiIntegrationTest {
         val request = AgentExtractRequest(
             instruction = "Extract product details: name, price, description, and rating"
         )
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/agent/extract",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/agent/extract", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("success"))
         assertTrue(value.containsKey("data"))
     }
@@ -713,19 +607,16 @@ class ComprehensiveApiIntegrationTest {
         val request = AgentSummarizeRequest(
             instruction = "Provide a concise summary of the main content on this page"
         )
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/agent/summarize",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/agent/summarize", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
+        @Suppress("UNCHECKED_CAST")
+        val body = response.responseBody as Map<String, Any?>
         // Response is AgentSummarizeResponse(value = String)
-        assertTrue(response.body!!.containsKey("value"))
-        val summary = response.body!!["value"] as String?
+        assertTrue(body.containsKey("value"))
+        val summary = body["value"] as String?
         assertNotNull(summary)
         assertTrue(summary!!.isNotBlank())
     }
@@ -737,18 +628,15 @@ class ComprehensiveApiIntegrationTest {
         val sessionId = createSession()
 
         val request = NormalizeRequest(url = "example.com/path", args = "-expire 1d")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/normalize",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/normalize", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("url"))
         val normalized = value["url"] as String
         assertTrue(normalized.startsWith("http"))
@@ -762,18 +650,15 @@ class ComprehensiveApiIntegrationTest {
             url = "https://example.com",
             args = "-expire 7d -ignoreFailure"
         )
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/normalize",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/normalize", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("spec"))
     }
 
@@ -782,18 +667,15 @@ class ComprehensiveApiIntegrationTest {
         val sessionId = createSession()
 
         val request = OpenRequest(url = "https://example.com/fresh")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/open",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/open", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("url"))
         assertEquals("https://example.com/fresh", value["url"])
     }
@@ -806,18 +688,15 @@ class ComprehensiveApiIntegrationTest {
             url = "https://example.com/cached",
             args = "-expire 1h"
         )
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/load",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/load", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("url"))
         assertTrue(value.containsKey("protocolStatus"))
     }
@@ -830,56 +709,39 @@ class ComprehensiveApiIntegrationTest {
             url = "https://example.com/submit",
             args = "-queue"
         )
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/submit",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/submit", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.OK, response.statusCode)
-        assertNotNull(response.body)
-        assertEquals(true, response.body!!["value"])
+        assertEquals(HttpStatus.OK, response.status)
+        assertNotNull(response.responseBody)
+        @Suppress("UNCHECKED_CAST")
+        val body = response.responseBody as Map<String, Any?>
+        assertEquals(true, body["value"])
     }
 
     // ==================== Error Handling Tests ====================
 
     @Test
     fun `should return 404 for control operations on non-existent session`() {
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/invalid-session-id/control/pause",
-            HttpEntity<String>(jsonHeaders()),
-            Map::class.java
-        )
+        val response = postJson("/session/invalid-session-id/control/pause", "").returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
-        assertNotNull(response.headers["X-Request-Id"])
+        assertEquals(HttpStatus.NOT_FOUND, response.status)
+        assertNotNull(response.responseHeaders["X-Request-Id"])
     }
 
     @Test
     fun `should return error for agent operations on non-existent session`() {
         val request = AgentRunRequest(task = "test task")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/non-existent/agent/run",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/non-existent/agent/run", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        assertEquals(HttpStatus.NOT_FOUND, response.status)
     }
 
     @Test
     fun `should return error for PulsarSession operations on non-existent session`() {
         val request = NormalizeRequest(url = "example.com")
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/non-existent/normalize",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/non-existent/normalize", request).returnResult(Map::class.java)
 
-        assertEquals(HttpStatus.NOT_FOUND, response.statusCode)
+        assertEquals(HttpStatus.NOT_FOUND, response.status)
     }
 
     // ==================== End-to-End Workflow Tests ====================
@@ -895,43 +757,25 @@ class ComprehensiveApiIntegrationTest {
 
         // 3. Check if element exists
         val existsRequest = SelectorRef(selector = "#product-list")
-        val existsEntity = HttpEntity(existsRequest, jsonHeaders())
-        val existsResponse = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/selectors/exists",
-            existsEntity,
-            Map::class.java
-        )
-        assertEquals(HttpStatus.OK, existsResponse.statusCode)
+        val existsResponse = postJson("/session/$sessionId/selectors/exists", existsRequest).returnResult(Map::class.java)
+        assertEquals(HttpStatus.OK, existsResponse.status)
 
         // 4. Click an element
         val clickRequest = SelectorRef(selector = ".product-card")
-        val clickEntity = HttpEntity(clickRequest, jsonHeaders())
-        val clickResponse = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/selectors/click",
-            clickEntity,
-            Map::class.java
-        )
-        assertEquals(HttpStatus.OK, clickResponse.statusCode)
+        val clickResponse = postJson("/session/$sessionId/selectors/click", clickRequest).returnResult(Map::class.java)
+        assertEquals(HttpStatus.OK, clickResponse.status)
 
         // 5. Extract data using agent
         val extractRequest = AgentExtractRequest(instruction = "Extract product information")
-        val extractEntity = HttpEntity(extractRequest, jsonHeaders())
-        val extractResponse = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/agent/extract",
-            extractEntity,
-            Map::class.java
-        )
-        assertEquals(HttpStatus.OK, extractResponse.statusCode)
+        val extractResponse = postJson("/session/$sessionId/agent/extract", extractRequest).returnResult(Map::class.java)
+        assertEquals(HttpStatus.OK, extractResponse.status)
 
         // 6. Delete session
-        restTemplate.delete("$baseUrl/session/$sessionId")
+        deleteJson("/session/$sessionId")
 
         // 7. Verify session is deleted
-        val verifyResponse = restTemplate.getForEntity(
-            "$baseUrl/session/$sessionId",
-            Map::class.java
-        )
-        assertEquals(HttpStatus.NOT_FOUND, verifyResponse.statusCode)
+        val verifyResponse = getJson("/session/$sessionId").returnResult(Map::class.java)
+        assertEquals(HttpStatus.NOT_FOUND, verifyResponse.status)
     }
 
     @Test
@@ -945,14 +789,14 @@ class ComprehensiveApiIntegrationTest {
         assertNotEquals(session1, session3)
 
         // Verify all sessions exist
-        assertEquals(HttpStatus.OK, restTemplate.getForEntity("$baseUrl/session/$session1", Map::class.java).statusCode)
-        assertEquals(HttpStatus.OK, restTemplate.getForEntity("$baseUrl/session/$session2", Map::class.java).statusCode)
-        assertEquals(HttpStatus.OK, restTemplate.getForEntity("$baseUrl/session/$session3", Map::class.java).statusCode)
+        assertEquals(HttpStatus.OK, getJson("/session/$session1").returnResult(Map::class.java).status)
+        assertEquals(HttpStatus.OK, getJson("/session/$session2").returnResult(Map::class.java).status)
+        assertEquals(HttpStatus.OK, getJson("/session/$session3").returnResult(Map::class.java).status)
 
         // Cleanup
-        restTemplate.delete("$baseUrl/session/$session1")
-        restTemplate.delete("$baseUrl/session/$session2")
-        restTemplate.delete("$baseUrl/session/$session3")
+        deleteJson("/session/$session1")
+        deleteJson("/session/$session2")
+        deleteJson("/session/$session3")
     }
 
     // ==================== Helper Methods ====================
@@ -961,16 +805,12 @@ class ComprehensiveApiIntegrationTest {
      * Helper method to create a session and return the session ID.
      */
     private fun createSession(): String {
-        val request = NewSessionRequest()
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session", NewSessionRequest()).returnResult(Map::class.java)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         return value["sessionId"] as String
     }
 
@@ -979,12 +819,7 @@ class ComprehensiveApiIntegrationTest {
      */
     private fun navigateToUrl(sessionId: String, url: String) {
         val request = SetUrlRequest(url = url)
-        val entity = HttpEntity(request, jsonHeaders())
-        restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/url",
-            entity,
-            Map::class.java
-        )
+        postJson("/session/$sessionId/url", request)
     }
 
     /**
@@ -992,15 +827,12 @@ class ComprehensiveApiIntegrationTest {
      */
     private fun getElementId(sessionId: String, selector: String): String {
         val request = SelectorRef(selector = selector)
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/selectors/element",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/selectors/element", request).returnResult(Map::class.java)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         return value["element-6066-11e4-a52e-4f735466cecf"] as String
     }
 
@@ -1009,15 +841,12 @@ class ComprehensiveApiIntegrationTest {
      */
     private fun createEventConfig(sessionId: String, eventType: String): String {
         val request = EventConfig(eventType = eventType, enabled = true)
-        val entity = HttpEntity(request, jsonHeaders())
-        val response = restTemplate.postForEntity(
-            "$baseUrl/session/$sessionId/event-configs",
-            entity,
-            Map::class.java
-        )
+        val response = postJson("/session/$sessionId/event-configs", request).returnResult(Map::class.java)
 
         @Suppress("UNCHECKED_CAST")
-        val value = response.body!!["value"] as Map<String, Any?>
+        val body = response.responseBody as Map<String, Any?>
+        @Suppress("UNCHECKED_CAST")
+        val value = body["value"] as Map<String, Any?>
         return value["configId"] as String
     }
 }
