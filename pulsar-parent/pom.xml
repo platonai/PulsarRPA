@@ -27,7 +27,7 @@ under the License.
     <groupId>ai.platon</groupId>
     <artifactId>pulsar-parent</artifactId>
     <name>Pulsar Parent</name>
-    <version>4.3.0-SNAPSHOT</version>
+    <version>4.4.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <description>
