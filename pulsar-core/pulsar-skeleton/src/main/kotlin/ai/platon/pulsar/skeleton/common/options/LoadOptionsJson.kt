@@ -212,7 +212,7 @@ object LoadOptionsJson {
                 val argName = "-$key"
                 when (value) {
                     is Boolean -> if (value) argName else "$argName false"
-                    is Duration -> "$argName ${formatDuration(value)}"
+                    is Duration -> "$argName ${formatDurationToString(value)}"
                     is Instant -> "$argName $value"
                     is Enum<*> -> "$argName ${value.name}"
                     else -> "$argName $value"
@@ -226,25 +226,26 @@ object LoadOptionsJson {
     private fun convertValue(value: Any?): Any? {
         return when (value) {
             null -> null
-            is Duration -> formatDuration(value)
+            is Duration -> formatDurationToString(value)
             is Instant -> value.toString()
             is Enum<*> -> value.name
             else -> value
         }
     }
+}
 
-    /**
-     * Formats a Duration to a human-readable string.
-     */
-    private fun formatDuration(duration: Duration): String {
-        return when {
-            duration.isNegative -> "0s"
-            duration.toDays() > 0 && duration.toHours() % 24 == 0L -> "${duration.toDays()}d"
-            duration.toHours() > 0 && duration.toMinutes() % 60 == 0L -> "${duration.toHours()}h"
-            duration.toMinutes() > 0 && duration.toSeconds() % 60 == 0L -> "${duration.toMinutes()}m"
-            duration.toMillis() % 1000 == 0L -> "${duration.toSeconds()}s"
-            else -> "${duration.toMillis()}ms"
-        }
+/**
+ * Formats a Duration to a human-readable string.
+ * This is a private utility function shared by LoadOptionsJson and DurationJsonSerializer.
+ */
+private fun formatDurationToString(duration: Duration): String {
+    return when {
+        duration.isNegative -> "0s"
+        duration.toDays() > 0 && duration.toHours() % 24 == 0L -> "${duration.toDays()}d"
+        duration.toHours() > 0 && duration.toMinutes() % 60 == 0L -> "${duration.toHours()}h"
+        duration.toMinutes() > 0 && duration.toSeconds() % 60 == 0L -> "${duration.toMinutes()}m"
+        duration.toMillis() % 1000 == 0L -> "${duration.toSeconds()}s"
+        else -> "${duration.toMillis()}ms"
     }
 }
 
@@ -256,18 +257,7 @@ private class DurationJsonSerializer : JsonSerializer<Duration>() {
         if (value == null) {
             gen.writeNull()
         } else {
-            gen.writeString(formatDuration(value))
-        }
-    }
-
-    private fun formatDuration(duration: Duration): String {
-        return when {
-            duration.isNegative -> "0s"
-            duration.toDays() > 0 && duration.toHours() % 24 == 0L -> "${duration.toDays()}d"
-            duration.toHours() > 0 && duration.toMinutes() % 60 == 0L -> "${duration.toHours()}h"
-            duration.toMinutes() > 0 && duration.toSeconds() % 60 == 0L -> "${duration.toMinutes()}m"
-            duration.toMillis() % 1000 == 0L -> "${duration.toSeconds()}s"
-            else -> "${duration.toMillis()}ms"
+            gen.writeString(formatDurationToString(value))
         }
     }
 }
