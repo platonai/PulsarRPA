@@ -111,7 +111,8 @@ confirm_and_remove_ci_tags() {
   local removeAll=false
 
   # Iterate line-by-line
-  while IFS= read -r tag; do
+  # Use file descriptor 3 to avoid conflict with stdin
+  while IFS= read -r -u 3 tag; do
     [[ -z "$tag" ]] && continue
 
     if [[ "$removeAll" == false ]]; then
@@ -138,7 +139,7 @@ confirm_and_remove_ci_tags() {
     fi
 
     remove_tag "$tag"
-  done <<< "$tags"
+  done 3<<< "$tags"
 }
 
 confirm_and_remove_ci_tags
