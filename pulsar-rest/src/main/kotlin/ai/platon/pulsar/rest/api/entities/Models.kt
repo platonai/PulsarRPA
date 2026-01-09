@@ -140,20 +140,20 @@ data class W3DocumentRequest(
  * @property mode The execution mode, either "sync" or "async", default to "sync". (Deprecated: use [async] instead)
  */
 data class CommandRequest @JsonCreator constructor(
-    @JsonProperty("url") var url: String,
-    @JsonProperty("args") var args: String? = null,
-    @JsonProperty("onBrowserLaunchedActions") var onBrowserLaunchedActions: List<String>? = null,
-    @JsonProperty("onPageReadyActions") var onPageReadyActions: List<String>? = null,
-    @JsonProperty("actions") var actions: List<String>? = null,
-    @JsonProperty("pageSummaryPrompt") var pageSummaryPrompt: String? = null,
-    @JsonProperty("dataExtractionRules") var dataExtractionRules: String? = null,
-    @JsonProperty("uriExtractionRules") var uriExtractionRules: String? = null,
-    @JsonProperty("xsql") var xsql: String? = null,
-    @JsonProperty("richText") var richText: Boolean? = null,
-    @JsonProperty("async") var async: Boolean? = null,
+    @param:JsonProperty("url") var url: String,
+    @param:JsonProperty("args") var args: String? = null,
+    @param:JsonProperty("onBrowserLaunchedActions") var onBrowserLaunchedActions: List<String>? = null,
+    @param:JsonProperty("onPageReadyActions") var onPageReadyActions: List<String>? = null,
+    @param:JsonProperty("actions") var actions: List<String>? = null,
+    @param:JsonProperty("pageSummaryPrompt") var pageSummaryPrompt: String? = null,
+    @param:JsonProperty("dataExtractionRules") var dataExtractionRules: String? = null,
+    @param:JsonProperty("uriExtractionRules") var uriExtractionRules: String? = null,
+    @param:JsonProperty("xsql") var xsql: String? = null,
+    @param:JsonProperty("richText") var richText: Boolean? = null,
+    @param:JsonProperty("async") var async: Boolean? = null,
     @Deprecated("Use async instead")
-    @JsonProperty("mode") var mode: String? = null, // "sync" or "async", default to "sync"
-    @JsonProperty("id") var id: String? = null,
+    @param:JsonProperty("mode") var mode: String? = null, // "sync" or "async", default to "sync"
+    @param:JsonProperty("id") var id: String? = null,
 ) {
     fun hasAction(): Boolean {
         return !onBrowserLaunchedActions.isNullOrEmpty() || !onPageReadyActions.isNullOrEmpty()
@@ -207,11 +207,11 @@ data class CommandResult(
  * @property instruct The instruction text.
  * */
 data class InstructResult @JsonCreator constructor(
-    @JsonProperty("name") var name: String,
-    @JsonProperty("statusCode") var statusCode: Int = ResourceStatus.SC_CREATED,
-    @JsonProperty("result") var result: Any? = null,
-    @JsonProperty("resultType") var resultType: String? = null,
-    @JsonProperty("instruct") var instruct: String? = null,
+    @param:JsonProperty("name") var name: String,
+    @param:JsonProperty("statusCode") var statusCode: Int = ResourceStatus.SC_CREATED,
+    @param:JsonProperty("result") var result: Any? = null,
+    @param:JsonProperty("resultType") var resultType: String? = null,
+    @param:JsonProperty("instruct") var instruct: String? = null,
 ) {
     companion object {
 

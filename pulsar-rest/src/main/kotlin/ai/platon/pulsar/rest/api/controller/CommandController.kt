@@ -35,8 +35,6 @@ class CommandController(
      * */
     @PostMapping(value = ["", "/"])
     fun submitCommand(@RequestBody request: CommandRequest): ResponseEntity<Any> {
-        // logger.info("Hit CommandController.submitCommand | async={} | url={}", request.isAsync(), request.url)
-
         val eventHandlers = PageEventHandlersFactory.create()
         val response = when {
             request.isAsync() -> commandService.submitAsync(request, eventHandlers)
