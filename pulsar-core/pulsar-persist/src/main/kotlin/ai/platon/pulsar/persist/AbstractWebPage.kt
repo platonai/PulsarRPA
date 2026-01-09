@@ -273,8 +273,8 @@ abstract class AbstractWebPage(
         return url.hashCode()
     }
 
-    override fun compareTo(other: WebPage): Int {
-        return url.compareTo(Objects.requireNonNull(other.url))
+    override fun compareTo(other: PageSnapshot): Int {
+        return url.compareTo(other.url)
     }
 
     override fun equals(other: Any?): Boolean {
