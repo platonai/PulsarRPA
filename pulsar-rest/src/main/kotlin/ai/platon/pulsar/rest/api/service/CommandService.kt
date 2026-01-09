@@ -168,7 +168,7 @@ class CommandService(
             // AgentState has 'summary' for the final result message
             val resultSummary = finalState?.summary ?: finalState?.description ?: ""
             status.message = resultSummary
-            status.ensureCommandResult().pageSummary = resultSummary
+            status.ensureCommandResult().summary = resultSummary
             status.refresh(ResourceStatus.SC_OK)
         } catch (e: Exception) {
             logger.error("Failed to execute agent command: {}", plainCommand, e)

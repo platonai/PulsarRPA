@@ -22,7 +22,6 @@ import reactor.core.publisher.Flux
 class CommandController(
     val commandService: CommandService,
 ) {
-
     /**
      * Execute a command with structured JSON input and output.
      *

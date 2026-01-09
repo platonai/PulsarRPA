@@ -189,6 +189,7 @@ data class CommandRequest @JsonCreator constructor(
  * @property xsqlResultSet The result set from the X-SQL query.
  */
 data class CommandResult(
+    var summary: String? = null,
     var pageSummary: String? = null,
 //    var fields: String? = null,
 //    var links: String? = null,
