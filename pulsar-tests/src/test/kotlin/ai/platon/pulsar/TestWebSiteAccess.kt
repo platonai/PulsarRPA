@@ -26,8 +26,12 @@ class TestWebSiteAccess {
     @Value($$"${server.port}")
     var port: Int = 18080
 
-    @Autowired
-    lateinit var rest: RestTestClient
+    val hostname = "127.0.0.1"
+
+    val baseUri get() = String.format("http://%s:%d", hostname, port)
+
+    // Build a RestTestClient bound to the running server on demand
+    protected val rest get() = RestTestClient.bindToServer().baseUrl(baseUri).build()
 
     val context get() = session.context
 
