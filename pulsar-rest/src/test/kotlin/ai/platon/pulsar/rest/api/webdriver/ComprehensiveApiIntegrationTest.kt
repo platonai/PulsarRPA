@@ -14,6 +14,14 @@ import org.springframework.test.web.servlet.client.RestTestClient
 /**
  * Comprehensive integration tests for all WebDriver API endpoints.
  * Tests all controllers: Session, Navigation, Selector, Element, Script, Control, Events, Agent, PulsarSession, Health.
+ * 
+ * These tests use the real interactive webpage (interactive-1.html) from the test assets.
+ * The interactive page contains:
+ * - Header (#pageHeader) with title "Welcome to the Interactive Page"
+ * - User Information section (#userInformation) with name input (#name) and output (#nameOutput)
+ * - Preferences section (#preferences) with color selector (#colorSelect)
+ * - Calculator section (#calculatorSection) with inputs (#num1, #num2), Add button (#addButton), and result (#sumResult)
+ * - Toggle section (#toggleSection) with toggle button (#toggleMessageButton) and hidden message (#hiddenMessage)
  */
 @SpringBootTest(
     classes = [WebDriverTestApplication::class],
@@ -132,8 +140,8 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     fun `should navigate and retrieve current URL`() {
         val sessionId = createSession()
 
-        // Navigate
-        val navRequest = SetUrlRequest(url = "https://example.com/test-page")
+        // Navigate to real interactive page
+        val navRequest = SetUrlRequest(url = interactiveUrl)
         val navResponse = postJson("/session/$sessionId/url", navRequest).returnResult(Map::class.java)
 
         assertEquals(HttpStatus.OK, navResponse.status)
@@ -144,15 +152,15 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
         assertEquals(HttpStatus.OK, urlResponse.status)
         @Suppress("UNCHECKED_CAST")
         val urlBody = urlResponse.responseBody as Map<String, Any?>
-        assertEquals("https://example.com/test-page", urlBody["value"])
+        assertEquals(interactiveUrl, urlBody["value"])
     }
 
     @Test
     fun `should get document URI`() {
         val sessionId = createSession()
 
-        // Navigate first
-        navigateToUrl(sessionId, "https://example.com/page")
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
 
         val response = getJson("/session/$sessionId/documentUri").returnResult(Map::class.java)
 
@@ -168,8 +176,8 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     fun `should get base URI`() {
         val sessionId = createSession()
 
-        // Navigate first
-        navigateToUrl(sessionId, "https://example.com/path/page")
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
 
         val response = getJson("/session/$sessionId/baseUri").returnResult(Map::class.java)
 
@@ -178,7 +186,7 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
         @Suppress("UNCHECKED_CAST")
         val body = response.responseBody as Map<String, Any?>
         val baseUri = body["value"] as String
-        assertTrue(baseUri.startsWith("https://"))
+        assertTrue(baseUri.startsWith("http://"))
     }
 
     // ==================== Selector Operations ====================
@@ -186,8 +194,11 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     @Test
     fun `should find multiple elements by selector`() {
         val sessionId = createSession()
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
 
-        val request = SelectorRef(selector = ".product-item")
+        // Find all section elements in interactive-1.html
+        val request = SelectorRef(selector = "section")
         val response = postJson("/session/$sessionId/selectors/elements", request).returnResult(Map::class.java)
 
         assertEquals(HttpStatus.OK, response.status)
@@ -207,8 +218,11 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     @Test
     fun `should wait for selector to appear`() {
         val sessionId = createSession()
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
 
-        val request = WaitForRequest(selector = "#dynamic-element", timeout = 1000)
+        // Wait for the page header which exists in interactive-1.html
+        val request = WaitForRequest(selector = "#pageHeader", timeout = 1000)
         val response = postJson("/session/$sessionId/selectors/waitFor", request).returnResult(Map::class.java)
 
         // Should succeed in mock mode or timeout in real mode
@@ -220,8 +234,11 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     @Test
     fun `should fill input field by selector`() {
         val sessionId = createSession()
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
 
-        val request = FillRequest(selector = "input[name='username']", value = "testuser")
+        // Fill the name input field from interactive-1.html
+        val request = FillRequest(selector = "#name", value = "TestUser")
         val response = postJson("/session/$sessionId/selectors/fill", request).returnResult(Map::class.java)
 
         assertEquals(HttpStatus.OK, response.status)
@@ -231,8 +248,11 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     @Test
     fun `should press key by selector`() {
         val sessionId = createSession()
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
 
-        val request = PressRequest(selector = "input[name='search']", key = "Enter")
+        // Press Enter on the name input field from interactive-1.html
+        val request = PressRequest(selector = "#name", key = "Enter")
         val response = postJson("/session/$sessionId/selectors/press", request).returnResult(Map::class.java)
 
         assertEquals(HttpStatus.OK, response.status)
@@ -242,8 +262,11 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     @Test
     fun `should get outer HTML by selector`() {
         val sessionId = createSession()
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
 
-        val request = SelectorRef(selector = "#main-content")
+        // Get outer HTML of the page header from interactive-1.html
+        val request = SelectorRef(selector = "#pageHeader")
         val response = postJson("/session/$sessionId/selectors/outerHtml", request).returnResult(Map::class.java)
 
         assertEquals(HttpStatus.OK, response.status)
@@ -261,8 +284,11 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     @Test
     fun `should take screenshot of element by selector`() {
         val sessionId = createSession()
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
 
-        val request = SelectorRef(selector = "#header")
+        // Take screenshot of the page header from interactive-1.html
+        val request = SelectorRef(selector = "#pageHeader")
         val response = postJson("/session/$sessionId/selectors/screenshot", request).returnResult(Map::class.java)
 
         assertEquals(HttpStatus.OK, response.status)
@@ -282,8 +308,11 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     @Test
     fun `should find element using WebDriver locator`() {
         val sessionId = createSession()
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
 
-        val request = FindElementRequest(using = "css selector", value = ".login-button")
+        // Find the Add button from interactive-1.html
+        val request = FindElementRequest(using = "css selector", value = "#addButton")
         val response = postJson("/session/$sessionId/element", request).returnResult(Map::class.java)
 
         assertEquals(HttpStatus.OK, response.status)
@@ -299,8 +328,11 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     @Test
     fun `should find multiple elements using WebDriver locator`() {
         val sessionId = createSession()
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
 
-        val request = FindElementRequest(using = "css selector", value = ".item")
+        // Find all input elements from interactive-1.html
+        val request = FindElementRequest(using = "css selector", value = "input")
         val response = postJson("/session/$sessionId/elements", request).returnResult(Map::class.java)
 
         assertEquals(HttpStatus.OK, response.status)
@@ -316,7 +348,10 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     @Test
     fun `should click element by ID`() {
         val sessionId = createSession()
-        val elementId = getElementId(sessionId, "button.submit")
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
+        // Get element ID for the toggle button from interactive-1.html
+        val elementId = getElementId(sessionId, "#toggleMessageButton")
 
         val response = postJson("/session/$sessionId/element/$elementId/click", "").returnResult(Map::class.java)
 
@@ -326,9 +361,12 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     @Test
     fun `should send keys to element by ID`() {
         val sessionId = createSession()
-        val elementId = getElementId(sessionId, "input[name='email']")
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
+        // Get element ID for the name input from interactive-1.html
+        val elementId = getElementId(sessionId, "#name")
 
-        val request = SendKeysRequest(text = "test@example.com")
+        val request = SendKeysRequest(text = "TestUser")
         val response = postJson("/session/$sessionId/element/$elementId/value", request).returnResult(Map::class.java)
 
         assertEquals(HttpStatus.OK, response.status)
@@ -337,9 +375,13 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     @Test
     fun `should get element attribute`() {
         val sessionId = createSession()
-        val elementId = getElementId(sessionId, "a.link")
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
+        // Get element ID for the name input from interactive-1.html
+        val elementId = getElementId(sessionId, "#name")
 
-        val response = getJson("/session/$sessionId/element/$elementId/attribute/href").returnResult(Map::class.java)
+        // Get the placeholder attribute from interactive-1.html's name input
+        val response = getJson("/session/$sessionId/element/$elementId/attribute/placeholder").returnResult(Map::class.java)
 
         assertEquals(HttpStatus.OK, response.status)
         assertNotNull(response.responseBody)
@@ -352,7 +394,10 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     @Test
     fun `should get element text`() {
         val sessionId = createSession()
-        val elementId = getElementId(sessionId, "h1.title")
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
+        // Get element ID for the h1 in header from interactive-1.html
+        val elementId = getElementId(sessionId, "#pageHeader h1")
 
         val response = getJson("/session/$sessionId/element/$elementId/text").returnResult(Map::class.java)
 
@@ -519,9 +564,11 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     @Test
     fun `should run agent with detailed task`() {
         val sessionId = createSession()
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
 
         val request = AgentRunRequest(
-            task = "Navigate to the login page, find the username field, fill it with 'admin', and click the login button"
+            task = "Find the name input field and fill it with 'TestUser', then find the Add button in the calculator section"
         )
         val response = postJson("/session/$sessionId/agent/run", request).returnResult(Map::class.java)
 
@@ -539,9 +586,11 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     @Test
     fun `should observe page and return action options`() {
         val sessionId = createSession()
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
 
         val request = AgentObserveRequest(
-            instruction = "Identify all clickable buttons and links on the page"
+            instruction = "Identify all clickable buttons and input fields on the page"
         )
         val response = postJson("/session/$sessionId/agent/observe", request).returnResult(Map::class.java)
 
@@ -563,9 +612,11 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     @Test
     fun `should execute specific agent action`() {
         val sessionId = createSession()
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
 
         val request = AgentActRequest(
-            action = "Click the 'Add to Cart' button"
+            action = "Click the 'Toggle Message' button to reveal the hidden message"
         )
         val response = postJson("/session/$sessionId/agent/act", request).returnResult(Map::class.java)
 
@@ -583,9 +634,11 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     @Test
     fun `should extract structured data with schema`() {
         val sessionId = createSession()
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
 
         val request = AgentExtractRequest(
-            instruction = "Extract product details: name, price, description, and rating"
+            instruction = "Extract all section titles and their descriptions from the page"
         )
         val response = postJson("/session/$sessionId/agent/extract", request).returnResult(Map::class.java)
 
@@ -603,9 +656,11 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     @Test
     fun `should summarize page content`() {
         val sessionId = createSession()
+        // Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
 
         val request = AgentSummarizeRequest(
-            instruction = "Provide a concise summary of the main content on this page"
+            instruction = "Provide a concise summary of this interactive demo page and its features"
         )
         val response = postJson("/session/$sessionId/agent/summarize", request).returnResult(Map::class.java)
 
@@ -627,7 +682,9 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     fun `should normalize URL without scheme`() {
         val sessionId = createSession()
 
-        val request = NormalizeRequest(url = "example.com/path", args = "-expire 1d")
+        // Use the base URL from interactiveUrl without scheme (handles both http:// and https://)
+        val urlWithoutScheme = interactiveUrl.replaceFirst(Regex("^https?://"), "")
+        val request = NormalizeRequest(url = urlWithoutScheme, args = "-expire 1d")
         val response = postJson("/session/$sessionId/normalize", request).returnResult(Map::class.java)
 
         assertEquals(HttpStatus.OK, response.status)
@@ -647,7 +704,7 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
         val sessionId = createSession()
 
         val request = NormalizeRequest(
-            url = "https://example.com",
+            url = interactiveUrl,
             args = "-expire 7d -ignoreFailure"
         )
         val response = postJson("/session/$sessionId/normalize", request).returnResult(Map::class.java)
@@ -666,7 +723,7 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
     fun `should open URL bypassing cache`() {
         val sessionId = createSession()
 
-        val request = OpenRequest(url = "https://example.com/fresh")
+        val request = OpenRequest(url = interactiveUrl)
         val response = postJson("/session/$sessionId/open", request).returnResult(Map::class.java)
 
         assertEquals(HttpStatus.OK, response.status)
@@ -677,7 +734,7 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
         @Suppress("UNCHECKED_CAST")
         val value = body["value"] as Map<String, Any?>
         assertTrue(value.containsKey("url"))
-        assertEquals("https://example.com/fresh", value["url"])
+        assertEquals(interactiveUrl, value["url"])
     }
 
     @Test
@@ -685,7 +742,7 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
         val sessionId = createSession()
 
         val request = LoadRequest(
-            url = "https://example.com/cached",
+            url = interactiveUrl,
             args = "-expire 1h"
         )
         val response = postJson("/session/$sessionId/load", request).returnResult(Map::class.java)
@@ -706,7 +763,7 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
         val sessionId = createSession()
 
         val request = SubmitRequest(
-            url = "https://example.com/submit",
+            url = interactiveUrl,
             args = "-queue"
         )
         val response = postJson("/session/$sessionId/submit", request).returnResult(Map::class.java)
@@ -752,21 +809,21 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
         val sessionId = createSession()
         assertNotNull(sessionId)
 
-        // 2. Navigate to page
-        navigateToUrl(sessionId, "https://example.com/products")
+        // 2. Navigate to real interactive page
+        navigateToUrl(sessionId, interactiveUrl)
 
-        // 3. Check if element exists
-        val existsRequest = SelectorRef(selector = "#product-list")
+        // 3. Check if page header element exists (from interactive-1.html)
+        val existsRequest = SelectorRef(selector = "#pageHeader")
         val existsResponse = postJson("/session/$sessionId/selectors/exists", existsRequest).returnResult(Map::class.java)
         assertEquals(HttpStatus.OK, existsResponse.status)
 
-        // 4. Click an element
-        val clickRequest = SelectorRef(selector = ".product-card")
+        // 4. Click the toggle button (from interactive-1.html)
+        val clickRequest = SelectorRef(selector = "#toggleMessageButton")
         val clickResponse = postJson("/session/$sessionId/selectors/click", clickRequest).returnResult(Map::class.java)
         assertEquals(HttpStatus.OK, clickResponse.status)
 
-        // 5. Extract data using agent
-        val extractRequest = AgentExtractRequest(instruction = "Extract product information")
+        // 5. Extract section information using agent
+        val extractRequest = AgentExtractRequest(instruction = "Extract all section titles from this interactive page")
         val extractResponse = postJson("/session/$sessionId/agent/extract", extractRequest).returnResult(Map::class.java)
         assertEquals(HttpStatus.OK, extractResponse.status)
 
@@ -787,6 +844,11 @@ class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
         assertNotEquals(session1, session2)
         assertNotEquals(session2, session3)
         assertNotEquals(session1, session3)
+
+        // Navigate all sessions to the real interactive page
+        navigateToUrl(session1, interactiveUrl)
+        navigateToUrl(session2, interactiveUrl)
+        navigateToUrl(session3, interactiveUrl)
 
         // Verify all sessions exist
         assertEquals(HttpStatus.OK, getJson("/session/$session1").returnResult(Map::class.java).status)
