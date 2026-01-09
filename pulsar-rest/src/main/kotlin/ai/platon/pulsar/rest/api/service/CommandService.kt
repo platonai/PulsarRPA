@@ -157,11 +157,18 @@ class CommandService(
 
     /**
      * Internal method to execute agent command with a pre-created status.
+     *
+     * The status is updated with the agent's state history reference, allowing callers
+     * to access the latest agent state via [CommandStatus.currentAgentState] during execution.
      */
     private suspend fun executeAgentCommandInternal(plainCommand: String, status: CommandStatus) {
         try {
             status.refresh(ResourceStatus.SC_PROCESSING)
             val agent = session.companionAgent
+
+            // Set agent history reference to allow real-time state tracking
+            status.agentHistory = agent.stateHistory
+
             val history = agent.run(plainCommand)
             val finalState = history.finalResult
 

@@ -1,10 +1,13 @@
 package ai.platon.pulsar.rest.api.entities
 
+import ai.platon.pulsar.agentic.AgentHistory
+import ai.platon.pulsar.agentic.AgentState
 import ai.platon.pulsar.common.ResourceStatus
 import ai.platon.pulsar.persist.ProtocolStatus
 import ai.platon.pulsar.persist.metadata.ProtocolStatusCodes
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import com.fasterxml.jackson.annotation.JsonCreator
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import java.time.Instant
 import java.util.*
@@ -261,6 +264,21 @@ data class CommandStatus(
     val createTime: Instant = Instant.now()
     var lastModifiedTime: Instant? = null
     var finishTime: Instant? = null
+
+    /**
+     * The agent's state history reference for tracking agent execution progress.
+     * This is set when executing agent commands and provides access to the latest agent state.
+     * It is excluded from JSON serialization as it's only used for internal tracking.
+     */
+    @get:JsonIgnore
+    var agentHistory: AgentHistory? = null
+
+    /**
+     * Returns the current (latest) agent state from the agent history.
+     * This provides real-time access to the agent's execution state during async operations.
+     */
+    val currentAgentState: AgentState?
+        get() = agentHistory?.lastOrNull()
 
     companion object {
         fun notFound(id: String) = CommandStatus(id, ResourceStatus.SC_NOT_FOUND, isDone = true)
