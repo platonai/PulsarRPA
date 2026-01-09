@@ -1,0 +1,151 @@
+name: Prepare Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release (e.g., 4.4.0, 4.4.0-rc.1)'
+        required: true
+        type: string
+      source_branch:
+        description: 'Source branch for the release'
+        required: false
+        default: '4.4.x'
+        type: string
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Validate version format
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+            echo "❌ Invalid version format: $VERSION"
+            echo "Expected format: X.Y.Z or X.Y.Z-rc.N"
+            echo "Examples: 4.4.0, 4.4.0-rc.1"
+            exit 1
+          fi
+          
+          echo "✅ Version format is valid: $VERSION"
+
+      - name: Checkout source branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.source_branch }}
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Update versions
+        run: |
+          echo "📝 Updating version to ${{ github.event.inputs.version }}..."
+          
+          # Update VERSION file
+          echo "${{ github.event.inputs.version }}" > VERSION
+          
+          # Run the version update script
+          chmod +x bin/release/update-versions.sh
+          
+          # Temporarily set VERSION env for the script
+          export VERSION="${{ github.event.inputs.version }}"
+          
+          # The script expects SNAPSHOT_VERSION in VERSION file, so we need to adjust
+          # Let's manually do what the script does since we're setting a release version
+          SNAPSHOT_VERSION="${{ github.event.inputs.version }}-SNAPSHOT"
+          VERSION="${{ github.event.inputs.version }}"
+          
+          echo "Replacing $SNAPSHOT_VERSION with $VERSION in project files..."
+          
+          # Replace version in pom.xml, README files, etc.
+          for FILE_PATTERN in 'pom.xml' 'llm-config.md' 'README.md' 'README.zh.md'; do
+            find . -maxdepth 8 -name "$FILE_PATTERN" -type f | while read FILE; do
+              if [ -f "$FILE" ]; then
+                sed -i "s/$SNAPSHOT_VERSION/$VERSION/g" "$FILE"
+              fi
+            done
+          done
+          
+          echo "✅ Version updated to $VERSION"
+
+      - name: Commit version changes
+        run: |
+          git add -A
+          
+          if git diff --staged --quiet; then
+            echo "⚠️ No changes to commit"
+          else
+            git commit -m "chore: bump version to ${{ github.event.inputs.version }}"
+            git push origin ${{ github.event.inputs.source_branch }}
+            echo "✅ Version changes committed and pushed"
+          fi
+
+      - name: Create Pull Request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          SOURCE_BRANCH="${{ github.event.inputs.source_branch }}"
+          
+          # Check if PR already exists
+          EXISTING_PR=$(gh pr list --head "$SOURCE_BRANCH" --base main --json number --jq '.[0].number' || echo "")
+          
+          if [ -n "$EXISTING_PR" ]; then
+            echo "⚠️ PR #$EXISTING_PR already exists from $SOURCE_BRANCH to main"
+            echo "PR URL: https://github.com/${{ github.repository }}/pull/$EXISTING_PR"
+            exit 0
+          fi
+          
+          # Create PR body
+          cat > pr_body.md << 'EOF'
+          ## 🚀 Release Preparation
+
+          This PR prepares the release of version **${{ github.event.inputs.version }}**.
+
+          ### 📋 Pre-Merge Checklist
+
+          - [ ] Version numbers updated correctly
+          - [ ] CHANGELOG updated (if applicable)
+          - [ ] All CI checks passing
+          - [ ] Documentation updated (if needed)
+          - [ ] Breaking changes documented (if any)
+
+          ### 🔄 Post-Merge Instructions
+
+          After merging this PR to `main`, create the release tag:
+
+          1. Go to [Create Release Tag workflow](https://github.com/${{ github.repository }}/actions/workflows/create-release-tag.yml)
+          2. Click "Run workflow"
+          3. Enter version: `${{ github.event.inputs.version }}`
+          4. Click "Run workflow" button
+
+          This will create tag `v${{ github.event.inputs.version }}` on main branch and trigger the release workflow.
+
+          ---
+          
+          _Automated PR created by [prepare-release.yml](https://github.com/${{ github.repository }}/actions/workflows/prepare-release.yml)_
+          EOF
+          
+          # Create the PR
+          gh pr create \
+            --base main \
+            --head "$SOURCE_BRANCH" \
+            --title "🚀 Release v$VERSION" \
+            --body-file pr_body.md \
+            --label release
+          
+          echo "✅ Pull request created successfully"
+          
+          # Get the PR URL
+          PR_URL=$(gh pr list --head "$SOURCE_BRANCH" --base main --json url --jq '.[0].url')
+          echo "PR URL: $PR_URL"

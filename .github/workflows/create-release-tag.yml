@@ -1,0 +1,98 @@
+name: Create Release Tag
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to tag (e.g., 4.4.0, 4.4.0-rc.1)'
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  create-tag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Validate version format
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+          
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
+            echo "❌ Invalid version format: $VERSION"
+            echo "Expected format: X.Y.Z or X.Y.Z-rc.N"
+            echo "Examples: 4.4.0, 4.4.0-rc.1"
+            exit 1
+          fi
+          
+          echo "✅ Version format is valid: $VERSION"
+
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Check if tag already exists
+        run: |
+          TAG="v${{ github.event.inputs.version }}"
+          
+          # Check if tag exists locally
+          if git tag -l "$TAG" | grep -q "$TAG"; then
+            echo "❌ Tag $TAG already exists locally"
+            exit 1
+          fi
+          
+          # Check if tag exists remotely
+          if git ls-remote --tags origin | grep -q "refs/tags/$TAG"; then
+            echo "❌ Tag $TAG already exists on remote"
+            echo "Existing tags:"
+            git ls-remote --tags origin | grep "$TAG" || true
+            exit 1
+          fi
+          
+          echo "✅ Tag $TAG does not exist yet"
+
+      - name: Create annotated tag
+        run: |
+          TAG="v${{ github.event.inputs.version }}"
+          VERSION="${{ github.event.inputs.version }}"
+          
+          echo "📝 Creating annotated tag: $TAG"
+          git tag -a "$TAG" -m "Release version $VERSION"
+          
+          echo "✅ Tag created successfully"
+
+      - name: Push tag to origin
+        run: |
+          TAG="v${{ github.event.inputs.version }}"
+          
+          echo "🚀 Pushing tag $TAG to origin..."
+          git push origin "$TAG"
+          
+          echo "✅ Tag pushed successfully"
+
+      - name: Output success message
+        run: |
+          TAG="v${{ github.event.inputs.version }}"
+          
+          echo "::notice::✅ Tag $TAG created successfully on main branch"
+          echo ""
+          echo "🎉 Tag created successfully!"
+          echo ""
+          echo "📋 Next Steps:"
+          echo "  1. The release workflow will be triggered automatically"
+          echo "  2. Monitor the workflow at: https://github.com/${{ github.repository }}/actions/workflows/release.yml"
+          echo "  3. Once complete, the release will be available at: https://github.com/${{ github.repository }}/releases/tag/$TAG"
+          echo ""
+          echo "🔗 Useful Links:"
+          echo "  - Release workflow: https://github.com/${{ github.repository }}/actions/workflows/release.yml"
+          echo "  - Releases: https://github.com/${{ github.repository }}/releases"
