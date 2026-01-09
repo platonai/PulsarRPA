@@ -1,44 +1,46 @@
-# Browser4 WebDriver-Compatible API（openapi.yaml 解读与实现映射）
+# Browser4 WebDriver-Compatible API (Reading `openapi.yaml` and Mapping to Implementation)
 
-> 目标：让 `openapi/openapi.md` 成为 **spec 与代码之间的可维护索引**：读得懂、找得到、可持续更新。
+> Goal: make `openapi/openapi.md` a **maintainable index between spec and code**: easy to read, easy to locate things, and easy to keep updated.
 >
-> 权威来源：
-> - **Spec**：`openapi/openapi.yaml`
-> - **实现**：`pulsar-rest/src/main/kotlin/ai/platon/pulsar/rest/api/webdriver/controller/*`
+> Sources of truth:
+> - **Spec**: `openapi/openapi.yaml`
+> - **Implementation**: `pulsar-rest/src/main/kotlin/ai/platon/pulsar/rest/api/webdriver/controller/*`
 >
-> 适用范围：本文聚焦 WebDriver-Compatible API（以 `/session...` 为根路径）。仓库内其它 REST 面（如 `/api/*`）不在本文详细展开（见附录）。
+> Scope: this document focuses on the WebDriver-Compatible API (rooted at `/session...`). Other REST surfaces in this repo (such as `/api/*`) are not covered in detail here (see Appendix).
 
 ---
 
-## 1. OpenAPI 概览（从 `openapi.yaml` 提取）
+## 1. OpenAPI Overview (Extracted from `openapi.yaml`)
 
-- OpenAPI：`3.1.0`
-- Title：**Browser4 WebDriver-Compatible API**
-- Server（默认开发地址）：`http://localhost:8182`
-- 风格：大量响应采用 WebDriver 兼容包装：
-  - 成功：`{"value": ...}` 或 `{"value": null}`
-  - 失败：`ErrorResponse.value.error` / `ErrorResponse.value.message`
+- OpenAPI: `3.1.0`
+- Title: **Browser4 WebDriver-Compatible API**
+- Server (default dev address): `http://localhost:8182`
+- Style: many responses use a WebDriver-compatible wrapper:
+    - Success: `{"value": ...}` or `{"value": null}`
+    - Failure: `ErrorResponse.value.error` / `ErrorResponse.value.message`
 
-### 1.1 Tags（能力分组）
-`openapi.yaml` 将接口按能力分为 9 组（tags）：
+### 1.1 Tags (Capability Groups)
 
-- `session`：会话生命周期（create/get/delete）
-- `navigation`：导航与 URL 信息（url/documentUri/baseUri）
-- `selectors`：扩展：selector-first 交互（exists/waitFor/click/fill/press/outerHtml/screenshot/element(s)）
-- `element`：WebDriver 标准 element-by-id（find element(s)/click/sendKeys/attribute/text）
-- `script`：执行 JavaScript（sync/async）
-- `control`：delay/pause/stop
-- `events`：事件配置、订阅、查询
-- `agent`：AI agent（run/observe/act/extract/summarize/clearHistory）
-- `pulsar`：PulsarSession 能力（normalize/open/load/submit）
+`openapi.yaml` groups endpoints into 9 capability tags:
+
+- `session`: session lifecycle (create/get/delete)
+- `navigation`: navigation and URL information (url/documentUri/baseUri)
+- `selectors`: extension: selector-first interactions (exists/waitFor/click/fill/press/outerHtml/screenshot/element(s))
+- `element`: standard WebDriver element-by-id (find element(s)/click/sendKeys/attribute/text)
+- `script`: execute JavaScript (sync/async)
+- `control`: delay/pause/stop
+- `events`: event config, subscription, query
+- `agent`: AI agent (run/observe/act/extract/summarize/clearHistory)
+- `pulsar`: PulsarSession capabilities (normalize/open/load/submit)
 
 ---
 
-## 2. 端点总览（按 tag）
+## 2. Endpoint Overview (By Tag)
 
-> 提示：这里给出“骨架索引”，细节（请求/响应 schema、状态码）以 `openapi.yaml` 为准。
+> Tip: this is a “skeleton index”. For detailed request/response schemas and status codes, refer to `openapi.yaml`.
 
 ### 2.1 session
+
 | Method | Path | operationId |
 |---|---|---|
 | POST | `/session` | `createSession` |
@@ -46,6 +48,7 @@
 | DELETE | `/session/{sessionId}` | `deleteSession` |
 
 ### 2.2 navigation
+
 | Method | Path | operationId |
 |---|---|---|
 | POST | `/session/{sessionId}/url` | `navigateTo` |
@@ -53,7 +56,8 @@
 | GET | `/session/{sessionId}/documentUri` | `getDocumentUri` |
 | GET | `/session/{sessionId}/baseUri` | `getBaseUri` |
 
-### 2.3 selectors（selector-first 扩展）
+### 2.3 selectors (selector-first extension)
+
 | Method | Path | operationId |
 |---|---|---|
 | POST | `/session/{sessionId}/selectors/exists` | `selectorExists` |
@@ -66,7 +70,8 @@
 | POST | `/session/{sessionId}/selectors/outerHtml` | `getOuterHtmlBySelector` |
 | POST | `/session/{sessionId}/selectors/screenshot` | `screenshotBySelector` |
 
-### 2.4 element（标准 WebDriver element）
+### 2.4 element (standard WebDriver element)
+
 | Method | Path | operationId |
 |---|---|---|
 | POST | `/session/{sessionId}/element` | `findElement` |
@@ -77,12 +82,14 @@
 | GET | `/session/{sessionId}/element/{elementId}/text` | `getElementText` |
 
 ### 2.5 script
+
 | Method | Path | operationId |
 |---|---|---|
 | POST | `/session/{sessionId}/execute/sync` | `executeSync` |
 | POST | `/session/{sessionId}/execute/async` | `executeAsync` |
 
 ### 2.6 control
+
 | Method | Path | operationId |
 |---|---|---|
 | POST | `/session/{sessionId}/control/delay` | `delay` |
@@ -90,6 +97,7 @@
 | POST | `/session/{sessionId}/control/stop` | `stop` |
 
 ### 2.7 events
+
 | Method | Path | operationId |
 |---|---|---|
 | POST | `/session/{sessionId}/event-configs` | `createEventConfig` |
@@ -98,6 +106,7 @@
 | POST | `/session/{sessionId}/events/subscribe` | `subscribeToEvents` |
 
 ### 2.8 agent
+
 | Method | Path | operationId |
 |---|---|---|
 | POST | `/session/{sessionId}/agent/run` | `run` |
@@ -108,6 +117,7 @@
 | POST | `/session/{sessionId}/agent/clearHistory` | `clearHistory` |
 
 ### 2.9 pulsar
+
 | Method | Path | operationId |
 |---|---|---|
 | POST | `/session/{sessionId}/normalize` | `normalize` |
@@ -117,13 +127,13 @@
 
 ---
 
-## 3. Spec → Controller 对照（代码映射）
+## 3. Spec → Controller Mapping (Implementation Map)
 
-WebDriver-Compatible API 的实现基本集中在：
+The WebDriver-Compatible API implementation is mostly located under:
 
 - `pulsar-rest/src/main/kotlin/ai/platon/pulsar/rest/api/webdriver/controller/`
 
-按 tag 对应 Controller 文件：
+Controller files by tag:
 
 | Tag | Controller |
 |---|---|
@@ -137,83 +147,87 @@ WebDriver-Compatible API 的实现基本集中在：
 | agent | `AgentController.kt` |
 | pulsar | `PulsarSessionController.kt` |
 
-关键依赖（用于区分 real/mock）：
+Key dependencies (used to differentiate real vs mock):
 
-- real 会话与真实能力入口：`pulsar-rest/.../webdriver/service/SessionManager.kt`（存在时 controllers 会启用 real 分支）
-- mock/演示存储：`pulsar-rest/.../webdriver/store/InMemoryStore.kt`
+- entry for real sessions and real capabilities: `pulsar-rest/.../webdriver/service/SessionManager.kt` (when present/injected, controllers enable the real branch)
+- mock/demo storage: `pulsar-rest/.../webdriver/store/InMemoryStore.kt`
 
 ---
 
-## 4. 实现覆盖矩阵（real / mock）
+## 4. Implementation Coverage Matrix (real / mock)
 
-> 口径：
-> - **real**：controller 通过 `SessionManager` 获取 session，并调用 `session.pulsarSession.*` 或 `session.pulsarSession.getOrCreateBoundDriver()`/`session.agent.*` 完成真实动作。
-> - **mock**：仅操作 `InMemoryStore` 中的会话/元素/事件，返回演示数据。
+> Definitions:
+> - **real**: the controller obtains a session through `SessionManager` and invokes real actions via `session.pulsarSession.*` or `session.pulsarSession.getOrCreateBoundDriver()` / `session.agent.*`.
+> - **mock**: the controller only operates on sessions/elements/events stored in `InMemoryStore`, returning demo data.
 >
-> 注意：当前实现允许 real 和 mock 并存（同一 endpoint 在不同运行配置下走不同分支）。
+> Note: the current implementation allows real and mock to coexist (the same endpoint can take different branches under different runtime configurations).
 
-| Tag | Endpoint（代表性） | Real | Mock | 备注 |
+| Tag | Endpoint (representative) | Real | Mock | Notes |
 |---|---|---:|---:|---|
-| session | `/session` `/session/{id}` | ✅ | ✅ | `SessionController`：根据 `SessionManager` 是否注入切换 real/mock |
-| navigation | `/session/{id}/url` | ✅ | ✅ | real 模式会 `pulsarSession.load(url)`，但 `GET url/documentUri/baseUri` 当前主要返回“存储的 url” |
-| selectors | `/selectors/exists` `/waitFor` `/click` `/fill` `/press` `/outerHtml` `/screenshot` | ✅ | ✅ | real 模式通过 bound driver 执行；mock 模式多为演示（如 exists 固定 true、screenshot 返回 mock base64） |
-| selectors | `/selectors/element(s)` | ❌ | ✅ | 当前查找 element(s) 仍基于 store 生成 elementId（real 模式未对齐为“从 driver 实际 find”） |
-| element | `/element/{elementId}/*` | ✅(部分) | ✅ | real 模式通过 store 中 elementId → selector，再用 driver 操作；elementId 本身仍来自 store |
-| script | `/execute/sync` `/execute/async` | ✅ | ✅ | real 通过 driver.evaluate；mock 固定返回 null |
-| control | `/control/*` | ❌ | ✅ | 仅 mock（sleep/改内存 status），不联动真实 driver/session |
-| events | `/event-configs` `/events` `/events/subscribe` | ❌ | ✅ | 仅 mock（内存事件体系），不是浏览器真实事件流 |
-| agent | `/agent/*` | ✅ | ✅ | real 调用 `session.agent.*`；mock 返回演示响应 |
-| pulsar | `/normalize` `/open` `/load` `/submit` | ✅ | ✅ | real 调用 `pulsarSession.*`；mock 返回演示 WebPageResult |
+| session | `/session` `/session/{id}` | ✅ | ✅ | `SessionController`: switches real/mock depending on whether `SessionManager` is injected |
+| navigation | `/session/{id}/url` | ✅ | ✅ | real mode calls `pulsarSession.load(url)`, but `GET url/documentUri/baseUri` currently mostly returns the “stored url” |
+| selectors | `/selectors/exists` `/waitFor` `/click` `/fill` `/press` `/outerHtml` `/screenshot` | ✅ | ✅ | real mode executes via bound driver; mock mode is mostly demo (e.g., exists always true, screenshot returns mock base64) |
+| selectors | `/selectors/element(s)` | ❌ | ✅ | currently element(s) lookup is still based on generating elementId from the store (real mode is not aligned to “find via driver”) |
+| element | `/element/{elementId}/*` | ✅ (partial) | ✅ | real mode maps elementId → selector (via store) and then operates via driver; elementId still originates from the store |
+| script | `/execute/sync` `/execute/async` | ✅ | ✅ | real uses driver.evaluate; mock returns null |
+| control | `/control/*` | ❌ | ✅ | mock only (sleep / update in-memory status), does not link to real driver/session |
+| events | `/event-configs` `/events` `/events/subscribe` | ❌ | ✅ | mock only (in-memory event system), not a real browser event stream |
+| agent | `/agent/*` | ✅ | ✅ | real calls `session.agent.*`; mock returns demo responses |
+| pulsar | `/normalize` `/open` `/load` `/submit` | ✅ | ✅ | real calls `pulsarSession.*`; mock returns a demo WebPageResult |
 
 ---
 
-## 5. 已知语义差异与注意事项（spec vs 实现）
+## 5. Known Semantic Differences and Notes (spec vs implementation)
 
-### 5.1 navigation 的“当前 URL”语义
-- `POST /url`（real）会触发加载：`pulsarSession.load(request.url)`，并将 url 写入 `SessionManager`。
-- `GET /url` / `GET /documentUri` / `GET /baseUri`（real）目前主要基于 **SessionManager/会话对象中存储的 url**。
-  - 这与“从真实浏览器读取当前地址/文档地址”的 WebDriver 语义并不完全等价。
+### 5.1 The meaning of “current URL” in navigation
 
-### 5.2 selectors / element 的 elementId 语义
-- `elementId` 当前更像“服务端 session store 的句柄”。
-- real 模式下，element 的 click/fill/text/attribute 等，会把 elementId 反查成 selector，再通过 driver 执行。
-  - 这意味着 elementId 的生命周期/有效性由 store 决定，并非浏览器端原生引用。
+- `POST /url` (real) triggers a load: `pulsarSession.load(request.url)`, and writes the url into `SessionManager`.
+- `GET /url` / `GET /documentUri` / `GET /baseUri` (real) currently mostly uses the **url stored in SessionManager / the session object**.
+    - This is not fully equivalent to the WebDriver semantics of “read the current address/document URI from the real browser”.
 
-### 5.3 control / events 是 demo-only
-- `control` 与 `events` 当前没有 real 分支：主要用于演示与接口占位。
-- 若要对齐 WebDriver/浏览器事件流，需要引入 driver 侧能力与更明确的状态机/订阅模型。
+### 5.2 elementId semantics in selectors / element
 
----
+- `elementId` currently behaves more like a “server-side session store handle”.
+- In real mode, element click/fill/text/attribute operations map elementId back to a selector, then execute via the driver.
+    - That means elementId lifetime/validity is controlled by the store, not a native browser reference.
 
-## 6. 维护建议（让 spec vs 实现可持续对齐）
+### 5.3 control / events are demo-only
 
-1. **以 `openapi.yaml` 为唯一 spec 来源**：新增/修改端点时先改 yaml，再补 controller 和本文的映射/矩阵。
-2. **明确 demo-only 等级**：建议在 controller 或 docs 中统一标注（例如 `@Deprecated("demo-only")`/README 标识），避免误用。
-3. **优先补齐真实实现（按使用价值）**：
-   - P0：`selectors/element(s)` 的 real find 对齐（从 driver 实际查找并返回稳定 elementId 策略）
-   - P0：control/events 的 real 语义设计（若对外承诺）
-   - P1：进一步对齐 navigation 的“当前 URL/documentUri”获取方式
-4. **增加最小契约测试（MockMvc/WebTestClient）**：至少覆盖
-   - `POST /session` → 返回 sessionId
-   - 404 错误体结构符合 `ErrorResponse`
-   - `POST /session/{id}/load` 或 `POST /session/{id}/url` 的基本成功路径
+- `control` and `events` currently have no real branch: they mainly serve as demos/placeholders.
+- To align with WebDriver / real browser event streams, driver-side capabilities and a clearer state machine/subscription model would be needed.
 
 ---
 
-## 7. 快速验证（Windows / PowerShell / Maven Wrapper）
+## 6. Maintenance Suggestions (Keeping spec and implementation in sync)
 
-> 说明：仓库是多模块 Maven，请在项目根目录使用 `mvnw.cmd`。
+1. **Treat `openapi.yaml` as the single source of spec truth**: when adding/modifying endpoints, update the yaml first, then add the controller logic and update this mapping/matrix.
+2. **Make demo-only endpoints explicit**: consider consistent markings in controllers or docs (e.g., `@Deprecated("demo-only")` or README labels) to avoid accidental misuse.
+3. **Prioritize real implementation gaps (by value)**:
+    - P0: align real find for `selectors/element(s)` (find via driver and return a stable elementId strategy)
+    - P0: design real semantics for control/events (if publicly promised)
+    - P1: further align navigation “current URL/documentUri” retrieval
+4. **Add minimal contract tests (MockMvc/WebTestClient)** covering at least:
+    - `POST /session` → returns sessionId
+    - 404 error body matches `ErrorResponse`
+    - basic success path for `POST /session/{id}/load` or `POST /session/{id}/url`
+
+---
+
+## 7. Quick Verification (Windows / PowerShell / Maven Wrapper)
+
+> Note: this repo is a multi-module Maven project. Use `mvnw.cmd` at the project root.
 
 ```powershell
-# 1) 快速构建（跳过测试）
+# 1) Quick build (skip tests)
 .\mvnw.cmd -q -DskipTests package
 
-# 2) 仅验证 REST 模块测试（会级联构建依赖模块）
+# 2) Run tests for the REST module only (will build dependent modules)
 .\mvnw.cmd -pl pulsar-rest -am test -D"surefire.failIfNoSpecifiedTests=false"
 ```
 
 ---
 
-## 附录 A：其它 REST surfaces
+## Appendix A: Other REST surfaces
 
-仓库中还存在非 `/session...` 的 REST Controller（例如 `/api/*` 命令、对话、抽取等）。这些端点是否纳入 OpenAPI（以及是否与本文同一契约面）建议另起文档说明，避免与 WebDriver-Compatible API 混淆。
+There are also REST controllers outside `/session...` in this repo (for example, `/api/*` commands, chat, extraction, etc.). Whether those endpoints are included in OpenAPI (and whether they belong to the same contract surface as this doc) should be described in a separate document to avoid mixing them with the WebDriver-Compatible API.
+
