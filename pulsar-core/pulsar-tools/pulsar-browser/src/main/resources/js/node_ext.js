@@ -328,19 +328,52 @@ let __pulsar_NodeExt = function (node, config) {
  * @return {boolean}
  * */
 __pulsar_NodeExt.prototype.isVisible = function() {
-    let hidden = this.node.offsetParent === null;
+    // NodeExt is created by __pulsar_NodeFeatureCalculator, which should have already
+    // populated nodeExt.rect and nodeExt.styles.
 
-    if (hidden) {
+    // If we can't resolve a rectangle, treat it as not visible.
+    // (This also avoids throwing in overflow checks.)
+    if (!this.rect) {
         return false
     }
 
-    if (this.node instanceof Element) {
-        const style = getComputedStyle(this.node);
-        if (style.display !== "none" && style.visibility !== "hidden") {
-            return true;
-        }
+    // For non-elements (e.g. Text nodes), rely on the estimated rect.
+    if (!(this.node instanceof Element)) {
+        return this.rect.width > 0 && this.rect.height > 0 && !this.isOverflowHidden()
     }
 
+    // Style checks
+    const style = getComputedStyle(this.node);
+    if (!style) {
+        // Defensive: if style is unavailable, fall back to geometry.
+        return this.rect.width > 0 && this.rect.height > 0 && !this.isOverflowHidden()
+    }
+
+    if (style.display === "none") {
+        return false
+    }
+
+    // visibility:collapse is mainly for table rows/cols, treat as hidden too.
+    if (style.visibility === "hidden" || style.visibility === "collapse") {
+        return false
+    }
+
+    // Align with __pulsar_utils__.getVisibleTextContent(): opacity 0 means not visible.
+    if (style.opacity === "0") {
+        return false
+    }
+
+    // display:contents doesn't generate a box for itself; fall back to util's recursive check.
+    if (style.display === "contents") {
+        return __pulsar_utils__.isElementVisible(this.node)
+    }
+
+    // Geometry checks
+    if (this.rect.width <= 0 || this.rect.height <= 0) {
+        return false
+    }
+
+    // Finally, apply overflow hidden clipping from ancestor constraints.
     return !this.isOverflowHidden()
 };
 
@@ -359,10 +392,28 @@ __pulsar_NodeExt.prototype.isOverflown = function() {
  * @return {boolean}
  * */
 __pulsar_NodeExt.prototype.isOverflowHidden = function() {
-    let p = this.parent();
-    let maxWidth = this.config.viewPortWidth;
-    return p != null && p.maxWidth < maxWidth && (this.left() >= p.right() || this.right() <= p.left());
+    // Be defensive: rect might be unavailable for some nodes.
+    if (!this.rect) {
+        return false
+    }
 
+    let p = this.parent();
+    if (p == null || !p.rect) {
+        return false
+    }
+
+    let maxWidth = this.config.viewPortWidth;
+
+    // If an ancestor constrains maxWidth (overflow hidden), and this node is completely outside
+    // the ancestor's box, then consider it overflow-hidden.
+    if (p.maxWidth >= maxWidth) {
+        return false
+    }
+
+    const horizontallyOut = this.left() >= p.right() || this.right() <= p.left();
+    const verticallyOut = this.top() >= p.bottom() || this.bottom() <= p.top();
+
+    return horizontallyOut || verticallyOut;
 };
 
 /**

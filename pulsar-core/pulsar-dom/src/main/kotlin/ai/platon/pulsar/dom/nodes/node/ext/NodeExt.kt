@@ -451,7 +451,6 @@ val Node.hasOverflowHiddenFlag: Boolean get() = hasAttr(PULSAR_ATTR_OVERFLOW_HID
 
 /**
  * Whether the node is visible.
- * TODO: there are bugs in this method and can not be used.
  * */
 val Node.isVisible: Boolean
     get() {

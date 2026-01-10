@@ -15,7 +15,7 @@ object ScrapeAPIUtils {
     @Throws(IllegalArgumentException::class)
     fun normalize(rawSql: String?): NormXSQL {
         if (rawSql == null) {
-            throw throw IllegalArgumentException("SQL is required")
+            throw IllegalArgumentException("SQL is required")
         }
         val configuredUrl = extractUrlFromFromClause(rawSql) ?: throw IllegalArgumentException("No url found in sql: >>>$rawSql<<<")
 

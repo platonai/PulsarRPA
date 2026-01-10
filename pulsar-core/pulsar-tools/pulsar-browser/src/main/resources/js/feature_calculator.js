@@ -75,13 +75,12 @@ __pulsar_NodeFeatureCalculator.prototype.calcSelfIndicator = function(node, dept
     // Calculate the rectangle of this node
     nodeExt.rect = node.__pulsar_getRect();
 
-    // TODO: since there are too many _hidden nodes, we should simplified it to save space
     if (node.__pulsar_isElement()) {
         // "hidden" seems not defined properly,
         // In some cases, the parent element is "hidden", but the children are not expected to be hidden.
         // for example, ul tag often have a zero dimension.
         if (nodeExt.isHidden()) {
-            // TODO: if there is already a `h` attribute, use a longer one
+            // TODO: if there is already a `_h` attribute, use a longer one
             let attrName = this.config.ATTR_HIDDEN
             if (node.hasAttribute(attrName)) {
                 attrName = "_ps_" + this.config.ATTR_HIDDEN

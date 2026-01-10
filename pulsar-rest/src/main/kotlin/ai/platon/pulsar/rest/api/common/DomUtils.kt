@@ -92,35 +92,6 @@ object DomUtils {
         return sb.toString()
     }
 
-    fun selectLinks(document: FeaturedDocument): Set<String> {
-        val links = mutableSetOf<String>()
-        document.body.forEachElement { ele ->
-            if (ele.isAnchor) {
-                val href = URLUtils.normalizeOrNull(ele.attr("abs:href"))
-                if (href != null && URLUtils.isStandard(href)) {
-                    links.add(href)
-                }
-            }
-        }
-
-        return links
-    }
-
-    fun selectLinks(screenNumber: Float, document: FeaturedDocument, regex: String): String {
-        val pattern = regex.toRegex()
-        val sb = StringBuilder()
-        document.body.forEachElement { ele ->
-            if (ele.isAnchor && ele.isVisible) {
-                val href = ele.attr("abs:href")
-                if (URLUtils.isStandard(href) && href.matches(pattern)) {
-                    val anchorText = ele.cleanText
-                    sb.appendLine("$anchorText $href")
-                }
-            }
-        }
-        return sb.toString()
-    }
-
     fun accumRichText(
         node: Node,
         sb: StringBuilder,
