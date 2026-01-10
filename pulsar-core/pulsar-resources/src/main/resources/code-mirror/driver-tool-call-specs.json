@@ -125,14 +125,6 @@
   "arguments" : [ {
     "name" : "name",
     "type" : "String"
-  } ],
-  "returnType" : "Unit"
-}, {
-  "domain" : "driver",
-  "method" : "deleteCookies",
-  "arguments" : [ {
-    "name" : "name",
-    "type" : "String"
   }, {
     "name" : "url",
     "type" : "String?",
@@ -333,15 +325,6 @@
   } ],
   "returnType" : "Boolean",
   "description" : "    /**\n     * Returns whether the element is visible.\n     *\n     * ```kotlin\n     * driver.isVisible(\"input[name='q']\")\n     * ```\n     *\n     * @param selector - The selector of the element to check.\n     * @return Whether the element is visible.\n     * */\n"
-}, {
-  "domain" : "driver",
-  "method" : "visible",
-  "arguments" : [ {
-    "name" : "selector",
-    "type" : "String"
-  } ],
-  "returnType" : "Boolean",
-  "description" : "    /**\n     * Returns whether the element is visible.\n     *\n     * ```kotlin\n     * driver.visible(\"input[name='q']\")\n     * ```\n     *\n     * @param selector - The selector of the element to check.\n     * @return Whether the element is visible.\n     * */\n"
 }, {
   "domain" : "driver",
   "method" : "isChecked",
@@ -563,14 +546,6 @@
   } ],
   "returnType" : "Double",
   "description" : "    /**\n     * The current page frame scrolls to the middle.\n     *\n     * ```kotlin\n     * driver.scrollToMiddle(0.2)\n     * driver.scrollToMiddle(0.5)\n     * driver.scrollToMiddle(0.8)\n     * ```\n     *\n     * @param ratio The ratio of the page to scroll to, 0.0 means the top, 1.0 means the bottom.\n     */\n"
-}, {
-  "domain" : "driver",
-  "method" : "scrollToScreen",
-  "arguments" : [ {
-    "name" : "screenNumber",
-    "type" : "Double"
-  } ],
-  "returnType" : "Unit"
 }, {
   "domain" : "driver",
   "method" : "scrollToViewport",
