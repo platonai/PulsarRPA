@@ -4,7 +4,7 @@
 >
 > Sources of truth:
 > - **Spec**: `openapi/openapi.yaml`
-> - **Implementation**: `pulsar-rest/src/main/kotlin/ai/platon/pulsar/rest/api/webdriver/controller/*`
+> - **Implementation**: `pulsar-rest/src/main/kotlin/ai/platon/pulsar/rest/openapi/controller/*`
 >
 > Scope: this document focuses on the WebDriver-Compatible API (rooted at `/session...`). Other REST surfaces in this repo (such as `/api/*`) are not covered in detail here (see Appendix).
 
@@ -131,7 +131,7 @@
 
 The WebDriver-Compatible API implementation is mostly located under:
 
-- `pulsar-rest/src/main/kotlin/ai/platon/pulsar/rest/api/webdriver/controller/`
+- `pulsar-rest/src/main/kotlin/ai/platon/pulsar/rest/openapi/controller/`
 
 Controller files by tag:
 

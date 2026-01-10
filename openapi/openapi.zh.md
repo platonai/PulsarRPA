@@ -4,7 +4,7 @@
 >
 > 权威来源：
 > - **Spec**：`openapi/openapi.yaml`
-> - **实现**：`pulsar-rest/src/main/kotlin/ai/platon/pulsar/rest/api/webdriver/controller/*`
+> - **实现**：`pulsar-rest/src/main/kotlin/ai/platon/pulsar/rest/openapi/controller/*`
 >
 > 适用范围：本文聚焦 WebDriver-Compatible API（以 `/session...` 为根路径）。仓库内其它 REST 面（如 `/api/*`）不在本文详细展开（见附录）。
 
@@ -121,7 +121,7 @@
 
 WebDriver-Compatible API 的实现基本集中在：
 
-- `pulsar-rest/src/main/kotlin/ai/platon/pulsar/rest/api/webdriver/controller/`
+- `pulsar-rest/src/main/kotlin/ai/platon/pulsar/rest/openapi/controller/`
 
 按 tag 对应 Controller 文件：
 
