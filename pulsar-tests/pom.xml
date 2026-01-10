@@ -20,6 +20,27 @@
     <artifactId>pulsar-tests</artifactId>
     <name>Pulsar Tests</name>
 
+    <properties>
+        <!-- Skip tests by default in this module because they are time-consuming.
+             To run tests, use: mvn test -DrunPulsarTests=true -->
+        <skipTests>true</skipTests>
+    </properties>
+
+    <profiles>
+        <profile>
+            <id>run-pulsar-tests</id>
+            <activation>
+                <property>
+                    <name>runPulsarTests</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <properties>
+                <skipTests>false</skipTests>
+            </properties>
+        </profile>
+    </profiles>
+
     <dependencies>
         <!-- Internal Dependencies -->
         <dependency>

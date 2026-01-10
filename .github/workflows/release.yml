@@ -131,6 +131,9 @@ jobs:
           SKIP_TESTS_FLAG=""
           if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
             SKIP_TESTS_FLAG="-DskipTests"
+          else
+            # Enable pulsar-tests module tests for release builds
+            SKIP_TESTS_FLAG="-DrunPulsarTests=true"
           fi
 
           ./mvnw clean install $SKIP_TESTS_FLAG --batch-mode --show-version
