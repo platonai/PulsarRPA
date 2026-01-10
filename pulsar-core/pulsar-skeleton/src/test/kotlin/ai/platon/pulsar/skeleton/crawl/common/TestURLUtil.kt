@@ -2,7 +2,6 @@ package ai.platon.pulsar.skeleton.crawl.common
 
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.printlnPro
-import ai.platon.pulsar.common.urls.URLUtils.resolveURL
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.getHostBatches
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.toASCII
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.toUNICODE
@@ -52,26 +51,6 @@ class TestURLUtil {
 
     @Test
     @Throws(Exception::class)
-    fun testResolveURL() { // test PULSAR-436
-        val u436 = URI.create("http://a/b/c/d;p?q#f").toURL()
-        assertEquals("http://a/b/c/d;p?q#f", u436.toString())
-        var abs = resolveURL(u436, "?y")
-        assertEquals("http://a/b/c/d;p?y", abs.toString())
-        // test PULSAR-566
-        val u566 = URI.create("http://www.fleurie.org/entreprise.asp").toURL()
-        abs = resolveURL(u566, "?id_entrep=111")
-        assertEquals("http://www.fleurie.org/entreprise.asp?id_entrep=111", abs.toString())
-        val base = URI.create(baseString).toURL()
-        assertEquals("http://a/b/c/d;p?q", baseString, base.toString())
-
-        for (i in targets.indices) {
-            val u = resolveURL(base, targets[i][0])
-            assertEquals(targets[i][1], targets[i][1], u.toString())
-        }
-    }
-
-    @Test
-    @Throws(Exception::class)
     fun testToUNICODE() {
         assertEquals(
             "http://www.çevir.com",
@@ -103,35 +82,6 @@ class TestURLUtil {
     fun testFileProtocol() { // keep one single slash PULSAR-XXX
         assertEquals("file:/path/file.html", toASCII("file:/path/file.html"))
         assertEquals("file:/path/file.html", toUNICODE("file:/path/file.html"))
-    }
-
-    companion object {
-        // from RFC3986 section 5.4.1
-        private const val baseString = "http://a/b/c/d;p?q"
-        private val targets = arrayOf(
-            arrayOf("g", "http://a/b/c/g"),
-            arrayOf("./g", "http://a/b/c/g"),
-            arrayOf("g/", "http://a/b/c/g/"),
-            arrayOf("/g", "http://a/g"),
-            arrayOf("//g", "http://g"),
-            arrayOf("?y", "http://a/b/c/d;p?y"),
-            arrayOf("g?y", "http://a/b/c/g?y"),
-            arrayOf("#s", "http://a/b/c/d;p?q#s"),
-            arrayOf("g#s", "http://a/b/c/g#s"),
-            arrayOf("g?y#s", "http://a/b/c/g?y#s"),
-            arrayOf(";x", "http://a/b/c/;x"),
-            arrayOf("g;x", "http://a/b/c/g;x"),
-            arrayOf("g;x?y#s", "http://a/b/c/g;x?y#s"),
-            arrayOf("", "http://a/b/c/d;p?q"),
-            arrayOf(".", "http://a/b/c/"),
-            arrayOf("./", "http://a/b/c/"),
-            arrayOf("..", "http://a/b/"),
-            arrayOf("../", "http://a/b/"),
-            arrayOf("../g", "http://a/b/g"),
-            arrayOf("src", "http://a/"),
-            arrayOf("../../", "http://a/"),
-            arrayOf("../../g", "http://a/g")
-        )
     }
 }
 

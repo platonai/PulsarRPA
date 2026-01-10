@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED")
+
 package ai.platon.pulsar.common
 
 import org.apache.commons.lang3.StringUtils
@@ -152,12 +154,11 @@ object DateTimes {
 
     @JvmOverloads
     fun readableDuration(duration: Duration, truncatedToUnit: ChronoUnit = ChronoUnit.SECONDS): String {
-        return StringUtils.removeStart(duration.truncatedTo(truncatedToUnit).toString(), "PT")
-            .lowercase(Locale.getDefault())
+        return duration.truncatedTo(truncatedToUnit).toString().removePrefix("PT").lowercase()
     }
 
     fun readableDuration(duration: String): String {
-        return StringUtils.removeStart(duration, "PT").lowercase(Locale.getDefault())
+        return duration.removePrefix("PT").lowercase(Locale.getDefault())
     }
 
     fun isoInstantFormat(time: Long): String {

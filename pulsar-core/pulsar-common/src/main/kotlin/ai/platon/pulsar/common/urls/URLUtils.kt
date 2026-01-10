@@ -1,3 +1,5 @@
+@file:Suppress("Unused")
+
 package ai.platon.pulsar.common.urls
 
 import ai.platon.pulsar.common.config.AppConstants
@@ -307,7 +309,6 @@ object URLUtils {
     fun removeRedundantSlashes(url: String): String {
         val uri = URI(url).normalize()
 
-        // 直接判断路径是否为null或空，简化逻辑
         val normalizedPath = uri.path?.replace(Regex("/+"), "/") ?: "/"
 
         return URI(
@@ -389,63 +390,6 @@ object URLUtils {
         val uriBuilder = URIBuilder(url)
         uriBuilder.setParameters(uriBuilder.queryParams.apply { removeIf { it.name !in parameterNames } })
         return uriBuilder.build().toString()
-    }
-
-    /**
-     * Resolve relative URL-s and fix a java.net.URL error in handling of URLs
-     * with pure query targets.
-     *
-     * @param base   base url
-     * @param targetUrl target url (maybe relative)
-     * @return resolved absolute url.
-     * @throws MalformedURLException
-     */
-    @Throws(MalformedURLException::class)
-    @JvmStatic
-    fun resolveURL(base: URL, targetUrl: String): URL {
-        val target = targetUrl.trim()
-
-        // handle the case that there is a target that is a pure query,
-        // for example
-        // http://careers3.accenture.com/Careers/ASPX/Search.aspx?co=0&sk=0
-        // It has urls in the page of the form href="?co=0&sk=0&pg=1", and by
-        // default
-        // URL constructs the base+target combo as
-        // http://careers3.accenture.com/Careers/ASPX/?co=0&sk=0&pg=1, incorrectly
-        // dropping the Search.aspx target
-        //
-        // Browsers handle these just fine, they must have an exception similar to
-        // this
-        return if (target.startsWith("?")) {
-            fixPureQueryTargets(base, target)
-        } else URL(base, target)
-    }
-
-    /**
-     * Handle the case in RFC3986 section 5.4.1 example 7, and similar.
-     *
-     * @param base      base url
-     * @param targetUrl target url
-     * @return resolved absolute url.
-     */
-    private fun fixPureQueryTargets(base: URL, targetUrl: String): URL {
-        var target = targetUrl.trim()
-        if (!target.startsWith("?")) {
-            return URL(base, target)
-        }
-
-        val basePath = base.path
-        var baseRightMost = ""
-        val baseRightMostIdx = basePath.lastIndexOf("/")
-        if (baseRightMostIdx != -1) {
-            baseRightMost = basePath.substring(baseRightMostIdx + 1)
-        }
-
-        if (target.startsWith("?")) {
-            target = baseRightMost + target
-        }
-
-        return URL(base, target)
     }
 
     /**
