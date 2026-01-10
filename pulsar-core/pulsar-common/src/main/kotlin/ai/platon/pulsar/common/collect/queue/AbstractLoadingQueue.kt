@@ -117,11 +117,11 @@ abstract class AbstractLoadingQueue(
     @Synchronized
     override fun add(url: UrlAware) = offer(url)
 
+    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     @Synchronized
     override fun addAll(urls: Collection<UrlAware>): Boolean {
         if (urls.size > freeSlots) {
             val n = freeSlots
-            // TODO: can be optimized
             super.addAll(urls.take(n))
             overflow(urls.drop(n))
         } else {

@@ -59,7 +59,7 @@ object Ping {
             else -> "ping -c $pingTimes -w ${timeOut/1000} $ipAddress"
         }
         try {
-            val p = r.exec(pingCommand) ?: return time
+            val p = r.exec(arrayOf(pingCommand)) ?: return time
             reader = BufferedReader(InputStreamReader(p.inputStream))   // 逐行检查输出,计算类似出现=23ms TTL=62字样的次数
             var connectedCount = 0
             var timeTotal = 0.0f

@@ -79,6 +79,7 @@ object ResourceLoader {
             Class.forName(className) as Class<Z>
         } catch (e: ClassNotFoundException) {
             try {
+                @Suppress("UNCHECKED_CAST")
                 Class.forName(className, true, Thread.currentThread().contextClassLoader) as Class<Z>
             } catch (e2: Exception) {
                 throw e2
