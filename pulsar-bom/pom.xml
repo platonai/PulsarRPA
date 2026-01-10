@@ -288,6 +288,21 @@
                 <scope>test</scope>
             </dependency>
 
+            <!-- Kotlin -->
+
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-stdlib</artifactId>
+                <version>${kotlin.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
@@ -298,9 +313,19 @@
         <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
 
         <!--  Language  -->
+        <javaVersion>17</javaVersion>
         <kotlinVersion>2.2.21</kotlinVersion>
 
         <!--  Kotlin  -->
         <kotlin.version>${kotlinVersion}</kotlin.version>
+        <maven.compiler.release>${javaVersion}</maven.compiler.release>
+        <kotlin.compiler.jvmTarget>${javaVersion}</kotlin.compiler.jvmTarget>
+
+        <spring-boot.version>4.0.1</spring-boot.version>
+
+        <ktor.version>2.3.11</ktor.version>
+        <springmockk.version>4.0.2</springmockk.version>
+
+        <langchain4j.version>1.5.0</langchain4j.version>
     </properties>
 </project>
