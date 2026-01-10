@@ -9,8 +9,7 @@ import ai.platon.pulsar.test.server.DemoSiteStarter
 
 class FusedActs {
 
-    private val logger = getLogger(this)
-    private val log = logger
+    private val log = getLogger(this)
 
     private var step = 0
 
@@ -143,9 +142,9 @@ class FusedActs {
 
         // Print final values so variables are referenced (avoid unused warnings in IDE/build)
         log.info("[STEP ${++step}] Summary outputs")
-        logger.info("Final extracted fields keys: ${fields.keys}")
-        logger.info("Sample page content snippet: ${content?.take(120)}")
-        logger.info("Last action result: $agent")
+        log.info("Final extracted fields keys: ${fields.keys}")
+        log.info("Sample page content snippet: ${content?.take(120)}")
+        log.info("Last action result: $agent")
 
         agent.processTrace.forEach { println("""🚩$it""") }
 
