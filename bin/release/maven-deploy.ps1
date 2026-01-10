@@ -52,9 +52,9 @@ $VERSION =$SNAPSHOT_VERSION -replace "-SNAPSHOT", ""
 $VERSION | Set-Content "$AppHome\VERSION"
 
 # Replace SNAPSHOT version with the release version
-@('llm-config.md', 'README.zh.md', 'pom.xml') | ForEach-Object {
+@('README.md', 'README.zh.md', 'pom.xml') | ForEach-Object {
   Get-ChildItem -Path "$AppHome" -Depth 5 -Filter $_ -Recurse | ForEach-Object {
-    (Get-Content $_.FullName) -replace $SNAPSHOT_VERSION, $VERSION | Set-Content $_.FullName
+    (Get-Content $_.FullName) -replace $SNAPSHOT_VERSION, $VERSION | Set-Content -Encoding utf8 $_.FullName
   }
 }
 

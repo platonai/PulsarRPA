@@ -121,7 +121,7 @@ foreach ($F in $VERSION_AWARE_FILES) {
         $content = $content -replace [regex]::Escape($SNAPSHOT_VERSION), $NEXT_SNAPSHOT_VERSION
         # Update 'vMAJOR.MINOR.PATCH' tokens to new release version (digits only)
         $content = $content -replace "v[0-9]+\.[0-9]+\.[0-9]+", "v$NEXT_VERSION"
-        Set-Content $F $content
+        Set-Content $F $content -Encoding utf8
     }
 }
 
