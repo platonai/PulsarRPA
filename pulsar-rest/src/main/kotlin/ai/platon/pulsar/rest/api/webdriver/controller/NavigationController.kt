@@ -21,11 +21,11 @@ import org.springframework.web.bind.annotation.*
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
 class NavigationController(
-    @Autowired(required = false) private val sessionManager: SessionManager?,
-    @Autowired(required = false) private val store: InMemoryStore?
+    @param:Autowired(required = false) private val sessionManager: SessionManager?,
+    @param:Autowired(required = false) private val store: InMemoryStore?
 ) {
     private val logger = LoggerFactory.getLogger(NavigationController::class.java)
-    
+
     private val useRealSessions: Boolean = sessionManager != null
 
     /**
@@ -43,7 +43,7 @@ class NavigationController(
         if (useRealSessions) {
             val session = sessionManager!!.getSession(sessionId)
                 ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            
+
             try {
                 // Use real PulsarSession to load the page
                 runBlocking {
@@ -60,7 +60,7 @@ class NavigationController(
             }
             store.setSessionUrl(sessionId, request.url)
         }
-        
+
         return ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
     }
 
@@ -78,7 +78,7 @@ class NavigationController(
         val url = if (useRealSessions) {
             val session = sessionManager!!.getSession(sessionId)
                 ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            
+
             // Return the stored URL from session
             session.url ?: "about:blank"
         } else {
@@ -87,7 +87,7 @@ class NavigationController(
             }
             store.getSession(sessionId)?.url ?: "about:blank"
         }
-        
+
         return ResponseEntity.ok(WebDriverResponse(value = url))
     }
 
@@ -105,7 +105,7 @@ class NavigationController(
         val uri = if (useRealSessions) {
             val session = sessionManager!!.getSession(sessionId)
                 ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            
+
             // For now, return the current URL (in real implementation, this could be different from URL)
             session.url ?: "about:blank"
         } else {
@@ -114,7 +114,7 @@ class NavigationController(
             }
             store.getSession(sessionId)?.url ?: "about:blank"
         }
-        
+
         return ResponseEntity.ok(WebDriverResponse(value = uri))
     }
 
@@ -132,7 +132,7 @@ class NavigationController(
         val baseUri = if (useRealSessions) {
             val session = sessionManager!!.getSession(sessionId)
                 ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            
+
             // Extract base URI from current URL (protocol + host)
             session.url?.let { url ->
                 try {
@@ -156,7 +156,7 @@ class NavigationController(
                 }
             } ?: "about:blank"
         }
-        
+
         return ResponseEntity.ok(WebDriverResponse(value = baseUri))
     }
 }

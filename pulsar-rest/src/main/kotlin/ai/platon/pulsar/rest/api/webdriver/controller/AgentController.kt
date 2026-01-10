@@ -22,8 +22,8 @@ import org.springframework.web.bind.annotation.*
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
 class AgentController(
-    @Autowired(required = false) private val sessionManager: SessionManager?,
-    @Autowired(required = false) private val store: InMemoryStore?
+    @param:Autowired(required = false) private val sessionManager: SessionManager?,
+    @param:Autowired(required = false) private val store: InMemoryStore?
 ) {
     private val logger = LoggerFactory.getLogger(AgentController::class.java)
 

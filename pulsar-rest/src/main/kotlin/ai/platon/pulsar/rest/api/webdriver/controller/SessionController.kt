@@ -21,11 +21,11 @@ import org.springframework.web.bind.annotation.*
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
 class SessionController(
-    @Autowired(required = false) private val sessionManager: SessionManager?,
-    @Autowired(required = false) private val store: InMemoryStore?
+    @param:Autowired(required = false) private val sessionManager: SessionManager?,
+    @param:Autowired(required = false) private val store: InMemoryStore?
 ) {
     private val logger = LoggerFactory.getLogger(SessionController::class.java)
-    
+
     private val useRealSessions: Boolean = sessionManager != null
 
     init {
@@ -120,7 +120,7 @@ class SessionController(
         } else {
             store!!.deleteSession(sessionId)
         }
-        
+
         if (!deleted) {
             return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
         }

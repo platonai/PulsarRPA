@@ -22,11 +22,11 @@ import org.springframework.web.bind.annotation.*
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
 class PulsarSessionController(
-    @Autowired(required = false) private val sessionManager: SessionManager?,
-    @Autowired(required = false) private val store: InMemoryStore?
+    @param:Autowired(required = false) private val sessionManager: SessionManager?,
+    @param:Autowired(required = false) private val store: InMemoryStore?
 ) {
     private val logger = LoggerFactory.getLogger(PulsarSessionController::class.java)
-    
+
     private val useRealSessions: Boolean = sessionManager != null
 
     companion object {
@@ -49,7 +49,7 @@ class PulsarSessionController(
         val result = if (useRealSessions) {
             val session = sessionManager!!.getSession(sessionId)
                 ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            
+
             // Use real PulsarSession.normalize
             val normUrl = session.pulsarSession.normalize(request.url, request.args ?: "")
             NormUrlResult(
@@ -89,14 +89,14 @@ class PulsarSessionController(
         val result = if (useRealSessions) {
             val session = sessionManager!!.getSession(sessionId)
                 ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            
+
             // Use real PulsarSession.open (which fetches fresh from internet)
             val page = runBlocking {
                 session.pulsarSession.open(request.url)
             }
-            
+
             sessionManager.setSessionUrl(sessionId, request.url)
-            
+
             WebPageResult(
                 url = page.url,
                 location = page.location ?: page.url,
@@ -140,16 +140,16 @@ class PulsarSessionController(
         val result = if (useRealSessions) {
             val session = sessionManager!!.getSession(sessionId)
                 ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            
+
             // Use real PulsarSession.load (checks cache first)
             val page = if (request.args != null) {
                 session.pulsarSession.load(request.url, request.args)
             } else {
                 session.pulsarSession.load(request.url)
             }
-            
+
             sessionManager.setSessionUrl(sessionId, request.url)
-            
+
             WebPageResult(
                 url = page.url,
                 location = page.location ?: page.url,
@@ -192,7 +192,7 @@ class PulsarSessionController(
         val success = if (useRealSessions) {
             val session = sessionManager!!.getSession(sessionId)
                 ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            
+
             // Use real PulsarSession.submit
             if (request.args != null) {
                 session.pulsarSession.submit(request.url, request.args)
@@ -207,7 +207,7 @@ class PulsarSessionController(
             // Mock always returns success
             true
         }
-        
+
         return ResponseEntity.ok(SubmitResponse(value = success))
     }
 
@@ -217,25 +217,25 @@ class PulsarSessionController(
      */
     private fun normalizeUrl(url: String): String {
         if (url.isBlank()) return ""
-        
+
         var normalized = url.trim()
-        
+
         // Add scheme if missing
         if (!normalized.startsWith("http://") && !normalized.startsWith("https://")) {
             normalized = "https://$normalized"
         }
-        
+
         // Remove fragment
         val fragmentIndex = normalized.indexOf('#')
         if (fragmentIndex > 0) {
             normalized = normalized.substring(0, fragmentIndex)
         }
-        
+
         // Remove trailing slash for consistency (unless it's the root)
         if (normalized.endsWith("/") && normalized.count { it == '/' } > MIN_URL_SLASH_COUNT) {
             normalized = normalized.dropLast(1)
         }
-        
+
         return normalized
     }
 }
