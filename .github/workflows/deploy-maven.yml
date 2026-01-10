@@ -142,7 +142,7 @@ jobs:
             --show-version --errors
         env:
           GPG_PASSPHRASE:   ${{ secrets.GPG_PASSPHRASE }}
-          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
-          MAVEN_PASSWORD:   ${{ secrets.CENTRAL_PASSWORD }}
-          MAVEN_USERNAME:   ${{ secrets.CENTRAL_USERNAME }}
-          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          MAVEN_USERNAME:   ${{ secrets.CENTRAL_USERNAME }} # MAVEN_USERNAME might be the correct name
+          MAVEN_PASSWORD:   ${{ secrets.CENTRAL_PASSWORD }} # MAVEN_PASSWORD might be the correct name
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }} # might not be needed
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }} # might not be needed
