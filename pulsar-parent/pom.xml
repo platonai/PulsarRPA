@@ -119,7 +119,7 @@ under the License.
         <resourceBundleArtifact>apache-jar-resource-bundle</resourceBundleArtifact>
         <gpg.useagent>true</gpg.useagent>
         <!-- java version used to to set maven.compiler.* -->
-        <javaVersion>17</javaVersion>
+
         <minimalMavenBuildVersion>3.9</minimalMavenBuildVersion>
         <minimalJavaBuildVersion>${javaVersion}</minimalJavaBuildVersion>
         <!-- for surefire, failsafe and surefire-report -->
@@ -161,6 +161,16 @@ under the License.
         <version.maven-war-plugin>3.5.1</version.maven-war-plugin>
 
         <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
+
+
+        <!--  Language  -->
+        <javaVersion>17</javaVersion>
+        <kotlinVersion>2.2.21</kotlinVersion>
+
+        <!--  Kotlin  -->
+        <kotlin.version>${kotlinVersion}</kotlin.version>
+        <maven.compiler.release>${javaVersion}</maven.compiler.release>
+        <kotlin.compiler.jvmTarget>${javaVersion}</kotlin.compiler.jvmTarget>
     </properties>
 
     <build>

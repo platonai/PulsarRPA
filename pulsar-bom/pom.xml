@@ -321,11 +321,6 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <ktor.version>2.3.11</ktor.version>
-        <springmockk.version>4.0.2</springmockk.version>
-
-        <langchain4j.version>1.5.0</langchain4j.version>
-
         <!-- Plugin versions -->
         <!-- Overrides ai.platon:platon -->
         <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
@@ -344,8 +339,20 @@
         <dokka.version>1.9.20</dokka.version>
         <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
 
-        <kotlin.version>2.2.21</kotlin.version>
-        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
+        <!--  Language  -->
+        <javaVersion>17</javaVersion>
+        <kotlinVersion>2.2.21</kotlinVersion>
+
+        <!--  Kotlin  -->
+        <kotlin.version>${kotlinVersion}</kotlin.version>
+        <maven.compiler.release>${javaVersion}</maven.compiler.release>
+        <kotlin.compiler.jvmTarget>${javaVersion}</kotlin.compiler.jvmTarget>
+
         <spring-boot.version>4.0.1</spring-boot.version>
+
+        <ktor.version>2.3.11</ktor.version>
+        <springmockk.version>4.0.2</springmockk.version>
+
+        <langchain4j.version>1.5.0</langchain4j.version>
     </properties>
 </project>
