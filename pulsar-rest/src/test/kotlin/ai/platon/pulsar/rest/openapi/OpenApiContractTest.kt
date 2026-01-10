@@ -1,4 +1,4 @@
-package ai.platon.pulsar.rest.api.openapi
+package ai.platon.pulsar.rest.openapi
 
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
@@ -9,6 +9,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 import org.yaml.snakeyaml.Yaml
 import java.nio.charset.StandardCharsets
 import org.springframework.web.servlet.mvc.method.RequestMappingInfo
+import kotlin.collections.iterator
 
 /**
  * Light-weight contract checks to prevent OpenAPI spec drifting away from Spring MVC mappings.

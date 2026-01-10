@@ -1,4 +1,4 @@
-package ai.platon.pulsar.rest.api.openapi.service
+package ai.platon.pulsar.rest.openapi.service
 
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.BasicAgenticSession

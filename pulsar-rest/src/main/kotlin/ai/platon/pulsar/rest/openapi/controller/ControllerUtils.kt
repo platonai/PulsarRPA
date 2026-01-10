@@ -1,6 +1,6 @@
-package ai.platon.pulsar.rest.api.openapi.controller
+package ai.platon.pulsar.rest.openapi.controller
 
-import ai.platon.pulsar.rest.api.openapi.dto.ErrorResponse
+import ai.platon.pulsar.rest.openapi.dto.ErrorResponse
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.ResponseEntity
 import java.util.UUID

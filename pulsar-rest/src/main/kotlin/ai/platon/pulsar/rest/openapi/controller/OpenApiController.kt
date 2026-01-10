@@ -1,4 +1,4 @@
-package ai.platon.pulsar.rest.api.openapi.controller
+package ai.platon.pulsar.rest.openapi.controller
 
 import org.slf4j.LoggerFactory
 import org.springframework.core.io.ClassPathResource

@@ -1,6 +1,6 @@
-package ai.platon.pulsar.rest.api.openapi
+package ai.platon.pulsar.rest.openapi
 
-import ai.platon.pulsar.rest.api.openapi.dto.*
+import ai.platon.pulsar.rest.openapi.dto.*
 import ai.platon.pulsar.rest.util.server.MockWebSiteAccess
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test

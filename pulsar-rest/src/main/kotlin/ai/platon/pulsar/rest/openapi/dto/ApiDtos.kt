@@ -1,4 +1,4 @@
-package ai.platon.pulsar.rest.api.openapi.dto
+package ai.platon.pulsar.rest.openapi.dto
 
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty

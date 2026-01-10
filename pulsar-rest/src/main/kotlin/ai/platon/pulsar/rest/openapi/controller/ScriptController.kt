@@ -1,8 +1,8 @@
-package ai.platon.pulsar.rest.api.openapi.controller
+package ai.platon.pulsar.rest.openapi.controller
 
-import ai.platon.pulsar.rest.api.openapi.dto.*
-import ai.platon.pulsar.rest.api.openapi.service.SessionManager
-import ai.platon.pulsar.rest.api.openapi.store.InMemoryStore
+import ai.platon.pulsar.rest.openapi.dto.*
+import ai.platon.pulsar.rest.openapi.service.SessionManager
+import ai.platon.pulsar.rest.openapi.store.InMemoryStore
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
 import jakarta.servlet.http.HttpServletResponse
 import kotlinx.coroutines.runBlocking

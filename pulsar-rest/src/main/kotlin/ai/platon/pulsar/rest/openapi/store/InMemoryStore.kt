@@ -1,9 +1,9 @@
-package ai.platon.pulsar.rest.api.openapi.store
+package ai.platon.pulsar.rest.openapi.store
 
-import ai.platon.pulsar.rest.api.openapi.dto.Event
-import ai.platon.pulsar.rest.api.openapi.dto.EventConfig
-import ai.platon.pulsar.rest.api.openapi.dto.EventConfigWithId
-import ai.platon.pulsar.rest.api.openapi.dto.SubscriptionData
+import ai.platon.pulsar.rest.openapi.dto.Event
+import ai.platon.pulsar.rest.openapi.dto.EventConfig
+import ai.platon.pulsar.rest.openapi.dto.EventConfigWithId
+import ai.platon.pulsar.rest.openapi.dto.SubscriptionData
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.security.MessageDigest
