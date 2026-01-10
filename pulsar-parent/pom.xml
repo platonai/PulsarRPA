@@ -159,6 +159,8 @@ under the License.
         <version.maven-source-plugin>3.4.0</version.maven-source-plugin>
         <version.maven-surefire>${surefire.version}</version.maven-surefire>
         <version.maven-war-plugin>3.5.1</version.maven-war-plugin>
+
+        <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
     </properties>
 
     <build>
@@ -588,7 +590,7 @@ under the License.
                     <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
-                        <version>0.9.0</version>
+                        <version>${central-publishing-maven-plugin.version}</version>
                         <extensions>true</extensions>
                         <configuration>
                             <publishingServerId>central</publishingServerId>
