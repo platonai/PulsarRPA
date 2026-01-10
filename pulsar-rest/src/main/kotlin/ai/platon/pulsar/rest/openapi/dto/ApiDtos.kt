@@ -103,7 +103,7 @@ data class FindElementRequest(
  * Uses the W3C WebDriver element identifier key.
  */
 data class ElementRef(
-    @JsonProperty("element-6066-11e4-a52e-4f735466cecf")
+    @param:JsonProperty("element-6066-11e4-a52e-4f735466cecf")
     val elementId: String
 )
 

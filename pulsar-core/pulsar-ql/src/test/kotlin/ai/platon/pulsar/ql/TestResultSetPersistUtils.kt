@@ -80,6 +80,7 @@ class TestResultSetPersistUtils {
 
         if (rs.next()) {
             val c1 = "'C1R1', 'C1R2', 'C1R3', 'C1R4', 'C1R5', 'C1R6', 'C1R7', 'C1R8', 'C1R9', 'C1R10'"
+            @Suppress("UNCHECKED_CAST")
             val array = rs.getArray("C1").array as Array<Any>
             assertEquals(c1, array.joinToString())
         }

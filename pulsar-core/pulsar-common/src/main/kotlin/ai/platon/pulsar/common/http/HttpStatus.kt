@@ -1,6 +1,6 @@
 package ai.platon.pulsar.common.http
 
-import org.springframework.lang.Nullable
+import javax.annotation.Nullable
 
 /*
  * Copyright 2002-2023 the original author or authors.
@@ -541,7 +541,7 @@ enum class HttpStatus(
             @Nullable
             fun resolve(statusCode: Int): Series? {
                 val seriesCode = statusCode / 100
-                for (series in values()) {
+                for (series in entries) {
                     if (series.value == seriesCode) {
                         return series
                     }

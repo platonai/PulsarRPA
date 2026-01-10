@@ -16,20 +16,6 @@ object Ping {
         return InetAddress.getByName(ipAddress).isReachable(timeOut)
     }
 
-    fun ping02(ipAddress: String) {
-        try {
-            val pro = Runtime.getRuntime().exec("ping $ipAddress")
-            val buf = BufferedReader(InputStreamReader(pro.inputStream))
-            var line = buf.readLine()
-            while (line != null) {
-                println(line)
-                line = buf.readLine()
-            }
-        } catch (ex: Exception) {
-            println(ex.message)
-        }
-    }
-
     fun ping(ipAddress: String, pingTimes: Int, timeout: Duration): Boolean {
         var reader: BufferedReader? = null
         val r = Runtime.getRuntime()  // 将要执行的ping命令,此命令是windows格式的命令

@@ -700,6 +700,7 @@ Kill all Chrome processes and run the program again.
         report.appendLine("Chrome Launch Report")
         report.appendLine("=".repeat(50))
 
+        @Suppress("UNCHECKED_CAST")
         val launchInfo = data["launchInfo"] as Map<String, Any>
         report.appendLine("Launch Time: ${launchInfo["timestamp"]}")
         report.appendLine("Duration: ${launchInfo["launchDuration"]}")
@@ -707,12 +708,15 @@ Kill all Chrome processes and run the program again.
         report.appendLine("Chrome Binary: ${launchInfo["chromeBinary"]}")
         report.appendLine("User Data Dir: ${launchInfo["userDataDirectory"]}")
 
+        @Suppress("UNCHECKED_CAST")
         val processInfo = data["processInfo"] as Map<String, Any>
         report.appendLine("Process ID: ${processInfo["pid"]}")
         report.appendLine("Process Alive: ${processInfo["isAlive"]}")
 
+        @Suppress("UNCHECKED_CAST")
         val chromeOptions = data["chromeOptions"] as Map<String, Any>
         report.appendLine("Headless Mode: ${chromeOptions["headless"]}")
+        @Suppress("UNCHECKED_CAST")
         val args = chromeOptions["arguments"] as List<String>
         report.appendLine("Arguments: ${args.joinToString(" ")}")
 

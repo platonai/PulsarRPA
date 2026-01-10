@@ -154,8 +154,6 @@ data class CommandRequest @JsonCreator constructor(
     @param:JsonProperty("xsql") var xsql: String? = null,
     @param:JsonProperty("richText") var richText: Boolean? = null,
     @param:JsonProperty("async") var async: Boolean? = null,
-    @Deprecated("Use async instead")
-    @param:JsonProperty("mode") var mode: String? = null, // "sync" or "async", default to "sync"
     @param:JsonProperty("id") var id: String? = null,
 ) {
     fun hasAction(): Boolean {
@@ -165,7 +163,6 @@ data class CommandRequest @JsonCreator constructor(
     fun isAsync(): Boolean {
         return when {
             async == true -> true
-            mode?.lowercase() == "async" -> true
             else -> false
         }
     }
@@ -343,10 +340,12 @@ fun CommandStatus.addInstructResult(result: InstructResult) {
         }
 
         "fields" -> {
+            @Suppress("UNCHECKED_CAST")
             commandResult.fields = result.result as? Map<String, String>?
         }
 
         "links" -> {
+            @Suppress("UNCHECKED_CAST")
             commandResult.links = result.result as? List<String>?
         }
     }

@@ -46,17 +46,17 @@ open class BrowserWebDriverFetcher(
     val conf: ImmutableConfig
 ): WebDriverFetcher {
     private val logger = LoggerFactory.getLogger(BrowserWebDriverFetcher::class.java)!!
-    
+
     enum class EventType {
         willFetch,
         fetched
     }
-    
+
     @Throws(Exception::class)
     override suspend fun fetchDeferred(url: String, driver: WebDriver): FetchResult {
         return fetchDeferred(FetchTask.create(url, conf.toVolatileConfig()), driver)
     }
-    
+
     @Throws(Exception::class)
     override suspend fun fetchDeferred(task: FetchTask, driver: WebDriver): FetchResult {
         emit(EventType.willFetch, task.page, driver)
@@ -69,27 +69,26 @@ open class BrowserWebDriverFetcher(
         }
 
         emit(EventType.fetched, task.page, driver)
-        
+
         return result
     }
-    
+
     private suspend fun emit(type: EventType, page: WebPage, driver: WebDriver) {
         val event = page.browseEventHandlers ?: return
         when(type) {
             EventType.willFetch -> notify(type.name) { event.onWillFetch(page, driver) }
             EventType.fetched -> notify(type.name) { event.onFetched(page, driver) }
-            else -> {}
         }
     }
-    
+
     private suspend fun notify(name: String, action: suspend () -> Unit) {
         val e = kotlin.runCatching { action() }.exceptionOrNull()
-        
+
         if (e != null) {
             handleEventException(name, e)
         }
     }
-    
+
     private fun handleEventException(name: String, e: Throwable) {
         when (e) {
             is WebDriverCancellationException -> logger.info("Web driver is cancelled")
@@ -113,9 +112,9 @@ open class PrivacyManagedBrowserFetcher(
     private val closeCascaded: Boolean = false
 ): AbstractBrowserFetcher(), IncognitoBrowserFetcher {
     private val logger = LoggerFactory.getLogger(PrivacyManagedBrowserFetcher::class.java)!!
-    
+
     override val webdriverFetcher by lazy { BrowserWebDriverFetcher(browserEmulator, conf) }
-    
+
     private val closed = AtomicBoolean()
     private val illegalState = AtomicBoolean()
     override val isActive get() = !illegalState.get() && !closed.get() && AppContext.isActive
@@ -128,12 +127,12 @@ open class PrivacyManagedBrowserFetcher(
         if (!isActive) {
             return ForwardingResponse.canceled(page)
         }
-        
+
         if (page.isInternal) {
             logger.warn("Unexpected internal page | {}", page.url)
             return ForwardingResponse.canceled(page)
         }
-        
+
         val task = FetchTask.create(page)
         return fetchDeferred(task)
     }
