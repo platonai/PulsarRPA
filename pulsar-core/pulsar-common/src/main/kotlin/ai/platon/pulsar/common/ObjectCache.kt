@@ -26,24 +26,26 @@ import java.util.*
  */
 class ObjectCache private constructor() {
     private val objectMap = HashMap<String, Any?>()
-    
+
     fun hasBean(key: String): Boolean {
         return objectMap[key] != null
     }
-    
+
     fun getBean(key: String): Any? {
         return objectMap[key]
     }
-    
+
     fun <T> getBean(key: String, defaultValue: T): T {
         val obj = objectMap[key] ?: return defaultValue
+        @Suppress("UNCHECKED_CAST")
         return obj as T
     }
-    
+
     fun <T> getBean(clazz: Class<T>): T? {
+        @Suppress("UNCHECKED_CAST")
         return objectMap[clazz.name] as T?
     }
-    
+
     inline fun <reified T: Any> getBean(): T? = getBean(T::class.java)
 
     inline fun <reified T: Any> computeIfAbsent(mappingFunction: () -> T): T {
@@ -54,14 +56,14 @@ class ObjectCache private constructor() {
         }
         return value
     }
-    
+
     fun putBean(obj: Any) {
         objectMap[obj.javaClass.name] = obj
     }
-    
+
     companion object {
         private val CACHE = WeakHashMap<ImmutableConfig, ObjectCache>()
-        
+
         @JvmStatic
         fun get(conf: ImmutableConfig): ObjectCache {
             return CACHE.computeIfAbsent(conf) { ObjectCache() }

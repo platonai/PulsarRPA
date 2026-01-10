@@ -71,20 +71,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.jetbrains.kotlinx</groupId>
-                <artifactId>kotlinx-coroutines-bom</artifactId>
-                <version>${kotlin.coroutine.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
-                <groupId>org.jetbrains.kotlin</groupId>
-                <artifactId>kotlin-bom</artifactId>
-                <version>${kotlin.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-            <dependency>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-serialization</artifactId>
                 <version>${kotlin.version}</version>
@@ -116,22 +102,7 @@
                 <artifactId>jodd-core</artifactId>
                 <version>${jodd-trove4j-core.version}</version>
             </dependency>
-            <dependency>
-                <groupId>net.sourceforge.nekohtml</groupId>
-                <artifactId>nekohtml</artifactId>
-                <version>${nekohtml.version}</version>
-            </dependency>
-            <!-- TODO: This artifact was moved to: net.sf.trove4j » core -->
-            <dependency>
-                <groupId>net.sf.trove4j</groupId>
-                <artifactId>trove4j</artifactId>
-                <version>${trove4j.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>net.sf.trove4j</groupId>
-                <artifactId>core</artifactId>
-                <version>${trove4j-core.version}</version>
-            </dependency>
+
             <dependency>
                 <groupId>jtidy</groupId>
                 <artifactId>jtidy</artifactId>
@@ -145,13 +116,7 @@
                 <artifactId>icu4j</artifactId>
                 <version>${icu4j.version}</version>
             </dependency>
-            <!-- https://mvnrepository.com/artifact/xerces/xercesImpl -->
-            <!-- Xerces2 provides high performance, fully compliant XML parsers -->
-            <dependency>
-                <groupId>xerces</groupId>
-                <artifactId>xercesImpl</artifactId>
-                <version>${xercesImpl.version}</version>
-            </dependency>
+
             <!--  Tika for general document parsers  -->
             <dependency>
                 <groupId>org.apache.tika</groupId>
@@ -275,22 +240,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.jetbrains.kotlinx</groupId>
-                <artifactId>dataframe-core</artifactId>
-                <version>${dataframe.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jetbrains.kotlinx</groupId>
-                <artifactId>dataframe-excel</artifactId>
-                <version>${dataframe.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.jetbrains.kotlinx</groupId>
-                <artifactId>dataframe-bom</artifactId>
-                <version>${dataframe.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.apache.httpcomponents</groupId>
                 <artifactId>httpcore</artifactId>
                 <version>${httptrove4j-core.version}</version>
@@ -371,15 +320,7 @@
                 <artifactId>jgrapht-ext</artifactId>
                 <version>${jgrapht.version}</version>
             </dependency>
-            <!--
-                Hamcrest is a framework for writing matcher objects allowing ‘match�?rules to be defined declaratively.
-              -->
-            <dependency>
-                <groupId>org.hamcrest</groupId>
-                <artifactId>hamcrest-all</artifactId>
-                <version>${hamcrest-all.version}</version>
-                <scope>test</scope>
-            </dependency>
+
             <!--
                 The Jakarta-ORO Java classes are a set of text-processing Java classes
                 that provide Perl5 compatible regular expressions.
@@ -457,14 +398,6 @@
                 <groupId>org.perf4j</groupId>
                 <artifactId>perf4j</artifactId>
                 <version>${perf4j.version}</version>
-            </dependency>
-            <!--  junit 5  -->
-            <dependency>
-                <groupId>org.junit</groupId>
-                <artifactId>junit-bom</artifactId>
-                <version>${junit5.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
             </dependency>
 
             <dependency>

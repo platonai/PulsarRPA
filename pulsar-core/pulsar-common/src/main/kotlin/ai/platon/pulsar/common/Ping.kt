@@ -27,7 +27,7 @@ object Ping {
         try {
             // 执行命令并获取输出
             println(pingCommand)
-            val p = r.exec(pingCommand) ?: return false
+            val p = r.exec(arrayOf(pingCommand)) ?: return false
             reader = BufferedReader(InputStreamReader(p.inputStream))   // 逐行检查输出,计算类似出现=23ms TTL=62字样的次数
             var connectedCount = 0
             var line = reader.readLine()

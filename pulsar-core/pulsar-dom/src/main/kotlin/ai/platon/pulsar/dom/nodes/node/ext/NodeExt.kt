@@ -46,6 +46,7 @@ class IntFeature(val name: Int) {
 }
 
 class MapField<T>(val initializer: (Node) -> T) {
+    @Suppress("UNCHECKED_CAST")
     operator fun getValue(thisRef: Node, property: KProperty<*>): T =
         thisRef.extension.variables[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
 
@@ -295,7 +296,7 @@ fun Element.clearAttributesCascaded(): Element {
  * Parse style attribute of the element into an array of strings.
  * */
 fun Element.parseStyle(): Array<String> {
-    return Strings.stripNonChar(attr("style"), ":;")
+    return Strings.removeNonChineseChar(attr("style"), ":;")
         .split(";".toRegex())
         .dropLastWhile { it.isEmpty() }
         .toTypedArray()

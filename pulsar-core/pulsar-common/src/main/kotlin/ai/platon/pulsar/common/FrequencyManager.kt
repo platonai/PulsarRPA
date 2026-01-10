@@ -57,8 +57,8 @@ class FrequencyManager<T : Comparable<T>> : MutableMap<String, Frequency<T>> {
         return counters.remove(key)
     }
 
-    override fun putAll(m: Map<out String, Frequency<T>>) {
-        counters.putAll(m)
+    override fun putAll(from: Map<out String, Frequency<T>>) {
+        counters.putAll(from)
     }
 
     override fun clear() {
