@@ -2,6 +2,7 @@ package ai.platon.pulsar.rest.openapi.controller
 
 import ai.platon.pulsar.rest.openapi.service.SessionManager
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.CrossOrigin
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @CrossOrigin
 @RequestMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
+@ConditionalOnBean(SessionManager::class)
 class HealthController(
     private val sessionManager: SessionManager
 ) {

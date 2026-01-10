@@ -4,6 +4,7 @@ import ai.platon.pulsar.rest.openapi.dto.*
 import ai.platon.pulsar.rest.openapi.service.SessionManager
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -17,6 +18,7 @@ import org.springframework.web.bind.annotation.*
     "/session/{sessionId}/control",
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
+@ConditionalOnBean(SessionManager::class)
 class ControlController(
     private val sessionManager: SessionManager
 ) {

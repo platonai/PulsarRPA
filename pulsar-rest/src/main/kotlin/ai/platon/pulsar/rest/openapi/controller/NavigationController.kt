@@ -5,6 +5,7 @@ import ai.platon.pulsar.rest.openapi.service.SessionManager
 import jakarta.servlet.http.HttpServletResponse
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -18,6 +19,7 @@ import org.springframework.web.bind.annotation.*
     "/session/{sessionId}",
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
+@ConditionalOnBean(SessionManager::class)
 class NavigationController(
     private val sessionManager: SessionManager
 ) {
