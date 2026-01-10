@@ -276,16 +276,6 @@ class PlaywrightDriver(
         }
     }
 
-    override suspend fun deleteCookies(name: String) {
-        try {
-            rpc.invokeDeferred("deleteCookies") {
-                page.context().clearCookies()
-            }
-        } catch (e: Exception) {
-            rpc.handleWebDriverException(e, "deleteCookies", name)
-        }
-    }
-
     override suspend fun deleteCookies(name: String, url: String?, domain: String?, path: String?) {
         try {
             rpc.invokeDeferred("deleteCookies") {

@@ -115,8 +115,6 @@ interface JvmWebDriver {
     @Throws(WebDriverException::class)
     fun isVisibleAsync(selector: String): CompletableFuture<Boolean>
     @Throws(WebDriverException::class)
-    fun visibleAsync(selector: String): CompletableFuture<Boolean>
-    @Throws(WebDriverException::class)
     fun isCheckedAsync(selector: String): CompletableFuture<Boolean>
 
     @Throws(WebDriverException::class)
