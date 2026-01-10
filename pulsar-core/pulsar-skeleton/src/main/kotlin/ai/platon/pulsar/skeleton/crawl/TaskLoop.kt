@@ -12,9 +12,6 @@ interface TaskLoop : StartStopRunnable {
     val urlFeeder: Iterable<UrlAware>
     val collectors: List<out DataCollector<UrlAware>>
     val taskRunner: TaskRunner
-
-    @Deprecated("Use TaskLoop instead", ReplaceWith("TaskLoop"))
-    val crawler: TaskRunner get() = taskRunner
     val display: String
     val abstract: String
     val report: String

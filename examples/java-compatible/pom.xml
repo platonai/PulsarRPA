@@ -24,6 +24,25 @@
 
     <build>
         <defaultGoal>package</defaultGoal>
+
+        <!-- Ensure consistent encoding across OSes (avoid Windows GBK platform encoding warnings) -->
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <configuration>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <release>${maven.compiler.release}</release>
+                    <encoding>${project.build.sourceEncoding}</encoding>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
 
     <dependencyManagement>
@@ -46,6 +65,10 @@
     </dependencies>
 
     <properties>
+        <!-- Keep this module copy/paste friendly: explicitly pin UTF-8 instead of relying on repo parent -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
         <pulsar.version>4.4.0-SNAPSHOT</pulsar.version>
         <spring-boot.version>4.0.1</spring-boot.version>
         <maven.compiler.release>17</maven.compiler.release>

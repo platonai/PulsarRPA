@@ -748,17 +748,6 @@ open class LoadOptions(
     var noFilter = false
 
     /**
-     * Deprecated network condition parameter, use interactLevel instead.
-     */
-    @Deprecated("Use interactLevel instead", ReplaceWith("options.interactLevel"))
-    @Parameter(
-        names = ["-netCond", "-netCondition", "--net-condition"],
-        converter = ConditionConverter::class,
-        description = "Indicates the network condition"
-    )
-    var netCondition = Condition.GOOD
-
-    /**
      * Controls the level of interaction with web pages during crawling.
      *
      * This setting balances content quality against performance:

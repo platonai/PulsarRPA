@@ -62,12 +62,6 @@ interface PulsarContext : java.lang.AutoCloseable {
     val taskLoops: TaskLoops
 
     /**
-     * The main loops
-     * */
-    @Deprecated("Use taskLoops instead", ReplaceWith("taskLoops"))
-    val crawlLoops: TaskLoops get() = taskLoops
-
-    /**
      * The browser factory.
      * */
     val browserFactory: BrowserFactory

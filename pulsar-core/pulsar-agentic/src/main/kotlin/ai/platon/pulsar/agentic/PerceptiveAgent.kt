@@ -144,10 +144,6 @@ data class ObserveOptions(
     // internal, deprecated
     @get:JsonIgnore
     val agentState: AgentState? = null,
-    // internal, deprecated
-    @get:JsonIgnore
-    @Deprecated("deprecated")
-    val additionalContext: MutableMap<String, Any> = mutableMapOf(),
 )
 
 data class ObserveResult constructor(
@@ -179,10 +175,6 @@ data class ObserveResult constructor(
     val backendNodeId: Int? = null,
 
     val observeElement: ObserveElement? = null,
-
-    // internal
-    @Deprecated("deprecated")
-    val additionalContext: MutableMap<String, Any> = mutableMapOf(),
 
     // internal
     val actionDescription: ActionDescription? = null,

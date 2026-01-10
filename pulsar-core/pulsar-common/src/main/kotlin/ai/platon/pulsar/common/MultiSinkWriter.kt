@@ -15,7 +15,7 @@ open class MultiSinkWriter : AutoCloseable {
     companion object {
         private val _writers = ConcurrentHashMap<Path, MessageWriter>()
     }
-    
+
     private val logger = getLogger(MultiSinkWriter::class)
     private val closed = AtomicBoolean()
 
@@ -43,9 +43,6 @@ open class MultiSinkWriter : AutoCloseable {
         writeTo(message, getPath(filename))
     }
 
-    @Deprecated("Use writeTo instead", ReplaceWith("writeTo(message, path)"))
-    fun write(message: String, path: Path) = writeTo(message, path)
-    
     fun writeTo(message: String, file: Path) {
         _writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }.write(message)
         closeIdleWriters()
@@ -68,7 +65,7 @@ open class MultiSinkWriter : AutoCloseable {
     fun flush() {
         _writers.values.forEach { it.flush() }
     }
-    
+
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             _writers.forEach {

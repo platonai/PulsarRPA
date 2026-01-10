@@ -16,17 +16,10 @@ enum class BrowserType {
      * */
     PULSAR_CHROME,
 
-    @Deprecated("No mock chrome available")
-    MOCK_CHROME,
-
     /**
      * The playwright's browser implementation.
      * */
     PLAYWRIGHT_CHROME;
-
-//    override fun toString(): String {
-//        return name.lowercase(Locale.getDefault())
-//    }
 
     companion object {
         val DEFAULT = PULSAR_CHROME

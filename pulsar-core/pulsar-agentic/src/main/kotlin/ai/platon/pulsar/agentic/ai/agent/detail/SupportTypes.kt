@@ -136,39 +136,3 @@ data class ExecutionContext constructor(
         )
     }
 }
-
-@Deprecated("Use requestId to retrieve context")
-fun ActionOptions.setContext(context: ExecutionContext) {
-    // TODO: interface/API call with remote context management
-    additionalContext["context"] = context
-}
-
-@Deprecated("Use requestId to retrieve context")
-fun ActionOptions.getContext(): ExecutionContext? {
-    // TODO: interface/API call with remote context management
-    return additionalContext["context"] as? ExecutionContext
-}
-
-@Deprecated("Use requestId to retrieve context")
-fun ObserveResult.setContext(context: ExecutionContext) {
-    // TODO: interface/API call with remote context management
-    additionalContext["context"] = context
-}
-
-@Deprecated("Use requestId to retrieve context")
-fun ObserveResult.getContext(): ExecutionContext? {
-    // TODO: interface/API call with remote context management
-    return additionalContext["context"] as? ExecutionContext
-}
-
-@Deprecated("Use requestId to retrieve context")
-fun ObserveOptions.setContext(context: ExecutionContext) {
-    // TODO: interface/API call with remote context management
-    additionalContext["context"] = context
-}
-
-@Deprecated("Use requestId to retrieve context")
-fun ObserveOptions.getContext(): ExecutionContext? {
-    // TODO: interface/API call with remote context management
-    return additionalContext["context"] as? ExecutionContext
-}

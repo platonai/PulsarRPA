@@ -177,9 +177,6 @@ object ResourceStatus {
      */
     const val SC_METHOD_FAILURE: Int = 420
 
-    @Deprecated("Use {@link #SC_UNPROCESSABLE_CONTENT}")
-    val SC_UNPROCESSABLE_ENTITY: Int = SC_UNPROCESSABLE_CONTENT
-
     /** `423 Locked` (WebDAV - RFC 2518)  */
     const val SC_LOCKED: Int = 423
 

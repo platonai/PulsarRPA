@@ -58,11 +58,6 @@ interface Browser: AutoCloseable {
      * */
     val settings: BrowserSettings
     /**
-     * Check if this browser is open.
-     * */
-    @Deprecated("Use isConnected instead", ReplaceWith("isConnected"))
-    val canConnect: Boolean get() = isConnected
-    /**
      * Check if this browser is idle.
      * */
     val isIdle: Boolean

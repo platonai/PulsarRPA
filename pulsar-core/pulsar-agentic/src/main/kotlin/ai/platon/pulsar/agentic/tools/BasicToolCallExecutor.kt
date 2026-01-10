@@ -79,15 +79,6 @@ open class BasicToolCallExecutor(
             ?: throw UnsupportedOperationException("❓ Unsupported target ${target::class}")
     }
 
-    @Deprecated("Executing `expression` is deprecated")
-    @Throws(UnsupportedOperationException::class)
-    suspend fun execute(expression: String, target: Any): TcEvaluate {
-        return toolExecutors
-            .firstOrNull { it.targetClass.isSuperclassOf(target::class) }
-            ?.execute(expression, target)
-            ?: throw UnsupportedOperationException("❓ Unsupported target ${target::class}")
-    }
-
     companion object {
         val EVAL_HELP = """
 Evaluate an Kotlin expression using ScriptEngineManager.

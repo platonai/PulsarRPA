@@ -206,9 +206,6 @@ open class StreamingTaskRunner(
         return sessionConfig.getWithFallback(BROWSER_CONTEXT_NUMBER, PRIVACY_CONTEXT_NUMBER)?.toIntOrNull() ?: 2
     }
 
-    @Deprecated("Use numBrowserContexts instead", replaceWith = ReplaceWith("numBrowserContexts"))
-    val numPrivacyContexts get() = numBrowserContexts
-
     /**
      * The maximum number of open tabs allowed in each open browser.
      * */

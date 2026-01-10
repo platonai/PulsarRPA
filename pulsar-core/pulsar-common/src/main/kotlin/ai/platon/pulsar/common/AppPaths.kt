@@ -225,9 +225,6 @@ object AppPaths {
      */
     fun getTmpDirectory(first: String, vararg more: String): Path = resolve(TMP_DIR, first, *more)
 
-    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getTmpDirectory(first, *more)"))
-    fun getTmp(first: String, vararg more: String) = getTmpDirectory(first, *more)
-
     /**
      * Get a random path of the process's temporary directory.
      *
@@ -245,9 +242,6 @@ object AppPaths {
     fun getRandomTmpDirectory(prefix: String = "", suffix: String = ""): Path =
         getTmpDirectory(prefix, RandomStringUtils.secure().nextAlphabetic(18), suffix)
 
-    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getRandomTmpDirectory(prefix, suffix)"))
-    fun getRandomTmp(prefix: String = "", suffix: String = "") = getRandomTmpDirectory(prefix, suffix)
-
     /**
      * Get a path of the process's temporary directory.
      *
@@ -263,9 +257,6 @@ object AppPaths {
      * @return the path in the process's temporary directory
      * */
     fun getProcTmpDirectory(first: String, vararg more: String): Path = resolve(PROC_TMP_DIR, first, *more)
-
-    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getProcTmpDirectory(first, *more)"))
-    fun getProcTmp(first: String, vararg more: String) = getProcTmpDirectory(first, *more)
 
     /**
      * Get a path of the temporary directory in the process's temporary directory.
@@ -289,9 +280,6 @@ object AppPaths {
      * */
     fun getProcTmpTmpDirectory(first: String, vararg more: String): Path =
         resolve(PROC_TMP_DIR.resolve("tmp"), first, *more)
-
-    @Deprecated("Inappropriate name", ReplaceWith("AppPaths.getProcTmpTmpDirectory(first, *more)"))
-    fun getProcTmpTmp(first: String, vararg more: String) = getProcTmpTmpDirectory(first, *more)
 
     /**
      * Get a path of the temporary directory in the process's temporary directory.
@@ -374,9 +362,6 @@ object AppPaths {
      */
     fun md5Hex(uri: String) = DigestUtils.md5Hex(uri)
 
-    @Deprecated("Inappropriate name", ReplaceWith("md5Hex(uri)"))
-    fun fileId(uri: String) = md5Hex(uri)
-
     /**
      * Create a mock page path.
      * */
@@ -417,7 +402,7 @@ object AppPaths {
         val u = URLUtils.getURLOrNull(uri) ?: return "${prefix}unknown$suffix"
 
         val dirForDomain = fromHost(u)
-        val fileId = fileId(uri)
+        val fileId = md5Hex(uri)
         return "$prefix$dirForDomain-$fileId$suffix"
     }
 

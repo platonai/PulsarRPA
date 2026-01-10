@@ -160,14 +160,6 @@ class PulsarWebDriver(
         return driverHelper.invokeOnPage("getCookies") { getCookies0() } ?: listOf()
     }
 
-    @Deprecated(
-        "Use deleteCookies(name, url, domain, path) instead." + "[deleteCookies] (3/5) | code: -32602, At least one of the url and domain needs to be specified",
-        ReplaceWith("driver.deleteCookies(name, url, domain, path)")
-    )
-    override suspend fun deleteCookies(name: String) {
-        driverHelper.invokeOnPage("deleteCookies") { cdpDeleteCookies(name) }
-    }
-
     override suspend fun deleteCookies(name: String, url: String?, domain: String?, path: String?) {
         driverHelper.invokeOnPage("deleteCookies") { cdpDeleteCookies(name, url, domain, path) }
     }

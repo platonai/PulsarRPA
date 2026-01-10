@@ -33,7 +33,7 @@ class Screenshot(
 
             val path = AppPaths.WEB_CACHE_DIR
                 .resolve("screenshot")
-                .resolve(AppPaths.fileId(page.url))
+                .resolve(AppPaths.md5Hex(page.url))
                 .resolve("$name.jpg")
             val bytes = Base64.getDecoder().decode(screenshot)
             AppFiles.saveTo(bytes, path, true)
