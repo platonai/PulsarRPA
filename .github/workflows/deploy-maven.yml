@@ -84,11 +84,20 @@ jobs:
       - name: Deploy to Maven Central
         if: success()
         run: |
-          echo "=== Deploying to Maven Central ==="
-
           SKIP_TESTS_FLAG=""
           if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
             SKIP_TESTS_FLAG="-DskipTests"
           fi
 
-          ./mvnw deploy -P deploy,release $SKIP_TESTS_FLAG
+          echo "=== Deploying to Maven Central ==="
+          ./mvnw --batch-mode deploy -P deploy,release $SKIP_TESTS_FLAG \
+            -Dgpg.passphrase="$GPG_PASSPHRASE" \
+            -Dgpg.batch=true \
+            -Dgpg.pinentry-mode=loopback \
+            --show-version --errors
+        env:
+          GPG_PASSPHRASE:   ${{ secrets.GPG_PASSPHRASE }}
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          MAVEN_USERNAME:   ${{ secrets.CENTRAL_USERNAME }}
+          MAVEN_PASSWORD:   ${{ secrets.CENTRAL_PASSWORD }}
