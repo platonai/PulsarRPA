@@ -707,17 +707,9 @@ public final class Strings {
         return defaultValue;
     }
 
-
     public static int getFirstInteger(String s, int defaultValue) {
-        var number = getFirstInteger(s);
+        var number = findFirstInteger(s);
         return number == null ? defaultValue : number;
-    }
-
-    /**
-     * @deprecated use {@link #findFirstInteger(String)} instead
-     */
-    public static Integer getFirstInteger(String s) {
-        return findFirstInteger(s);
     }
 
     /**
@@ -753,13 +745,6 @@ public final class Strings {
 
     public static int findFirstInteger(String s, int defaultValue) {
         return getFirstInteger(s, defaultValue);
-    }
-
-    /**
-     * @deprecated use {@link #findLastInteger(String)} instead
-     */
-    public static int getLastInteger(String s, int defaultValue) {
-        return findLastInteger(s, defaultValue);
     }
 
     /**
