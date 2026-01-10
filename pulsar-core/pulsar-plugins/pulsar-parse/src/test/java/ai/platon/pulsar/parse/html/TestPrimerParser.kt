@@ -18,6 +18,7 @@ import org.w3c.dom.DocumentFragment
 import org.xml.sax.InputSource
 import org.xml.sax.SAXException
 import java.io.ByteArrayInputStream
+import java.net.URI
 import java.net.URL
 import java.util.*
 import java.util.stream.Collectors
@@ -186,7 +187,7 @@ class TestPrimerParser {
             val node = HTMLDocumentImpl().createDocumentFragment()
             try {
                 parser.parse(InputSource(ByteArrayInputStream(testPages[i].toByteArray())), node)
-                testBaseHrefURLs[i] = URL(testBaseHrefs[i])
+                testBaseHrefURLs[i] = URI.create(testBaseHrefs[i]).toURL()
             } catch (e: Exception) {
                 // assertTrue("caught exception: $e", false)
                 printlnPro(e.stringify())

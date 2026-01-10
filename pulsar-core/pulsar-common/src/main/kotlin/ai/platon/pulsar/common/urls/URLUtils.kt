@@ -147,7 +147,7 @@ object URLUtils {
      *               unknown protocol is found, or {@code spec} is {@code null},
      *               or the parsed URL fails to comply with the specific syntax
      *               of the associated protocol.
-     * @see        java.net.URL#URL(java.net.URL)
+     * @see        java.net.URL#URI.create(java.net.URL)
      */
     @JvmStatic
     fun getURLOrNull(spec: String?): URL? {
@@ -155,7 +155,7 @@ object URLUtils {
             return null
         }
 
-        return kotlin.runCatching { URL(spec) }.getOrNull()
+        return kotlin.runCatching { URI.create(spec).toURL() }.getOrNull()
     }
 
     /**
@@ -531,7 +531,7 @@ object URLUtils {
      */
     @JvmStatic
     fun reverseUrl(url: String): String {
-        return reverseUrl(URL(url))
+        return reverseUrl(URI.create(url).toURL())
     }
 
     /**
@@ -547,7 +547,7 @@ object URLUtils {
     @JvmStatic
     fun reverseUrlOrEmpty(url: String): String {
         return try {
-            reverseUrl(URL(url))
+            reverseUrl(URI.create(url).toURL())
         } catch (e: MalformedURLException) {
             ""
         }
@@ -566,7 +566,7 @@ object URLUtils {
     @JvmStatic
     fun reverseUrlOrNull(url: String): String? {
         return try {
-            reverseUrl(URL(url))
+            reverseUrl(URI.create(url).toURL())
         } catch (e: MalformedURLException) {
             null
         }

@@ -4,6 +4,7 @@ import ai.platon.pulsar.common.DateTimes
 import ai.platon.pulsar.common.config.AppConstants
 import ai.platon.pulsar.common.options.OptionUtils
 import java.net.MalformedURLException
+import java.net.URI
 import java.net.URL
 import java.time.Instant
 
@@ -30,7 +31,7 @@ abstract class AbstractUrl(
     override val isStandard get() = URLUtils.isStandard(url)
 
     @get:Throws(MalformedURLException::class)
-    override val toURL get() = URL(url)
+    override val toURL get() = URI.create(url).toURL()
 
     override val toURLOrNull get() = URLUtils.getURLOrNull(url)
 
@@ -45,7 +46,7 @@ abstract class AbstractUrl(
             val deadTime = OptionUtils.findOption(args, listOf("-deadline", "-deadTime", "--dead-time")) ?: ""
             return DateTimes.parseBestInstantOrNull(deadTime) ?: DateTimes.doomsday
         }
-    
+
     /**
      * An abstract url can compare to one of the following types:
      * 1. a [String]
@@ -72,7 +73,7 @@ abstract class AbstractUrl(
     override fun hashCode() = url.hashCode()
 
     override fun toString() = url
-    
+
     /**
      * Serialize the url to a string
      * */
@@ -85,7 +86,7 @@ abstract class AbstractUrl(
      * */
     open fun serializeTo(sb: StringBuilder): StringBuilder {
         sb.append(url)
-        
+
         args?.takeIf { it.isNotBlank() }?.replace("\"", "\\\"")
             ?.let { sb.append(" -args ").append(it) }
         text.takeUnless { it.isEmpty() }?.let { sb.append(" -text ").append(it) }
@@ -98,7 +99,7 @@ abstract class AbstractUrl(
         district.takeIf { it != "*" }?.let { sb.append(" -district ").append(it) }
         nMaxRetry.takeIf { it != 3 }?.let { sb.append(" -nMaxRetry ").append(it) }
         depth.takeUnless { it == 0 }?.let { sb.append(" -depth ").append(it) }
-        
+
         return sb
     }
 }

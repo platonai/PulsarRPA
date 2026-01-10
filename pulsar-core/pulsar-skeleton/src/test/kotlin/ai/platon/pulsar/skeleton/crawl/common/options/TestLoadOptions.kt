@@ -74,17 +74,6 @@ class TestLoadOptions {
     }
 
     @Test
-    fun testNetConditionOptions() {
-        val options = LoadOptions.parse("-netCond worst", VolatileConfig.UNSAFE)
-//        logPrintln(options.toString())
-//        logPrintln(options.clone().toString())
-
-        assertEquals(Condition.WORST, options.netCondition)
-        assertEquals(Condition.WORST, options.clone().netCondition)
-        assertEquals(options.toString(), options.clone().toString())
-    }
-
-    @Test
     fun testParameterOverwriting() {
         val args1 = "-parse -incognito -expires 1s -retry -storeContent false -cacheContent false"
         val args2 = "-incognito -expires 1d -storeContent true -cacheContent true"

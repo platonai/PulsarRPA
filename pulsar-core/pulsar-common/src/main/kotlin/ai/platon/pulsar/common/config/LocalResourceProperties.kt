@@ -385,7 +385,7 @@ class LocalResourceProperties(
             } else {
                 var url: URL
                 try {
-                    url = URL(confInclude2)
+                    url = URI.create(confInclude2).toURL()
                     url.openConnection().connect()
                 } catch (ioe: IOException) {
                     var href = File(confInclude2)

@@ -131,7 +131,7 @@ class UriExtractor {
                         uri.startsWith("javascript:") -> uri
                 uri.startsWith("http://") || uri.startsWith("https://") -> uri
                 else -> {
-                    val base = URL(baseUrl)
+                    val base = URI.create(baseUrl).toURL()
                     URL(base, uri).toString()
                 }
             }

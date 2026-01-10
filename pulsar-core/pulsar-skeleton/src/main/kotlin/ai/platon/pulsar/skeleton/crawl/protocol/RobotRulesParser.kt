@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileReader
 import java.io.LineNumberReader
+import java.net.URI
 import java.net.URL
 import java.util.*
 import kotlin.system.exitProcess
@@ -72,7 +73,7 @@ abstract class RobotRulesParser(
     @NotNull
     fun getRobotRulesSet(protocol: Protocol, url: String): BaseRobotRules {
         val u = try {
-            URL(url)
+            URI.create(url).toURL()
         } catch (e: Exception) {
             return EMPTY_RULES
         }

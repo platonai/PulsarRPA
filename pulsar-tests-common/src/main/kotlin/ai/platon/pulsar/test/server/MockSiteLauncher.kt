@@ -5,6 +5,7 @@ import org.springframework.boot.builder.SpringApplicationBuilder
 import org.springframework.context.ConfigurableApplicationContext
 import java.io.Closeable
 import java.net.HttpURLConnection
+import java.net.URI
 import java.net.URL
 import java.time.Duration
 import java.time.Instant
@@ -129,8 +130,8 @@ object MockSiteLauncher : Closeable {
         healthPath: String = System.getProperty("mock.site.healthPath", "/actuator/health")
     ): Boolean {
         val port = boundPort ?: return false
-        val healthUrl = URL("http://localhost:$port$healthPath")
-        val rootUrl = URL("http://localhost:$port/")
+        val healthUrl = URI.create("http://localhost:$port$healthPath").toURL()
+        val rootUrl = URI.create("http://localhost:$port/").toURL()
         val deadline = Instant.now().plus(timeout)
         while (Instant.now().isBefore(deadline)) {
             if (probe(healthUrl) || probe(rootUrl)) return true

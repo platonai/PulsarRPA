@@ -2,6 +2,7 @@ package ai.platon.pulsar.skeleton.crawl.parse.html
 
 import ai.platon.pulsar.persist.metadata.MultiMetadata
 import org.w3c.dom.Node
+import java.net.URI
 import java.net.URL
 import java.util.*
 
@@ -14,12 +15,12 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
      * A convenience method. Returns the current value of `noIndex`.
      */
     var noIndex = false
-    
+
     /**
      * A convenience method. Returns the current value of `noFollow`.
      */
     var noFollow = false
-    
+
     /**
      * A convenience method. Returns the current value of `noCache`.
      */
@@ -57,23 +58,23 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
      * Sets the `refreshHref`.
      */
     var refreshHref: URL? = null
-    
+
     /**
      * Returns all collected values of the general meta tags. Property names are
      * tag names, property values are "content" values.
      */
     val generalTags = MultiMetadata()
-    
+
     /**
      * Returns all collected values of the "http-equiv" meta tags. Property names
      * are tag names, property values are "content" values.
      */
     val httpEquivTags = Properties()
-    
+
     init {
         walk(root)
     }
-    
+
     /**
      * Sets all boolean values to `false`. Clears all other tags.
      */
@@ -88,7 +89,7 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
         generalTags.clear()
         httpEquivTags.clear()
     }
-    
+
     /**
      * Utility class with indicators for the robots directives "noindex" and
      * "nofollow", and HTTP-EQUIV/no-cache
@@ -98,7 +99,7 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
             if ("body".equals(node.nodeName, ignoreCase = true)) { // META tags should not be under body
                 return
             }
-            
+
             if ("meta".equals(node.nodeName, ignoreCase = true)) {
                 val attrs = node.attributes
                 var nameNode: Node? = null
@@ -121,28 +122,26 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
                         val name = nameNode.nodeValue.lowercase(Locale.getDefault())
                         generalTags.put(name, contentNode.nodeValue)
                         if ("robots" == name) {
-                            if (contentNode != null) {
-                                val directives = contentNode.nodeValue.lowercase(Locale.getDefault())
-                                var index = directives.indexOf("none")
-                                if (index >= 0) {
-                                    noIndex = true
-                                    noFollow = true
-                                }
-                                index = directives.indexOf("all")
-                                if (index >= 0) { // do nothing...
-                                }
-                                index = directives.indexOf("noindex")
-                                if (index >= 0) {
-                                    noIndex = true
-                                }
-                                index = directives.indexOf("nofollow")
-                                if (index >= 0) {
-                                    noFollow = true
-                                }
-                                index = directives.indexOf("nocache")
-                                if (index >= 0) {
-                                    noCache = true
-                                }
+                            val directives = contentNode.nodeValue.lowercase(Locale.getDefault())
+                            var index = directives.indexOf("none")
+                            if (index >= 0) {
+                                noIndex = true
+                                noFollow = true
+                            }
+                            index = directives.indexOf("all")
+                            if (index >= 0) { // do nothing...
+                            }
+                            index = directives.indexOf("noindex")
+                            if (index >= 0) {
+                                noIndex = true
+                            }
+                            index = directives.indexOf("nofollow")
+                            if (index >= 0) {
+                                noFollow = true
+                            }
+                            index = directives.indexOf("nocache")
+                            if (index >= 0) {
+                                noCache = true
                             }
                         } // end if (name == robots)
                     }
@@ -161,14 +160,14 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
                             val time = if (idx == -1) { // just the refresh time
                                 content
                             } else content.substring(0, idx)
-                            
+
                             try {
                                 refreshTime = time.toInt()
                                 // skip this if we couldn't parse the time
                                 refresh = true
                             } catch (e: Exception) {
                             }
-                            
+
                             var refreshUrl: URL? = null
                             if (refresh && idx != -1) { // set the URL
                                 idx = content.lowercase(Locale.getDefault()).indexOf("url=")
@@ -179,7 +178,7 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
                                 if (idx != -1) {
                                     val url = content.substring(idx)
                                     refreshUrl = try {
-                                        URL(url)
+                                        URI.create(url).toURL()
                                     } catch (e: Exception) {
                                         // XXX according to the spec, this has to be an absolute
                                         // XXX url. However, many websites use relative URLs and
@@ -213,7 +212,7 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
                     val urlString = hrefNode.nodeValue
                     var url: URL? = null
                     try {
-                        url = currURL?.let { URL(it, urlString) } ?: URL(urlString)
+                        url = currURL?.let { URI.create(it, urlString) } ?: URI.create(urlString)
                     } catch (ignored: Exception) {
                     }
                     if (url != null) baseHref = url
@@ -228,7 +227,7 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
             }
         }
     }
-    
+
     override fun toString(): String {
         val sb = StringBuffer()
         sb.append("base=$baseHref, noCache=$noCache, noFollow=$noFollow, noIndex=$noIndex, refresh=$refresh, refreshHref=$refreshHref")

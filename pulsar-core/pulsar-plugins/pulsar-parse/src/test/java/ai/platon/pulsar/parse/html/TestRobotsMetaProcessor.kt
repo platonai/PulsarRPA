@@ -7,6 +7,7 @@ import org.cyberneko.html.parsers.DOMFragmentParser
 import org.springframework.test.context.ContextConfiguration
 import org.xml.sax.InputSource
 import java.io.ByteArrayInputStream
+import java.net.URI
 import java.net.URL
 import kotlin.test.*
 
@@ -16,27 +17,27 @@ import kotlin.test.*
 @Ignore("Failed")
 @ContextConfiguration(locations = ["classpath:/test-context/parse-beans.xml"])
 class TestRobotsMetaProcessor {
-    private var currURLsAndAnswers: Array<Array<URL?>> = arrayOf(arrayOf())
-    
+    private var currURLsAndAnswers: Array<Array<URI?>> = arrayOf(arrayOf())
+
     @Test
     fun testRobotsMetaProcessor() {
         val parser = DOMFragmentParser()
         try {
             currURLsAndAnswers = arrayOf(
-                arrayOf(URL("http://www.pulsar.org"), null),
-                arrayOf(URL("http://www.pulsar.org"), null),
-                arrayOf(URL("http://www.pulsar.org"), null),
-                arrayOf(URL("http://www.pulsar.org"), null),
-                arrayOf(URL("http://www.pulsar.org"), null),
-                arrayOf(URL("http://www.pulsar.org"), null),
-                arrayOf(URL("http://www.pulsar.org"), null),
-                arrayOf<URL?>(URL("http://www.pulsar.org/foo/"), URL("http://www.pulsar.org/")),
-                arrayOf<URL?>(URL("http://www.pulsar.org"), URL("http://www.pulsar.org/base/"))
+                arrayOf(URI.create("http://www.pulsar.org"), null),
+                arrayOf(URI.create("http://www.pulsar.org"), null),
+                arrayOf(URI.create("http://www.pulsar.org"), null),
+                arrayOf(URI.create("http://www.pulsar.org"), null),
+                arrayOf(URI.create("http://www.pulsar.org"), null),
+                arrayOf(URI.create("http://www.pulsar.org"), null),
+                arrayOf(URI.create("http://www.pulsar.org"), null),
+                arrayOf<URI?>(URI.create("http://www.pulsar.org/foo/"), URI.create("http://www.pulsar.org/")),
+                arrayOf<URI?>(URI.create("http://www.pulsar.org"), URI.create("http://www.pulsar.org/base/"))
             )
         } catch (e: Exception) {
             fail("couldn't make test URLs!")
         }
-        
+
         for (i in tests.indices) {
             val bytes = tests[i].toByteArray()
             val node = HTMLDocumentImpl().createDocumentFragment()
@@ -45,7 +46,7 @@ class TestRobotsMetaProcessor {
             } catch (e: Exception) {
                 e.printStackTrace()
             }
-            val robotsMeta = HTMLMetaTags(node, currURLsAndAnswers[i][0])
+            val robotsMeta = HTMLMetaTags(node, currURLsAndAnswers[i][0]?.toURL())
             assertEquals(robotsMeta.noIndex, answers[i][0], "got follow wrong on test $i")
             assertEquals(robotsMeta.noFollow, answers[i][1], "got follow wrong on test $i")
             assertEquals(robotsMeta.noCache, answers[i][2], "got cache wrong on test $i")
@@ -56,7 +57,7 @@ class TestRobotsMetaProcessor {
             )
         }
     }
-    
+
     companion object {
         val answers = arrayOf(
             booleanArrayOf(true, true, true),
@@ -69,7 +70,7 @@ class TestRobotsMetaProcessor {
             booleanArrayOf(false, false, false),
             booleanArrayOf(false, false, false)
         )
-        
+
         /*
      *
      * some sample tags:

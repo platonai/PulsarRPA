@@ -8,6 +8,7 @@ import ai.platon.pulsar.common.urls.StatefulUrl
 import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.URLUtils
 import java.net.MalformedURLException
+import java.net.URI
 import java.net.URL
 import java.time.Instant
 import java.util.concurrent.CompletableFuture
@@ -68,7 +69,7 @@ open class CompletableHyperlink<T>(
     override val isStandard get() = URLUtils.isStandard(url)
 
     @get: Throws(MalformedURLException::class)
-    override val toURL get() = URL(url)
+    override val toURL get() = URI.create(url).toURL()
 
     override val toURLOrNull get() = URLUtils.getURLOrNull(url)
 

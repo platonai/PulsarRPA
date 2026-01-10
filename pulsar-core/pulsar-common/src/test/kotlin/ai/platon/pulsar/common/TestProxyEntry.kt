@@ -3,6 +3,7 @@ package ai.platon.pulsar.common
 import ai.platon.pulsar.common.proxy.ProxyEntry
 import ai.platon.pulsar.common.urls.URLUtils
 import java.net.Proxy
+import java.net.URI
 import java.net.URL
 import kotlin.test.*
 
@@ -25,7 +26,7 @@ class TestProxyEntry {
             .readAllLines(ProxyEntry.PROXY_TEST_WEB_SITES_FILE)
             .mapNotNullTo(ProxyEntry.TEST_URLS) { URLUtils.getURLOrNull(it) }
         assertTrue(ProxyEntry.TEST_URLS.isNotEmpty())
-        assertTrue(URL("http://www.dongqiudi.com") in ProxyEntry.TEST_URLS)
+        assertTrue(URI.create("http://www.dongqiudi.com") in ProxyEntry.TEST_URLS)
     }
 
     @Test

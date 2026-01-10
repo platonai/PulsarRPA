@@ -7,6 +7,7 @@ import ai.platon.pulsar.skeleton.crawl.protocol.Response
 import ai.platon.pulsar.skeleton.crawl.protocol.RobotRulesParser
 import crawlercommons.robots.BaseRobotRules
 import org.slf4j.LoggerFactory
+import java.net.URI
 import java.net.URL
 import java.util.*
 
@@ -19,7 +20,7 @@ open class HttpRobotRulesParser(
     conf: ImmutableConfig
 ) : RobotRulesParser(conf) {
     private val allowForbidden = conf.getBoolean("http.robots.403.allow", false)
-    
+
     /**
      * Get the rules from robots.txt which applies for the given `url`.
      * Robot rules are cached for a unique combination of host, protocol, and
@@ -41,12 +42,12 @@ open class HttpRobotRulesParser(
             if (LOG.isTraceEnabled) {
                 LOG.trace("cache miss $url")
             }
-            
+
             try {
                 val http = (protocol as? AbstractHttpProtocol) ?: return EMPTY_RULES
                 val page = GoraWebPage.newWebPage(URL(url, "/robots.txt").toString(), volatileConfig)
                 var response: Response? = http.getResponse(page, true) ?: return EMPTY_RULES
-                
+
                 // try one level of redirection ?
                 if (response != null && (response.httpCode == 301 || response.httpCode == 302)) {
                     var redirection = response.getHeader("Location")
@@ -54,16 +55,11 @@ open class HttpRobotRulesParser(
                         redirection = response.getHeader("location")
                     }
                     if (redirection != null) {
-                        redir =
-                            if (!redirection.startsWith("http")) { // RFC says it should be absolute, but apparently it isn't
-                                URL(url, redirection)
-                            } else {
-                                URL(redirection)
-                            }
+                        redir = URI.create(redirection).toURL()
                         response = http.getResponse(GoraWebPage.newWebPage(redir.toString(), volatileConfig), true)
                     }
                 }
-                
+
                 val content = response?.pageDatum?.content
                 if (response != null && content != null) {
                     if (response.httpCode == 200) // found rules: parse them
@@ -93,13 +89,13 @@ open class HttpRobotRulesParser(
                 }
             }
         }
-        
+
         return robotRules ?: EMPTY_RULES
     }
-    
+
     companion object {
         val LOG = LoggerFactory.getLogger(HttpRobotRulesParser::class.java)
-        
+
         /**
          * Compose unique key to store and access robot rules in cache for given URL
          */

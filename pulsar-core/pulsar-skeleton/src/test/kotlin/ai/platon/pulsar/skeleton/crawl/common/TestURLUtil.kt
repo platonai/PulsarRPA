@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.urls.URLUtils.resolveURL
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.getHostBatches
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.toASCII
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil.toUNICODE
+import java.net.URI
 import java.net.URL
 import kotlin.test.BeforeTest
 import kotlin.test.Test
@@ -25,23 +26,23 @@ class TestURLUtil {
     @Test
     @Throws(Exception::class)
     fun testGetHostBatches() {
-        var url = URL("http://subdomain.example.edu.tr")
+        var url = URI.create("http://subdomain.example.edu.tr").toURL()
         var batches = getHostBatches(url)
         printlnPro(batches.joinToString())
         assertEquals("subdomain", batches[0])
         assertEquals("example", batches[1])
         assertEquals("edu", batches[2])
         assertEquals("tr", batches[3])
-        url = URL("http://")
+        url = URI.create("http://").toURL()
         batches = getHostBatches(url)
         assertEquals(1, batches.size.toLong())
         assertEquals("", batches[0])
-        url = URL("http://140.211.11.130/foundation/contributing.html")
+        url = URI.create("http://140.211.11.130/foundation/contributing.html").toURL()
         batches = getHostBatches(url)
         assertEquals(1, batches.size.toLong())
         assertEquals("140.211.11.130", batches[0])
         // test non-ascii
-        url = URL("http://www.example.商業.tw")
+        url = URI.create("http://www.example.商業.tw").toURL()
         batches = getHostBatches(url)
         assertEquals("www", batches[0])
         assertEquals("example", batches[1])
@@ -52,15 +53,15 @@ class TestURLUtil {
     @Test
     @Throws(Exception::class)
     fun testResolveURL() { // test PULSAR-436
-        val u436 = URL("http://a/b/c/d;p?q#f")
+        val u436 = URI.create("http://a/b/c/d;p?q#f").toURL()
         assertEquals("http://a/b/c/d;p?q#f", u436.toString())
         var abs = resolveURL(u436, "?y")
         assertEquals("http://a/b/c/d;p?y", abs.toString())
         // test PULSAR-566
-        val u566 = URL("http://www.fleurie.org/entreprise.asp")
+        val u566 = URI.create("http://www.fleurie.org/entreprise.asp").toURL()
         abs = resolveURL(u566, "?id_entrep=111")
         assertEquals("http://www.fleurie.org/entreprise.asp?id_entrep=111", abs.toString())
-        val base = URL(baseString)
+        val base = URI.create(baseString).toURL()
         assertEquals("http://a/b/c/d;p?q", baseString, base.toString())
 
         for (i in targets.indices) {

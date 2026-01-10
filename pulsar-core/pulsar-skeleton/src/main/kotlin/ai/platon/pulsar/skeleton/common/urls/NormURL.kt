@@ -6,6 +6,7 @@ import ai.platon.pulsar.common.urls.UrlAware
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.skeleton.common.options.LoadOptions
 import java.net.MalformedURLException
+import java.net.URI
 import java.net.URL
 
 /**
@@ -46,7 +47,7 @@ open class NormURL constructor(
      * */
     @Throws(MalformedURLException::class)
     constructor(spec: String, options: LoadOptions, hrefSpec: String? = null, detail: UrlAware? = null):
-            this(URL(spec), options, hrefSpec?.let { URL(hrefSpec) }, detail)
+            this(URI.create(spec).toURL(), options, hrefSpec?.let { URI.create(hrefSpec).toURL() }, detail)
 
     /**
      * The url specification in string format.

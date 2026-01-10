@@ -67,7 +67,7 @@ public class NetUtil {
 
         return reachable;
     }
-    
+
     public static boolean testHttpNetwork(String host, int port) {
         if (host.isBlank()) {
             return false;

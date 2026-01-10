@@ -75,7 +75,7 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
   private java.lang.CharSequence anchor;
   private int order;
   public org.apache.avro.Schema getSchema() { return SCHEMA$; }
-  // Used by DatumWriter.  Applications should not call. 
+  // Used by DatumWriter.  Applications should not call.
   public java.lang.Object get(int field$) {
     switch (field$) {
     case 0: return url;
@@ -84,8 +84,8 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
     default: throw new org.apache.avro.AvroRuntimeException("Bad index");
     }
   }
-  
-  // Used by DatumReader.  Applications should not call. 
+
+  // Used by DatumReader.  Applications should not call.
   @SuppressWarnings(value="unchecked")
   public void put(int field$, java.lang.Object value) {
     switch (field$) {
@@ -111,7 +111,7 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
     this.url = value;
     setDirty(0);
   }
-  
+
   /**
    * Checks the dirty status of the 'url' field. A field is dirty if it represents a change that has not yet been written to the database.
    * @param value the value to set.
@@ -135,7 +135,7 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
     this.anchor = value;
     setDirty(1);
   }
-  
+
   /**
    * Checks the dirty status of the 'anchor' field. A field is dirty if it represents a change that has not yet been written to the database.
    * @param value the value to set.
@@ -159,7 +159,7 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
     this.order = value;
     setDirty(2);
   }
-  
+
   /**
    * Checks the dirty status of the 'order' field. A field is dirty if it represents a change that has not yet been written to the database.
    * @param value the value to set.
@@ -172,17 +172,17 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
   public static ai.platon.pulsar.persist.gora.generated.GHypeLink.Builder newBuilder() {
     return new ai.platon.pulsar.persist.gora.generated.GHypeLink.Builder();
   }
-  
+
   /** Creates a new GHypeLink RecordBuilder by copying an existing Builder */
   public static ai.platon.pulsar.persist.gora.generated.GHypeLink.Builder newBuilder(ai.platon.pulsar.persist.gora.generated.GHypeLink.Builder other) {
     return new ai.platon.pulsar.persist.gora.generated.GHypeLink.Builder(other);
   }
-  
+
   /** Creates a new GHypeLink RecordBuilder by copying an existing GHypeLink instance */
   public static ai.platon.pulsar.persist.gora.generated.GHypeLink.Builder newBuilder(ai.platon.pulsar.persist.gora.generated.GHypeLink other) {
     return new ai.platon.pulsar.persist.gora.generated.GHypeLink.Builder(other);
   }
-  
+
   private static java.nio.ByteBuffer deepCopyToReadOnlyBuffer(
       java.nio.ByteBuffer input) {
     java.nio.ByteBuffer copy = java.nio.ByteBuffer.allocate(input.capacity());
@@ -205,7 +205,7 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
     copy.limit(limit);
     return copy.asReadOnlyBuffer();
   }
-  
+
   /**
    * RecordBuilder for GHypeLink instances.
    */
@@ -220,12 +220,12 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
     private Builder() {
       super(ai.platon.pulsar.persist.gora.generated.GHypeLink.SCHEMA$);
     }
-    
+
     /** Creates a Builder by copying an existing Builder */
     private Builder(ai.platon.pulsar.persist.gora.generated.GHypeLink.Builder other) {
       super(other);
     }
-    
+
     /** Creates a Builder by copying an existing GHypeLink instance */
     private Builder(ai.platon.pulsar.persist.gora.generated.GHypeLink other) {
             super(ai.platon.pulsar.persist.gora.generated.GHypeLink.SCHEMA$);
@@ -247,76 +247,76 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
     public java.lang.CharSequence getUrl() {
       return url;
     }
-    
+
     /** Sets the value of the 'url' field */
     public ai.platon.pulsar.persist.gora.generated.GHypeLink.Builder setUrl(java.lang.CharSequence value) {
       validate(fields()[0], value);
       this.url = value;
       fieldSetFlags()[0] = true;
-      return this; 
+      return this;
     }
-    
+
     /** Checks whether the 'url' field has been set */
     public boolean hasUrl() {
       return fieldSetFlags()[0];
     }
-    
+
     /** Clears the value of the 'url' field */
     public ai.platon.pulsar.persist.gora.generated.GHypeLink.Builder clearUrl() {
       url = null;
       fieldSetFlags()[0] = false;
       return this;
     }
-    
+
     /** Gets the value of the 'anchor' field */
     public java.lang.CharSequence getAnchor() {
       return anchor;
     }
-    
+
     /** Sets the value of the 'anchor' field */
     public ai.platon.pulsar.persist.gora.generated.GHypeLink.Builder setAnchor(java.lang.CharSequence value) {
       validate(fields()[1], value);
       this.anchor = value;
       fieldSetFlags()[1] = true;
-      return this; 
+      return this;
     }
-    
+
     /** Checks whether the 'anchor' field has been set */
     public boolean hasAnchor() {
       return fieldSetFlags()[1];
     }
-    
+
     /** Clears the value of the 'anchor' field */
     public ai.platon.pulsar.persist.gora.generated.GHypeLink.Builder clearAnchor() {
       anchor = null;
       fieldSetFlags()[1] = false;
       return this;
     }
-    
+
     /** Gets the value of the 'order' field */
     public java.lang.Integer getOrder() {
       return order;
     }
-    
+
     /** Sets the value of the 'order' field */
     public ai.platon.pulsar.persist.gora.generated.GHypeLink.Builder setOrder(int value) {
       validate(fields()[2], value);
       this.order = value;
       fieldSetFlags()[2] = true;
-      return this; 
+      return this;
     }
-    
+
     /** Checks whether the 'order' field has been set */
     public boolean hasOrder() {
       return fieldSetFlags()[2];
     }
-    
+
     /** Clears the value of the 'order' field */
     public ai.platon.pulsar.persist.gora.generated.GHypeLink.Builder clearOrder() {
       fieldSetFlags()[2] = false;
       return this;
     }
-    
+
     @Override
     public GHypeLink build() {
       try {
@@ -330,7 +330,7 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
       }
     }
   }
-  
+
   public GHypeLink.Tombstone getTombstone(){
   	return TOMBSTONE;
   }
@@ -340,18 +340,18 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
   }
 
   private static final Tombstone TOMBSTONE = new Tombstone();
-  
+
   public static final class Tombstone extends GHypeLink implements org.apache.gora.persistency.Tombstone {
-  
+
       private Tombstone() { }
-  
+
 	  		  /**
 	   * Gets the value of the 'url' field.
 		   */
 	  public java.lang.CharSequence getUrl() {
 	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
 	  }
-	
+
 	  /**
 	   * Sets the value of the 'url' field.
 		   * @param value the value to set.
@@ -359,7 +359,7 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
 	  public void setUrl(java.lang.CharSequence value) {
 	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
 	  }
-	  
+
 	  /**
 	   * Checks the dirty status of the 'url' field. A field is dirty if it represents a change that has not yet been written to the database.
 		   * @param value the value to set.
@@ -367,14 +367,14 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
 	  public boolean isUrlDirty() {
 	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
 	  }
-	
+
 				  /**
 	   * Gets the value of the 'anchor' field.
 		   */
 	  public java.lang.CharSequence getAnchor() {
 	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
 	  }
-	
+
 	  /**
 	   * Sets the value of the 'anchor' field.
 		   * @param value the value to set.
@@ -382,7 +382,7 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
 	  public void setAnchor(java.lang.CharSequence value) {
 	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
 	  }
-	  
+
 	  /**
 	   * Checks the dirty status of the 'anchor' field. A field is dirty if it represents a change that has not yet been written to the database.
 		   * @param value the value to set.
@@ -390,14 +390,14 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
 	  public boolean isAnchorDirty() {
 	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
 	  }
-	
+
 				  /**
 	   * Gets the value of the 'order' field.
 		   */
 	  public java.lang.Integer getOrder() {
 	    throw new java.lang.UnsupportedOperationException("Get is not supported on tombstones");
 	  }
-	
+
 	  /**
 	   * Sets the value of the 'order' field.
 		   * @param value the value to set.
@@ -405,7 +405,7 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
 	  public void setOrder(java.lang.Integer value) {
 	    throw new java.lang.UnsupportedOperationException("Set is not supported on tombstones");
 	  }
-	  
+
 	  /**
 	   * Checks the dirty status of the 'order' field. A field is dirty if it represents a change that has not yet been written to the database.
 		   * @param value the value to set.
@@ -413,8 +413,8 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
 	  public boolean isOrderDirty() {
 	    throw new java.lang.UnsupportedOperationException("IsDirty is not supported on tombstones");
 	  }
-	
-		  
+
+
   }
 
   private static final org.apache.avro.io.DatumWriter
@@ -453,6 +453,6 @@ public class GHypeLink extends org.apache.gora.persistency.impl.PersistentBase i
             .directBinaryDecoder((java.io.InputStream) in,
                     null));
   }
-  
+
 }
 
