@@ -1,11 +1,10 @@
 package ai.platon.pulsar.rest.api.webdriver
 
 import ai.platon.pulsar.rest.api.webdriver.dto.*
-import ai.platon.pulsar.rest.util.server.TestWebSiteAccess
+import ai.platon.pulsar.rest.util.server.MockWebSiteAccess
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.client.RestTestClient
@@ -17,7 +16,7 @@ import org.springframework.test.web.servlet.client.RestTestClient
     classes = [WebDriverTestApplication::class],
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
-class WebDriverApiIntegrationTest: TestWebSiteAccess() {
+class WebDriverApiIntegrationTest: MockWebSiteAccess() {
 
     private fun postJson(path: String, body: Any?): RestTestClient.ResponseSpec {
         return client.post()

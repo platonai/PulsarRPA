@@ -1,12 +1,11 @@
 package ai.platon.pulsar.rest.api.webdriver
 
 import ai.platon.pulsar.rest.api.webdriver.dto.*
-import ai.platon.pulsar.rest.util.server.TestWebSiteAccess
+import ai.platon.pulsar.rest.util.server.MockWebSiteAccess
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestInstance
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.boot.test.web.server.LocalServerPort
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.client.RestTestClient
@@ -14,7 +13,7 @@ import org.springframework.test.web.servlet.client.RestTestClient
 /**
  * Comprehensive integration tests for all WebDriver API endpoints.
  * Tests all controllers: Session, Navigation, Selector, Element, Script, Control, Events, Agent, PulsarSession, Health.
- * 
+ *
  * These tests use the real interactive webpage (interactive-1.html) from the test assets.
  * The interactive page contains:
  * - Header (#pageHeader) with title "Welcome to the Interactive Page"
@@ -28,7 +27,7 @@ import org.springframework.test.web.servlet.client.RestTestClient
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
 )
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-class ComprehensiveApiIntegrationTest: TestWebSiteAccess() {
+class ComprehensiveApiIntegrationTest: MockWebSiteAccess() {
 
     private fun postJson(path: String, body: Any?): RestTestClient.ResponseSpec {
         return client.post()

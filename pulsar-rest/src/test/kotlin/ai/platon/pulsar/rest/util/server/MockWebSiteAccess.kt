@@ -3,7 +3,6 @@ package ai.platon.pulsar.rest.util.server
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.getLogger
-import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.test.TestResourceUtil
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -14,7 +13,7 @@ import org.springframework.test.web.servlet.client.RestTestClient
     classes = [EnableMockServerApplication::class],
     webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
 )
-class TestWebSiteAccess {
+class MockWebSiteAccess {
 
     @Autowired
     lateinit var conf: ImmutableConfig
