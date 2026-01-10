@@ -45,7 +45,7 @@ open class HttpRobotRulesParser(
 
             try {
                 val http = (protocol as? AbstractHttpProtocol) ?: return EMPTY_RULES
-                val page = GoraWebPage.newWebPage(URL(url, "/robots.txt").toString(), volatileConfig)
+                val page = GoraWebPage.newWebPage(url.toURI().resolve("/robots.txt").toString(), volatileConfig)
                 var response: Response? = http.getResponse(page, true) ?: return EMPTY_RULES
 
                 // try one level of redirection ?
