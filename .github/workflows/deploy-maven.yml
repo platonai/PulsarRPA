@@ -143,4 +143,4 @@ jobs:
         env:
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
-          CENTRAL_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
