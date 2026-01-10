@@ -1,13 +1,13 @@
 package ai.platon.pulsar.rest.openapi.controller
 
 import ai.platon.pulsar.rest.openapi.dto.*
-import ai.platon.pulsar.rest.openapi.store.InMemoryStore
+import ai.platon.pulsar.rest.openapi.service.SessionManager
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.UUID
 
 /**
  * Controller for execution control operations (delay, pause, stop).
@@ -18,8 +18,9 @@ import java.util.UUID
     "/session/{sessionId}/control",
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
+@ConditionalOnBean(SessionManager::class)
 class ControlController(
-    private val store: InMemoryStore
+    private val sessionManager: SessionManager
 ) {
     private val logger = LoggerFactory.getLogger(ControlController::class.java)
 
@@ -30,9 +31,6 @@ class ControlController(
 
     /**
      * Delays execution for a specified duration.
-     *
-     * Note: This is a mock implementation that uses Thread.sleep() for simplicity.
-     * In production, consider using async processing for better throughput.
      *
      * @param sessionId The session identifier.
      * @param request The delay request containing duration in milliseconds.
@@ -48,11 +46,11 @@ class ControlController(
         logger.debug("Session {} delaying for {} ms", sessionId, request.ms)
         ControllerUtils.addRequestId(response)
 
-        if (!store.sessionExists(sessionId)) {
+        if (!sessionManager.sessionExists(sessionId)) {
             return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
         }
 
-        // Mock implementation - sleep for the requested duration (capped for safety)
+        // Sleep for the requested duration (capped for safety)
         val delayMs = request.ms.coerceIn(0, MAX_DELAY_MS)
         if (delayMs > 0) {
             Thread.sleep(delayMs.toLong())
@@ -72,7 +70,7 @@ class ControlController(
         logger.debug("Session {} pausing", sessionId)
         ControllerUtils.addRequestId(response)
 
-        val updated = store.setSessionStatus(sessionId, "paused")
+        val updated = sessionManager.setSessionStatus(sessionId, "paused")
         if (!updated) {
             return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
         }
@@ -91,7 +89,7 @@ class ControlController(
         logger.debug("Session {} stopping", sessionId)
         ControllerUtils.addRequestId(response)
 
-        val updated = store.setSessionStatus(sessionId, "stopped")
+        val updated = sessionManager.setSessionStatus(sessionId, "stopped")
         if (!updated) {
             return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
         }

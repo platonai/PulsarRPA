@@ -1,9 +1,8 @@
 package ai.platon.pulsar.rest.openapi.controller
 
 import ai.platon.pulsar.rest.openapi.service.SessionManager
-import ai.platon.pulsar.rest.openapi.store.InMemoryStore
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.CrossOrigin
@@ -17,9 +16,9 @@ import org.springframework.web.bind.annotation.RestController
 @RestController
 @CrossOrigin
 @RequestMapping(produces = [MediaType.APPLICATION_JSON_VALUE])
+@ConditionalOnBean(SessionManager::class)
 class HealthController(
-    @param:Autowired(required = false) private val sessionManager: SessionManager?,
-    private val store: InMemoryStore
+    private val sessionManager: SessionManager
 ) {
     private val logger = LoggerFactory.getLogger(HealthController::class.java)
 
@@ -30,20 +29,11 @@ class HealthController(
     fun health(): ResponseEntity<Map<String, Any>> {
         logger.debug("Health check requested")
 
-        val useRealSessions = sessionManager != null
-        val status = "UP"
-
-        val response = mutableMapOf<String, Any>(
-            "status" to status,
-            "mode" to if (useRealSessions) "real" else "mock"
+        val sessionCount = sessionManager.getActiveSessionCount()
+        val response = mapOf<String, Any>(
+            "status" to "UP",
+            "activeSessions" to sessionCount
         )
-
-        if (useRealSessions) {
-            val sessionCount = sessionManager!!.getActiveSessionCount()
-            response["activeSessions"] = sessionCount
-        } else {
-            response["activeSessions"] = store.getActiveSessionCount()
-        }
 
         return ResponseEntity.ok(response)
     }
@@ -55,12 +45,8 @@ class HealthController(
     fun ready(): ResponseEntity<Map<String, Any>> {
         logger.debug("Readiness check requested")
 
-        val useRealSessions = sessionManager != null
-        val ready = true // Always ready in current implementation
-
         val response = mapOf(
-            "ready" to ready,
-            "mode" to if (useRealSessions) "real" else "mock"
+            "ready" to true
         )
 
         return ResponseEntity.ok(response)

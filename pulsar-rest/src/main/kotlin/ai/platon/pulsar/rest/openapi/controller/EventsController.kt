@@ -1,9 +1,11 @@
 package ai.platon.pulsar.rest.openapi.controller
 
 import ai.platon.pulsar.rest.openapi.dto.*
+import ai.platon.pulsar.rest.openapi.service.SessionManager
 import ai.platon.pulsar.rest.openapi.store.InMemoryStore
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -17,7 +19,9 @@ import org.springframework.web.bind.annotation.*
     "/session/{sessionId}",
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
+@ConditionalOnBean(SessionManager::class)
 class EventsController(
+    private val sessionManager: SessionManager,
     private val store: InMemoryStore
 ) {
     private val logger = LoggerFactory.getLogger(EventsController::class.java)
@@ -34,8 +38,11 @@ class EventsController(
         logger.debug("Session {} creating event config for type: {}", sessionId, request.eventType)
         ControllerUtils.addRequestId(response)
 
+        if (!sessionManager.sessionExists(sessionId)) {
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        }
+
         val config = store.addEventConfig(sessionId, request)
-            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
         return ResponseEntity.ok(EventConfigResponse(value = config))
     }
@@ -51,8 +58,11 @@ class EventsController(
         logger.debug("Session {} getting event configs", sessionId)
         ControllerUtils.addRequestId(response)
 
+        if (!sessionManager.sessionExists(sessionId)) {
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        }
+
         val configs = store.getEventConfigs(sessionId)
-            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
         return ResponseEntity.ok(EventConfigsResponse(value = configs))
     }
@@ -68,8 +78,11 @@ class EventsController(
         logger.debug("Session {} getting events", sessionId)
         ControllerUtils.addRequestId(response)
 
+        if (!sessionManager.sessionExists(sessionId)) {
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        }
+
         val events = store.getEvents(sessionId)
-            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
         return ResponseEntity.ok(EventsResponse(value = events))
     }
@@ -86,8 +99,11 @@ class EventsController(
         logger.debug("Session {} subscribing to events: {}", sessionId, request.eventTypes)
         ControllerUtils.addRequestId(response)
 
+        if (!sessionManager.sessionExists(sessionId)) {
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        }
+
         val subscription = store.createSubscription(sessionId, request.eventTypes)
-            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
         return ResponseEntity.ok(SubscriptionResponse(value = subscription))
     }

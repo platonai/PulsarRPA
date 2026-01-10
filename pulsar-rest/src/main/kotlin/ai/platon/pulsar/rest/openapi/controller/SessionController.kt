@@ -2,39 +2,26 @@ package ai.platon.pulsar.rest.openapi.controller
 
 import ai.platon.pulsar.rest.openapi.dto.*
 import ai.platon.pulsar.rest.openapi.service.SessionManager
-import ai.platon.pulsar.rest.openapi.store.InMemoryStore
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 /**
  * Controller for WebDriver session management.
- * Supports both mock mode (InMemoryStore) and real mode (SessionManager).
  */
 @RestController
 @CrossOrigin
 @RequestMapping(
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
+@ConditionalOnBean(SessionManager::class)
 class SessionController(
-    @param:Autowired(required = false) private val sessionManager: SessionManager?,
-    @param:Autowired(required = false) private val store: InMemoryStore?
+    private val sessionManager: SessionManager
 ) {
     private val logger = LoggerFactory.getLogger(SessionController::class.java)
-
-    private val useRealSessions: Boolean = sessionManager != null
-
-    init {
-        if (useRealSessions) {
-            logger.info("SessionController initialized with real browser sessions")
-        } else {
-            logger.info("SessionController initialized with mock sessions")
-        }
-    }
 
     /**
      * Creates a new WebDriver session.
@@ -47,23 +34,13 @@ class SessionController(
         logger.debug("Creating new session with capabilities: {}", request?.capabilities)
         ControllerUtils.addRequestId(response)
 
-        val responseBody = if (useRealSessions) {
-            val session = sessionManager!!.createSession(request?.capabilities)
-            NewSessionResponse(
-                value = NewSessionResponse.SessionValue(
-                    sessionId = session.sessionId,
-                    capabilities = session.capabilities
-                )
+        val session = sessionManager.createSession(request?.capabilities)
+        val responseBody = NewSessionResponse(
+            value = NewSessionResponse.SessionValue(
+                sessionId = session.sessionId,
+                capabilities = session.capabilities
             )
-        } else {
-            val session = store!!.createSession(request?.capabilities)
-            NewSessionResponse(
-                value = NewSessionResponse.SessionValue(
-                    sessionId = session.sessionId,
-                    capabilities = session.capabilities
-                )
-            )
-        }
+        )
         return ResponseEntity.ok(responseBody)
     }
 
@@ -78,29 +55,17 @@ class SessionController(
         logger.debug("Getting session: {}", sessionId)
         ControllerUtils.addRequestId(response)
 
-        val responseBody = if (useRealSessions) {
-            val session = sessionManager!!.getSession(sessionId)
-                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            SessionDetails(
-                value = SessionDetails.SessionDetailsValue(
-                    sessionId = session.sessionId,
-                    url = session.url,
-                    status = session.status,
-                    capabilities = session.capabilities
-                )
+        val session = sessionManager.getSession(sessionId)
+            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+
+        val responseBody = SessionDetails(
+            value = SessionDetails.SessionDetailsValue(
+                sessionId = session.sessionId,
+                url = session.url,
+                status = session.status,
+                capabilities = session.capabilities
             )
-        } else {
-            val session = store!!.getSession(sessionId)
-                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            SessionDetails(
-                value = SessionDetails.SessionDetailsValue(
-                    sessionId = session.sessionId,
-                    url = session.url,
-                    status = session.status,
-                    capabilities = session.capabilities
-                )
-            )
-        }
+        )
         return ResponseEntity.ok(responseBody)
     }
 
@@ -115,12 +80,7 @@ class SessionController(
         logger.debug("Deleting session: {}", sessionId)
         ControllerUtils.addRequestId(response)
 
-        val deleted = if (useRealSessions) {
-            sessionManager!!.deleteSession(sessionId)
-        } else {
-            store!!.deleteSession(sessionId)
-        }
-
+        val deleted = sessionManager.deleteSession(sessionId)
         if (!deleted) {
             return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
         }
