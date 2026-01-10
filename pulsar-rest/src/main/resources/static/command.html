@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8"/>
-    <title>PulsarCommander SSE Client</title>
+    <title>Pulsar Commander - SSE Client</title>
     <style>
         body {
             font-family: 'Segoe UI', Arial, sans-serif;
@@ -575,14 +575,14 @@
     <h2>🚀 Browser4 Commander</h2>
     <label for="commandInput">🤖 What do you want me to do?</label>
     <textarea id="commandInput" rows="6" cols="60">
-        Go to https://www.amazon.com/dp/B08PP5MSVB
+Go to https://www.amazon.com/dp/B08PP5MSVB
 
-        After browser launch: clear browser cookies.
-        After page load: scroll to the middle.
+After browser launch: clear browser cookies.
+After page load: scroll to the middle.
 
-        Summarize the product.
-        Extract: product name, price, ratings.
-        Find all links containing /dp/.
+Summarize the product.
+Extract: product name, price, ratings.
+Find all links containing /dp/.
     </textarea><br>
     <button id="reviseButton" onclick="reviseCommand()">✨ Refine</button>
     <button id="submitButton" onclick="submitCommand()" style="float: right;">🚀 Submit</button>
@@ -890,7 +890,7 @@
     }
 
     // ==================== Utility Functions ====================
-    
+
     function toggleJsonView() {
         const jsonContent = document.getElementById('finalResult');
         const toggleText = document.getElementById('jsonToggleText');
@@ -1039,7 +1039,7 @@
 
     function renderDataCollectionResult(data) {
         const commandResult = data.commandResult;
-        
+
         // Render Page Summary
         const pageSummarySection = document.getElementById('pageSummarySection');
         const pageSummaryText = document.getElementById('pageSummaryText');
@@ -1060,7 +1060,7 @@
             fieldsSection.style.display = '';
             const fieldEntries = Object.entries(fields);
             fieldsCount.textContent = fieldEntries.length + ' field' + (fieldEntries.length > 1 ? 's' : '');
-            fieldsTableBody.innerHTML = fieldEntries.map(([key, value]) => 
+            fieldsTableBody.innerHTML = fieldEntries.map(([key, value]) =>
                 `<tr>
                     <td class="field-name">${escapeHtml(key)}</td>
                     <td class="field-value">${escapeHtml(String(value))}</td>
@@ -1091,7 +1091,7 @@
                 const statusIcon = result.statusCode === 200 ? '✅' : '❌';
                 const statusClass = result.statusCode === 200 ? 'badge-success' : 'badge-error';
                 let resultContent = '';
-                
+
                 if (result.resultType === 'string') {
                     resultContent = `<pre>${escapeHtml(String(result.result))}</pre>`;
                 } else if (result.resultType === 'map' && typeof result.result === 'object') {
@@ -1103,7 +1103,7 @@
                 } else {
                     resultContent = `<pre>${escapeHtml(JSON.stringify(result.result, null, 2))}</pre>`;
                 }
-                
+
                 return `<div class="instruct-result-card">
                     <div class="instruct-result-header">
                         <span class="instruct-result-name">
@@ -1129,20 +1129,20 @@
         const linksContainer = document.getElementById('linksContainer');
         const linksCount = document.getElementById('linksCount');
         const showMoreBtn = document.getElementById('showMoreLinksBtn');
-        
+
         linksSection.style.display = '';
         linksCount.textContent = links.length + ' link' + (links.length > 1 ? 's' : '');
-        
+
         const displayLinks = allLinksShown ? links : links.slice(0, MAX_LINKS_PREVIEW);
-        
-        linksContainer.innerHTML = displayLinks.map((link, index) => 
+
+        linksContainer.innerHTML = displayLinks.map((link, index) =>
             `<div class="link-item">
                 <span class="link-index">${index + 1}</span>
                 <a href="${escapeHtml(link)}" target="_blank" class="link-url" title="${escapeHtml(link)}">${escapeHtml(link)}</a>
                 <button class="link-copy-btn" onclick="copyToClipboard('${escapeHtml(link.replace(/'/g, "\\'"))}')">📋 Copy</button>
             </div>`
         ).join('');
-        
+
         if (links.length > MAX_LINKS_PREVIEW) {
             showMoreBtn.style.display = '';
             showMoreBtn.textContent = allLinksShown ? 'Show Less' : `Show All ${links.length} Links`;
