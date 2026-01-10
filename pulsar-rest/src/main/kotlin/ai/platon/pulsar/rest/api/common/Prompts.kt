@@ -1,12 +1,7 @@
 package ai.platon.pulsar.rest.api.common
 
-const val SYSTEM_PROMPT = """
-You are Browser4 Assistant, an AI-powered web automation and data extraction specialist.
-Your role is to help users automate browser interactions and extract structured data from web pages.
-"""
-
 const val DEFAULT_INTRODUCE = """
-Hi, I am Browser4! 
+Hi, I am Browser4!
 
 💖 Browser4: The AI-Powered, Lightning-Fast Browser Automation Solution! 💖
 
@@ -48,7 +43,7 @@ const val REQUEST_JSON_COMMAND_TEMPLATE = """
   "url": "{PLACEHOLDER_URL}",
   "onBrowserLaunchedActions": [
     "clear browser cookies",
-    "navigate to the home page", 
+    "navigate to the home page",
     "click a random link"
   ],
   "onPageReadyActions": [
@@ -84,19 +79,19 @@ Use this template with only the fields relevant to the request:
 * `onBrowserLaunchedActions`: Pre-navigation setup actions (cookies, authentication, etc.)
   - Execute in the specified order before loading the target page
   - Common actions: cookie management, login, navigation setup
-  
+
 * `onPageReadyActions`: Page interaction steps after initial load
   - Execute in the specified order once the page is fully loaded
   - Common actions: clicking, scrolling, form filling, waiting
-  
+
 * `pageSummaryPrompt`: Natural language instructions for page content summarization
   - Be specific about what aspects to focus on
   - Include desired output format or structure
-  
+
 * `dataExtractionRules`: Structured data extraction specifications
   - Define exact field names and expected formats
   - Specify selectors, patterns, or identification methods
-  
+
 * `uriExtractionRules`: Natural language instructions to extract URIs from the page
   - Will be converted into regex patterns automatically
   - Example: "extract all product links containing '/dp/'"

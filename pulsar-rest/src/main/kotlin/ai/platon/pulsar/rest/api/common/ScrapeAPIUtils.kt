@@ -17,7 +17,7 @@ object ScrapeAPIUtils {
         if (rawSql == null) {
             throw throw IllegalArgumentException("SQL is required")
         }
-        val configuredUrl = extractUrl(rawSql) ?: throw IllegalArgumentException("No url found in sql: >>>$rawSql<<<")
+        val configuredUrl = extractUrlFromFromClause(rawSql) ?: throw IllegalArgumentException("No url found in sql: >>>$rawSql<<<")
 
         val (url, args) = URLUtils.splitUrlArgs(configuredUrl)
         val sql = eraseExpireOptions(rawSql)
@@ -66,7 +66,7 @@ object ScrapeAPIUtils {
     /**
      * Extract the url from the SQL, the url might be configured
      * */
-    fun extractUrl(sql: String?): String? {
+    fun extractUrlFromFromClause(sql: String?): String? {
         if (sql == null) {
             return null
         }
@@ -75,20 +75,7 @@ object ScrapeAPIUtils {
         return if (sql0.contains(" from ", ignoreCase = true)) {
             ResultSetUtils.extractUrlFromFromClause(sql0)
         } else {
-            // TODO: this branch is deprecated
-            val input = sql0
-            val linkExtractor = LinkExtractor.builder()
-                .linkTypes(EnumSet.of(LinkType.URL))
-                .build()
-            val links = linkExtractor.extractLinks(input).iterator()
-
-            if (links.hasNext()) {
-                val link = links.next()
-                input.substring(link.beginIndex, link.endIndex)
-            } else {
-                null
-            }
+            null
         }
     }
-
 }
