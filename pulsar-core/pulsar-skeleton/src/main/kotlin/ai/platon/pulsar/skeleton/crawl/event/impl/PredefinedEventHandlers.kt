@@ -21,6 +21,7 @@ open class LoginHandler(
 
     private val logger = getLogger(this)
 
+    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
         logger.info("Navigating to login page ... | {}", loginUrl)
 
@@ -73,6 +74,7 @@ class CloseMaskLayerHandler(
 ) : WebPageWebDriverEventHandler() {
     private val logger = getLogger(this)
 
+    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
         logger.info("Closing mask layer... | {}", closeSelector)
         var n = 5

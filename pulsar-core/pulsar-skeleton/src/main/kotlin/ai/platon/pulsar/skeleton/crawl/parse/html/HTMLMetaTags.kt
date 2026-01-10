@@ -187,7 +187,8 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
                                         // XXX infinitely recursive paths (a crawler trap)...
                                         // if (!url.startsWith("/")) url = "/" + url;
                                         try {
-                                            URL(currURL, url)
+                                            // URL(currURL, url)
+                                            currURL?.toURI()?.resolve(url)?.toURL()
                                         } catch (e1: Exception) {
                                             null
                                         }
