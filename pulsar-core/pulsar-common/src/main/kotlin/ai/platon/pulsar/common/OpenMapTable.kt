@@ -17,7 +17,7 @@ class OpenMapTable(
      * The underlying rows, each row is associated with a key.
      * */
     val map = mutableMapOf<String, Row>()
-    
+
     /**
      * The attributes.
      * */
@@ -30,7 +30,7 @@ class OpenMapTable(
      * The row collection.
      * */
     val rows get() = map.values
-    
+
     val keys: Set<String> get() = map.keys
     val numRows: Int get() = map.size
     val isEmpty: Boolean get() = numRows == 0
@@ -127,6 +127,7 @@ class OpenMapTable(
 }
 
 class TableAttribute<T: Any>(val initializer: (OpenMapTable) -> T) {
+    @Suppress("UNCHECKED_CAST")
     operator fun getValue(thisRef: OpenMapTable, property: KProperty<*>): T =
             thisRef.attributes[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
 
@@ -137,6 +138,7 @@ class TableAttribute<T: Any>(val initializer: (OpenMapTable) -> T) {
 }
 
 class ColumnAttribute<T: Any>(val initializer: (OpenMapTable.Column) -> T) {
+    @Suppress("UNCHECKED_CAST")
     operator fun getValue(thisRef: OpenMapTable.Column, property: KProperty<*>): T =
             thisRef.attributes[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
 
@@ -147,6 +149,7 @@ class ColumnAttribute<T: Any>(val initializer: (OpenMapTable.Column) -> T) {
 }
 
 class RowAttribute<T: Any>(val initializer: (OpenMapTable.Row) -> T) {
+    @Suppress("UNCHECKED_CAST")
     operator fun getValue(thisRef: OpenMapTable.Row, property: KProperty<*>): T =
             thisRef.attributes[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
 
@@ -157,6 +160,7 @@ class RowAttribute<T: Any>(val initializer: (OpenMapTable.Row) -> T) {
 }
 
 class CellAttribute<T: Any>(val initializer: (OpenMapTable.Cell) -> T) {
+    @Suppress("UNCHECKED_CAST")
     operator fun getValue(thisRef: OpenMapTable.Cell, property: KProperty<*>): T =
             thisRef.attributes[property.name] as? T ?: setValue(thisRef, property, initializer(thisRef))
 
