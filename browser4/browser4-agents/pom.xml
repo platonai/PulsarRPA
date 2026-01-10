@@ -132,53 +132,144 @@
     </dependencies>
 
     <profiles>
-        <!-- Profile to build Windows executable using launch4j -->
+
+        <!-- Profile to build Windows app-image and installer using jpackage -->
         <profile>
-            <id>win-exe</id>
+            <id>win-jpackage</id>
             <build>
                 <plugins>
+                    <!-- Ensure we have a staged input dir for jpackage -->
                     <plugin>
-                        <groupId>com.akathist.maven.plugins.launch4j</groupId>
-                        <artifactId>launch4j-maven-plugin</artifactId>
-                        <version>${launch4j-maven-plugin.version}</version>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <version>3.3.1</version>
                         <executions>
                             <execution>
-                                <id>l4j-clui</id>
+                                <id>stage-jpackage-input</id>
                                 <phase>package</phase>
                                 <goals>
-                                    <goal>launch4j</goal>
+                                    <goal>copy-resources</goal>
                                 </goals>
                                 <configuration>
-                                    <headerType>console</headerType>
-                                    <outfile>${project.build.directory}/Browser4.exe</outfile>
-                                    <jar>${project.build.directory}/Browser4.jar</jar>
-                                    <errTitle>Browser4</errTitle>
-                                    <classPath>
-                                        <mainClass>org.springframework.boot.loader.launch.JarLauncher</mainClass>
-                                    </classPath>
-                                    <jre>
-                                        <minVersion>${kotlin.compiler.jvmTarget}</minVersion>
-                                        <opts>
-                                            <opt>-Dfile.encoding=UTF-8</opt>
-                                        </opts>
-                                    </jre>
-                                    <versionInfo>
-                                        <fileVersion>4.4.0.0</fileVersion>
-                                        <txtFileVersion>${pulsar.version}</txtFileVersion>
-                                        <fileDescription>Browser4 - A lightning-fast browser for your AI</fileDescription>
-                                        <copyright>Copyright (C) 2014-2026 platon.ai. All Rights Reserved.</copyright>
-                                        <productVersion>4.4.0.0</productVersion>
-                                        <txtProductVersion>${pulsar.version}</txtProductVersion>
-                                        <productName>Browser4</productName>
-                                        <internalName>Browser4</internalName>
-                                        <originalFilename>Browser4.exe</originalFilename>
-                                    </versionInfo>
+                                    <outputDirectory>${project.build.directory}/jpackage/input</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.build.directory}</directory>
+                                            <includes>
+                                                <include>${project.build.finalName}.jar</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+
+                    <!-- Invoke JDK 17+ jpackage to produce a self-contained Windows executable -->
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <version>1.6.0</version>
+                        <executions>
+                            <!-- Portable app-image: target/jpackage/app-image/Browser4/Browser4.exe -->
+                            <execution>
+                                <id>jpackage-app-image</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>jpackage</executable>
+                                    <workingDirectory>${project.basedir}</workingDirectory>
+                                    <arguments>
+                                        <argument>--type</argument>
+                                        <argument>app-image</argument>
+
+                                        <argument>--name</argument>
+                                        <argument>${project.build.finalName}</argument>
+
+                                        <argument>--app-version</argument>
+                                        <argument>${jpackage.appVersion}</argument>
+
+                                        <argument>--vendor</argument>
+                                        <argument>platon.ai</argument>
+
+                                        <argument>--input</argument>
+                                        <argument>${project.build.directory}/jpackage/input</argument>
+
+                                        <argument>--main-jar</argument>
+                                        <argument>${project.build.finalName}.jar</argument>
+
+                                        <argument>--dest</argument>
+                                        <argument>${project.build.directory}/jpackage/app-image</argument>
+
+                                        <!-- Keep a console so you can see logs on double-click during development -->
+                                        <argument>--win-console</argument>
+
+                                        <!-- Default JVM flags -->
+                                        <argument>--java-options</argument>
+                                        <argument>-Dfile.encoding=UTF-8</argument>
+
+                                        <!-- Icon is optional; add icon argument back once you have packaging/windows/Browser4.ico -->
+                                    </arguments>
+                                    <!-- Allow build without icon file (icon is optional) -->
+                                    <skip>${jpackage.skip}</skip>
+                                </configuration>
+                            </execution>
+
+                            <!-- Installer exe: target/jpackage/dist/Browser4-<version>.exe (requires WiX v3 on PATH) -->
+                            <execution>
+                                <id>jpackage-installer-exe</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>jpackage</executable>
+                                    <workingDirectory>${project.basedir}</workingDirectory>
+                                    <arguments>
+                                        <argument>--type</argument>
+                                        <argument>exe</argument>
+
+                                        <argument>--name</argument>
+                                        <argument>${project.build.finalName}</argument>
+
+                                        <argument>--app-version</argument>
+                                        <argument>${jpackage.appVersion}</argument>
+
+                                        <argument>--vendor</argument>
+                                        <argument>platon.ai</argument>
+
+                                        <argument>--input</argument>
+                                        <argument>${project.build.directory}/jpackage/input</argument>
+
+                                        <argument>--main-jar</argument>
+                                        <argument>${project.build.finalName}.jar</argument>
+
+                                        <argument>--dest</argument>
+                                        <argument>${project.build.directory}/jpackage/dist</argument>
+
+                                        <argument>--win-console</argument>
+
+                                        <argument>--java-options</argument>
+                                        <argument>-Dfile.encoding=UTF-8</argument>
+
+                                        <!-- Icon is optional; add icon argument back once you have packaging/windows/Browser4.ico -->
+                                    </arguments>
+                                    <!-- Off by default because it needs WiX; enable with -Djpackage.installer=true -->
+                                    <skip>${jpackage.installer.skip}</skip>
                                 </configuration>
                             </execution>
                         </executions>
                     </plugin>
                 </plugins>
             </build>
+            <properties>
+                <!-- On by default for this profile -->
+                <jpackage.skip>false</jpackage.skip>
+                <!-- Installer is off by default (WiX dependency). Set -Djpackage.installer.skip=false to enable. -->
+                <jpackage.installer.skip>true</jpackage.installer.skip>
+            </properties>
         </profile>
     </profiles>
 
@@ -187,6 +278,12 @@
         <spring-boot.version>4.0.1</spring-boot.version>
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
         <pulsar.version>4.4.0-SNAPSHOT</pulsar.version>
-        <launch4j-maven-plugin.version>2.5.2</launch4j-maven-plugin.version>
+
+        <!-- jpackage toggles (defaults keep normal builds unaffected) -->
+        <jpackage.skip>true</jpackage.skip>
+        <jpackage.installer.skip>true</jpackage.installer.skip>
+
+        <!-- jpackage requires a numeric/strict version; snapshots are not accepted -->
+        <jpackage.appVersion>4.4.0</jpackage.appVersion>
     </properties>
 </project>
