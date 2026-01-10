@@ -66,6 +66,37 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>deploy</id>
+            <build>
+                <plugins>
+                    <!--
+                      Central requires a -javadoc.jar for each published artifact.
+                      This module is Kotlin-heavy and shaded, so standard Javadoc generation is unreliable;
+                      we attach an (empty) javadoc jar instead to satisfy Central validation.
+                    -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>attach-javadocs</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>jar</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <skip>false</skip>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <dependencies>
         <!-- Internal -->
         <dependency>
