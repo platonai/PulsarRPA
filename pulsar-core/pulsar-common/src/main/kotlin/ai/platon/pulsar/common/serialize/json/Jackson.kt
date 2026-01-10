@@ -1,3 +1,5 @@
+@file:Suppress("Unused")
+
 package ai.platon.pulsar.common.serialize.json
 
 import com.fasterxml.jackson.annotation.JsonInclude

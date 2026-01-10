@@ -14,7 +14,10 @@ class DoubleSerializerTest {
     private fun mapper(includeNulls: Boolean = true): ObjectMapper =
         jacksonObjectMapper().apply {
             if (includeNulls) {
-                setSerializationInclusion(JsonInclude.Include.ALWAYS)
+                // ObjectMapper#setSerializationInclusion is deprecated; use default property inclusion instead.
+                setDefaultPropertyInclusion(
+                    JsonInclude.Value.construct(JsonInclude.Include.ALWAYS, JsonInclude.Include.ALWAYS)
+                )
             }
             val module = SimpleModule().apply {
                 addSerializer(Double::class.java, DoubleSerializer())
