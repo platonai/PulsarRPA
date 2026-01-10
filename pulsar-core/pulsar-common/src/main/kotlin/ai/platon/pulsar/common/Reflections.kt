@@ -68,6 +68,7 @@ open class SuspendAwareHandler(private val impl: Any) : InvocationHandler {
 
         // 检查是否是 suspend 函数
         return if (kFunc.isSuspend) {
+            @Suppress("UNCHECKED_CAST")
             val cont = realArgs.last() as Continuation<Any?>
             eventHandlerScope.launch(cont.context) {
                 val result = kFunc.callSuspend(impl, *realArgs.dropLast(1).toTypedArray())

@@ -422,7 +422,6 @@ class LoadComponent(
 
             // TODO: test the dirty flag
             // do not persist this copy
-            require(page is GoraWebPage)
             page.unbox().clearDirty()
             require(!page.isFetched)
             require(page.isNotInternal)

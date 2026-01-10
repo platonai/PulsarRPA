@@ -1,3 +1,5 @@
+@file:Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE", "unused")
+
 package ai.platon.pulsar.skeleton.crawl.event
 
 import ai.platon.pulsar.common.lang.*

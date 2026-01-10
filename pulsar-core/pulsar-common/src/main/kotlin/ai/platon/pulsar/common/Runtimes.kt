@@ -192,7 +192,7 @@ object Runtimes {
             }
 
             // Execute the command
-            val process = Runtime.getRuntime().exec(command)
+            val process = Runtime.getRuntime().exec(arrayOf(command))
             process.waitFor()
 
             // Check if the command executed successfully

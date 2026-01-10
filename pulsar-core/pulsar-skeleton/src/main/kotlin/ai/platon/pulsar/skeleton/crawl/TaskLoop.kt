@@ -10,7 +10,7 @@ interface TaskLoop : StartStopRunnable {
     val name: String
     val config: ImmutableConfig
     val urlFeeder: Iterable<UrlAware>
-    val collectors: List<out DataCollector<UrlAware>>
+    val collectors: List<DataCollector<UrlAware>>
     val taskRunner: TaskRunner
     val display: String
     val abstract: String

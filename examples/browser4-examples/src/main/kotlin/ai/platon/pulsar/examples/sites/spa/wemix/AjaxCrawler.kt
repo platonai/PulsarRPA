@@ -1,3 +1,5 @@
+@file:Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
+
 package ai.platon.pulsar.examples.sites.spa.wemix
 
 import ai.platon.pulsar.common.AppPaths

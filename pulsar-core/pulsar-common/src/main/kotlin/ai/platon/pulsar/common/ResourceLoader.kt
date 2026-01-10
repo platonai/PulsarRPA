@@ -23,11 +23,11 @@ object ResourceLoader {
     private val lastModifiedTimes = ConcurrentHashMap<Path, Instant>()
     private val userClassFactories = ConcurrentLinkedDeque<ClassFactory>()
     private val classLoader = Thread.currentThread().contextClassLoader ?: ResourceLoader::class.java.classLoader
-    
+
     private val DEFAULT_LINE_FILTER: (line: String) -> Boolean = { line ->
         !line.startsWith("# ") && !line.startsWith("-- ") && line.isNotBlank()
     }
-    
+
     /**
      * Add a class factory in order to manage more than one class loader.
      *
@@ -36,7 +36,7 @@ object ResourceLoader {
     fun addClassFactory(classFactory: ClassFactory) {
         userClassFactories.add(classFactory)
     }
-    
+
     /**
      * Remove a class factory
      *
@@ -45,7 +45,7 @@ object ResourceLoader {
     fun removeClassFactory(classFactory: ClassFactory) {
         userClassFactories.remove(classFactory)
     }
-    
+
     /**
      * Load a class, but check if it is allowed to load this class first. To
      * perform access rights checking, the system property h2.allowedClasses
@@ -62,6 +62,7 @@ object ResourceLoader {
                 try {
                     val userClass = classFactory.loadClass(className)
                     if (userClass != null) {
+                        @Suppress("UNCHECKED_CAST")
                         return userClass as Class<Z>
                     }
                 } catch (ignored: ClassNotFoundException) {
@@ -71,9 +72,10 @@ object ResourceLoader {
                 }
             }
         }
-        
+
         // Use local ClassLoader
         return try {
+            @Suppress("UNCHECKED_CAST")
             Class.forName(className) as Class<Z>
         } catch (e: ClassNotFoundException) {
             try {
@@ -85,7 +87,7 @@ object ResourceLoader {
             throw e
         }
     }
-    
+
     /**
      * Read all lines from one of the following resource: string, file by file name and resource by resource name
      * The front resource have higher priority
@@ -102,47 +104,47 @@ object ResourceLoader {
             }
         } ?: listOf()
     }
-    
+
     fun readAllLines(resource: String) = readAllLines(resource, true)
-    
+
     fun readAllLines(resource: String, filter: Boolean): List<String> {
         if (!filter) {
             return readAllLinesNoFilter(resource)
         }
-        
+
         return getResourceAsReader(resource)?.useLines { it.filter(DEFAULT_LINE_FILTER).toList() } ?: listOf()
     }
-    
+
     fun readAllLines(resource: String, filter: (String) -> Boolean = { true }): List<String> {
         return getResourceAsReader(resource)?.useLines { it.filter(filter).toList() } ?: listOf()
     }
-    
+
     fun readAllLinesNoFilter(resource: String): List<String> {
         return getResourceAsReader(resource)?.useLines {
             it.toList()
         } ?: listOf()
     }
-    
+
     fun readAllLinesIfModified(path: Path): List<String> {
         val lastModified = lastModifiedTimes.getOrDefault(path, Instant.EPOCH)
         val modified = Files.getLastModifiedTime(path).toInstant()
-        
+
         return takeIf { modified > lastModified }
             ?.let { Files.readAllLines(path).also { lastModifiedTimes[path] = modified } }
             ?: listOf()
     }
-    
+
     fun readString(resource: String): String {
         return readStringTo(resource, StringBuilder()).toString()
     }
-    
+
     fun readStringTo(resource: String, sb: StringBuilder): StringBuilder {
         getResourceAsReader(resource)?.forEachLine {
             sb.appendLine(it)
         }
         return sb
     }
-    
+
     /**
      * Get a [Reader] attached to the configuration resource with the
      * given `name`.
@@ -162,7 +164,7 @@ object ResourceLoader {
             null
         }
     }
-    
+
     /**
      * Find the first resource associated by prefix/name
      */
@@ -173,7 +175,7 @@ object ResourceLoader {
             .onEach { found = true }
             .firstOrNull() ?: getResourceAsStream(resource)
     }
-    
+
     /**
      * Get a [Reader] attached to the configuration resource with the
      * given `name`.
@@ -184,12 +186,12 @@ object ResourceLoader {
     fun getResourceAsReader(resource: String, vararg resourcePrefixes: String): Reader? {
         return getResourceAsStream(resource, *resourcePrefixes)?.let { InputStreamReader(it) }
     }
-    
+
     /**
      * Check if a resource exists
      */
     fun exists(name: String) = getURLOrNull(name) != null
-    
+
     /**
      * Finds a resource with a given name.
      *
@@ -207,11 +209,11 @@ object ResourceLoader {
         while (url == null && it.hasNext()) {
             url = it.next().javaClass.getResource(name)
         }
-        
+
         // classLoader.getResource: URL object for reading the resource; null if the resource could not be found
         return url ?: classLoader.getResource(name)
     }
-    
+
     /**
      * Finds a resource with a given name.
      *
@@ -264,7 +266,7 @@ object ResourceLoader {
     fun getPath(resource: String): Path {
         return getURL(resource).toURI().toPath()
     }
-    
+
     /**
      * Finds a resource with a given name.
      *
@@ -276,7 +278,7 @@ object ResourceLoader {
     fun getPathOrNull(resource: String): Path? {
         return getURLOrNull(resource)?.toURI()?.toPath()
     }
-    
+
     @Throws(FileNotFoundException::class)
     fun getMultiSourceReader(stringResource: String?, resource: String): Reader? {
         return getMultiSourceReader(stringResource, resource, "")

@@ -17,7 +17,6 @@ package ai.platon.pulsar.protocol.browser.emulator.impl
 
 import ai.platon.pulsar.browser.common.BrowserSettings
 import ai.platon.pulsar.common.*
-import ai.platon.pulsar.common.config.CapabilityTypes
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_MAX_CONTENT_LENGTH
 import ai.platon.pulsar.common.config.CapabilityTypes.FETCH_PAGE_AUTO_EXPORT_LIMIT
 import ai.platon.pulsar.common.config.ImmutableConfig
@@ -59,9 +58,6 @@ abstract class BrowserEmulatorImplBase(
 ) : AbstractEventEmitter<EmulateEvents>(), Parameterized, AutoCloseable {
     private val logger = getLogger(BrowserEmulatorImplBase::class)
     private val tracer = logger.takeIf { it.isTraceEnabled }
-
-    val supportAllCharsets get() = immutableConfig.getBoolean(CapabilityTypes.PARSE_SUPPORT_ALL_CHARSETS, true)
-    val charsetPattern = if (supportAllCharsets) SYSTEM_AVAILABLE_CHARSET_PATTERN else DEFAULT_CHARSET_PATTERN
 
     /**
      * The maximum length of the page source, 8M by default.
@@ -169,7 +165,7 @@ abstract class BrowserEmulatorImplBase(
             pageDatum.location = urls.location
             if (pageDatum.url != pageDatum.location) {
                 // in-browser redirection
-                // messageWriter?.debugRedirects(pageDatum.url, urls)
+                tracer?.trace("In-browser redirection: {} -> {}", pageDatum.url, urls.location)
             }
         }
 
@@ -186,7 +182,7 @@ abstract class BrowserEmulatorImplBase(
      * */
     override fun close() {
         if (closed.compareAndSet(false, true)) {
-
+            logger.debug("Browser emulator is closed")
         }
     }
 

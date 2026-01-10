@@ -10,7 +10,7 @@ import kotlinx.coroutines.delay
 import kotlin.random.Random
 
 private class RPAPaginateHandler(val initPageNumber: Int) : WebPageWebDriverEventHandler() {
-
+    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
         driver.waitForSelector("#tab-transactions")
         driver.click("#tab-transactions")
@@ -20,13 +20,11 @@ private class RPAPaginateHandler(val initPageNumber: Int) : WebPageWebDriverEven
         IntRange(1, 100).forEach { i ->
             roundGap(i)
 
-            var text = driver.selectFirstTextOrNull(".table__list table.table__list-set tr:nth-child(25)") ?: ""
+            val text = driver.selectFirstTextOrNull(".table__list table.table__list-set tr:nth-child(25)") ?: ""
             println(text)
             if (text.length < 100) {
                 delay(3000)
             }
-
-            text = driver.outerHTML(".table__list table.table__list-set") ?: ""
 
             val nthChild = if (initPageNumber == 1 || i <= 6) i else 6
             val nextPageSelector = "ul.el-pager li:nth-child($nthChild)"

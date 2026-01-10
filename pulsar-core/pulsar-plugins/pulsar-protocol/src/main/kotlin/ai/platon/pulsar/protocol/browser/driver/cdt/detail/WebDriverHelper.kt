@@ -20,6 +20,8 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.nio.file.Files
 
 class WebDriverHelper(
@@ -56,10 +58,14 @@ class WebDriverHelper(
         val reportDir = messageWriter.reportDir.resolve("trace").resolve(host)
 
         if (!Files.exists(reportDir)) {
-            Files.createDirectories(reportDir)
+            withContext(Dispatchers.IO) {
+                Files.createDirectories(reportDir)
+            }
         }
 
-        val count = Files.list(reportDir).count()
+        val count = withContext(Dispatchers.IO) {
+            Files.list(reportDir)
+        }.count()
         if (count > 2_000) {
             // TOO MANY tracing
             return

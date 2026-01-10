@@ -7,6 +7,7 @@ import ai.platon.pulsar.dom.Documents
 import ai.platon.pulsar.persist.WebPage
 
 class AmazonSearcherJsEventHandler: WebPageWebDriverEventHandler() {
+    @Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
     override suspend fun invoke(page: WebPage, driver: WebDriver): Any? {
         val selector = "input#twotabsearchtextbox"
         val expressions = "document.querySelector('$selector').value = 'cup';" +
