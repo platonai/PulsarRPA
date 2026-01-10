@@ -131,10 +131,62 @@
         </dependency>
     </dependencies>
 
+    <profiles>
+        <!-- Profile to build Windows executable using launch4j -->
+        <profile>
+            <id>win-exe</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>com.akathist.maven.plugins.launch4j</groupId>
+                        <artifactId>launch4j-maven-plugin</artifactId>
+                        <version>${launch4j-maven-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>l4j-clui</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>launch4j</goal>
+                                </goals>
+                                <configuration>
+                                    <headerType>console</headerType>
+                                    <outfile>${project.build.directory}/Browser4.exe</outfile>
+                                    <jar>${project.build.directory}/Browser4.jar</jar>
+                                    <errTitle>Browser4</errTitle>
+                                    <classPath>
+                                        <mainClass>org.springframework.boot.loader.launch.JarLauncher</mainClass>
+                                    </classPath>
+                                    <jre>
+                                        <minVersion>${kotlin.compiler.jvmTarget}</minVersion>
+                                        <opts>
+                                            <opt>-Dfile.encoding=UTF-8</opt>
+                                        </opts>
+                                    </jre>
+                                    <versionInfo>
+                                        <fileVersion>4.4.0.0</fileVersion>
+                                        <txtFileVersion>${pulsar.version}</txtFileVersion>
+                                        <fileDescription>Browser4 - A lightning-fast browser for your AI</fileDescription>
+                                        <copyright>Copyright (C) 2014-2026 platon.ai. All Rights Reserved.</copyright>
+                                        <productVersion>4.4.0.0</productVersion>
+                                        <txtProductVersion>${pulsar.version}</txtProductVersion>
+                                        <productName>Browser4</productName>
+                                        <internalName>Browser4</internalName>
+                                        <originalFilename>Browser4.exe</originalFilename>
+                                    </versionInfo>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
     <properties>
         <kotlin.version>2.2.21</kotlin.version>
         <spring-boot.version>4.0.1</spring-boot.version>
         <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
         <pulsar.version>4.4.0-SNAPSHOT</pulsar.version>
+        <launch4j-maven-plugin.version>2.5.2</launch4j-maven-plugin.version>
     </properties>
 </project>
