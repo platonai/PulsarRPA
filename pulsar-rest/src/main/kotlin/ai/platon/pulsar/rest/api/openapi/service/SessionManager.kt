@@ -1,4 +1,4 @@
-package ai.platon.pulsar.rest.api.webdriver.service
+package ai.platon.pulsar.rest.api.openapi.service
 
 import ai.platon.pulsar.agentic.AgenticSession
 import ai.platon.pulsar.agentic.BasicAgenticSession
@@ -26,7 +26,7 @@ class SessionManager(
     private val pulsarContext: PulsarContext
 ) {
     private val logger = LoggerFactory.getLogger(SessionManager::class.java)
-    
+
     /**
      * Container for session-related objects.
      */
@@ -41,14 +41,14 @@ class SessionManager(
         val createdAt: Long = System.currentTimeMillis(),
         var lastAccessedAt: Long = System.currentTimeMillis()
     )
-    
+
     private val sessions = ConcurrentHashMap<String, ManagedSession>()
-    
+
     // Cleanup executor for removing stale sessions
     private val cleanupExecutor = Executors.newSingleThreadScheduledExecutor { r ->
         Thread(r, "session-cleanup").apply { isDaemon = true }
     }
-    
+
     init {
         // Schedule periodic cleanup of idle sessions (every 5 minutes)
         cleanupExecutor.scheduleAtFixedRate(
@@ -56,7 +56,7 @@ class SessionManager(
             5, 5, TimeUnit.MINUTES
         )
     }
-    
+
     /**
      * Creates a new browser session with the specified capabilities.
      *
@@ -65,17 +65,17 @@ class SessionManager(
      */
     fun createSession(capabilities: Map<String, Any?>? = null): ManagedSession {
         val sessionId = UUID.randomUUID().toString()
-        
+
         // Create PulsarSession (standard session)
         val pulsarSession = pulsarContext.createSession()
-        
+
         // Create AgenticContext and AgenticSession (AI-powered session)
         val agenticContext = AgenticContexts.create()
         val agenticSession = agenticContext.createSession()
-        
+
         // Get the companion agent
         val agent = agenticSession.companionAgent
-        
+
         val session = ManagedSession(
             sessionId = sessionId,
             pulsarSession = pulsarSession,
@@ -83,13 +83,13 @@ class SessionManager(
             agent = agent,
             capabilities = capabilities
         )
-        
+
         sessions[sessionId] = session
         logger.info("Created session {} with capabilities: {}", sessionId, capabilities)
-        
+
         return session
     }
-    
+
     /**
      * Retrieves a session by ID.
      *
@@ -101,7 +101,7 @@ class SessionManager(
         session?.lastAccessedAt = System.currentTimeMillis()
         return session
     }
-    
+
     /**
      * Deletes a session and cleans up resources.
      *
@@ -110,23 +110,23 @@ class SessionManager(
      */
     fun deleteSession(sessionId: String): Boolean {
         val session = sessions.remove(sessionId) ?: return false
-        
+
         try {
             // Close the agent to release browser resources
             session.agent.close()
-            
+
             // Close sessions
             session.agenticSession.close()
             session.pulsarSession.close()
-            
+
             logger.info("Deleted session {} and released resources", sessionId)
         } catch (e: Exception) {
             logger.error("Error closing session {}: {}", sessionId, e.message, e)
         }
-        
+
         return true
     }
-    
+
     /**
      * Updates the URL for a session.
      *
@@ -141,7 +141,7 @@ class SessionManager(
         logger.debug("Session {} navigated to: {}", sessionId, url)
         return true
     }
-    
+
     /**
      * Updates the status of a session.
      *
@@ -156,7 +156,7 @@ class SessionManager(
         logger.debug("Session {} status changed to: {}", sessionId, status)
         return true
     }
-    
+
     /**
      * Checks if a session exists.
      *
@@ -166,7 +166,7 @@ class SessionManager(
     fun sessionExists(sessionId: String): Boolean {
         return sessions.containsKey(sessionId)
     }
-    
+
     /**
      * Gets the count of active sessions.
      *
@@ -175,7 +175,7 @@ class SessionManager(
     fun getActiveSessionCount(): Int {
         return sessions.size
     }
-    
+
     /**
      * Cleans up idle sessions that haven't been accessed for more than 30 minutes.
      */
@@ -184,7 +184,7 @@ class SessionManager(
         val idleSessions = sessions.entries.filter { (_, session) ->
             session.lastAccessedAt < idleThreshold
         }
-        
+
         if (idleSessions.isNotEmpty()) {
             logger.info("Cleaning up {} idle sessions", idleSessions.size)
             idleSessions.forEach { (sessionId, _) ->
@@ -192,7 +192,7 @@ class SessionManager(
             }
         }
     }
-    
+
     /**
      * Cleanup method called on shutdown.
      */

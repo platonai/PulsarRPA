@@ -1,8 +1,8 @@
-package ai.platon.pulsar.rest.api.webdriver.controller
+package ai.platon.pulsar.rest.api.openapi.controller
 
-import ai.platon.pulsar.rest.api.webdriver.dto.*
-import ai.platon.pulsar.rest.api.webdriver.service.SessionManager
-import ai.platon.pulsar.rest.api.webdriver.store.InMemoryStore
+import ai.platon.pulsar.rest.api.openapi.dto.*
+import ai.platon.pulsar.rest.api.openapi.service.SessionManager
+import ai.platon.pulsar.rest.api.openapi.store.InMemoryStore
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
 import jakarta.servlet.http.HttpServletResponse
 import kotlinx.coroutines.runBlocking
@@ -27,7 +27,7 @@ class ScriptController(
     private val store: InMemoryStore
 ) {
     private val logger = LoggerFactory.getLogger(ScriptController::class.java)
-    
+
     private val useRealSessions: Boolean = sessionManager != null
 
     /**

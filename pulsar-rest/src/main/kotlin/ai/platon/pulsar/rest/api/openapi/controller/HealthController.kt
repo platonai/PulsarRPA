@@ -1,7 +1,7 @@
-package ai.platon.pulsar.rest.api.webdriver.controller
+package ai.platon.pulsar.rest.api.openapi.controller
 
-import ai.platon.pulsar.rest.api.webdriver.service.SessionManager
-import ai.platon.pulsar.rest.api.webdriver.store.InMemoryStore
+import ai.platon.pulsar.rest.api.openapi.service.SessionManager
+import ai.platon.pulsar.rest.api.openapi.store.InMemoryStore
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
@@ -29,22 +29,22 @@ class HealthController(
     @GetMapping("/health")
     fun health(): ResponseEntity<Map<String, Any>> {
         logger.debug("Health check requested")
-        
+
         val useRealSessions = sessionManager != null
         val status = "UP"
-        
+
         val response = mutableMapOf<String, Any>(
             "status" to status,
             "mode" to if (useRealSessions) "real" else "mock"
         )
-        
+
         if (useRealSessions) {
             val sessionCount = sessionManager!!.getActiveSessionCount()
             response["activeSessions"] = sessionCount
         } else {
             response["activeSessions"] = store.getActiveSessionCount()
         }
-        
+
         return ResponseEntity.ok(response)
     }
 
@@ -54,15 +54,15 @@ class HealthController(
     @GetMapping("/health/ready")
     fun ready(): ResponseEntity<Map<String, Any>> {
         logger.debug("Readiness check requested")
-        
+
         val useRealSessions = sessionManager != null
         val ready = true // Always ready in current implementation
-        
+
         val response = mapOf(
             "ready" to ready,
             "mode" to if (useRealSessions) "real" else "mock"
         )
-        
+
         return ResponseEntity.ok(response)
     }
 
@@ -72,11 +72,11 @@ class HealthController(
     @GetMapping("/health/live")
     fun live(): ResponseEntity<Map<String, Any>> {
         logger.debug("Liveness check requested")
-        
+
         val response = mapOf(
             "live" to true
         )
-        
+
         return ResponseEntity.ok(response)
     }
 }

@@ -1,4 +1,4 @@
-package ai.platon.pulsar.rest.api.webdriver
+package ai.platon.pulsar.rest.api.openapi
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.context.annotation.ComponentScan

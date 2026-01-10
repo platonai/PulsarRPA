@@ -1,7 +1,7 @@
-package ai.platon.pulsar.rest.api.webdriver.controller
+package ai.platon.pulsar.rest.api.openapi.controller
 
-import ai.platon.pulsar.rest.api.webdriver.dto.*
-import ai.platon.pulsar.rest.api.webdriver.store.InMemoryStore
+import ai.platon.pulsar.rest.api.openapi.dto.*
+import ai.platon.pulsar.rest.api.openapi.store.InMemoryStore
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType

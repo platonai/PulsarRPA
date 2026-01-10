@@ -1,6 +1,6 @@
-package ai.platon.pulsar.rest.api.webdriver.controller
+package ai.platon.pulsar.rest.api.openapi.controller
 
-import ai.platon.pulsar.rest.api.webdriver.dto.ErrorResponse
+import ai.platon.pulsar.rest.api.openapi.dto.ErrorResponse
 import jakarta.servlet.http.HttpServletResponse
 import org.springframework.http.ResponseEntity
 import java.util.UUID
@@ -35,7 +35,7 @@ object ControllerUtils {
             )
         )
     }
-    
+
     /**
      * Creates a 500 Internal Server Error response with WebDriver-style error format.
      *

@@ -1,4 +1,4 @@
-package ai.platon.pulsar.rest.api.webdriver
+package ai.platon.pulsar.rest.api.openapi
 
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
