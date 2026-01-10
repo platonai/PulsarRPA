@@ -149,7 +149,7 @@ class AsinSellerScraper {
         val otherSellerCount = rs.getString("other_seller_num")?.toIntOrNull() ?: 0
         totalOtherSellerCount += otherSellerCount
 
-        val extractedSellerUrls = rs.getArray("buy_box_seller_id").array as Array<Object>
+        val extractedSellerUrls = rs.getArray("buy_box_seller_id").array as Array<Any>
         val sellerLinks = extractedSellerUrls.map { it.toString() }.filter { URLUtils.isStandard(it) }
             .mapNotNull { href ->
                 AmazonUrls.normalizeSellerUrl(href)?.let { Hyperlink(it, "", href = href, referrer = asinUrl) }

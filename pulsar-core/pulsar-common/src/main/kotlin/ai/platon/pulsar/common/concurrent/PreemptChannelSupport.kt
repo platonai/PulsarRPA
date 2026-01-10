@@ -58,12 +58,14 @@ open class PreemptChannelSupport(val name: String = "") {
     /**
      * Indicates whether there are any active events (preemptive or normal tasks).
      */
-    val hasEvent get() = arrayOf(numRunningPreemptiveTasks,
-        numRunningPreemptiveTasks, numPendingNormalTasks, numRunningNormalTasks).sumBy { it.get() } > 0
+    val hasEvent get() = arrayOf(
+        numRunningPreemptiveTasks,
+            numRunningPreemptiveTasks, numPendingNormalTasks, numRunningNormalTasks
+    ).sumOf { it.get() } > 0
 
     /**
      * Executes a preemptive task. If there is at least one preemptive task in the critical section, all normal tasks must wait.
-     * 
+     *
      * Preemptive tasks are low-probability events, so it's OK to use locks.
      *
      * @param preemptiveTask The preemptive task to execute.
