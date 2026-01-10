@@ -83,6 +83,235 @@
             max-height: 320px;
             overflow-y: auto;
         }
+
+        /* Result card styles */
+        .result-card {
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+
+        .result-card-header {
+            background: linear-gradient(135deg, #2a5d9f 0%, #4e8ad1 100%);
+            color: #fff;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .result-card-header h3 {
+            margin: 0;
+            font-size: 1.1em;
+            font-weight: 600;
+        }
+
+        .result-card-body {
+            padding: 20px;
+        }
+
+        /* Status badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .badge-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .badge-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        /* Summary section */
+        .summary-section {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-left: 4px solid #2a5d9f;
+            padding: 16px 20px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 20px;
+        }
+
+        .summary-section p {
+            margin: 0;
+            font-size: 1.05em;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        /* Info grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .info-item {
+            background: #f8f9fa;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+        }
+
+        .info-item-label {
+            font-size: 0.8em;
+            color: #6c757d;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .info-item-value {
+            font-size: 0.95em;
+            color: #212529;
+            font-weight: 500;
+        }
+
+        /* List sections */
+        .list-section {
+            margin-bottom: 20px;
+        }
+
+        .list-section h4 {
+            color: #2a5d9f;
+            font-size: 0.95em;
+            margin: 0 0 12px 0;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .list-section ul {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .list-section li {
+            background: #f8f9fa;
+            padding: 10px 14px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border-left: 3px solid #4e8ad1;
+            font-size: 0.95em;
+            color: #333;
+        }
+
+        .list-section li:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Collapsible JSON section */
+        .json-toggle {
+            background: #e9ecef;
+            border: none;
+            padding: 10px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .json-toggle:hover {
+            background: #dee2e6;
+        }
+
+        .json-content {
+            display: none;
+            margin-top: 12px;
+            background: #f4f7fa;
+            border: 1px solid #e0e6ed;
+            border-radius: 8px;
+            padding: 14px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.85em;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .json-content.show {
+            display: block;
+        }
+
+        /* Status bar */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .status-bar-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9em;
+        }
+
+        .status-bar-item .icon {
+            font-size: 1.1em;
+        }
+
+        /* Agent state section */
+        .agent-state {
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .agent-state-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .agent-state-header h4 {
+            margin: 0;
+            color: #2a5d9f;
+            font-size: 1em;
+        }
+
+        .step-indicator {
+            background: #2a5d9f;
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
     </style>
 </head>
 <body>
@@ -106,9 +335,87 @@
 
     </div>
     <div id="finalResultContainer" style="display:none;margin-top:18px;">
-        <h3 style="color:#2a5d9f;">🎯 Final Result</h3>
-        <pre id="finalResult"
-             style="background:#f4f7fa;border:1px solid #e0e6ed;border-radius:8px;padding:14px;font-size:1em;color:#222;white-space:pre;overflow-x:auto;"></pre>
+        <div class="result-card">
+            <div class="result-card-header">
+                <h3>🎯 Final Result</h3>
+                <span id="resultStatusBadge" class="badge badge-success">Success</span>
+            </div>
+            <div class="result-card-body">
+                <!-- Status Bar -->
+                <div id="resultStatusBar" class="status-bar">
+                    <div class="status-bar-item">
+                        <span class="icon">📊</span>
+                        <span id="statusCodeDisplay">Status: --</span>
+                    </div>
+                    <div class="status-bar-item">
+                        <span class="icon">📄</span>
+                        <span id="pageStatusDisplay">Page: --</span>
+                    </div>
+                    <div class="status-bar-item">
+                        <span class="icon">🆔</span>
+                        <span id="taskIdDisplay">ID: --</span>
+                    </div>
+                </div>
+
+                <!-- Summary Section -->
+                <div id="summarySection" class="summary-section" style="display:none;">
+                    <p id="summaryText"></p>
+                </div>
+
+                <!-- Agent State Section -->
+                <div id="agentStateSection" class="agent-state" style="display:none;">
+                    <div class="agent-state-header">
+                        <h4>🤖 Agent State</h4>
+                        <span id="stepIndicator" class="step-indicator">Step 1</span>
+                    </div>
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <div class="info-item-label">Instruction</div>
+                            <div id="instructionValue" class="info-item-value">--</div>
+                        </div>
+                        <div class="info-item">
+                            <div class="info-item-label">URL</div>
+                            <div id="urlValue" class="info-item-value">--</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Key Findings -->
+                <div id="keyFindingsSection" class="list-section" style="display:none;">
+                    <h4>💡 Key Findings</h4>
+                    <ul id="keyFindingsList"></ul>
+                </div>
+
+                <!-- Next Suggestions -->
+                <div id="suggestionsSection" class="list-section" style="display:none;">
+                    <h4>🚀 Next Suggestions</h4>
+                    <ul id="suggestionsList"></ul>
+                </div>
+
+                <!-- Time Info -->
+                <div id="timeInfoSection" class="info-grid" style="display:none;">
+                    <div class="info-item">
+                        <div class="info-item-label">Created</div>
+                        <div id="createTimeValue" class="info-item-value">--</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-item-label">Finished</div>
+                        <div id="finishTimeValue" class="info-item-value">--</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-item-label">Duration</div>
+                        <div id="durationValue" class="info-item-value">--</div>
+                    </div>
+                </div>
+
+                <!-- Raw JSON Toggle -->
+                <button class="json-toggle" onclick="toggleJsonView()">
+                    <span>📝</span>
+                    <span id="jsonToggleText">Show Raw JSON</span>
+                </button>
+                <pre id="finalResult" class="json-content"></pre>
+            </div>
+        </div>
     </div>
 </div>
 <script>
@@ -262,7 +569,7 @@
                 status.textContent = 'Not Found';
             } else if (data.statusCode === 500) {
                 status.textContent = 'Finished: ERROR';
-            } else if (data.isDone) {
+            } else if (data.isDone || data.done) {
                 status.textContent = 'Finished ' + data.status;
             } else {
                 status.textContent = 'Processing: ' + (data.status || '');
@@ -270,7 +577,129 @@
             }
 
             finalResultContainer.style.display = '';
+            renderResult(data);
             finalResult.textContent = JSON.stringify(data, null, 2);
+        }
+
+        function toggleJsonView() {
+            const jsonContent = document.getElementById('finalResult');
+            const toggleText = document.getElementById('jsonToggleText');
+            jsonContent.classList.toggle('show');
+            toggleText.textContent = jsonContent.classList.contains('show') ? 'Hide Raw JSON' : 'Show Raw JSON';
+        }
+
+        function formatDateTime(isoString) {
+            if (!isoString) return '--';
+            try {
+                const date = new Date(isoString);
+                return date.toLocaleString();
+            } catch (e) {
+                return isoString;
+            }
+        }
+
+        function calculateDuration(startTime, endTime) {
+            if (!startTime || !endTime) return '--';
+            try {
+                const start = new Date(startTime);
+                const end = new Date(endTime);
+                const durationMs = end - start;
+                if (durationMs < 1000) return durationMs + ' ms';
+                if (durationMs < 60000) return (durationMs / 1000).toFixed(1) + ' s';
+                return (durationMs / 60000).toFixed(1) + ' min';
+            } catch (e) {
+                return '--';
+            }
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function renderResult(data) {
+            // Update status badge
+            const statusBadge = document.getElementById('resultStatusBadge');
+            const isSuccess = data.statusCode === 200 || data.status === 'OK';
+            const hasErrors = data.currentAgentState?.hasErrors;
+            if (hasErrors) {
+                statusBadge.textContent = 'Error';
+                statusBadge.className = 'badge badge-error';
+            } else if (isSuccess) {
+                statusBadge.textContent = 'Success';
+                statusBadge.className = 'badge badge-success';
+            } else {
+                statusBadge.textContent = data.status || 'Unknown';
+                statusBadge.className = 'badge badge-warning';
+            }
+
+            // Update status bar
+            document.getElementById('statusCodeDisplay').textContent = 'Status: ' + (data.statusCode || '--') + ' ' + (data.status || '');
+            document.getElementById('pageStatusDisplay').textContent = 'Page: ' + (data.pageStatus || '--') + ' (' + (data.pageStatusCode || '--') + ')';
+            document.getElementById('taskIdDisplay').textContent = 'ID: ' + (data.id ? data.id.substring(0, 8) + '...' : '--');
+
+            // Update summary section
+            const summarySection = document.getElementById('summarySection');
+            const summaryText = document.getElementById('summaryText');
+            const summary = data.message || data.commandResult?.summary || data.currentAgentState?.summary;
+            if (summary) {
+                summarySection.style.display = '';
+                summaryText.textContent = summary;
+            } else {
+                summarySection.style.display = 'none';
+            }
+
+            // Update agent state section
+            const agentStateSection = document.getElementById('agentStateSection');
+            const agentState = data.currentAgentState;
+            if (agentState) {
+                agentStateSection.style.display = '';
+                document.getElementById('stepIndicator').textContent = 'Step ' + (agentState.step || 1);
+                document.getElementById('instructionValue').textContent = agentState.instruction || '--';
+                const urlValue = document.getElementById('urlValue');
+                if (agentState.url) {
+                    urlValue.innerHTML = '<a href="' + escapeHtml(agentState.url) + '" target="_blank" style="color:#2a5d9f;text-decoration:none;">' + escapeHtml(agentState.url) + '</a>';
+                } else {
+                    urlValue.textContent = '--';
+                }
+            } else {
+                agentStateSection.style.display = 'none';
+            }
+
+            // Update key findings
+            const keyFindingsSection = document.getElementById('keyFindingsSection');
+            const keyFindingsList = document.getElementById('keyFindingsList');
+            const keyFindings = agentState?.keyFindings || [];
+            if (keyFindings.length > 0) {
+                keyFindingsSection.style.display = '';
+                keyFindingsList.innerHTML = keyFindings.map(finding => '<li>' + escapeHtml(finding) + '</li>').join('');
+            } else {
+                keyFindingsSection.style.display = 'none';
+            }
+
+            // Update suggestions
+            const suggestionsSection = document.getElementById('suggestionsSection');
+            const suggestionsList = document.getElementById('suggestionsList');
+            const suggestions = agentState?.nextSuggestions || [];
+            if (suggestions.length > 0) {
+                suggestionsSection.style.display = '';
+                suggestionsList.innerHTML = suggestions.map(suggestion => '<li>' + escapeHtml(suggestion) + '</li>').join('');
+            } else {
+                suggestionsSection.style.display = 'none';
+            }
+
+            // Update time info
+            const timeInfoSection = document.getElementById('timeInfoSection');
+            if (data.createTime || data.finishTime) {
+                timeInfoSection.style.display = '';
+                document.getElementById('createTimeValue').textContent = formatDateTime(data.createTime);
+                document.getElementById('finishTimeValue').textContent = formatDateTime(data.finishTime);
+                document.getElementById('durationValue').textContent = calculateDuration(data.createTime, data.finishTime);
+            } else {
+                timeInfoSection.style.display = 'none';
+            }
         }
     }
 </script>
