@@ -31,7 +31,7 @@ class TestString {
         assertEquals("b,c,d", s)
         s = "a\nb\nc\nd\ne\nf\ng\n"
         // assume the avarage lenght of a link is 100 characters
-        val pos = StringUtils.indexOf(s, '\n'.toInt(), s.length / 2)
+        val pos = StringUtils.indexOf(s, '\n'.code, s.length / 2)
         s = s.substring(pos + 1)
         assertEquals("e\nf\ng\n", s)
     }
