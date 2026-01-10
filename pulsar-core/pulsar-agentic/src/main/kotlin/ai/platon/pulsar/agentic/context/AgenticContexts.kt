@@ -169,6 +169,11 @@ object AgenticContexts {
     ): PerceptiveAgent = getOrCreateSession(spa, headless, maxBrowsers, maxOpenTabs, interactSettings, profileMode).companionAgent
 
     /**
+     * A shorthand to get or create the companion agent and run a [task].
+     * */
+    suspend fun run(task: String) = getOrCreateAgent().run(task)
+
+    /**
      * Block the current thread until the context shutdown is triggered.
      *
      * @throws InterruptedException If the current thread is interrupted while waiting.

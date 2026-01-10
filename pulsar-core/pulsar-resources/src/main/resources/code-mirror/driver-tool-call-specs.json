@@ -1,7 +1,6 @@
 [ {
   "domain" : "driver",
   "method" : "jvm",
-  "arguments" : [ ],
   "returnType" : "JvmWebDriver",
   "description" : "    /**\n     * Returns a JvmWebDriver to support other JVM languages, such as java, clojure, scala, and so on,\n     * the other JVM languages might have difficulty to handle kotlin suspend methods.\n     * @see JvmWebDriver\n     * */\n"
 }, {
@@ -9,8 +8,7 @@
   "method" : "addInitScript",
   "arguments" : [ {
     "name" : "script",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Adds a script which would be evaluated in one of the following scenarios:\n     *\n     * * Whenever the page is navigated.\n     *\n     * The script is evaluated after the document was created but before any of\n     * its scripts were run. This is useful to amend the JavaScript environment, e.g.\n     * to seed [Math.random].\n     *\n     * This function should be invoked before a navigation, usually in an onWillNavigate\n     * event handler.\n     *\n     * @param script Javascript source code to add.\n     * */\n"
@@ -19,8 +17,7 @@
   "method" : "addBlockedURLs",
   "arguments" : [ {
     "name" : "urlPatterns",
-    "type" : "List<String>",
-    "defaultValue" : ""
+    "type" : "List<String>"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Blocks resource URLs from loading.\n     *\n     * @param urlPatterns URL patterns to block. Wildcards ('*') are allowed.\n     */\n"
@@ -29,8 +26,7 @@
   "method" : "open",
   "arguments" : [ {
     "name" : "url",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Opens the specified URL in the web driver.\n     *\n     * This function navigates the web driver to the provided URL and waits for the navigation to complete.\n     * It is a suspend function, meaning it can be used within coroutines for asynchronous execution.\n     *\n     * Example usage:\n     * ```kotlin\n     * driver.open(\"https://www.example.com\")\n     * ```\n     *\n     * @param url The URL to which the web driver should navigate. Must be a valid URL string.\n     * @throws WebDriverException If an error occurs during navigation or waiting for the navigation to complete.\n     */\n"
@@ -39,8 +35,7 @@
   "method" : "navigateTo",
   "arguments" : [ {
     "name" : "url",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Navigates current page to the given URL.\n     *\n     * ```kotlin\n     * driver.navigateTo(\"https://www.example.com\")\n     * driver.waitForNavigation()\n     * ```\n     *\n     * @param url URL to navigate page to.\n     */\n"
@@ -49,75 +44,62 @@
   "method" : "navigateTo",
   "arguments" : [ {
     "name" : "entry",
-    "type" : "NavigateEntry",
-    "defaultValue" : ""
+    "type" : "NavigateEntry"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Navigates current page to the given URL.\n     *\n     * ```kotlin\n     * val entry = NavigateEntry(\"https://www.example.com?timestamp=11712067353\", pageUrl = \"https://www.example.com\")\n     * driver.navigateTo(entry)\n     * driver.waitForNavigation()\n     * ```\n     *\n     * @param entry NavigateEntry to navigate page to.\n     */\n"
 }, {
   "domain" : "driver",
   "method" : "reload",
-  "arguments" : [ ],
-  "returnType" : "Unit",
-  "description" : null
+  "returnType" : "Unit"
 }, {
   "domain" : "driver",
   "method" : "goBack",
-  "arguments" : [ ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Navigates the browser to the previous page in the navigation history.\n     *\n     * This method is expected to use the browser's navigation history to move back to the previous page.\n     * It should handle any exceptions that may occur during the navigation process.\n     *\n     * @throws WebDriverException If an error occurs while navigating back.\n     */\n"
 }, {
   "domain" : "driver",
   "method" : "goForward",
-  "arguments" : [ ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Navigates the browser to the next page in the navigation history.\n     *\n     * This method is expected to use the browser's navigation history to move forward to the next page.\n     * It should handle any exceptions that may occur during the navigation process.\n     *\n     * @throws WebDriverException If an error occurs while navigating forward.\n     */\n"
 }, {
   "domain" : "driver",
   "method" : "currentUrl",
-  "arguments" : [ ],
   "returnType" : "String",
   "description" : "    /**\n     * Returns a string representing the current URL that the browser is looking at. The current url is always\n     * the main frame's `document.documentURI` if the browser succeed to return it, and is displayed in the browser's\n     * address bar.\n     *\n     * If the browser failed to return a proper url, returns the passed in url to navigate, just like a real user enter\n     * a url in the address bar but the browser failed to load the page.\n     *\n     * NOTE: the url can be non-standard, for example:\n     *\n     * about:blank\n     * chrome://newtab\n     * chrome://settings\n     *\n     * see [ai.platon.cdt.kt.protocol.types.page.NavigationEntry.userTypedURL]\n     *\n     * @return A string containing the URL of the document, or the passed in url to navigate.\n     */\n"
 }, {
   "domain" : "driver",
   "method" : "url",
-  "arguments" : [ ],
   "returnType" : "String",
   "description" : "    /**\n     * The URL read-only property of the Document interface returns the document location as a string.\n     *\n     * This property equals to javascript `document.URL`.\n     * The `document.URL` property returns the same value. The `document.documentURI` property can be used on\n     * any document types, while the `document.URL` property can only be used on HTML documents.\n     *\n     * @see [Document: URL property](https://developer.mozilla.org/en-US/docs/Web/API/Document/URL)\n     *\n     * @return A string containing the URL of the document\n     */\n"
 }, {
   "domain" : "driver",
   "method" : "documentURI",
-  "arguments" : [ ],
   "returnType" : "String",
   "description" : "    /**\n     * Returns the document location as a string.\n     *\n     * This property equals to javascript `document.documentURI`.\n     *\n     * The `document.URL` property which returns the same value. The `document.documentURI` property can be used on\n     * any document types, while the `document.URL` property can only be used on HTML documents.\n     *\n     * @see [Document: documentURI property](https://developer.mozilla.org/en-US/docs/Web/API/Document/documentURI)\n     *\n     * @return The document's documentURI.\n     * */\n"
 }, {
   "domain" : "driver",
   "method" : "baseURI",
-  "arguments" : [ ],
   "returnType" : "String",
   "description" : "    /**\n     * Returns the document's baseURI.\n     *\n     * The baseURI is a property of Node, it's the absolute base URL of the\n     * document containing the node. A baseURI is used to resolve relative URLs.\n     *\n     * The base URL is determined as follows:\n     * 1. By default, the base URL is the location of the document\n     *    (as determined by window.location).\n     * 2. If the document has an `<base>` element, its href attribute is used.\n     *\n     * @return The document's baseURI.\n     * */\n"
 }, {
   "domain" : "driver",
   "method" : "referrer",
-  "arguments" : [ ],
   "returnType" : "String",
   "description" : "    /**\n     * The referrer property returns the URI of the page that linked to this page.\n     *\n     * The value is an empty string if the user navigated to the page directly (not through a link, but, for example,\n     * by using a bookmark).\n     *\n     * Inside an <iframe>, the referrer will initially be set to the same value as the href of the parent\n     * window's Window.location.\n     *\n     * @return The document's referrer.\n     * */\n"
 }, {
   "domain" : "driver",
   "method" : "pageSource",
-  "arguments" : [ ],
   "returnType" : "String?",
   "description" : "    /**\n     * Returns the source of the last loaded page. If the page has been modified after loading (for\n     * example, by JavaScript) there is no guarantee that the returned text is that of the modified\n     * page.\n     *\n     * PageSource and outerHTML:\n     *\n     * - pageSource: returns document HTML markup, will support non-HTML document\n     * - outerHTML: returns document HTML markup, for HTML document only\n     *\n     * ```kotlin\n     * val pageSource = driver.pageSource()\n     * ```\n     *\n     * @return The source of the current page\n     */\n"
 }, {
   "domain" : "driver",
   "method" : "title",
-  "arguments" : [ ],
   "returnType" : "String",
   "description" : "    /**\n     * Returns the title of the current page.\n     * */\n"
 }, {
   "domain" : "driver",
   "method" : "nanoDOMTree",
-  "arguments" : [ ],
   "returnType" : "NanoDOMTree?",
   "description" : "    /**\n     * Retrieve a nano version of the DOM tree, which is based on the accessibility tree, enhanced by DOM and document snapshot.\n     *\n     * References:\n     *\n     * - [ai.platon.cdt.kt.protocol.commands.Accessibility.getFullAXTree]\n     * - [ai.platon.cdt.kt.protocol.commands.DOM.getDocument]\n     * - [ai.platon.cdt.kt.protocol.types.domsnapshot.DocumentSnapshot]\n     * */\n"
 }, {
@@ -125,19 +107,16 @@
   "method" : "chat",
   "arguments" : [ {
     "name" : "prompt",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "ModelResponse",
   "description" : "    /**\n     * Chat with the AI model about the specified element.\n     *\n     * @param prompt The prompt to chat with\n     * @param selector The selector to find the element\n     * @return The response from the model\n     */\n"
 }, {
   "domain" : "driver",
   "method" : "getCookies",
-  "arguments" : [ ],
   "returnType" : "List<Map<String, String>>",
   "description" : "    /**\n     * Returns the cookies of the current page.\n     *\n     * ```kotlin\n     * val cookies = driver.getCookies()\n     * ```\n     *\n     * @return The cookies of the current page.\n     */\n"
 }, {
@@ -145,18 +124,15 @@
   "method" : "deleteCookies",
   "arguments" : [ {
     "name" : "name",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
-  "returnType" : "Unit",
-  "description" : null
+  "returnType" : "Unit"
 }, {
   "domain" : "driver",
   "method" : "deleteCookies",
   "arguments" : [ {
     "name" : "name",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "url",
     "type" : "String?",
@@ -175,7 +151,6 @@
 }, {
   "domain" : "driver",
   "method" : "clearBrowserCookies",
-  "arguments" : [ ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Clears browser cookies.\n     *\n     * ```kotlin\n     * driver.clearBrowserCookies()\n     * ```\n     *\n     * @see Browser.clearCookies\n     * */\n"
 }, {
@@ -183,8 +158,7 @@
   "method" : "waitForSelector",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Duration",
   "description" : "    /**\n     * Wait until the element identified by the selector becomes present in the DOM or timeout.\n     *\n     * ```kotlin\n     * val remainingTime = driver.waitForSelector(\"h2.title\")\n     * ```\n     *\n     * @param selector The selector of the element to wait for.\n     * @return The remaining time until timeout when the element becomes present.\n     * */\n"
@@ -193,12 +167,10 @@
   "method" : "waitForSelector",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "timeoutMillis",
-    "type" : "Long",
-    "defaultValue" : ""
+    "type" : "Long"
   } ],
   "returnType" : "Long",
   "description" : "    /**\n     * Wait until the element identified by the selector becomes present in the DOM or timeout.\n     *\n     * ```kotlin\n     * val remainingTime = driver.waitForSelector(\"h2.title\", 30000)\n     * ```\n     *\n     * @param timeoutMillis The maximum time to wait for the element to become present.\n     * @return The remaining time until timeout when the element becomes present.\n     * */\n"
@@ -207,12 +179,10 @@
   "method" : "waitForSelector",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "timeout",
-    "type" : "Duration",
-    "defaultValue" : ""
+    "type" : "Duration"
   } ],
   "returnType" : "Duration",
   "description" : "    /**\n     * Wait for the element identified by the selector to become present in the DOM, or until timeout.\n     *\n     * ```kotlin\n     * val remainingTime = driver.waitForSelector(\"h2.title\", Duration.ofSeconds(30))\n     * ```\n     *\n     * @param timeout The maximum time to wait for the element to become present.\n     * @return The remaining time until timeout when the element becomes present.\n     * */\n"
@@ -221,12 +191,10 @@
   "method" : "waitForSelector",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "action",
-    "type" : "suspend (",
-    "defaultValue" : ""
+    "type" : "suspend ("
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Wait for the element identified by the selector to become present in the DOM, or until timeout.\n     * This method periodically checks for the existence of the element. If the element is not found during a check,\n     * the action will be executed, such as scrolling the page down.\n     *\n     * ```kotlin\n     * val remainingTime = driver.waitForSelector(\"h2.title\") {\n     *  driver.scrollDown()\n     * }\n     * ```\n     *\n     * @param action The action to execute when the element is not found.\n     * */\n"
@@ -235,16 +203,13 @@
   "method" : "waitForSelector",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "timeoutMillis",
-    "type" : "Long",
-    "defaultValue" : ""
+    "type" : "Long"
   }, {
     "name" : "action",
-    "type" : "suspend (",
-    "defaultValue" : ""
+    "type" : "suspend ("
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Wait for the element identified by the selector to become present in the DOM, or until timeout.\n     * This method periodically checks for the existence of the element. If the element is not found during a check,\n     * the action will be executed, such as scrolling the page down.\n     *\n     * ```kotlin\n     * val remainingTime = driver.waitForSelector(\"h2.title\", 30000) {\n     *  driver.scrollDown()\n     * }\n     * ```\n     *\n     * @param timeoutMillis The maximum time to wait for the element to become present.\n     * @param action The action to execute when the element is not found.\n     * @return The remaining time until timeout when the element becomes present.\n     * */\n"
@@ -253,16 +218,13 @@
   "method" : "waitForSelector",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "timeout",
-    "type" : "Duration",
-    "defaultValue" : ""
+    "type" : "Duration"
   }, {
     "name" : "action",
-    "type" : "suspend (",
-    "defaultValue" : ""
+    "type" : "suspend ("
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Wait for the element identified by the selector to become present in the DOM, or until timeout.\n     * This method periodically checks for the existence of the element. If the element is not found during a check,\n     * the action will be executed, such as scrolling the page down.\n     *\n     * ```kotlin\n     * val remainingTime = driver.waitForSelector(\"h2.title\", Duration.ofSeconds(30)) {\n     *  driver.scrollDown()\n     * }\n     * ```\n     *\n     * @param timeout The maximum time to wait for the element to become present.\n     * @param action The action to execute when the element is not found.\n     * @return The remaining time until timeout when the element becomes present.\n     * */\n"
@@ -271,8 +233,7 @@
   "method" : "waitForNavigation",
   "arguments" : [ {
     "name" : "oldUrl",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Duration",
   "description" : "    /**\n     * Wait until the current url changes or timeout.\n     *\n     * ```kotlin\n     * val url = \"https://www.example.com\"\n     * driver.navigateTo(url)\n     * var remainingTime = driver.waitForNavigation()\n     * if (remainingTime > 0) {\n     *   driver.click(\"a[href='/next']\")\n     *   remainingTime = driver.waitForNavigation(url)\n     * }\n     * ```\n     * */\n"
@@ -281,12 +242,10 @@
   "method" : "waitForNavigation",
   "arguments" : [ {
     "name" : "oldUrl",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "timeoutMillis",
-    "type" : "Long",
-    "defaultValue" : ""
+    "type" : "Long"
   } ],
   "returnType" : "Long",
   "description" : "    /**\n     * Wait until the current url changes or timeout.\n     *\n     * ```kotlin\n     * val url = \"https://www.example.com\"\n     * driver.navigateTo(url)\n     * var remainingTime = driver.waitForNavigation(1000)\n     * if (remainingTime > 0) {\n     *   driver.click(\"a[href='/next']\")\n     *   remainingTime = driver.waitForNavigation(url, 1000)\n     * }\n     * ```\n     *\n     * @param timeoutMillis The maximum time to wait for the url to change.\n     * */\n"
@@ -295,12 +254,10 @@
   "method" : "waitForNavigation",
   "arguments" : [ {
     "name" : "oldUrl",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "timeout",
-    "type" : "Duration",
-    "defaultValue" : ""
+    "type" : "Duration"
   } ],
   "returnType" : "Duration",
   "description" : "    /**\n     * Wait until the current url changes or timeout.\n     *\n     * ```kotlin\n     * val timeout = Duration.ofSeconds(30)\n     * val url = \"https://www.example.com\"\n     * driver.navigateTo(url)\n     * var remainingTime = driver.waitForNavigation(timeout)\n     * if (remainingTime > 0) {\n     *   driver.click(\"a[href='/next']\")\n     *   remainingTime = driver.waitForNavigation(url, timeout)\n     * }\n     * ```\n     *\n     * @param timeout The maximum time to wait for the url to change.\n     * */\n"
@@ -309,12 +266,10 @@
   "method" : "waitForPage",
   "arguments" : [ {
     "name" : "url",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "timeout",
-    "type" : "Duration",
-    "defaultValue" : ""
+    "type" : "Duration"
   } ],
   "returnType" : "WebDriver?",
   "description" : "    /**\n     * Await navigation to the specified URL page or timeout if necessary.\n     *\n     * ```kotlin\n     * val newDriver = driver.waitForPage(\"https://www.example.com\", Duration.ofSeconds(30))\n     * ```\n     *\n     * @param url The URL to navigate to.\n     * @return The remaining time until timeout when the predicate returns true.\n     * */\n"
@@ -323,8 +278,7 @@
   "method" : "waitUntil",
   "arguments" : [ {
     "name" : "predicate",
-    "type" : "suspend (",
-    "defaultValue" : ""
+    "type" : "suspend ("
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Wait until the predicate returns true.\n     *\n     * ```kotlin\n     * val remainingTime = driver.waitUntil {\n     *    driver.exists(\"h2.title\")\n     * }\n     * ```\n     *\n     * @param predicate The predicate to check.\n     * @return The remaining time until timeout when the predicate returns true.\n     * */\n"
@@ -333,12 +287,10 @@
   "method" : "waitUntil",
   "arguments" : [ {
     "name" : "timeoutMillis",
-    "type" : "Long",
-    "defaultValue" : ""
+    "type" : "Long"
   }, {
     "name" : "predicate",
-    "type" : "suspend (",
-    "defaultValue" : ""
+    "type" : "suspend ("
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Wait until the predicate returns true.\n     *\n     * ```kotlin\n     * val remainingTime = driver.waitUntil(10000) {\n     *   driver.exists(\"h2.title\")\n     * }\n     * ```\n     *\n     * @param timeoutMillis The maximum time to wait for the predicate to return true.\n     * @param predicate The predicate to check.\n     * @return The remaining time until timeout when the predicate returns true.\n     * */\n"
@@ -347,12 +299,10 @@
   "method" : "waitUntil",
   "arguments" : [ {
     "name" : "timeout",
-    "type" : "Duration",
-    "defaultValue" : ""
+    "type" : "Duration"
   }, {
     "name" : "predicate",
-    "type" : "suspend (",
-    "defaultValue" : ""
+    "type" : "suspend ("
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Wait until the predicate returns true.\n     *\n     * ```kotlin\n     * val remainingTime = driver.waitUntil(Duration.ofSeconds(10)) {\n     *    driver.exists(\"h2.title\")\n     * }\n     * ```\n     *\n     * @param timeout The maximum time to wait for the predicate to return true.\n     * @param predicate The predicate to check.\n     * @return The remaining time until timeout when the predicate returns true.\n     * */\n"
@@ -361,8 +311,7 @@
   "method" : "exists",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Boolean",
   "description" : "    /**\n     * Returns whether the element exists.\n     *\n     * ```kotlin\n     * driver.exists(\"h2.title\")\n     * ```\n     *\n     * @param selector - The selector of the element to check.\n     * @return Whether the element exists.\n     * */\n"
@@ -371,8 +320,7 @@
   "method" : "isHidden",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Boolean",
   "description" : "    /**\n     * Returns whether the element is hidden.\n     *\n     * ```kotlin\n     * driver.isHidden(\"input[name='q']\")\n     * ```\n     *\n     * @param selector - The selector of the element to check.\n     * @return Whether the element is hidden.\n     * */\n"
@@ -381,8 +329,7 @@
   "method" : "isVisible",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Boolean",
   "description" : "    /**\n     * Returns whether the element is visible.\n     *\n     * ```kotlin\n     * driver.isVisible(\"input[name='q']\")\n     * ```\n     *\n     * @param selector - The selector of the element to check.\n     * @return Whether the element is visible.\n     * */\n"
@@ -391,8 +338,7 @@
   "method" : "visible",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Boolean",
   "description" : "    /**\n     * Returns whether the element is visible.\n     *\n     * ```kotlin\n     * driver.visible(\"input[name='q']\")\n     * ```\n     *\n     * @param selector - The selector of the element to check.\n     * @return Whether the element is visible.\n     * */\n"
@@ -401,15 +347,13 @@
   "method" : "isChecked",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Boolean",
   "description" : "    /**\n     * Returns whether the element is checked.\n     *\n     * ```kotlin\n     * driver.isChecked(\"input[name='agree']\")\n     * ```\n     *\n     * @param selector - The selector of the element to check.\n     * @return Whether the element is checked.\n     * */\n"
 }, {
   "domain" : "driver",
   "method" : "bringToFront",
-  "arguments" : [ ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Brings the browser window to the front.\n     *\n     * ```kotlin\n     * driver.bringToFront()\n     * ```\n     */\n"
 }, {
@@ -417,8 +361,7 @@
   "method" : "hover",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * This method hovers over the element.\n     *\n     * 1. Scroll the element into view if needed.\n     * 2. Move mouse to hover over a random position near the center of the element.\n     *\n     * ```kotlin\n     * driver.hover(\"h1\")\n     * ```\n     */\n"
@@ -427,8 +370,7 @@
   "method" : "focus",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * This method fetches an element with `selector` and focuses it. If there's no\n     * element matching `selector`, nothing to do.\n     *\n     * ```kotlin\n     * driver.focus(\"input[name='q']\")\n     * ```\n     *\n     * @param selector - A [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)\n     * of an element to focus. If there are multiple elements satisfying the selector, the first will be focused.\n     */\n"
@@ -437,12 +379,10 @@
   "method" : "type",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "text",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * This method emulates inserting text that doesn't come from a key press.\n     *\n     * ```kotlin\n     * driver.type(\"input[name='q']\", \"Hello, World!\")\n     * ```\n     *\n     * @param selector - A [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)\n     * of an element to focus. If there are multiple elements satisfying the\n     * selector, the first will be focused.\n     * @param text The text to insert.\n     */\n"
@@ -451,12 +391,10 @@
   "method" : "fill",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "text",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * This method emulates inserting text that doesn't come from a key press.\n     *\n     * Unlike [type], this method clears the existing value before typing.\n     *\n     * ```kotlin\n     * driver.fill(\"input[name='q']\", \"Hello, World!\")\n     * ```\n     *\n     * @param selector - A [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)\n     * of an element to focus, and then fill text into it. If there are multiple elements satisfying the\n     * selector, the first will be focused.\n     * @param text The text to fill.\n     */\n"
@@ -465,12 +403,10 @@
   "method" : "press",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "key",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Shortcut for keyboard down and keyboard up.\n     *\n     * The key is specified as a string, which can be a single character, a key name, or a combination of both.\n     * For example, 'a', 'A', 'KeyA', 'Enter', 'Shift+A', and 'Control+Shift+Tab' are all valid keys.\n     *\n     * ```kotlin\n     * driver.press(\"input[name='q']\", \"Enter\")\n     * ```\n     *\n     * @param selector - A [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)\n     * of an element to focus, and then press a key. If there are multiple elements satisfying the\n     * selector, the first will be focused.\n     * @param key - A key to press. The key can be a single character, a key name, or a combination of both.\n     *      See [Code values for keyboard events](https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_code_values)\n     */\n"
@@ -479,8 +415,7 @@
   "method" : "click",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "count",
     "type" : "Int",
@@ -493,12 +428,10 @@
   "method" : "click",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "modifier",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * focus on an element with [selector] and click it with [modifier] pressed\n     * */\n"
@@ -507,12 +440,10 @@
   "method" : "clickTextMatches",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "pattern",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "count",
     "type" : "Int",
@@ -525,16 +456,13 @@
   "method" : "clickMatches",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "attrName",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "pattern",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "count",
     "type" : "Int",
@@ -547,8 +475,7 @@
   "method" : "clickNthAnchor",
   "arguments" : [ {
     "name" : "n",
-    "type" : "Int",
-    "defaultValue" : ""
+    "type" : "Int"
   }, {
     "name" : "rootSelector",
     "type" : "String",
@@ -561,8 +488,7 @@
   "method" : "check",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * This method check an element with [selector]. If there's no element matching [selector], nothing to do.\n     *\n     * @param selector - A\n     * [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)\n     * of an element to check. If there are multiple elements satisfying the\n     * selector, the first will be checked.\n     * */\n"
@@ -571,8 +497,7 @@
   "method" : "uncheck",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * This method uncheck an element with [selector]. If there's no element matching [selector], nothing to do.\n     *\n     * @param selector - A\n     * [selector](https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_Selectors)\n     * of an element to uncheck. If there are multiple elements satisfying the\n     * selector, the first will be focused.\n     * */\n"
@@ -581,8 +506,7 @@
   "method" : "scrollTo",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Double",
   "description" : "    /**\n     * This method fetches an element with [selector], scrolls it into view if needed. If there's no element matching\n     * [selector], the method does nothing.\n     *\n     * ```kotlin\n     * driver.scrollTo(\"h2.title\")\n     * ```\n     *\n     * @param selector - A selector to search for element to scroll to. If there are multiple elements satisfying\n     * the [selector], the first will be selected.\n     */\n"
@@ -623,13 +547,11 @@
 }, {
   "domain" : "driver",
   "method" : "scrollToTop",
-  "arguments" : [ ],
   "returnType" : "Double",
   "description" : "    /**\n     * The current page frame scrolls to the top.\n     *\n     * ```kotlin\n     * driver.scrollToTop()\n     * ```\n     */\n"
 }, {
   "domain" : "driver",
   "method" : "scrollToBottom",
-  "arguments" : [ ],
   "returnType" : "Double",
   "description" : "    /**\n     * The current page frame scrolls to the bottom.\n     *\n     * ```kotlin\n     * driver.scrollToBottom()\n     * ```\n     */\n"
 }, {
@@ -637,8 +559,7 @@
   "method" : "scrollToMiddle",
   "arguments" : [ {
     "name" : "ratio",
-    "type" : "Double",
-    "defaultValue" : ""
+    "type" : "Double"
   } ],
   "returnType" : "Double",
   "description" : "    /**\n     * The current page frame scrolls to the middle.\n     *\n     * ```kotlin\n     * driver.scrollToMiddle(0.2)\n     * driver.scrollToMiddle(0.5)\n     * driver.scrollToMiddle(0.8)\n     * ```\n     *\n     * @param ratio The ratio of the page to scroll to, 0.0 means the top, 1.0 means the bottom.\n     */\n"
@@ -647,18 +568,15 @@
   "method" : "scrollToScreen",
   "arguments" : [ {
     "name" : "screenNumber",
-    "type" : "Double",
-    "defaultValue" : ""
+    "type" : "Double"
   } ],
-  "returnType" : "Unit",
-  "description" : null
+  "returnType" : "Unit"
 }, {
   "domain" : "driver",
   "method" : "scrollToViewport",
   "arguments" : [ {
     "name" : "n",
-    "type" : "Double",
-    "defaultValue" : ""
+    "type" : "Double"
   }, {
     "name" : "smooth",
     "type" : "Boolean",
@@ -715,12 +633,10 @@
   "method" : "moveMouseTo",
   "arguments" : [ {
     "name" : "x",
-    "type" : "Double",
-    "defaultValue" : ""
+    "type" : "Double"
   }, {
     "name" : "y",
-    "type" : "Double",
-    "defaultValue" : ""
+    "type" : "Double"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * The mouse moves to the position specified by [x] and [y].\n     *\n     * ```kotlin\n     * driver.moveMouseTo(100.0, 200.0)\n     * ```\n     *\n     * @param x The x coordinate to move to.\n     * @param y The y coordinate to move to.\n     */\n"
@@ -729,12 +645,10 @@
   "method" : "moveMouseTo",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "deltaX",
-    "type" : "Int",
-    "defaultValue" : ""
+    "type" : "Int"
   }, {
     "name" : "deltaY",
     "type" : "Int",
@@ -747,12 +661,10 @@
   "method" : "dragAndDrop",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "deltaX",
-    "type" : "Int",
-    "defaultValue" : ""
+    "type" : "Int"
   }, {
     "name" : "deltaY",
     "type" : "Int",
@@ -763,7 +675,6 @@
 }, {
   "domain" : "driver",
   "method" : "outerHTML",
-  "arguments" : [ ],
   "returnType" : "String?",
   "description" : "    /**\n     * Returns the document's HTML markup.\n     *\n     * ```kotlin\n     * val html = driver.outerHTML()\n     * ```\n     *\n     * If the document does not exist, returns null.\n     *\n     * @return The HTML markup of the document.\n     * */\n"
 }, {
@@ -771,8 +682,7 @@
   "method" : "outerHTML",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "String?",
   "description" : "    /**\n     * Returns the node's HTML markup, the node is located by [selector].\n     *\n     * If the node does not exist, returns null.\n     *\n     * ```kotlin\n     * val html = driver.outerHTML(\"h2.title\")\n     * ```\n     *\n     * @param selector The selector to locate the node.\n     * @return The HTML markup of the node.\n     * */\n"
@@ -791,18 +701,15 @@
   "method" : "extract",
   "arguments" : [ {
     "name" : "fields",
-    "type" : "Map<String, String>",
-    "defaultValue" : ""
+    "type" : "Map<String, String>"
   } ],
-  "returnType" : "Map<String, String?>",
-  "description" : null
+  "returnType" : "Map<String, String?>"
 }, {
   "domain" : "driver",
   "method" : "selectFirstTextOrNull",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "String?",
   "description" : "    /**\n     * Returns the node's text content, the node is located by [selector].\n     *\n     * If the node does not exist, returns null.\n     *\n     * ```kotlin\n     * val text = driver.selectFirstTextOrNull(\"h2.title\")\n     * ```\n     *\n     * @param selector The selector to locate the node.\n     * @return The text content of the node.\n     * */\n"
@@ -811,8 +718,7 @@
   "method" : "selectTextAll",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "List<String>",
   "description" : "    /**\n     * Returns a list of text contents of all the elements matching the specified selector within the page.\n     *\n     * If no elements match the selector, returns an empty list.\n     *\n     * ```kotlin\n     * val texts = driver.selectTextAll(\"h2\")\n     * ```\n     *\n     * @param selector The selector to locate the nodes.\n     * @return The text contents of the nodes.\n     * */\n"
@@ -821,12 +727,10 @@
   "method" : "selectFirstAttributeOrNull",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "attrName",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "String?",
   "description" : "    /**\n     * Returns the node's attribute value, the node is located by [selector], the attribute is [attrName].\n     *\n     * If the node does not exist, or the attribute does not exist, returns null.\n     *\n     * ```kotlin\n     * val classes = driver.selectFirstAttributeOrNull(\"h2.title\", \"class\")\n     * ```\n     *\n     * @param selector The selector to locate the node.\n     * @param attrName The attribute name to retrieve.\n     * @return The attribute value of the node.\n     * */\n"
@@ -835,8 +739,7 @@
   "method" : "selectAttributes",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Map<String, String>",
   "description" : "    /**\n     * Returns the node's attribute values, the node is located by [selector].\n     *\n     * If the node do not exist, or the attribute does not exist, returns an empty list.\n     *\n     * ```kotlin\n     * val classes = driver.selectAttributes(\"h2.title\", \"class\")\n     * ```\n     *\n     * @param selector The selector to locate the nodes.\n     * @return The attribute pairs of the nodes.\n     * */\n"
@@ -845,12 +748,10 @@
   "method" : "selectAttributeAll",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "attrName",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "start",
     "type" : "Int",
@@ -867,16 +768,13 @@
   "method" : "setAttribute",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "attrName",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "attrValue",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Set the attribute of an element located by [selector].\n     *\n     * ```kotlin\n     * driver.setAttribute(\"h2.title\", \"class\", \"header\")\n     * ```\n     *\n     * @param selector The CSS query to select an element.\n     * @param attrName The attribute name to set.\n     * @param attrValue The attribute value to set.\n     * */\n"
@@ -885,16 +783,13 @@
   "method" : "setAttributeAll",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "attrName",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "attrValue",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Set the attribute of all elements matching the CSS query.\n     *\n     * ```kotlin\n     * driver.setAttributeAll(\"h2.title\", \"class\", \"header\")\n     * ```\n     *\n     * @param selector The CSS query to select elements.\n     * @param attrName The attribute name to set.\n     * @param attrValue The attribute value to set.\n     * */\n"
@@ -903,12 +798,10 @@
   "method" : "selectFirstPropertyValueOrNull",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "propName",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "String?",
   "description" : "    /**\n     * Returns the node's property value, the node is located by [selector], the property is [propName].\n     *\n     * If the node does not exist, or the property does not exist, returns null.\n     *\n     * ```kotlin\n     * val classes = driver.selectFirstPropertyOrNull(\"input#input\", \"value\")\n     * ```\n     *\n     * @param selector The selector to locate the node.\n     * @param propName The property name to retrieve.\n     * @return The property value of the node.\n     * */\n"
@@ -917,12 +810,10 @@
   "method" : "selectPropertyValueAll",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "propName",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "start",
     "type" : "Int",
@@ -939,16 +830,13 @@
   "method" : "setProperty",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "propName",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "propValue",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Set the property of an element located by [selector].\n     *\n     * ```kotlin\n     * driver.setProperty(\"input#input\", \"value\")\n     * ```\n     *\n     * @param selector The CSS query to select an element.\n     * @param propName The property name to set.\n     * @param propValue The property value to set.\n     * */\n"
@@ -957,16 +845,13 @@
   "method" : "setPropertyAll",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "propName",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "propValue",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Set the property of all elements matching the CSS query.\n     *\n     * ```kotlin\n     * driver.setPropertyAll(\"input#input\", \"value\")\n     * ```\n     *\n     * @param selector The CSS query to select elements.\n     * @param propName The property name to set.\n     * @param propValue The property value to set.\n     * */\n"
@@ -975,8 +860,7 @@
   "method" : "selectHyperlinks",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "offset",
     "type" : "Int",
@@ -993,8 +877,7 @@
   "method" : "selectAnchors",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "offset",
     "type" : "Int",
@@ -1011,8 +894,7 @@
   "method" : "selectImages",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "offset",
     "type" : "Int",
@@ -1029,8 +911,7 @@
   "method" : "evaluate",
   "arguments" : [ {
     "name" : "expression",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Any?",
   "description" : "    /**\n     * Executes JavaScript in the context of the currently selected frame or window. If the result is not Javascript object,\n     * it is not returned.\n     *\n     * If you want to execute a function, convert it to IIFE (Immediately Invoked Function Expression).\n     *\n     * ```kotlin\n     * val title = driver.evaluate(\"document.title\")\n     * ```\n     *\n     * Multi-line JavaScript code:\n     *\n     * ```kotlin\n     * val code = \"\"\"\n     * () => {\n     *   const a = 10;\n     *   const b = 20;\n     *   return a * b;\n     * }\n     * \"\"\".trimIndent()\n     *\n     * val result = driver.evaluate(code)\n     * ```\n     *\n     * ### 🔍 Notes:\n     * * **Wrap the code in an IIFE (Immediately Invoked Function Expression)** to return a value.\n     * * **Escape line breaks** with `\\n`.\n     *\n     * @param expression Javascript expression to evaluate\n     * @return Remote object value in case of primitive values or null.\n     * */\n"
@@ -1039,12 +920,10 @@
   "method" : "evaluate",
   "arguments" : [ {
     "name" : "expression",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "defaultValue",
-    "type" : "T",
-    "defaultValue" : ""
+    "type" : "T"
   } ],
   "returnType" : "T",
   "description" : "    /**\n     * Executes JavaScript and returns the result or [defaultValue] if evaluation returns null or incompatible type.\n     */\n"
@@ -1053,8 +932,7 @@
   "method" : "evaluateValue",
   "arguments" : [ {
     "name" : "expression",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Any?",
   "description" : "    /** Detailed evaluation metadata (beta). */\n    @Throws(WebDriverException::class)\n    suspend fun evaluateDetail(expression: String): JsEvaluation?\n\n    /**\n     * Executes JavaScript returning JSON if availiable value if possible (objects serialized), else primitive/string/null.\n     */\n"
@@ -1063,8 +941,7 @@
   "method" : "evaluateValueDetail",
   "arguments" : [ {
     "name" : "expression",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "JsEvaluation?",
   "description" : "    /** Executes JS returning JSONifiable value or [defaultValue] if null/incompatible. */\n    @Throws(WebDriverException::class)\n    suspend fun <T> evaluateValue(expression: String, defaultValue: T): T\n\n    /** Detailed value evaluation metadata (beta). */\n"
@@ -1073,15 +950,12 @@
   "method" : "evaluateValue",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   }, {
     "name" : "functionDeclaration",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
-  "returnType" : "Any?",
-  "description" : null
+  "returnType" : "Any?"
 }, {
   "domain" : "driver",
   "method" : "captureScreenshot",
@@ -1097,8 +971,7 @@
   "method" : "captureScreenshot",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "String?",
   "description" : "    /**\n     * Scroll the element matched by [selector] into view (if needed) then take a screenshot of that element's bounding box.\n     * Returns a Base64 encoded image (implementation usually PNG/JPEG), PNG by default.\n     */\n"
@@ -1107,8 +980,7 @@
   "method" : "captureScreenshot",
   "arguments" : [ {
     "name" : "rect",
-    "type" : "RectD",
-    "defaultValue" : ""
+    "type" : "RectD"
   } ],
   "returnType" : "String?",
   "description" : "    /**\n     * Take a screenshot of the rectangle specified by [rect] in the current page coordinate space. Caller is responsible\n     * for ensuring the rectangle is visible or scrolled into view if the implementation requires it.\n     */\n"
@@ -1117,8 +989,7 @@
   "method" : "clickablePoint",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "PointD?",
   "description" : "    /**\n     * Calculate the clickable point of an element located by [selector].\n     * If the element does not exist, or is not clickable, returns null.\n     *\n     * @param selector The selector of the element to calculate the clickable point.\n     * @return The clickable point of the element.\n     * */\n"
@@ -1127,15 +998,13 @@
   "method" : "boundingBox",
   "arguments" : [ {
     "name" : "selector",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "RectD?",
   "description" : "    /**\n     * Return the bounding box of an element located by [selector].\n     * If the element does not exist, returns null.\n     *\n     * @param selector The selector of the element to calculate the bounding box.\n     * @return The bounding box of the element.\n     * */\n"
 }, {
   "domain" : "driver",
   "method" : "newJsoupSession",
-  "arguments" : [ ],
   "returnType" : "Connection",
   "description" : "    /**\n     * Create a new Jsoup session with the last page's context, which means, the same headers and cookies.\n     *\n     * @return The Jsoup session.\n     * */\n"
 }, {
@@ -1143,8 +1012,7 @@
   "method" : "loadJsoupResource",
   "arguments" : [ {
     "name" : "url",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "Connection.Response",
   "description" : "    /**\n     * Load the url as a resource with Jsoup rather than browser rendering, with the last page's context,\n     * which means, the same headers and cookies.\n     *\n     * @param url The URL to load.\n     * @return The Jsoup response.\n     * */\n"
@@ -1153,8 +1021,7 @@
   "method" : "loadResource",
   "arguments" : [ {
     "name" : "url",
-    "type" : "String",
-    "defaultValue" : ""
+    "type" : "String"
   } ],
   "returnType" : "NetworkResourceResponse",
   "description" : "    /**\n     * Load the url as a resource without browser rendering, with the last page's context, which means, the same headers\n     * and cookies.\n     *\n     * @param url The URL to load.\n     * @return The network resource response.\n     * */\n"
@@ -1173,8 +1040,7 @@
   "method" : "delay",
   "arguments" : [ {
     "name" : "duration",
-    "type" : "Duration",
-    "defaultValue" : ""
+    "type" : "Duration"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Delay for a given amount of time.\n     *\n     * @param duration The amount of time to delay.\n     * */\n"
@@ -1183,21 +1049,18 @@
   "method" : "delay",
   "arguments" : [ {
     "name" : "duration",
-    "type" : "kotlin.time.Duration",
-    "defaultValue" : ""
+    "type" : "kotlin.time.Duration"
   } ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Delay for a given amount of time.\n     *\n     * @param duration The amount of time to delay.\n     * */\n"
 }, {
   "domain" : "driver",
   "method" : "pause",
-  "arguments" : [ ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Force the page pauses all navigations and PENDING resource fetches.\n     * If the page loading pauses, the user can still interact with the page,\n     * and therefore resources can continue to load.\n     * */\n"
 }, {
   "domain" : "driver",
   "method" : "stop",
-  "arguments" : [ ],
   "returnType" : "Unit",
   "description" : "    /**\n     * Force the page stop all navigations and RELEASES all resources. Interaction with the\n     * stop page results in undefined behavior and the results should not be trusted.\n     *\n     * If a web driver stops, it can later be used to visit other pages.\n     * */\n"
 } ]

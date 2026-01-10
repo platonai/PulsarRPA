@@ -440,14 +440,6 @@ interface WebDriver : Closeable {
     @Throws(WebDriverException::class)
     suspend fun getCookies(): List<Map<String, String>>
 
-    @Deprecated(
-        "Use deleteCookies(name, url, domain, path) instead." +
-                "[deleteCookies] (3/5) | code: -32602, At least one of the url and domain needs to be specified",
-        ReplaceWith("driver.deleteCookies(name, url, domain, path)")
-    )
-    @Throws(WebDriverException::class)
-    suspend fun deleteCookies(name: String)
-
     /**
      * Deletes browser cookies with matching name and url or domain/path pair.
      *
@@ -728,20 +720,6 @@ interface WebDriver : Closeable {
      * */
     @Throws(WebDriverException::class)
     suspend fun isVisible(selector: String): Boolean
-
-    /**
-     * Returns whether the element is visible.
-     *
-     * ```kotlin
-     * driver.visible("input[name='q']")
-     * ```
-     *
-     * @param selector - The selector of the element to check.
-     * @return Whether the element is visible.
-     * */
-    @Deprecated("Use isVisible instead", ReplaceWith("isVisible"))
-    @Throws(WebDriverException::class)
-    suspend fun visible(selector: String): Boolean = isVisible(selector)
 
     /**
      * Returns whether the element is checked.
@@ -1048,10 +1026,6 @@ interface WebDriver : Closeable {
      */
     @Throws(WebDriverException::class)
     suspend fun scrollToMiddle(ratio: Double): Double
-
-    @Deprecated("Inappropriate name", ReplaceWith("scrollToViewport(screenNumber)"))
-    @Throws(WebDriverException::class)
-    suspend fun scrollToScreen(screenNumber: Double) = scrollToViewport(screenNumber)
 
     /**
      * Scroll to the 2.5th viewport position.
