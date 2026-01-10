@@ -42,45 +42,10 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Set up JDK ${{ env.JAVA_VERSION }}
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: ${{ env.JAVA_VERSION }}
-          cache: maven
-
-      - name: Correct Permissions
+      - name: Update Version
         run: |
           find bin/ -name "*.sh" | xargs chmod +x
           chmod +x ./mvnw
-
-      - name: Extract version from tag
-        id: tag
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            TAG="${{ github.event.inputs.tag }}"
-          else
-            TAG=${GITHUB_REF#refs/tags/}
-          fi
-          VERSION=${TAG#v}
-
-          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]]; then
-            echo "❌ Invalid version format: $VERSION"
-            exit 1
-          fi
-
-          # Dynamic prerelease detection
-          IS_PRERELEASE="false"
-          if [[ "$VERSION" == *"-"* ]]; then
-            IS_PRERELEASE="true"
-          fi
-
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "TAG=$TAG" >> $GITHUB_ENV
-          echo "IS_PRERELEASE=$IS_PRERELEASE" >> $GITHUB_ENV
-
-      - name: Update Version
-        run: |
           bin/release/update-versions.sh
 
       - name: Cache Maven packages
@@ -89,21 +54,6 @@ jobs:
           path: ~/.m2
           key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
           restore-keys: ${{ runner.os }}-m2
-
-      - name: Maven Build
-        run: |
-          SKIP_TESTS_FLAG=""
-          if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
-            SKIP_TESTS_FLAG="-DskipTests"
-          fi
-
-          ./mvnw clean install $SKIP_TESTS_FLAG --batch-mode --show-version
-
-      - name: Import GPG key
-        run: |
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import
-          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-          gpgconf --kill gpg-agent
 
       - name: Set up JDK ${{ env.JAVA_VERSION }} For Deployment
         uses: actions/setup-java@v4
@@ -134,15 +84,20 @@ jobs:
       - name: Deploy to Maven Central
         if: success()
         run: |
+          SKIP_TESTS_FLAG=""
+          if [ "${{ github.event.inputs.skip_tests }}" = "true" ]; then
+            SKIP_TESTS_FLAG="-DskipTests"
+          fi
+
           echo "=== Deploying to Maven Central ==="
-          ./mvnw --batch-mode deploy -P deploy,release -DskipTests \
+          ./mvnw --batch-mode deploy -P deploy,release $SKIP_TESTS_FLAG \
             -Dgpg.passphrase="$GPG_PASSPHRASE" \
             -Dgpg.batch=true \
             -Dgpg.pinentry-mode=loopback \
             --show-version --errors
         env:
           GPG_PASSPHRASE:   ${{ secrets.GPG_PASSPHRASE }}
-          MAVEN_USERNAME:   ${{ secrets.CENTRAL_USERNAME }} # MAVEN_USERNAME might be the correct name
-          MAVEN_PASSWORD:   ${{ secrets.CENTRAL_PASSWORD }} # MAVEN_PASSWORD might be the correct name
-          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }} # might not be needed
-          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }} # might not be needed
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
+          MAVEN_USERNAME:   ${{ secrets.CENTRAL_USERNAME }}
+          MAVEN_PASSWORD:   ${{ secrets.CENTRAL_PASSWORD }}
