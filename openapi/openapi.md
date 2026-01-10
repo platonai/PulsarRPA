@@ -149,8 +149,8 @@ Controller files by tag:
 
 Key dependencies (used to differentiate real vs mock):
 
-- entry for real sessions and real capabilities: `pulsar-rest/.../webdriver/service/SessionManager.kt` (when present/injected, controllers enable the real branch)
-- mock/demo storage: `pulsar-rest/.../webdriver/store/InMemoryStore.kt`
+- entry for real sessions and real capabilities: `pulsar-rest/.../openapi/service/SessionManager.kt` (when present/injected, controllers enable the real branch)
+- mock/demo storage: `pulsar-rest/.../openapi/store/InMemoryStore.kt`
 
 ---
 

@@ -139,8 +139,8 @@ WebDriver-Compatible API 的实现基本集中在：
 
 关键依赖（用于区分 real/mock）：
 
-- real 会话与真实能力入口：`pulsar-rest/.../webdriver/service/SessionManager.kt`（存在时 controllers 会启用 real 分支）
-- mock/演示存储：`pulsar-rest/.../webdriver/store/InMemoryStore.kt`
+- real 会话与真实能力入口：`pulsar-rest/.../openapi/service/SessionManager.kt`（存在时 controllers 会启用 real 分支）
+- mock/演示存储：`pulsar-rest/.../openapi/store/InMemoryStore.kt`
 
 ---
 
