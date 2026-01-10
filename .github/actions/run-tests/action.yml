@@ -38,6 +38,10 @@ inputs:
     description: 'Generate test reports (default: true)'
     required: false
     default: 'true'
+  run_pulsar_tests:
+    description: 'Run pulsar-tests module tests (default: true for CI)'
+    required: false
+    default: 'true'
 
 outputs:
   test_status:
@@ -97,6 +101,7 @@ runs:
         echo "  - Fail Fast: ${{ inputs.fail_fast }}"
         echo "  - Parallel: ${{ inputs.parallel_tests }}"
         echo "  - Reports: ${{ inputs.test_reports }}"
+        echo "  - Run Pulsar Tests: ${{ inputs.run_pulsar_tests }}"
         
         # Build test command
         test_cmd="$MAVEN_CMD test"
@@ -129,6 +134,11 @@ runs:
         # Add parallel execution
         if [ "${{ inputs.parallel_tests }}" == "true" ]; then
           test_cmd="$test_cmd -Dsurefire.parallel=methods -Dsurefire.threadCount=4"
+        fi
+
+        # Add pulsar-tests flag
+        if [ "${{ inputs.run_pulsar_tests }}" == "true" ]; then
+          test_cmd="$test_cmd -DrunPulsarTests=true"
         fi
         
         # Add batch mode and other options
