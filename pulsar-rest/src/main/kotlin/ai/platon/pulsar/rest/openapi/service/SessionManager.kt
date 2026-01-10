@@ -1,16 +1,13 @@
 package ai.platon.pulsar.rest.openapi.service
 
 import ai.platon.pulsar.agentic.AgenticSession
-import ai.platon.pulsar.agentic.BasicAgenticSession
 import ai.platon.pulsar.agentic.PerceptiveAgent
 import ai.platon.pulsar.agentic.context.AgenticContexts
-import ai.platon.pulsar.common.config.VolatileConfig
 import ai.platon.pulsar.skeleton.context.PulsarContext
-import ai.platon.pulsar.skeleton.session.PulsarSession
 import org.slf4j.LoggerFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean
 import org.springframework.stereotype.Service
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -22,9 +19,7 @@ import java.util.concurrent.TimeUnit
  */
 @Service
 @ConditionalOnBean(PulsarContext::class)
-class SessionManager(
-    private val pulsarContext: PulsarContext
-) {
+class SessionManager {
     private val logger = LoggerFactory.getLogger(SessionManager::class.java)
 
     /**
@@ -32,8 +27,7 @@ class SessionManager(
      */
     data class ManagedSession(
         val sessionId: String,
-        val pulsarSession: PulsarSession,
-        val agenticSession: AgenticSession,
+        val pulsarSession: AgenticSession,
         val agent: PerceptiveAgent,
         val capabilities: Map<String, Any?>?,
         var url: String? = null,
@@ -66,20 +60,14 @@ class SessionManager(
     fun createSession(capabilities: Map<String, Any?>? = null): ManagedSession {
         val sessionId = UUID.randomUUID().toString()
 
-        // Create PulsarSession (standard session)
-        val pulsarSession = pulsarContext.createSession()
-
-        // Create AgenticContext and AgenticSession (AI-powered session)
-        val agenticContext = AgenticContexts.create()
-        val agenticSession = agenticContext.createSession()
+        val agenticSession = AgenticContexts.createSession()
 
         // Get the companion agent
         val agent = agenticSession.companionAgent
 
         val session = ManagedSession(
             sessionId = sessionId,
-            pulsarSession = pulsarSession,
-            agenticSession = agenticSession,
+            pulsarSession = agenticSession,
             agent = agent,
             capabilities = capabilities
         )
@@ -116,7 +104,6 @@ class SessionManager(
             session.agent.close()
 
             // Close sessions
-            session.agenticSession.close()
             session.pulsarSession.close()
 
             logger.info("Deleted session {} and released resources", sessionId)

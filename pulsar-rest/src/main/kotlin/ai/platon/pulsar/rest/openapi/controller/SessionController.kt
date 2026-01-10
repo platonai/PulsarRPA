@@ -1,6 +1,9 @@
 package ai.platon.pulsar.rest.openapi.controller
 
-import ai.platon.pulsar.rest.openapi.dto.*
+import ai.platon.pulsar.rest.openapi.dto.NewSessionRequest
+import ai.platon.pulsar.rest.openapi.dto.NewSessionResponse
+import ai.platon.pulsar.rest.openapi.dto.SessionDetails
+import ai.platon.pulsar.rest.openapi.dto.WebDriverResponse
 import ai.platon.pulsar.rest.openapi.service.SessionManager
 import jakarta.servlet.http.HttpServletResponse
 import org.slf4j.LoggerFactory
