@@ -105,13 +105,13 @@ under the License.
     </repositories>
 
     <properties>
-<!--        <distMgmtReleasesId>apache.releases.https</distMgmtReleasesId>-->
-<!--        <distMgmtReleasesName>Apache Release Distribution Repository</distMgmtReleasesName>-->
-<!--        <distMgmtReleasesUrl>https://repository.apache.org/service/local/staging/deploy/maven2</distMgmtReleasesUrl>-->
-<!--        <distMgmtSnapshotsId>apache.snapshots.https</distMgmtSnapshotsId>-->
-<!--        <distMgmtSnapshotsName>Apache Development Snapshot Repository</distMgmtSnapshotsName>-->
-<!--        <distMgmtSnapshotsUrl>https://repository.apache.org/content/repositories/snapshots</distMgmtSnapshotsUrl>-->
-<!--        <organization.logo>https://www.apache.org/images/asf_logo_wide_2016.png</organization.logo>-->
+        <!--        <distMgmtReleasesId>apache.releases.https</distMgmtReleasesId>-->
+        <!--        <distMgmtReleasesName>Apache Release Distribution Repository</distMgmtReleasesName>-->
+        <!--        <distMgmtReleasesUrl>https://repository.apache.org/service/local/staging/deploy/maven2</distMgmtReleasesUrl>-->
+        <!--        <distMgmtSnapshotsId>apache.snapshots.https</distMgmtSnapshotsId>-->
+        <!--        <distMgmtSnapshotsName>Apache Development Snapshot Repository</distMgmtSnapshotsName>-->
+        <!--        <distMgmtSnapshotsUrl>https://repository.apache.org/content/repositories/snapshots</distMgmtSnapshotsUrl>-->
+        <!--        <organization.logo>https://www.apache.org/images/asf_logo_wide_2016.png</organization.logo>-->
 
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -159,6 +159,8 @@ under the License.
         <version.maven-source-plugin>3.4.0</version.maven-source-plugin>
         <version.maven-surefire>${surefire.version}</version.maven-surefire>
         <version.maven-war-plugin>3.5.1</version.maven-war-plugin>
+
+        <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
     </properties>
 
     <build>
@@ -329,7 +331,7 @@ under the License.
                     <configuration>
                         <autoVersionSubmodules>true</autoVersionSubmodules>
                         <goals>deploy</goals>
-<!--                        <releaseProfiles>apache-release</releaseProfiles>-->
+                        <!--                        <releaseProfiles>apache-release</releaseProfiles>-->
                         <releaseProfiles>release</releaseProfiles>
                     </configuration>
                 </plugin>
@@ -477,7 +479,7 @@ under the License.
         <!-- START SNIPPET: release-profile -->
         <profile>
             <id>release</id>
-<!--            <id>apache-release</id>-->
+            <!--            <id>apache-release</id>-->
             <build>
                 <plugins>
                     <!-- Create a source-release artifact that contains the fully buildable
@@ -579,94 +581,113 @@ under the License.
             </build>
         </profile>
         <!-- END SNIPPET: release-profile -->
-<!--        <profile>-->
-<!--            <id>jdk8</id>-->
-<!--            <activation>-->
-<!--                <jdk>[,9)</jdk>-->
-<!--            </activation>-->
-<!--            <properties>-->
-<!--                <maven.compiler.source>${javaVersion}</maven.compiler.source>-->
-<!--                <maven.compiler.target>${javaVersion}</maven.compiler.target>-->
-<!--            </properties>-->
-<!--        </profile>-->
-<!--        <profile>-->
-<!--            <id>jdk9+</id>-->
-<!--            <activation>-->
-<!--                &lt;!&ndash; this does not support toolchains, https://issues.apache.org/jira/browse/MNG-6943 &ndash;&gt;-->
-<!--                <jdk>[9,)</jdk>-->
-<!--            </activation>-->
-<!--            <properties>-->
-<!--                &lt;!&ndash; https://maven.apache.org/plugins/maven-compiler-plugin/examples/set-compiler-release.html, affects m-compiler-p and m-javadoc-p &ndash;&gt;-->
-<!--                <maven.compiler.release>${javaVersion}</maven.compiler.release>-->
-<!--            </properties>-->
-<!--        </profile>-->
-<!--        <profile>-->
-<!--            <id>only-eclipse</id>-->
-<!--            <activation>-->
-<!--                <property>-->
-<!--                    <name>m2e.version</name>-->
-<!--                </property>-->
-<!--            </activation>-->
-<!--            <build>-->
-<!--                <pluginManagement>-->
-<!--                    <plugins>-->
-<!--                        &lt;!&ndash; Disable execution of some plugins in m2e (https://www.eclipse.org/m2e/documentation/m2e-execution-not-covered.html) &ndash;&gt;-->
-<!--                        <plugin>-->
-<!--                            <groupId>org.eclipse.m2e</groupId>-->
-<!--                            <artifactId>lifecycle-mapping</artifactId>-->
-<!--                            <version>1.0.0</version>&lt;!&ndash; as this is an artificial artifact only use in a profile (https://bugs.eclipse.org/bugs/show_bug.cgi?id=367870#c18) &ndash;&gt;-->
-<!--                            <configuration>-->
-<!--                                <lifecycleMappingMetadata>-->
-<!--                                    <pluginExecutions>-->
-<!--                                        <pluginExecution>-->
-<!--                                            &lt;!&ndash; no native m2e support yet (https://issues.apache.org/jira/browse/MRRESOURCES-85) &ndash;&gt;-->
-<!--                                            <pluginExecutionFilter>-->
-<!--                                                <groupId>org.apache.maven.plugins</groupId>-->
-<!--                                                <artifactId>maven-remote-resources-plugin</artifactId>-->
-<!--                                                <versionRange>[0,)</versionRange>-->
-<!--                                                <goals>-->
-<!--                                                    <goal>process</goal>-->
-<!--                                                </goals>-->
-<!--                                            </pluginExecutionFilter>-->
-<!--                                            <action>-->
-<!--                                                <ignore />-->
-<!--                                            </action>-->
-<!--                                        </pluginExecution>-->
-<!--                                    </pluginExecutions>-->
-<!--                                </lifecycleMappingMetadata>-->
-<!--                            </configuration>-->
-<!--                        </plugin>-->
-<!--                    </plugins>-->
-<!--                </pluginManagement>-->
-<!--            </build>-->
-<!--        </profile>-->
-<!--        <profile>-->
-<!--            <id>use-apache-snapshots</id>-->
-<!--            <activation>-->
-<!--                <property>-->
-<!--                    <name>apache.snapshots</name>-->
-<!--                </property>-->
-<!--            </activation>-->
-<!--            <repositories>-->
-<!--                <repository>-->
-<!--                    <id>apache.snapshots</id>-->
-<!--                    <name>Apache Snapshot Repository</name>-->
-<!--                    <url>https://repository.apache.org/snapshots</url>-->
-<!--                    <releases>-->
-<!--                        <enabled>false</enabled>-->
-<!--                    </releases>-->
-<!--                </repository>-->
-<!--            </repositories>-->
-<!--            <pluginRepositories>-->
-<!--                <pluginRepository>-->
-<!--                    <id>apache.snapshots</id>-->
-<!--                    <name>Apache Snapshot Repository</name>-->
-<!--                    <url>https://repository.apache.org/snapshots</url>-->
-<!--                    <releases>-->
-<!--                        <enabled>false</enabled>-->
-<!--                    </releases>-->
-<!--                </pluginRepository>-->
-<!--            </pluginRepositories>-->
-<!--        </profile>-->
+
+        <!-- Deploy profile for Central Portal -->
+        <profile>
+            <id>deploy</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>${central-publishing-maven-plugin.version}</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+
+        <!--        <profile>-->
+        <!--            <id>jdk8</id>-->
+        <!--            <activation>-->
+        <!--                <jdk>[,9)</jdk>-->
+        <!--            </activation>-->
+        <!--            <properties>-->
+        <!--                <maven.compiler.source>${javaVersion}</maven.compiler.source>-->
+        <!--                <maven.compiler.target>${javaVersion}</maven.compiler.target>-->
+        <!--            </properties>-->
+        <!--        </profile>-->
+        <!--        <profile>-->
+        <!--            <id>jdk9+</id>-->
+        <!--            <activation>-->
+        <!--                &lt;!&ndash; this does not support toolchains, https://issues.apache.org/jira/browse/MNG-6943 &ndash;&gt;-->
+        <!--                <jdk>[9,)</jdk>-->
+        <!--            </activation>-->
+        <!--            <properties>-->
+        <!--                &lt;!&ndash; https://maven.apache.org/plugins/maven-compiler-plugin/examples/set-compiler-release.html, affects m-compiler-p and m-javadoc-p &ndash;&gt;-->
+        <!--                <maven.compiler.release>${javaVersion}</maven.compiler.release>-->
+        <!--            </properties>-->
+        <!--        </profile>-->
+        <!--        <profile>-->
+        <!--            <id>only-eclipse</id>-->
+        <!--            <activation>-->
+        <!--                <property>-->
+        <!--                    <name>m2e.version</name>-->
+        <!--                </property>-->
+        <!--            </activation>-->
+        <!--            <build>-->
+        <!--                <pluginManagement>-->
+        <!--                    <plugins>-->
+        <!--                        &lt;!&ndash; Disable execution of some plugins in m2e (https://www.eclipse.org/m2e/documentation/m2e-execution-not-covered.html) &ndash;&gt;-->
+        <!--                        <plugin>-->
+        <!--                            <groupId>org.eclipse.m2e</groupId>-->
+        <!--                            <artifactId>lifecycle-mapping</artifactId>-->
+        <!--                            <version>1.0.0</version>&lt;!&ndash; as this is an artificial artifact only use in a profile (https://bugs.eclipse.org/bugs/show_bug.cgi?id=367870#c18) &ndash;&gt;-->
+        <!--                            <configuration>-->
+        <!--                                <lifecycleMappingMetadata>-->
+        <!--                                    <pluginExecutions>-->
+        <!--                                        <pluginExecution>-->
+        <!--                                            &lt;!&ndash; no native m2e support yet (https://issues.apache.org/jira/browse/MRRESOURCES-85) &ndash;&gt;-->
+        <!--                                            <pluginExecutionFilter>-->
+        <!--                                                <groupId>org.apache.maven.plugins</groupId>-->
+        <!--                                                <artifactId>maven-remote-resources-plugin</artifactId>-->
+        <!--                                                <versionRange>[0,)</versionRange>-->
+        <!--                                                <goals>-->
+        <!--                                                    <goal>process</goal>-->
+        <!--                                                </goals>-->
+        <!--                                            </pluginExecutionFilter>-->
+        <!--                                            <action>-->
+        <!--                                                <ignore />-->
+        <!--                                            </action>-->
+        <!--                                        </pluginExecution>-->
+        <!--                                    </pluginExecutions>-->
+        <!--                                </lifecycleMappingMetadata>-->
+        <!--                            </configuration>-->
+        <!--                        </plugin>-->
+        <!--                    </plugins>-->
+        <!--                </pluginManagement>-->
+        <!--            </build>-->
+        <!--        </profile>-->
+        <!--        <profile>-->
+        <!--            <id>use-apache-snapshots</id>-->
+        <!--            <activation>-->
+        <!--                <property>-->
+        <!--                    <name>apache.snapshots</name>-->
+        <!--                </property>-->
+        <!--            </activation>-->
+        <!--            <repositories>-->
+        <!--                <repository>-->
+        <!--                    <id>apache.snapshots</id>-->
+        <!--                    <name>Apache Snapshot Repository</name>-->
+        <!--                    <url>https://repository.apache.org/snapshots</url>-->
+        <!--                    <releases>-->
+        <!--                        <enabled>false</enabled>-->
+        <!--                    </releases>-->
+        <!--                </repository>-->
+        <!--            </repositories>-->
+        <!--            <pluginRepositories>-->
+        <!--                <pluginRepository>-->
+        <!--                    <id>apache.snapshots</id>-->
+        <!--                    <name>Apache Snapshot Repository</name>-->
+        <!--                    <url>https://repository.apache.org/snapshots</url>-->
+        <!--                    <releases>-->
+        <!--                        <enabled>false</enabled>-->
+        <!--                    </releases>-->
+        <!--                </pluginRepository>-->
+        <!--            </pluginRepositories>-->
+        <!--        </profile>-->
     </profiles>
 </project>
