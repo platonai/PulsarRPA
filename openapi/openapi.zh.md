@@ -160,7 +160,7 @@ WebDriver-Compatible API 的实现基本集中在：
 | selectors | `/selectors/element(s)` | ❌ | ✅ | 当前查找 element(s) 仍基于 store 生成 elementId（real 模式未对齐为“从 driver 实际 find”） |
 | element | `/element/{elementId}/*` | ✅(部分) | ✅ | real 模式通过 store 中 elementId → selector，再用 driver 操作；elementId 本身仍来自 store |
 | script | `/execute/sync` `/execute/async` | ✅ | ✅ | real 通过 driver.evaluate；mock 固定返回 null |
-| control | `/control/*` | ❌ | ✅ | 仅 mock（sleep/改内存 status），不联动真实 driver/session |
+| control | `/control/*` | ✅(部分) | ✅ | `/control/delay` 会休眠请求的时长（最大 30 秒防止资源耗尽）；`/control/pause` 和 `/control/stop` 更新 `SessionManager` 中的会话状态，但尚未直接暂停/停止 driver 级操作。 |
 | events | `/event-configs` `/events` `/events/subscribe` | ❌ | ✅ | 仅 mock（内存事件体系），不是浏览器真实事件流 |
 | agent | `/agent/*` | ✅ | ✅ | real 调用 `session.agent.*`；mock 返回演示响应 |
 | pulsar | `/normalize` `/open` `/load` `/submit` | ✅ | ✅ | real 调用 `pulsarSession.*`；mock 返回演示 WebPageResult |
@@ -179,9 +179,13 @@ WebDriver-Compatible API 的实现基本集中在：
 - real 模式下，element 的 click/fill/text/attribute 等，会把 elementId 反查成 selector，再通过 driver 执行。
   - 这意味着 elementId 的生命周期/有效性由 store 决定，并非浏览器端原生引用。
 
-### 5.3 control / events 是 demo-only
-- `control` 与 `events` 当前没有 real 分支：主要用于演示与接口占位。
-- 若要对齐 WebDriver/浏览器事件流，需要引入 driver 侧能力与更明确的状态机/订阅模型。
+### 5.3 control / events 现状
+
+- `control` 端点现已有部分真实实现：
+    - `/control/delay`：会休眠请求的时长（最大 30 秒，防止资源耗尽）。
+    - `/control/pause` 和 `/control/stop`：更新 `SessionManager` 中的会话状态，但尚未直接暂停/停止 driver 级操作。
+- `events` 当前没有 real 分支：主要用于演示与接口占位（内存事件体系）。
+- 若要完全对齐 WebDriver/浏览器事件流，需要引入 driver 侧能力与更明确的状态机/订阅模型。
 
 ---
 
@@ -191,8 +195,9 @@ WebDriver-Compatible API 的实现基本集中在：
 2. **明确 demo-only 等级**：建议在 controller 或 docs 中统一标注（例如 `@Deprecated("demo-only")`/README 标识），避免误用。
 3. **优先补齐真实实现（按使用价值）**：
    - P0：`selectors/element(s)` 的 real find 对齐（从 driver 实际查找并返回稳定 elementId 策略）
-   - P0：control/events 的 real 语义设计（若对外承诺）
+   - P1：`events` 的 real 语义设计（浏览器事件流集成，若对外承诺）
    - P1：进一步对齐 navigation 的“当前 URL/documentUri”获取方式
+   - P2：扩展 `control/pause` 和 `control/stop` 以暂停/停止 driver 级操作
 4. **增加最小契约测试（MockMvc/WebTestClient）**：至少覆盖
    - `POST /session` → 返回 sessionId
    - 404 错误体结构符合 `ErrorResponse`
