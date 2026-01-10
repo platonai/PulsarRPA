@@ -4,6 +4,26 @@
 
 Build the project.
 
+## build-exe.ps1, build-exe.sh
+
+Build Browser4 as a Windows executable (.exe). The resulting `Browser4.exe` can be run on Windows
+systems with a Java Runtime Environment (JRE) 17+ installed.
+
+Usage:
+```bash
+# On Windows PowerShell
+.\bin\build-exe.ps1
+
+# On Linux/macOS or Windows Git Bash
+./bin/build-exe.sh
+```
+
+Options:
+- `-Clean` / `-clean`: Perform a clean build before packaging
+- `-Test` / `-test`: Run tests during the build (tests are skipped by default)
+
+The executable will be created at `browser4/browser4-agents/target/Browser4.exe`.
+
 ## build-run.ps1, build-run.sh
 
 Build and run the project.
