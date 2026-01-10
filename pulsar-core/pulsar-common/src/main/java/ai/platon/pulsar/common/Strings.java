@@ -389,20 +389,6 @@ public final class Strings {
         return removeNonChineseChar(text, null);
     }
 
-    /**
-     * @deprecated Use {@link #removeNonChineseChar(String)} instead
-     */
-    public static String stripNonChar(String text) {
-        return removeNonChineseChar(text);
-    }
-
-    /**
-     * @deprecated Use {@link #removeNonChineseChar(String, String)} instead
-     */
-    public static String stripNonChar(String text, String keeps) {
-        return removeNonChineseChar(text, keeps);
-    }
-
     public static String removeNonChineseChar(String text, String keeps) {
         if (text == null) return "";
         StringBuilder builder = new StringBuilder();
@@ -668,11 +654,11 @@ public final class Strings {
     /**
      * See CaseFormat from Guava, for example, LOWER_UNDERSCORE.to(LOWER_CAMEL, str)
      */
-    public static String humanize(String text, String suffix, String seperator) {
-        text = StringUtils.join(text.split("(?=\\p{Upper})"), seperator);
-        text = text.replaceAll("[-_]", seperator).toLowerCase().trim();
+    public static String humanize(String text, String suffix, String separator) {
+        text = StringUtils.join(text.split("(?=\\p{Upper})"), separator);
+        text = text.replaceAll("[-_]", separator).toLowerCase().trim();
 
-        return text + seperator + suffix;
+        return text + separator + suffix;
     }
 
     /**
@@ -869,11 +855,11 @@ public final class Strings {
     /**
      * Wraps the string in single quotes only if it contains one or more whitespace characters.
      * Whitespace detection uses {@link StringUtils#containsWhitespace(CharSequence)}.
-     *
+     * <p>
      * Behavior:
      * - Returns null if input is null; returns empty string if input is empty.
      * - If whitespace exists, delegates to {@link #singleQuote(String)}; otherwise returns the original string.
-     *
+     * <p>
      * Examples:
      * singleQuoteIfContainsWhitespace("hello world") => 'hello world'
      * singleQuoteIfContainsWhitespace("hello") => hello
@@ -892,11 +878,11 @@ public final class Strings {
     /**
      * Wraps the string in double quotes only if it contains one or more whitespace characters.
      * Whitespace detection uses {@link StringUtils#containsWhitespace(CharSequence)}.
-     *
+     * <p>
      * Behavior:
      * - Returns null if input is null; returns empty string if input is empty.
      * - If whitespace exists, delegates to {@link #doubleQuote(String)}; otherwise returns the original string.
-     *
+     * <p>
      * Examples:
      * doubleQuoteIfContainsWhitespace("hello world") => "hello world"
      * doubleQuoteIfContainsWhitespace("hello") => hello
@@ -915,12 +901,12 @@ public final class Strings {
     /**
      * Wraps the string in single quotes if it contains any non-alphanumeric character.
      * Internal single quotes are NOT escaped here; use {@link #singleQuote(String)} if escaping is required.
-     *
+     * <p>
      * Behavior:
      * - Returns null if input is null.
      * - Uses {@link StringUtils#isAlphanumeric(CharSequence)} to decide quoting.
      * - For empty input, returns two single quotes: ''
-     *
+     * <p>
      * Examples:
      * singleQuoteIfNonAlphanumeric("hello") => hello
      * singleQuoteIfNonAlphanumeric("hello-world") => 'hello-world'
@@ -940,11 +926,11 @@ public final class Strings {
     /**
      * Wraps the string in double quotes if it contains any non-alphanumeric character.
      * Internal double quotes are escaped by delegating to {@link #doubleQuote(String)}.
-     *
+     * <p>
      * Behavior:
      * - Returns null if input is null; returns empty string if input is empty.
      * - Uses {@link StringUtils#isAlphanumeric(CharSequence)} to decide quoting.
-     *
+     * <p>
      * Examples:
      * doubleQuoteIfNonAlphanumeric("hello") => hello
      * doubleQuoteIfNonAlphanumeric("a b") => "a b"
@@ -1152,7 +1138,7 @@ public final class Strings {
 
             if (line.endsWith("\\")) {
                 merging = true;
-                mergedLine.append(StringUtils.removeEnd(line, "\\"));
+                mergedLine.append(org.apache.commons.lang3.Strings.CS.removeEnd(line, "\\"));
             } else {
                 mergedLine.append(mergeSlashedLine(line));
                 merging = false;
