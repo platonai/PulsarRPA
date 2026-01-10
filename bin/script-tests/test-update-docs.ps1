@@ -9,6 +9,6 @@ Set-Location $AppHome
 # Replace SNAPSHOT version with the release version
 @('README.md', 'README.zh.md') | ForEach-Object {
   Get-ChildItem -Path "$AppHome" -Depth 5 -Filter $_ -Recurse | ForEach-Object {
-    (Get-Content $_.FullName) -replace "Browser4", "Browser4Test" | Set-Content $_.FullName -Encoding utf8
+    (Get-Content $_.FullName) -replace "Browser4", "Browser4Test" | Set-Content $_.FullName
   }
 }
