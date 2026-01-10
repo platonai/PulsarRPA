@@ -1,13 +1,13 @@
-
 package ai.platon.pulsar.parse.html
 
-import ai.platon.pulsar.persist.metadata.Name
 import ai.platon.pulsar.skeleton.crawl.parse.PageParser
 import ai.platon.pulsar.skeleton.crawl.parse.ParseException
 import ai.platon.pulsar.skeleton.crawl.parse.html.PrimerHtmlParser
 import org.springframework.beans.factory.annotation.Autowired
 import java.nio.charset.Charset
-import kotlin.test.*
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class TestHtmlParser : HtmlParserTestBase() {
     @Autowired

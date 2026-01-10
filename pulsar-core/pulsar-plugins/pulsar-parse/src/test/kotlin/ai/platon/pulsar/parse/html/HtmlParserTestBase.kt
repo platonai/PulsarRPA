@@ -1,4 +1,3 @@
-
 package ai.platon.pulsar.parse.html
 
 import ai.platon.pulsar.common.config.AppConstants
@@ -19,7 +18,7 @@ class HtmlParserTestBase {
     protected val conf get() = immutableConfig.toVolatileConfig()
 
     protected fun getPage(html: String, charset: Charset): WebPage {
-        val page = GoraWebPage.newWebPage(exampleUrl, conf)
+        val page = GoraWebPage.Companion.newWebPage(exampleUrl, conf)
         page.location = exampleUrl
         page.setByteArrayContent(html.toByteArray(charset))
         page.contentType = "text/html"
