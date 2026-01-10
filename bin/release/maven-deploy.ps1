@@ -103,7 +103,7 @@ if ($exitCode -eq 0) {
 
 Set-Location $AppHome
 
-Write-Host "Artifacts are staged remotely, you should close and release the staging manually:"
-Write-Host "https://oss.sonatype.org/#stagingRepositories"
+Write-Host "Artifacts are uploaded, you should publish manually:"
+Write-Host "https://central.sonatype.com/publishing"
 Write-Host "Hit the following link to check if the artifacts are synchronized to the maven center: "
 Write-Host "https://repo1.maven.org/maven2/ai/platon/pulsar"
