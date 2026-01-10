@@ -13,7 +13,7 @@
         }
 
         .container {
-            max-width: 820px;
+            max-width: 1200px;
             margin: 40px auto;
             background: #fff;
             border-radius: 12px;
@@ -312,6 +312,262 @@
             font-size: 0.85em;
             font-weight: 600;
         }
+
+        /* Data Collection Response Styles */
+        .data-section {
+            margin-bottom: 24px;
+        }
+
+        .data-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .data-section-header h4 {
+            margin: 0;
+            color: #2a5d9f;
+            font-size: 1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .data-section-count {
+            background: #e9ecef;
+            color: #495057;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        /* Fields Table */
+        .fields-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+        }
+
+        .fields-table th,
+        .fields-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .fields-table th {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            font-weight: 600;
+            color: #495057;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .fields-table td {
+            font-size: 0.95em;
+            color: #333;
+        }
+
+        .fields-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .fields-table tr:hover td {
+            background: #f8f9fa;
+        }
+
+        .field-name {
+            font-weight: 500;
+            color: #2a5d9f;
+            min-width: 150px;
+        }
+
+        .field-value {
+            word-break: break-word;
+        }
+
+        /* Page Summary Card */
+        .page-summary-card {
+            background: linear-gradient(135deg, #f0f7ff 0%, #e8f4fd 100%);
+            border-left: 4px solid #2a5d9f;
+            border-radius: 0 12px 12px 0;
+            padding: 20px 24px;
+            margin-bottom: 24px;
+        }
+
+        .page-summary-card p {
+            margin: 0;
+            line-height: 1.8;
+            color: #333;
+            font-size: 1em;
+            white-space: pre-line;
+        }
+
+        /* Links Section */
+        .links-container {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .link-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            padding: 10px 12px;
+            background: #fff;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            border: 1px solid #e9ecef;
+            transition: all 0.2s;
+        }
+
+        .link-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .link-item:hover {
+            border-color: #2a5d9f;
+            box-shadow: 0 2px 8px rgba(42, 93, 159, 0.1);
+        }
+
+        .link-index {
+            background: #2a5d9f;
+            color: #fff;
+            min-width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+
+        .link-url {
+            flex: 1;
+            word-break: break-all;
+            font-size: 0.9em;
+            color: #2a5d9f;
+            text-decoration: none;
+        }
+
+        .link-url:hover {
+            text-decoration: underline;
+        }
+
+        .link-copy-btn {
+            background: #e9ecef;
+            border: none;
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8em;
+            color: #495057;
+            transition: background 0.2s;
+            flex-shrink: 0;
+        }
+
+        .link-copy-btn:hover {
+            background: #dee2e6;
+        }
+
+        /* Instruction Results */
+        .instruct-result-card {
+            background: #fff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            margin-bottom: 12px;
+            overflow: hidden;
+        }
+
+        .instruct-result-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .instruct-result-name {
+            font-weight: 600;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .instruct-result-type {
+            font-size: 0.8em;
+            color: #6c757d;
+            background: #e9ecef;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .instruct-result-body {
+            padding: 16px;
+        }
+
+        .instruct-result-body pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+            color: #333;
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        /* Show More/Less button */
+        .show-more-btn {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border: 1px solid #e9ecef;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9em;
+            color: #495057;
+            text-align: center;
+            transition: all 0.2s;
+            margin-top: 12px;
+        }
+
+        .show-more-btn:hover {
+            background: linear-gradient(135deg, #e9ecef 0%, #dee2e6 100%);
+            border-color: #dee2e6;
+        }
+
+        /* Two column layout for wider screens */
+        .two-column-layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 900px) {
+            .two-column-layout {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -405,6 +661,57 @@
                     <div class="info-item">
                         <div class="info-item-label">Duration</div>
                         <div id="durationValue" class="info-item-value">--</div>
+                    </div>
+                </div>
+
+                <!-- Page Summary Section (for data collection) -->
+                <div id="pageSummarySection" class="data-section" style="display:none;">
+                    <div class="data-section-header">
+                        <h4>📝 Page Summary</h4>
+                    </div>
+                    <div class="page-summary-card">
+                        <p id="pageSummaryText"></p>
+                    </div>
+                </div>
+
+                <!-- Extracted Fields Section (for data collection) -->
+                <div id="fieldsSection" class="data-section" style="display:none;">
+                    <div class="data-section-header">
+                        <h4>📋 Extracted Fields</h4>
+                        <span id="fieldsCount" class="data-section-count">0 fields</span>
+                    </div>
+                    <table class="fields-table">
+                        <thead>
+                            <tr>
+                                <th>Field Name</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody id="fieldsTableBody">
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Links Section (for data collection) -->
+                <div id="linksSection" class="data-section" style="display:none;">
+                    <div class="data-section-header">
+                        <h4>🔗 Extracted Links</h4>
+                        <span id="linksCount" class="data-section-count">0 links</span>
+                    </div>
+                    <div id="linksContainer" class="links-container">
+                    </div>
+                    <button id="showMoreLinksBtn" class="show-more-btn" style="display:none;" onclick="toggleLinksView()">
+                        Show All Links
+                    </button>
+                </div>
+
+                <!-- Instruction Results Section -->
+                <div id="instructResultsSection" class="data-section" style="display:none;">
+                    <div class="data-section-header">
+                        <h4>📊 Instruction Results</h4>
+                        <span id="instructResultsCount" class="data-section-count">0 results</span>
+                    </div>
+                    <div id="instructResultsContainer">
                     </div>
                 </div>
 
@@ -580,126 +887,267 @@
             renderResult(data);
             finalResult.textContent = JSON.stringify(data, null, 2);
         }
+    }
 
-        function toggleJsonView() {
-            const jsonContent = document.getElementById('finalResult');
-            const toggleText = document.getElementById('jsonToggleText');
-            jsonContent.classList.toggle('show');
-            toggleText.textContent = jsonContent.classList.contains('show') ? 'Hide Raw JSON' : 'Show Raw JSON';
+    // ==================== Utility Functions ====================
+    
+    function toggleJsonView() {
+        const jsonContent = document.getElementById('finalResult');
+        const toggleText = document.getElementById('jsonToggleText');
+        jsonContent.classList.toggle('show');
+        toggleText.textContent = jsonContent.classList.contains('show') ? 'Hide Raw JSON' : 'Show Raw JSON';
+    }
+
+    function formatDateTime(isoString) {
+        if (!isoString) return '--';
+        try {
+            const date = new Date(isoString);
+            return date.toLocaleString();
+        } catch (e) {
+            return isoString;
+        }
+    }
+
+    function calculateDuration(startTime, endTime) {
+        if (!startTime || !endTime) return '--';
+        try {
+            const start = new Date(startTime);
+            const end = new Date(endTime);
+            const durationMs = end - start;
+            if (durationMs < 1000) return durationMs + ' ms';
+            if (durationMs < 60000) return (durationMs / 1000).toFixed(1) + ' s';
+            return (durationMs / 60000).toFixed(1) + ' min';
+        } catch (e) {
+            return '--';
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function renderResult(data) {
+        // Update status badge
+        const statusBadge = document.getElementById('resultStatusBadge');
+        const isSuccess = data.statusCode === 200 || data.status === 'OK';
+        const hasErrors = data.currentAgentState?.hasErrors;
+        if (hasErrors) {
+            statusBadge.textContent = 'Error';
+            statusBadge.className = 'badge badge-error';
+        } else if (isSuccess) {
+            statusBadge.textContent = 'Success';
+            statusBadge.className = 'badge badge-success';
+        } else {
+            statusBadge.textContent = data.status || 'Unknown';
+            statusBadge.className = 'badge badge-warning';
         }
 
-        function formatDateTime(isoString) {
-            if (!isoString) return '--';
-            try {
-                const date = new Date(isoString);
-                return date.toLocaleString();
-            } catch (e) {
-                return isoString;
-            }
+        // Update status bar
+        document.getElementById('statusCodeDisplay').textContent = 'Status: ' + (data.statusCode || '--') + ' ' + (data.status || '');
+        document.getElementById('pageStatusDisplay').textContent = 'Page: ' + (data.pageStatus || '--') + ' (' + (data.pageStatusCode || '--') + ')';
+        document.getElementById('taskIdDisplay').textContent = 'ID: ' + (data.id ? data.id.substring(0, 8) + '...' : '--');
+
+        // Update summary section
+        const summarySection = document.getElementById('summarySection');
+        const summaryText = document.getElementById('summaryText');
+        const summary = data.message || data.commandResult?.summary || data.currentAgentState?.summary;
+        if (summary) {
+            summarySection.style.display = '';
+            summaryText.textContent = summary;
+        } else {
+            summarySection.style.display = 'none';
         }
 
-        function calculateDuration(startTime, endTime) {
-            if (!startTime || !endTime) return '--';
-            try {
-                const start = new Date(startTime);
-                const end = new Date(endTime);
-                const durationMs = end - start;
-                if (durationMs < 1000) return durationMs + ' ms';
-                if (durationMs < 60000) return (durationMs / 1000).toFixed(1) + ' s';
-                return (durationMs / 60000).toFixed(1) + ' min';
-            } catch (e) {
-                return '--';
-            }
-        }
-
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-
-        function renderResult(data) {
-            // Update status badge
-            const statusBadge = document.getElementById('resultStatusBadge');
-            const isSuccess = data.statusCode === 200 || data.status === 'OK';
-            const hasErrors = data.currentAgentState?.hasErrors;
-            if (hasErrors) {
-                statusBadge.textContent = 'Error';
-                statusBadge.className = 'badge badge-error';
-            } else if (isSuccess) {
-                statusBadge.textContent = 'Success';
-                statusBadge.className = 'badge badge-success';
+        // Update agent state section
+        const agentStateSection = document.getElementById('agentStateSection');
+        const agentState = data.currentAgentState;
+        if (agentState) {
+            agentStateSection.style.display = '';
+            document.getElementById('stepIndicator').textContent = 'Step ' + (agentState.step || 1);
+            document.getElementById('instructionValue').textContent = agentState.instruction || '--';
+            const urlValue = document.getElementById('urlValue');
+            if (agentState.url) {
+                urlValue.innerHTML = '<a href="' + escapeHtml(agentState.url) + '" target="_blank" style="color:#2a5d9f;text-decoration:none;">' + escapeHtml(agentState.url) + '</a>';
             } else {
-                statusBadge.textContent = data.status || 'Unknown';
-                statusBadge.className = 'badge badge-warning';
+                urlValue.textContent = '--';
             }
+        } else {
+            agentStateSection.style.display = 'none';
+        }
 
-            // Update status bar
-            document.getElementById('statusCodeDisplay').textContent = 'Status: ' + (data.statusCode || '--') + ' ' + (data.status || '');
-            document.getElementById('pageStatusDisplay').textContent = 'Page: ' + (data.pageStatus || '--') + ' (' + (data.pageStatusCode || '--') + ')';
-            document.getElementById('taskIdDisplay').textContent = 'ID: ' + (data.id ? data.id.substring(0, 8) + '...' : '--');
+        // Update key findings
+        const keyFindingsSection = document.getElementById('keyFindingsSection');
+        const keyFindingsList = document.getElementById('keyFindingsList');
+        const keyFindings = agentState?.keyFindings || [];
+        if (keyFindings.length > 0) {
+            keyFindingsSection.style.display = '';
+            keyFindingsList.innerHTML = keyFindings.map(finding => '<li>' + escapeHtml(finding) + '</li>').join('');
+        } else {
+            keyFindingsSection.style.display = 'none';
+        }
 
-            // Update summary section
-            const summarySection = document.getElementById('summarySection');
-            const summaryText = document.getElementById('summaryText');
-            const summary = data.message || data.commandResult?.summary || data.currentAgentState?.summary;
-            if (summary) {
-                summarySection.style.display = '';
-                summaryText.textContent = summary;
-            } else {
-                summarySection.style.display = 'none';
-            }
+        // Update suggestions
+        const suggestionsSection = document.getElementById('suggestionsSection');
+        const suggestionsList = document.getElementById('suggestionsList');
+        const suggestions = agentState?.nextSuggestions || [];
+        if (suggestions.length > 0) {
+            suggestionsSection.style.display = '';
+            suggestionsList.innerHTML = suggestions.map(suggestion => '<li>' + escapeHtml(suggestion) + '</li>').join('');
+        } else {
+            suggestionsSection.style.display = 'none';
+        }
 
-            // Update agent state section
-            const agentStateSection = document.getElementById('agentStateSection');
-            const agentState = data.currentAgentState;
-            if (agentState) {
-                agentStateSection.style.display = '';
-                document.getElementById('stepIndicator').textContent = 'Step ' + (agentState.step || 1);
-                document.getElementById('instructionValue').textContent = agentState.instruction || '--';
-                const urlValue = document.getElementById('urlValue');
-                if (agentState.url) {
-                    urlValue.innerHTML = '<a href="' + escapeHtml(agentState.url) + '" target="_blank" style="color:#2a5d9f;text-decoration:none;">' + escapeHtml(agentState.url) + '</a>';
+        // Update time info
+        const timeInfoSection = document.getElementById('timeInfoSection');
+        if (data.createTime || data.finishTime) {
+            timeInfoSection.style.display = '';
+            document.getElementById('createTimeValue').textContent = formatDateTime(data.createTime);
+            document.getElementById('finishTimeValue').textContent = formatDateTime(data.finishTime);
+            document.getElementById('durationValue').textContent = calculateDuration(data.createTime, data.finishTime);
+        } else {
+            timeInfoSection.style.display = 'none';
+        }
+
+        // Render data collection results (commandResult)
+        renderDataCollectionResult(data);
+    }
+
+    // Track links display state
+    let allLinksShown = false;
+    const MAX_LINKS_PREVIEW = 10;
+
+    function toggleLinksView() {
+        allLinksShown = !allLinksShown;
+        const btn = document.getElementById('showMoreLinksBtn');
+        btn.textContent = allLinksShown ? 'Show Less' : 'Show All Links';
+        // Re-render with stored data
+        if (window.lastLinksData) {
+            renderLinks(window.lastLinksData);
+        }
+    }
+
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => {
+            // Show brief feedback
+        }).catch(err => {
+            console.error('Failed to copy:', err);
+        });
+    }
+
+    function renderDataCollectionResult(data) {
+        const commandResult = data.commandResult;
+        
+        // Render Page Summary
+        const pageSummarySection = document.getElementById('pageSummarySection');
+        const pageSummaryText = document.getElementById('pageSummaryText');
+        const pageSummary = commandResult?.pageSummary;
+        if (pageSummary) {
+            pageSummarySection.style.display = '';
+            pageSummaryText.textContent = pageSummary;
+        } else {
+            pageSummarySection.style.display = 'none';
+        }
+
+        // Render Fields
+        const fieldsSection = document.getElementById('fieldsSection');
+        const fieldsTableBody = document.getElementById('fieldsTableBody');
+        const fieldsCount = document.getElementById('fieldsCount');
+        const fields = commandResult?.fields;
+        if (fields && typeof fields === 'object' && Object.keys(fields).length > 0) {
+            fieldsSection.style.display = '';
+            const fieldEntries = Object.entries(fields);
+            fieldsCount.textContent = fieldEntries.length + ' field' + (fieldEntries.length > 1 ? 's' : '');
+            fieldsTableBody.innerHTML = fieldEntries.map(([key, value]) => 
+                `<tr>
+                    <td class="field-name">${escapeHtml(key)}</td>
+                    <td class="field-value">${escapeHtml(String(value))}</td>
+                </tr>`
+            ).join('');
+        } else {
+            fieldsSection.style.display = 'none';
+        }
+
+        // Render Links
+        const links = commandResult?.links;
+        window.lastLinksData = links; // Store for toggle
+        if (links && Array.isArray(links) && links.length > 0) {
+            renderLinks(links);
+        } else {
+            document.getElementById('linksSection').style.display = 'none';
+        }
+
+        // Render Instruction Results
+        const instructResults = data.instructResults;
+        const instructResultsSection = document.getElementById('instructResultsSection');
+        const instructResultsContainer = document.getElementById('instructResultsContainer');
+        const instructResultsCount = document.getElementById('instructResultsCount');
+        if (instructResults && Array.isArray(instructResults) && instructResults.length > 0) {
+            instructResultsSection.style.display = '';
+            instructResultsCount.textContent = instructResults.length + ' result' + (instructResults.length > 1 ? 's' : '');
+            instructResultsContainer.innerHTML = instructResults.map((result, index) => {
+                const statusIcon = result.statusCode === 200 ? '✅' : '❌';
+                const statusClass = result.statusCode === 200 ? 'badge-success' : 'badge-error';
+                let resultContent = '';
+                
+                if (result.resultType === 'string') {
+                    resultContent = `<pre>${escapeHtml(String(result.result))}</pre>`;
+                } else if (result.resultType === 'map' && typeof result.result === 'object') {
+                    resultContent = `<pre>${escapeHtml(JSON.stringify(result.result, null, 2))}</pre>`;
+                } else if (result.resultType === 'list' && Array.isArray(result.result)) {
+                    const listItems = result.result.slice(0, 5).map(item => escapeHtml(String(item))).join('\n');
+                    const moreCount = result.result.length > 5 ? `\n... and ${result.result.length - 5} more items` : '';
+                    resultContent = `<pre>${listItems}${moreCount}</pre>`;
                 } else {
-                    urlValue.textContent = '--';
+                    resultContent = `<pre>${escapeHtml(JSON.stringify(result.result, null, 2))}</pre>`;
                 }
-            } else {
-                agentStateSection.style.display = 'none';
-            }
+                
+                return `<div class="instruct-result-card">
+                    <div class="instruct-result-header">
+                        <span class="instruct-result-name">
+                            ${statusIcon} ${escapeHtml(result.name || 'Result ' + (index + 1))}
+                        </span>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <span class="instruct-result-type">${escapeHtml(result.resultType || 'unknown')}</span>
+                            <span class="badge ${statusClass}">${result.statusCode}</span>
+                        </div>
+                    </div>
+                    <div class="instruct-result-body">
+                        ${resultContent}
+                    </div>
+                </div>`;
+            }).join('');
+        } else {
+            instructResultsSection.style.display = 'none';
+        }
+    }
 
-            // Update key findings
-            const keyFindingsSection = document.getElementById('keyFindingsSection');
-            const keyFindingsList = document.getElementById('keyFindingsList');
-            const keyFindings = agentState?.keyFindings || [];
-            if (keyFindings.length > 0) {
-                keyFindingsSection.style.display = '';
-                keyFindingsList.innerHTML = keyFindings.map(finding => '<li>' + escapeHtml(finding) + '</li>').join('');
-            } else {
-                keyFindingsSection.style.display = 'none';
-            }
-
-            // Update suggestions
-            const suggestionsSection = document.getElementById('suggestionsSection');
-            const suggestionsList = document.getElementById('suggestionsList');
-            const suggestions = agentState?.nextSuggestions || [];
-            if (suggestions.length > 0) {
-                suggestionsSection.style.display = '';
-                suggestionsList.innerHTML = suggestions.map(suggestion => '<li>' + escapeHtml(suggestion) + '</li>').join('');
-            } else {
-                suggestionsSection.style.display = 'none';
-            }
-
-            // Update time info
-            const timeInfoSection = document.getElementById('timeInfoSection');
-            if (data.createTime || data.finishTime) {
-                timeInfoSection.style.display = '';
-                document.getElementById('createTimeValue').textContent = formatDateTime(data.createTime);
-                document.getElementById('finishTimeValue').textContent = formatDateTime(data.finishTime);
-                document.getElementById('durationValue').textContent = calculateDuration(data.createTime, data.finishTime);
-            } else {
-                timeInfoSection.style.display = 'none';
-            }
+    function renderLinks(links) {
+        const linksSection = document.getElementById('linksSection');
+        const linksContainer = document.getElementById('linksContainer');
+        const linksCount = document.getElementById('linksCount');
+        const showMoreBtn = document.getElementById('showMoreLinksBtn');
+        
+        linksSection.style.display = '';
+        linksCount.textContent = links.length + ' link' + (links.length > 1 ? 's' : '');
+        
+        const displayLinks = allLinksShown ? links : links.slice(0, MAX_LINKS_PREVIEW);
+        
+        linksContainer.innerHTML = displayLinks.map((link, index) => 
+            `<div class="link-item">
+                <span class="link-index">${index + 1}</span>
+                <a href="${escapeHtml(link)}" target="_blank" class="link-url" title="${escapeHtml(link)}">${escapeHtml(link)}</a>
+                <button class="link-copy-btn" onclick="copyToClipboard('${escapeHtml(link.replace(/'/g, "\\'"))}')">📋 Copy</button>
+            </div>`
+        ).join('');
+        
+        if (links.length > MAX_LINKS_PREVIEW) {
+            showMoreBtn.style.display = '';
+            showMoreBtn.textContent = allLinksShown ? 'Show Less' : `Show All ${links.length} Links`;
+        } else {
+            showMoreBtn.style.display = 'none';
         }
     }
 </script>
