@@ -10,22 +10,46 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import java.math.BigDecimal
 import java.math.RoundingMode
 
-class DoubleSerializer(val decimals: Int = 2): JsonSerializer<Double>() {
+/**
+ * Strategy to serialize non-finite floating point values (NaN / +/-Infinity).
+ */
+enum class NonFiniteDoubleStrategy {
+    /** Write JSON null. Most compatible and always valid JSON. */
+    NULL,
+
+    /** Write a JSON string like "NaN", "Infinity", "-Infinity". */
+    STRING,
+}
+
+class DoubleSerializer(
+    val decimals: Int = 2,
+    private val nonFiniteStrategy: NonFiniteDoubleStrategy = NonFiniteDoubleStrategy.NULL,
+) : JsonSerializer<Double>() {
     override fun serialize(value: Double?, gen: JsonGenerator, serializers: SerializerProvider) {
         if (value == null) {
             gen.writeNull()
-        } else if (value.isNaN()) {
-            gen.writeRawValue("NaN")
-        } else if (value == Double.POSITIVE_INFINITY) {
-            gen.writeRawValue("∞")
-        } else if (value == Double.NEGATIVE_INFINITY) {
-            gen.writeRawValue("-∞")
-        } else {
-            // remove tailing `0`,  remove tailing `.`
-            val s = BigDecimal.valueOf(value).setScale(decimals, RoundingMode.HALF_UP).toString()
-            val s1 = s.dropLastWhile { it == '0' }.dropLastWhile { it == '.' }
-            gen.writeNumber(s1)
+            return
         }
+
+        if (!value.isFinite()) {
+            when (nonFiniteStrategy) {
+                NonFiniteDoubleStrategy.NULL -> gen.writeNull()
+                NonFiniteDoubleStrategy.STRING -> {
+                    val s = when {
+                        value.isNaN() -> "NaN"
+                        value == Double.POSITIVE_INFINITY -> "Infinity"
+                        else -> "-Infinity"
+                    }
+                    gen.writeString(s)
+                }
+            }
+            return
+        }
+
+        // remove tailing `0`,  remove tailing `.`
+        val s = BigDecimal.valueOf(value).setScale(decimals, RoundingMode.HALF_UP).toString()
+        val s1 = s.dropLastWhile { it == '0' }.dropLastWhile { it == '.' }
+        gen.writeNumber(s1)
     }
 }
 
@@ -36,7 +60,8 @@ class DoubleSerializer(val decimals: Int = 2): JsonSerializer<Double>() {
  * - Falls back to runtime-type serializer when needed (never defaultSerializeValue)
  */
 class SmartNumberSerializer(private val decimals: Int = 2) : JsonSerializer<Number>() {
-    private val doubleSerializer = DoubleSerializer(decimals)
+    // Keep decimals as a real property and build the delegate serializer from it (also avoids unused-param warnings).
+    private val doubleSerializer = DoubleSerializer(decimals = decimals)
 
     override fun serialize(value: Number?, gen: JsonGenerator, serializers: SerializerProvider) {
         if (value == null) {
@@ -69,11 +94,6 @@ fun doubleBindModule(decimals: Int = 2): SimpleModule {
         addSerializer(Double::class.javaPrimitiveType, doubleSerializer)
         // Handle Number containers (List<Number>, Map<String, Number>, Any) without recursion
         addSerializer(Number::class.java, SmartNumberSerializer(decimals))
-
-        // IMPORTANT:
-        // We DO NOT call defaultSerializeValue inside SmartNumberSerializer; instead we resolve
-        // the runtime-type serializer via providers.findValueSerializer(...) to avoid infinite
-        // recursion for declared Number types in containers.
     }
 }
 
@@ -89,10 +109,10 @@ fun pulsarObjectMapper(): ObjectMapper = jacksonObjectMapper()
     .configure(JsonParser.Feature.ALLOW_UNQUOTED_CONTROL_CHARS, true)
     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
     .configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true)
-    .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-    .setSerializationInclusion(JsonInclude.Include.NON_EMPTY)
-    .setSerializationInclusion(JsonInclude.Include.NON_ABSENT)
-    .setSerializationInclusion(JsonInclude.Include.USE_DEFAULTS)
+    // Prefer non-deprecated API; setSerializationInclusion is deprecated in newer Jackson.
+    .setDefaultPropertyInclusion(JsonInclude.Value.construct(JsonInclude.Include.NON_EMPTY, JsonInclude.Include.NON_EMPTY))
+    // Ensure Double/Number formatting works in containers like List<Number>, Map<String, Any>, etc.
+    .registerModule(doubleBindModule())
     .registerModule(JavaTimeModule())
 
 /**

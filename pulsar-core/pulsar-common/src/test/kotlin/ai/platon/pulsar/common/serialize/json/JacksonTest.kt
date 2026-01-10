@@ -23,6 +23,12 @@ class PulsarObjectMapperTest {
         assertFalse(objectMapper.deserializationConfig.isEnabled(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES))
         assertTrue(objectMapper.deserializationConfig.isEnabled(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT))
         assertTrue(objectMapper.registeredModuleIds.contains(JavaTimeModule().typeId))
+
+        // Effective inclusion policy should be a single, explicit one.
+        assertEquals(
+            com.fasterxml.jackson.annotation.JsonInclude.Include.NON_EMPTY,
+            objectMapper.serializationConfig.defaultPropertyInclusion.valueInclusion
+        )
     }
 
     @Test
@@ -106,5 +112,15 @@ class PulsarObjectMapperTest {
         assertEquals("Huawei P60 Pro Dual SIM 8GB + 256GB Global Model MNA-LX9 Factory Unlocked Mobile Cellphone - Black", obj["product_name"])
         assertEquals("$595.00", obj["price"])
         assertEquals("3.6 out of 5 stars (36 ratings)", obj["ratings"])
+    }
+
+    @Test
+    fun `pulsarObjectMapper formats doubles in containers`() {
+        val objectMapper = pulsarObjectMapper()
+        val listNum: List<Number> = listOf(1.234, 1.0, 2.5)
+        val mapAny: Map<String, Any> = mapOf("x" to 1.234, "y" to 1.0, "z" to 2.5)
+
+        assertEquals("[1.23,1,2.5]", objectMapper.writeValueAsString(listNum))
+        assertEquals("{\"x\":1.23,\"y\":1,\"z\":2.5}", objectMapper.writeValueAsString(mapAny))
     }
 }

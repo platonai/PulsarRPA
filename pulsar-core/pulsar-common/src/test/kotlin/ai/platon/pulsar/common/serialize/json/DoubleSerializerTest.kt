@@ -67,11 +67,10 @@ class DoubleSerializerTest {
     }
 
     @Test
-    fun `direct serialize - non-finite numbers as tokens`() {
-        // DecimalFormat renders special values as symbolic tokens; generator writes them as-is
-        assertEquals("NaN", serializeWithCustom(Double.NaN))
-        assertEquals("∞", serializeWithCustom(Double.POSITIVE_INFINITY))
-        assertEquals("-∞", serializeWithCustom(Double.NEGATIVE_INFINITY))
+    fun `direct serialize - non-finite numbers are serialized as null by default`() {
+        assertEquals("null", serializeWithCustom(Double.NaN))
+        assertEquals("null", serializeWithCustom(Double.POSITIVE_INFINITY))
+        assertEquals("null", serializeWithCustom(Double.NEGATIVE_INFINITY))
     }
 
     @Test
