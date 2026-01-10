@@ -636,9 +636,11 @@
 
         <dokka.version>1.9.10</dokka.version>
 
+        <!--  Language  -->
         <javaVersion>17</javaVersion>
         <kotlinVersion>2.2.21</kotlinVersion>
 
+        <!--  Kotlin  -->
         <kotlin.version>${kotlinVersion}</kotlin.version>
         <maven.compiler.release>${javaVersion}</maven.compiler.release>
         <kotlin.compiler.jvmTarget>${javaVersion}</kotlin.compiler.jvmTarget>

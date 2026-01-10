@@ -76,16 +76,6 @@
         </pluginRepository>
     </pluginRepositories>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-clean-plugin</artifactId>
-                <version>${version.maven-clean-plugin}</version>
-            </plugin>
-        </plugins>
-    </build>
-
     <profiles>
         <profile>
             <id>deploy</id>
@@ -269,12 +259,13 @@
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-rest</artifactId>
+                <artifactId>pulsar-agentic</artifactId>
                 <version>${project.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-agentic</artifactId>
+                <artifactId>pulsar-rest</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
@@ -297,7 +288,6 @@
                 <scope>test</scope>
             </dependency>
 
-
             <!-- Kotlin -->
 
             <dependency>
@@ -317,35 +307,25 @@
     </dependencyManagement>
 
     <properties>
-        <!-- Build properties -->
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <!-- Plugin versions -->
+        <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
+        <checksum-maven-plugin.version>1.11</checksum-maven-plugin.version>
+        <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
+
+        <!--  Language  -->
+        <javaVersion>17</javaVersion>
+        <kotlinVersion>2.2.21</kotlinVersion>
+
+        <!--  Kotlin  -->
+        <kotlin.version>${kotlinVersion}</kotlin.version>
+        <maven.compiler.release>${javaVersion}</maven.compiler.release>
+        <kotlin.compiler.jvmTarget>${javaVersion}</kotlin.compiler.jvmTarget>
+
+        <spring-boot.version>4.0.1</spring-boot.version>
 
         <ktor.version>2.3.11</ktor.version>
         <springmockk.version>4.0.2</springmockk.version>
 
         <langchain4j.version>1.5.0</langchain4j.version>
-
-        <!-- Plugin versions -->
-        <!-- Overrides ai.platon:platon -->
-        <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
-        <version.maven-clean-plugin>3.3.2</version.maven-clean-plugin>
-        <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
-        <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
-        <maven-deploy-plugin.version>3.1.1</maven-deploy-plugin.version>
-        <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
-        <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
-        <maven-surefire-plugin.version>3.5.4</maven-surefire-plugin.version>
-        <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
-        <checksum-maven-plugin.version>1.11</checksum-maven-plugin.version>
-        <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
-        <license-maven-plugin.version>4.3</license-maven-plugin.version>
-        <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
-        <dokka.version>1.9.20</dokka.version>
-        <central-publishing-maven-plugin.version>0.9.0</central-publishing-maven-plugin.version>
-
-        <kotlin.version>2.2.21</kotlin.version>
-        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
-        <spring-boot.version>4.0.1</spring-boot.version>
     </properties>
 </project>

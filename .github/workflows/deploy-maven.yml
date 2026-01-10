@@ -1,4 +1,4 @@
-name: Publish To Maven Central
+name: Deploy OOS
 
 on:
   workflow_dispatch:
@@ -115,7 +115,7 @@ jobs:
           server-username: ${{ secrets.CENTRAL_USERNAME }}
           server-password: ${{ secrets.CENTRAL_PASSWORD }}
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
-          gpg-passphrase: ${{ secrets.GPG_PASSPHRASE }}
+          gpg-passphrase:  ${{ secrets.GPG_PASSPHRASE }}
 
       - name: Debug Maven settings
         run: |
@@ -141,6 +141,8 @@ jobs:
             -Dgpg.pinentry-mode=loopback \
             --show-version --errors
         env:
-          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          GPG_PASSPHRASE:   ${{ secrets.GPG_PASSPHRASE }}
           CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
-          CENTRAL_PASSWORD: ${{ secrets.SONATYPE_PASSWORD }}
+          MAVEN_PASSWORD:   ${{ secrets.CENTRAL_PASSWORD }}
+          MAVEN_USERNAME:   ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
