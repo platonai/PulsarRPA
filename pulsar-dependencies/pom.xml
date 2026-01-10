@@ -614,4 +614,24 @@
         <pulsar-h2.version>1.4.196</pulsar-h2.version>
         <pulsar-jsoup.version>1.14.3</pulsar-jsoup.version>
     </properties>
+
+    <profiles>
+        <!-- Deploy profile for Central Portal -->
+        <profile>
+            <id>deploy</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>0.9.0</version>
+                        <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
