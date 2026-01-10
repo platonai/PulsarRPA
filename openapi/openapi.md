@@ -170,7 +170,7 @@ Key dependencies (used to differentiate real vs mock):
 | selectors | `/selectors/element(s)` | ❌ | ✅ | currently element(s) lookup is still based on generating elementId from the store (real mode is not aligned to “find via driver”) |
 | element | `/element/{elementId}/*` | ✅ (partial) | ✅ | real mode maps elementId → selector (via store) and then operates via driver; elementId still originates from the store |
 | script | `/execute/sync` `/execute/async` | ✅ | ✅ | real uses driver.evaluate; mock returns null |
-| control | `/control/*` | ❌ | ✅ | mock only (sleep / update in-memory status), does not link to real driver/session |
+| control | `/control/*` | ✅ (partial) | ✅ | `/control/delay` sleeps for requested duration (capped at 30s); `/control/pause` and `/control/stop` update session status in `SessionManager`. No direct driver-level pause/stop yet. |
 | events | `/event-configs` `/events` `/events/subscribe` | ❌ | ✅ | mock only (in-memory event system), not a real browser event stream |
 | agent | `/agent/*` | ✅ | ✅ | real calls `session.agent.*`; mock returns demo responses |
 | pulsar | `/normalize` `/open` `/load` `/submit` | ✅ | ✅ | real calls `pulsarSession.*`; mock returns a demo WebPageResult |
@@ -191,10 +191,13 @@ Key dependencies (used to differentiate real vs mock):
 - In real mode, element click/fill/text/attribute operations map elementId back to a selector, then execute via the driver.
     - That means elementId lifetime/validity is controlled by the store, not a native browser reference.
 
-### 5.3 control / events are demo-only
+### 5.3 control / events status
 
-- `control` and `events` currently have no real branch: they mainly serve as demos/placeholders.
-- To align with WebDriver / real browser event streams, driver-side capabilities and a clearer state machine/subscription model would be needed.
+- `control` endpoints now have partial real implementation:
+    - `/control/delay`: sleeps for the requested duration (capped at 30 seconds to prevent resource exhaustion).
+    - `/control/pause` and `/control/stop`: update session status in `SessionManager`, but do not yet pause/stop driver-level operations.
+- `events` currently have no real branch: they mainly serve as demos/placeholders (in-memory event system).
+- To fully align with WebDriver / real browser event streams, driver-side capabilities and a clearer state machine/subscription model would be needed.
 
 ---
 
@@ -204,8 +207,9 @@ Key dependencies (used to differentiate real vs mock):
 2. **Make demo-only endpoints explicit**: consider consistent markings in controllers or docs (e.g., `@Deprecated("demo-only")` or README labels) to avoid accidental misuse.
 3. **Prioritize real implementation gaps (by value)**:
     - P0: align real find for `selectors/element(s)` (find via driver and return a stable elementId strategy)
-    - P0: design real semantics for control/events (if publicly promised)
+    - P1: design real semantics for `events` (browser event stream integration, if publicly promised)
     - P1: further align navigation “current URL/documentUri” retrieval
+    - P2: extend `control/pause` and `control/stop` to pause/stop driver-level operations
 4. **Add minimal contract tests (MockMvc/WebTestClient)** covering at least:
     - `POST /session` → returns sessionId
     - 404 error body matches `ErrorResponse`
