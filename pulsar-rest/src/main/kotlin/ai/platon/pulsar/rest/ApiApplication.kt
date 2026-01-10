@@ -1,4 +1,4 @@
-package ai.platon.pulsar.rest.api
+package ai.platon.pulsar.rest
 
 import ai.platon.pulsar.boot.autoconfigure.PulsarContextInitializer
 import ai.platon.pulsar.skeleton.crawl.TaskLoops
@@ -13,7 +13,7 @@ import org.springframework.context.annotation.ImportResource
 @ImportResource("classpath:rest-beans/app-context.xml")
 @ComponentScan(
     "ai.platon.pulsar.boot.autoconfigure",
-    "ai.platon.pulsar.rest.api"
+    "ai.platon.pulsar.rest"
 )
 class ApiApplication(
     val globalCache: GlobalCache,
