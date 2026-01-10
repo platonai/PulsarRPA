@@ -2,11 +2,9 @@ package ai.platon.pulsar.rest.openapi.controller
 
 import ai.platon.pulsar.rest.openapi.dto.*
 import ai.platon.pulsar.rest.openapi.service.SessionManager
-import ai.platon.pulsar.rest.openapi.store.InMemoryStore
 import jakarta.servlet.http.HttpServletResponse
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -22,12 +20,9 @@ import org.springframework.web.bind.annotation.*
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
 class AgentController(
-    @param:Autowired(required = false) private val sessionManager: SessionManager?,
-    @param:Autowired(required = false) private val store: InMemoryStore?
+    private val sessionManager: SessionManager
 ) {
     private val logger = LoggerFactory.getLogger(AgentController::class.java)
-
-    private val useRealSessions: Boolean = sessionManager != null
 
     /**
      * Runs an autonomous agent task.
@@ -42,43 +37,31 @@ class AgentController(
         logger.debug("Session {} running agent task: {}", sessionId, request.task.take(100))
         ControllerUtils.addRequestId(response)
 
-        val result = if (useRealSessions) {
-            val session = sessionManager!!.getSession(sessionId)
-                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        val session = sessionManager.getSession(sessionId)
+            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
-            try {
-                // Use real PerceptiveAgent.run
-                val history = runBlocking {
-                    session.agent.run(request.task)
-                }
+        val result = try {
+            // Use real PerceptiveAgent.run
+            val history = runBlocking {
+                session.agent.run(request.task)
+            }
 
-                AgentRunResult(
-                    success = !history.hasErrors,
-                    message = if (history.hasErrors) "Agent task has errors" else "Agent task completed",
-                    historySize = history.size,
-                    processTraceSize = history.size
-                )
-            } catch (e: Exception) {
-                logger.error("Error running agent task: {}", e.message, e)
-                AgentRunResult(
-                    success = false,
-                    message = "Error: ${e.message}",
-                    historySize = 0,
-                    processTraceSize = 0
-                )
-            }
-        } else {
-            if (!store!!.sessionExists(sessionId)) {
-                return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            }
-            // Mock implementation
             AgentRunResult(
-                success = true,
-                message = "Agent task completed (mock)",
-                historySize = 1,
-                processTraceSize = 1
+                success = !history.hasErrors,
+                message = if (history.hasErrors) "Agent task has errors" else "Agent task completed",
+                historySize = history.size,
+                processTraceSize = history.size
+            )
+        } catch (e: Exception) {
+            logger.error("Error running agent task: {}", e.message, e)
+            AgentRunResult(
+                success = false,
+                message = "Error: ${e.message}",
+                historySize = 0,
+                processTraceSize = 0
             )
         }
+
         return ResponseEntity.ok(AgentRunResponse(value = result))
     }
 
@@ -94,46 +77,30 @@ class AgentController(
         logger.debug("Session {} observing page with instruction: {}", sessionId, request.instruction?.take(100))
         ControllerUtils.addRequestId(response)
 
-        val result = if (useRealSessions) {
-            val session = sessionManager!!.getSession(sessionId)
-                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        val session = sessionManager.getSession(sessionId)
+            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
-            try {
-                // Use real PerceptiveAgent.observe
-                val observeResults = runBlocking {
-                    session.agent.observe(request.instruction ?: "")
-                }
-
-                // Convert to DTOs
-                val observations = observeResults.map { observeResult ->
-                    ObserveResultDto(
-                        locator = observeResult.locator,
-                        domain = observeResult.domain,
-                        method = observeResult.method,
-                        arguments = observeResult.arguments,
-                        description = observeResult.description
-                    )
-                }
-
-                observations
-            } catch (e: Exception) {
-                logger.error("Error observing page: {}", e.message, e)
-                emptyList()
+        val result = try {
+            // Use real PerceptiveAgent.observe
+            val observeResults = runBlocking {
+                session.agent.observe(request.instruction ?: "")
             }
-        } else {
-            if (!store!!.sessionExists(sessionId)) {
-                return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+
+            // Convert to DTOs
+            observeResults.map { observeResult ->
+                ObserveResultDto(
+                    locator = observeResult.locator,
+                    domain = observeResult.domain,
+                    method = observeResult.method,
+                    arguments = observeResult.arguments,
+                    description = observeResult.description
+                )
             }
-            // Mock implementation
-            val observeResult = ObserveResultDto(
-                locator = "1,123",
-                domain = "driver",
-                method = "click",
-                arguments = mapOf("selector" to "#sample-element"),
-                description = "Click on sample element"
-            )
-            listOf(observeResult)
+        } catch (e: Exception) {
+            logger.error("Error observing page: {}", e.message, e)
+            emptyList()
         }
+
         return ResponseEntity.ok(AgentObserveResponse(value = result))
     }
 
@@ -149,44 +116,32 @@ class AgentController(
         logger.debug("Session {} executing action: {}", sessionId, request.action.take(100))
         ControllerUtils.addRequestId(response)
 
-        val result = if (useRealSessions) {
-            val session = sessionManager!!.getSession(sessionId)
-                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        val session = sessionManager.getSession(sessionId)
+            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
-            try {
-                // Use real PerceptiveAgent.act
-                val actResult = runBlocking {
-                    session.agent.act(request.action)
-                }
+        val result = try {
+            // Use real PerceptiveAgent.act
+            val actResult = runBlocking {
+                session.agent.act(request.action)
+            }
 
-                ActResultDto(
-                    success = actResult.success,
-                    message = actResult.message
-                        ?: (if (actResult.success) "Action executed successfully" else "Action failed"),
-                    action = request.action,
-                    isComplete = actResult.isComplete
-                )
-            } catch (e: Exception) {
-                logger.error("Error executing action: {}", e.message, e)
-                ActResultDto(
-                    success = false,
-                    message = "Error: ${e.message}",
-                    action = request.action,
-                    isComplete = false
-                )
-            }
-        } else {
-            if (!store!!.sessionExists(sessionId)) {
-                return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            }
-            // Mock implementation
             ActResultDto(
-                success = true,
-                message = "Action executed successfully (mock)",
+                success = actResult.success,
+                message = actResult.message
+                    ?: (if (actResult.success) "Action executed successfully" else "Action failed"),
                 action = request.action,
-                isComplete = true
+                isComplete = actResult.isComplete
+            )
+        } catch (e: Exception) {
+            logger.error("Error executing action: {}", e.message, e)
+            ActResultDto(
+                success = false,
+                message = "Error: ${e.message}",
+                action = request.action,
+                isComplete = false
             )
         }
+
         return ResponseEntity.ok(AgentActResponse(value = result))
     }
 
@@ -202,40 +157,29 @@ class AgentController(
         logger.debug("Session {} extracting data with instruction: {}", sessionId, request.instruction.take(100))
         ControllerUtils.addRequestId(response)
 
-        val result = if (useRealSessions) {
-            val session = sessionManager!!.getSession(sessionId)
-                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        val session = sessionManager.getSession(sessionId)
+            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
-            try {
-                // Use real PerceptiveAgent.extract
-                val extractResult = runBlocking {
-                    session.agent.extract(request.instruction)
-                }
+        val result = try {
+            // Use real PerceptiveAgent.extract
+            val extractResult = runBlocking {
+                session.agent.extract(request.instruction)
+            }
 
-                ExtractResultDto(
-                    success = extractResult.success,
-                    data = extractResult.data,
-                    message = extractResult.message
-                )
-            } catch (e: Exception) {
-                logger.error("Error extracting data: {}", e.message, e)
-                ExtractResultDto(
-                    success = false,
-                    data = null,
-                    message = "Error: ${e.message}"
-                )
-            }
-        } else {
-            if (!store!!.sessionExists(sessionId)) {
-                return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            }
-            // Mock implementation
             ExtractResultDto(
-                success = true,
-                data = mapOf("title" to "Sample Page", "items" to listOf("Item 1", "Item 2")),
-                message = "Data extracted successfully (mock)"
+                success = extractResult.success,
+                data = extractResult.data,
+                message = extractResult.message
+            )
+        } catch (e: Exception) {
+            logger.error("Error extracting data: {}", e.message, e)
+            ExtractResultDto(
+                success = false,
+                data = null,
+                message = "Error: ${e.message}"
             )
         }
+
         return ResponseEntity.ok(AgentExtractResponse(value = result))
     }
 
@@ -251,29 +195,22 @@ class AgentController(
         logger.debug("Session {} summarizing page", sessionId)
         ControllerUtils.addRequestId(response)
 
-        val summary = if (useRealSessions) {
-            val session = sessionManager!!.getSession(sessionId)
-                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        val session = sessionManager.getSession(sessionId)
+            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
-            try {
-                // Use real PerceptiveAgent.summarize
-                runBlocking {
-                    session.agent.summarize(
-                        instruction = request.instruction,
-                        selector = request.selector
-                    )
-                }
-            } catch (e: Exception) {
-                logger.error("Error summarizing page: {}", e.message, e)
-                "Error: ${e.message}"
+        val summary = try {
+            // Use real PerceptiveAgent.summarize
+            runBlocking {
+                session.agent.summarize(
+                    instruction = request.instruction,
+                    selector = request.selector
+                )
             }
-        } else {
-            if (!store!!.sessionExists(sessionId)) {
-                return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            }
-            // Mock implementation
-            "This is a sample web page with various elements and content (mock summary)."
+        } catch (e: Exception) {
+            logger.error("Error summarizing page: {}", e.message, e)
+            "Error: ${e.message}"
         }
+
         return ResponseEntity.ok(AgentSummarizeResponse(value = summary))
     }
 
@@ -288,26 +225,18 @@ class AgentController(
         logger.debug("Session {} clearing agent history", sessionId)
         ControllerUtils.addRequestId(response)
 
-        val success = if (useRealSessions) {
-            val session = sessionManager!!.getSession(sessionId)
-                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        val session = sessionManager.getSession(sessionId)
+            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
-            try {
-                // Use real PerceptiveAgent.clearHistory
-                runBlocking {
-                    session.agent.clearHistory()
-                }
-                true
-            } catch (e: Exception) {
-                logger.error("Error clearing agent history: {}", e.message, e)
-                false
+        val success = try {
+            // Use real PerceptiveAgent.clearHistory
+            runBlocking {
+                session.agent.clearHistory()
             }
-        } else {
-            if (!store!!.sessionExists(sessionId)) {
-                return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-            }
-            // Mock always returns success
             true
+        } catch (e: Exception) {
+            logger.error("Error clearing agent history: {}", e.message, e)
+            false
         }
 
         return ResponseEntity.ok(AgentClearHistoryResponse(value = success))

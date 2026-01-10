@@ -7,11 +7,9 @@ import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriverException
 import jakarta.servlet.http.HttpServletResponse
 import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-import java.util.Base64
 
 /**
  * Controller for selector-first element operations.
@@ -23,12 +21,10 @@ import java.util.Base64
     produces = [MediaType.APPLICATION_JSON_VALUE]
 )
 class SelectorController(
-    @param:Autowired(required = false) private val sessionManager: SessionManager?,
+    private val sessionManager: SessionManager,
     private val store: InMemoryStore
 ) {
     private val logger = LoggerFactory.getLogger(SelectorController::class.java)
-
-    private val useRealSessions: Boolean = sessionManager != null
 
     /**
      * Checks if an element matching the selector exists.
@@ -42,31 +38,22 @@ class SelectorController(
         logger.debug("Session {} checking selector exists: {}", sessionId, request.selector)
         ControllerUtils.addRequestId(response)
 
-        if (useRealSessions) {
-            val managed = sessionManager!!.getSession(sessionId)
-                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        val managed = sessionManager.getSession(sessionId)
+            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
-            return try {
-                val exists = runBlocking {
-                    val driver = managed.pulsarSession.getOrCreateBoundDriver()
-                    driver.exists(request.selector)
-                }
-                ResponseEntity.ok(ExistsResponse(value = ExistsResponse.ExistsValue(exists = exists)))
-            } catch (e: WebDriverException) {
-                logger.error("Selector exists check failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message)
-                ControllerUtils.errorResponse("webdriver error", e.message ?: "WebDriver error")
-            } catch (e: Exception) {
-                logger.error("Selector exists check failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message, e)
-                ControllerUtils.errorResponse("internal error", e.message ?: "Internal error")
+        return try {
+            val exists = runBlocking {
+                val driver = managed.pulsarSession.getOrCreateBoundDriver()
+                driver.exists(request.selector)
             }
+            ResponseEntity.ok(ExistsResponse(value = ExistsResponse.ExistsValue(exists = exists)))
+        } catch (e: WebDriverException) {
+            logger.error("Selector exists check failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message)
+            ControllerUtils.errorResponse("webdriver error", e.message ?: "WebDriver error")
+        } catch (e: Exception) {
+            logger.error("Selector exists check failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message, e)
+            ControllerUtils.errorResponse("internal error", e.message ?: "Internal error")
         }
-
-        if (!store.sessionExists(sessionId)) {
-            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-        }
-
-        // Mock implementation always returns true for demonstration
-        return ResponseEntity.ok(ExistsResponse(value = ExistsResponse.ExistsValue(exists = true)))
     }
 
     /**
@@ -81,46 +68,37 @@ class SelectorController(
         logger.debug("Session {} waiting for selector: {} (timeout: {}ms)", sessionId, request.selector, request.timeout)
         ControllerUtils.addRequestId(response)
 
-        if (useRealSessions) {
-            val managed = sessionManager!!.getSession(sessionId)
-                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        val managed = sessionManager.getSession(sessionId)
+            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
-            val timeoutMillis = request.timeout.toLong().coerceAtLeast(0)
+        val timeoutMillis = request.timeout.toLong().coerceAtLeast(0)
 
-            return try {
-                val remainingMillis = runBlocking {
-                    val driver = managed.pulsarSession.getOrCreateBoundDriver()
-                    driver.waitForSelector(request.selector, timeoutMillis)
-                }
+        return try {
+            val remainingMillis = runBlocking {
+                val driver = managed.pulsarSession.getOrCreateBoundDriver()
+                driver.waitForSelector(request.selector, timeoutMillis)
+            }
 
-                if (remainingMillis <= 0L) {
-                    // OpenAPI defines 408 for waitFor timeout.
-                    return ResponseEntity.status(408).body(
-                        ErrorResponse(
-                            value = ErrorResponse.ErrorValue(
-                                error = "timeout",
-                                message = "Timeout waiting for selector '${request.selector}'"
-                            )
+            if (remainingMillis <= 0L) {
+                // OpenAPI defines 408 for waitFor timeout.
+                return ResponseEntity.status(408).body(
+                    ErrorResponse(
+                        value = ErrorResponse.ErrorValue(
+                            error = "timeout",
+                            message = "Timeout waiting for selector '${request.selector}'"
                         )
                     )
-                }
-
-                ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
-            } catch (e: WebDriverException) {
-                logger.error("Wait for selector failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message)
-                ControllerUtils.errorResponse("webdriver error", e.message ?: "WebDriver error")
-            } catch (e: Exception) {
-                logger.error("Wait for selector failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message, e)
-                ControllerUtils.errorResponse("internal error", e.message ?: "Internal error")
+                )
             }
-        }
 
-        if (!store.sessionExists(sessionId)) {
-            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+            ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
+        } catch (e: WebDriverException) {
+            logger.error("Wait for selector failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message)
+            ControllerUtils.errorResponse("webdriver error", e.message ?: "WebDriver error")
+        } catch (e: Exception) {
+            logger.error("Wait for selector failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message, e)
+            ControllerUtils.errorResponse("internal error", e.message ?: "Internal error")
         }
-
-        // Mock implementation - immediately returns success
-        return ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
     }
 
     /**
@@ -135,8 +113,11 @@ class SelectorController(
         logger.debug("Session {} finding element by selector: {}", sessionId, request.selector)
         ControllerUtils.addRequestId(response)
 
+        if (!sessionManager.sessionExists(sessionId)) {
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        }
+
         val element = store.getOrCreateElement(sessionId, request.selector, request.strategy)
-            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
         return ResponseEntity.ok(ElementResponse(value = ElementRef(elementId = element.elementId)))
     }
@@ -153,10 +134,12 @@ class SelectorController(
         logger.debug("Session {} finding elements by selector: {}", sessionId, request.selector)
         ControllerUtils.addRequestId(response)
 
-        val element = store.getOrCreateElement(sessionId, request.selector, request.strategy)
-            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        if (!sessionManager.sessionExists(sessionId)) {
+            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        }
 
-        // Mock implementation returns a single element
+        val element = store.getOrCreateElement(sessionId, request.selector, request.strategy)
+
         return ResponseEntity.ok(ElementsResponse(value = listOf(ElementRef(elementId = element.elementId))))
     }
 
@@ -172,31 +155,22 @@ class SelectorController(
         logger.debug("Session {} clicking selector: {}", sessionId, request.selector)
         ControllerUtils.addRequestId(response)
 
-        if (useRealSessions) {
-            val managed = sessionManager!!.getSession(sessionId)
-                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        val managed = sessionManager.getSession(sessionId)
+            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
-            return try {
-                runBlocking {
-                    val driver = managed.pulsarSession.getOrCreateBoundDriver()
-                    driver.click(request.selector)
-                }
-                ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
-            } catch (e: WebDriverException) {
-                logger.error("Click failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message)
-                ControllerUtils.errorResponse("webdriver error", e.message ?: "WebDriver error")
-            } catch (e: Exception) {
-                logger.error("Click failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message, e)
-                ControllerUtils.errorResponse("internal error", e.message ?: "Internal error")
+        return try {
+            runBlocking {
+                val driver = managed.pulsarSession.getOrCreateBoundDriver()
+                driver.click(request.selector)
             }
+            ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
+        } catch (e: WebDriverException) {
+            logger.error("Click failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message)
+            ControllerUtils.errorResponse("webdriver error", e.message ?: "WebDriver error")
+        } catch (e: Exception) {
+            logger.error("Click failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message, e)
+            ControllerUtils.errorResponse("internal error", e.message ?: "Internal error")
         }
-
-        if (!store.sessionExists(sessionId)) {
-            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-        }
-
-        store.getOrCreateElement(sessionId, request.selector, request.strategy)
-        return ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
     }
 
     /**
@@ -211,31 +185,22 @@ class SelectorController(
         logger.debug("Session {} filling selector: {} with value: {}", sessionId, request.selector, request.value)
         ControllerUtils.addRequestId(response)
 
-        if (useRealSessions) {
-            val managed = sessionManager!!.getSession(sessionId)
-                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        val managed = sessionManager.getSession(sessionId)
+            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
-            return try {
-                runBlocking {
-                    val driver = managed.pulsarSession.getOrCreateBoundDriver()
-                    driver.fill(request.selector, request.value)
-                }
-                ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
-            } catch (e: WebDriverException) {
-                logger.error("Fill failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message)
-                ControllerUtils.errorResponse("webdriver error", e.message ?: "WebDriver error")
-            } catch (e: Exception) {
-                logger.error("Fill failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message, e)
-                ControllerUtils.errorResponse("internal error", e.message ?: "Internal error")
+        return try {
+            runBlocking {
+                val driver = managed.pulsarSession.getOrCreateBoundDriver()
+                driver.fill(request.selector, request.value)
             }
+            ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
+        } catch (e: WebDriverException) {
+            logger.error("Fill failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message)
+            ControllerUtils.errorResponse("webdriver error", e.message ?: "WebDriver error")
+        } catch (e: Exception) {
+            logger.error("Fill failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message, e)
+            ControllerUtils.errorResponse("internal error", e.message ?: "Internal error")
         }
-
-        if (!store.sessionExists(sessionId)) {
-            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-        }
-
-        store.getOrCreateElement(sessionId, request.selector, request.strategy)
-        return ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
     }
 
     /**
@@ -250,31 +215,22 @@ class SelectorController(
         logger.debug("Session {} pressing key: {} on selector: {}", sessionId, request.key, request.selector)
         ControllerUtils.addRequestId(response)
 
-        if (useRealSessions) {
-            val managed = sessionManager!!.getSession(sessionId)
-                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        val managed = sessionManager.getSession(sessionId)
+            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
-            return try {
-                runBlocking {
-                    val driver = managed.pulsarSession.getOrCreateBoundDriver()
-                    driver.press(request.selector, request.key)
-                }
-                ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
-            } catch (e: WebDriverException) {
-                logger.error("Press failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message)
-                ControllerUtils.errorResponse("webdriver error", e.message ?: "WebDriver error")
-            } catch (e: Exception) {
-                logger.error("Press failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message, e)
-                ControllerUtils.errorResponse("internal error", e.message ?: "Internal error")
+        return try {
+            runBlocking {
+                val driver = managed.pulsarSession.getOrCreateBoundDriver()
+                driver.press(request.selector, request.key)
             }
+            ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
+        } catch (e: WebDriverException) {
+            logger.error("Press failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message)
+            ControllerUtils.errorResponse("webdriver error", e.message ?: "WebDriver error")
+        } catch (e: Exception) {
+            logger.error("Press failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message, e)
+            ControllerUtils.errorResponse("internal error", e.message ?: "Internal error")
         }
-
-        if (!store.sessionExists(sessionId)) {
-            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-        }
-
-        store.getOrCreateElement(sessionId, request.selector, request.strategy)
-        return ResponseEntity.ok(WebDriverResponse<Any?>(value = null))
     }
 
     /**
@@ -289,29 +245,22 @@ class SelectorController(
         logger.debug("Session {} getting outerHtml for selector: {}", sessionId, request.selector)
         ControllerUtils.addRequestId(response)
 
-        if (useRealSessions) {
-            val managed = sessionManager!!.getSession(sessionId)
-                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-
-            return try {
-                val html = runBlocking {
-                    val driver = managed.pulsarSession.getOrCreateBoundDriver()
-                    driver.outerHTML(request.selector)
-                }
-                ResponseEntity.ok(HtmlResponse(value = html))
-            } catch (e: WebDriverException) {
-                logger.error("Get outerHtml failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message)
-                ControllerUtils.errorResponse("webdriver error", e.message ?: "WebDriver error")
-            } catch (e: Exception) {
-                logger.error("Get outerHtml failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message, e)
-                ControllerUtils.errorResponse("internal error", e.message ?: "Internal error")
-            }
-        }
-
-        val element = store.getOrCreateElement(sessionId, request.selector, request.strategy)
+        val managed = sessionManager.getSession(sessionId)
             ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
-        return ResponseEntity.ok(HtmlResponse(value = element.outerHtml))
+        return try {
+            val html = runBlocking {
+                val driver = managed.pulsarSession.getOrCreateBoundDriver()
+                driver.outerHTML(request.selector)
+            }
+            ResponseEntity.ok(HtmlResponse(value = html))
+        } catch (e: WebDriverException) {
+            logger.error("Get outerHtml failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message)
+            ControllerUtils.errorResponse("webdriver error", e.message ?: "WebDriver error")
+        } catch (e: Exception) {
+            logger.error("Get outerHtml failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message, e)
+            ControllerUtils.errorResponse("internal error", e.message ?: "Internal error")
+        }
     }
 
     /**
@@ -326,30 +275,21 @@ class SelectorController(
         logger.debug("Session {} taking screenshot of selector: {}", sessionId, request.selector)
         ControllerUtils.addRequestId(response)
 
-        if (useRealSessions) {
-            val managed = sessionManager!!.getSession(sessionId)
-                ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
+        val managed = sessionManager.getSession(sessionId)
+            ?: return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
 
-            return try {
-                val base64 = runBlocking {
-                    val driver = managed.pulsarSession.getOrCreateBoundDriver()
-                    driver.captureScreenshot(request.selector)
-                }
-                ResponseEntity.ok(ScreenshotResponse(value = base64))
-            } catch (e: WebDriverException) {
-                logger.error("Screenshot failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message)
-                ControllerUtils.errorResponse("webdriver error", e.message ?: "WebDriver error")
-            } catch (e: Exception) {
-                logger.error("Screenshot failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message, e)
-                ControllerUtils.errorResponse("internal error", e.message ?: "Internal error")
+        return try {
+            val base64 = runBlocking {
+                val driver = managed.pulsarSession.getOrCreateBoundDriver()
+                driver.captureScreenshot(request.selector)
             }
+            ResponseEntity.ok(ScreenshotResponse(value = base64))
+        } catch (e: WebDriverException) {
+            logger.error("Screenshot failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message)
+            ControllerUtils.errorResponse("webdriver error", e.message ?: "WebDriver error")
+        } catch (e: Exception) {
+            logger.error("Screenshot failed | sessionId={} selector={} | {}", sessionId, request.selector, e.message, e)
+            ControllerUtils.errorResponse("internal error", e.message ?: "Internal error")
         }
-
-        if (!store.sessionExists(sessionId)) {
-            return ControllerUtils.notFound("session not found", "No active session with id $sessionId")
-        }
-
-        val mockPng = Base64.getEncoder().encodeToString("mock-screenshot-data".toByteArray())
-        return ResponseEntity.ok(ScreenshotResponse(value = mockPng))
     }
 }

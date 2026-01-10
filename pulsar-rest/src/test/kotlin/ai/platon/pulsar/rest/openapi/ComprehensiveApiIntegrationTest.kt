@@ -1,6 +1,7 @@
 package ai.platon.pulsar.rest.openapi
 
 import ai.platon.pulsar.rest.openapi.dto.*
+import ai.platon.pulsar.rest.util.server.EnableMockServerApplication
 import ai.platon.pulsar.rest.util.server.MockWebSiteAccess
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
@@ -23,8 +24,8 @@ import org.springframework.test.web.servlet.client.RestTestClient
  * - Toggle section (#toggleSection) with toggle button (#toggleMessageButton) and hidden message (#hiddenMessage)
  */
 @SpringBootTest(
-    classes = [WebDriverTestApplication::class],
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+    classes = [EnableMockServerApplication::class],
+    webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT
 )
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class ComprehensiveApiIntegrationTest: MockWebSiteAccess() {
@@ -52,7 +53,7 @@ class ComprehensiveApiIntegrationTest: MockWebSiteAccess() {
     // ==================== Health Endpoints ====================
 
     @Test
-    fun `should return health status with mode and active sessions`() {
+    fun `should return health status with active sessions`() {
         val response = getJson("/health").returnResult(Map::class.java)
 
         assertEquals(HttpStatus.OK, response.status)
@@ -61,8 +62,6 @@ class ComprehensiveApiIntegrationTest: MockWebSiteAccess() {
         @Suppress("UNCHECKED_CAST")
         val body = response.responseBody as Map<String, Any?>
         assertEquals("UP", body["status"])
-        assertTrue(body.containsKey("mode"))
-        assertTrue(body["mode"] in listOf("mock", "real"))
         assertTrue(body.containsKey("activeSessions"))
     }
 
@@ -76,7 +75,6 @@ class ComprehensiveApiIntegrationTest: MockWebSiteAccess() {
         @Suppress("UNCHECKED_CAST")
         val body = response.responseBody as Map<String, Any?>
         assertEquals(true, body["ready"])
-        assertTrue(body.containsKey("mode"))
     }
 
     @Test
@@ -224,7 +222,7 @@ class ComprehensiveApiIntegrationTest: MockWebSiteAccess() {
         val request = WaitForRequest(selector = "#pageHeader", timeout = 1000)
         val response = postJson("/session/$sessionId/selectors/waitFor", request).returnResult(Map::class.java)
 
-        // Should succeed in mock mode or timeout in real mode
+        // Should succeed if element exists or timeout if not found
         assertTrue(
             response.status == HttpStatus.OK || response.status == HttpStatus.REQUEST_TIMEOUT
         )

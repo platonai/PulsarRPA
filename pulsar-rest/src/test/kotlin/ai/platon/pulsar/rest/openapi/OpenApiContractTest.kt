@@ -1,5 +1,6 @@
 package ai.platon.pulsar.rest.openapi
 
+import ai.platon.pulsar.rest.util.server.EnableMockServerApplication
 import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,7 +19,7 @@ import kotlin.collections.iterator
  * - Source of truth: `classpath:static/openapi.yaml` (served by `OpenApiController`).
  * - Every `(method, path)` documented under `paths:` must exist in Spring MVC handler mappings.
  */
-@SpringBootTest
+@SpringBootTest(classes = [EnableMockServerApplication::class])
 class OpenApiContractTest {
 
     @Autowired
