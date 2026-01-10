@@ -57,6 +57,7 @@ class MapField<T>(val initializer: (Node) -> T) {
 }
 
 class NullableMapField<T> {
+    @Suppress("UNCHECKED_CAST")
     operator fun getValue(thisRef: Node, property: KProperty<*>): T? = thisRef.extension.variables[property.name] as T?
 
     operator fun setValue(thisRef: Node, property: KProperty<*>, value: T?) {
