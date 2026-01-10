@@ -212,7 +212,7 @@ class HTMLMetaTags(root: Node, private val currURL: URL?) {
                     val urlString = hrefNode.nodeValue
                     var url: URL? = null
                     try {
-                        url = currURL?.let { URI.create(it, urlString) } ?: URI.create(urlString)
+                        url = currURL?.let { URL(it, urlString) } ?: URI.create(urlString).toURL()
                     } catch (ignored: Exception) {
                     }
                     if (url != null) baseHref = url

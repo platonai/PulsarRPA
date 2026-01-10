@@ -170,7 +170,7 @@ abstract class AbstractHttpProtocol : Protocol {
                 // handle redirect
                 // some broken servers, such as MS IIS, use lowercase header name...
                 val redirect = response.getHeader("Location") ?: response.getHeader("location") ?: ""
-                u = URI.create(u, redirect).toURL()
+                u = URL(u, redirect)
                 finalProtocolStatus.args[ProtocolStatus.ARG_REDIRECT_TO_URL] = u.toString()
             }
         }

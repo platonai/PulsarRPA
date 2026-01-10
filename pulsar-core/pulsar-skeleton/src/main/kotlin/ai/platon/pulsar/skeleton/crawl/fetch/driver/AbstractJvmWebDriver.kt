@@ -29,7 +29,6 @@ abstract class AbstractJvmWebDriver: JvmWebDriver, WebDriver {
     override fun waitForNavigationAsync(oldUrl: String, timeout: Duration) = interopScope.future { waitForNavigation(oldUrl, timeout) }
     override fun existsAsync(selector: String) = interopScope.future { exists(selector) }
     override fun isVisibleAsync(selector: String) = interopScope.future { isVisible(selector) }
-    override fun visibleAsync(selector: String) = interopScope.future { visible(selector) }
     override fun isHiddenAsync(selector: String) = interopScope.future { isHidden(selector) }
     override fun isCheckedAsync(selector: String) = interopScope.future { isChecked(selector) }
     override fun typeAsync(selector: String, text: String) = interopScope.future { type(selector, text) }
