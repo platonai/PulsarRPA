@@ -117,12 +117,12 @@ parse_args() {
                 exit 0
                 ;;
             -f|--force)
-                FETCH_REMOTE=false
+                FETCH_REMOTE=0
                 log INFO "Force mode enabled - will build and test on every iteration"
                 shift
                 ;;
             -n|--no-fetch)
-                FETCH_REMOTE=false
+                FETCH_REMOTE=0
                 log INFO "No-fetch mode enabled - will only check local changes"
                 shift
                 ;;
@@ -132,7 +132,7 @@ parse_args() {
                 shift
                 ;;
             -c|--clean)
-                CLEAN_BUILD=true
+                CLEAN_BUILD=1
                 log INFO "Clean build enabled"
                 shift
                 ;;
@@ -389,7 +389,7 @@ main() {
     print_banner
 
     # Initial repository status
-    print_repo_status | log INFO
+    print_repo_status
 
     # Verify repository is a git repository
     if ! git -C "$repoPath" rev-parse --git-dir &> /dev/null; then
@@ -432,36 +432,36 @@ main() {
         print_repo_status
 
         local current_hash="$last_hash"
-        local should_build=false
+        local -i should_build=0
         local build_reason=""
 
         # Check for remote changes
         if fetch_remote; then
-            should_build=true
+            should_build=1
             build_reason="remote changes detected"
         fi
 
         # Check for local changes (always check even if remote fetch is disabled)
         if [[ $FETCH_REMOTE -eq 0 ]] && ! is_repo_clean; then
-            should_build=true
+            should_build=1
             build_reason="local uncommitted changes"
         fi
 
         # Force build if enabled
-        if [[ $FETCH_REMOTE -eq 0 ]] && [[ "$should_build" == "false" ]]; then
-            should_build=true
+        if [[ $FETCH_REMOTE -eq 0 ]] && [[ $should_build -eq 0 ]]; then
+            should_build=1
             build_reason="force build mode enabled"
         fi
 
         # Get current hash for comparison
         current_hash=$(get_head_hash)
         if [[ "$current_hash" != "$last_hash" ]]; then
-            should_build=true
+            should_build=1
             build_reason="commit change (${last_hash:0:8} -> ${current_hash:0:8})"
         fi
 
         # Build if needed
-        if [[ "$should_build" == "true" ]]; then
+        if [[ $should_build -eq 1 ]]; then
             ((build_count++))
             log INFO "Build trigger #$build_count: $build_reason"
 
