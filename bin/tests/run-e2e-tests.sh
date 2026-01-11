@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # =============================================================================
-# run-e2e-test.sh - Use Case Based End-to-End Test Suite
+# run-e2e-tests.sh - Use Case Based End-to-End Test Suite
 # =============================================================================
 # This script reads use case files from bin/tests/use-cases/ and executes them
 # against the Browser4 server using the api/commands/plain endpoint.

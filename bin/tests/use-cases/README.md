@@ -38,16 +38,16 @@ Use `run-e2e-test-v2.sh` to execute these use cases:
 
 ```bash
 # Run all use cases
-bin/tests/run-e2e-test.sh
+bin/tests/run-e2e-tests.sh
 
 # Run specific use cases by number
-bin/tests/run-e2e-test.sh -t "01,02,03"
+bin/tests/run-e2e-tests.sh -t "01,02,03"
 
 # Run with verbose output
-bin/tests/run-e2e-test.sh --verbose
+bin/tests/run-e2e-tests.sh --verbose
 
 # Show help
-bin/tests/run-e2e-test.sh --help
+bin/tests/run-e2e-tests.sh --help
 ```
 
 ## Adding New Use Cases
