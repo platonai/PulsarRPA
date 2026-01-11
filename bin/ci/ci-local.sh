@@ -414,8 +414,6 @@ main() {
         fi
     fi
 
-    git pull
-
     # Initial build
     log INFO "Intial build starting..."
     run_build_script
