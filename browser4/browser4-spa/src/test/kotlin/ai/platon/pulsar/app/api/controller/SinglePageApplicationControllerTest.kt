@@ -1,11 +1,11 @@
 package ai.platon.pulsar.app.api.controller
 
 import ai.platon.pulsar.agentic.ActionOptions
+import ai.platon.pulsar.app.api.TestHelper
 import ai.platon.pulsar.common.AppPaths
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.rest.api.entities.NavigateRequest
-import ai.platon.pulsar.test.TestResourceUtil.Companion.PRODUCT_DETAIL_URL
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.*
@@ -56,7 +56,7 @@ class SinglePageApplicationControllerTest : IntegrationTestBase() {
     @Order(10)
     @Test
     fun `navigate to product page`() {
-        val request = NavigateRequest(PRODUCT_DETAIL_URL)
+        val request = NavigateRequest(TestHelper.PRODUCT_DETAIL_URL)
         val result = client.post().uri("/api/navigate")
             .body(request)
             .exchange()

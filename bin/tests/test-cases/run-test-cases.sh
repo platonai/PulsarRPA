@@ -20,10 +20,12 @@ VERBOSE_MODE=true
 USER_NAME="platonai"
 
 # Load curl commands list (expected format: Description|curl ...)
-source "$(dirname "$0")/CURL_COMMANDS.sh" || {
-  echo "Error: Could not source CURL_COMMANDS.sh. Ensure it exists in the same directory."
+COMMANDS_FILE="${COMMANDS_FILE:-$(dirname "$0")/test-cases.sh}"
+if [[ ! -f "$COMMANDS_FILE" ]]; then
+  echo "Error: Could not find commands file at $COMMANDS_FILE"
   exit 1
-}
+fi
+source "$COMMANDS_FILE"
 
 # =============================================================================
 # SECTION: GLOBAL CONFIGURATION AND INITIALIZATION
