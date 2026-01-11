@@ -1,0 +1,14 @@
+# Use Case 6: Deep E-commerce Category Analysis
+# Level: Complex (Single-site)
+# Type: Agentic reasoning, loops, aggregation
+# Description: Deep analysis of noise cancelling headphones with filtering and ranking
+
+1. go to https://www.amazon.com/
+2. search for "noise cancelling headphones"
+3. filter by rating ≥ 4 stars
+4. sort by "Best Sellers"
+5. open the top 5 products
+6. extract pricing and review summaries
+7. identify common negative keywords
+8. rank products by value
+9. generate a markdown report

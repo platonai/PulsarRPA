@@ -1,0 +1,13 @@
+# Use Case 11: Hiring Market Cross-Platform Comparison
+# Level: Complex (Cross-site)
+# Type: Cross-site workflows
+# Description: Compare QA automation engineer hiring trends across Indeed and LinkedIn
+
+1. go to https://www.indeed.com/
+2. search for "QA automation engineer"
+3. record salary ranges
+4. go to https://www.linkedin.com/jobs
+5. search for the same role
+6. compare skill requirements
+7. assess demand differences
+8. summarize findings

@@ -1,0 +1,10 @@
+# Use Case 1: E-commerce Product Comparison (Single-site)
+# Level: Simple
+# Type: Single-site, deterministic
+# Description: Compare mechanical keyboards on Amazon by extracting price, rating, and review count
+
+1. go to https://www.amazon.com/
+2. search for "mechanical keyboard"
+3. open the first 3 products
+4. extract price, rating, and review count
+5. write a comparison table to a markdown file

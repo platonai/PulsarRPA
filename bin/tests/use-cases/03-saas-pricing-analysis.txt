@@ -1,0 +1,9 @@
+# Use Case 3: SaaS Pricing Analysis (Single-site)
+# Level: Simple
+# Type: Single-site, deterministic
+# Description: Analyze Notion pricing tiers and extract features
+
+1. go to https://www.notion.so/pricing
+2. identify all pricing tiers
+3. extract price and core features
+4. summarize differences in markdown
