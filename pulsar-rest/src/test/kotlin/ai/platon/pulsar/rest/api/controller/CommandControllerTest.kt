@@ -12,7 +12,7 @@ import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-class CommandControllerTest : ScrapeControllerTestBase() {
+class CommandControllerTest : RestAPITestBase() {
 
     /**
      * Test [CommandController.submitCommand]

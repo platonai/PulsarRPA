@@ -12,7 +12,7 @@ import kotlin.test.assertNotNull
 
 @Disabled("TimeConsumingTest")
 @Tag("TimeConsumingTest")
-class CommandControllerSSETest : ScrapeControllerTestBase() {
+class CommandControllerSSETest : RestAPITestBase() {
 
     /**
      * Test [CommandController.submitCommand]

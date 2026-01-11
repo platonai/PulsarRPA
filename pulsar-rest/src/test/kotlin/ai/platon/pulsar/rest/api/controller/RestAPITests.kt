@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.test.web.servlet.client.expectBody
 import kotlin.test.assertNotNull
 
-open class ScrapeControllerTests : ScrapeControllerTestBase() {
+open class RestAPITests : RestAPITestBase() {
 
     /**
      * Test [ScrapeController.submitJob]

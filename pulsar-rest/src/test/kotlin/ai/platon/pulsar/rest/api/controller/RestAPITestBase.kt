@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.context.annotation.Import
 
 @Import(MockEcServerConfiguration::class)
-open class ScrapeControllerTestBase : IntegrationTestBase() {
+open class RestAPITestBase : IntegrationTestBase() {
 
     companion object {
         val urls = mapOf(
