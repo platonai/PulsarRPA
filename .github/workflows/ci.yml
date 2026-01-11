@@ -77,6 +77,7 @@ jobs:
         if: inputs.skip_tests != true
         uses: ./.github/actions/run-tests
         with:
+          # Exclude integration and e2e tests in this CI build
           test_excludes: '**integration**,**e2e**'
           timeout_minutes: '35'
 

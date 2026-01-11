@@ -57,7 +57,8 @@ jobs:
         if: inputs.skip_tests != true
         uses: ./.github/actions/run-tests
         with:
-          test_excludes: '**integration**,**e2e**'
+          # Run all tests in this nightly build, do not exclude any
+          # test_excludes: '**integration**,**e2e**'
           timeout_minutes: '35'
 
       - name: Check Test Status
