@@ -103,12 +103,6 @@
                 <version>${jodd-trove4j-core.version}</version>
             </dependency>
 
-            <dependency>
-                <groupId>jtidy</groupId>
-                <artifactId>jtidy</artifactId>
-                <version>4aug2000r7-dev</version>
-            </dependency>
-
             <!--  Tika for general document parsers  -->
             <dependency>
                 <groupId>org.apache.tika</groupId>
