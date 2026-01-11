@@ -30,7 +30,6 @@ import java.net.*
  */
 object InternalURLUtil {
     private val logger = LoggerFactory.getLogger(InternalURLUtil::class.java)
-    private val IP_REGEX = Regex("(\\d{1,3}\\.){3}(\\d{1,3})")
 
     fun getHost(url: String): String? {
         val u = getURLOrNull(url) ?: return null
@@ -62,75 +61,6 @@ object InternalURLUtil {
             }
         }
         return host
-    }
-
-    /** Partitions of the hostname of the url by "."  */
-    fun getHostBatches(url: URL): List<String> {
-        val host = url.host
-        // return whole hostname, if it is an ipv4
-        // TODO : handle ipv6
-        return if (IP_REGEX.matches(host)) listOf(host) else host.split(".")
-    }
-
-    @JvmStatic
-    fun toASCII(url: String?): String? {
-        if (url == null) {
-            return null
-        }
-
-        return try {
-            val u = URI.create(url).toURL()
-            val host = u.host
-            if (host == null || host.isEmpty()) {
-                // no host name => no punycoded domain name
-                // also do not add additional slashes for file: URLs (PULSAR-1880)
-                return url
-            }
-            val p = URI(
-                u.protocol, u.userInfo, IDN.toASCII(host),
-                u.port, u.path, u.query, u.ref
-            )
-            p.toString()
-        } catch (e: Exception) {
-            null
-        }
-    }
-
-    @JvmStatic
-    fun toUNICODE(url: String?): String? {
-        if (url == null) {
-            return null
-        }
-
-        return try {
-            val u = URI.create(url).toURL()
-            val host = u.host
-            if (host == null || host.isEmpty()) {
-                // no host name => no punycoded domain name
-                // also do not add additional slashes for file: URLs (PULSAR-1880)
-                return url
-            }
-            val sb = StringBuilder()
-            sb.append(u.protocol)
-            sb.append("://")
-            if (u.userInfo != null) {
-                sb.append(u.userInfo)
-                sb.append('@')
-            }
-            sb.append(IDN.toUnicode(host))
-            if (u.port != -1) {
-                sb.append(':')
-                sb.append(u.port)
-            }
-            sb.append(u.file) // includes query
-            if (u.ref != null) {
-                sb.append('#')
-                sb.append(u.ref)
-            }
-            sb.toString()
-        } catch (e: Exception) {
-            null
-        }
     }
 
     /**
