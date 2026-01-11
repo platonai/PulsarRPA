@@ -91,7 +91,7 @@ class AgentFileSystemTest {
     }
 
     @Test
-    fun `fileExists returns not exists for missing file`() {
+    fun `fileExists returns not exists for missing file`() = runBlocking {
         val result = fs.fileExists("nonexistent.txt")
         assertTrue(result.contains("does not exist"))
     }
@@ -106,7 +106,7 @@ class AgentFileSystemTest {
     }
 
     @Test
-    fun `getFileInfo returns error for non-existent file`() {
+    fun `getFileInfo returns error for non-existent file`() = runBlocking {
         val result = fs.getFileInfo("nonexistent.txt")
         assertTrue(result.contains("not found"))
     }
@@ -199,7 +199,7 @@ class AgentFileSystemTest {
     }
 
     @Test
-    fun `listFilesInfo returns empty message when no files`() {
+    fun `listFilesInfo returns empty message when no files`() = runBlocking {
         val result = fs.listFilesInfo()
         assertTrue(result.contains("No files"))
     }
