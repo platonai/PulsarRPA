@@ -23,11 +23,11 @@ public class ProtocolHeaders implements HttpHeaders {
         try {
             patterns[0] = (Perl5Pattern) compiler.compile("\\bfilename=['\"](.+)['\"]");
             patterns[1] = (Perl5Pattern) compiler.compile("\\bfilename=(\\S+)\\b");
-        } catch (MalformedPatternException e) {
+        } catch (MalformedPatternException ignored) {
         }
     }
 
-    private Map<CharSequence, CharSequence> headers;
+    private final Map<CharSequence, CharSequence> headers;
 
     private ProtocolHeaders(Map<CharSequence, CharSequence> headers) {
         this.headers = headers;
