@@ -33,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.regex.Pattern
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.exists
+import kotlin.io.path.notExists
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -464,23 +465,25 @@ class ChromeLauncher constructor(
 
         // val isSystemDefaultBrowser = userDataDir == AppPaths.SYSTEM_DEFAULT_BROWSER_DATA_DIR_PLACEHOLDER
 
+        val scriptFileName = if (SystemUtils.IS_OS_WINDOWS) "kill-browsers.ps1" else "kill-browsers.sh"
+        val scriptPath = AppPaths.SCRIPT_DIR.resolve(scriptFileName)
+        if (scriptPath.notExists()) {
+            val content = ResourceLoader.readString(scriptFileName)
+            Files.write(scriptPath, content.toByteArray())
+        }
+
         val message = """
 
 ===============================================================================
 !!!   FAILED TO START CHROME   !!!
 
-Failed to start Chrome programmatically, but there are already $count chrome
-processes running in the system.
+Run the script to kill Chrome processes and run the program again:
 
-Kill all Chrome processes and run the program again.
+$scriptPath
 
 ===============================================================================
 
                     """.trimIndent()
-
-//        Runtimes.listAllChromeProcesses().forEach {
-//            println(it)
-//        }
 
         logger.warn(message)
         return
