@@ -7,6 +7,7 @@ import ai.platon.pulsar.rest.api.entities.CommandRequest
 import ai.platon.pulsar.rest.api.entities.CommandStatus
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.Test
+import org.springframework.test.web.servlet.client.expectBody
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -32,7 +33,7 @@ class CommandControllerTest : ScrapeControllerTestBase() {
             .body(request)
             .exchange()
             .expectStatus().is2xxSuccessful
-            .expectBody(CommandStatus::class.java)
+            .expectBody<CommandStatus>()
             .returnResult()
             .responseBody
         assertNotNull(status)
@@ -71,7 +72,7 @@ class CommandControllerTest : ScrapeControllerTestBase() {
             .body(request)
             .exchange()
             .expectStatus().is2xxSuccessful
-            .expectBody(CommandStatus::class.java)
+            .expectBody<CommandStatus>()
             .returnResult()
             .responseBody
         assertNotNull(status)
@@ -102,7 +103,7 @@ class CommandControllerTest : ScrapeControllerTestBase() {
             .body(request)
             .exchange()
             .expectStatus().is2xxSuccessful
-            .expectBody(CommandStatus::class.java)
+            .expectBody<CommandStatus>()
             .returnResult()
             .responseBody
         assertNotNull(status)

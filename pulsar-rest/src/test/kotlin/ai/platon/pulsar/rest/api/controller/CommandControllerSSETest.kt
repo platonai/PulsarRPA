@@ -2,83 +2,101 @@ package ai.platon.pulsar.rest.api.controller
 
 import ai.platon.pulsar.common.printlnPro
 import ai.platon.pulsar.rest.api.entities.CommandRequest
-//import okhttp3.OkHttpClient
-//import okhttp3.Request
-import org.joda.time.LocalTime
+import ai.platon.pulsar.rest.api.entities.CommandStatus
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
-import java.io.BufferedReader
-import java.util.concurrent.TimeUnit
-import kotlin.test.Ignore
+import org.springframework.http.MediaType
+import org.springframework.test.web.servlet.client.expectBody
 import kotlin.test.assertNotNull
 
-@Ignore("TimeConsumingTest")
+@Disabled("TimeConsumingTest")
 @Tag("TimeConsumingTest")
 class CommandControllerSSETest : ScrapeControllerTestBase() {
 
-//    /**
-//     * Test [CommandController.submitCommand]
-//     * Test [CommandController.streamEvents]
-//     * */
-//    @Test
-//    fun `Test submitCommand with pageSummaryPrompt + SSE`() {
-//        val pageType = "productDetailPage"
-//        val url = requireNotNull(urls[pageType])
-//
-//        val request = CommandRequest(url,
-//            "",
-//            pageSummaryPrompt = "Summarize the product.",
-//            mode = "async",
-//        )
-//
-//        val id = restTemplate.postForObject("$baseUri/api/commands", request, String::class.java)
-//        printlnPro("id: $id")
-//        assertNotNull(id)
-//
-//        receiveSSE(id)
-//    }
+    /**
+     * Test [CommandController.submitCommand]
+     * Test [CommandController.streamEvents]
+     * */
+    @Test
+    fun `Test submitCommand with pageSummaryPrompt + SSE`() {
+        val pageType = "productDetailPage"
+        val url = requireNotNull(urls[pageType])
 
-//    /**
-//     * Test [CommandController.submitCommand]
-//     * Test [CommandController.streamEvents]
-//     * */
-//    @Test
-//    fun `Test submitCommand with pageSummaryPrompt, dataExtractionRules + SSE`() {
-//        val pageType = "productDetailPage"
-//        val url = requireNotNull(urls[pageType])
-//
-//        val request = CommandRequest(url,
-//            "",
-//            pageSummaryPrompt = "Summarize the product.",
-//            dataExtractionRules = "product name, ratings, price",
-//            mode = "async",
-//        )
-//
-//        val id = restTemplate.postForObject("$baseUri/api/commands", request, String::class.java)
-//        printlnPro("id: $id")
-//        assertNotNull(id)
-//
-//        receiveSSE(id)
-//    }
-//
-//    private fun receiveSSE(id: String) {
-//        val client = OkHttpClient.Builder()
-//            .readTimeout(60, TimeUnit.SECONDS)
-//            .build()
-//
-//        // 2. Connect to SSE stream
-//        val sseRequest = Request.Builder()
-//            .url("$baseUri/api/commands/$id/stream")
-//            .build()
-//
-//        client.newCall(sseRequest).execute().body?.charStream()?.use { inputStream ->
-//            BufferedReader(inputStream).lineSequence().forEach { line ->
-//                if (line.startsWith("data:")) {
-//                    val data = line.removePrefix("data:").trim()
-//                    printlnPro("[${LocalTime.now()}] $data")
-//                }
-//            }
-//        }
-//    }
+        val request = CommandRequest(
+            url,
+            "",
+            pageSummaryPrompt = "Summarize the product.",
+            async = true,
+        )
+
+        val status = client.post().uri("/api/commands")
+            .body(request)
+            .exchange()
+            .expectStatus().is2xxSuccessful
+            .expectBody<CommandStatus>()
+            .returnResult()
+            .responseBody
+
+        assertNotNull(status)
+        val id = status.id
+        printlnPro("commandId: $id")
+
+        receiveSSE(id)
+    }
+
+    /**
+     * Test [CommandController.submitCommand]
+     * Test [CommandController.streamEvents]
+     * */
+    @Test
+    fun `Test submitCommand with pageSummaryPrompt, dataExtractionRules + SSE`() {
+        val pageType = "productDetailPage"
+        val url = requireNotNull(urls[pageType])
+
+        val request = CommandRequest(
+            url,
+            "",
+            pageSummaryPrompt = "Summarize the product.",
+            dataExtractionRules = "product name, ratings, price",
+            async = true,
+        )
+
+        val status = client.post().uri("/api/commands")
+            .body(request)
+            .exchange()
+            .expectStatus().is2xxSuccessful
+            .expectBody<CommandStatus>()
+            .returnResult()
+            .responseBody
+
+        assertNotNull(status)
+        val id = status.id
+        printlnPro("commandId: $id")
+
+        receiveSSE(id)
+    }
+
+    private fun receiveSSE(id: String) {
+        // Consume only a limited prefix of the SSE stream to keep the test bounded.
+        val result = client.get().uri("/api/commands/$id/stream")
+            .accept(MediaType.TEXT_EVENT_STREAM)
+            .exchange()
+            .expectStatus().is2xxSuccessful
+            .expectBody<String>()
+            .returnResult()
+
+        val body = result.responseBody
+        assertNotNull(body)
+
+        // Basic sanity: server-sent events should contain at least one "data:" line.
+        val lines = body.lineSequence().filter { it.isNotBlank() }.take(200).toList()
+        lines.filter { it.startsWith("data:") }.take(20).forEach { printlnPro(it) }
+
+        // Don’t overfit here: different environments may emit different JSON structures.
+        // The contract we enforce is just: it’s an SSE stream and contains data frames.
+        check(lines.any { it.startsWith("data:") }) {
+            "Expected SSE data frames for command $id but got: ${lines.take(20).joinToString("\\n") }"
+        }
+    }
 }
-

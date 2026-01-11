@@ -1,7 +1,7 @@
 # Browser4: Gradle vs Maven 构建系统评估报告
 
-**评估日期**: 2026-01-09  
-**分支**: 4.4.x  
+**评估日期**: 2026-01-09
+**分支**: 4.4.x
 **项目版本**: 4.4.0-SNAPSHOT
 
 ---
@@ -60,7 +60,7 @@ Browser4 (root)
 
 ### 当前 Maven 配置特点
 
-1. **依赖管理**: 使用 `pulsar-dependencies` 作为 BOM，导入 Spring Boot、Kotlin、OkHttp 等多个 BOM
+1. **依赖管理**: 使用 `pulsar-dependencies` 作为 BOM，导入 Spring Boot、Kotlin 等多个 BOM
 2. **Kotlin 编译**: 使用 `kotlin-maven-plugin` 配合 `allopen`、`spring`、`jpa` 编译器插件
 3. **多 Profile**: `ci`、`deploy`、`examples`、`release` 等多个构建 Profile
 4. **测试框架**: JUnit 5 + MockK + Mockito + Spring Test
