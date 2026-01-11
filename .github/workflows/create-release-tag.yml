@@ -30,10 +30,10 @@ jobs:
           
           echo "✅ Version format is valid: $VERSION"
 
-      - name: Checkout main branch
+      - name: Checkout master branch
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: master
           fetch-depth: 0
 
       - name: Configure Git
@@ -84,7 +84,7 @@ jobs:
         run: |
           TAG="v${{ github.event.inputs.version }}"
           
-          echo "::notice::✅ Tag $TAG created successfully on main branch"
+          echo "::notice::✅ Tag $TAG created successfully on master branch"
           echo ""
           echo "🎉 Tag created successfully!"
           echo ""

@@ -91,10 +91,10 @@ jobs:
           SOURCE_BRANCH="${{ github.event.inputs.source_branch }}"
           
           # Check if PR already exists
-          EXISTING_PR=$(gh pr list --head "$SOURCE_BRANCH" --base main --json number --jq '.[0].number' || echo "")
+          EXISTING_PR=$(gh pr list --head "$SOURCE_BRANCH" --base master --json number --jq '.[0].number' || echo "")
           
           if [ -n "$EXISTING_PR" ]; then
-            echo "⚠️ PR #$EXISTING_PR already exists from $SOURCE_BRANCH to main"
+            echo "⚠️ PR #$EXISTING_PR already exists from $SOURCE_BRANCH to master"
             echo "PR URL: https://github.com/${{ github.repository }}/pull/$EXISTING_PR"
             exit 0
           fi
@@ -115,14 +115,14 @@ jobs:
 
           ### 🔄 Post-Merge Instructions
 
-          After merging this PR to `main`, create the release tag:
+          After merging this PR to `master`, create the release tag:
 
           1. Go to [Create Release Tag workflow](https://github.com/${{ github.repository }}/actions/workflows/create-release-tag.yml)
           2. Click "Run workflow"
           3. Enter version: `${{ github.event.inputs.version }}`
           4. Click "Run workflow" button
 
-          This will create tag `v${{ github.event.inputs.version }}` on main branch and trigger the release workflow.
+          This will create tag `v${{ github.event.inputs.version }}` on master branch and trigger the release workflow.
 
           ---
           
@@ -131,7 +131,7 @@ jobs:
           
           # Create the PR
           gh pr create \
-            --base main \
+            --base master \
             --head "$SOURCE_BRANCH" \
             --title "🚀 Release v$VERSION" \
             --body-file pr_body.md \
@@ -140,5 +140,5 @@ jobs:
           echo "✅ Pull request created successfully"
           
           # Get the PR URL
-          PR_URL=$(gh pr list --head "$SOURCE_BRANCH" --base main --json url --jq '.[0].url')
+          PR_URL=$(gh pr list --head "$SOURCE_BRANCH" --base master --json url --jq '.[0].url')
           echo "PR URL: $PR_URL"
