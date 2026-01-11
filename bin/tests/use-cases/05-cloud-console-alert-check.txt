@@ -1,0 +1,10 @@
+# Use Case 5: Cloud Console Alert Check (Single-site)
+# Level: Simple
+# Type: Single-site, deterministic
+# Description: Check cloud provider console for active alerts
+# Note: This use case requires authentication and is typically used in enterprise environments
+
+1. go to the cloud provider console
+2. log in with credentials
+3. navigate to the alerts page
+4. export active alerts to CSV

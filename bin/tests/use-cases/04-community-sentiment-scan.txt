@@ -1,0 +1,9 @@
+# Use Case 4: Community Sentiment Scan (Single-site)
+# Level: Simple
+# Type: Single-site, deterministic
+# Description: Scan Reddit programming community for browser automation sentiment
+
+1. go to https://www.reddit.com/r/programming/
+2. search for "browser automation"
+3. open the top 5 posts
+4. summarize key opinions and sentiment

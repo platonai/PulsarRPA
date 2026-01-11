@@ -1,0 +1,14 @@
+# Use Case 7: Job Market Skill Demand Analysis
+# Level: Complex (Single-site)
+# Type: Agentic reasoning, loops, aggregation
+# Description: Analyze job market for Senior Backend Engineer roles with skill frequency analysis
+
+1. go to https://www.linkedin.com/jobs
+2. search for "Senior Backend Engineer"
+3. apply "Remote" filter
+4. paginate through 3 pages
+5. open 10 job postings
+6. extract skill requirements
+7. normalize skill names
+8. calculate frequency
+9. generate a demand summary

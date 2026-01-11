@@ -1,0 +1,14 @@
+# Use Case 13: Ongoing Competitive Monitoring
+# Level: Enterprise
+# Type: Long-running, scheduled, auditable
+# Description: Continuous competitive monitoring with change detection
+
+1. go to competitor official websites
+2. locate pricing and feature pages
+3. snapshot current state
+4. repeat on a scheduled interval
+5. detect changes and diffs
+6. classify changes (pricing / feature)
+7. store versioned results
+8. trigger alerts
+9. generate a periodic report

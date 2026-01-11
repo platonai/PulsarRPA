@@ -1,0 +1,14 @@
+# Use Case 12: Company Due Diligence Automation
+# Level: Enterprise
+# Type: Cross-site, long-running, auditable
+# Description: Automated company due diligence report generation
+
+1. go to the company official website
+2. extract product description and customers
+3. go to https://www.crunchbase.com/
+4. extract funding history and investors
+5. search the company on Google News
+6. open the latest 5 articles
+7. identify major business events
+8. assess risk and maturity
+9. generate a due diligence report

@@ -1,0 +1,14 @@
+# Use Case 8: Open Source Project Health Evaluation
+# Level: Complex (Single-site)
+# Type: Agentic reasoning, loops, aggregation
+# Description: Evaluate health of browser automation open source projects on GitHub
+
+1. go to https://github.com/search
+2. search for "browser automation"
+3. filter by stars > 1000
+4. open the top 3 repositories
+5. navigate to Issues
+6. count open vs closed issues
+7. navigate to Contributors
+8. evaluate activity level
+9. produce a health score
