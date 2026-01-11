@@ -1,9 +1,8 @@
 #!/bin/bash
 
-# Test script for curl commands from README.md
-# All curl commands are explicitly listed below for easy maintenance
-# Author: Auto-generated for platonai
-# Date: 2025-06-11 17:29:59
+# Test suite to execute documented curl commands against a running Browser4 instance.
+# Commands are sourced from CURL_COMMANDS.sh, one per line as: "Description|curl ...".
+# Logs and responses are stored under ./target/test-results for post-run inspection.
 
 # set -e  # Exit on error
 
@@ -20,6 +19,7 @@ SKIP_SERVER_CHECK=false
 VERBOSE_MODE=true
 USER_NAME="platonai"
 
+# Load curl commands list (expected format: Description|curl ...)
 source "$(dirname "$0")/CURL_COMMANDS.sh" || {
   echo "Error: Could not source CURL_COMMANDS.sh. Ensure it exists in the same directory."
   exit 1
@@ -53,15 +53,18 @@ mkdir -p "$TEST_RESULTS_DIR"
 # SECTION: UTILITY FUNCTIONS
 # =============================================================================
 
+# Basic logger with timestamp; mirrored to log file for later review
 log() {
   local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
   echo -e "[$timestamp] $1" | tee -a "$LOG_FILE"
 }
 
+# Verbose logger (toggle via --verbose)
 vlog() {
   [[ "$VERBOSE_MODE" == "true" ]] && log "${CYAN}[VERBOSE]${NC} $1"
 }
 
+# Inline progress meter for long runs
 show_progress() {
   local current=$1
   local total=$2
@@ -74,12 +77,13 @@ show_progress() {
   printf "] %d%% (%d/%d)" $percent $current $total
 }
 
+# Substitute localhost URL with configured base URL to support remote targets
 substitute_urls() {
-  # Substitute localhost URL with configured base URL
   local command="$1"
   echo "$command" | sed "s|http://localhost:8182|$PULSAR_BASE_URL|g"
 }
 
+# Lightweight availability probe before executing the suite (unless skipped)
 check_server() {
   log "${BLUE}[INFO]${NC} Checking Browser4 server at $PULSAR_BASE_URL..."
   if curl -s --connect-timeout 5 --max-time 10 "$PULSAR_BASE_URL/actuator/health" >/dev/null 2>&1; then
@@ -100,7 +104,7 @@ check_server() {
 # SECTION: TEST EXECUTION FUNCTIONS
 # =============================================================================
 
-# Execute a curl command with appropriate parameters and return results
+# Execute a curl command with timeout/metrics. Writes payload to response_file and metrics to response_file.meta.
 execute_curl_command() {
   local curl_command="$1"
   local timeout="$2"
@@ -116,7 +120,7 @@ execute_curl_command() {
   return $?
 }
 
-# Process successful responses
+# Persist a trimmed copy of successful responses for quick inspection
 process_success_response() {
   local response_file="$1"
   local test_number="$2"
@@ -140,7 +144,7 @@ process_success_response() {
   fi
 }
 
-# Process error responses with HTTP status codes
+# Persist and print helpful context for HTTP error responses (non-2xx)
 process_error_response() {
   local response_file="$1"
   local error_file="$2"
@@ -162,7 +166,7 @@ process_error_response() {
   fi
 }
 
-# Process command execution timeout (curl exit code 28)
+# Capture partial data and diagnostics when curl timed out (exit code 28)
 process_timeout_response() {
   local response_file="$1"
   local error_file="$2"
@@ -187,7 +191,7 @@ process_timeout_response() {
   log "${CYAN}[HINT]${NC} You can increase timeout via '-t <seconds>' or run with --fast to reduce delays."
 }
 
-# Process command execution errors
+# Persist stderr/command when execution failed for reasons other than HTTP or timeout
 process_execution_error() {
   local error_file="$1"
   local test_number="$2"
@@ -205,7 +209,7 @@ process_execution_error() {
   fi
 }
 
-# Main function to run a curl test
+# Wrapper around a single CURL_COMMANDS entry
 run_curl_test() {
   local test_name="$1"
   local curl_command="$2"
@@ -407,4 +411,3 @@ trap 'log "\n${YELLOW}[INFO]${NC} Tests interrupted by user"; exit 130' INT
 
 parse_args "$@"
 main
-
