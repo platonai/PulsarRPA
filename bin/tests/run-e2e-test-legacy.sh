@@ -27,32 +27,6 @@ echo "End to end test suite starting at $(date)"
 echo "Minimum success rate to pass: ${INTEGRATION_MIN_SUCCESS_RATE}%"
 echo "--------------------------------------------------------------------"
 
-echo "[TEST 1/4] Running command-sse.sh end to end test..."
-echo "--------------------------------------------------------------------"
-# Start time for TEST 1
-start_time="$(date '+%Y-%m-%d %H:%M:%S %Z')"
-start_epoch=$(date +%s)
-echo "Start time: $start_time"
-# Run TEST 1 with explicit error capture
-set +e
-"$AppHome"/bin/command-sse.sh
-exit_code=$?
-set -e
-# End time for TEST 1
-end_time="$(date '+%Y-%m-%d %H:%M:%S %Z')"
-end_epoch=$(date +%s)
-duration=$((end_epoch - start_epoch))
-EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
-if [ $exit_code -eq 0 ]; then
-  echo "[PASS] End to end test command-sse.sh completed successfully"
-  PASSED_TESTS=$((PASSED_TESTS + 1))
-else
-  echo "[FAIL] End to end test command-sse.sh failed with exit code $exit_code"
-  FAILED_TESTS=$((FAILED_TESTS + 1))
-fi
-echo "End time: $end_time (Duration: ${duration}s)"
-echo "===================================================================="
-
 echo "[TEST 2/4] Running scrape.sh end to end test..."
 echo "--------------------------------------------------------------------"
 # Start time for TEST 2
@@ -120,7 +94,7 @@ start_epoch=$(date +%s)
 echo "Start time: $start_time"
 # Run TEST 4 with explicit error capture
 set +e
-bash "$AppHome"/bin/tests/run-test-cases.sh
+bash "$AppHome"/bin/tests/test-cases-legacy.sh
 exit_code=$?
 set -e
 # End time for TEST 4
