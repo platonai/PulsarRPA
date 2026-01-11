@@ -44,7 +44,7 @@ import kotlin.time.Duration.Companion.minutes
  * - todo* flags: Control integration with persistent todolist.md planning & progress.
  */
 data class AgentConfig(
-    val maxSteps: Int = 100,
+    val maxSteps: Int = 1000,
     val maxRetries: Int = 3,
     val baseRetryDelayMs: Long = 1_000,
     val maxRetryDelayMs: Long = 30_000,
