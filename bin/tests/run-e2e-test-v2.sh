@@ -45,6 +45,12 @@ readonly MIN_SUCCESS_RATE="${MIN_SUCCESS_RATE:-50}"
 # Test selection (comma-separated list of test numbers or "all")
 TEST_SELECTION="${TEST_SELECTION:-all}"
 
+# How many tests to run (applies after selection/filtering)
+TEST_COUNT="${TEST_COUNT:-3}"
+
+# Execution order: random | sequential
+EXECUTION_ORDER="${EXECUTION_ORDER:-random}"
+
 # Verbose mode
 VERBOSE="${VERBOSE:-false}"
 
@@ -89,6 +95,19 @@ vlog() {
 
 ensure_directories() {
     mkdir -p "$TEST_RESULTS_DIR"
+}
+
+# Fisher-Yates shuffle to avoid external dependencies like shuf
+shuffle_array() {
+    local arr=("$@")
+    local shuffled=()
+    local i rand
+    while ((${#arr[@]})); do
+        rand=$((RANDOM % ${#arr[@]}))
+        shuffled+=("${arr[rand]}")
+        arr=("${arr[@]:0:rand}" "${arr[@]:rand+1}")
+    done
+    printf '%s\n' "${shuffled[@]}"
 }
 
 check_server() {
@@ -437,7 +456,25 @@ run_all_tests() {
     fi
     
     local total_selected=${#tests_to_run[@]}
-    log "${BLUE}[INFO]${NC} Tests to execute: $total_selected"
+    log "${BLUE}[INFO]${NC} Tests selected: $total_selected | Order: $EXECUTION_ORDER | Count: $TEST_COUNT"
+    
+    if ! [[ "$TEST_COUNT" =~ ^[0-9]+$ ]] || (( TEST_COUNT <= 0 )); then
+        log "${RED}[ERROR]${NC} TEST_COUNT must be a positive integer (got: $TEST_COUNT)"
+        exit 1
+    fi
+    
+    # Apply ordering
+    if [[ "$EXECUTION_ORDER" == "random" ]]; then
+        mapfile -t tests_to_run < <(shuffle_array "${tests_to_run[@]}")
+    fi
+    
+    # Apply limit
+    if (( ${#tests_to_run[@]} > TEST_COUNT )); then
+        tests_to_run=("${tests_to_run[@]:0:TEST_COUNT}")
+    fi
+    
+    total_selected=${#tests_to_run[@]}
+    log "${BLUE}[INFO]${NC} Tests to execute after limiting: $total_selected"
     
     # Run tests
     local test_counter=0
@@ -496,6 +533,8 @@ OPTIONS:
     -u, --url URL           Browser4 base URL (default: http://localhost:8182)
     -t, --test SELECTION    Test selection (comma-separated numbers or "all", default: all)
                             Examples: "01,02,03" or "01-ecommerce" or "all"
+    -n, --count N           Number of tests to run after selection (default: 3)
+    -o, --order MODE        Execution order: random | sequential (default: random)
     -s, --skip-server       Skip server connectivity check
     -v, --verbose           Enable verbose output
     -h, --help              Show this help message
@@ -508,13 +547,16 @@ ENVIRONMENT VARIABLES:
     ENTERPRISE_TIMEOUT      Timeout for enterprise tests (default: 600)
     MIN_SUCCESS_RATE        Minimum success rate to pass (default: 50)
     TEST_SELECTION          Same as --test option
+    TEST_COUNT              Same as --count option (default: 3)
+    EXECUTION_ORDER         Same as --order option (default: random)
     VERBOSE                 Same as --verbose option
 
 EXAMPLES:
-    $0                              # Run all tests with defaults
+    $0                              # Run 3 random tests from all use cases
     $0 -u http://localhost:8080     # Use custom server URL
     $0 -t "01,02,03"               # Run specific tests
     $0 -t "01-ecommerce"           # Run test by name prefix
+    $0 -n 5 -o sequential           # Run first 5 tests in order
     $0 --verbose                    # Enable verbose logging
     $0 --skip-server -v             # Skip server check, verbose mode
 
@@ -540,6 +582,14 @@ parse_args() {
                 ;;
             -t|--test)
                 TEST_SELECTION="$2"
+                shift 2
+                ;;
+            -n|--count)
+                TEST_COUNT="$2"
+                shift 2
+                ;;
+            -o|--order)
+                EXECUTION_ORDER="$2"
                 shift 2
                 ;;
             -s|--skip-server)
