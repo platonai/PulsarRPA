@@ -27,7 +27,8 @@ set -e
 # Configuration
 # =============================================================================
 readonly API_BASE="${API_BASE:-http://localhost:8182}"
-readonly COMMAND_ENDPOINT="$API_BASE/api/commands/plain"
+readonly COMMAND_ENDPOINT="$API_BASE/api/commands/plain?mode=async"
+readonly COMMAND_STATUS_BASE="$API_BASE/api/commands"
 readonly USE_CASES_DIR="$AppHome/bin/tests/use-cases"
 readonly TEST_RESULTS_DIR="./target/test-results/use-cases"
 readonly TIMESTAMP="$(date '+%Y%m%d_%H%M%S')"
@@ -270,11 +271,10 @@ run_use_case_test() {
         done
     fi
 
-    # Prepare temp files
-    local response_file
-    response_file=$(mktemp)
-    local error_file
-    error_file=$(mktemp)
+    # Prepare result files
+    local status_file="${TEST_RESULTS_DIR}/${test_name}_status.log"
+    local result_file="${TEST_RESULTS_DIR}/${test_name}_result.json"
+    : > "$status_file"
 
     # Start time tracking
     local start_time
@@ -284,129 +284,149 @@ run_use_case_test() {
     log "${BLUE}[INFO]${NC} Start time: $start_time"
 
     # Execute the command
-    log "${BLUE}[INFO]${NC} Sending task to server..."
+    log "${BLUE}[INFO]${NC} Sending task to server using async plain command..."
 
     set +e
-    local http_status
-    http_status=$(curl -s -w '%{http_code}' \
-        --max-time "$timeout" \
+    local submit_output
+    submit_output=$(curl -s -w '|%{http_code}' \
+        --connect-timeout 5 \
+        --max-time 15 \
         -X POST \
         -H "Content-Type: text/plain" \
         --data "$task_content" \
-        -o "$response_file" \
-        "$COMMAND_ENDPOINT" 2>"$error_file")
-    local exit_code=$?
+        "$COMMAND_ENDPOINT")
+    local submit_exit=$?
     set -e
 
-    # End time tracking
+    local submit_http="${submit_output##*|}"
+    local command_id="${submit_output%|*}"
+    command_id="${command_id%$'\n'}"
+    command_id="${command_id%$'\r'}"
+    command_id="${command_id%\"}"
+    command_id="${command_id#\"}"
+
+    local test_passed=false
+    local test_result=""
+
+    if [[ $submit_exit -ne 0 ]]; then
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
+        log "${RED}[FAIL]${NC} ❌ Failed to submit command (exit code: $submit_exit)"
+        log "${BLUE}[INFO]${NC} End time: $(date '+%Y-%m-%d %H:%M:%S %Z') (Duration: $(( $(date +%s) - start_epoch ))s)"
+        log "===================================================================="
+        return 1
+    fi
+
+    if [[ -z "$command_id" ]] || ! assert_http_success "$submit_http"; then
+        FAILED_TESTS=$((FAILED_TESTS + 1))
+        EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
+        log "${RED}[FAIL]${NC} ❌ Invalid response from server (HTTP: $submit_http, id: '$command_id')"
+        log "${BLUE}[INFO]${NC} End time: $(date '+%Y-%m-%d %H:%M:%S %Z') (Duration: $(( $(date +%s) - start_epoch ))s)"
+        log "===================================================================="
+        return 1
+    fi
+
+    log "${BLUE}[INFO]${NC} Command ID: $command_id"
+
+    local status_url="$COMMAND_STATUS_BASE/$command_id/status"
+    local result_url="$COMMAND_STATUS_BASE/$command_id/result"
+    local last_status_content=""
+    local last_change_epoch
+    last_change_epoch=$(date +%s)
+    local stale_intervals=0
+
+    while true; do
+        set +e
+        local status_output
+        status_output=$(curl -s -w '|%{http_code}' --max-time "$timeout" "$status_url")
+        local status_exit=$?
+        set -e
+
+        if [[ $status_exit -ne 0 ]]; then
+            FAILED_TESTS=$((FAILED_TESTS + 1))
+            EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
+            test_result="FAIL"
+            log "${RED}[FAIL]${NC} ❌ Failed to query status (exit code: $status_exit)"
+            break
+        fi
+
+        local status_http="${status_output##*|}"
+        local status_body="${status_output%|*}"
+
+        if ! assert_http_success "$status_http"; then
+            FAILED_TESTS=$((FAILED_TESTS + 1))
+            EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
+            test_result="FAIL"
+            log "${RED}[FAIL]${NC} ❌ Status HTTP error: $status_http"
+            break
+        fi
+
+        if [[ "$status_body" != "$last_status_content" ]]; then
+            printf "[%s] %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$status_body" >> "$status_file"
+            last_status_content="$status_body"
+            last_change_epoch=$(date +%s)
+            stale_intervals=0
+        else
+            local now_epoch
+            now_epoch=$(date +%s)
+            if (( now_epoch - last_change_epoch >= 30 )); then
+                stale_intervals=$((stale_intervals + 1))
+                last_change_epoch=$now_epoch
+                log "${YELLOW}[WAIT]${NC} Status unchanged for $((stale_intervals * 30))s (id: $command_id)"
+            fi
+        fi
+
+        if [[ "$status_body" =~ \"isDone\"[[:space:]]*:[[:space:]]*true ]]; then
+            log "${BLUE}[INFO]${NC} Task completed, fetching result..."
+            set +e
+            local result_output
+            result_output=$(curl -s -w '|%{http_code}' --max-time "$timeout" "$result_url")
+            local result_exit=$?
+            set -e
+
+            if [[ $result_exit -ne 0 ]]; then
+                FAILED_TESTS=$((FAILED_TESTS + 1))
+                EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
+                test_result="FAIL"
+                log "${RED}[FAIL]${NC} ❌ Failed to fetch result (exit code: $result_exit)"
+            else
+                local result_http="${result_output##*|}"
+                local result_body="${result_output%|*}"
+                if assert_http_success "$result_http"; then
+                    printf "%s\n" "$result_body" > "$result_file"
+                    PASSED_TESTS=$((PASSED_TESTS + 1))
+                    EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
+                    test_result="PASS"
+                    test_passed=true
+                    log "${GREEN}[PASS]${NC} ✅ Result saved to $result_file"
+                else
+                    FAILED_TESTS=$((FAILED_TESTS + 1))
+                    EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
+                    test_result="FAIL"
+                    log "${RED}[FAIL]${NC} ❌ Result HTTP error: $result_http"
+                fi
+            fi
+            break
+        fi
+
+        if (( stale_intervals >= 3 )); then
+            TIMED_OUT_TESTS=$((TIMED_OUT_TESTS + 1))
+            test_result="TIMEOUT"
+            log "${YELLOW}[TIMEOUT]${NC} Status not updated for 90 seconds, marking as timeout"
+            break
+        fi
+
+        sleep 1
+    done
+
     local end_time
     end_time=$(date '+%Y-%m-%d %H:%M:%S %Z')
     local end_epoch
     end_epoch=$(date +%s)
     local duration=$((end_epoch - start_epoch))
 
-    # Process results
-    local response_size=0
-    if [[ -f "$response_file" ]]; then
-        response_size=$(wc -c < "$response_file")
-    fi
-
-    log "${BLUE}[RESPONSE]${NC} HTTP Status: $http_status | Size: ${response_size}B | Duration: ${duration}s"
-
-    local test_passed=false
-    local test_result=""
-
-    if [[ $exit_code -eq 28 ]]; then
-        # Timeout
-        TIMED_OUT_TESTS=$((TIMED_OUT_TESTS + 1))
-        test_result="TIMEOUT"
-        log "${YELLOW}[TIMEOUT]${NC} Command exceeded ${timeout}s and was aborted"
-
-        # Save partial response
-        cp "$response_file" "${TEST_RESULTS_DIR}/${test_name}_timeout_response.txt" 2>/dev/null || true
-
-    elif [[ $exit_code -ne 0 ]]; then
-        # Curl execution error
-        FAILED_TESTS=$((FAILED_TESTS + 1))
-        EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
-        test_result="FAIL"
-        log "${RED}[FAIL]${NC} ❌ Curl execution failed (exit code: $exit_code)"
-
-        if [[ -s "$error_file" ]]; then
-            local curl_error
-            curl_error=$(head -c 500 "$error_file")
-            log "${RED}[ERROR]${NC} $curl_error"
-        fi
-
-    elif assert_http_success "$http_status"; then
-        # HTTP success - now validate response content
-        EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
-
-        # Run assertions based on level
-        local assertion_passed=true
-
-        # Basic content assertion
-        if ! assert_response_has_content "$response_file" 10; then
-            assertion_passed=false
-            log "${YELLOW}[ASSERTION]${NC} Response content too short"
-        fi
-
-        # Task completion assertion (for non-async requests)
-        if [[ "$assertion_passed" == "true" ]] && ! assert_task_completed "$response_file"; then
-            # Not a strict failure for complex tasks
-            if [[ "$level" != *Simple* ]]; then
-                log "${YELLOW}[ASSERTION]${NC} Task completion unclear (complex task - acceptable)"
-            else
-                assertion_passed=false
-                log "${YELLOW}[ASSERTION]${NC} Task completion not detected"
-            fi
-        fi
-
-        if [[ "$assertion_passed" == "true" ]]; then
-            PASSED_TESTS=$((PASSED_TESTS + 1))
-            test_result="PASS"
-            test_passed=true
-            log "${GREEN}[PASS]${NC} ✅ Test completed successfully"
-        else
-            FAILED_TESTS=$((FAILED_TESTS + 1))
-            test_result="FAIL"
-            log "${RED}[FAIL]${NC} ❌ Assertions failed"
-        fi
-
-        # Save response
-        cp "$response_file" "${TEST_RESULTS_DIR}/${test_name}_response.txt" 2>/dev/null || true
-
-        # Show response preview
-        if [[ "$response_size" -gt 0 && "$response_size" -lt 2000 ]]; then
-            local preview
-            preview=$(head -c 500 "$response_file")
-            log "${CYAN}[PREVIEW]${NC} $preview..."
-        elif [[ "$response_size" -ge 2000 ]]; then
-            log "${CYAN}[INFO]${NC} Large response (${response_size}B) saved to results directory"
-        fi
-
-    else
-        # HTTP error
-        FAILED_TESTS=$((FAILED_TESTS + 1))
-        EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
-        test_result="FAIL"
-        log "${RED}[FAIL]${NC} ❌ HTTP Status: $http_status"
-
-        # Save error response
-        cp "$response_file" "${TEST_RESULTS_DIR}/${test_name}_error_${http_status}.txt" 2>/dev/null || true
-
-        if [[ -s "$response_file" ]]; then
-            local error_preview
-            error_preview=$(head -c 500 "$response_file")
-            log "${RED}[ERROR RESPONSE]${NC} $error_preview"
-        fi
-    fi
-
     log "${BLUE}[INFO]${NC} End time: $end_time (Duration: ${duration}s)"
     log "===================================================================="
-
-    # Cleanup
-    rm -f "$response_file" "$error_file"
 
     return $([ "$test_passed" == "true" ] && echo 0 || echo 1)
 }
