@@ -245,7 +245,7 @@ data class CommandStatus(
 
     var statusCode: Int = ResourceStatus.SC_CREATED,
     var event: String = "",
-    var isDone: Boolean = false,
+    var state: String = "created", // created, in_progress, done
 
     var pageStatusCode: Int = ProtocolStatusCodes.SC_CREATED,
     var pageContentBytes: Int = 0,
@@ -261,6 +261,8 @@ data class CommandStatus(
     val createTime: Instant = Instant.now()
     var lastModifiedTime: Instant? = null
     var finishTime: Instant? = null
+
+    val isDone: Boolean get() = state == "done"
 
     /**
      * The agent's state history reference for tracking agent execution progress.
@@ -278,17 +280,17 @@ data class CommandStatus(
         get() = agentHistory?.lastOrNull()
 
     companion object {
-        fun notFound(id: String) = CommandStatus(id, ResourceStatus.SC_NOT_FOUND, isDone = true)
+        fun notFound(id: String) = CommandStatus(id, ResourceStatus.SC_NOT_FOUND, state = "done")
 
-        fun failed(id: String) = CommandStatus(id, ResourceStatus.SC_EXPECTATION_FAILED, isDone = true)
+        fun failed(id: String) = CommandStatus(id, ResourceStatus.SC_EXPECTATION_FAILED, state = "done")
 
         fun failed(id: String, statusCode: Int, pageStatusCode: Int = statusCode) =
-            CommandStatus(id, statusCode = statusCode, pageStatusCode = pageStatusCode, isDone = true)
+            CommandStatus(id, statusCode = statusCode, pageStatusCode = pageStatusCode, state = "done")
 
         fun failed(statusCode: Int, pageStatusCode: Int = statusCode) = failed("", statusCode, pageStatusCode)
 
         fun failed(id: String, e: Exception): CommandStatus {
-            return CommandStatus(id, statusCode = ResourceStatus.SC_EXPECTATION_FAILED, isDone = true)
+            return CommandStatus(id, statusCode = ResourceStatus.SC_EXPECTATION_FAILED, state = "done")
         }
     }
 }
@@ -301,7 +303,7 @@ fun CommandStatus.ensureCommandResult(): CommandResult {
 
 fun CommandStatus.refresh(isDone: Boolean = false) {
     lastModifiedTime = Instant.now()
-    this.isDone = isDone
+    state = "done".takeIf { isDone } ?: "in_progress"
 }
 
 fun CommandStatus.refresh(statusCode: Int) = refresh(statusCode, this.pageStatusCode, false)
@@ -310,7 +312,7 @@ fun CommandStatus.refresh(statusCode: Int, pageStatusCode: Int, isDone: Boolean)
     lastModifiedTime = Instant.now()
     this.statusCode = statusCode
     this.pageStatusCode = pageStatusCode
-    this.isDone = isDone
+    state = "done".takeIf { isDone } ?: "in_progress"
 }
 
 fun CommandStatus.failed(statusCode: Int): CommandStatus {
