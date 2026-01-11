@@ -321,16 +321,6 @@
                 <version>${jgrapht.version}</version>
             </dependency>
 
-            <!--
-                The Jakarta-ORO Java classes are a set of text-processing Java classes
-                that provide Perl5 compatible regular expressions.
-                As of 2010-09-01, the ORO project is retired.
-             -->
-            <dependency>
-                <groupId>oro</groupId>
-                <artifactId>oro</artifactId>
-                <version>${oro.version}</version>
-            </dependency>
             <!--  Commander line parser  -->
             <dependency>
                 <groupId>com.beust</groupId>
@@ -499,7 +489,6 @@
         <websocket.api.version>1.1</websocket.api.version>
 
         <xml-apis.version>1.3.04</xml-apis.version>
-        <oro.version>2.0.8</oro.version>
         <EvalEx.version>2.0</EvalEx.version>
         <jsr305.version>3.0.0</jsr305.version>
         <jcommander.version>1.82</jcommander.version>
