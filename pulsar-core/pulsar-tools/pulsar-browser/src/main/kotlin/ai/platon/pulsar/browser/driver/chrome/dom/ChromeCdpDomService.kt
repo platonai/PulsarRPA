@@ -3,14 +3,12 @@ package ai.platon.pulsar.browser.driver.chrome.dom
 import ai.platon.cdt.kt.protocol.types.accessibility.AXNode
 import ai.platon.pulsar.browser.driver.chrome.RemoteDevTools
 import ai.platon.pulsar.browser.driver.chrome.dom.AccessibilityHandler.AccessibilityTreeResult
-import ai.platon.pulsar.browser.driver.chrome.dom.DOMSerializer
 import ai.platon.pulsar.browser.driver.chrome.dom.model.*
 import ai.platon.pulsar.browser.driver.chrome.dom.util.DomDebug
 import ai.platon.pulsar.browser.driver.chrome.dom.util.HashUtils
 import ai.platon.pulsar.browser.driver.chrome.dom.util.ScrollUtils
 import ai.platon.pulsar.browser.driver.chrome.dom.util.XPathUtils
 import ai.platon.pulsar.common.getLogger
-import com.ibm.icu.util.TimeZone
 import java.awt.Dimension
 import java.util.*
 
@@ -253,7 +251,13 @@ class ChromeCdpDomService(
 
             val parentBranchHash = if (ancestors.isNotEmpty()) {
                 runCatching { HashUtils.parentBranchHash(ancestors) }
-                    .onFailure { tracer?.trace("Parent branch hash failed | nodeId={} | {} ", node.nodeId, it.toString())}
+                    .onFailure {
+                        tracer?.trace(
+                            "Parent branch hash failed | nodeId={} | {} ",
+                            node.nodeId,
+                            it.toString()
+                        )
+                    }
                     .getOrNull()
             } else null
 
@@ -313,7 +317,8 @@ class ChromeCdpDomService(
                         cOffsetY += b.y
                     }
                 }
-                mergedContentDocument = merge(node.contentDocument, newAncestors, cFrames, cOffsetX, cOffsetY, depth + 1)
+                mergedContentDocument =
+                    merge(node.contentDocument, newAncestors, cFrames, cOffsetX, cOffsetY, depth + 1)
             }
 
             return mergedNode.copy(
@@ -401,23 +406,30 @@ class ChromeCdpDomService(
                 null
             }
         }
+
         suspend fun evalInt(expr: String): Int? = evalDouble(expr)?.toInt()
 
         // Scroll positions and viewport size (resilient)
         val scrollX = evalDouble("window.scrollX || window.pageXOffset || 0") ?: 0.0
         val scrollY = evalDouble("window.scrollY || window.pageYOffset || 0") ?: 0.0
-        val viewportWidth = (evalDouble("window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth || 0") ?: 0.0).toInt()
-        val viewportHeight = (evalDouble("window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight || 0") ?: 0.0).toInt()
+        val viewportWidth =
+            (evalDouble("window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth || 0")
+                ?: 0.0).toInt()
+        val viewportHeight =
+            (evalDouble("window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight || 0")
+                ?: 0.0).toInt()
 
         // Screen dimensions
         val screenWidth = evalInt("(window.screen && window.screen.width) || 0") ?: 0
         val screenHeight = evalInt("(window.screen && window.screen.height) || 0") ?: 0
 
         // Compute max vertical scroll and ratio
-        val totalHeight = evalDouble("(document.scrollingElement || document.documentElement || document.body).scrollHeight")
-            ?: viewportHeight.toDouble()
-        val clientHeight = evalDouble("(document.scrollingElement || document.documentElement || document.body).clientHeight")
-            ?: viewportHeight.toDouble()
+        val totalHeight =
+            evalDouble("(document.scrollingElement || document.documentElement || document.body).scrollHeight")
+                ?: viewportHeight.toDouble()
+        val clientHeight =
+            evalDouble("(document.scrollingElement || document.documentElement || document.body).clientHeight")
+                ?: viewportHeight.toDouble()
         val maxScrollY = (totalHeight - clientHeight).let { if (it.isFinite() && it > 0) it else 0.0 }
         val scrollYRatio = if (maxScrollY > 0) (scrollY / maxScrollY).coerceIn(0.0, 1.0) else 0.0
 
@@ -466,11 +478,17 @@ class ChromeCdpDomService(
         // Helpers
         suspend fun evalString(expr: String): String? = try {
             devTools.runtime.evaluate(expr).result.value?.toString()
-        } catch (_: Exception) { null }
+        } catch (_: Exception) {
+            null
+        }
+
         suspend fun evalDouble(expr: String): Double? = try {
             val res = devTools.runtime.evaluate(expr).result
             res?.value?.toString()?.toDoubleOrNull() ?: res.unserializableValue?.toDoubleOrNull()
-        } catch (_: Exception) { null }
+        } catch (_: Exception) {
+            null
+        }
+
         suspend fun evalInt(expr: String): Int? = evalDouble(expr)?.toInt()
         suspend fun evalBoolean(expr: String): Boolean? = try {
             val v = devTools.runtime.evaluate(expr).result.value
@@ -480,20 +498,25 @@ class ChromeCdpDomService(
                 is Number -> v.toInt() != 0
                 else -> null
             }
-        } catch (_: Exception) { null }
+        } catch (_: Exception) {
+            null
+        }
 
         val tzId = evalString("Intl.DateTimeFormat().resolvedOptions().timeZone")
         val timeZone = runCatching { if (!tzId.isNullOrBlank()) TimeZone.getTimeZone(tzId) else TimeZone.getDefault() }
             .getOrDefault(TimeZone.getDefault())
 
         val langTag = evalString("navigator.language || (navigator.languages && navigator.languages[0]) || ''")
-        val locale = runCatching { if (!langTag.isNullOrBlank()) Locale.forLanguageTag(langTag) else Locale.getDefault() }
-            .getOrDefault(Locale.getDefault())
+        val locale =
+            runCatching { if (!langTag.isNullOrBlank()) Locale.forLanguageTag(langTag) else Locale.getDefault() }
+                .getOrDefault(Locale.getDefault())
 
         val userAgent = evalString("navigator.userAgent")
         val devicePixelRatio = runCatching { getDevicePixelRatio() }.getOrDefault(1.0)
-        val viewportWidth = evalInt("window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth || 0")
-        val viewportHeight = evalInt("window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight || 0")
+        val viewportWidth =
+            evalInt("window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth || 0")
+        val viewportHeight =
+            evalInt("window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight || 0")
         val screenWidth = evalInt("(window.screen && window.screen.width) || 0")
         val screenHeight = evalInt("(window.screen && window.screen.height) || 0")
         val colorDepth = evalInt("(window.screen && (screen.colorDepth || screen.pixelDepth)) || 0")
@@ -502,8 +525,10 @@ class ChromeCdpDomService(
         val onLine = evalBoolean("navigator.onLine")
         val networkEffectiveType = evalString("(navigator.connection && navigator.connection.effectiveType) || ''")
         val saveData = evalBoolean("(navigator.connection && navigator.connection.saveData) || false")
-        val prefersDarkMode = evalBoolean("(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) || false")
-        val prefersReducedMotion = evalBoolean("(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || false")
+        val prefersDarkMode =
+            evalBoolean("(window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches) || false")
+        val prefersReducedMotion =
+            evalBoolean("(window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches) || false")
         val isSecureContext = evalBoolean("isSecureContext")
         val crossOriginIsolated = evalBoolean("crossOriginIsolated")
         val doNotTrack = evalString("navigator.doNotTrack || ''")
