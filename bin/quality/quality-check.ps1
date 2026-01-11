@@ -1,8 +1,13 @@
+#!/usr/bin/env pwsh
+
 Param()
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $Root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
+while ($Root -and -not (Test-Path (Join-Path $Root 'pom.xml'))) {
+    $Root = Split-Path -Parent $Root
+}
 Set-Location $Root
 
 $Exempt = @('pulsar-benchmarks','examples/browser4-examples','pulsar-bom','browser4')
@@ -16,9 +21,9 @@ foreach ($m in $modules) {
     $testRoot = Join-Path $m 'src/test'
     $tests = 0; $its = 0; $e2e = 0
     if (Test-Path $testRoot) {
-        $tests = @(Get-ChildItem -Recurse -Include *Test.kt,*Test.java -Path $testRoot -ErrorAction SilentlyContinue) .Count
-        $its   = @(Get-ChildItem -Recurse -Include *IT.kt,*IT.java -Path $testRoot -ErrorAction SilentlyContinue) .Count
-        $e2e   = @(Select-String -Path (Join-Path $testRoot '*.*') -Pattern '@Tag\("E2ETest"\)' -ErrorAction SilentlyContinue) .Count
+        $tests = @(Get-ChildItem -Recurse -Include *Test.kt,*Test.java -Path $testRoot -ErrorAction SilentlyContinue).Count
+        $its   = @(Get-ChildItem -Recurse -Include *IT.kt,*IT.java -Path $testRoot -ErrorAction SilentlyContinue).Count
+        $e2e   = @(Select-String -Path (Join-Path $testRoot '*.*') -Pattern '@Tag\("E2ETest"\)' -ErrorAction SilentlyContinue).Count
     }
     $status = 'OK'; $note = ''
     if ($tests -eq 0 -and $its -eq 0 -and $e2e -eq 0) {
