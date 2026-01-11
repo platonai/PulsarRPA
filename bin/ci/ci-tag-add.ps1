@@ -1,6 +1,7 @@
 #!/usr/bin/env pwsh
 
 param(
+    [string]$PreReleaseVersion = "ci",
     [string]$remote = "origin"
 )
 
@@ -17,12 +18,12 @@ $version = $SNAPSHOT_VERSION -replace "-SNAPSHOT", ""
 
 $parts = $version -split "\."
 $PREFIX = $parts[0] + "." + $parts[1]
-$pattern = "^v$version-ci\.[0-9]+$"
+$pattern = "^v$version-$PreReleaseVersion\.[0-9]+$"
 
-# Get all matching tags and sort them by version and ci number
+# Get all matching tags and sort them by version and pre-release number
 $tags = git tag --list | Where-Object { $_ -match "^$pattern$" }
 if (-not $tags) {
-    $newTag = "v$version-ci.1"
+    $newTag = "v$version-$PreReleaseVersion.1"
     Write-Host "No existing tags found. Creating new tag: $newTag"
     git tag $newTag
     git push $remote $newTag
@@ -31,10 +32,10 @@ if (-not $tags) {
     exit 0
 }
 
-# Sort tags by version and CI number (natural order)
+# Sort tags by version and pre-release number (natural order)
 $latestTag = $tags | Sort-Object {
-    # Extract version and CI number for sorting
-    if ($_ -match "^v(\d+)\.(\d+)\.(\d+)-ci\.(\d+)$") {
+    # Extract version and pre-release number for sorting
+    if ($_ -match "^v(\d+)\.(\d+)\.(\d+)-$PreReleaseVersion\.(\d+)$") {
         return [int]$matches[1]*1000000 + [int]$matches[2]*10000 + [int]$matches[3]*100 + [int]$matches[4]
     }
     return 0
@@ -42,11 +43,11 @@ $latestTag = $tags | Sort-Object {
 
 Write-Host "Latest tag found: $latestTag"
 
-if ($latestTag -match "^(v\d+\.\d+\.\d+)-ci\.(\d+)$") {
+if ($latestTag -match "^(v\d+\.\d+\.\d+)-$PreReleaseVersion\.(\d+)$") {
     $baseVersion = $matches[1]
-    $ciNumber = [int]$matches[2]
-    $newCiNumber = $ciNumber + 1
-    $newTag = "$baseVersion-ci.$newCiNumber"
+    $prNumber = [int]$matches[2]
+    $newPrNumber = $prNumber + 1
+    $newTag = "$baseVersion-$PreReleaseVersion.$newPrNumber"
     git tag $newTag
     git push $remote $newTag
     Write-Host "Created new tag '$newTag' and pushed it to remote '$remote'."
