@@ -12,18 +12,18 @@ $ErrorActionPreference = "Stop"
 
 # 自然语言命令内容
 $COMMAND = @'
-    Go to https://www.amazon.com/dp/B08PP5MSVB
+Go to https://www.amazon.com/dp/B08PP5MSVB
 
-    After browser launch:
-      - clear browser cookies
-      - go to https://www.amazon.com/
-      - wait for 5 seconds
-      - click the first product link
-    After page load: scroll to the middle.
+After browser launch:
+  - clear browser cookies
+  - go to https://www.amazon.com/
+  - wait for 5 seconds
+  - click the first product link
+After page load: scroll to the middle.
 
-    Summarize the product.
-    Extract: product name, price, ratings.
-    Find all links containing /dp/.
+Summarize the product.
+Extract: product name, price, ratings.
+Find all links containing /dp/.
 '@
 
 # API 接口
@@ -154,8 +154,8 @@ try {
         $lastUpdate = $data
       }
 
-      # 检查是否已完成
-      if ($data -match '"isDone"\s*:\s*true') {
+      # 检查是否已完成（兼容 "done" : true 与 "isDone" : true）
+      if ($data -match '"done"\s*:\s*true' -or $data -match '"isDone"\s*:\s*true') {
         $isDone = $true
         Write-Host "`nTask completed! Fetching final result..." -ForegroundColor Green
         Start-Sleep -Seconds 2  # 等待服务器完全处理完成

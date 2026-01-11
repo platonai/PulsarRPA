@@ -120,7 +120,7 @@ start_epoch=$(date +%s)
 echo "Start time: $start_time"
 # Run TEST 4 with explicit error capture
 set +e
-bash "$AppHome"/bin/tests/test-curl-commands.sh
+bash "$AppHome"/bin/tests/run-test-cases.sh
 exit_code=$?
 set -e
 # End time for TEST 4

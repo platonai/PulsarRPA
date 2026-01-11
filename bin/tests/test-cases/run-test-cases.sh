@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Test suite to execute documented curl commands against a running Browser4 instance.
-# Commands are sourced from CURL_COMMANDS.sh, one per line as: "Description|curl ...".
+# Commands are sourced from test-cases.sh, one per line as: "Description|curl ...".
 # Logs and responses are stored under ./target/test-results for post-run inspection.
 
 # set -e  # Exit on error
