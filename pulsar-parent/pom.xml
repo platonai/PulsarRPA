@@ -63,7 +63,6 @@ under the License.
         <connection>scm:git:https://github.com/platonai/platon.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/platon.git</developerConnection>
         <url>https://github.com/platonai/platon.git</url>
-        <tag>v4.0.3-SNAPSHOT</tag>
     </scm>
 
     <distributionManagement>

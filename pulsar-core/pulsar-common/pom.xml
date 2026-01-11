@@ -41,12 +41,6 @@
 
         <!-- Local Data Storage -->
 
-        <!-- XML process -->
-        <dependency>
-            <groupId>xml-apis</groupId>
-            <artifactId>xml-apis</artifactId>
-        </dependency>
-
         <!-- for URIBuilder -->
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>
