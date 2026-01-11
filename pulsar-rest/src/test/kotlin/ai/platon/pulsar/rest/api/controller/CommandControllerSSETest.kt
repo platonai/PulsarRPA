@@ -30,16 +30,7 @@ class CommandControllerSSETest : RestAPITestBase() {
             async = true,
         )
 
-        val status = client.post().uri("/api/commands")
-            .body(request)
-            .exchange()
-            .expectStatus().is2xxSuccessful
-            .expectBody<CommandStatus>()
-            .returnResult()
-            .responseBody
-
-        assertNotNull(status)
-        val id = status.id
+        val id = submitAsyncAndGetId(request)
         printlnPro("commandId: $id")
 
         receiveSSE(id)
@@ -62,19 +53,37 @@ class CommandControllerSSETest : RestAPITestBase() {
             async = true,
         )
 
-        val status = client.post().uri("/api/commands")
-            .body(request)
-            .exchange()
-            .expectStatus().is2xxSuccessful
-            .expectBody<CommandStatus>()
-            .returnResult()
-            .responseBody
-
-        assertNotNull(status)
-        val id = status.id
+        val id = submitAsyncAndGetId(request)
         printlnPro("commandId: $id")
 
         receiveSSE(id)
+    }
+
+    private fun submitAsyncAndGetId(request: CommandRequest): String {
+        // For async requests, POST /api/commands returns the command id as plain text (JSON string or raw string).
+        val rawBody = client.post().uri("/api/commands")
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(request)
+            .exchange()
+            .expectStatus().is2xxSuccessful
+            .expectBody<String>()
+            .returnResult()
+            .responseBody
+
+        val body = rawBody?.trim()
+        check(!body.isNullOrBlank()) { "Expected non-blank async command id body" }
+
+        // It might be returned as a JSON string ("id") or as plain text (id)
+        val id = body.removeSurrounding("\"").trim()
+        check(id.isNotBlank()) { "Expected non-blank command id but got: $body" }
+
+        // Sanity: it should also be queryable as status.
+        client.get().uri("/api/commands/$id/status")
+            .exchange()
+            .expectStatus().is2xxSuccessful
+            .expectBody<CommandStatus>()
+
+        return id
     }
 
     private fun receiveSSE(id: String) {
