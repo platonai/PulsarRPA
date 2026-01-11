@@ -303,6 +303,9 @@ run_build_script() {
     # Construct build command
     local build_cmd=("$buildScript")
 
+    # also build projects required
+    build_cmd+=("-am")
+
     if [[ $CLEAN_BUILD -eq 1 ]]; then
         build_cmd+=("-clean")
         log DEBUG "Clean build flag added"
