@@ -44,12 +44,13 @@
     </developers>
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/platonai</url>
+        <url>http://www.github.com/platonai</url>
     </issueManagement>
     <scm>
         <connection>scm:git:https://github.com/platonai/platon.git</connection>
         <developerConnection>scm:git:https://github.com/platonai/platon.git</developerConnection>
         <url>https://github.com/platonai/platon.git</url>
+        <tag>v4.0.3-SNAPSHOT</tag>
     </scm>
 
     <distributionManagement>
@@ -61,15 +62,6 @@
 
     <dependencyManagement>
         <dependencies>
-
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring-boot.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>okhttp-bom</artifactId>
@@ -283,16 +275,6 @@
                 <version>${jgrapht.version}</version>
             </dependency>
 
-            <!--
-                The Jakarta-ORO Java classes are a set of text-processing Java classes
-                that provide Perl5 compatible regular expressions.
-                As of 2010-09-01, the ORO project is retired.
-             -->
-            <dependency>
-                <groupId>oro</groupId>
-                <artifactId>oro</artifactId>
-                <version>${oro.version}</version>
-            </dependency>
             <!--  Commander line parser  -->
             <dependency>
                 <groupId>com.beust</groupId>
@@ -458,7 +440,6 @@
         <!-- required by pulsar-browser -->
         <websocket.api.version>1.1</websocket.api.version>
 
-        <oro.version>2.0.8</oro.version>
         <EvalEx.version>2.0</EvalEx.version>
         <jsr305.version>3.0.0</jsr305.version>
         <jcommander.version>1.82</jcommander.version>

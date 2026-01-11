@@ -96,12 +96,7 @@
             <artifactId>gson</artifactId>
         </dependency>
 
-        <!-- Required by OutlinkExtractor, PatternCompiler -->
-        <dependency>
-            <groupId>oro</groupId>
-            <artifactId>oro</artifactId>
-        </dependency>
-        <!-- Required option parser, PatternCompiler -->
+        <!-- Required option parser -->
         <dependency>
             <groupId>com.beust</groupId>
             <artifactId>jcommander</artifactId>
