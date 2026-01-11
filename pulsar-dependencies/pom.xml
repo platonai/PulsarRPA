@@ -127,13 +127,6 @@
                     </exclusion>
                 </exclusions>
             </dependency>
-            <!-- Persist -->
-            <!-- TODO: This artifact was moved to: jakarta.persistence » jakarta.persistence-api -->
-            <dependency>
-                <groupId>javax.persistence</groupId>
-                <artifactId>javax.persistence-api</artifactId>
-                <version>${javax.persistence-api.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>dev.langchain4j</groupId>
