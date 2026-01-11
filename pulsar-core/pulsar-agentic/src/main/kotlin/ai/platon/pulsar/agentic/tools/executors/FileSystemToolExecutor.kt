@@ -40,6 +40,14 @@ class FileSystemToolExecutor : AbstractToolExecutor() {
                     paramBool(args, "external", functionName, required = false, default = false) ?: false
                 )
             }
+            // fs.append(filename: String, content: String)
+            "append" -> {
+                validateArgs(args, allowed = setOf("filename", "content"), required = setOf("filename", "content"), functionName)
+                fs.append(
+                    paramString(args, "filename", functionName)!!,
+                    paramString(args, "content", functionName)!!
+                )
+            }
             // fs.replaceContent(filename: String, oldStr: String, newStr: String)
             "replaceContent" -> {
                 validateArgs(args, allowed = setOf("filename", "oldStr", "newStr"), required = setOf("filename", "oldStr", "newStr"), functionName)
@@ -48,6 +56,48 @@ class FileSystemToolExecutor : AbstractToolExecutor() {
                     paramString(args, "oldStr", functionName)!!,
                     paramString(args, "newStr", functionName)!!
                 )
+            }
+            // fs.fileExists(filename: String)
+            "fileExists" -> {
+                validateArgs(args, allowed = setOf("filename"), required = setOf("filename"), functionName)
+                fs.fileExists(
+                    paramString(args, "filename", functionName)!!
+                )
+            }
+            // fs.getFileInfo(filename: String)
+            "getFileInfo" -> {
+                validateArgs(args, allowed = setOf("filename"), required = setOf("filename"), functionName)
+                fs.getFileInfo(
+                    paramString(args, "filename", functionName)!!
+                )
+            }
+            // fs.deleteFile(filename: String)
+            "deleteFile" -> {
+                validateArgs(args, allowed = setOf("filename"), required = setOf("filename"), functionName)
+                fs.deleteFile(
+                    paramString(args, "filename", functionName)!!
+                )
+            }
+            // fs.copyFile(source: String, dest: String)
+            "copyFile" -> {
+                validateArgs(args, allowed = setOf("source", "dest"), required = setOf("source", "dest"), functionName)
+                fs.copyFile(
+                    paramString(args, "source", functionName)!!,
+                    paramString(args, "dest", functionName)!!
+                )
+            }
+            // fs.moveFile(source: String, dest: String)
+            "moveFile" -> {
+                validateArgs(args, allowed = setOf("source", "dest"), required = setOf("source", "dest"), functionName)
+                fs.moveFile(
+                    paramString(args, "source", functionName)!!,
+                    paramString(args, "dest", functionName)!!
+                )
+            }
+            // fs.listFiles()
+            "listFiles" -> {
+                validateArgs(args, allowed = emptySet(), required = emptySet(), functionName)
+                fs.listFilesInfo()
             }
             else -> throw IllegalArgumentException("Unsupported fs method: $functionName(${args.keys})")
         }

@@ -140,6 +140,23 @@ Your ultimate mission is to **accomplish `<user_request>` efficiently, safely, a
 
 ## #6. File System Protocol (文件与任务持久化)
 
+Agent拥有一个完整的文件系统，支持以下操作：
+
+| 方法           | 签名                                                      | 说明             |
+| ------------ | ------------------------------------------------------- | -------------- |
+| `writeString`    | `fs.writeString(filename: String, content: String)`     | 写入/覆盖文件内容      |
+| `readString`     | `fs.readString(filename: String): String`               | 读取文件内容         |
+| `append`         | `fs.append(filename: String, content: String)`          | 追加内容到文件末尾      |
+| `replaceContent` | `fs.replaceContent(filename, oldStr, newStr): String`   | 替换文件中的内容       |
+| `fileExists`     | `fs.fileExists(filename: String): String`               | 检查文件是否存在       |
+| `getFileInfo`    | `fs.getFileInfo(filename: String): String`              | 获取文件信息（大小、行数）  |
+| `deleteFile`     | `fs.deleteFile(filename: String): String`               | 删除文件           |
+| `copyFile`       | `fs.copyFile(source: String, dest: String): String`     | 复制文件           |
+| `moveFile`       | `fs.moveFile(source: String, dest: String): String`     | 移动/重命名文件       |
+| `listFiles`      | `fs.listFiles(): String`                                | 列出所有文件及其信息     |
+
+支持的文件格式：`md`, `txt`, `json`, `jsonl`, `csv`
+
 | 文件            | 用途        | 生命周期     |
 | ------------- | --------- | -------- |
 | `todolist.md` | 子任务列表与计划  | 临时（任务周期） |
@@ -150,9 +167,9 @@ Your ultimate mission is to **accomplish `<user_request>` efficiently, safely, a
 
 ```json
 {
-  "domain": "system",
-  "method": "save",
-  "arguments": [{ "file": "results.md", "content": "已完成第1阶段任务。" }]
+  "domain": "fs",
+  "method": "writeString",
+  "arguments": { "filename": "results.md", "content": "已完成第1阶段任务。" }
 }
 ```
 

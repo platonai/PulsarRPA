@@ -270,6 +270,160 @@ class AgentFileSystem constructor(
         }
     }
 
+    /**
+     * Checks if a file exists in the agent file system.
+     *
+     * @param fullFileName The full file name including extension (e.g., "data.json")
+     * @return A message indicating whether the file exists
+     */
+    fun fileExists(fullFileName: String): String {
+        if (!isValidFilename(fullFileName)) return INVALID_FILENAME_ERROR_MESSAGE
+        val exists = files.containsKey(fullFileName)
+        return if (exists) {
+            "File '$fullFileName' exists."
+        } else {
+            "File '$fullFileName' does not exist."
+        }
+    }
+
+    /**
+     * Returns information about a file including size and line count.
+     *
+     * @param fullFileName The full file name including extension (e.g., "data.json")
+     * @return A message with file information or an error message
+     */
+    fun getFileInfo(fullFileName: String): String {
+        if (!isValidFilename(fullFileName)) return INVALID_FILENAME_ERROR_MESSAGE
+        val file = getFile(fullFileName) ?: return "File '$fullFileName' not found."
+        return try {
+            val content = file.content()
+            val sizeBytes = content.toByteArray(StandardCharsets.UTF_8).size
+            val lineCount = if (content.isEmpty()) 0 else content.split("\n").size
+            val charCount = content.length
+            """File info for '$fullFileName':
+- Size: $sizeBytes bytes
+- Characters: $charCount
+- Lines: $lineCount
+- Extension: ${file.extension}"""
+        } catch (e: Exception) {
+            "Error: Could not get info for file '$fullFileName'. ${e.message ?: ""}".trim()
+        }
+    }
+
+    /**
+     * Deletes a file from the agent file system.
+     *
+     * @param fullFileName The full file name including extension (e.g., "data.json")
+     * @return A message indicating success or failure
+     */
+    suspend fun deleteFile(fullFileName: String): String {
+        if (!isValidFilename(fullFileName)) return INVALID_FILENAME_ERROR_MESSAGE
+        val file = files.remove(fullFileName) ?: return "File '$fullFileName' not found."
+        return try {
+            val filePath = dataDir.resolve(file.fullName)
+            withContext(Dispatchers.IO) {
+                if (filePath.exists()) {
+                    Files.delete(filePath)
+                }
+            }
+            "File '$fullFileName' deleted successfully."
+        } catch (e: IOException) {
+            // File removed from memory but OS file deletion failed
+            "File '$fullFileName' removed from memory, but could not delete from disk: ${e.message}"
+        } catch (e: Exception) {
+            "Error: Could not delete file '$fullFileName'. ${e.message ?: ""}".trim()
+        }
+    }
+
+    /**
+     * Copies a file within the agent file system.
+     *
+     * @param sourceFileName The source file name (e.g., "source.txt")
+     * @param destFileName The destination file name (e.g., "dest.txt")
+     * @return A message indicating success or failure
+     */
+    suspend fun copyFile(sourceFileName: String, destFileName: String): String {
+        if (!isValidFilename(sourceFileName)) return "Error: Invalid source fileName format. Must be alphanumeric with supported extension."
+        if (!isValidFilename(destFileName)) return "Error: Invalid destination fileName format. Must be alphanumeric with supported extension."
+        if (sourceFileName == destFileName) return "Error: Source and destination file names must be different."
+        
+        val sourceFile = getFile(sourceFileName) ?: return "Source file '$sourceFileName' not found."
+        
+        return try {
+            val (destName, destExt) = parseFilename(destFileName)
+            val newFile = createFile(destExt, destName, sourceFile.content())
+            files[destFileName] = newFile
+            newFile.writeString(dataDir)
+            "File '$sourceFileName' copied to '$destFileName' successfully."
+        } catch (e: FileSystemError) {
+            e.message ?: "Error: Could not copy file."
+        } catch (e: Exception) {
+            "Error: Could not copy file '$sourceFileName' to '$destFileName'. ${e.message ?: ""}".trim()
+        }
+    }
+
+    /**
+     * Moves/renames a file within the agent file system.
+     *
+     * @param sourceFileName The source file name (e.g., "old.txt")
+     * @param destFileName The destination file name (e.g., "new.txt")
+     * @return A message indicating success or failure
+     */
+    suspend fun moveFile(sourceFileName: String, destFileName: String): String {
+        if (!isValidFilename(sourceFileName)) return "Error: Invalid source fileName format. Must be alphanumeric with supported extension."
+        if (!isValidFilename(destFileName)) return "Error: Invalid destination fileName format. Must be alphanumeric with supported extension."
+        if (sourceFileName == destFileName) return "Error: Source and destination file names must be different."
+        
+        val sourceFile = files.remove(sourceFileName) ?: return "Source file '$sourceFileName' not found."
+        
+        return try {
+            // Delete old file from disk
+            val oldPath = dataDir.resolve(sourceFile.fullName)
+            withContext(Dispatchers.IO) {
+                if (oldPath.exists()) {
+                    Files.delete(oldPath)
+                }
+            }
+            
+            // Create new file with same content
+            val (destName, destExt) = parseFilename(destFileName)
+            val newFile = createFile(destExt, destName, sourceFile.content())
+            files[destFileName] = newFile
+            newFile.writeString(dataDir)
+            
+            "File '$sourceFileName' moved to '$destFileName' successfully."
+        } catch (e: FileSystemError) {
+            // Restore source file on failure
+            files[sourceFileName] = sourceFile
+            e.message ?: "Error: Could not move file."
+        } catch (e: Exception) {
+            // Restore source file on failure
+            files[sourceFileName] = sourceFile
+            "Error: Could not move file '$sourceFileName' to '$destFileName'. ${e.message ?: ""}".trim()
+        }
+    }
+
+    /**
+     * Lists all files in the agent file system with their basic info.
+     *
+     * @return A formatted string listing all files
+     */
+    fun listFilesInfo(): String {
+        if (files.isEmpty()) {
+            return "No files in the file system."
+        }
+        
+        val sb = StringBuilder()
+        sb.appendLine("Files in agent file system (${files.size} files):")
+        for ((fileName, file) in files) {
+            val content = file.content()
+            val sizeBytes = content.toByteArray(StandardCharsets.UTF_8).size
+            val lineCount = if (content.isEmpty()) 0 else content.split("\n").size
+            sb.appendLine("- $fileName (${sizeBytes} bytes, $lineCount lines)")
+        }
+        return sb.toString().trimEnd()
+    }
+
     suspend fun saveExtractedContent(content: String): String {
         val initial = "extracted_content_$extractedContentCount"
         val fileName = "$initial.md"

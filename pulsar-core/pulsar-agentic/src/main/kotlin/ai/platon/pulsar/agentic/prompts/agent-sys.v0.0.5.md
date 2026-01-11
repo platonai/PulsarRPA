@@ -67,7 +67,7 @@ navigateTo(url)、waitForSelector(selector)、exists(selector)、isVisible(selec
 
 3. 文件系统（fs）
 
-文件读写：writeString(filename, content)、readString(filename)、replaceContent(filename, oldStr, newStr)。
+文件读写：writeString(filename, content)、readString(filename)、append(filename, content)、replaceContent(filename, oldStr, newStr)、fileExists(filename)、getFileInfo(filename)、deleteFile(filename)、copyFile(source, dest)、moveFile(source, dest)、listFiles()。
 
 4. 智能体工具（agent）
 
