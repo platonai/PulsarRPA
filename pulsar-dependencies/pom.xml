@@ -108,14 +108,6 @@
                 <artifactId>jtidy</artifactId>
                 <version>4aug2000r7-dev</version>
             </dependency>
-            <!--  for EncodingDetector  -->
-            <!-- International Components for Unicode for Java (ICU4J) is a mature, widely used Java library providing
-            Unicode and Globalization support -->
-            <dependency>
-                <groupId>com.ibm.icu</groupId>
-                <artifactId>icu4j</artifactId>
-                <version>${icu4j.version}</version>
-            </dependency>
 
             <!--  Tika for general document parsers  -->
             <dependency>
@@ -469,7 +461,6 @@
 
         <xercesImpl.version>2.12.2</xercesImpl.version>
         <trove4j-core.version>3.0.3</trove4j-core.version>
-        <icu4j.version>75.1</icu4j.version>
         <trove4j.version>3.0.3</trove4j.version>
         <jodd-trove4j-core.version>3.5.2</jodd-trove4j-core.version>
 

@@ -52,12 +52,6 @@
             <groupId>org.apache.httpcomponents.client5</groupId>
             <artifactId>httpclient5</artifactId>
         </dependency>
-        <!-- For ai.platon.pulsar.common.EncodingDetector -->
-        <!-- TODO: use tika -->
-        <dependency>
-            <groupId>com.ibm.icu</groupId>
-            <artifactId>icu4j</artifactId>
-        </dependency>
 
         <!-- Utility Libraries -->
         <dependency>
