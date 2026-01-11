@@ -372,7 +372,7 @@ print_banner() {
 
 # Main function
 main() {
-    log DEBUG "Starting with arguments: $@"
+    log DEBUG "Starting with arguments:" "$@"
 
     # Parse arguments
     parse_args "$@"
@@ -413,6 +413,8 @@ main() {
             FETCH_REMOTE=0
         fi
     fi
+
+    git pull
 
     # Initial build
     log INFO "Intial build starting..."
