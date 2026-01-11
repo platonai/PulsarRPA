@@ -149,7 +149,7 @@ jobs:
 
             if timeout 1200 ./bin/tests/run-e2e-tests.sh; then
               echo "✅ E2E tests passed"
-              echo "E2E_status=success" >> $GITHUB_OUTPUT
+              echo "e2e_status=success" >> $GITHUB_OUTPUT
             else
               echo "❌ E2E tests failed"
               echo "integration_status=failed" >> $GITHUB_OUTPUT
@@ -158,7 +158,7 @@ jobs:
           else
             echo "⚠️ E2E test script not found: ./bin/tests/run-e2e-tests.sh"
             echo "Skipping E2E tests..."
-            echo "E2E_status=skipped" >> $GITHUB_OUTPUT
+            echo "e2e_status=skipped" >> $GITHUB_OUTPUT
           fi
 
           echo "::endgroup::"
