@@ -122,9 +122,9 @@ jobs:
         run: |
           echo "::group::🧪 End to End Tests"
 
-          if [ -f "./bin/tests/run-e2e-test.sh" ]; then
+          if [ -f "./bin/tests/run-e2e-tests.sh" ]; then
             echo "✅ Found E2E test script"
-            chmod +x ./bin/tests/run-e2e-test.sh
+            chmod +x ./bin/tests/run-e2e-tests.sh
 
             echo "🚀 Running E2E tests..."
             date
@@ -132,7 +132,7 @@ jobs:
             echo "Network: ${{ env.NETWORK_NAME }}"
             echo "Container: ${{ env.CONTAINER_NAME }}"
 
-            if timeout 1200 ./bin/tests/run-e2e-test.sh; then
+            if timeout 1200 ./bin/tests/run-e2e-tests.sh; then
               echo "✅ E2E tests passed"
               echo "E2E_status=success" >> $GITHUB_OUTPUT
             else
@@ -141,7 +141,7 @@ jobs:
               exit 1
             fi
           else
-            echo "⚠️ E2E test script not found: ./bin/tests/run-E2E-test.sh"
+            echo "⚠️ E2E test script not found: ./bin/tests/run-e2e-tests.sh"
             echo "Skipping E2E tests..."
             echo "E2E_status=skipped" >> $GITHUB_OUTPUT
           fi

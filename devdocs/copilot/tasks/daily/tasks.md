@@ -6,7 +6,7 @@
 
 ## Features
 
-### Improve run-e2e-test.sh
+### Improve run-e2e-tests.sh
 
 
 
