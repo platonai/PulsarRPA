@@ -110,7 +110,14 @@ browser.closeTab(tabId: String)
 // domain: fs
 fs.writeString(filename: String, content: String)
 fs.readString(filename: String): String
+fs.append(filename: String, content: String)
 fs.replaceContent(filename: String, oldStr: String, newStr: String): String
+fs.fileExists(filename: String): String
+fs.getFileInfo(filename: String): String
+fs.deleteFile(filename: String): String
+fs.copyFile(source: String, dest: String): String
+fs.moveFile(source: String, dest: String): String
+fs.listFiles(): String
 
 // domain: agent
 agent.extract(instruction: String, schema: String): String
