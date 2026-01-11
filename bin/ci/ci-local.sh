@@ -10,6 +10,7 @@ SCRIPT_NAME="$(basename "$0")"
 # Default values
 declare -i INTERVAL_SECONDS=60
 declare -i FETCH_REMOTE=1
+declare -i FORCE_BUILD=0
 BUILD_MODULES=":pulsar-tests"
 declare -i LOG_TO_FILE=0
 LOG_FILE=""
@@ -117,7 +118,7 @@ parse_args() {
                 exit 0
                 ;;
             -f|--force)
-                FETCH_REMOTE=0
+                FORCE_BUILD=1
                 log INFO "Force mode enabled - will build and test on every iteration"
                 shift
                 ;;
@@ -356,6 +357,7 @@ print_banner() {
     echo "Check interval: ${INTERVAL_SECONDS}s"
     echo "Clean build: $([[ $CLEAN_BUILD -eq 1 ]] && echo 'enabled' || echo 'disabled')"
     echo "Fetch remote: $([[ $FETCH_REMOTE -eq 1 ]] && echo 'enabled' || echo 'disabled')"
+    echo "Force build: $([[ $FORCE_BUILD -eq 1 ]] && echo 'enabled' || echo 'disabled')"
     if [[ -n "$BUILD_MODULES" ]]; then
         echo "Build modules: $BUILD_MODULES"
     else
@@ -442,16 +444,22 @@ main() {
         if fetch_remote; then
             should_build=1
             build_reason="remote changes detected"
+            # Pull the changes
+            log INFO "Pulling latest changes..."
+            if ! git pull --no-rebase --quiet 2>/dev/null; then
+                log ERROR "Failed to pull changes"
+                should_build=0
+            fi
         fi
 
-        # Check for local changes (always check even if remote fetch is disabled)
+        # Check for local changes (only when fetch is disabled)
         if [[ $FETCH_REMOTE -eq 0 ]] && ! is_repo_clean; then
             should_build=1
             build_reason="local uncommitted changes"
         fi
 
-        # Force build if enabled
-        if [[ $FETCH_REMOTE -eq 0 ]] && [[ $should_build -eq 0 ]]; then
+        # Force build if enabled and no other reason to build
+        if [[ $FORCE_BUILD -eq 1 ]] && [[ $should_build -eq 0 ]]; then
             should_build=1
             build_reason="force build mode enabled"
         fi
