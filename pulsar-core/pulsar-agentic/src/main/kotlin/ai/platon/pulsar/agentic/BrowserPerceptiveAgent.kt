@@ -154,7 +154,10 @@ open class BrowserPerceptiveAgent constructor(
         }
 
         try {
-            withContext(agentScope.coroutineContext) { resolveInCoroutine(action) }
+            // Avoid passing a distinct Job to withContext (structured concurrency violation warning).
+            // We still inherit caller cancellation while switching dispatcher as configured by agentScope.
+            val ctx = agentScope.coroutineContext.minusKey(Job)
+            withContext(ctx) { resolveInCoroutine(action) }
         } catch (_: CancellationException) {
             logger.info("Cancelled due to cancellation")
         } finally {
@@ -175,7 +178,8 @@ open class BrowserPerceptiveAgent constructor(
         }
 
         return try {
-            withContext(agentScope.coroutineContext) {
+            val ctx = agentScope.coroutineContext.minusKey(Job)
+            withContext(ctx) {
                 super.act(action)
             }
         } catch (_: CancellationException) {
@@ -193,7 +197,8 @@ open class BrowserPerceptiveAgent constructor(
         }
 
         return try {
-            withContext(agentScope.coroutineContext) {
+            val ctx = agentScope.coroutineContext.minusKey(Job)
+            withContext(ctx) {
                 super.act(observe)
             }
         } catch (_: CancellationException) {
@@ -215,7 +220,8 @@ open class BrowserPerceptiveAgent constructor(
         }
 
         return try {
-            withContext(agentScope.coroutineContext) {
+            val ctx = agentScope.coroutineContext.minusKey(Job)
+            withContext(ctx) {
                 super.extract(options)
             }
         } catch (_: CancellationException) {
@@ -236,15 +242,17 @@ open class BrowserPerceptiveAgent constructor(
 //        options.setContext(context)
         val context = stateManager.getOrCreateActiveContext(options)
 
+        val ctx = agentScope.coroutineContext.minusKey(Job)
+
         if (!options.fromResolve) {
-            return withContext(agentScope.coroutineContext) {
+            return withContext(ctx) {
                 if (isClosed) throw CancellationException("closed")
                 super.observe(options)
             }
         }
 
         try {
-            val results = withContext(agentScope.coroutineContext) {
+            val results = withContext(ctx) {
                 if (isClosed) throw CancellationException("closed")
                 super.observe(options)
             }
