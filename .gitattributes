@@ -36,6 +36,7 @@
 *.scss    text eol=lf
 *.sql     text eol=lf
 *.env     text eol=lf
+*.txt     text eol=lf
 
 # Treat these as binary to avoid EOL conversions and diffs
 *.png     binary

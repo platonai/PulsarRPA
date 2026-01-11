@@ -89,7 +89,7 @@ data class AgentConfig(
     val todoTagsFromToolCall: Boolean = true,
 )
 
-open class BrowserPerceptiveAgent constructor(
+open class BrowserPerceptiveAgent(
     session: AgenticSession,
     val maxSteps: Int = 100,
     config: AgentConfig = AgentConfig(maxSteps = maxSteps)
@@ -535,7 +535,7 @@ open class BrowserPerceptiveAgent constructor(
             action = action.action
         )
 
-        return ResolveResult(activeContext!!, actResult)
+        return ResolveResult(activeContext, actResult)
     }
 
     protected suspend fun initializeResolution(initContext: ExecutionContext, attempt: Int) {
