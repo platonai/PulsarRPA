@@ -112,9 +112,11 @@ check_server() {
 # =============================================================================
 
 # Extract task description (comment lines) from use case file
+# Returns up to MAX_DESCRIPTION_LINES lines of description (typically: title, level, type, description)
 extract_description() {
     local file="$1"
-    grep '^#' "$file" | sed 's/^# *//' | head -5
+    local max_lines=5  # Sufficient to capture title, level, type, description, and note
+    grep '^#' "$file" | sed 's/^# *//' | head -"$max_lines"
 }
 
 # Extract task level from use case file
@@ -165,9 +167,9 @@ assert_response_has_content() {
         return 1
     fi
     
-    local content_length
-    content_length=$(wc -c < "$response_file")
-    [[ "$content_length" -gt "$min_length" ]]
+    local response_content_length
+    response_content_length=$(wc -c < "$response_file")
+    [[ "$response_content_length" -gt "$min_length" ]]
 }
 
 # Assert response is valid JSON (when expected)
@@ -197,9 +199,11 @@ assert_task_completed() {
     fi
     
     # Check for non-empty response with substantial content
-    local content_length
-    content_length=$(wc -c < "$response_file")
-    [[ "$content_length" -gt 50 ]]
+    # Minimum 50 bytes ensures there's meaningful content beyond empty JSON/error stubs
+    local min_substantial_content=50
+    local response_content_length
+    response_content_length=$(wc -c < "$response_file")
+    [[ "$response_content_length" -gt "$min_substantial_content" ]]
 }
 
 # =============================================================================
