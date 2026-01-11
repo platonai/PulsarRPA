@@ -390,7 +390,7 @@ class PulsarPerceptiveAgentTest : WebDriverTestBase() {
                 if (agent.stateHistory.isEmpty()) {
                     assertTrue(agent.toString().contains("no history"))
                 } else {
-                    val lastEntry = agent.stateHistory.last()
+                    val lastEntry = agent.stateHistory.last().toString()
                     assertEquals(lastEntry, agent.toString())
                 }
             }
