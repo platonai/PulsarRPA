@@ -10,6 +10,7 @@ import ai.platon.pulsar.ql.common.types.ValueStringJSON
 import ai.platon.pulsar.skeleton.context.PulsarContexts
 import com.fasterxml.jackson.module.kotlin.readValue
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.CancellationException
 import java.util.concurrent.atomic.AtomicInteger
 
 const val DATA_EXTRACTION_RULES_PLACEHOLDER = "{DATA_EXTRACTION_RULES}"
@@ -50,13 +51,35 @@ object LLMFunctions {
     @JvmStatic
     @UDFunction(description = "Chat with the LLM model")
     fun chat(prompt: String): String {
-        return runBlocking { session.chat(prompt).content }
+        return try {
+            runBlocking { session.chat(prompt).content }
+        } catch (e: Exception) {
+            // Handle interruption gracefully
+            when (e) {
+                is InterruptedException, is kotlinx.coroutines.CancellationException -> {
+                    logger.info("Chat interrupted, returning empty result")
+                    ""
+                }
+                else -> throw e
+            }
+        }
     }
 
     @JvmStatic
     @UDFunction(description = "Chat with the LLM model")
     fun chat(dom: ValueDom, prompt: String): String {
-        return runBlocking { session.chat(prompt, dom.element).content }
+        return try {
+            runBlocking { session.chat(prompt, dom.element).content }
+        } catch (e: Exception) {
+            // Handle interruption gracefully
+            when (e) {
+                is InterruptedException, is kotlinx.coroutines.CancellationException -> {
+                    logger.info("Chat interrupted, returning empty result")
+                    ""
+                }
+                else -> throw e
+            }
+        }
     }
 
     @JvmStatic
@@ -68,7 +91,18 @@ object LLMFunctions {
 
     internal fun extractInternal(domContent: String, dataExtractionRules: String): Map<String, String> {
         val prompt = LLM_UDF_EXTRACT_PROMPT.replace(DATA_EXTRACTION_RULES_PLACEHOLDER, dataExtractionRules)
-        val content = runBlocking { session.chat(prompt + "\n" + domContent).content }
+        val content = try {
+            runBlocking { session.chat(prompt + "\n" + domContent).content }
+        } catch (e: Exception) {
+            // Handle interruption gracefully
+            when (e) {
+                is InterruptedException, is kotlinx.coroutines.CancellationException -> {
+                    logger.info("Extraction interrupted, returning empty result")
+                    return emptyMap()
+                }
+                else -> throw e
+            }
+        }
 
         val jsonBlocks = JSONExtractor.extractJsonBlocks(content)
         if (jsonBlocks.isEmpty()) {

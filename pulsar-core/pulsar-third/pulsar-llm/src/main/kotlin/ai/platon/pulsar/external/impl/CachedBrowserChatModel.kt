@@ -16,6 +16,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.CancellationException
+import java.lang.InterruptedException
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
 import org.ehcache.Cache
@@ -289,6 +291,11 @@ open class CachedBrowserChatModel(
                 logger.warn("Timeout and cancelled to sent chat message, trying $i-th time | {}", e.message)
                 continue
             } catch (e: RuntimeException) {
+                // Check for interruption/cancellation - if interrupted, exit immediately without retry
+                if (isInterruptionException(e)) {
+                    logger.info("Interrupted, aborting retry at attempt $i | {}", e.message)
+                    throw e
+                }
                 lastException = e
                 if (e.cause is InterruptedIOException) {
                     logger.info("InterruptedIOException, trying $i-th time | {}", e.message)
@@ -316,6 +323,23 @@ open class CachedBrowserChatModel(
     private suspend fun sendChatMessageInIOThread(vararg messages: ChatMessage): ChatResponse {
         return withContext(Dispatchers.IO) {
             langchainModel.chat(*messages)
+        }
+    }
+
+    private fun isInterruptionException(e: Exception): Boolean {
+        return when (e) {
+            is CancellationException -> true
+            is InterruptedException -> true
+            else -> {
+                var cause: Throwable? = e.cause
+                while (cause != null) {
+                    if (cause is InterruptedException || cause is CancellationException || cause is InterruptedIOException) {
+                        return true
+                    }
+                    cause = cause.cause
+                }
+                false
+            }
         }
     }
 
