@@ -16,7 +16,7 @@ if [[ "$CHROME_VERSION" == "" ]]; then
   exit
 fi
 
-mkdir "$APP_HOME/target/"
+mkdir -p "$APP_HOME/target/"
 UBERJAR="$APP_HOME"/target/Browser4.jar
 if [ ! -f "$UBERJAR" ]; then
   SERVER_HOME=$APP_HOME/browser4/browser4-agents
