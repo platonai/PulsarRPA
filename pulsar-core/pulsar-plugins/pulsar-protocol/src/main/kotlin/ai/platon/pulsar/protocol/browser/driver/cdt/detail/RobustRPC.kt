@@ -59,12 +59,57 @@ class RobustRPC(
 
         var i = 1
         while (result.isFailure && i++ < maxRetry && driver.checkState()) {
+            val exception = result.exceptionOrNull()
+            // Check if this is a permanent error that shouldn't be retried
+            if (exception != null && !isRetryableException(exception)) {
+                logger.warn("Encountered non-retryable exception: [$action], aborting retries | {}", exception.message)
+                break
+            }
             delay(500)
             result = kotlin.runCatching { invokeDeferred0(action, block) }
                 .onFailure { logger.warn("Exception to execute action: [$action], retrying $i/$maxRetry times", it) }
         }
 
         return result.getOrElse { throw it }
+    }
+
+    /**
+     * Check if an exception is retryable. Returns false for permanent errors that
+     * will not be resolved by retrying, such as:
+     * - Invalid URL errors
+     * - Invalid parameter errors
+     * - etc.
+     */
+    private fun isRetryableException(e: Throwable): Boolean {
+        // Non-retryable CDP errors
+        if (e is ai.platon.pulsar.browser.driver.chrome.util.CDPReturnError) {
+            val errorMessage = e.errorMessage?.lowercase() ?: ""
+            val message = e.message?.lowercase() ?: ""
+
+            // List of error messages that indicate permanent failures
+            val permanentErrorPatterns = listOf(
+                "cannot navigate to invalid url",
+                "invalid url",
+                "unsupported url scheme",
+                "cannot find context",
+                "invalid parameter",
+                "unsupported operation",
+                "target closed"
+            )
+
+            return permanentErrorPatterns.none { pattern ->
+                errorMessage.contains(pattern) || message.contains(pattern)
+            }
+        }
+
+        // ChromeRPCException with specific error codes might also be non-retryable
+        if (e is ChromeRPCException) {
+            // Add specific error codes here if needed
+            // For now, assume other RPC errors are retryable
+        }
+
+        // Default: assume unknown exceptions are retryable
+        return true
     }
 
     suspend fun <T> invokeSilently(action: String, message: String? = null, block: suspend () -> T): T? {

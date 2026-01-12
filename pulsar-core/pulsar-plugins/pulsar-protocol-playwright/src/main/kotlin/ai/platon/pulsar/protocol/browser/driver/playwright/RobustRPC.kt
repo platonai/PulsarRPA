@@ -53,12 +53,19 @@ internal class RobustRPC(
             return null
         }
 
-        var i = maxRetry
+        val maxRetryAttempts = maxRetry
+        var i = maxRetryAttempts
         var result = kotlin.runCatching { invokeDeferred0(action, block) }
             .onFailure {
                 // no handler here
             }
         while (result.isFailure && i-- > 0 && driver.checkState(action)) {
+            val exception = result.exceptionOrNull()
+            // Check if this is a permanent error that shouldn't be retried
+            if (exception != null && !isRetryableException(exception)) {
+                logger.warn("Encountered non-retryable exception: [$action], aborting retries | {}", exception.message)
+                break
+            }
             result = kotlin.runCatching { invokeDeferred0(action, block) }
                 .onFailure {
                     // no handler here
@@ -66,6 +73,33 @@ internal class RobustRPC(
         }
 
         return result.getOrElse { throw it }
+    }
+
+    /**
+     * Check if an exception is retryable. Returns false for permanent errors that
+     * will not be resolved by retrying, such as:
+     * - Invalid URL errors
+     * - Invalid parameter errors
+     * - etc.
+     */
+    private fun isRetryableException(e: Throwable): Boolean {
+        // For Playwright, check the exception message for permanent error patterns
+        val message = e.message?.lowercase() ?: ""
+
+        // List of error messages that indicate permanent failures
+        val permanentErrorPatterns = listOf(
+            "cannot navigate to invalid url",
+            "invalid url",
+            "unsupported url scheme",
+            "cannot find context",
+            "invalid parameter",
+            "unsupported operation",
+            "target closed"
+        )
+
+        return permanentErrorPatterns.none { pattern ->
+            message.contains(pattern)
+        }
     }
 
     suspend fun <T> invokeDeferredSilently(
