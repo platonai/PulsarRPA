@@ -4,7 +4,7 @@ script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)"
 RUN_E2E_BASICS="${RUN_E2E_BASICS:-false}"
 
 if [[ "$RUN_E2E_BASICS" == "true" ]]; then
-  "$script_dir/run-e2e-test-cases.sh" "$@"
+  "$script_dir/test-cases/run-test-cases.sh" "$@"
   exit_code=$?
   if [ $exit_code -ne 0 ]; then
     exit $exit_code
