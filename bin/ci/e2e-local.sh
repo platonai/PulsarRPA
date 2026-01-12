@@ -67,14 +67,12 @@ ensure_directories() {
 }
 
 build_browser4() {
-  if [[ "$SKIP_BUILD" == "true" ]]; then
-    if [[ -f "$JAR_PATH" ]]; then
-      log "Skipping build (jar found at $JAR_PATH)"
-      return
-    else
-      log "Jar not found at $JAR_PATH, cannot skip build"
-      exit 1
-    fi
+  if [[ -f "$JAR_PATH" && "$SKIP_BUILD" == "true" ]]; then
+    log "Skipping build (jar found at $JAR_PATH)"
+    return
+  fi
+  if [[ ! -f "$JAR_PATH" && "$SKIP_BUILD" == "true" ]]; then
+    log "Jar not found at $JAR_PATH, running build despite --skip-build"
   fi
 
   log "Building Browser4 agents..."
@@ -84,6 +82,10 @@ build_browser4() {
     build_cmd+=($BUILD_ARGS)
   fi
   "${build_cmd[@]}"
+  if [[ ! -f "$JAR_PATH" ]]; then
+    log "Build finished but jar not found at $JAR_PATH"
+    exit 1
+  fi
 }
 
 wait_for_server() {
