@@ -440,16 +440,19 @@ main() {
         local -i should_build=0
         local build_reason=""
 
-        # Check for remote changes
-        if fetch_remote; then
+        # Check for remote changes - always pull if fetch_remote indicates changes
+        fetch_remote
+        local -i fetch_exit=$?
+        if [[ $fetch_exit -eq 0 ]]; then
+            # Pull the changes (this will succeed if fetch_remote returned 0)
+            log INFO "Pulling latest changes..."
+            # Use || true to prevent exit on error due to set -e but show the error
+            if ! git pull --no-rebase --quiet; then
+                log WARN "Git pull encountered issues, but continuing..."
+            fi
+            # Always continue after pull attempt - don't let errors stop the build check
             should_build=1
             build_reason="remote changes detected"
-            # Pull the changes
-            log INFO "Pulling latest changes..."
-            if ! git pull --no-rebase --quiet 2>/dev/null; then
-                log ERROR "Failed to pull changes"
-                should_build=0
-            fi
         fi
 
         # Check for local changes (only when fetch is disabled)
