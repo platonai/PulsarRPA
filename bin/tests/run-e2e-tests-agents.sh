@@ -93,6 +93,28 @@ vlog() {
     [[ "$VERBOSE" == "true" ]] && log "${CYAN}[VERBOSE]${NC} $1"
 }
 
+record_response_if_changed() {
+    local content="$1"
+    local file="$2"
+    local last_ref="$3"
+    local label="${4:-}"
+    local last_value="${!last_ref-}"
+
+    if [[ "$content" != "$last_value" ]]; then
+        local timestamp
+        timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+        if [[ -n "$label" ]]; then
+            printf "[%s] [%s] %s\n" "$timestamp" "$label" "$content" >> "$file"
+        else
+            printf "[%s] %s\n" "$timestamp" "$content" >> "$file"
+        fi
+        printf -v "$last_ref" '%s' "$content"
+        return 0
+    fi
+
+    return 1
+}
+
 ensure_directories() {
     mkdir -p "$TEST_RESULTS_DIR"
 }
@@ -268,6 +290,7 @@ run_use_case_test() {
     local status_file="${TEST_RESULTS_DIR}/${test_name}_status.log"
     local result_file="${TEST_RESULTS_DIR}/${test_name}_result.json"
     : > "$status_file"
+    local last_status_content=""
 
     # Start time tracking
     local start_time
@@ -297,6 +320,7 @@ run_use_case_test() {
     command_id="${command_id%$'\r'}"
     command_id="${command_id%\"}"
     command_id="${command_id#\"}"
+    record_response_if_changed "$submit_output" "$status_file" last_status_content "submit" || true
 
     local test_passed=false
     local test_result=""
@@ -323,7 +347,6 @@ run_use_case_test() {
 
     local status_url="$COMMAND_STATUS_BASE/$command_id/status"
     local result_url="$COMMAND_STATUS_BASE/$command_id/result"
-    local last_status_content=""
     local last_change_epoch
     last_change_epoch=$(date +%s)
     local stale_intervals=0
@@ -355,17 +378,7 @@ run_use_case_test() {
         local status_http="${status_output##*|}"
         local status_body="${status_output%|*}"
 
-        if ! assert_http_success "$status_http"; then
-            FAILED_TESTS=$((FAILED_TESTS + 1))
-            EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
-            test_result="FAIL"
-            log "${RED}[FAIL]${NC} ❌ Status HTTP error: $status_http"
-            break
-        fi
-
-        if [[ "$status_body" != "$last_status_content" ]]; then
-            printf "[%s] %s\n" "$(date '+%Y-%m-%d %H:%M:%S')" "$status_body" >> "$status_file"
-            last_status_content="$status_body"
+        if record_response_if_changed "$status_body" "$status_file" last_status_content "status"; then
             last_change_epoch=$(date +%s)
             stale_intervals=0
         else
@@ -374,6 +387,14 @@ run_use_case_test() {
                 last_change_epoch=$now_epoch
                 log "${YELLOW}[WAIT]${NC} Status unchanged for $((stale_intervals * 30))s (id: $command_id)"
             fi
+        fi
+
+        if ! assert_http_success "$status_http"; then
+            FAILED_TESTS=$((FAILED_TESTS + 1))
+            EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
+            test_result="FAIL"
+            log "${RED}[FAIL]${NC} ❌ Status HTTP error: $status_http"
+            break
         fi
 
         # if there is a line contains "isDone" and "true", then the task is completed
@@ -393,6 +414,7 @@ run_use_case_test() {
             else
                 local result_http="${result_output##*|}"
                 local result_body="${result_output%|*}"
+                record_response_if_changed "$result_body" "$status_file" last_status_content "result" || true
                 if assert_http_success "$result_http"; then
                     printf "%s\n" "$result_body" > "$result_file"
                     PASSED_TESTS=$((PASSED_TESTS + 1))
@@ -512,7 +534,13 @@ run_all_tests() {
             break
         fi
         test_counter=$((test_counter + 1))
+        set +e
         run_use_case_test "$use_case_file" "$test_counter" "$total_selected"
+        local test_rc=$?
+        set -e
+        if (( test_rc != 0 )); then
+            log "${YELLOW}[INFO]${NC} Continuing to next test despite failure (exit code: $test_rc)"
+        fi
     done
 }
 
