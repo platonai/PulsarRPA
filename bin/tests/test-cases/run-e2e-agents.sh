@@ -501,12 +501,12 @@ run_all_tests() {
     fi
 
     # Get list of use case files
-    local use_case_files=()
+    use_case_files=()
     while IFS= read -r -d '' file; do
         use_case_files+=("$file")
     done < <(find "$USE_CASES_DIR" -name "*.txt" -type f -print0 | sort -z)
 
-    local total_files=${#use_case_files[@]}
+    total_files=${#use_case_files[@]}
 
     if [[ $total_files -eq 0 ]]; then
         log "${RED}[ERROR]${NC} No use case files found in $USE_CASES_DIR"
@@ -516,7 +516,7 @@ run_all_tests() {
     log "${BLUE}[INFO]${NC} Found $total_files use case files"
 
     # Build list of tests to run
-    local tests_to_run=()
+    tests_to_run=()
     if [[ "$TEST_SELECTION" == "all" ]]; then
         tests_to_run=("${use_case_files[@]}")
     else
@@ -537,11 +537,15 @@ run_all_tests() {
 
     # Filter by level
     if ((${#tests_to_run[@]})); then
-        local filtered_tests=()
+        filtered_tests=()
         for file in "${tests_to_run[@]}"; do
-            local lvl
             lvl=$(extract_level "$file")
-            if level_matches_filter "$lvl"; then
+            # Check if level matches filter (set +e to prevent exit on non-zero)
+            set +e
+            level_matches_filter "$lvl"
+            match_rc=$?
+            set -e
+            if [[ $match_rc -eq 0 ]]; then
                 filtered_tests+=("$file")
             else
                 SKIPPED_TESTS=$((SKIPPED_TESTS + 1))
@@ -551,13 +555,13 @@ run_all_tests() {
         tests_to_run=("${filtered_tests[@]}")
     fi
 
-    local total_selected=${#tests_to_run[@]}
-    local count_label="$TEST_COUNT"
+    total_selected=${#tests_to_run[@]}
+    count_label="$TEST_COUNT"
     [[ "$TEST_COUNT" == "0" ]] && count_label="all"
     log "${BLUE}[INFO]${NC} Tests selected: $total_selected | Order: $EXECUTION_ORDER | Count: $count_label"
 
-    if ! [[ "$TEST_COUNT" =~ ^[0-9]+$ ]] || (( TEST_COUNT <= 0 )); then
-        log "${RED}[ERROR]${NC} TEST_COUNT must be a positive integer (got: $TEST_COUNT)"
+    if ! [[ "$TEST_COUNT" =~ ^[0-9]+$ ]] || [[ "$TEST_COUNT" -lt 0 ]]; then
+        log "${RED}[ERROR]${NC} TEST_COUNT must be a non-negative integer (got: $TEST_COUNT)"
         exit 1
     fi
 
@@ -575,11 +579,9 @@ run_all_tests() {
     log "${BLUE}[INFO]${NC} Tests to execute after limiting: $total_selected"
 
     # Run tests with suite-level timeout
-    local suite_start_epoch
     suite_start_epoch=$(date +%s)
-    local test_counter=0
+    test_counter=0
     for use_case_file in "${tests_to_run[@]}"; do
-        local now
         now=$(date +%s)
         if (( now - suite_start_epoch >= TOTAL_TIMEOUT )); then
             log "${YELLOW}[TIMEOUT]${NC} Suite timeout (${TOTAL_TIMEOUT}s) reached; skipping remaining tests"
@@ -588,7 +590,7 @@ run_all_tests() {
         test_counter=$((test_counter + 1))
         set +e
         run_use_case_test "$use_case_file" "$test_counter" "$total_selected"
-        local test_rc=$?
+        test_rc=$?
         set -e
         if (( test_rc != 0 )); then
             log "${YELLOW}[INFO]${NC} Continuing to next test despite failure (exit code: $test_rc)"
