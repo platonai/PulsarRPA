@@ -424,7 +424,7 @@ function Print-Summary {
 
 function Show-Usage {
     @"
-Usage: run-e2e-tests-agents.ps1 [OPTIONS]
+Usage: run-e2e-fast-agents.ps1 [OPTIONS]
 
 Run use case based end-to-end tests against Browser4 server.
 
@@ -452,11 +452,11 @@ ENVIRONMENT VARIABLES:
     SKIP_SERVER_CHECK       Same as --skip-server option
 
 EXAMPLES:
-    .\run-e2e-tests-agents.ps1                 # Run 3 random tests from all use cases
-    .\run-e2e-tests-agents.ps1 -u http://localhost:8080
-    .\run-e2e-tests-agents.ps1 -t "01,02,03"
-    .\run-e2e-tests-agents.ps1 -n 5 -o sequential
-    .\run-e2e-tests-agents.ps1 --skip-server -v
+    .\run-e2e-fast-agents.ps1                 # Run 3 random tests from all use cases
+    .\run-e2e-fast-agents.ps1 -u http://localhost:8080
+    .\run-e2e-fast-agents.ps1 -t "01,02,03"
+    .\run-e2e-fast-agents.ps1 -n 5 -o sequential
+    .\run-e2e-fast-agents.ps1 --skip-server -v
 "@
 }
 
