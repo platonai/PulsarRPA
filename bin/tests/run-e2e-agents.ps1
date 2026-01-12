@@ -4,22 +4,6 @@
     run-e2e-agents.ps1 - PowerShell version of run-e2e-agents.sh
 #>
 
-$ErrorActionPreference = "Stop"
-
-function Get-AppHome {
-    $dir = Split-Path -Parent $PSCommandPath
-    while ($true) {
-        if (Test-Path (Join-Path $dir "VERSION")) { return $dir }
-        $parent = Split-Path -Parent $dir
-        if ($parent -eq $dir) { break }
-        $dir = $parent
-    }
-    return (Get-Location).Path
-}
-
-$AppHome = Get-AppHome
-Set-Location $AppHome
-
 param(
     [string]$Url,
     [string]$Test,
@@ -51,6 +35,22 @@ OPTIONS:
 "@
     exit 0
 }
+
+$ErrorActionPreference = "Stop"
+
+function Get-AppHome {
+    $dir = Split-Path -Parent $PSCommandPath
+    while ($true) {
+        if (Test-Path (Join-Path $dir "VERSION")) { return $dir }
+        $parent = Split-Path -Parent $dir
+        if ($parent -eq $dir) { break }
+        $dir = $parent
+    }
+    return (Get-Location).Path
+}
+
+$AppHome = Get-AppHome
+Set-Location $AppHome
 
 # Configuration (params override env, then defaults)
 $API_BASE = if ($Url) { $Url } elseif ($env:API_BASE) { $env:API_BASE } else { "http://localhost:8182" }
@@ -334,48 +334,6 @@ function Print-Summary {
     if ($EXECUTED_TESTS -eq 0) { exit 1 }
     if ($successRate -ge [int]$MIN_SUCCESS_RATE) { exit 0 } else { exit 1 }
 }
-
-function Usage {
-@"
-Usage: run-e2e-agents.ps1 [OPTIONS]
-
-OPTIONS:
-    -Url <URL>             Browser4 base URL (default: http://localhost:8182)
-    -Test <SELECTION>      Test selection (comma-separated numbers or "all", default: all)
-    -Count <N>             Number of tests to run after selection (default: all)
-    -Order <MODE>          Execution order: random | sequential (default: random)
-    -Level <LEVELS>        Comma-separated task levels to run (default: Simple; use "all" for all levels)
-    -TaskTimeout <SEC>     Per-test timeout in seconds (default: 180)
-    -TotalTimeout <SEC>    Total suite timeout in seconds (default: 1200)
-    -SkipServer            Skip server connectivity check
-    -Verbose               Enable verbose output
-    -Help                  Show this help message
-"@
-}
-
-param(
-    [string]$Url,
-    [string]$Test,
-    [int]$Count,
-    [string]$Order,
-    [string]$Level,
-    [int]$TaskTimeout,
-    [int]$TotalTimeout,
-    [switch]$SkipServer,
-    [switch]$Verbose,
-    [switch]$Help
-)
-
-if ($Help) { Usage; exit 0 }
-if ($PSBoundParameters.ContainsKey('Url')) { $API_BASE = $Url; $COMMAND_ENDPOINT = "$API_BASE/api/commands/plain?mode=async"; $COMMAND_STATUS_BASE = "$API_BASE/api/commands" }
-if ($PSBoundParameters.ContainsKey('Test')) { $TEST_SELECTION = $Test }
-if ($PSBoundParameters.ContainsKey('Count')) { $TEST_COUNT = $Count }
-if ($PSBoundParameters.ContainsKey('Order')) { $EXECUTION_ORDER = $Order }
-if ($PSBoundParameters.ContainsKey('Level')) { $LEVEL_FILTER = $Level }
-if ($PSBoundParameters.ContainsKey('TaskTimeout')) { $TASK_TIMEOUT = $TaskTimeout }
-if ($PSBoundParameters.ContainsKey('TotalTimeout')) { $TOTAL_TIMEOUT = $TotalTimeout }
-if ($SkipServer) { $SKIP_SERVER_CHECK = $true }
-if ($Verbose) { $VERBOSE_MODE = $true }
 
 Ensure-Directories
 
