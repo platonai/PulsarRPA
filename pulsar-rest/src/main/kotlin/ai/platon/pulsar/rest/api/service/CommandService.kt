@@ -191,28 +191,17 @@ class CommandService(
     fun getResult(id: String) = commandStatusCache[id]?.commandResult
 
     fun streamEvents(id: String): Flux<ServerSentEvent<CommandStatus>> {
-        var doneCount = 0
         val handleFluxSink = { sink: FluxSink<CommandStatus> ->
-            val job = commandStatusFlow(id).onEach {
-                sink.next(it)
-
-                if (it.isDone) {
-                    ++doneCount
+            val job = commandStatusFlow(id)
+                .onEach { sink.next(it) }
+                .onCompletion { sink.complete() }
+                .catch {
+                    logger.error("Error in command status flow", it)
+                    sink.error(it)
                 }
+                .launchIn(commanderScope)
 
-                if (doneCount >= 5) {
-                    // the client may not close the connection correctly
-                    // check the exact behavior when the underlying flow is finished
-                    sink.complete()
-                }
-            }.catch {
-                logger.error("Error in command status flow", it)
-                sink.error(it)
-            }.launchIn(commanderScope)
-
-            sink.onDispose {
-                job.cancel()
-            }
+            sink.onDispose { job.cancel() }
         }
 
         return Flux.create { sink -> handleFluxSink(sink) }.map {
