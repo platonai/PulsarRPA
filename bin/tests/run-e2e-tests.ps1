@@ -25,8 +25,8 @@ if ($runLegacy) {
     }
 }
 
-$agentsPs1 = Join-Path $scriptDir "run-e2e-fast-agents.ps1"
-$agentsSh = Join-Path $scriptDir "run-e2e-fast-agents.sh"
+$agentsPs1 = Join-Path $scriptDir "run-e2e-agents.ps1"
+$agentsSh = Join-Path $scriptDir "run-e2e-agents.sh"
 if (Test-Path $agentsPs1) {
     & $agentsPs1 @args
     $exitCode = $LASTEXITCODE
