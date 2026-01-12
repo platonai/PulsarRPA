@@ -95,7 +95,7 @@ fi
 echo "===================================================================="
 
 TEST_INDEX=$((TEST_INDEX + 1))
-echo "[TEST ${TEST_INDEX}/${PLANNED_TESTS}] Running test-cases-legacy.sh end to end test"
+echo "[TEST ${TEST_INDEX}/${PLANNED_TESTS}] Running run-test-cases.sh end to end test"
 echo "--------------------------------------------------------------------"
 # Start time for TEST 4
 start_time="$(date '+%Y-%m-%d %H:%M:%S %Z')"
@@ -103,7 +103,7 @@ start_epoch=$(date +%s)
 echo "Start time: $start_time"
 # Run TEST 4 with explicit error capture
 set +e
-bash "$AppHome"/bin/tests/test-cases-legacy.sh
+bash "$AppHome"/bin/tests/run-test-cases.sh
 exit_code=$?
 set -e
 # End time for TEST 4
@@ -112,10 +112,10 @@ end_epoch=$(date +%s)
 duration=$((end_epoch - start_epoch))
 EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
 if [ $exit_code -eq 0 ]; then
-  echo "[PASS] End to end test test-cases-legacy.sh completed successfully"
+  echo "[PASS] End to end test run-test-cases.sh completed successfully"
   PASSED_TESTS=$((PASSED_TESTS + 1))
 else
-  echo "[FAIL] End to end test test-cases-legacy.sh failed with exit code $exit_code"
+  echo "[FAIL] End to end test run-test-cases.sh failed with exit code $exit_code"
   FAILED_TESTS=$((FAILED_TESTS + 1))
 fi
 

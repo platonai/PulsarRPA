@@ -68,7 +68,7 @@ Tests for validating scripts.
 
 End-to-end and integration test scripts:
 - `run-e2e-test.ps1`, `run-e2e-tests.sh` - Run end-to-end tests
-- `test-curl-commands.ps1`, `test-cases-legacy.sh` - Test using curl commands
+- `run-test-cases.ps1`, `run-test-cases.sh` - Test using curl commands
 
 ### tools/
 
