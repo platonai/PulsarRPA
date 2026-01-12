@@ -73,6 +73,7 @@ $httpClient.Timeout = [System.TimeSpan]::FromMinutes(30)
 $request = New-Object System.Net.Http.HttpRequestMessage([System.Net.Http.HttpMethod]::Get, $SSE_URL)
 $request.Headers.Add("Accept", "text/event-stream")
 $request.Headers.Add("Cache-Control", "no-cache")
+$request.Headers.TryAddWithoutValidation("Accept-Charset", "utf-8") | Out-Null
 
 # 清理函数
 function Cleanup {
@@ -104,7 +105,16 @@ function Get-FinalResult {
   }
 
   try {
-    $result = Invoke-RestMethod -Uri $RESULT_URL -Method GET -ContentType "application/json"
+    $resultRequest = New-Object System.Net.Http.HttpRequestMessage([System.Net.Http.HttpMethod]::Get, $RESULT_URL)
+    $resultRequest.Headers.TryAddWithoutValidation("Accept", "application/json") | Out-Null
+    $resultRequest.Headers.TryAddWithoutValidation("Accept-Charset", "utf-8") | Out-Null
+
+    $resultResponse = $httpClient.SendAsync($resultRequest).Result
+    if (-not $resultResponse.IsSuccessStatusCode) {
+      throw "HTTP request failed with status: $($resultResponse.StatusCode)"
+    }
+
+    $result = $resultResponse.Content.ReadAsStringAsync().Result
 
     Write-Host "`n=== FINAL RESULT ===" -ForegroundColor Yellow
     Write-Host "Command ID: $CommandId" -ForegroundColor Cyan
@@ -133,6 +143,8 @@ function Get-FinalResult {
   } catch {
     Write-Warning "Failed to fetch final result: $_"
     Write-Host "You can manually check the result at: $RESULT_URL"
+  } finally {
+    if ($resultResponse) { $resultResponse.Dispose() }
   }
 }
 
