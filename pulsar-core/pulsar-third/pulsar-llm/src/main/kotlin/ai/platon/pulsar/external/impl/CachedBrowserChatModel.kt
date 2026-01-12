@@ -242,11 +242,16 @@ open class CachedBrowserChatModel(
             else -> ResponseState.OTHER
         }
 
-        val modelResponse = ModelResponse(response.aiMessage().text().trim(), state, tokenUsage)
+        val content = try {
+            response.aiMessage().text().trim()
+        } catch (_: Throwable) {
+            ""
+        }
+        val modelResponse = ModelResponse(content, state, tokenUsage)
         if (logger.isInfoEnabled) {
-            val content = modelResponse.content
+            val logContent = modelResponse.content
             val maxWidth = when {
-                content.contains("screenshotContentSummary") -> 2000 // A browser agent's response
+                logContent.contains("screenshotContentSummary") -> 2000 // A browser agent's response
                 else -> 500
             }
             val log = Strings.compactInline(modelResponse.content, maxWidth)
