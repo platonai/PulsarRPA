@@ -30,17 +30,16 @@ function Update-Endpoints {
 }
 
 # Timeout settings (seconds)
-$DEFAULT_TIMEOUT = if ($env:DEFAULT_TIMEOUT) { [int]$env:DEFAULT_TIMEOUT } else { 300 }
-$SIMPLE_TIMEOUT = if ($env:SIMPLE_TIMEOUT) { [int]$env:SIMPLE_TIMEOUT } else { 180 }
-$COMPLEX_TIMEOUT = if ($env:COMPLEX_TIMEOUT) { [int]$env:COMPLEX_TIMEOUT } else { 300 }
-$ENTERPRISE_TIMEOUT = if ($env:ENTERPRISE_TIMEOUT) { [int]$env:ENTERPRISE_TIMEOUT } else { 600 }
+# Per-task timeout defaults to 3 minutes; suite timeout defaults to 20 minutes
+$TASK_TIMEOUT = if ($env:TASK_TIMEOUT) { [int]$env:TASK_TIMEOUT } else { 180 }
+$TOTAL_TIMEOUT = if ($env:TOTAL_TIMEOUT) { [int]$env:TOTAL_TIMEOUT } else { 1200 }
 
 # Minimum success rate
 $MIN_SUCCESS_RATE = if ($env:MIN_SUCCESS_RATE) { [int]$env:MIN_SUCCESS_RATE } else { 50 }
 
 # Test selection
 $TEST_SELECTION = if ($env:TEST_SELECTION) { $env:TEST_SELECTION } else { "all" }
-$TEST_COUNT = if ($env:TEST_COUNT) { [int]$env:TEST_COUNT } else { 3 }
+$TEST_COUNT = if ($env:TEST_COUNT) { [int]$env:TEST_COUNT } else { 0 }
 $EXECUTION_ORDER = if ($env:EXECUTION_ORDER) { $env:EXECUTION_ORDER } else { "random" }
 $VERBOSE = $false
 if ($env:VERBOSE -and $env:VERBOSE -eq "true") { $VERBOSE = $true }
@@ -138,10 +137,7 @@ function Get-TaskContent {
 
 function Get-TimeoutForLevel {
     param([string]$Level)
-    if ($Level -match "Simple") { return $SIMPLE_TIMEOUT }
-    if ($Level -match "Complex") { return $COMPLEX_TIMEOUT }
-    if ($Level -match "Enterprise") { return $ENTERPRISE_TIMEOUT }
-    return $DEFAULT_TIMEOUT
+    return $TASK_TIMEOUT
 }
 
 function Test-HttpSuccess {
@@ -229,6 +225,14 @@ function Run-UseCaseTest {
     $staleIntervals = 0
 
     while ($true) {
+        $nowEpoch = [int](Get-Date -UFormat %s)
+        if (($nowEpoch - $startEpoch) -ge $timeout) {
+            $script:TIMED_OUT_TESTS++
+            $script:EXECUTED_TESTS++
+            $testResult = "TIMEOUT"
+            Write-Log ("{0}[TIMEOUT]{1} Task exceeded per-test timeout ({2}s); aborting" -f $YELLOW, $NC, $timeout)
+            break
+        }
         $statusOutput = & curl.exe -s -w "|%{http_code}" --max-time $timeout "$statusUrl"
         $statusExit = $LASTEXITCODE
 
@@ -257,7 +261,6 @@ function Run-UseCaseTest {
             $lastChangeEpoch = [int](Get-Date -UFormat %s)
             $staleIntervals = 0
         } else {
-            $nowEpoch = [int](Get-Date -UFormat %s)
             if (($nowEpoch - $lastChangeEpoch) -ge 30) {
                 $staleIntervals++
                 $lastChangeEpoch = $nowEpoch
@@ -297,6 +300,7 @@ function Run-UseCaseTest {
 
         if ($staleIntervals -ge 3) {
             $script:TIMED_OUT_TESTS++
+            $script:EXECUTED_TESTS++
             $testResult = "TIMEOUT"
             Write-Log ("{0}[TIMEOUT]{1} Status not updated for 90 seconds, marking as timeout" -f $YELLOW, $NC)
             break
@@ -347,7 +351,8 @@ function Run-AllTests {
     }
 
     $totalSelected = $testsToRun.Count
-    Write-Log ("{0}[INFO]{1} Tests selected: {2} | Order: {3} | Count: {4}" -f $BLUE, $NC, $totalSelected, $EXECUTION_ORDER, $TEST_COUNT)
+    $countLabel = if ($TEST_COUNT -eq 0) { "all" } else { $TEST_COUNT }
+    Write-Log ("{0}[INFO]{1} Tests selected: {2} | Order: {3} | Count: {4}" -f $BLUE, $NC, $totalSelected, $EXECUTION_ORDER, $countLabel)
 
     if (-not ($TEST_COUNT -is [int]) -or $TEST_COUNT -le 0) {
         Write-Log ("{0}[ERROR]{1} TEST_COUNT must be a positive integer (got: {2})" -f $RED, $NC, $TEST_COUNT)
@@ -358,7 +363,7 @@ function Run-AllTests {
         $testsToRun = Shuffle-Array -Array $testsToRun
     }
 
-    if ($testsToRun.Count -gt $TEST_COUNT) {
+    if ($TEST_COUNT -gt 0 -and $testsToRun.Count -gt $TEST_COUNT) {
         $testsToRun = $testsToRun[0..($TEST_COUNT - 1)]
     }
 
@@ -366,7 +371,13 @@ function Run-AllTests {
     Write-Log ("{0}[INFO]{1} Tests to execute after limiting: {2}" -f $BLUE, $NC, $totalSelected)
 
     $testCounter = 0
+    $suiteStart = [int](Get-Date -UFormat %s)
     foreach ($useCaseFile in $testsToRun) {
+        $now = [int](Get-Date -UFormat %s)
+        if (($now - $suiteStart) -ge $TOTAL_TIMEOUT) {
+            Write-Log ("{0}[TIMEOUT]{1} Suite timeout ({2}s) reached; skipping remaining tests" -f $YELLOW, $NC, $TOTAL_TIMEOUT)
+            break
+        }
         $testCounter++
         Run-UseCaseTest -UseCaseFile $useCaseFile -TestNumber $testCounter -TotalTests $totalSelected | Out-Null
     }
@@ -421,21 +432,21 @@ OPTIONS:
     -u, --url URL           Browser4 base URL (default: http://localhost:8182)
     -t, --test SELECTION    Test selection (comma-separated numbers or "all", default: all)
                             Examples: "01,02,03" or "01-ecommerce" or "all"
-    -n, --count N           Number of tests to run after selection (default: 3)
+    -n, --count N           Number of tests to run after selection (default: all)
     -o, --order MODE        Execution order: random | sequential (default: random)
+    --task-timeout SEC      Per-test timeout in seconds (default: 180)
+    --total-timeout SEC     Total suite timeout in seconds (default: 1200)
     -s, --skip-server       Skip server connectivity check
     -v, --verbose           Enable verbose output
     -h, --help              Show this help message
 
 ENVIRONMENT VARIABLES:
     API_BASE                Browser4 base URL
-    DEFAULT_TIMEOUT         Default timeout in seconds (default: 300)
-    SIMPLE_TIMEOUT          Timeout for simple tests (default: 180)
-    COMPLEX_TIMEOUT         Timeout for complex tests (default: 300)
-    ENTERPRISE_TIMEOUT      Timeout for enterprise tests (default: 600)
+    TASK_TIMEOUT            Per-test timeout in seconds (default: 180)
+    TOTAL_TIMEOUT           Total suite timeout in seconds (default: 1200)
     MIN_SUCCESS_RATE        Minimum success rate to pass (default: 50)
     TEST_SELECTION          Same as --test option
-    TEST_COUNT              Same as --count option (default: 3)
+    TEST_COUNT              Same as --count option (0 or unset means all)
     EXECUTION_ORDER         Same as --order option (default: random)
     VERBOSE                 Same as --verbose option
     SKIP_SERVER_CHECK       Same as --skip-server option
@@ -462,6 +473,8 @@ function Parse-Args {
             "--count" { if ($i + 1 -ge $Arguments.Length) { Show-Usage; exit 1 }; $TEST_COUNT = [int]$Arguments[$i + 1]; $i += 2; continue }
             "-o" { if ($i + 1 -ge $Arguments.Length) { Show-Usage; exit 1 }; $EXECUTION_ORDER = $Arguments[$i + 1]; $i += 2; continue }
             "--order" { if ($i + 1 -ge $Arguments.Length) { Show-Usage; exit 1 }; $EXECUTION_ORDER = $Arguments[$i + 1]; $i += 2; continue }
+            "--task-timeout" { if ($i + 1 -ge $Arguments.Length) { Show-Usage; exit 1 }; $TASK_TIMEOUT = [int]$Arguments[$i + 1]; $i += 2; continue }
+            "--total-timeout" { if ($i + 1 -ge $Arguments.Length) { Show-Usage; exit 1 }; $TOTAL_TIMEOUT = [int]$Arguments[$i + 1]; $i += 2; continue }
             "-s" { $SKIP_SERVER_CHECK = $true; $i++; continue }
             "--skip-server" { $SKIP_SERVER_CHECK = $true; $i++; continue }
             "-v" { $VERBOSE = $true; $i++; continue }

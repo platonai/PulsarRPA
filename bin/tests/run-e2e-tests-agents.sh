@@ -35,10 +35,9 @@ readonly TIMESTAMP="$(date '+%Y%m%d_%H%M%S')"
 readonly LOG_FILE="${TEST_RESULTS_DIR}/use_case_tests_${TIMESTAMP}.log"
 
 # Timeout settings (seconds)
-readonly DEFAULT_TIMEOUT="${DEFAULT_TIMEOUT:-300}"
-readonly SIMPLE_TIMEOUT="${SIMPLE_TIMEOUT:-180}"
-readonly COMPLEX_TIMEOUT="${COMPLEX_TIMEOUT:-300}"
-readonly ENTERPRISE_TIMEOUT="${ENTERPRISE_TIMEOUT:-600}"
+# Per-task timeout defaults to 3 minutes; suite timeout defaults to 20 minutes
+readonly TASK_TIMEOUT="${TASK_TIMEOUT:-180}"
+readonly TOTAL_TIMEOUT="${TOTAL_TIMEOUT:-1200}"
 
 # Minimum success rate for overall pass (percentage, integer)
 readonly MIN_SUCCESS_RATE="${MIN_SUCCESS_RATE:-50}"
@@ -46,8 +45,8 @@ readonly MIN_SUCCESS_RATE="${MIN_SUCCESS_RATE:-50}"
 # Test selection (comma-separated list of test numbers or "all")
 TEST_SELECTION="${TEST_SELECTION:-all}"
 
-# How many tests to run (applies after selection/filtering)
-TEST_COUNT="${TEST_COUNT:-3}"
+# How many tests to run (applies after selection/filtering). 0 means all.
+TEST_COUNT="${TEST_COUNT:-0}"
 
 # Execution order: random | sequential
 EXECUTION_ORDER="${EXECUTION_ORDER:-random}"
@@ -159,13 +158,7 @@ extract_task_content() {
 
 # Get timeout based on task level
 get_timeout_for_level() {
-    local level="$1"
-    case "$level" in
-        *Simple*) echo "$SIMPLE_TIMEOUT" ;;
-        *Complex*) echo "$COMPLEX_TIMEOUT" ;;
-        *Enterprise*) echo "$ENTERPRISE_TIMEOUT" ;;
-        *) echo "$DEFAULT_TIMEOUT" ;;
-    esac
+    echo "$TASK_TIMEOUT"
 }
 
 # =============================================================================
@@ -336,6 +329,15 @@ run_use_case_test() {
     local stale_intervals=0
 
     while true; do
+        local now_epoch
+        now_epoch=$(date +%s)
+        if (( now_epoch - start_epoch >= timeout )); then
+            TIMED_OUT_TESTS=$((TIMED_OUT_TESTS + 1))
+            EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
+            test_result="TIMEOUT"
+            log "${YELLOW}[TIMEOUT]${NC} Task exceeded per-test timeout (${timeout}s); aborting"
+            break
+        fi
         set +e
         local status_output
         status_output=$(curl -s -w '|%{http_code}' --max-time "$timeout" "$status_url")
@@ -367,8 +369,6 @@ run_use_case_test() {
             last_change_epoch=$(date +%s)
             stale_intervals=0
         else
-            local now_epoch
-            now_epoch=$(date +%s)
             if (( now_epoch - last_change_epoch >= 30 )); then
                 stale_intervals=$((stale_intervals + 1))
                 last_change_epoch=$now_epoch
@@ -412,6 +412,7 @@ run_use_case_test() {
 
         if (( stale_intervals >= 3 )); then
             TIMED_OUT_TESTS=$((TIMED_OUT_TESTS + 1))
+            EXECUTED_TESTS=$((EXECUTED_TESTS + 1))
             test_result="TIMEOUT"
             log "${YELLOW}[TIMEOUT]${NC} Status not updated for 90 seconds, marking as timeout"
             break
@@ -477,7 +478,9 @@ run_all_tests() {
     fi
 
     local total_selected=${#tests_to_run[@]}
-    log "${BLUE}[INFO]${NC} Tests selected: $total_selected | Order: $EXECUTION_ORDER | Count: $TEST_COUNT"
+    local count_label="$TEST_COUNT"
+    [[ "$TEST_COUNT" == "0" ]] && count_label="all"
+    log "${BLUE}[INFO]${NC} Tests selected: $total_selected | Order: $EXECUTION_ORDER | Count: $count_label"
 
     if ! [[ "$TEST_COUNT" =~ ^[0-9]+$ ]] || (( TEST_COUNT <= 0 )); then
         log "${RED}[ERROR]${NC} TEST_COUNT must be a positive integer (got: $TEST_COUNT)"
@@ -490,16 +493,24 @@ run_all_tests() {
     fi
 
     # Apply limit
-    if (( ${#tests_to_run[@]} > TEST_COUNT )); then
+    if (( TEST_COUNT > 0 && ${#tests_to_run[@]} > TEST_COUNT )); then
         tests_to_run=("${tests_to_run[@]:0:TEST_COUNT}")
     fi
 
     total_selected=${#tests_to_run[@]}
     log "${BLUE}[INFO]${NC} Tests to execute after limiting: $total_selected"
 
-    # Run tests
+    # Run tests with suite-level timeout
+    local suite_start_epoch
+    suite_start_epoch=$(date +%s)
     local test_counter=0
     for use_case_file in "${tests_to_run[@]}"; do
+        local now
+        now=$(date +%s)
+        if (( now - suite_start_epoch >= TOTAL_TIMEOUT )); then
+            log "${YELLOW}[TIMEOUT]${NC} Suite timeout (${TOTAL_TIMEOUT}s) reached; skipping remaining tests"
+            break
+        fi
         test_counter=$((test_counter + 1))
         run_use_case_test "$use_case_file" "$test_counter" "$total_selected"
     done
@@ -554,21 +565,21 @@ OPTIONS:
     -u, --url URL           Browser4 base URL (default: http://localhost:8182)
     -t, --test SELECTION    Test selection (comma-separated numbers or "all", default: all)
                             Examples: "01,02,03" or "01-ecommerce" or "all"
-    -n, --count N           Number of tests to run after selection (default: 3)
+    -n, --count N           Number of tests to run after selection (default: all)
     -o, --order MODE        Execution order: random | sequential (default: random)
+    --task-timeout SEC      Per-test timeout in seconds (default: 180)
+    --total-timeout SEC     Total suite timeout in seconds (default: 1200)
     -s, --skip-server       Skip server connectivity check
     -v, --verbose           Enable verbose output
     -h, --help              Show this help message
 
 ENVIRONMENT VARIABLES:
     API_BASE                Browser4 base URL
-    DEFAULT_TIMEOUT         Default timeout in seconds (default: 300)
-    SIMPLE_TIMEOUT          Timeout for simple tests (default: 180)
-    COMPLEX_TIMEOUT         Timeout for complex tests (default: 300)
-    ENTERPRISE_TIMEOUT      Timeout for enterprise tests (default: 600)
+    TASK_TIMEOUT            Per-test timeout in seconds (default: 180)
+    TOTAL_TIMEOUT           Total suite timeout in seconds (default: 1200)
     MIN_SUCCESS_RATE        Minimum success rate to pass (default: 50)
     TEST_SELECTION          Same as --test option
-    TEST_COUNT              Same as --count option (default: 3)
+    TEST_COUNT              Same as --count option (0 or unset means all)
     EXECUTION_ORDER         Same as --order option (default: random)
     VERBOSE                 Same as --verbose option
 
@@ -611,6 +622,14 @@ parse_args() {
                 ;;
             -o|--order)
                 EXECUTION_ORDER="$2"
+                shift 2
+                ;;
+            --task-timeout)
+                TASK_TIMEOUT="$2"
+                shift 2
+                ;;
+            --total-timeout)
+                TOTAL_TIMEOUT="$2"
                 shift 2
                 ;;
             -s|--skip-server)
