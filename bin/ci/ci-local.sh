@@ -306,6 +306,7 @@ run_build_script() {
 
     # also build projects required
     build_cmd+=("-am")
+    build_cmd+=("-Prun-pulsar-tests")
 
     if [[ $CLEAN_BUILD -eq 1 ]]; then
         build_cmd+=("-clean")
