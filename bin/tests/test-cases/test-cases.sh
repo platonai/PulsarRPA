@@ -2,6 +2,7 @@
 
 # =============================================================================
 # CURL COMMANDS FROM README.MD - UPDATE THIS SECTION AS NEEDED
+# This file is sourced by run-test-cases.sh and should only declare commands.
 # =============================================================================
 
 # Defaults (override via environment)
@@ -16,9 +17,9 @@ CURL_DESC_QUERY_PARAMS="Query Parameters Test"
 CURL_CMD_QUERY_PARAMS="curl -X GET \"${BASE_URL}/actuator/health?details=true\""
 
 CURL_DESC_WEBUI="WebUI Command Interface"
-CURL_CMD_WEBUI="
-curl -X GET \"${BASE_URL}/command.html\"
-"
+read -r -d '' CURL_CMD_WEBUI << EOF
+curl -X GET "${BASE_URL}/command.html"
+EOF
 
 CURL_DESC_CUSTOM_HEADERS="Custom Headers Test"
 read -r -d '' CURL_CMD_CUSTOM_HEADERS << EOF
@@ -95,6 +96,15 @@ curl -X POST "${BASE_URL}/api/commands" -H "Content-Type: application/json" -d '
 }'
 EOF
 
+CURL_DESC_ASYNC_MODE="Async Command Mode Test"
+read -r -d '' CURL_CMD_ASYNC_MODE << EOF
+curl -X POST "${BASE_URL}/api/commands/plain?mode=async" -H "Content-Type: text/plain" -d "
+Go to ${PRODUCT_URL}
+
+Extract the page title and all text content.
+"
+EOF
+
 CURL_DESC_XSQL_LLM="X-SQL API - LLM Data Extraction"
 read -r -d '' CURL_CMD_XSQL_LLM << EOF
 curl -X POST "${BASE_URL}/api/x/e" -H "Content-Type: text/plain" -d "
@@ -107,16 +117,8 @@ from load_and_select('${PRODUCT_URL}', 'body');
 "
 EOF
 
-CURL_DESC_ASYNC_MODE="Async Command Mode Test"
-read -r -d '' CURL_CMD_ASYNC_MODE << EOF
-curl -X POST "${BASE_URL}/api/commands/plain?mode=async" -H "Content-Type: text/plain" -d "
-Go to ${PRODUCT_URL}
-
-Extract the page title and all text content.
-"
-EOF
-
 # 系统测试优先的命令数组 (System tests first, then functional tests)
+# shellcheck disable=SC2034
 declare -a CURL_COMMANDS=(
   "$CURL_DESC_HEALTH_CHECK|$CURL_CMD_HEALTH_CHECK"
   "$CURL_DESC_QUERY_PARAMS|$CURL_CMD_QUERY_PARAMS"

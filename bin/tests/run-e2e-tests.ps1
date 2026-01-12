@@ -3,26 +3,20 @@
 $ErrorActionPreference = "Stop"
 
 $scriptDir = Split-Path -Path (Resolve-Path $MyInvocation.MyCommand.Path) -Parent
-$runLegacy = $false
-if ($env:RUN_LEGACY_E2E -and $env:RUN_LEGACY_E2E -eq "true") {
-    $runLegacy = $true
-}
 
-if ($runLegacy) {
-    $legacyPs1 = Join-Path $scriptDir "run-e2e-test-legacy.ps1"
-    $legacySh = Join-Path $scriptDir "run-e2e-test-legacy.sh"
-    if (Test-Path $legacyPs1) {
-        & $legacyPs1 @args
-    } elseif (Test-Path $legacySh) {
-        & bash "$legacySh" @args
-    } else {
-        Write-Error "Legacy E2E script not found (expected $legacyPs1 or $legacySh)"
-        exit 1
-    }
-    $legacyExit = $LASTEXITCODE
-    if ($legacyExit -ne 0) {
-        exit $legacyExit
-    }
+$basicPs1 = Join-Path $scriptDir "run-e2e-test-cases.ps1"
+$basicSh = Join-Path $scriptDir "run-e2e-test-cases.sh"
+if (Test-Path $basicPs1) {
+    & $basicPs1 @args
+} elseif (Test-Path $basicSh) {
+    & bash "$basicSh" @args
+} else {
+    Write-Error "basic E2E script not found (expected $basicPs1 or $basicSh)"
+    exit 1
+}
+$basicExit = $LASTEXITCODE
+if ($basicExit -ne 0) {
+    exit $basicExit
 }
 
 $agentsPs1 = Join-Path $scriptDir "run-e2e-agents.ps1"
