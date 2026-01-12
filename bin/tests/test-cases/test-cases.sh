@@ -2,7 +2,7 @@
 
 # =============================================================================
 # CURL COMMANDS FROM README.MD - UPDATE THIS SECTION AS NEEDED
-# This file is sourced by run-test-cases.sh and should only declare commands.
+# This file is sourced by run-e2e-tests.sh and should only declare commands.
 # =============================================================================
 
 # Defaults (override via environment)
