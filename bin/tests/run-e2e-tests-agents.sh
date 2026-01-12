@@ -57,6 +57,9 @@ VERBOSE="${VERBOSE:-false}"
 # Skip server check
 SKIP_SERVER_CHECK="${SKIP_SERVER_CHECK:-false}"
 
+# Default task note appended to every task
+readonly DEFAULT_TASK_NOTE="If you exceed either 30 steps or 10 minutes, you must complete the task immediately."
+
 # =============================================================================
 # Colors
 # =============================================================================
@@ -269,6 +272,10 @@ run_use_case_test() {
     level=$(extract_level "$use_case_file")
     local task_content
     task_content=$(extract_task_content "$use_case_file")
+    local task_payload="$task_content"
+    if [[ -n "$DEFAULT_TASK_NOTE" ]]; then
+        task_payload="${task_payload}"$'\n\n'"$DEFAULT_TASK_NOTE"
+    fi
     local timeout
     timeout=$(get_timeout_for_level "$level")
 
@@ -281,7 +288,7 @@ run_use_case_test() {
 
     if [[ "$VERBOSE" == "true" ]]; then
         log "${CYAN}[TASK CONTENT]${NC}"
-        echo "$task_content" | while read -r line; do
+        echo "$task_payload" | while read -r line; do
             log "    $line"
         done
     fi
@@ -309,7 +316,7 @@ run_use_case_test() {
         --max-time 15 \
         -X POST \
         -H "Content-Type: text/plain" \
-        --data "$task_content" \
+        --data "$task_payload" \
         "$COMMAND_ENDPOINT")
     local submit_exit=$?
     set -e
