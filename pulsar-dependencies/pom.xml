@@ -22,17 +22,17 @@
 
     <description>Pulsar Dependencies</description>
 
-    <url>https://platon.ai</url>
+    <url>https://browser4.io</url>
     <inceptionYear>2014</inceptionYear>
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
         </license>
     </licenses>
     <organization>
-        <name>The Platon AI Web Data Engine</name>
-        <url>http://platon.ai</url>
+        <name>Enable AI to browse the web</name>
+        <url>https://browser4.io</url>
     </organization>
     <developers>
         <developer>
@@ -44,7 +44,7 @@
     </developers>
     <issueManagement>
         <system>GitHub</system>
-        <url>http://www.github.com/platonai</url>
+        <url>https://www.github.com/platonai</url>
     </issueManagement>
     <scm>
         <connection>scm:git:https://github.com/platonai/platon.git</connection>

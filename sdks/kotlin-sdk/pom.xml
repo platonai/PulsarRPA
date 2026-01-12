@@ -19,17 +19,17 @@
     <name>Pulsar Kotlin SDK</name>
     <description>Kotlin SDK for Browser4 WebDriver-Compatible API based on OpenAPI specification</description>
 
-    <url>https://platon.ai</url>
-    <inceptionYear>2014</inceptionYear>
+    <url>https://browser4.io</url>
+    <inceptionYear>2025</inceptionYear>
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
         </license>
     </licenses>
     <organization>
-        <name>The Platon AI Web Data Engine</name>
-        <url>http://platon.ai</url>
+        <name>Enable AI to browse the web</name>
+        <url>https://browser4.io</url>
     </organization>
     <developers>
         <developer>
@@ -41,7 +41,7 @@
     </developers>
     <issueManagement>
         <system>GitHub</system>
-        <url>http://www.github.com/platonai</url>
+        <url>https://www.github.com/platonai</url>
     </issueManagement>
     <scm>
         <connection>scm:git:https://github.com/platonai/browser4.git</connection>
@@ -106,6 +106,21 @@
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
                 <version>${kotlin.version}</version>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirs>
+                                <sourceDir>src/main/kotlin</sourceDir>
+                                <sourceDir>target/generated-sources/annotations</sourceDir>
+                            </sourceDirs>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
