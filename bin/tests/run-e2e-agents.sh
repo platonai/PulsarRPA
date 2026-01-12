@@ -57,6 +57,9 @@ VERBOSE="${VERBOSE:-false}"
 # Skip server check
 SKIP_SERVER_CHECK="${SKIP_SERVER_CHECK:-false}"
 
+# Level filter (comma-separated); default runs Simple tasks
+LEVEL_FILTER="${LEVEL_FILTER:-Simple}"
+
 # Default task note appended to every task
 readonly DEFAULT_TASK_NOTE="If you exceed either 30 steps or 10 minutes, you must complete the task immediately."
 
@@ -81,6 +84,7 @@ PASSED_TESTS=0
 FAILED_TESTS=0
 SKIPPED_TESTS=0
 TIMED_OUT_TESTS=0
+LEVEL_FILTERS=()
 
 # =============================================================================
 # Utility Functions
@@ -120,6 +124,19 @@ record_response_if_changed() {
 
 ensure_directories() {
     mkdir -p "$TEST_RESULTS_DIR"
+}
+
+level_matches_filter() {
+    local level="$1"
+    local level_lc
+    level_lc=$(echo "$level" | tr '[:upper:]' '[:lower:]')
+    for lf in "${LEVEL_FILTERS[@]}"; do
+        [[ "$lf" == "all" ]] && return 0
+        if [[ "$level_lc" == "$lf" ]]; then
+            return 0
+        fi
+    done
+    return 1
 }
 
 # Fisher-Yates shuffle to avoid external dependencies like shuf
@@ -470,6 +487,18 @@ run_all_tests() {
     log "${BLUE}[INFO]${NC} ${BOLD}Starting Use Case Test Suite${NC}"
     log "${BLUE}[INFO]${NC} API Endpoint: $COMMAND_ENDPOINT"
     log "${BLUE}[INFO]${NC} Use Cases Directory: $USE_CASES_DIR"
+    log "${BLUE}[INFO]${NC} Level filter: $LEVEL_FILTER"
+
+    LEVEL_FILTERS=()
+    IFS=',' read -ra level_filter_values <<< "$LEVEL_FILTER"
+    for lf in "${level_filter_values[@]}"; do
+        lf=$(echo "$lf" | tr -d ' ')
+        lf=$(echo "$lf" | tr '[:upper:]' '[:lower:]')
+        [[ -n "$lf" ]] && LEVEL_FILTERS+=("$lf")
+    done
+    if (( ${#LEVEL_FILTERS[@]} == 0 )); then
+        LEVEL_FILTERS=("simple")
+    fi
 
     # Get list of use case files
     local use_case_files=()
@@ -504,6 +533,22 @@ run_all_tests() {
                 fi
             done
         done
+    fi
+
+    # Filter by level
+    if ((${#tests_to_run[@]})); then
+        local filtered_tests=()
+        for file in "${tests_to_run[@]}"; do
+            local lvl
+            lvl=$(extract_level "$file")
+            if level_matches_filter "$lvl"; then
+                filtered_tests+=("$file")
+            else
+                SKIPPED_TESTS=$((SKIPPED_TESTS + 1))
+                vlog "${YELLOW}[SKIP]${NC} Skipping $(basename "$file") due to level '$lvl'"
+            fi
+        done
+        tests_to_run=("${filtered_tests[@]}")
     fi
 
     local total_selected=${#tests_to_run[@]}
@@ -602,6 +647,7 @@ OPTIONS:
                             Examples: "01,02,03" or "01-ecommerce" or "all"
     -n, --count N           Number of tests to run after selection (default: all)
     -o, --order MODE        Execution order: random | sequential (default: random)
+    -l, --level LEVELS      Comma-separated task levels to run (default: Simple; use "all" for all levels)
     --task-timeout SEC      Per-test timeout in seconds (default: 180)
     --total-timeout SEC     Total suite timeout in seconds (default: 1200)
     -s, --skip-server       Skip server connectivity check
@@ -616,6 +662,7 @@ ENVIRONMENT VARIABLES:
     TEST_SELECTION          Same as --test option
     TEST_COUNT              Same as --count option (0 or unset means all)
     EXECUTION_ORDER         Same as --order option (default: random)
+    LEVEL_FILTER            Comma-separated task levels to run (default: Simple; use "all" for all levels)
     VERBOSE                 Same as --verbose option
 
 EXAMPLES:
@@ -657,6 +704,10 @@ parse_args() {
                 ;;
             -o|--order)
                 EXECUTION_ORDER="$2"
+                shift 2
+                ;;
+            -l|--level)
+                LEVEL_FILTER="$2"
                 shift 2
                 ;;
             --task-timeout)
