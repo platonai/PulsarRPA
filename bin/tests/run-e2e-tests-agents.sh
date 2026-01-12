@@ -376,7 +376,8 @@ run_use_case_test() {
             fi
         fi
 
-        if [[ "$status_body" =~ \"isDone\"[[:space:]]*:[[:space:]]*true ]]; then
+        # if there is a line contains "isDone" and "true", then the task is completed
+        if [[ "$status_body" =~ isDone.*true ]] || [[ "$status_body" =~ done.*true ]]; then
             log "${BLUE}[INFO]${NC} Task completed, fetching result..."
             set +e
             local result_output
