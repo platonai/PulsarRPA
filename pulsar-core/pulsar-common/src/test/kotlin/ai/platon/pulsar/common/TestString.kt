@@ -66,19 +66,11 @@ class TestString {
         var PATTERN_RECT = Pattern.compile(regex, Pattern.CASE_INSENSITIVE)
         text = ">=1,*,3,4"
         assertTrue(PATTERN_RECT.matcher(text).matches())
-        val matcher: Matcher
-        //        matcher = PATTERN_RECT.matcher(text);
-//        if (matcher.find()) {
-//          System.out.logPrintln(matcher.group(0));
-//          System.out.logPrintln(matcher.group(1) + matcher.group(2));
-//          System.out.logPrintln(matcher.group(3) + matcher.group(4));
-//          System.out.logPrintln(matcher.group(5) + matcher.group(6));
-//          System.out.logPrintln(matcher.group(7) + matcher.group(8));
-//        }
+
         text = "*,*,230,420"
         val REGEX_RECT = "([+-])?(\\*|\\d+),([+-])?(\\*|\\d+),([+-])?(\\*|\\d+),([+-])?(\\*|\\d+)"
         PATTERN_RECT = Pattern.compile(REGEX_RECT, Pattern.CASE_INSENSITIVE)
-        matcher = PATTERN_RECT.matcher(text)
+        val matcher: Matcher = PATTERN_RECT.matcher(text)
         if (matcher.find()) {
             assertEquals("*,*,230,420", matcher.group(0))
         }
@@ -140,22 +132,16 @@ class TestString {
     @Test
     fun testPricePattern() {
         val text = "￥799.00 (降价通知)"
-        // text = text.replaceAll("¥|,|'", "");
-// System.out.logPrintln(text);
         val matcher = Strings.PRICE_PATTERN.matcher(text)
         var count = 0
         while (matcher.find()) {
             count++
-            // System.out.logPrintln("Found Price : " + count + " : " + matcher.start() + " - " + matcher.end() + ", " + matcher.group());
         }
         assertTrue(count > 0)
     }
 
     @Test
     fun testParseVersion() {
-        // assertTrue(Math.abs(StringUtil.tryParseDouble("0.2.0") - 0.2) < 0.0000001);
-//    System.out.logPrintln(Lists.newArrayList("0.2.0".split("\\.")));
-//    System.out.logPrintln("0.2.0".split("\\.").length);
         assertEquals(3, "0.2.0".split(".").size)
     }
 
@@ -184,9 +170,14 @@ class TestString {
             "天王表 正品热卖  个性表盘  ",
             "天王表 正品热卖 \uE004主要职责：  OK"
         )
-        for (text in texts) {
-            printlnPro(Strings.removeNonCJKChar(text, Strings.DEFAULT_KEEP_CHARS))
-        }
+        assertEquals(
+            "天王表 正品热卖  个性表盘",
+            Strings.removeNonCJKChar("天王表 正品热卖  个性表盘  ", Strings.DEFAULT_KEEP_CHARS)
+        )
+        assertEquals(
+            "天王表 正品热卖 主要职责OK",
+            Strings.removeNonCJKChar("天王表 正品热卖 \uE004主要职责：  OK", Strings.DEFAULT_KEEP_CHARS)
+        )
     }
 
     @Test
@@ -203,10 +194,7 @@ class TestString {
             "1b关注全球华人健康",
             "a关注全球华人健康"
         )
-        for (text in noChineseTexts) {
-            // TODO: noChineseTexts assertion failed
-            // assertFalse(text, StringUtil.isChinese(text));
-        }
+
         val mainlyChineseTexts = arrayOf(
             "1234关注全球华人健康关注全球华人健康",
             "alpha关注全球华人健康关注全球华人健康",
@@ -215,10 +203,10 @@ class TestString {
         )
 
         for (text in mainlyChineseTexts) {
-            printlnPro(
-                Strings.countChinese(text).toString() + "/" + text.length
-                        + "=" + Strings.countChinese(text) * 1.0 / text.length + "\t" + text
-            )
+//            printlnPro(
+//                Strings.countChinese(text).toString() + "/" + text.length
+//                        + "=" + Strings.countChinese(text) * 1.0 / text.length + "\t" + text
+//            )
             assertTrue(Strings.isMainlyChinese(text, 0.6), text)
         }
     }
@@ -239,7 +227,7 @@ class TestString {
         assertEquals("http://t.tt/", parts[0])
         s = "ld,-o,-s,-w:hello,-a:b,-c"
         val options = StringUtils.replaceChars(s, ":,", Strings.padding[2]).split(" ").toTypedArray()
-        printlnPro(StringUtils.join(options, " "))
+        // printlnPro(StringUtils.join(options, " "))
     }
 
     @Test
@@ -280,10 +268,10 @@ class TestString {
         assertEquals(kvs, Strings.parseKvs("a=1 b=2 c=3"))
         assertEquals(kvs, Strings.parseKvs("a:1\nb:2\tc:3", ":"))
         assertTrue(Strings.parseKvs("abcd1234*&#$").isEmpty())
-        printlnPro(Strings.parseKvs("a=1 b=2 c=3 c=4  d e f"))
-        printlnPro(SParser.wrap("a=1 b=2 c=3,c=4 d e f").getKvs("="))
-        printlnPro(SParser.wrap("a=1 b=2 c=3 c=4,d= e f").getKvs("="))
-        printlnPro(SParser.wrap("").kvs)
+//        printlnPro(Strings.parseKvs("a=1 b=2 c=3 c=4  d e f"))
+//        printlnPro(SParser.wrap("a=1 b=2 c=3,c=4 d e f").getKvs("="))
+//        printlnPro(SParser.wrap("a=1 b=2 c=3 c=4,d= e f").getKvs("="))
+//        printlnPro(SParser.wrap("").kvs)
         val kvs2 = arrayOf(
             "a=1 b=2 c=3,c=4 d e f",
             "a=1 b=2 c=3 c=4 d= e f",
@@ -377,14 +365,14 @@ class TestString {
         val s = "409.7 219.3 864 411.8|12|16, 3, f"
         val base64 = Base64.getEncoder().encodeToString(s.toByteArray())
         assertEquals("NDA5LjcgMjE5LjMgODY0IDQxMS44fDEyfDE2LCAzLCBm", base64)
-        printlnPro(base64)
+//        printlnPro(base64)
         val decoded = String(Base64.getDecoder().decode(base64))
         assertEquals(s, decoded)
 
         val s2 = "409.7 219.3 864 411.8"
         val base64_2 = Base64.getEncoder().encodeToString(s2.toByteArray())
         assertEquals("NDA5LjcgMjE5LjMgODY0IDQxMS44", base64_2)
-        printlnPro(base64_2)
+        // printlnPro(base64_2)
     }
 }
 

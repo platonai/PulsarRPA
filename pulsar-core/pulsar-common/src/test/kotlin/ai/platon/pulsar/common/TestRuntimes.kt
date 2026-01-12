@@ -9,10 +9,6 @@ import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 class TestRuntimes {
-    @Test
-    fun testEnv() {
-        printlnPro(System.getenv("USER"))
-    }
 
     @Test
     fun testCheckIfProcessRunning() {
@@ -51,9 +47,7 @@ class TestRuntimes {
         assertTrue { Files.isSymbolicLink(symbolicPath) }
 
         Runtimes.deleteBrokenSymbolicLinks(tmp)
-        if (SystemUtils.IS_OS_WINDOWS) {
-            // TODO: what happens on windows
-        } else {
+        if (!SystemUtils.IS_OS_WINDOWS) {
             assertFalse { Files.isSymbolicLink(symbolicPath) }
         }
     }

@@ -159,7 +159,7 @@ class URLUtilsTest {
         // Test converting a browser protocol to URL
         val url = "chrome://settings"
         val expected = "$BROWSER_INTERNAL_BASE_URL?url=${URLEncoder.encode(url, Charsets.UTF_8)}"
-        printlnPro(expected)
+        // printlnPro(expected)
         assertEquals(expected, URLUtils.browserURLToStandardURL(url))
     }
 
@@ -188,8 +188,8 @@ class URLUtilsTest {
         val base64 = Base64.getUrlEncoder().encode(path.toString().toByteArray()).toString(Charsets.UTF_8)
         val expectedURL = "$expectedPrefix?path=$base64"
 
-        printlnPro(path)
-        printlnPro(result)
+//        printlnPro(path)
+//        printlnPro(result)
 
         assertEquals(expectedURL, result)
     }

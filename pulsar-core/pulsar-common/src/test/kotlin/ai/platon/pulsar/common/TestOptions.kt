@@ -18,10 +18,11 @@ class TestOptions {
             .filter { it in linkString }
         val regex = names.joinToString("|").toRegex()
         val values = linkString.split(regex)
+        assertEquals(values.size, 3)
+        assertEquals(url, values[0])
+        assertEquals(text, values[1])
 
-        // logPrintln("Regex: $regex")
-        values.forEach { printlnPro(it) }
-        // assertTrue { "" }
+        // values.forEach { printlnPro(it) }
     }
 
     @Test
@@ -32,10 +33,10 @@ class TestOptions {
         val linkString = "$url -text \"$text\" -args $args" + " "
 
         val regex = "-\\w+".toRegex()
-        val values = linkString.split(regex)
-
-        // logPrintln("Regex: $regex")
-        values.forEach { printlnPro(it) }
+        val values = linkString.split(regex).map { it.trim() }
+        assertEquals(values.size, 6)
+        assertEquals(url, values[0])
+        assertEquals(""""$text"""", values[1])
     }
 
     @Test
@@ -73,10 +74,6 @@ class TestOptions {
             argsList.forEach { args ->
                 val result = "-label$OPTION_REGEX".toRegex().find(args)
                 assertNotNull(result)
-
-//                logPrintln("$args")
-//                result.groups.forEach { logPrintln(it) }
-//                logPrintln()
 
                 assertEquals(2, result.groups.size)
                 assertEquals(label, result.groupValues[1])
