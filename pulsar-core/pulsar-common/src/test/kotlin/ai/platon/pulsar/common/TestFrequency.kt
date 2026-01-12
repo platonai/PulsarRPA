@@ -112,7 +112,7 @@ class TestFrequency {
 
         listOf(1, 2, 3, 4, 5, 9, 10).forEach {  v ->
             val a = freq.cumulativeFrequencyOf(v)
-            printlnPro("CF: $v -> $a")
+            // printlnPro("CF: $v -> $a")
         }
 
         // printlnPro(freq.toPString("PString:\n"))

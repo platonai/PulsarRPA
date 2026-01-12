@@ -17,15 +17,6 @@ import kotlin.test.*
 class TestDateTimeDetector {
 
     @Test
-    fun testParseDateTime() {
-        val t = "2017-02-06T02:15:11.174Z"
-        val dateTime = parseInstant(t, Instant.EPOCH)
-        assertEquals(t, DateTimeFormatter.ISO_INSTANT.format(dateTime))
-        //    System.out.logPrintln(dateTime);
-//    System.out.logPrintln(Instant.parse(t));
-    }
-
-    @Test
     @Throws(ParseException::class)
     fun testParseDateStrictly() {
         var dateTime = LocalDateTime.parse("2015-12-30T00:00:00").atZone(ZoneId.systemDefault()).toInstant()
@@ -64,28 +55,6 @@ class TestDateTimeDetector {
 
     @Test
     @Throws(ParseException::class)
-    fun testParseYearMonth() {
-        val yearMonth = YearMonth.parse("2015-12")
-        // System.out.logPrintln(yearMonth.atDay(1).atStartOfDay());
-        assertEquals("2015-12-01T00:00", yearMonth.atDay(1).atStartOfDay().toString())
-    }
-
-//    @Test
-//    @Throws(ParseException::class)
-//    fun testParseMalformedDate() {
-//        exception.expect(ParseException::class.java)
-//        DateUtils.parseDate("2015.2.4HELLO", "yy.MM.dd")
-//    }
-//
-//    @Test
-//    @Throws(ParseException::class)
-//    fun testParseMalformedDate2() {
-//        exception.expect(IllegalArgumentException::class.java)
-//        DateUtils.parseDate("2015.2.4", "yy.MM.ddHELLO")
-//    }
-
-    @Test
-    @Throws(ParseException::class)
     fun testParseDateWithLeniency() {
         var dateTime = LocalDateTime.parse("2015-12-02T00:00:00").atZone(ZoneId.systemDefault()).toInstant()
         assertEquals(dateTime, DateUtils.parseDate("2015.11.32", "yy.MM.dd").toInstant())
@@ -110,41 +79,10 @@ class TestDateTimeDetector {
         for (i in 1..12) {
             val monthString = String.format("%02d", i)
             val date = LocalDateTime.parse("2015-$monthString-02T00:00:00").atZone(ZoneId.systemDefault()).toInstant()
-            val monthName = Month.values()[i - 1].getDisplayName(TextStyle.FULL, Locale.getDefault())
+            val monthName = Month.entries[i - 1].getDisplayName(TextStyle.FULL, Locale.getDefault())
             // logPrintln("$monthName " + "M".repeat(monthName.length) + " dd, yyyy")
             assertEquals(date, DateUtils.parseDate("$monthName 02, 2015", pattern).toInstant())
         }
-    }
-
-    @Ignore("A fix is required, DateUtils.parseDate is not expected")
-    @Test
-    fun testParseDateWithLeniency3() {
-        var dateTime = LocalDateTime.parse("2015-12-02T00:00:00").atZone(ZoneId.systemDefault()).toInstant()
-        assertEquals(dateTime, DateUtils.parseDate("December 02, 2015",
-            "MMMM dd, yyyy", "MMMMM dd, yyyy",
-            "MMMMMM dd, yyyy", "MMMMMMM dd, yyyy", "MMMMMMMM dd, yyyy").toInstant())
-    }
-
-    @Test
-    fun testDetectJava8Chrono() {
-        val text = "2021-04-15T13:04:00.840771700Z"
-        val instant = Instant.parse(text)
-        val zonedDateTime = instant.atZone(ZoneId.systemDefault())
-        val localDate = zonedDateTime.toLocalDate()
-        val localDateTime = zonedDateTime.toLocalDateTime()
-
-        printlnPro(instant)
-        printlnPro(zonedDateTime)
-        printlnPro(localDate)
-        printlnPro(localDateTime)
-
-        val texts = mapOf(
-            "2021-04-15T13:04:00.840771700Z" to instant,
-            "2021-04-15T21:04:00.840771700+08:00[Asia/Shanghai]" to zonedDateTime,
-            "2021-04-15T21:04:00.840771700" to localDateTime
-        )
-
-        texts.map { DateTimeDetector().detectDateTime(it.key) to it.value }.forEach { printlnPro(it) }
     }
 
     @Test
@@ -168,14 +106,14 @@ class TestDateTimeDetector {
             assertNotNull(dateTime, text)
             assertTrue(detector.containsOldDate(text, 1, zoneId), text + ", " + dateTime.toInstant())
         }
-        val invalideTexts = arrayOf(
+        val invalidTexts = arrayOf(
                 "http://www.bjnews.com.cn/finance/20151260/432945.html",
                 "http://www.bjnews.com.cn/finance/2015/12/60/432945.html",
                 "http://www.bjnews.com.cn/finance/2015-12-60/432945.html",
                 "http://www.bjnews.com.cn/finance/15-12-60/432945.html",
                 "http://www.bjnews.com.cn/finance/15/12/60/432945.html"
         )
-        for (text in invalideTexts) {
+        for (text in invalidTexts) {
             assertNull(detector.detectDate(text))
         }
     }
@@ -208,8 +146,6 @@ class TestDateTimeDetector {
                 "2016-11-15 14:00 来源：新华社\n当前，各地大力推进精准扶贫...。\t但记者采访发现，仍有一些贫困村在落实扶贫政策时“撒芝麻盐”。"
         )
 
-//    texts.clear();
-//    texts.add("2016-11-15 14:00 来源：新华社\n当前，各地大力推进精准扶贫...。但记者采访发现，仍有一些贫困村在落实扶贫政策时“撒芝麻盐”。");
         for (text in texts) {
             val dateTime = detector.detectDateTime(text)
             // System.out.logPrintln(dateTime);
@@ -244,4 +180,3 @@ class TestDateTimeDetector {
         }
     }
 }
-

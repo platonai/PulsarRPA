@@ -1,24 +1,12 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.DateTimes.format
-import ai.platon.pulsar.common.DateTimes.now
-import ai.platon.pulsar.common.DateTimes.parseDuration
-import org.apache.commons.lang3.math.NumberUtils
-import org.apache.commons.lang3.time.DateFormatUtils
-import org.apache.commons.lang3.time.DateUtils
-import org.apache.commons.lang3.time.DurationFormatUtils
 import org.junit.jupiter.api.Assumptions
-import org.junit.jupiter.api.assertThrows
-import java.sql.Timestamp
-import java.text.ParseException
-import java.text.SimpleDateFormat
 import java.time.*
 import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
-import java.time.temporal.ChronoField
-import java.time.temporal.ChronoUnit
-import java.util.*
-import kotlin.test.*
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /**
  * Created by vincent on 16-7-20.
@@ -37,8 +25,17 @@ class TestDateTimes {
         val zoneId = ZoneId.systemDefault()
         val zoneOffset = zoneId.rules.getOffset(Instant.now())
         // Assume the system timezone is UTC+8
-        Assumptions.assumeTrue(zoneOffset == ZoneOffset.ofHours(8),
-            "This test runs only when the system timezone is UTC+8, will improve in the further")
+        Assumptions.assumeTrue(
+            zoneOffset == ZoneOffset.ofHours(8),
+            "This test runs only when the system timezone is UTC+8, will improve in the further"
+        )
+    }
+
+    @Test
+    fun testParseDateTime() {
+        val t = "2017-02-06T02:15:11.174Z"
+        val dateTime = DateTimes.parseInstant(t, Instant.EPOCH)
+        assertEquals(t, DateTimeFormatter.ISO_INSTANT.format(dateTime))
     }
 
     @Test
