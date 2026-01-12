@@ -5,13 +5,10 @@ while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
 }
 Set-Location $AppHome
 
-# 强制 PowerShell 使用 UTF-8 输出
-$OutputEncoding = [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-[Console]::InputEncoding  = [System.Text.Encoding]::UTF8
+# Import common utility script
+. $AppHome\bin\common\Util.ps1
 
-# 强制 Maven 使用 UTF-8（尤其是 exec:java）
-$env:MAVEN_OPTS = "-Dfile.encoding=UTF-8"
-$env:JAVA_TOOL_OPTIONS = "-Dfile.encoding=UTF-8"
+Fix-Encoding-UTF8
 
 # 运行
 ./mvnw.cmd `

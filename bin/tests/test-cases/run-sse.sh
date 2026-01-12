@@ -20,7 +20,7 @@ Find all links containing /dp/.
 
 # API 接口
 API_BASE="http://localhost:8182"
-COMMAND_ENDPOINT="$API_BASE/api/commands/plain?mode=async"
+COMMAND_ENDPOINT="$API_BASE/api/commands/plain?async=1"
 
 # 发送命令
 echo "Sending command to server..."
@@ -68,10 +68,10 @@ while read -r line; do
     data="${data#"${data%%[![:space:]]*}"}"  # 去除前导空白
     echo "SSE update: $data"
 
-    # 检查是否已完成（兼容 "done" : true 与 "isDone" : true）
-    if [[ "$data" =~ isDone.*true ]] || [[ "$data" =~ done.*true ]]; then
+    # Check for completion indicators: "done": true or "isDone": true
+    if [[ "$data" =~ \"isDone\"\s*:\s*true ]] || [[ "$data" =~ \"done\"\s*:\s*true ]]; then
       isDone=1
-      sleep 1 # 等待一秒以确保所有数据都已接收
+      sleep 1 # wait a moment to ensure all data is received
     fi
   fi
 

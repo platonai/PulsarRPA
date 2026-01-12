@@ -3,9 +3,14 @@
 # Find the first parent directory containing the VERSION file
 $AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
 while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
-  $AppHome = Split-Path -Parent $AppHome
+    $AppHome = Split-Path -Parent $AppHome
 }
 Set-Location $AppHome
+
+# 导入通用工具脚本
+. $AppHome\bin\common\Util.ps1
+
+Fix-Encoding-UTF8
 
 # 设置错误处理
 $ErrorActionPreference = "Stop"
@@ -55,6 +60,11 @@ $RESULT_URL = "$API_BASE/api/commands/$COMMAND_ID/result"
 
 Write-Host "Connecting to SSE stream..."
 
+# 确保 HttpClient 类型可用（Windows PowerShell 需显式加载）
+if (-not ("System.Net.Http.HttpClient" -as [type])) {
+  Add-Type -AssemblyName System.Net.Http
+}
+
 # 创建 HTTP 客户端用于 SSE
 $httpClient = New-Object System.Net.Http.HttpClient
 $httpClient.Timeout = [System.TimeSpan]::FromMinutes(30)
@@ -87,6 +97,12 @@ function Get-FinalResult {
 
   Write-Host "`n=== FETCHING FINAL RESULT ===" -ForegroundColor Green
 
+  # Print payload safely across Windows PowerShell 5.1 and pwsh.
+  function Write-TextBlock {
+    param([Parameter(Mandatory=$true)][string]$Text)
+    Write-Output $Text | Out-Host
+  }
+
   try {
     $result = Invoke-RestMethod -Uri $RESULT_URL -Method GET -ContentType "application/json"
 
@@ -95,19 +111,21 @@ function Get-FinalResult {
     Write-Host "Timestamp: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') UTC" -ForegroundColor Cyan
     Write-Host "Status: COMPLETED" -ForegroundColor Green
 
-    # 如果结果是 JSON，尝试格式化输出
+    # Normalise to a printable string (pretty JSON when possible).
     if ($result -is [string]) {
       try {
         $jsonResult = $result | ConvertFrom-Json
         Write-Host "`nStructured Result:" -ForegroundColor Magenta
-        $jsonResult | ConvertTo-Json -Depth 10 | Write-Host
+        $jsonText = $jsonResult | ConvertTo-Json -Depth 10
+        Write-TextBlock -Text $jsonText
       } catch {
         Write-Host "`nRaw Result:" -ForegroundColor Magenta
-        Write-Host $result
+        Write-TextBlock -Text $result
       }
     } else {
       Write-Host "`nResult Object:" -ForegroundColor Magenta
-      $result | ConvertTo-Json -Depth 10 | Write-Host
+      $jsonText = $result | ConvertTo-Json -Depth 10
+      Write-TextBlock -Text $jsonText
     }
 
     Write-Host "`n=== END OF RESULT ===" -ForegroundColor Yellow
@@ -128,7 +146,7 @@ try {
   }
 
   $stream = $response.Content.ReadAsStreamAsync().Result
-  $reader = New-Object System.IO.StreamReader($stream)
+  $reader = New-Object System.IO.StreamReader($stream, [System.Text.Encoding]::UTF8)
 
   # SSE 主循环
   $isDone = $false
@@ -154,7 +172,7 @@ try {
         $lastUpdate = $data
       }
 
-      # 检查是否已完成（兼容 "done" : true 与 "isDone" : true）
+      # Check for completion indicators: "done": true or "isDone": true
       if ($data -match '"done"\s*:\s*true' -or $data -match '"isDone"\s*:\s*true') {
         $isDone = $true
         Write-Host "`nTask completed! Fetching final result..." -ForegroundColor Green
@@ -184,4 +202,4 @@ try {
   Cleanup
 }
 
-Write-Host "`nFinished command-sse.ps1 script." -ForegroundColor Green
+Write-Host "`nFinished run-sse.ps1 script." -ForegroundColor Green

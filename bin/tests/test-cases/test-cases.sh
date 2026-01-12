@@ -27,20 +27,6 @@ curl -X GET "${BASE_URL}/actuator/health" -H "Accept: application/json" -H "User
 EOF
 
 # Advanced API Tests (Longer running)
-CURL_DESC_PLAIN_API="Plain Text Command API - Amazon Product"
-read -r -d '' CURL_CMD_PLAIN_API << EOF
-curl -X POST "${BASE_URL}/api/commands/plain" -H "Content-Type: text/plain" -d "
-Go to ${PRODUCT_URL}
-
-After browser launch: clear browser cookies.
-After page load: scroll to the middle.
-
-Summarize the product.
-Extract: product name, price, ratings.
-Find all links containing /dp/.
-"
-EOF
-
 CURL_DESC_JSON_API="JSON Command API - Amazon Product"
 read -r -d '' CURL_CMD_JSON_API << EOF
 curl -X POST "${BASE_URL}/api/commands" -H "Content-Type: application/json" -d '{
@@ -57,12 +43,17 @@ curl -X POST "${BASE_URL}/api/commands" -H "Content-Type: application/json" -d '
 }'
 EOF
 
-CURL_DESC_ASYNC_MODE="Async Command Mode Test"
-read -r -d '' CURL_CMD_ASYNC_MODE << EOF
-curl -X POST "${BASE_URL}/api/commands/plain?mode=async" -H "Content-Type: text/plain" -d "
+CURL_DESC_PLAIN_API="Plain Text Command API - Amazon Product"
+read -r -d '' CURL_CMD_PLAIN_API << EOF
+curl -X POST "${BASE_URL}/api/commands/plain?async=1" -H "Content-Type: text/plain" -d "
 Go to ${PRODUCT_URL}
 
-Extract the page title and all text content.
+After browser launch: clear browser cookies.
+After page load: scroll to the middle.
+
+Summarize the product.
+Extract: product name, price, ratings.
+Find all links containing /dp/.
 "
 EOF
 
@@ -72,7 +63,6 @@ declare -a CURL_COMMANDS=(
   "$CURL_DESC_QUERY_PARAMS|$CURL_CMD_QUERY_PARAMS"
   "$CURL_DESC_WEBUI|$CURL_CMD_WEBUI"
   "$CURL_DESC_CUSTOM_HEADERS|$CURL_CMD_CUSTOM_HEADERS"
-  "$CURL_DESC_ASYNC_MODE|$CURL_CMD_ASYNC_MODE"
-  "$CURL_DESC_PLAIN_API|$CURL_CMD_PLAIN_API"
   "$CURL_DESC_JSON_API|$CURL_CMD_JSON_API"
+  "$CURL_DESC_PLAIN_API|$CURL_CMD_PLAIN_API"
 )

@@ -9,6 +9,11 @@ while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
 }
 Set-Location $AppHome
 
+# Import common utility script
+. $AppHome\bin\common\Util.ps1
+
+Fix-Encoding-UTF8
+
 $TARGET = Join-Path $PWD "target"
 mkdir -f $TARGET
 $UBERJAR = Join-Path $TARGET "Browser4.jar"
