@@ -414,6 +414,17 @@ main() {
         fi
     fi
 
+    # Update repository on startup if fetch is enabled
+    if [[ $FETCH_REMOTE -eq 1 ]]; then
+        log INFO "Updating repository before initial build..."
+        if fetch_remote; then
+            log INFO "Pulling latest changes on startup..."
+            if ! git pull --no-rebase --quiet; then
+                log WARN "Git pull encountered issues, but continuing with existing code..."
+            fi
+        fi
+    fi
+
     # Initial build
     log INFO "Intial build starting..."
     run_build_script
