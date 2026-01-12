@@ -8,7 +8,7 @@ import kotlinx.coroutines.delay
  * A reasoning agent that uses [observe -> act -> observe -> act -> ...] pattern to resolve browser use problems.
  * */
 class ObserveActBrowserAgent constructor(
-    session: AgenticSession, maxSteps: Int = 1000, config: AgentConfig = AgentConfig(maxSteps = maxSteps)
+    session: AgenticSession, maxSteps: Int = 100, config: AgentConfig = AgentConfig(maxSteps = maxSteps)
 ) : BrowserPerceptiveAgent(session, maxSteps, config) {
     private val logger = getLogger(ObserveActBrowserAgent::class)
 

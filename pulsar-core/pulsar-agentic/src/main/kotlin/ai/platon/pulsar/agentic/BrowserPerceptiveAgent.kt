@@ -44,7 +44,7 @@ import kotlin.time.Duration.Companion.minutes
  * - todo* flags: Control integration with persistent todolist.md planning & progress.
  */
 data class AgentConfig(
-    val maxSteps: Int = 1000,
+    val maxSteps: Int = 100,
     val maxRetries: Int = 3,
     val baseRetryDelayMs: Long = 1_000,
     val maxRetryDelayMs: Long = 30_000,
@@ -91,7 +91,7 @@ data class AgentConfig(
 
 open class BrowserPerceptiveAgent(
     session: AgenticSession,
-    val maxSteps: Int = 1000,
+    val maxSteps: Int = 100,
     config: AgentConfig = AgentConfig(maxSteps = maxSteps)
 ) : BrowserAgentActor(session, config) {
     private val logger = getLogger(BrowserPerceptiveAgent::class)
@@ -128,7 +128,7 @@ open class BrowserPerceptiveAgent(
     protected val checkpointManager = CheckpointManager(baseDir.resolve("checkpoints"))
 
     constructor(
-        driver: WebDriver, session: AgenticSession, maxSteps: Int = 1000,
+        driver: WebDriver, session: AgenticSession, maxSteps: Int = 100,
         config: AgentConfig = AgentConfig(maxSteps = maxSteps)
     ) : this(session, maxSteps = maxSteps, config = config) {
         session.bindDriver(driver)
