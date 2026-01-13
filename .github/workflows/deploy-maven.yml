@@ -1,4 +1,4 @@
-name: Deploy OOS
+name: Deploy To Maven Central
 
 on:
   workflow_dispatch:
