@@ -5,6 +5,20 @@ param(
     [string]$message = ""
 )
 
+$ErrorActionPreference = "Stop"
+
+# 🔍 Find the first parent directory containing the VERSION file
+$AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
+while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
+    $AppHome = Split-Path -Parent $AppHome
+}
+Set-Location $AppHome
+
+# Import common utility script
+. $AppHome\bin\common\Util.ps1
+
+Fix-Encoding-UTF8
+
 # Find VERSION file
 $AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
 while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
