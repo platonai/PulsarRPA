@@ -82,15 +82,18 @@ class Browser4Application {
         builder.appendLine("Example 1: Using the WebUI to run a command:")
         builder.appendLine(urls.frontend)
         builder.appendLine("------------------------------------------------------------------------------")
-        builder.appendLine("Example 2: For Beginners – Just Text, No Code:")
-        builder.appendLine(buildBeginnerExample(urls.commandEndpoint))
+        builder.appendLine("Example 2: Open task:")
+        builder.appendLine(buildOpenTaskExample(urls.commandEndpoint))
         builder.appendLine("------------------------------------------------------------------------------")
-        builder.appendLine("Example 3: For Advanced Users — LLM + X-SQL: Precise, Flexible, Powerful:")
-        builder.appendLine(buildAdvancedExample(urls.scrapingEndpoint))
+        builder.appendLine("Example 3: Scraping Task:")
+        builder.appendLine(buildScrapingExample(urls.commandEndpoint))
+        builder.appendLine("------------------------------------------------------------------------------")
+        builder.appendLine("Example 4: For Advanced Extract Task — LLM + X-SQL: Precise, Flexible, Powerful:")
+        builder.appendLine(buildAdvancedScrapingExample(urls.commandEndpoint))
         return builder.toString()
     }
 
-    private fun buildBeginnerExample(commandEndpoint: String): String {
+    private fun buildOpenTaskExample(commandEndpoint: String): String {
         return """
             ```shell
             curl -X POST "$commandEndpoint" -H "Content-Type: text/plain" -d "
@@ -107,16 +110,44 @@ class Browser4Application {
         """.trimIndent()
     }
 
-    private fun buildAdvancedExample(scrapingEndpoint: String): String {
+    private fun buildScrapingExample(commandEndpoint: String): String {
         return """
             ```shell
-            curl -X POST "$scrapingEndpoint" -H "Content-Type: text/plain" -d "
-            select
-              llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
-              dom_base_uri(dom) as url,
-              dom_first_text(dom, '#productTitle') as title,
-              dom_first_slim_html(dom, 'img:expr(width > 400)') as img
-            from load_and_select('https://www.amazon.com/dp/B08PP5MSVB', 'body');
+            curl -X POST "$commandEndpoint" -H "Content-Type: text/plain" -d "
+                Go to https://www.amazon.com/dp/B08PP5MSVB
+
+                After browser launch: clear browser cookies.
+                After page load: scroll to the middle.
+
+                Summarize the product.
+                Extract: product name, price, ratings.
+                Find all links containing /dp/.
+            "
+            ```
+        """.trimIndent()
+    }
+
+    private fun buildAdvancedScrapingExample(commandEndpoint: String): String {
+        return """
+            ```shell
+            curl -X POST "$commandEndpoint" -H "Content-Type: text/plain" -d "
+                Go to https://www.amazon.com/dp/B08PP5MSVB
+
+                After browser launch: clear browser cookies.
+                After page load: scroll to the middle.
+
+                Summarize the product.
+                Extract: product name, price, ratings.
+                Find all links containing /dp/.
+
+                xsql:
+                ```sql
+                select
+                  dom_base_uri(dom) as url,
+                  dom_first_text(dom, '#productTitle') as title,
+                  dom_first_slim_html(dom, 'img:expr(width > 400)') as img
+                from load_and_select('https://www.amazon.com/dp/B08PP5MSVB', 'body');
+                ```
             "
             ```
         """.trimIndent()
