@@ -137,13 +137,13 @@ try {
 
     # Push tag to remote
     git push $remote $newTag
-    Write-Host "✅ Successfully pushed tag: $newTag"
+    Write-Host "Successfully pushed tag: $newTag"
 
     # Try to show GitHub URL
     $remoteUrl = git config --get remote.$remote.url
     if ($remoteUrl -match 'github\.com[:/](.+?)(?:\.git)?$') {
         $repo = $matches[1]
-        Write-Host "🔗 Release URL: https://github.com/$repo/releases/tag/$newTag"
+        Write-Host "Release URL: https://github.com/$repo/releases/tag/$newTag"
     }
 
     Write-Output $newTag
@@ -151,4 +151,3 @@ try {
     Write-Error "Failed to create/push tag: $_"
     exit 1
 }
-
