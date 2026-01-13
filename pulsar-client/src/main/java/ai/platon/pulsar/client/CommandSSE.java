@@ -9,10 +9,10 @@ public class CommandSSE {
     public static void main(String[] args) throws Exception {
         var command = """
                 Go to https://www.amazon.com/dp/B08PP5MSVB
-                
+
                 After browser launch: clear browser cookies.
                 After page load: scroll to the middle.
-                
+
                 Summarize the product.
                 Extract: product name, price, ratings.
                 Find all links containing /dp/.
@@ -20,7 +20,7 @@ public class CommandSSE {
 
         // Send command to server
         var request = HttpRequest.newBuilder()
-                .uri(URI.create("http://localhost:8182/api/commands/plain?mode=async"))
+                .uri(URI.create("http://localhost:8182/api/commands/plain?async=1"))
                 .header("Content-Type", "text/plain")
                 .POST(HttpRequest.BodyPublishers.ofString(command))
                 .build();

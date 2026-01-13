@@ -33,7 +33,7 @@ Find all links containing /dp/.
 
 # API 接口
 $API_BASE = "http://localhost:8182"
-$COMMAND_ENDPOINT = "$API_BASE/api/commands/plain?mode=async"
+$COMMAND_ENDPOINT = "$API_BASE/api/commands/plain?async=1"
 
 # 发送命令
 Write-Host "Sending command to server..."

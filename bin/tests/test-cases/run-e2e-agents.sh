@@ -27,7 +27,7 @@ set -e
 # Configuration
 # =============================================================================
 readonly API_BASE="${API_BASE:-http://localhost:8182}"
-readonly COMMAND_ENDPOINT="$API_BASE/api/commands/plain?mode=async"
+readonly COMMAND_ENDPOINT="$API_BASE/api/commands/plain?async=1"
 readonly COMMAND_STATUS_BASE="$API_BASE/api/commands"
 readonly USE_CASES_DIR="$AppHome/bin/tests/use-cases"
 readonly TEST_RESULTS_DIR="./target/test-results/use-cases"
