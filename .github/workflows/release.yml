@@ -267,31 +267,6 @@ jobs:
 
           echo "✅ Successfully merged $TAG to master"
 
-      - name: Sync master to main branch
-        if: success() && env.IS_PRERELEASE == 'false' && (steps.merge_master.outcome == 'success' || steps.merge_master.outcome == 'skipped')
-        run: |
-          echo "🔄 Syncing master to main branch..."
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Ensure we have the latest master
-          git fetch origin master
-
-          # Check if main branch exists
-          if ! git ls-remote --exit-code --heads origin main >/dev/null 2>&1; then
-            echo "⚠️ Main branch does not exist, creating it from master..."
-            git checkout -b main origin/master
-            git push origin main
-            echo "✅ Created main branch from master"
-          else
-            echo "📝 Main branch exists, syncing from master..."
-            git fetch origin main
-            git checkout main
-            git reset --hard origin/master
-            git push origin main --force-with-lease
-            echo "✅ Successfully synced main branch with master"
-          fi
-
       - name: Build Browser4 JAR
         if: success()
         run: |
