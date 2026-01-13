@@ -1,4 +1,4 @@
-name: Post Release
+name: Sync master to main
 
 on:
   push:
