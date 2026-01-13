@@ -100,7 +100,7 @@ if ($prevTag) {
     Write-Host "`nChanges since $prevTag :"
     $changes = git log --oneline --no-merges "$prevTag..HEAD"
     if ($changes) {
-        $changes | ForEach-Object { Write-Host " * $_" }
+        $changes | ForEach-Object { Write-Host "  - $_" }
     } else {
         Write-Host "  No changes"
     }
