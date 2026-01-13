@@ -19,18 +19,6 @@ Set-Location $AppHome
 
 Fix-Encoding-UTF8
 
-# Find VERSION file
-$AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
-while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
-    $AppHome = Split-Path -Parent $AppHome
-}
-
-if (!$AppHome) {
-    Write-Error "VERSION file not found"
-    exit 1
-}
-
-Set-Location $AppHome
 Write-Host "Working in: $AppHome"
 
 # Check if we're in a git repo
