@@ -10,7 +10,7 @@ description: Translate README.md to other languages
 
 # README Translator
 
-Translate README.md to the following languages and create the corresponding document:
+Translate README.md into the following languages and create the corresponding documents:
 
-Chinese -> README.zh.md
-Japanese -> README.jp.md
+Chinese → README.zh.md
+Japanese → README.jp.md
