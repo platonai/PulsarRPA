@@ -1,4 +1,4 @@
-@file:Suppress("unused")
+@file:Suppress("unused", "deprecated")
 package ai.platon.cdt.kt.protocol.commands
 
 import ai.platon.cdt.kt.protocol.events.dom.AttributeModified
