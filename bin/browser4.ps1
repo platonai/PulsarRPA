@@ -17,10 +17,8 @@ Fix-Encoding-UTF8
 $TARGET = Join-Path $PWD "target"
 mkdir -f $TARGET
 $UBERJAR = Join-Path $TARGET "Browser4.jar"
-if (-not (Test-Path $UBERJAR)) {
-    $SERVER_HOME = Join-Path $AppHome "browser4\browser4-agents"
-    Copy-Item (Join-Path $SERVER_HOME "target\Browser4.jar") -Destination $UBERJAR
-}
+$SERVER_HOME = Join-Path $AppHome "browser4\browser4-agents"
+Copy-Item (Join-Path $SERVER_HOME "target\Browser4.jar") -Destination $UBERJAR
 
 # Other Java options
 $JAVA_OPTS = "$JAVA_OPTS -Dfile.encoding=UTF-8" # Use UTF-8

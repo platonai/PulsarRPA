@@ -82,10 +82,10 @@ class Browser4Application {
         builder.appendLine("Example 1: Using the WebUI to run a command:")
         builder.appendLine(urls.frontend)
         builder.appendLine("------------------------------------------------------------------------------")
-        builder.appendLine("Example 2: Open task:")
+        builder.appendLine("Example 2: Open task - Ask Browser4 for Anything:")
         builder.appendLine(buildOpenTaskExample(urls.commandEndpoint))
         builder.appendLine("------------------------------------------------------------------------------")
-        builder.appendLine("Example 3: Scraping Task:")
+        builder.appendLine("Example 3: Automation/Extraction Task - Zero Code:")
         builder.appendLine(buildScrapingExample(urls.commandEndpoint))
         builder.appendLine("------------------------------------------------------------------------------")
         builder.appendLine("Example 4: For Advanced Extract Task — LLM + X-SQL: Precise, Flexible, Powerful:")
@@ -140,7 +140,7 @@ class Browser4Application {
                 Extract: product name, price, ratings.
                 Find all links containing /dp/.
 
-                xsql:
+                X-SQL:
                 ```sql
                 select
                   dom_base_uri(dom) as url,
