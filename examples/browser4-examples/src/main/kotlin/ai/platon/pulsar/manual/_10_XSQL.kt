@@ -74,7 +74,7 @@ fun main() {
     // Create an agentic context which supports X-SQL execution
     // AI Note: AgenticContexts provides both SQL execution and AI features
     val context = AgenticContexts.create()
-    
+
     // =====================================================================
     // STEP 2: X-SQL Query Definition
     // =====================================================================
@@ -93,26 +93,26 @@ fun main() {
 select
       -- Extract product title from #productTitle element
       dom_first_text(dom, '#productTitle') as title,
-      
-      -- Extract brand from #bylineInfo element  
+
+      -- Extract brand from #bylineInfo element
       dom_first_text(dom, '#bylineInfo') as brand,
-      
+
       -- Extract price using complex CSS selector
       -- Looks in two possible locations: #price or #corePrice_desktop
       -- Uses :matches(^Price) to find "Price" label, then ~ td to get adjacent cell
       dom_first_text(dom, '#price tr td:matches(^Price) ~ td, #corePrice_desktop tr td:matches(^Price) ~ td') as price,
-      
+
       -- Extract review count from customer review text
       dom_first_text(dom, '#acrCustomerReviewText') as ratings,
-      
+
       -- Extract and convert rating score to float
       -- Uses str_first_float() to parse "4.5 out of 5" → 4.5
       -- Second argument (0.0) is default if parsing fails
       str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-      
+
   from load_and_select('https://www.amazon.com/dp/B08PP5MSVB -i 1s -njr 3', 'body');
             """
-    
+
     // =====================================================================
     // STEP 3: Execute Query and Format Results
     // =====================================================================
@@ -120,38 +120,10 @@ select
     // Execute the X-SQL query and get results as a standard JDBC ResultSet.
     // AI Note: ResultSet is compatible with standard Java database tools.
     val rs = context.executeQuery(sql)
-    
+
     // Format and print the results as a table
     // AI Note: ResultSetFormatter creates readable output:
     // - withHeader=true includes column names
     // - Automatically adjusts column widths
     println(ResultSetFormatter(rs, withHeader = true))
-    
-    // =====================================================================
-    // Additional X-SQL Examples (Reference)
-    // =====================================================================
-    //
-    // Example 1: Extract multiple products from a listing page
-    // ```sql
-    // select
-    //     dom_first_text(dom, '.product-title') as title,
-    //     dom_first_href(dom, '.product-link') as url
-    // from load_and_select('https://example.com/products', '.product-item');
-    // ```
-    //
-    // Example 2: Join multiple pages
-    // ```sql
-    // select p.title, d.description
-    // from load_and_select('url1', 'body') as p
-    // join load_and_select('url2', 'body') as d
-    // on true;
-    // ```
-    //
-    // Example 3: Filter results
-    // ```sql
-    // select * from (
-    //     select dom_first_text(dom, '.price') as price
-    //     from load_and_select('url', '.item')
-    // ) where cast(price as float) < 100;
-    // ```
 }
