@@ -108,9 +108,6 @@ open class BrowserPerceptiveAgent(
     protected val actionValidator = ActionValidator()
 
     protected val performanceMetrics = PerformanceMetrics()
-    protected val consecutiveFailureCounter = AtomicInteger(0)
-    protected val consecutiveLLMFailureCounter = AtomicInteger(0)
-    protected val consecutiveValidationFailureCounter = AtomicInteger(0)
     protected val stepExecutionTimes = ConcurrentHashMap<Int, Long>()
 
     // New components for better separation of concerns
@@ -258,7 +255,6 @@ open class BrowserPerceptiveAgent(
             }
 
             circuitBreaker.recordSuccess(CircuitBreaker.FailureType.LLM_FAILURE)
-            consecutiveLLMFailureCounter.set(0) // Keep for backward compatibility
 
             return results
         } catch (e: Exception) {
@@ -373,7 +369,6 @@ open class BrowserPerceptiveAgent(
             val actionDescription = cta.generate(messages, context)
             requireNotNull(context.agentState.actionDescription) { "Filed should be set: context.agentState.actionDescription" }
             circuitBreaker.recordSuccess(CircuitBreaker.FailureType.LLM_FAILURE)
-            consecutiveLLMFailureCounter.set(0) // Keep for backward compatibility
 
             actionDescription
         } catch (e: Exception) {
@@ -395,9 +390,7 @@ open class BrowserPerceptiveAgent(
             throw PerceptiveAgentError.PermanentError(cbError.message ?: "Circuit breaker tripped", cbError)
         }
 
-        consecutiveLLMFailureCounter.set(failures) // Keep for backward compatibility
         logger.error("🤖❌ action.gen.fail sid={} failures={} msg={}", context.sid, failures, e.message, e)
-        consecutiveFailureCounter.incrementAndGet()
     }
 
     protected suspend fun prepareStep(
@@ -612,9 +605,6 @@ open class BrowserPerceptiveAgent(
         try {
             logger.info("🧹 cleanup.partial sid={} step={}", context.sid, context.step)
             circuitBreaker.reset()
-            consecutiveFailureCounter.set(0)
-            consecutiveLLMFailureCounter.set(0)
-            consecutiveValidationFailureCounter.set(0)
             actionValidator.clearCache()
             // pageStateTracker.waitForDOMSettle(1000, 100)
         } catch (e: Exception) {
@@ -637,7 +627,6 @@ open class BrowserPerceptiveAgent(
             } catch (cbError: CircuitBreakerTrippedException) {
                 throw PerceptiveAgentError.PermanentError(cbError.message ?: "Circuit breaker tripped", cbError)
             }
-            consecutiveValidationFailureCounter.set(failures)
             logger.info(
                 "🛑 tool.validate.fail sid={} step={} failures={} locator={} | {}({}) | {}",
                 context.sid, context.step, failures, actionDescription.locator, toolCall.method, toolCall.arguments,
@@ -653,7 +642,6 @@ open class BrowserPerceptiveAgent(
         }
 
         circuitBreaker.recordSuccess(CircuitBreaker.FailureType.VALIDATION_FAILURE)
-        consecutiveValidationFailureCounter.set(0)
 
         return try {
             logger.info(
@@ -669,7 +657,6 @@ open class BrowserPerceptiveAgent(
             // stateManager.syncBrowserUseState(context)
 
             circuitBreaker.recordSuccess(CircuitBreaker.FailureType.EXECUTION_FAILURE)
-            consecutiveFailureCounter.set(0)
             val summary = "✅ ${toolCall.method} executed successfully"
 
             stateManager.addTrace(
@@ -685,7 +672,6 @@ open class BrowserPerceptiveAgent(
             } catch (cbError: CircuitBreakerTrippedException) {
                 throw PerceptiveAgentError.PermanentError(cbError.message ?: "Circuit breaker tripped", cbError)
             }
-            consecutiveFailureCounter.set(failures)
             logger.error(
                 "🛠️❌ tool.exec.fail sid={} step={} failures={} msg={}",
                 context.sid,
@@ -817,7 +803,10 @@ open class BrowserPerceptiveAgent(
             sb.appendLine("Successful actions: ${performanceMetrics.successfulActions}")
             sb.appendLine("Failed actions: ${performanceMetrics.failedActions}")
             sb.appendLine("Retry count: ${retryCounter.get()}")
-            sb.appendLine("Consecutive failures: ${consecutiveFailureCounter.get()}")
+            val failureCounts = circuitBreaker.getFailureCounts()
+            sb.appendLine("Circuit breaker - LLM failures: ${failureCounts[CircuitBreaker.FailureType.LLM_FAILURE]}")
+            sb.appendLine("Circuit breaker - Validation failures: ${failureCounts[CircuitBreaker.FailureType.VALIDATION_FAILURE]}")
+            sb.appendLine("Circuit breaker - Execution failures: ${failureCounts[CircuitBreaker.FailureType.EXECUTION_FAILURE]}")
             Files.writeString(path, sb)
             slogger.info(
                 "🧾✅ Transcript persisted successfully",
