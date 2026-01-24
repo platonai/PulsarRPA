@@ -18,7 +18,6 @@ import ai.platon.pulsar.common.MessageWriter
 import ai.platon.pulsar.common.getLogger
 import ai.platon.pulsar.protocol.browser.driver.cdt.PulsarWebDriver
 import kotlinx.coroutines.withTimeout
-import java.lang.ref.WeakReference
 import java.nio.file.Path
 import java.time.Instant
 import java.util.*
@@ -170,8 +169,7 @@ class AgentStateManager(
                 stepStartTime = Instant.now(),
                 agentState = currentAgentState,
                 config = baseContext.config,
-                stateHistory = _stateHistory,
-                baseContext = WeakReference(baseContext)
+                stateHistory = _stateHistory
             )
         }
 

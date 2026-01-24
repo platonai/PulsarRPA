@@ -15,12 +15,6 @@ class ObserveActBrowserAgent constructor(
     override suspend fun step(action: ActionOptions, context: ExecutionContext, noOpsIn: Int): StepProcessingResult {
         var consecutiveNoOps = noOpsIn
 
-        // val context = prepareStep(action, ctxIn, consecutiveNoOps)
-        // require(context.step == ctxIn.step + 1) { "Required: context.step == ctxIn.step + 1" }
-        require(context.agentState.prevState == context.baseContext.get()?.agentState) {
-            "Required: context.agentState.prevState == context.baseContext.get()?.agentState"
-        }
-
         // Execute the tool call with enhanced error handling
         val actResult = act(action)
 
