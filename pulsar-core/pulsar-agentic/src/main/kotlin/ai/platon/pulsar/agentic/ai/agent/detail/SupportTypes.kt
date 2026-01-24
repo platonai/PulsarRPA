@@ -13,7 +13,6 @@ import ai.platon.pulsar.agentic.ai.agent.ExtractParams
 import ai.platon.pulsar.agentic.ai.agent.ObserveParams
 import ai.platon.pulsar.common.Strings
 import ai.platon.pulsar.agentic.ExtractionSchema
-import java.lang.ref.WeakReference
 import java.time.Instant
 import java.util.*
 
@@ -69,8 +68,7 @@ data class PerformanceMetrics(
     val averageActionTimeMs: Double = 0.0,
     val totalExecutionTimeMs: Long = 0,
     val memoryUsageMB: Double = 0.0,
-    val retryCount: Int = 0,
-    val consecutiveFailures: Int = 0
+    val retryCount: Int = 0
 )
 
 /**
@@ -92,9 +90,7 @@ data class ExecutionContext constructor(
 
     val sessionId: String,
     val stepStartTime: Instant = Instant.now(),
-    val additionalContext: Map<String, Any> = emptyMap(),
-
-    var baseContext: WeakReference<ExecutionContext> = WeakReference<ExecutionContext>(null)
+    val additionalContext: Map<String, Any> = emptyMap()
 ) {
     val sid get() = sessionId.take(8)
 
