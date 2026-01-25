@@ -432,7 +432,7 @@
         <jodd-trove4j-core.version>3.5.2</jodd-trove4j-core.version>
 
         <!-- 2.5.2 suggested, but 2.7.2 is a correct version, we will consider using a shaded gora -->
-        <hadoop.version>2.7.2</hadoop.version>
+        <hadoop.version>3.4.0</hadoop.version>
 
         <!--  HTML parsing  -->
         <xerces.version>2.11.0</xerces.version>
