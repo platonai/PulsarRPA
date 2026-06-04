@@ -34,7 +34,7 @@ class TestRuntimes {
             return
         }
         
-        val tmp = AppPaths.getTmp("test")
+        val tmp = AppPaths.getTmpDirectory("test")
         val file = tmp.resolve(RandomStringUtils.randomAlphabetic(5))
         Files.createDirectories(file.parent)
         Files.writeString(file, "to be deleted")
@@ -59,7 +59,7 @@ class TestRuntimes {
 
     @Test
     fun testDeleteBrokenSymbolicLinksUsingJava() {
-        val tmpDir = AppPaths.getTmp("test")
+        val tmpDir = AppPaths.getTmpDirectory("test")
         val file = tmpDir.resolve(RandomStringUtils.randomAlphabetic(5))
         Files.createDirectories(file.parent)
         Files.writeString(file, "to be deleted")

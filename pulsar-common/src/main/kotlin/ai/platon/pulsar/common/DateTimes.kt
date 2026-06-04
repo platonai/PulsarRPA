@@ -1,3 +1,5 @@
+@file:Suppress("UNUSED")
+
 package ai.platon.pulsar.common
 
 import org.apache.commons.lang3.StringUtils
@@ -42,6 +44,22 @@ object DateTimes {
     val PATH_SAFE_FORMAT_2 = SimpleDateFormat("MMdd.HH")
     val PATH_SAFE_FORMAT_3 = SimpleDateFormat("MMdd.HHmm")
     val PATH_SAFE_FORMAT_4 = SimpleDateFormat("MMdd.HHmmss")
+
+    val PATH_SAFE_FORMAT_10 = SimpleDateFormat("yyyyMMdd.HHmmss")
+    val PATH_SAFE_FORMAT_12 = SimpleDateFormat("yyyy-MM-dd_HH-mm-ss")
+
+    val PATH_SAFE_FORMATTER_1 = DateTimeFormatter.ofPattern("MMdd").withZone(ZoneId.systemDefault())!!
+    val PATH_SAFE_FORMATTER_2 = DateTimeFormatter.ofPattern("MMdd.HH").withZone(ZoneId.systemDefault())!!
+    val PATH_SAFE_FORMATTER_3 = DateTimeFormatter.ofPattern("MMdd.HHmm").withZone(ZoneId.systemDefault())!!
+    val PATH_SAFE_FORMATTER_4 = DateTimeFormatter.ofPattern("MMdd.HHmmss").withZone(ZoneId.systemDefault())!!
+
+    val PATH_SAFE_YEAR = DateTimeFormatter.ofPattern("yyyy").withZone(ZoneId.systemDefault())!!
+    val PATH_SAFE_MONTH = DateTimeFormatter.ofPattern("MM").withZone(ZoneId.systemDefault())!!
+    val PATH_SAFE_DAY = DateTimeFormatter.ofPattern("dd").withZone(ZoneId.systemDefault())!!
+    val PATH_SAFE_MONTH_DAY = DateTimeFormatter.ofPattern("MMdd").withZone(ZoneId.systemDefault())!!
+
+    val PATH_SAFE_FORMATTER_11 = DateTimeFormatter.ofPattern("yyyyMMdd.HHmmss").withZone(ZoneId.systemDefault())!!
+    val PATH_SAFE_FORMATTER_12 = DateTimeFormatter.ofPattern("yyyy-MM-dd_HH-mm-ss").withZone(ZoneId.systemDefault())!!
 
     // inaccurate date time
     const val HOURS_PER_DAY = 24L
@@ -141,12 +159,11 @@ object DateTimes {
 
     @JvmOverloads
     fun readableDuration(duration: Duration, truncatedToUnit: ChronoUnit = ChronoUnit.SECONDS): String {
-        return StringUtils.removeStart(duration.truncatedTo(truncatedToUnit).toString(), "PT")
-            .lowercase(Locale.getDefault())
+        return duration.truncatedTo(truncatedToUnit).toString().removePrefix("PT").lowercase()
     }
 
     fun readableDuration(duration: String): String {
-        return StringUtils.removeStart(duration, "PT").lowercase(Locale.getDefault())
+        return duration.removePrefix("PT").lowercase(Locale.getDefault())
     }
 
     fun isoInstantFormat(time: Long): String {
@@ -313,7 +330,7 @@ object DateTimes {
                 else -> null
             }
         } catch (e: Throwable) {
-            logger.warn("Failed to parse $text | {}", e)
+            logger.warn("Failed to parse $text", e)
         }
 
         return null

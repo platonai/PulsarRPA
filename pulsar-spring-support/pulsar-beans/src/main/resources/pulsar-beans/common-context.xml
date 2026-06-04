@@ -24,7 +24,7 @@
     </bean>
 
     <!--Misc message writer -->
-    <bean id="messageWriter" class="ai.platon.pulsar.skeleton.common.message.MiscMessageWriter" destroy-method="close">
+    <bean id="messageWriter" class="ai.platon.pulsar.skeleton.common.message.MiscMessageMessageWriter" destroy-method="close">
     </bean>
 
     <!--The core metrics -->

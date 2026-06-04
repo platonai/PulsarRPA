@@ -1,13 +1,12 @@
 package ai.platon.pulsar.common
 
-import ai.platon.pulsar.common.config.ImmutableConfig
 import java.nio.file.Files
 import java.time.Duration
 import kotlin.test.*
 
-class TestMultiSinkWriter {
+class TestMultiSinkMessageWriter {
 
-    private val writer = MultiSinkWriter()
+    private val writer = MultiSinkMessageWriter()
 
     @Test
     fun `When writer is idle then close it automatically`() {

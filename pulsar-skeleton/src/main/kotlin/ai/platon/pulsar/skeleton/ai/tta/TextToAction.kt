@@ -5,6 +5,7 @@ import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.external.ChatModelFactory
 import ai.platon.pulsar.external.ModelResponse
 import ai.platon.pulsar.skeleton.common.llm.LLMUtils
+import kotlinx.coroutines.runBlocking
 import java.nio.file.Files
 
 data class ActionDescription(
@@ -71,39 +72,19 @@ class TextToAction(val conf: ImmutableConfig) {
     /**
      * Generate the action code from the prompt.
      * */
-    fun chatAboutAllInstruction(prompt: String): ModelResponse {
-        val promptWithSystemMessage = """
-            $actionInstructionMessage
-            $prompt
-        """.trimIndent()
-
-        return model?.call(promptWithSystemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
-    }
-
-    /**
-     * Generate the action code from the prompt.
-     * */
     fun chatAboutWebDriver(prompt: String): ModelResponse {
-        val promptWithSystemMessage = """
-            $webDriverMessage
-            
-            $prompt
-            
-        """.trimIndent()
-
-        return model?.call(promptWithSystemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
+        return runBlocking {
+            model?.callUmSm(prompt, webDriverMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
+        }
     }
 
     /**
      * Generate the action code from the prompt.
      * */
     fun chatAboutPulsarSession(prompt: String): ModelResponse {
-        val promptWithSystemMessage = """
-            $pulsarSessionMessage
-            $prompt
-        """.trimIndent()
-
-        return model?.call(promptWithSystemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
+        return runBlocking {
+            model?.callUmSm(prompt, pulsarSessionMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
+        }
     }
 
     /**

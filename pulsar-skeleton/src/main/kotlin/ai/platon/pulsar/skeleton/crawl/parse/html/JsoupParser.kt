@@ -33,11 +33,6 @@ class JsoupParser(
     fun parse(): FeaturedDocument {
         numJsoupParses.incrementAndGet()
 
-        if (page.encoding == null) {
-            val primerParser = PrimerParser(conf)
-            primerParser.detectEncoding(page)
-        }
-
         try {
             val mutableDocument = Jsoup.parse(page.contentAsInputStream, page.encoding, page.baseURI)
             updateMetaInfos(page, mutableDocument)

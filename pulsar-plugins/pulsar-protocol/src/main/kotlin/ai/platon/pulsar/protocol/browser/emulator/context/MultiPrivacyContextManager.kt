@@ -91,7 +91,7 @@ open class MultiPrivacyContextManager(
     private var lastDumpTime = Instant.now()
     private val snapshotDumpCount = AtomicInteger()
     var snapshotDumpInterval = SNAPSHOT_DUMP_INTERVAL
-    private val messageWriter = MultiSinkWriter()
+    private val messageWriter = MultiSinkMessageWriter()
 
     private val activeContextCount get() = permanentContexts.size + temporaryContexts.size
 

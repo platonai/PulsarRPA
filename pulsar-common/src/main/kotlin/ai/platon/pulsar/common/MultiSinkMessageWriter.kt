@@ -6,30 +6,30 @@ import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicBoolean
 
 /**
- * Created by vincent on 16-10-12.
+ * Created by Vincent on 16-10-12.
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  *
  * Multiple sink message writer. Messages from different source are write to different files.
  */
-open class MultiSinkWriter : AutoCloseable {
+open class MultiSinkMessageWriter(
+    val baseDir: Path = AppPaths.REPORT_DIR.resolve(DateTimes.formatNow("MMdd"))
+) : AutoCloseable {
     companion object {
         private val _writers = ConcurrentHashMap<Path, MessageWriter>()
     }
-    
-    private val logger = getLogger(MultiSinkWriter::class)
+
+    private val logger = getLogger(MultiSinkMessageWriter::class)
     private val closed = AtomicBoolean()
 
-    private val timeIdent get() = DateTimes.formatNow("MMdd")
-    val reportDir = AppPaths.REPORT_DIR.resolve(timeIdent)
     val writers: Map<Path, MessageWriter> get() = _writers
 
     init {
-        Files.createDirectories(reportDir)
+        Files.createDirectories(baseDir)
     }
 
-    fun getPath(filename: String) = pathOf(filename)
+    fun getPath(filename: String): Path = pathOf(filename)
 
-    fun pathOf(filename: String) = reportDir.resolve(filename)
+    fun pathOf(filename: String): Path = baseDir.resolve(filename)
 
     fun readAllLines(filename: String): List<String> {
         val path = getPath(filename)
@@ -39,24 +39,14 @@ open class MultiSinkWriter : AutoCloseable {
         return listOf()
     }
 
-    fun write(message: String, filename: String) {
-        writeTo(message, getPath(filename))
+    fun write(value: Any, filename: String): Path {
+        return writeTo(value, getPath(filename))
     }
 
-    @Deprecated("Use writeTo instead", ReplaceWith("writeTo(message, path)"))
-    fun write(message: String, path: Path) = writeTo(message, path)
-    
-    fun writeTo(message: String, file: Path) {
-        _writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }.write(message)
+    fun writeTo(value: Any, path: Path): Path {
+        _writers.computeIfAbsent(path.toAbsolutePath()) { MessageWriter(it) }.write(value)
         closeIdleWriters()
-    }
-
-    fun writeLineTo(message: String, file: Path) {
-        val writer = _writers.computeIfAbsent(file.toAbsolutePath()) { MessageWriter(it) }
-        writer.write(message)
-        writer.write("\n")
-
-        closeIdleWriters()
+        return path
     }
 
     fun close(filename: String) {
@@ -68,7 +58,7 @@ open class MultiSinkWriter : AutoCloseable {
     fun flush() {
         _writers.values.forEach { it.flush() }
     }
-    
+
     override fun close() {
         if (closed.compareAndSet(false, true)) {
             _writers.forEach {

@@ -2,12 +2,7 @@
 package ai.platon.pulsar.skeleton.crawl.schedule
 
 import ai.platon.pulsar.common.config.ImmutableConfig
-import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
-import ai.platon.pulsar.skeleton.common.persist.ext.options
-import ai.platon.pulsar.skeleton.crawl.component.FetchComponent
-import ai.platon.pulsar.persist.WebPage
-import java.time.Duration
-import java.time.Instant
+import ai.platon.pulsar.skeleton.common.message.MiscMessageMessageWriter
 
 /**
  * This class implements the default re-fetch schedule. That is, no matter if
@@ -19,5 +14,5 @@ import java.time.Instant
  */
 class DefaultFetchSchedule(
         conf: ImmutableConfig,
-        messageWriter: MiscMessageWriter? = null
+        messageWriter: MiscMessageMessageWriter? = null
 ) : AbstractFetchSchedule(conf, messageWriter)

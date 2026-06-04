@@ -1,14 +1,10 @@
-
 package ai.platon.pulsar.skeleton.crawl.scoring
 
 import ai.platon.pulsar.common.ScoreVector
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.config.Params
-import ai.platon.pulsar.skeleton.crawl.index.IndexDocument
 import ai.platon.pulsar.persist.WebPage
-import ai.platon.pulsar.persist.graph.WebEdge
-import ai.platon.pulsar.persist.graph.WebGraph
-import java.util.*
+import ai.platon.pulsar.skeleton.crawl.index.IndexDocument
 
 class ScoringFilters(
     scoringFilters: List<ScoringFilter> = emptyList(),
@@ -51,18 +47,6 @@ class ScoringFilters(
         }
 
         return score
-    }
-
-    override fun distributeScoreToOutlinks(page: WebPage, graph: WebGraph, outgoingEdges: Collection<WebEdge>, allCount: Int) {
-        scoringFilters.forEach {
-            it.distributeScoreToOutlinks(page, graph, outgoingEdges, allCount)
-        }
-    }
-
-    override fun updateScore(page: WebPage, graph: WebGraph, incomingEdges: Collection<WebEdge>) {
-        scoringFilters.forEach {
-            it.updateScore(page, graph, incomingEdges)
-        }
     }
 
     override fun updateContentScore(page: WebPage) {

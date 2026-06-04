@@ -4,7 +4,6 @@ import ai.platon.pulsar.common.DateTimes;
 import ai.platon.pulsar.common.HttpHeaders;
 import ai.platon.pulsar.common.SParser;
 import com.google.common.collect.Multimap;
-import org.apache.oro.text.regex.*;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -12,20 +11,17 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 public class ProtocolHeaders implements HttpHeaders {
 
-    static Perl5Pattern[] patterns = {null, null};
-
-    static {
-        Perl5Compiler compiler = new Perl5Compiler();
-        try {
-            patterns[0] = (Perl5Pattern) compiler.compile("\\bfilename=['\"](.+)['\"]");
-            patterns[1] = (Perl5Pattern) compiler.compile("\\bfilename=(\\S+)\\b");
-        } catch (MalformedPatternException e) {
-        }
-    }
+    private static final Pattern[] PATTERNS = {
+            Pattern.compile("\\bfilename=\"([^\"]+)\""),
+            Pattern.compile("\\bfilename='([^']+)'"),
+            Pattern.compile("\\bfilename=([^;\\s]+)")
+    };
 
     private Map<CharSequence, CharSequence> headers;
 
@@ -95,10 +91,10 @@ public class ProtocolHeaders implements HttpHeaders {
             return null;
         }
 
-        PatternMatcher matcher = new Perl5Matcher();
-        for (Perl5Pattern pattern : patterns) {
-            if (matcher.contains(contentDisposition.toString(), pattern)) {
-                return matcher.getMatch().group(1);
+        for (Pattern pattern : PATTERNS) {
+            Matcher matcher = pattern.matcher(contentDisposition);
+            if (matcher.find()) {
+                return matcher.group(1);
             }
         }
 

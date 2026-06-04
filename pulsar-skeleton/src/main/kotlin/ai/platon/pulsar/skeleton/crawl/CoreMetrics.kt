@@ -12,7 +12,7 @@ import ai.platon.pulsar.common.measure.ByteUnitConverter
 import ai.platon.pulsar.persist.WebDb
 import ai.platon.pulsar.persist.WebPage
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
-import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
+import ai.platon.pulsar.skeleton.common.message.MiscMessageMessageWriter
 import ai.platon.pulsar.skeleton.common.metrics.MetricsSystem
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
 import ai.platon.pulsar.skeleton.crawl.component.LoadComponent
@@ -33,7 +33,7 @@ import java.util.concurrent.ConcurrentSkipListSet
 import java.util.concurrent.atomic.AtomicBoolean
 
 class CoreMetrics(
-    private val messageWriter: MiscMessageWriter,
+    private val messageWriter: MiscMessageMessageWriter,
     conf: ImmutableConfig
 ) : Parameterized, AutoCloseable {
 

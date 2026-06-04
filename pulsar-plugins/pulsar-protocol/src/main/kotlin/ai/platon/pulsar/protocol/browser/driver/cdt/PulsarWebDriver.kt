@@ -13,7 +13,7 @@ import ai.platon.pulsar.common.math.geometric.PointD
 import ai.platon.pulsar.common.math.geometric.RectD
 import ai.platon.pulsar.common.urls.URLUtils
 import ai.platon.pulsar.protocol.browser.driver.cdt.detail.*
-import ai.platon.pulsar.skeleton.common.message.MiscMessageWriter
+import ai.platon.pulsar.skeleton.common.message.MiscMessageMessageWriter
 import ai.platon.pulsar.skeleton.crawl.common.InternalURLUtil
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.*
 import com.fasterxml.jackson.annotation.JsonInclude
@@ -28,7 +28,6 @@ import com.github.kklisura.cdt.protocol.v2023.types.network.ErrorReason
 import com.github.kklisura.cdt.protocol.v2023.types.network.LoadNetworkResourceOptions
 import com.github.kklisura.cdt.protocol.v2023.types.network.ResourceType
 import com.github.kklisura.cdt.protocol.v2023.types.runtime.Evaluate
-import com.google.common.annotations.Beta
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import org.apache.commons.lang3.SystemUtils
@@ -73,7 +72,7 @@ class PulsarWebDriver(
     private val screenshot = Screenshot(page, devTools)
 
     private val networkManager by lazy { NetworkManager(this, rpc) }
-    private val messageWriter = MiscMessageWriter()
+    private val messageWriter = MiscMessageMessageWriter()
 
     private val closed = AtomicBoolean()
 

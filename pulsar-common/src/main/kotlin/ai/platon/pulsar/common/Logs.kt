@@ -3,6 +3,7 @@ package ai.platon.pulsar.common
 import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.nio.file.Path
 import kotlin.reflect.KClass
 
 fun <T : Any> getLogger(clazz: KClass<T>): Logger = getLogger(clazz, "")
@@ -73,11 +74,11 @@ fun warnInterruptible(target: Any, t: Throwable, message: String?, vararg args: 
         getLogger(target).warn(message1, *args)
     } catch (t2: Throwable) {
         catastrophicError(t2, message1, *args)
-    }
-    
-    if (t is InterruptedException) {
-        // Preserve interrupt status
-        Thread.currentThread().interrupt()
+    } finally {
+        if (t is InterruptedException) {
+            // Preserve interrupt status
+            Thread.currentThread().interrupt()
+        }
     }
 }
 
@@ -167,6 +168,11 @@ fun warnForClose(target: Any, t: Throwable) = warnForClose(target, t, t.stringif
  * @param message the message to log
  * */
 fun warnForClose(target: Any, t: Throwable, message: String, vararg args: Any?) {
+    if (Thread.currentThread().isInterrupted) {
+        System.err.println("System is shutting down $message")
+        return
+    }
+
     var logger: Logger? = null
     try {
         logger = getLogger(target)
@@ -178,24 +184,64 @@ fun warnForClose(target: Any, t: Throwable, message: String, vararg args: Any?) 
     if (t is InterruptedException) {
         // Preserve interrupt status
         Thread.currentThread().interrupt()
-        
+
         val message2 = """
-                 * <p><em>Implementers of AutoClosable interface are strongly advised
-                 * to not have the {@code close} method throw {@link
-                 * InterruptedException}.</em>
-                 *
-                 * This exception interacts with a thread's interrupted status,
-                 * and runtime misbehavior is likely to occur if an {@code
-                 * InterruptedException} is {@linkplain Throwable#addSuppressed
-                 * suppressed}.
-                 *
-                 * More generally, if it would cause problems for an
-                 * exception to be suppressed, the {@code AutoCloseable.close}
-                 * method should not throw it.
+             * <p><em>Implementers of AutoClosable interface are strongly advised
+             * to not have the {@code close} method throw {@link
+             * InterruptedException}.</em>
+             *
+             * This exception interacts with a thread's interrupted status,
+             * and runtime misbehavior is likely to occur if an {@code
+             * InterruptedException} is {@linkplain Throwable#addSuppressed
+             * suppressed}.
+             *
+             * More generally, if it would cause problems for an
+             * exception to be suppressed, the {@code AutoCloseable.close}
+             * method should not throw it.
         """
-        
+
         logger?.warn(message2)
         logger?.warn(t.stringify())
     }
 }
 
+fun writeAuxLog(fileName: String, payload: Any): Path {
+    val path = AppPaths.detectAuxiliaryLogDir().resolve(fileName)
+    MessageWriter.writeOnce(path, payload)
+    return path
+}
+
+/**
+ * A protected version for println which can be disabled.
+ * */
+fun printlnPro() {
+    if (System.getProperty("log.print.enabled") != "true") {
+        return
+    }
+
+    println()
+}
+
+fun printlnPro(o: Any?) {
+    printlnPro(null, o)
+}
+
+/**
+ * A protected version for println which can be disabled.
+ * */
+fun printlnPro(ownerObj: Any?, o: Any?) {
+    if (System.getProperty("logging.printlnPro.enabled") == "false") {
+        return
+    }
+
+    val prefix = if (ownerObj != null) {
+        readableClassName(ownerObj) + " - "
+    } else null
+
+    val p = prefix ?: ""
+    if (o is String?) {
+        println("$p$o")
+    } else {
+        println("$p```\n$o\n```")
+    }
+}

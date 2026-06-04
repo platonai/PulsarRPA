@@ -20,6 +20,7 @@ package ai.platon.pulsar.common;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.event.KeyEvent;
 import java.nio.ByteBuffer;
@@ -740,10 +741,173 @@ public final class Strings {
     return StringUtils.reverse(s);
   }
 
-  public static String doubleQuoteIfContainsWhitespace(String s) {
-    if (StringUtils.containsWhitespace(s)) return "\"" + s + "\"";
+
+
+
+
+  /**
+   * Internal unified quote helper.
+   * Escapes same quote characters before wrapping.
+   * @param s Source string (nullable)
+   * @param quoteChar Quote character, either '\'' or '"'
+   * @return Quoted string or null if input is null
+   */
+  private static String quote(String s, char quoteChar) {
+    if (s == null) return null;
+    String escaped = s;
+    if (quoteChar == '\'') {
+      escaped = escaped.replace("'", "\\'");
+    } else if (quoteChar == '"') {
+      escaped = escaped.replace("\"", "\\\"");
+    }
+    return quoteChar + escaped + quoteChar;
+  }
+
+  /**
+   * Wraps the string in single quotes and escapes any internal single quotes (').
+   * <p>Uses unified {@link #quote(String, char)} helper.</p>
+   * @param s The source string (nullable)
+   * @return The quoted string, or {@code null} if input is {@code null}
+   */
+  public static String singleQuote(String s) {
+    return quote(s, '\'');
+  }
+
+  /**
+   * Wraps the string in double quotes and escapes any internal double quotes (" ).
+   * <p>Uses unified {@link #quote(String, char)} helper.</p>
+   * @param s The source string (nullable)
+   * @return The quoted string, or {@code null} if input is {@code null}
+   */
+  public static String doubleQuote(String s) {
+    return quote(s, '"');
+  }
+
+  /**
+   * Wraps the string in single quotes only if it contains one or more whitespace characters.
+   * Whitespace detection uses {@link StringUtils#containsWhitespace(CharSequence)}.
+   * <p>
+   * Behavior:
+   * - Returns null if input is null; returns empty string if input is empty.
+   * - If whitespace exists, delegates to {@link #singleQuote(String)}; otherwise returns the original string.
+   * <p>
+   * Examples:
+   * singleQuoteIfContainsWhitespace("hello world") => 'hello world'
+   * singleQuoteIfContainsWhitespace("hello") => hello
+   * singleQuoteIfContainsWhitespace("") => ""
+   * singleQuoteIfContainsWhitespace(null) => null
+   *
+   * @param s The source string
+   * @return Possibly quoted string; null if input is null; empty string if input is empty
+   */
+  public static String singleQuoteIfContainsWhitespace(String s) {
+    if (s == null) return null;
+    if (StringUtils.containsWhitespace(s)) return singleQuote(s);
     else return s;
   }
+
+  /**
+   * Wraps the string in double quotes only if it contains one or more whitespace characters.
+   * Whitespace detection uses {@link StringUtils#containsWhitespace(CharSequence)}.
+   * <p>
+   * Behavior:
+   * - Returns null if input is null; returns empty string if input is empty.
+   * - If whitespace exists, delegates to {@link #doubleQuote(String)}; otherwise returns the original string.
+   * <p>
+   * Examples:
+   * doubleQuoteIfContainsWhitespace("hello world") => "hello world"
+   * doubleQuoteIfContainsWhitespace("hello") => hello
+   * doubleQuoteIfContainsWhitespace("") => ""
+   * doubleQuoteIfContainsWhitespace(null) => null
+   *
+   * @param s The source string
+   * @return Possibly quoted string; null if input is null; empty string if input is empty
+   */
+  public static String doubleQuoteIfContainsWhitespace(String s) {
+    if (s == null) return null;
+    if (StringUtils.containsWhitespace(s)) return doubleQuote(s);
+    else return s;
+  }
+
+  /**
+   * Wraps the string in single quotes if it contains any non-alphanumeric character.
+   * Internal single quotes are NOT escaped here; use {@link #singleQuote(String)} if escaping is required.
+   * <p>
+   * Behavior:
+   * - Returns null if input is null.
+   * - Uses {@link StringUtils#isAlphanumeric(CharSequence)} to decide quoting.
+   * - For empty input, returns two single quotes: ''
+   * <p>
+   * Examples:
+   * singleQuoteIfNonAlphanumeric("hello") => hello
+   * singleQuoteIfNonAlphanumeric("hello-world") => 'hello-world'
+   * singleQuoteIfNonAlphanumeric("Bob's") => 'Bob's'
+   * singleQuoteIfNonAlphanumeric("") => "''"
+   * singleQuoteIfNonAlphanumeric(null) => null
+   *
+   * @param s The source string
+   * @return Possibly quoted string; null if input is null
+   */
+  public static String singleQuoteIfNonAlphanumeric(String s) {
+    if (s == null) return null;
+    if (StringUtils.isAlphanumeric(s)) return s;
+    return singleQuote(s);
+  }
+
+  /**
+   * Wraps the string in double quotes if it contains any non-alphanumeric character.
+   * Internal double quotes are escaped by delegating to {@link #doubleQuote(String)}.
+   * <p>
+   * Behavior:
+   * - Returns null if input is null; returns empty string if input is empty.
+   * - Uses {@link StringUtils#isAlphanumeric(CharSequence)} to decide quoting.
+   * <p>
+   * Examples:
+   * doubleQuoteIfNonAlphanumeric("hello") => hello
+   * doubleQuoteIfNonAlphanumeric("a b") => "a b"
+   * doubleQuoteIfNonAlphanumeric("a\"b") => "a\\\"b"
+   * doubleQuoteIfNonAlphanumeric("") => ""
+   * doubleQuoteIfNonAlphanumeric(null) => null
+   *
+   * @param s The source string
+   * @return Possibly quoted string; null if input is null; empty string if input is empty
+   */
+  public static String doubleQuoteIfNonAlphanumeric(String s) {
+    if (s == null) return null;
+    if (s.isEmpty()) return "";
+    if (StringUtils.isAlphanumeric(s)) return s;
+    return doubleQuote(s);
+  }
+
+  /**
+   * Replace all consecutive whitespace characters in the string — including regular spaces, tab characters, line breaks,
+   * full-width spaces, and HTML non-breaking spaces — with a single regular space " ".
+   *
+   */
+  public static String compactWhitespaces(String s) {
+    if (s == null) return null;
+    return s.replaceAll("[\\s\\u00A0]+", " ").trim();
+  }
+
+  /**
+   * Replace all consecutive whitespace characters in the string — including regular spaces, tab characters, line breaks,
+   * full-width spaces, and HTML non-breaking spaces — with a single regular space " ".
+   *
+   */
+  @NotNull
+  public static String compactInline(String s, int maxWidth) {
+    if (s == null) return "";
+    return StringUtils.abbreviate(compactWhitespaces(s), maxWidth);
+  }
+
+  @NotNull
+  public static String compactInline(String s) {
+    return compactInline(s, 200);
+  }
+
+
+
+
 
   /**
    * Formats a decimal number in its compact, readable form.

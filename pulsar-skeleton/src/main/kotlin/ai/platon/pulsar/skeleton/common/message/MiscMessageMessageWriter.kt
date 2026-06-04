@@ -1,8 +1,7 @@
 package ai.platon.pulsar.skeleton.common.message
 
-import ai.platon.pulsar.common.MultiSinkWriter
+import ai.platon.pulsar.common.MultiSinkMessageWriter
 import ai.platon.pulsar.persist.WebPage
-import java.util.*
 
 /**
  * Created by vincent on 16-10-12.
@@ -10,7 +9,7 @@ import java.util.*
  *
  * Write misc messages into misc sinks
  */
-class MiscMessageWriter: MultiSinkWriter() {
+class MiscMessageMessageWriter: MultiSinkMessageWriter() {
 
     fun debugIllegalLastFetchTime(page: WebPage) {
         val report = String.format(

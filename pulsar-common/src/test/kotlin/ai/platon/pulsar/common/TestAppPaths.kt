@@ -99,7 +99,7 @@ class TestAppPaths {
     fun testGetPaths() {
         val filename = "finish_job-1217.20347.sh"
         
-        var path = AppPaths.getTmp("scripts", filename)
+        var path = AppPaths.getTmpDirectory("scripts", filename)
         var path2 = path
         assertTrue(path.startsWith(AppPaths.TMP_DIR), "$path -> $path2")
         
@@ -211,7 +211,7 @@ class TestAppPaths {
     
     @Test
     fun testGetRandomProcTmpTmp() {
-        val path = AppPaths.getRandomProcTmpTmpDirectory("prefix-", ".suffix")
+        val path = AppPaths.getRandomProcTmpTmpPath("prefix-", ".suffix")
         assertTrue(path.startsWith(AppPaths.PROC_TMP_DIR.resolve("tmp")))
         assertTrue(path.toString().endsWith(".suffix"))
     }

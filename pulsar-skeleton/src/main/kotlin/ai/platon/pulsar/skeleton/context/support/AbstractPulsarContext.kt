@@ -26,6 +26,7 @@ import ai.platon.pulsar.skeleton.crawl.filter.ChainedUrlNormalizer
 import ai.platon.pulsar.skeleton.session.AbstractPulsarSession
 import ai.platon.pulsar.skeleton.session.PulsarEnvironment
 import ai.platon.pulsar.skeleton.session.PulsarSession
+import kotlinx.coroutines.runBlocking
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
 import org.springframework.beans.factory.BeanCreationException
@@ -444,11 +445,15 @@ abstract class AbstractPulsarContext(
     }
 
     override fun chat(prompt: String): ModelResponse {
-        return ChatModelFactory.getOrCreateOrNull(unmodifiedConfig)?.call(prompt) ?: ModelResponse.LLM_NOT_AVAILABLE
+        return runBlocking {
+            ChatModelFactory.getOrCreateOrNull(unmodifiedConfig)?.call(prompt) ?: ModelResponse.LLM_NOT_AVAILABLE
+        }
     }
 
     override fun chat(userMessage: String, systemMessage: String): ModelResponse {
-        return ChatModelFactory.getOrCreateOrNull(unmodifiedConfig)?.call(userMessage, systemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
+        return runBlocking {
+            ChatModelFactory.getOrCreateOrNull(unmodifiedConfig)?.callUmSm(userMessage, systemMessage) ?: ModelResponse.LLM_NOT_AVAILABLE
+        }
     }
 
     @Throws(WebDBException::class)

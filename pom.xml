@@ -721,9 +721,6 @@
         <mockito-junit-jupiter.version>5.23.0</mockito-junit-jupiter.version>
         <springmockk.version>5.0.1</springmockk.version>
 
-        <!-- Test execution control properties -->
-        <runITs>false</runITs>
-
         <!-- Default excludedGroups: exclude all non-Fast tests
              Includes both new taxonomy tags and legacy tags for backward compatibility:
              - New tags: Slow, Heavy, Integration, E2E, SDK, RequiresXYZ, ManualOnly
@@ -735,27 +732,6 @@
             SkippableLowerLevelTest,TestInfraCheck,OptionalTest,
             IntegrationTest,E2ETest,HeavyTest
         </surefire.excludedGroups>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     </properties>
 
