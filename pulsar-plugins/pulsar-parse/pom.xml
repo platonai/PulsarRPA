@@ -47,13 +47,11 @@
         <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-core</artifactId>
-            <version>${tika.version}</version>
         </dependency>
         <!-- Provide only the html parser, other parsers should be provided in projects -->
         <dependency>
             <groupId>org.apache.tika</groupId>
             <artifactId>tika-parser-html-module</artifactId>
-            <version>${tika.version}</version>
         </dependency>
 
         <dependency>

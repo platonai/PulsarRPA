@@ -66,19 +66,6 @@
             <artifactId>spring-context</artifactId>
         </dependency>
 
-        <!-- Requires org.apache.hadoop.io.Text, etc -->
-        <!-- Will remove hadoop dependency in the future -->
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>*</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
         <!-- apache common -->
         <dependency>
             <groupId>org.apache.commons</groupId>
@@ -103,6 +90,7 @@
         <dependency>
             <groupId>oro</groupId>
             <artifactId>oro</artifactId>
+            <version>2.0.8</version>
         </dependency>
         <!-- Required option parser, PatternCompiler -->
         <dependency>
@@ -114,7 +102,6 @@
         <dependency>
             <groupId>com.github.oshi</groupId>
             <artifactId>oshi-core</artifactId>
-            <version>${oshi.version}</version>
         </dependency>
         <!-- Metrics system -->
         <dependency>

@@ -27,16 +27,6 @@
             <artifactId>gora-shaded-mongodb</artifactId>
             <version>${gora-shaded-mongodb.version}</version>
         </dependency>
-        <!-- Requires org.apache.hadoop.conf.Configuration only, required by GoraStorage -->
-        <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-common</artifactId>
-        </dependency>
-        <!-- Required by hadoop-common -->
-        <dependency>
-            <groupId>commons-collections</groupId>
-            <artifactId>commons-collections</artifactId>
-        </dependency>
 
         <dependency>
             <groupId>ai.platon.pulsar</groupId>
@@ -51,16 +41,6 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-
-        <!-- Web graph computing -->
-        <dependency>
-            <groupId>org.jgrapht</groupId>
-            <artifactId>jgrapht-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.jgrapht</groupId>
-            <artifactId>jgrapht-ext</artifactId>
         </dependency>
 
         <dependency>
@@ -85,11 +65,6 @@
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>oro</groupId>
-            <artifactId>oro</artifactId>
         </dependency>
 
         <!-- Test -->

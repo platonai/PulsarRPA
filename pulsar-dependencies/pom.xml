@@ -17,7 +17,7 @@
     <groupId>ai.platon</groupId>
     <artifactId>pulsar-dependencies</artifactId>
     <name>Pulsar Dependencies</name>
-    <version>4.8.4-SNAPSHOT</version>
+    <version>3.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <description>Pulsar Dependencies</description>
@@ -243,7 +243,7 @@
             <dependency>
                 <groupId>com.github.oshi</groupId>
                 <artifactId>oshi-core</artifactId>
-                <version>${oshi-trove4j-core.version}</version>
+                <version>${oshi.version}</version>
             </dependency>
             <dependency>
                 <groupId>io.dropwizard.metrics</groupId>
@@ -305,85 +305,6 @@
         </dependencies>
     </dependencyManagement>
 
-    <properties>
-        <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
-        <central-publishing-maven-plugin.version>0.10.0</central-publishing-maven-plugin.version>
-        <!-- Apache common libraries -->
-        <!-- managed by spring-boot-dependencies -->
-        <commons-io.version>2.16.1</commons-io.version>
-        <commons-codec.version>1.17.0</commons-codec.version>
-        <commons-text.version>1.11.0</commons-text.version>
-        <commons-math3.version>3.6.1</commons-math3.version>
-        <commons-numbers-bom.version>1.1</commons-numbers-bom.version>
-        <commons-collections4.version>4.4</commons-collections4.version>
-        <commons-logging.version>1.3.2</commons-logging.version>
-        <commons-compress.version>1.26.2</commons-compress.version>
-
-        <oshi-trove4j-core.version>6.6.6</oshi-trove4j-core.version>
-
-        <xercesImpl.version>2.12.2</xercesImpl.version>
-        <trove4j-core.version>3.3.1</trove4j-core.version>
-        <trove4j.version>3.3.1</trove4j.version>
-        <jodd-trove4j-core.version>3.5.2</jodd-trove4j-core.version>
-
-        <!--  HTML parsing  -->
-        <xerces.version>2.11.0</xerces.version>
-        <nekohtml.version>1.9.22</nekohtml.version>
-        <tika.version>2.9.0</tika.version>
-
-        <!-- Web server -->
-        <httptrove4j-core.version>4.4.15</httptrove4j-core.version>
-        <httpclient.version>4.5.13</httpclient.version>
-
-        <!-- keep consistent with io.modelcontextprotocol:kotlin-sdk-core-jvm:jar:0.8.1 -->
-        <ktor.version>3.2.3</ktor.version>
-
-        <EvalEx.version>2.0</EvalEx.version>
-        <jcommander.version>1.82</jcommander.version>
-
-        <guava.version>33.6.0-jre</guava.version>
-
-        <!-- AI -->
-        <langchain4j.version>1.15.0</langchain4j.version>
-
-        <!--  Misc Dependencies  -->
-        <autolink.version>0.11.0</autolink.version>
-
-        <!--  metrics analyze  -->
-        <oshi.version>6.4.13</oshi.version>
-        <!-- Dropwizard Metrics is an older, robust library, best for JVM-specific monitoring,
-        but it lacks the dimensional (tagged) metrics and cloud-native integrations found in Micrometer. -->
-        <metrics.version>4.2.12</metrics.version>
-
-        <!-- Mockito is a popular and widely-used mocking framework for unit testing in Java. -->
-        <!-- managed by spring-boot-dependencies -->
-        <mockito-kotlin.version>5.4.0</mockito-kotlin.version>
-        <!-- MockK is a powerful and flexible mocking library designed specifically for Kotlin. -->
-
-        <junit5.version>5.12.1</junit5.version>
-        <mockk.version>1.14.6</mockk.version>
-        <springmockk.version>4.0.2</springmockk.version>
-        <mockito-junit-jupiter.version>5.20.0</mockito-junit-jupiter.version>
-
-        <!--  Language  -->
-        <javaVersion>17</javaVersion>
-        <kotlinVersion>2.2.21</kotlinVersion>
-
-        <!--  Kotlin  -->
-        <kotlin.version>${kotlinVersion}</kotlin.version>
-        <maven.compiler.release>${javaVersion}</maven.compiler.release>
-        <kotlin.compiler.jvmTarget>${javaVersion}</kotlin.compiler.jvmTarget>
-
-        <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>
-        <kotlin-statistics.version>1.2.1</kotlin-statistics.version>
-
-        <spring-boot.version>4.0.5</spring-boot.version>
-
-        <!-- Pulsar dependency -->
-        <pulsar-h2.version>1.4.197</pulsar-h2.version>
-        <pulsar-jsoup.version>1.14.3</pulsar-jsoup.version>
-    </properties>
-
     <profiles>
         <!-- Deploy profile for Central Portal -->
         <profile>
@@ -426,4 +347,151 @@
             </build>
         </profile>
     </profiles>
+
+
+    <properties>
+        <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
+        <central-publishing-maven-plugin.version>0.10.0</central-publishing-maven-plugin.version>
+        <!-- Apache common libraries -->
+        <!-- managed by spring-boot-dependencies -->
+        <commons-io.version>2.16.1</commons-io.version>
+        <commons-codec.version>1.17.0</commons-codec.version>
+        <commons-text.version>1.11.0</commons-text.version>
+        <commons-math3.version>3.6.1</commons-math3.version>
+        <commons-numbers-bom.version>1.1</commons-numbers-bom.version>
+        <commons-collections4.version>4.4</commons-collections4.version>
+        <commons-logging.version>1.3.2</commons-logging.version>
+        <commons-compress.version>1.26.2</commons-compress.version>
+
+        <oshi.version>6.6.6</oshi.version>
+
+        <xercesImpl.version>2.12.2</xercesImpl.version>
+        <trove4j-core.version>3.3.1</trove4j-core.version>
+        <trove4j.version>3.3.1</trove4j.version>
+        <jodd-trove4j-core.version>3.5.2</jodd-trove4j-core.version>
+
+        <!-- Web server -->
+        <httptrove4j-core.version>4.4.15</httptrove4j-core.version>
+        <httpclient.version>4.5.13</httpclient.version>
+
+        <!-- keep consistent with io.modelcontextprotocol:kotlin-sdk-core-jvm:jar:0.8.1 -->
+        <ktor.version>3.2.3</ktor.version>
+
+        <EvalEx.version>2.0</EvalEx.version>
+        <jcommander.version>1.82</jcommander.version>
+
+        <guava.version>33.6.0-jre</guava.version>
+
+        <!-- AI -->
+        <langchain4j.version>1.15.0</langchain4j.version>
+
+        <!--  Misc Dependencies  -->
+        <autolink.version>0.11.0</autolink.version>
+
+        <!--  metrics analyze  -->
+
+        <!-- Dropwizard Metrics is an older, robust library, best for JVM-specific monitoring,
+        but it lacks the dimensional (tagged) metrics and cloud-native integrations found in Micrometer. -->
+        <metrics.version>4.2.12</metrics.version>
+
+        <!-- Mockito is a popular and widely-used mocking framework for unit testing in Java. -->
+        <!-- managed by spring-boot-dependencies -->
+        <mockito-kotlin.version>5.4.0</mockito-kotlin.version>
+        <!-- MockK is a powerful and flexible mocking library designed specifically for Kotlin. -->
+
+        <junit5.version>5.12.1</junit5.version>
+        <mockk.version>1.14.6</mockk.version>
+        <springmockk.version>5.0.1</springmockk.version>
+        <mockito-junit-jupiter.version>5.20.0</mockito-junit-jupiter.version>
+
+        <!--  Language  -->
+        <javaVersion>17</javaVersion>
+        <kotlinVersion>2.2.21</kotlinVersion>
+
+        <!--  Kotlin  -->
+        <kotlin.version>${kotlinVersion}</kotlin.version>
+        <maven.compiler.release>${javaVersion}</maven.compiler.release>
+        <kotlin.compiler.jvmTarget>${javaVersion}</kotlin.compiler.jvmTarget>
+
+        <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>
+        <kotlin-statistics.version>1.2.1</kotlin-statistics.version>
+
+        <spring-boot.version>4.0.5</spring-boot.version>
+
+        <!-- Pulsar dependency -->
+        <pulsar-h2.version>1.4.197</pulsar-h2.version>
+        <pulsar-jsoup.version>1.14.3</pulsar-jsoup.version>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <poi-ooxml.version>5.3.0</poi-ooxml.version>
+        <poi.version>5.3.0</poi.version>
+
+
+
+        <trove4j-core.version>3.0.3</trove4j-core.version>
+        <icu4j.version>75.1</icu4j.version>
+        <trove4j.version>3.0.3</trove4j.version>
+
+        <!--  HTML parsing  -->
+        <xerces.version>2.11.0</xerces.version>
+        <nekohtml.version>1.9.22</nekohtml.version>
+        <tika.version>2.9.0</tika.version>
+
+        <mysql.driver.version>8.0.33</mysql.driver.version>
+
+        <spring-boot.version>3.3.8</spring-boot.version>
+        <!-- Use the one induced by spring-boot -->
+        <spring.version>6.1.16</spring.version>
+
+        <spring-data.version>2024.0.2</spring-data.version>
+
+        <!-- Web server -->
+
+        <javax.servlet-api.version>4.0.1</javax.servlet-api.version>
+
+        <netty.version>4.1.111.Final</netty.version>
+        <!-- required by pulsar-browser -->
+        <websocket.api.version>1.1</websocket.api.version>
+
+        <oro.version>2.0.8</oro.version>
+
+        <jsr305.version>3.0.0</jsr305.version>
+
+        <guava.version>33.2.1-jre</guava.version>
+        <dataframe.version>0.13.1</dataframe.version>
+        <jgrapht.version>1.0.1</jgrapht.version>
+
+        <!-- ML -->
+        <smile.version>3.1.1</smile.version>
+        <pmml.version>1.6.4</pmml.version>
+
+        <!-- NLP -->
+        <!-- TODO: figure out the reason why we need to override the default 8.1.1, seems it's caused by a dependency issue -->
+        <lucene.version>7.3.1</lucene.version>
+
+
+        <!--  Matchers that can be combined to create flexible expressions of intent  -->
+        <hamcrest-all.version>1.3</hamcrest-all.version>
+        <org.hamcrest.version>1.3</org.hamcrest.version>
+        <!-- Mockito is a popular and widely-used mocking framework for unit testing in Java. -->
+        <!-- managed by spring-boot-dependencies -->
+        <!-- MockK is a powerful and flexible mocking library designed specifically for Kotlin. -->
+        <mockk.version>1.13.12</mockk.version>
+        <junit5.version>5.10.3</junit5.version>
+    </properties>
+
 </project>

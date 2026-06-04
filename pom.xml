@@ -24,7 +24,7 @@
     <packaging>pom</packaging>
     <version>3.1.0-SNAPSHOT</version>
 
-    <name>Browser4 Base</name>
+    <name>PulsarRPA3</name>
     <description>A lightning-fast, coroutine-safe browser for your AI.</description>
 
     <licenses>
@@ -86,6 +86,7 @@
     <!-- Default active modules. The main goal is to allow the user to run PulsarApplication
      with a single click in the IDE right after opening the project. -->
     <modules>
+        <module>pulsar-dependencies</module>
         <module>pulsar-resources</module>
         <module>pulsar-common</module>
         <module>pulsar-persist</module>
@@ -158,9 +159,6 @@
                 <skipTests>false</skipTests>
                 <maven.javadoc.skip>true</maven.javadoc.skip>
             </properties>
-            <modules>
-                <module>pulsar-tests/pulsar-it-tests</module>
-            </modules>
         </profile>
 
         <!-- Deployment profile -->
@@ -269,9 +267,6 @@
                                     <includeNonPublic>false</includeNonPublic>
                                 </packageOptions>
                             </perPackageOptions>
-                            <sourceDirectories>
-                                <dir>${project.basedir}/src/main/kotlin</dir>
-                            </sourceDirectories>
                         </configuration>
                     </plugin>
 
@@ -613,12 +608,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.nibor.autolink</groupId>
-                <artifactId>autolink</artifactId>
-                <version>${autolink.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>io.ktor</groupId>
                 <artifactId>ktor-client-core</artifactId>
                 <version>${ktor.version}</version>
@@ -632,14 +621,6 @@
                 <groupId>io.ktor</groupId>
                 <artifactId>ktor-serialization-kotlinx-json-jvm</artifactId>
                 <version>${ktor.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-dependencies</artifactId>
-                <version>${spring-boot.version}</version>
-                <scope>import</scope>
-                <type>pom</type>
             </dependency>
 
             <!-- MockBean and SpyBean, but for MockK instead of Mockito -->
@@ -665,6 +646,7 @@
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
             <artifactId>kotlinx-coroutines-core</artifactId>
+            <version>${kotlin.coroutine.version}</version>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
@@ -734,6 +716,11 @@
         <maven.compiler.release>${javaVersion}</maven.compiler.release>
         <kotlin.compiler.jvmTarget>${javaVersion}</kotlin.compiler.jvmTarget>
 
+
+
+        <mockito-junit-jupiter.version>5.23.0</mockito-junit-jupiter.version>
+        <springmockk.version>5.0.1</springmockk.version>
+
         <!-- Test execution control properties -->
         <runITs>false</runITs>
 
@@ -748,6 +735,28 @@
             SkippableLowerLevelTest,TestInfraCheck,OptionalTest,
             IntegrationTest,E2ETest,HeavyTest
         </surefire.excludedGroups>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     </properties>
 
 </project>

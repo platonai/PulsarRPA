@@ -28,31 +28,9 @@
             <artifactId>pulsar-dom</artifactId>
         </dependency>
 
-        <!-- OpenAI model is the default, many LLM providers keep compatible OpenAI API -->
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-dashscope</artifactId>
-            <!-- exclude org.slf4j -->
-            <exclusions>
-                <exclusion>
-                    <groupId>org.slf4j</groupId>
-                    <artifactId>*</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
         <dependency>
             <groupId>dev.langchain4j</groupId>
             <artifactId>langchain4j-open-ai</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-zhipu-ai</artifactId>
-            <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>dev.langchain4j</groupId>
-            <artifactId>langchain4j-qianfan</artifactId>
             <scope>provided</scope>
         </dependency>
 
