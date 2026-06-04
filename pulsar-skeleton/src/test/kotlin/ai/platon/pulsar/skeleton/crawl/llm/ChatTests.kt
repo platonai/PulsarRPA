@@ -17,9 +17,9 @@ import kotlin.test.assertTrue
 class ChatTests {
     
     companion object {
-        private val url = "https://www.amazon.com/dp/B0C1H26C46"
+        private val url = "https://www.amazon.com/dp/B08PP5MSVB"
         private val args = "-requireSize 200000"
-        private val productHtml = ResourceLoader.readString("pages/amazon/B0C1H26C46.original.htm")
+        private val productHtml = ResourceLoader.readString("pages/amazon/B08PP5MSVB.original.htm")
         private val productText = ResourceLoader.readString("prompts/product.txt")
         
         private val session = PulsarContexts.createSession()

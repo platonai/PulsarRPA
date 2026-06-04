@@ -64,6 +64,6 @@ a,b,c,d,e,f,g
 
     @GetMapping("amazon/product.htm", produces = ["text/html"])
     fun amazonProduct(): String {
-        return ResourceLoader.readString("pages/amazon/B0C1H26C46.original.htm")
+        return ResourceLoader.readString("pages/amazon/B08PP5MSVB.original.htm")
     }
 }

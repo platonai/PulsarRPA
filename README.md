@@ -30,7 +30,7 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 Automate the browser and extract data at scale with simple text.
 
 ```text
-Go to https://www.amazon.com/dp/B0C1H26C46
+Go to https://www.amazon.com/dp/B08PP5MSVB
 
 After browser launch: clear browser cookies.
 After page load: scroll to the middle.
@@ -127,7 +127,7 @@ WebUI: http://localhost:8182/command.html
 #### 📄 Plain-Text-Based Version:
 ```shell
 curl -X POST "http://localhost:8182/api/commands/plain" -H "Content-Type: text/plain" -d '
-    Go to https://www.amazon.com/dp/B0C1H26C46
+    Go to https://www.amazon.com/dp/B08PP5MSVB
     
     After browser launch: clear browser cookies.
     After page load: scroll to the middle.
@@ -142,7 +142,7 @@ curl -X POST "http://localhost:8182/api/commands/plain" -H "Content-Type: text/p
 
 ```shell
 curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/json" -d '{
-    "url": "https://www.amazon.com/dp/B0C1H26C46",
+    "url": "https://www.amazon.com/dp/B08PP5MSVB",
     "onBrowserLaunchedActions": ["clear browser cookies"],
     "onPageReadyActions": ["scroll to the middle"],
     "pageSummaryPrompt": "Provide a brief introduction of this product.",
@@ -166,7 +166,7 @@ Harness the power of the `x/e` API for highly precise, flexible, and intelligent
     dom_base_uri(dom) as url,
     dom_first_text(dom, '#productTitle') as title,
     dom_first_slim_html(dom, 'img:expr(width > 400)') as img
-  from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
+  from load_and_select('https://www.amazon.com/dp/B08PP5MSVB', 'body');
   "
   ```
 
@@ -179,7 +179,7 @@ The extracted data example:
     "price": "$1,199.00",
     "ratings": "4.5 out of 5 stars"
   },
-  "url": "https://www.amazon.com/dp/B0C1H26C46",
+  "url": "https://www.amazon.com/dp/B08PP5MSVB",
   "title": "Apple iPhone 15 Pro Max",
   "img": "<img src=\"https://example.com/image.jpg\" />"
 }
@@ -283,7 +283,7 @@ select
     dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
     dom_first_text(dom, '#acrCustomerReviewText') as ratings,
     str_first_float(dom_first_text(dom, '#reviewsMedley .AverageCustomerReviews span:contains(out of)'), 0.0) as score
-from load_and_select('https://www.amazon.com/dp/B0C1H26C46  -i 1s -njr 3', 'body');
+from load_and_select('https://www.amazon.com/dp/B08PP5MSVB  -i 1s -njr 3', 'body');
 ```
 
 📚 Example Code:

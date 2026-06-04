@@ -9,7 +9,7 @@ public class Command {
 
     public static void main(String[] args) throws Exception {
         var command = """
-                Go to https://www.amazon.com/dp/B0C1H26C46
+                Go to https://www.amazon.com/dp/B08PP5MSVB
                 
                 After browser launch: clear browser cookies.
                 After page load: scroll to the middle.

@@ -33,7 +33,7 @@ curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
 select
 dom_base_uri(dom) as url,
 dom_first_text(dom, 'title') as page_title
-from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
+from load_and_select('https://www.amazon.com/dp/B08PP5MSVB', 'body');
 "
 '@
 
@@ -43,7 +43,7 @@ curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
 select
 dom_first_text(dom, 'h1') as heading,
 dom_all_texts(dom, 'p') as paragraphs
-from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
+from load_and_select('https://www.amazon.com/dp/B08PP5MSVB', 'body');
 "
 '@
 
@@ -54,14 +54,14 @@ select
 dom_first_text(dom, 'title') as page_title,
 dom_first_text(dom, 'h1,h2') as main_heading,
 dom_base_uri(dom) as base_url
-from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
+from load_and_select('https://www.amazon.com/dp/B08PP5MSVB', 'body');
 "
 '@
 
 $CURL_DESC_FORM_DATA = "Form Data Test"
 $CURL_CMD_FORM_DATA = @'
 curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
-select dom_first_text(dom, 'title') as title from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
+select dom_first_text(dom, 'title') as title from load_and_select('https://www.amazon.com/dp/B08PP5MSVB', 'body');
 "
 '@
 
@@ -69,7 +69,7 @@ select dom_first_text(dom, 'title') as title from load_and_select('https://www.a
 $CURL_DESC_PLAIN_API = "Plain Text Command API - Amazon Product"
 $CURL_CMD_PLAIN_API = @'
 curl -X POST "http://localhost:8182/api/commands/plain" -H "Content-Type: text/plain" -d "
-Go to https://www.amazon.com/dp/B0C1H26C46
+Go to https://www.amazon.com/dp/B08PP5MSVB
 
 After browser launch: clear browser cookies.
 After page load: scroll to the middle.
@@ -83,7 +83,7 @@ Find all links containing /dp/.
 $CURL_DESC_JSON_API = "JSON Command API - Amazon Product"
 $CURL_CMD_JSON_API = @'
 curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/json" -d '{
-"url": "https://www.amazon.com/dp/B0C1H26C46",
+"url": "https://www.amazon.com/dp/B08PP5MSVB",
 "onBrowserLaunchedActions": [
   "clear browser cookies",
   "navigate to the home page",
@@ -104,14 +104,14 @@ llm_extract(dom, 'product name, price, ratings') as llm_extracted_data,
 dom_base_uri(dom) as url,
 dom_first_text(dom, '#productTitle') as title,
 dom_first_slim_html(dom, 'img:expr(width > 400)') as img
-from load_and_select('https://www.amazon.com/dp/B0C1H26C46', 'body');
+from load_and_select('https://www.amazon.com/dp/B08PP5MSVB', 'body');
 "
 '@
 
 $CURL_DESC_ASYNC_MODE = "Async Command Mode Test"
 $CURL_CMD_ASYNC_MODE = @'
 curl -X POST "http://localhost:8182/api/commands/plain?mode=async" -H "Content-Type: text/plain" -d "
-Go to https://www.amazon.com/dp/B0C1H26C46
+Go to https://www.amazon.com/dp/B08PP5MSVB
 
 Extract the page title and all text content.
 "

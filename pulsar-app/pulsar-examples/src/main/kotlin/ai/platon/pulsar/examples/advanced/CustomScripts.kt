@@ -25,7 +25,7 @@ fun main() {
         driver.evaluate("__custom_utils__.addCustomEventListeners()")
     }
 
-    session.load("https://www.amazon.com/dp/B0C1H26C46", options)
+    session.load("https://www.amazon.com/dp/B08PP5MSVB", options)
     
     readlnOrNull()
 }

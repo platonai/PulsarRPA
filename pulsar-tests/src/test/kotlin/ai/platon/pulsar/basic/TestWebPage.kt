@@ -18,7 +18,7 @@ import kotlin.test.*
  * Copyright @ 2013-2016 Platon AI. All rights reserved
  */
 class TestWebPage: TestBase() {
-    private val url = "https://www.amazon.com/dp/B0C1H26C46"
+    private val url = "https://www.amazon.com/dp/B08PP5MSVB"
     private val groupId = 43853791
 
     @BeforeEach

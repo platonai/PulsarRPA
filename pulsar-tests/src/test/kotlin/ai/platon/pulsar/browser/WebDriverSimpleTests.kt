@@ -12,7 +12,7 @@ import kotlin.test.Test
 class WebDriverSimpleTests: WebDriverTestBase() {
     private val url = "https://www.amazon.com/"
     private val url2 = "https://www.amazon.com/Best-Sellers-Beauty/zgbs/beauty"
-    private val productURL = "https://www.amazon.com/dp/B0C1H26C46?th=1"
+    private val productURL = "https://www.amazon.com/dp/B08PP5MSVB?th=1"
 
     @Test
     fun testScrollDown() {

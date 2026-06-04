@@ -11,7 +11,7 @@ import java.nio.file.Files
 import kotlin.test.*
 
 class TestFileBackendStore {
-    private val url = "https://www.amazon.com/dp/B0C1H26C46"
+    private val url = "https://www.amazon.com/dp/B08PP5MSVB"
     private val persistDirectory = AppPaths.TEST_DIR.resolve("unittests/TestFileBackendStore")
     private val store = FileBackendPageStore(persistDirectory)
     private lateinit var page: WebPage

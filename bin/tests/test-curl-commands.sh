@@ -107,11 +107,14 @@ execute_curl_command() {
   local error_file="$4"
 
   local final_command=$(substitute_urls "$curl_command")
-  local full_command="$final_command --max-time $timeout -w '%{http_code}\\n%{time_total}\\n%{size_download}\\n%{url_effective}\\n%{content_type}' -o $response_file -s"
 
-  vlog "Executing: \n$(echo "$full_command" | head -c 2000)"
+  # Inject options right after the first 'curl ' token to ensure they belong to the same command line
+  local injected_command
+  injected_command=${final_command/curl /curl --max-time $timeout -w '%{http_code}\n%{time_total}\n%{size_download}\n%{url_effective}\n%{content_type}' -o $response_file -s }
 
-  eval "$full_command" > "${response_file}.meta" 2>"$error_file"
+  vlog "Executing: \n$(echo "$injected_command" | head -c 2000)"
+
+  eval "$injected_command" > "${response_file}.meta" 2>"$error_file"
   return $?
 }
 
@@ -366,4 +369,3 @@ trap 'log "\n${YELLOW}[INFO]${NC} Tests interrupted by user"; exit 130' INT
 
 parse_args "$@"
 main
-
