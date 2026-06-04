@@ -14,8 +14,9 @@
 
     <parent>
         <groupId>ai.platon</groupId>
-        <artifactId>platon</artifactId>
-        <version>4.0.2</version>
+        <artifactId>pulsar-parent</artifactId>
+        <!-- Parent POM should always use the published version -->
+        <version>4.5.0</version>
     </parent>
 
     <groupId>ai.platon.pulsar</groupId>

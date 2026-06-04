@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <!-- Licensed to the Apache Software Foundation (ASF) under one or more contributor
 	license agreements. See the NOTICE file distributed with this work for additional
 	information regarding copyright ownership. The ASF licenses this file to
@@ -13,28 +13,21 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <!-- Do not include platon dependencies -->
-<!--    <parent>-->
-<!--        <groupId>ai.platon</groupId>-->
-<!--        <artifactId>platon</artifactId>-->
-<!--        <version>4.0.1</version>-->
-<!--    </parent>-->
-
     <groupId>ai.platon.pulsar</groupId>
     <artifactId>pulsar-bom</artifactId>
     <name>Pulsar BOM</name>
-    <version>3.1.0-SNAPSHOT</version>
+    <version>4.8.4-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
-    <description>Bill of Materials POM for getting full, complete set of compatible versions of PulsarRPA modules
+    <description>Bill of Materials POM for getting full, complete set of compatible versions of Browser4 modules
     </description>
     <url>https://platon.ai</url>
 
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
         </license>
     </licenses>
     <inceptionYear>2024</inceptionYear>
@@ -54,11 +47,18 @@
     </developers>
 
     <scm>
-        <connection>scm:git:https://github.com/platonai/PulsarRPA.git</connection>
-        <developerConnection>scm:git:https://github.com/platonai/PulsarRPA.git</developerConnection>
-        <url>https://github.com/platonai/PulsarRPA</url>
+        <connection>scm:git:https://github.com/platonai/Browser4-base.git</connection>
+        <developerConnection>scm:git:https://github.com/platonai/Browser4-base.git</developerConnection>
+        <url>https://github.com/platonai/Browser4</url>
         <tag>HEAD</tag>
     </scm>
+
+    <distributionManagement>
+        <repository>
+            <id>central</id>
+            <url>https://central.sonatype.com/api/v1/publisher</url>
+        </repository>
+    </distributionManagement>
 
     <repositories>
         <repository>
@@ -67,175 +67,23 @@
         </repository>
     </repositories>
 
-    <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
-        <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-        </repository>
-    </distributionManagement>
+    <!-- Required by dokka-maven-plugin -->
+    <pluginRepositories>
+        <pluginRepository>
+            <id>jcenter</id>
+            <name>JCenter</name>
+            <url>https://jcenter.bintray.com/</url>
+        </pluginRepository>
+    </pluginRepositories>
 
     <profiles>
-        <!-- Release profile -->
-        <profile>
-            <id>release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-release-plugin</artifactId>
-                        <version>${maven-release-plugin.version}</version>
-                        <configuration>
-                            <tagNameFormat>v@{project.version}</tagNameFormat>
-                            <releaseProfiles>deploy</releaseProfiles>
-                            <autoVersionSubmodules>true</autoVersionSubmodules>
-                            <preparationGoals>clean verify</preparationGoals>
-                            <completionGoals>clean</completionGoals>
-                            <goals>deploy nexus-staging:release</goals>
-                            <pushChanges>false</pushChanges>
-                            <localCheckout>true</localCheckout>
-                            <checkModificationExcludes>
-                                <checkModificationExclude>pom.xml</checkModificationExclude>
-                            </checkModificationExcludes>
-                        </configuration>
-                    </plugin>
-                    <plugin>
-                        <groupId>com.commsen.maven</groupId>
-                        <artifactId>bom-helper-maven-plugin</artifactId>
-                        <version>0.4.0</version>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
         <profile>
             <id>deploy</id>
 
             <build>
+                <defaultGoal>deploy</defaultGoal>
+
                 <plugins>
-                    <!-- Attach sources -->
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-source-plugin</artifactId>
-                        <executions>
-                            <execution>
-                                <id>attach-sources</id>
-                                <goals>
-                                    <goal>jar-no-fork</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                    </plugin>
-
-                    <!-- Help maven-source-plugin works with kotlin -->
-                    <plugin>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>build-helper-maven-plugin</artifactId>
-                        <version>3.6.0</version>
-
-                        <executions>
-                            <execution>
-                                <phase>generate-sources</phase>
-                                <goals>
-                                    <goal>add-source</goal>
-                                </goals>
-                                <configuration>
-                                    <sources>
-                                        <source>src/main/kotlin</source>
-                                    </sources>
-                                </configuration>
-                            </execution>
-                        </executions>
-                    </plugin>
-                    <plugin>
-                        <groupId>org.jetbrains.dokka</groupId>
-                        <artifactId>dokka-maven-plugin</artifactId>
-                        <version>${dokka.version}</version>
-                        <executions>
-                            <execution>
-                                <!-- generate javadoc.jar before package gpg plugin can generate asc for it -->
-                                <phase>prepare-package</phase>
-                                <goals>
-                                    <goal>dokka</goal>
-                                    <goal>javadocJar</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <!-- Set to true to skip dokka task, default: false -->
-                            <skip>false</skip>
-
-                            <!-- Use default or set to custom path to cache directory to enable package-list caching. -->
-                            <!-- When set to default, caches stored in $USER_HOME/.cache/dokka -->
-                            <cacheRoot>default</cacheRoot>
-
-                            <!-- Used for linking to JDK, default: 11 -->
-                            <jdkVersion>11</jdkVersion>
-
-                            <!-- Do not output deprecated members, applies globally, can be overridden by packageOptions -->
-                            <skipDeprecated>true</skipDeprecated>
-                            <!-- Emit warnings about not documented members, applies globally, also can be overridden by packageOptions -->
-                            <reportUndocumented>true</reportUndocumented>
-                            <!-- Do not create index pages for empty packages -->
-                            <skipEmptyPackages>false</skipEmptyPackages>
-                            <includeNonPublic>false</includeNonPublic>
-
-                            <!-- Short form list of sourceRoots, by default, set to ${project.compileSourceRoots} -->
-                            <sourceDirectories>
-                                <dir>${project.basedir}/src/main/java</dir>
-                                <dir>${project.basedir}/src/main/kotlin</dir>
-                            </sourceDirectories>
-
-                            <!-- Disable linking to online kotlin-stdlib documentation  -->
-                            <noStdlibLink>false</noStdlibLink>
-                            <noJdkLink>false</noJdkLink>
-
-                            <!-- Allows to customize documentation generation options on a per-package basis -->
-                            <perPackageOptions>
-                                <packageOptions>
-                                    <!-- Will match kotlin and all sub-packages of it -->
-                                    <!-- <prefix>kotlin</prefix>-->
-
-                                    <!-- All options are optional, default values are below: -->
-                                    <skipDeprecated>false</skipDeprecated>
-                                    <!-- Emit warnings about not documented members  -->
-                                    <reportUndocumented>true</reportUndocumented>
-                                    <includeNonPublic>false</includeNonPublic>
-                                </packageOptions>
-                            </perPackageOptions>
-                        </configuration>
-                    </plugin>
-
-                    <!--                    &lt;!&ndash; Generate Kotlin documentation &ndash;&gt;-->
-                    <!--                    <plugin>-->
-                    <!--                        <groupId>org.jetbrains.dokka</groupId>-->
-                    <!--                        <artifactId>dokka-maven-plugin</artifactId>-->
-                    <!--                        <version>${dokka.version}</version>-->
-                    <!--                        <executions>-->
-                    <!--                            <execution>-->
-                    <!--                                <phase>prepare-package</phase>-->
-                    <!--                                <goals>-->
-                    <!--                                    <goal>javadocJar</goal>-->
-                    <!--                                </goals>-->
-                    <!--                            </execution>-->
-                    <!--                        </executions>-->
-                    <!--                        <configuration>-->
-                    <!--                            <sourceDirectories>-->
-                    <!--                                <dir>${project.basedir}/src/main/kotlin</dir>-->
-                    <!--                                <dir>${project.basedir}/src/main/java</dir>-->
-                    <!--                            </sourceDirectories>-->
-                    <!--                            <documentedVisibilities>-->
-                    <!--                                <visibility>PUBLIC</visibility>-->
-                    <!--                                <visibility>PROTECTED</visibility>-->
-                    <!--                            </documentedVisibilities>-->
-                    <!--                            <skipEmptyPackages>true</skipEmptyPackages>-->
-                    <!--                            <reportUndocumented>false</reportUndocumented>-->
-                    <!--                            <platform>jvm</platform>-->
-                    <!--                            <jdkVersion>11</jdkVersion>-->
-                    <!--                        </configuration>-->
-                    <!--                    </plugin>-->
 
                     <!-- GPG signing -->
                     <plugin>
@@ -292,196 +140,147 @@
                         </configuration>
                     </plugin>
 
-                    <!-- Nexus staging -->
                     <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>${nexus-staging-maven-plugin.version}</version>
-                        <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>false</autoReleaseAfterClose>
-                            <stagingProgressTimeoutMinutes>15</stagingProgressTimeoutMinutes>
-                            <stagingProgressPauseDurationSeconds>10</stagingProgressPauseDurationSeconds>
-                        </configuration>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>${central-publishing-maven-plugin.version}</version>
                         <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                        </configuration>
                     </plugin>
                 </plugins>
             </build>
+
         </profile>
     </profiles>
 
     <dependencyManagement>
         <dependencies>
-            <!-- Internal Dependencies -->
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-common</artifactId>
-                <version>${project.version}</version>
+                <version>${browser4.base.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-boilerpipe</artifactId>
-                <version>${project.version}</version>
+                <artifactId>pulsar-persist</artifactId>
+                <version>${browser4.base.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-skeleton</artifactId>
+                <version>${browser4.base.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-resources</artifactId>
+                <version>${browser4.base.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon.pulsar</groupId>
+                <artifactId>pulsar-resources</artifactId>
+                <type>test-jar</type>
+                <classifier>tests</classifier>
+                <scope>test</scope>
+                <version>${browser4.base.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-plugins</artifactId>
                 <type>pom</type>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-persist</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-skeleton</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-resources</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-resources</artifactId>
-                <type>test-jar</type>
-                <classifier>tests</classifier>
-                <scope>test</scope>
-                <version>${project.version}</version>
+                <version>${browser4.base.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-protocol</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-filter</artifactId>
-                <version>${project.version}</version>
+                <version>${browser4.base.version}</version>
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-parse</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-scoring</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-schedule</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-index</artifactId>
-                <version>${project.version}</version>
+                <version>${browser4.base.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-browser</artifactId>
-                <version>${project.version}</version>
+                <version>${browser4.base.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-llm</artifactId>
-                <version>${project.version}</version>
+                <version>${browser4.base.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-dom</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-beans</artifactId>
-                <version>${project.version}</version>
+                <version>${browser4.base.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-ql-common</artifactId>
-                <version>${project.version}</version>
+                <version>${browser4.base.version}</version>
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-ql-common</artifactId>
                 <classifier>shaded</classifier>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-ql</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-rest</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-boot</artifactId>
-                <version>${project.version}</version>
+                <version>${browser4.base.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-qa</artifactId>
-                <version>${project.version}</version>
+                <artifactId>pulsar-ql</artifactId>
+                <version>${browser4.base.version}</version>
             </dependency>
+
+            <!-- Kotlin -->
+
             <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-qa</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-                <classifier>tests</classifier>
-                <scope>test</scope>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-stdlib</artifactId>
+                <version>${kotlin.version}</version>
             </dependency>
+
             <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-tests</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-tests</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
-                <classifier>tests</classifier>
-                <scope>test</scope>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring-boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
         </dependencies>
     </dependencyManagement>
 
     <properties>
         <!-- Plugin versions -->
-        <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
-        <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
-        <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
-        <maven-deploy-plugin.version>3.1.1</maven-deploy-plugin.version>
-        <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
         <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
-        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
-        <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
-        <nexus-staging-maven-plugin.version>1.7.0</nexus-staging-maven-plugin.version>
         <checksum-maven-plugin.version>1.11</checksum-maven-plugin.version>
-        <license-maven-plugin.version>4.3</license-maven-plugin.version>
-        <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
-        <dokka.version>1.9.10</dokka.version>
+        <central-publishing-maven-plugin.version>0.10.0</central-publishing-maven-plugin.version>
+
+        <!--  Language  -->
+        <javaVersion>17</javaVersion>
+        <kotlinVersion>2.2.21</kotlinVersion>
+
+        <!--  Kotlin  -->
+        <kotlin.version>${kotlinVersion}</kotlin.version>
+        <maven.compiler.release>${javaVersion}</maven.compiler.release>
+        <kotlin.compiler.jvmTarget>${javaVersion}</kotlin.compiler.jvmTarget>
+
+        <spring-boot.version>4.0.1</spring-boot.version>
+        <browser4.base.version>${project.version}</browser4.base.version>
+
+        <!-- keep consistent with io.modelcontextprotocol:kotlin-sdk-core-jvm:jar:0.8.1 -->
+        <ktor.version>3.2.3</ktor.version>
+        <springmockk.version>4.0.2</springmockk.version>
+
+        <langchain4j.version>1.5.0</langchain4j.version>
     </properties>
 </project>
