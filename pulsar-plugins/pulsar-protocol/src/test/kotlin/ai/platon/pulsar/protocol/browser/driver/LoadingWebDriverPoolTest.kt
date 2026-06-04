@@ -2,14 +2,11 @@ package ai.platon.pulsar.protocol.browser.driver
 
 import ai.platon.pulsar.common.LinkExtractors
 import ai.platon.pulsar.common.Runtimes
-import ai.platon.pulsar.common.alwaysTrue
 import ai.platon.pulsar.common.browser.BrowserType
 import ai.platon.pulsar.common.config.ImmutableConfig
 import ai.platon.pulsar.common.sleepSeconds
 import ai.platon.pulsar.protocol.browser.DefaultWebDriverPoolManager
-import ai.platon.pulsar.protocol.browser.driver.playwright.PlaywrightDriver
 import ai.platon.pulsar.skeleton.common.AppSystemInfo
-import ai.platon.pulsar.skeleton.crawl.fetch.driver.Browser
 import ai.platon.pulsar.skeleton.crawl.fetch.driver.WebDriver
 import ai.platon.pulsar.skeleton.crawl.fetch.privacy.BrowserId
 import kotlinx.coroutines.runBlocking
@@ -53,14 +50,8 @@ class LoadingWebDriverPoolTest {
 
     @Test
     fun test_pollWebDrivers() {
-        while(pool.numDriverSlots > 0 && !AppSystemInfo.isSystemOverCriticalLoad) {
+        while (pool.numDriverSlots > 0 && !AppSystemInfo.isSystemOverCriticalLoad) {
             val driver = pool.poll()
-
-            if (driver is PlaywrightDriver) {
-                println("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver.guid} | ${driver::class.qualifiedName}")
-            } else {
-                println("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver::class.qualifiedName}")
-            }
 
             runBlocking {
                 driver.navigateTo(seeds.random())
@@ -77,7 +68,7 @@ class LoadingWebDriverPoolTest {
         val executor = Executors.newFixedThreadPool(pool.numDriverSlots)
 
         var i = 0
-        while(i++ < 120) {
+        while (i++ < 120) {
             if (pool.numDriverSlots == 0) {
                 sleepSeconds(1)
                 continue
@@ -86,12 +77,6 @@ class LoadingWebDriverPoolTest {
             println("$i. Round $i polling a driver")
             val driver = pool.poll()
             drivers += driver
-
-            if (driver is PlaywrightDriver) {
-                println("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver.guid} | ${driver::class.qualifiedName}")
-            } else {
-                println("Created WebDriver #${driver.id} | ${pool.takeSnapshot()} | ${driver::class.qualifiedName}")
-            }
 
             executor.submit {
                 val url = seeds.random()

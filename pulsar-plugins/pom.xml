@@ -26,7 +26,6 @@
         <module>pulsar-filter</module>
         <module>pulsar-parse</module>
         <module>pulsar-protocol</module>
-        <module>pulsar-protocol-playwright</module>
         <module>pulsar-scoring</module>
         <module>pulsar-index</module>
         <module>pulsar-schedule</module>
@@ -51,11 +50,6 @@
                 <version>${project.version}</version>
             </dependency>
 
-            <dependency>
-                <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-protocol-playwright</artifactId>
-                <version>${project.version}</version>
-            </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
                 <artifactId>pulsar-protocol</artifactId>
