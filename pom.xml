@@ -24,8 +24,8 @@
     <packaging>pom</packaging>
     <version>3.1.0-SNAPSHOT</version>
 
-    <name>Pulsar RPA</name>
-    <description>Engage and automate web interactions at scale.</description>
+    <name>Browser4 Base</name>
+    <description>A lightning-fast, coroutine-safe browser for your AI.</description>
 
     <licenses>
         <license>
@@ -44,30 +44,26 @@
     </developers>
 
     <scm>
-        <connection>scm:git:https://github.com/platonai/PulsarRPA.git</connection>
-        <developerConnection>scm:git:https://github.com/platonai/PulsarRPA.git</developerConnection>
-        <url>https://github.com/platonai/PulsarRPA</url>
+        <connection>scm:git:https://github.com/platonai/PulsarRPA3.git</connection>
+        <developerConnection>scm:git:https://github.com/platonai/PulsarRPA3.git</developerConnection>
+        <url>https://github.com/platonai/PulsarRPA3</url>
         <tag>HEAD</tag>
     </scm>
 
     <issueManagement>
         <system>GitHub</system>
-        <url>https://github.com/platonai/PulsarRPA/issues</url>
+        <url>https://github.com/platonai/PulsarRPA3/issues</url>
     </issueManagement>
 
     <ciManagement>
         <system>GitHub Actions</system>
-        <url>https://github.com/platonai/PulsarRPA/actions</url>
+        <url>https://github.com/platonai/PulsarRPA3/actions</url>
     </ciManagement>
 
     <distributionManagement>
-        <snapshotRepository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/content/repositories/snapshots</url>
-        </snapshotRepository>
         <repository>
-            <id>ossrh</id>
-            <url>https://oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+            <id>central</id>
+            <url>https://central.sonatype.com/api/v1/publisher</url>
         </repository>
     </distributionManagement>
 
@@ -162,100 +158,14 @@
                 <skipTests>false</skipTests>
                 <maven.javadoc.skip>true</maven.javadoc.skip>
             </properties>
-        </profile>
-
-        <!-- CI profile -->
-        <profile>
-            <id>ci</id>
-            <properties>
-                <skipTests>false</skipTests>
-                <maven.test.failure.ignore>false</maven.test.failure.ignore>
-            </properties>
-            <build>
-                <plugins>
-                    <!--用于在 Maven 项目中收集和生成 Java 代码的测试覆盖率报告 -->
-                    <!-- instructions covered ratio is expected minimum is 0.70 -->
-                    <plugin>
-                        <groupId>org.jacoco</groupId>
-                        <artifactId>jacoco-maven-plugin</artifactId>
-                        <version>${jacoco-maven-plugin.version}</version>
-                        <executions>
-                            <execution>
-                                <id>report-aggregate</id>
-                                <phase>verify</phase>
-                                <goals>
-                                    <goal>report-aggregate</goal>
-                                </goals>
-                            </execution>
-                        </executions>
-                        <configuration>
-                            <dataFile>${project.build.directory}/jacoco.exec</dataFile>
-                            <outputDirectory>${project.reporting.outputDirectory}/jacoco</outputDirectory>
-                            <skip>false</skip>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <!-- Release profile -->
-        <profile>
-            <id>release</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.apache.maven.plugins</groupId>
-                        <artifactId>maven-release-plugin</artifactId>
-                        <version>${maven-release-plugin.version}</version>
-                        <configuration>
-                            <tagNameFormat>v@{project.version}</tagNameFormat>
-                            <releaseProfiles>deploy</releaseProfiles>
-                            <autoVersionSubmodules>true</autoVersionSubmodules>
-                            <preparationGoals>clean verify</preparationGoals>
-                            <completionGoals>clean</completionGoals>
-                            <goals>deploy nexus-staging:release</goals>
-                            <pushChanges>false</pushChanges>
-                            <localCheckout>true</localCheckout>
-                            <checkModificationExcludes>
-                                <checkModificationExclude>pom.xml</checkModificationExclude>
-                            </checkModificationExcludes>
-                        </configuration>
-                    </plugin>
-
-                </plugins>
-            </build>
+            <modules>
+                <module>pulsar-tests/pulsar-it-tests</module>
+            </modules>
         </profile>
 
         <!-- Deployment profile -->
         <profile>
             <id>deploy</id>
-            <properties>
-                <deploy-active>true</deploy-active>
-            </properties>
-            <modules>
-                <module>pulsar-common</module>
-                <module>pulsar-persist</module>
-                <module>pulsar-third</module>
-                <module>pulsar-skeleton</module>
-                <module>pulsar-resources</module>
-                <module>pulsar-dom</module>
-                <module>pulsar-plugins</module>
-
-                <module>pulsar-tools</module>
-                <module>pulsar-ql-common</module>
-                <module>pulsar-ql</module>
-
-                <module>pulsar-spring-support</module>
-                <module>pulsar-rest</module>
-
-                <module>pulsar-tests</module>
-                <module>pulsar-all</module>
-
-                <module>pulsar-client</module>
-                <module>pulsar-app</module>
-
-                <module>pulsar-bom</module>
-            </modules>
 
             <build>
                 <plugins>
@@ -293,6 +203,16 @@
                             </execution>
                         </executions>
                     </plugin>
+
+                    <!-- Override parent pom's javadoc settings, skip generating javadoc, use kdoc instead -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-javadoc-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+
                     <plugin>
                         <groupId>org.jetbrains.dokka</groupId>
                         <artifactId>dokka-maven-plugin</artifactId>
@@ -308,15 +228,15 @@
                             </execution>
                         </executions>
                         <configuration>
-                            <!-- Set to true to skip dokka task, default: false -->
+                            <!-- Set to true to skip a dokka task, default: false -->
                             <skip>false</skip>
 
-                            <!-- Use default or set to custom path to cache directory to enable package-list caching. -->
+                            <!-- Use default or set to a custom path to cache directory to enable package-list caching. -->
                             <!-- When set to default, caches stored in $USER_HOME/.cache/dokka -->
                             <cacheRoot>default</cacheRoot>
 
                             <!-- Used for linking to JDK, default: 11 -->
-                            <jdkVersion>11</jdkVersion>
+                            <jdkVersion>${javaVersion}</jdkVersion>
 
                             <!-- Do not output deprecated members, applies globally, can be overridden by packageOptions -->
                             <skipDeprecated>true</skipDeprecated>
@@ -349,43 +269,16 @@
                                     <includeNonPublic>false</includeNonPublic>
                                 </packageOptions>
                             </perPackageOptions>
+                            <sourceDirectories>
+                                <dir>${project.basedir}/src/main/kotlin</dir>
+                            </sourceDirectories>
                         </configuration>
                     </plugin>
-
-<!--                    &lt;!&ndash; Generate Kotlin documentation &ndash;&gt;-->
-<!--                    <plugin>-->
-<!--                        <groupId>org.jetbrains.dokka</groupId>-->
-<!--                        <artifactId>dokka-maven-plugin</artifactId>-->
-<!--                        <version>${dokka.version}</version>-->
-<!--                        <executions>-->
-<!--                            <execution>-->
-<!--                                <phase>prepare-package</phase>-->
-<!--                                <goals>-->
-<!--                                    <goal>javadocJar</goal>-->
-<!--                                </goals>-->
-<!--                            </execution>-->
-<!--                        </executions>-->
-<!--                        <configuration>-->
-<!--                            <sourceDirectories>-->
-<!--                                <dir>${project.basedir}/src/main/kotlin</dir>-->
-<!--                                <dir>${project.basedir}/src/main/java</dir>-->
-<!--                            </sourceDirectories>-->
-<!--                            <documentedVisibilities>-->
-<!--                                <visibility>PUBLIC</visibility>-->
-<!--                                <visibility>PROTECTED</visibility>-->
-<!--                            </documentedVisibilities>-->
-<!--                            <skipEmptyPackages>true</skipEmptyPackages>-->
-<!--                            <reportUndocumented>false</reportUndocumented>-->
-<!--                            <platform>jvm</platform>-->
-<!--                            <jdkVersion>11</jdkVersion>-->
-<!--                        </configuration>-->
-<!--                    </plugin>-->
 
                     <!-- GPG signing -->
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>${maven-gpg-plugin.version}</version>
                         <configuration>
                             <gpgArguments>
                                 <arg>--pinentry-mode</arg>
@@ -407,7 +300,7 @@
                     <plugin>
                         <groupId>net.nicoulaj.maven.plugins</groupId>
                         <artifactId>checksum-maven-plugin</artifactId>
-                        <version>${checksum-maven-plugin.version}</version>
+                        <version>${version.checksum-maven-plugin}</version>
                         <executions>
                             <execution>
                                 <id>source-release-checksum</id>
@@ -436,34 +329,17 @@
                         </configuration>
                     </plugin>
 
-                    <!-- Nexus staging -->
                     <plugin>
-                        <groupId>org.sonatype.plugins</groupId>
-                        <artifactId>nexus-staging-maven-plugin</artifactId>
-                        <version>${nexus-staging-maven-plugin.version}</version>
-                        <configuration>
-                            <serverId>ossrh</serverId>
-                            <nexusUrl>https://oss.sonatype.org/</nexusUrl>
-                            <autoReleaseAfterClose>false</autoReleaseAfterClose>
-                            <stagingProgressTimeoutMinutes>15</stagingProgressTimeoutMinutes>
-                            <stagingProgressPauseDurationSeconds>10</stagingProgressPauseDurationSeconds>
-                        </configuration>
+                        <groupId>org.sonatype.central</groupId>
+                        <artifactId>central-publishing-maven-plugin</artifactId>
+                        <version>${central-publishing-maven-plugin.version}</version>
                         <extensions>true</extensions>
+                        <configuration>
+                            <publishingServerId>central</publishingServerId>
+                            <autoPublish>true</autoPublish>
+                            <waitUntil>published</waitUntil>
+                        </configuration>
                     </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <profile>
-            <id>OS-WIN</id>
-            <activation>
-                <os>
-                    <family>windows</family>
-                </os>
-            </activation>
-            <build>
-                <plugins>
-
                 </plugins>
             </build>
         </profile>
@@ -471,223 +347,98 @@
 
     <build>
         <defaultGoal>install</defaultGoal>
-        <directory>target</directory>
-        <finalName>${project.artifactId}-${project.version}</finalName>
-        <pluginManagement>
-            <plugins>
-                <!--  kotlin  -->
-                <plugin>
-                    <groupId>org.jetbrains.kotlin</groupId>
-                    <artifactId>kotlin-maven-plugin</artifactId>
-                    <version>${kotlin.version}</version>
-                    <!-- You can set this option to automatically take information about lifecycles -->
-                    <extensions>true</extensions>
-                    <executions>
-                        <execution>
-                            <id>compile</id>
-                            <goals>
-                                <goal>compile</goal>
-                            </goals>
-                            <configuration>
-                                <sourceDirs>
-                                    <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
-                                    <sourceDir>${project.basedir}/src/main/java</sourceDir>
-                                </sourceDirs>
-                            </configuration>
-                        </execution>
-                        <execution>
-                            <id>test-compile</id>
-                            <goals>
-                                <goal>test-compile</goal>
-                            </goals>
-                            <configuration>
-                                <sourceDirs>
-                                    <sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
-                                    <sourceDir>${project.basedir}/src/test/java</sourceDir>
-                                </sourceDirs>
-                            </configuration>
-                        </execution>
-                    </executions>
-                    <!--  Required by spring  -->
-                    <dependencies>
-                        <dependency>
-                            <groupId>org.jetbrains.kotlin</groupId>
-                            <artifactId>kotlin-maven-allopen</artifactId>
-                            <version>${kotlin.version}</version>
-                        </dependency>
-                        <dependency>
-                            <groupId>org.jetbrains.kotlin</groupId>
-                            <artifactId>kotlin-maven-noarg</artifactId>
-                            <version>${kotlin.version}</version>
-                        </dependency>
-                    </dependencies>
-                    <configuration>
-                        <args>
-                            <arg>-Xjsr305=strict</arg>
-                        </args>
-                        <compilerPlugins>
-                            <plugin>spring</plugin>
-                            <plugin>jpa</plugin>
-                            <plugin>all-open</plugin>
-                        </compilerPlugins>
-                        <pluginOptions>
-                            <option>all-open:annotation=javax.persistence.Entity</option>
-                            <option>all-open:annotation=javax.persistence.Embeddable</option>
-                            <option>all-open:annotation=javax.persistence.MappedSuperclass</option>
-                        </pluginOptions>
-                        <jvmTarget>${kotlin.compiler.jvmTarget}</jvmTarget>
-                    </configuration>
-                </plugin>
-                <!--  java  -->
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>${version.maven-compiler-plugin}</version>
-                    <executions>
-                        <!--  Replacing default-compile as it is treated specially by maven  -->
-                        <execution>
-                            <id>default-compile</id>
-                            <phase>none</phase>
-                        </execution>
-                        <!--  Replacing default-testCompile as it is treated specially by maven  -->
-                        <execution>
-                            <id>default-testCompile</id>
-                            <phase>none</phase>
-                        </execution>
-                        <execution>
-                            <id>java-compile</id>
-                            <phase>compile</phase>
-                            <goals>
-                                <goal>compile</goal>
-                            </goals>
-                        </execution>
-                        <execution>
-                            <id>java-test-compile</id>
-                            <phase>test-compile</phase>
-                            <goals>
-                                <goal>testCompile</goal>
-                            </goals>
-                        </execution>
-                    </executions>
-                    <configuration>
-                        <verbose>true</verbose>
-                        <fork>true</fork>
-                        <source>${javac.src.version}</source>
-                        <target>${javac.target.version}</target>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <artifactId>maven-clean-plugin</artifactId>
-                    <version>${version.maven-clean-plugin}</version>
-                    <configuration>
-                        <filesets>
-                            <fileset>
-                                <directory>${basedir}/lib</directory>
-                                <followSymlinks>false</followSymlinks>
-                                <useDefaultExcludes>true</useDefaultExcludes>
-                                <includes>
-                                    <include>*.*</include>
-                                </includes>
-                            </fileset>
-                        </filesets>
-                    </configuration>
-                </plugin>
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>exec-maven-plugin</artifactId>
-                    <version>${maven-exec-plugin.version}</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.springframework.boot</groupId>
-                    <artifactId>spring-boot-maven-plugin</artifactId>
-                    <version>${spring-boot.version}</version>
-                </plugin>
-            </plugins>
-        </pluginManagement>
 
         <plugins>
             <!--  kotlin plugin should come before maven-compiler-plugin  -->
+
+            <!--  kotlin  -->
             <plugin>
                 <groupId>org.jetbrains.kotlin</groupId>
                 <artifactId>kotlin-maven-plugin</artifactId>
+                <version>${kotlin.version}</version>
+                <!-- You can set this option to automatically take information about lifecycles -->
+                <extensions>true</extensions>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirs>
+                                <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
+                            </sourceDirs>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirs>
+                                <sourceDir>${project.basedir}/src/test/kotlin</sourceDir>
+                            </sourceDirs>
+                        </configuration>
+                    </execution>
+                </executions>
+                <!--  Required by spring  -->
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jetbrains.kotlin</groupId>
+                        <artifactId>kotlin-maven-allopen</artifactId>
+                        <version>${kotlin.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.jetbrains.kotlin</groupId>
+                        <artifactId>kotlin-maven-noarg</artifactId>
+                        <version>${kotlin.version}</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
-                    <!-- Disable warnings or not -->
-                    <nowarn>false</nowarn>
                     <args>
-                        <!-- Enable strict mode for JSR-305 annotations -->
                         <arg>-Xjsr305=strict</arg>
                     </args>
+                    <compilerPlugins>
+                        <plugin>spring</plugin>
+                        <plugin>jpa</plugin>
+                        <plugin>all-open</plugin>
+                    </compilerPlugins>
+                    <pluginOptions>
+                        <option>all-open:annotation=javax.persistence.Entity</option>
+                        <option>all-open:annotation=javax.persistence.Embeddable</option>
+                        <option>all-open:annotation=javax.persistence.MappedSuperclass</option>
+                    </pluginOptions>
                     <jvmTarget>${kotlin.compiler.jvmTarget}</jvmTarget>
                 </configuration>
             </plugin>
-            <!-- NO java code by default, so do NOT include maven-compiler-plugin -->
-            <!--            <plugin>-->
-            <!--                <groupId>org.apache.maven.plugins</groupId>-->
-            <!--                <artifactId>maven-compiler-plugin</artifactId>-->
-            <!--            </plugin>-->
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.owasp</groupId>
-                <artifactId>dependency-check-maven</artifactId>
-                <version>7.0.1</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>check</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
             </plugin>
 
             <!--
             The Surefire Plugin is used during the test phase of the build lifecycle to execute the unit tests of
             an application.
-            see https://maven.apache.org/surefire/maven-surefire-plugin/
             -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>${surefire.version}</version>
+                <version>${version.maven-surefire}</version>
                 <configuration>
-                    <excludedGroups>TimeConsumingTest,ExternalServiceTest</excludedGroups>
+                    <!--
+
+                    -->
+                    <excludedGroups>${surefire.excludedGroups}</excludedGroups>
+
                     <!-- All tests are in the same JVM process -->
                     <forkCount>1</forkCount>
                     <reuseForks>true</reuseForks>
-                </configuration>
-
-                <dependencies>
-                    <dependency>
-                        <groupId>org.junit.jupiter</groupId>
-                        <artifactId>junit-jupiter-engine</artifactId>
-                        <version>${junit5.version}</version>
-                    </dependency>
-                </dependencies>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-clean-plugin</artifactId>
-            </plugin>
-
-            <!-- Override parent pom's javadoc settings, skip generating javadoc, use kdoc instead -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
-                </configuration>
-            </plugin>
-            <!-- Skip maven-deploy-plugin to use nexus-staging-maven-plugin -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <configuration>
-                    <skip>true</skip>
+                    <!-- Enable byte-buddy-agent -->
+                    <argLine>-XX:+EnableDynamicAgentLoading</argLine>
+                    <useModulePath>false</useModulePath>
                 </configuration>
             </plugin>
         </plugins>
@@ -695,6 +446,21 @@
 
     <dependencyManagement>
         <dependencies>
+            <dependency>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-bom</artifactId>
+                <version>${kotlin.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>ai.platon</groupId>
+                <artifactId>pulsar-dependencies</artifactId>
+                <version>${project.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
             <!-- Internal Dependencies -->
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
@@ -823,14 +589,12 @@
 
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-qa</artifactId>
+                <artifactId>pulsar-tests-common</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>ai.platon.pulsar</groupId>
-                <artifactId>pulsar-qa</artifactId>
-                <version>${project.version}</version>
-                <type>test-jar</type>
+                <artifactId>pulsar-tests-common</artifactId>
                 <classifier>tests</classifier>
                 <scope>test</scope>
             </dependency>
@@ -900,8 +664,7 @@
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlinx</groupId>
-            <artifactId>kotlinx-coroutines-core-jvm</artifactId>
-            <version>${kotlin.coroutine.version}</version>
+            <artifactId>kotlinx-coroutines-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.kotlin</groupId>
@@ -918,30 +681,73 @@
     </dependencies>
 
     <properties>
-        <!-- Build properties -->
+        <!-- Suppress warning: [WARNING] Using platform encoding (GBK actually) to copy filtered resources -->
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
-        <ktor.version>2.3.11</ktor.version>
-        <springmockk.version>4.0.2</springmockk.version>
-        <version.maven-exec-plugin>3.3.0</version.maven-exec-plugin>
-        <mockito-junit-jupiter.version>5.11.0</mockito-junit-jupiter.version>
+        <dokka.version>1.9.10</dokka.version>
 
+        <surefire.version>3.5.4</surefire.version>
 
-        <!-- Plugin versions -->
-        <maven-compiler-plugin.version>3.12.1</maven-compiler-plugin.version>
-        <maven-source-plugin.version>3.3.0</maven-source-plugin.version>
-        <maven-javadoc-plugin.version>3.6.3</maven-javadoc-plugin.version>
-        <maven-deploy-plugin.version>3.1.1</maven-deploy-plugin.version>
-        <maven-release-plugin.version>3.0.1</maven-release-plugin.version>
-        <maven-gpg-plugin.version>3.1.0</maven-gpg-plugin.version>
-        <maven-surefire-plugin.version>3.2.5</maven-surefire-plugin.version>
-        <maven-failsafe-plugin.version>3.2.5</maven-failsafe-plugin.version>
-        <nexus-staging-maven-plugin.version>1.7.0</nexus-staging-maven-plugin.version>
-        <checksum-maven-plugin.version>1.11</checksum-maven-plugin.version>
         <jacoco-maven-plugin.version>0.8.11</jacoco-maven-plugin.version>
-        <license-maven-plugin.version>4.3</license-maven-plugin.version>
-        <versions-maven-plugin.version>2.16.2</versions-maven-plugin.version>
+        <central-publishing-maven-plugin.version>0.10.0</central-publishing-maven-plugin.version>
+
+        <version.apache-rat-plugin>0.16.1</version.apache-rat-plugin>
+        <version.apache-resource-bundles>1.7</version.apache-resource-bundles>
+        <version.checksum-maven-plugin>1.11</version.checksum-maven-plugin>
+        <version.maven-antrun-plugin>3.2.0</version.maven-antrun-plugin>
+        <version.maven-assembly-plugin>3.8.0</version.maven-assembly-plugin>
+        <version.maven-clean-plugin>3.5.0</version.maven-clean-plugin>
+        <version.maven-checkstyle-plugin>3.6.0</version.maven-checkstyle-plugin>
+        <version.maven-compiler-plugin>3.14.1</version.maven-compiler-plugin>
+        <version.maven-dependency-plugin>3.9.0</version.maven-dependency-plugin>
+        <version.maven-deploy-plugin>3.1.4</version.maven-deploy-plugin>
+        <version.maven-ear-plugin>3.4.0</version.maven-ear-plugin>
+        <version.maven-enforcer-plugin>3.6.2</version.maven-enforcer-plugin>
+        <version.maven-fluido-skin>2.1.0</version.maven-fluido-skin>
+        <version.maven-gpg-plugin>3.2.8</version.maven-gpg-plugin>
+        <version.maven-help-plugin>3.5.1</version.maven-help-plugin>
+        <version.maven-install-plugin>3.1.4</version.maven-install-plugin>
+        <version.maven-invoker-plugin>3.9.1</version.maven-invoker-plugin>
+        <version.maven-jar-plugin>3.5.0</version.maven-jar-plugin>
+        <version.maven-javadoc-plugin>3.12.0</version.maven-javadoc-plugin>
+        <version.maven-plugin-tools>3.15.2</version.maven-plugin-tools>
+        <version.maven-project-info-reports-plugin>3.9.0</version.maven-project-info-reports-plugin>
+        <version.maven-release-plugin>3.3.1</version.maven-release-plugin>
+        <version.maven-remote-resources-plugin>3.3.0</version.maven-remote-resources-plugin>
+        <version.maven-resources-plugin>3.4.0</version.maven-resources-plugin>
+        <version.maven-scm-plugin>2.2.1</version.maven-scm-plugin>
+        <version.maven-scm-publish-plugin>3.3.0</version.maven-scm-publish-plugin>
+        <version.maven-shade-plugin>3.6.1</version.maven-shade-plugin>
+        <version.maven-site-plugin>3.21.0</version.maven-site-plugin>
+        <version.maven-source-plugin>3.4.0</version.maven-source-plugin>
+        <version.maven-surefire>${surefire.version}</version.maven-surefire>
+        <version.maven-war-plugin>3.5.1</version.maven-war-plugin>
+
+        <!--  Language  -->
+        <javaVersion>17</javaVersion>
+        <kotlinVersion>2.2.21</kotlinVersion>
+        <kotlin.coroutine.version>1.10.2</kotlin.coroutine.version>
+
+        <!--  Kotlin  -->
+        <kotlin.version>${kotlinVersion}</kotlin.version>
+        <maven.compiler.release>${javaVersion}</maven.compiler.release>
+        <kotlin.compiler.jvmTarget>${javaVersion}</kotlin.compiler.jvmTarget>
+
+        <!-- Test execution control properties -->
+        <runITs>false</runITs>
+
+        <!-- Default excludedGroups: exclude all non-Fast tests
+             Includes both new taxonomy tags and legacy tags for backward compatibility:
+             - New tags: Slow, Heavy, Integration, E2E, SDK, RequiresXYZ, ManualOnly
+             - Legacy tags: IntegrationTest, E2ETest, HeavyTest, SkippableLowerLevelTest, TestInfraCheck, OptionalTest
+             Migration: Gradually migrate tests from legacy tags to new taxonomy -->
+        <surefire.excludedGroups>
+            Slow,Heavy,RequiresServer,RequiresBrowser,RequiresAI,RequiresDocker,
+            E2E,SDK,ManualOnly,
+            SkippableLowerLevelTest,TestInfraCheck,OptionalTest,
+            IntegrationTest,E2ETest,HeavyTest
+        </surefire.excludedGroups>
     </properties>
 
 </project>
