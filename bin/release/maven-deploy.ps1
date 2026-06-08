@@ -1,11 +1,7 @@
 #!/usr/bin/env pwsh
 
-# 🔍 Find the first parent directory containing the VERSION file
-$AppHome=(Get-Item -Path $MyInvocation.MyCommand.Path).Directory
-while ($AppHome -ne $null -and !(Test-Path "$AppHome/VERSION")) {
-  $AppHome = Split-Path -Parent $AppHome
-}
-Set-Location $AppHome
+$repoRoot = (git rev-parse --show-toplevel 2>$null)
+Set-Location $repoRoot
 
 function printUsage {
   Write-Host "Usage: maven-deploy.ps1 [-clean|-test]"
@@ -13,7 +9,7 @@ function printUsage {
 }
 
 # Maven command and options
-$MvnCmd = Join-Path $AppHome '.\mvnw.cmd'
+$MvnCmd = Join-Path $repoRoot '.\mvnw.cmd'
 
 # Initialize flags and additional arguments
 $PerformClean = $false
@@ -47,19 +43,19 @@ foreach ($Arg in $args)
 Write-Host "Deploy the project ..."
 Write-Host "Changing version ..."
 
-$SNAPSHOT_VERSION = Get-Content "$AppHome\VERSION" -TotalCount 1
+$SNAPSHOT_VERSION = Get-Content "$repoRoot\VERSION" -TotalCount 1
 $VERSION =$SNAPSHOT_VERSION -replace "-SNAPSHOT", ""
-$VERSION | Set-Content "$AppHome\VERSION"
+$VERSION | Set-Content "$repoRoot\VERSION"
 
 # Replace SNAPSHOT version with the release version
-@('llm-config.md', 'README-CN.md', 'pom.xml') | ForEach-Object {
-  Get-ChildItem -Path "$AppHome" -Depth 2 -Filter $_ -Recurse | ForEach-Object {
-    (Get-Content $_.FullName) -replace $SNAPSHOT_VERSION, $VERSION | Set-Content $_.FullName
+@('pom.xml') | ForEach-Object {
+  Get-ChildItem -Path "$repoRoot" -Depth 5 -Filter $_ -Recurse | ForEach-Object {
+    (Get-Content $_.FullName) -replace $SNAPSHOT_VERSION, $VERSION | Set-Content -Encoding utf8 $_.FullName
   }
 }
 
 if ($PerformClean) {
-  & $MvnCmd clean -Pall-modules
+  & $MvnCmd clean
   if ($LastExitCode -ne 0) {
     exit $LastExitCode
   }
@@ -78,30 +74,9 @@ if ($exitCode -eq 0) {
   exit $exitCode
 }
 
-# The following commands are commented out to avoid accidental execution
+Set-Location $repoRoot
 
-# Build pulsar-app/pulsar-master but do not deploy the artifacts
-$PulsarAppPath = Join-Path $AppHome 'pulsar-app/pulsar-master'
-if (Test-Path $PulsarAppPath) {
-  Set-Location $PulsarAppPath
-  & $MvnCmd clean install -DskipTests
-  if ($LastExitCode -ne 0) {
-    exit $LastExitCode
-  }
-} else {
-  Write-Host "pulsar-app/pulsar-master not found, skipping build."
-}
-
-$exitCode =$LastExitCode
-if ($exitCode -eq 0) {
-  Write-Host "Build successfully"
-} else {
-  exit $exitCode
-}
-
-Set-Location $AppHome
-
-Write-Host "Artifacts are staged remotely, you should close and release the staging manually:"
-Write-Host "https://oss.sonatype.org/#stagingRepositories"
+Write-Host "Artifacts are uploaded, you should publish manually:"
+Write-Host "https://central.sonatype.com/publishing"
 Write-Host "Hit the following link to check if the artifacts are synchronized to the maven center: "
 Write-Host "https://repo1.maven.org/maven2/ai/platon/pulsar"

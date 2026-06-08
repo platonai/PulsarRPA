@@ -29,7 +29,8 @@ public class ClientSecurityState {
 
   private IPAddressSpace initiatorIPAddressSpace;
 
-  private PrivateNetworkRequestPolicy privateNetworkRequestPolicy;
+    // vincent, 2025/12/07
+//  private PrivateNetworkRequestPolicy privateNetworkRequestPolicy;
 
   public Boolean getInitiatorIsSecureContext() {
     return initiatorIsSecureContext;
@@ -47,12 +48,13 @@ public class ClientSecurityState {
     this.initiatorIPAddressSpace = initiatorIPAddressSpace;
   }
 
-  public PrivateNetworkRequestPolicy getPrivateNetworkRequestPolicy() {
-    return privateNetworkRequestPolicy;
-  }
-
-  public void setPrivateNetworkRequestPolicy(
-      PrivateNetworkRequestPolicy privateNetworkRequestPolicy) {
-    this.privateNetworkRequestPolicy = privateNetworkRequestPolicy;
-  }
+  // vincent, 2025/12/07
+//  public PrivateNetworkRequestPolicy getPrivateNetworkRequestPolicy() {
+//    return privateNetworkRequestPolicy;
+//  }
+//
+//  public void setPrivateNetworkRequestPolicy(
+//      PrivateNetworkRequestPolicy privateNetworkRequestPolicy) {
+//    this.privateNetworkRequestPolicy = privateNetworkRequestPolicy;
+//  }
 }

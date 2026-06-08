@@ -6,32 +6,32 @@
 
 ---
 
-[English](README.md) | 简体中文 | [中国镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA)
+[English](README.md) | 简体中�?| [中国镜像](https://gitee.com/platonai_galaxyeye/PulsarRPA)
 
 ## 🌟 介绍
 
-💖 **PulsarRPA: 由AI驱动的超快浏览器自动化解决方案!** 💖
+💖 **PulsarRPA: 由AI驱动的超快浏览器自动化解决方�?** 💖
 
-### ✨ 核心能力:
+### �?核心能力:
 
-- 🤖 **AI集成与大语言模型** – 由大语言模型驱动的更智能自动化。
-- ⚡ **超快自动化** – 协程安全的浏览器自动化并发，爬虫级别的抓取性能。
-- 🧠 **网页理解** – 深度理解动态网页内容。
-- 📊 **数据提取API** – 强大的结构化数据轻松提取工具。
+- 🤖 **AI集成与大语言模型** �?由大语言模型驱动的更智能自动化�?
+- �?**超快自动�?* �?协程安全的浏览器自动化并发，爬虫级别的抓取性能�?
+- 🧠 **网页理解** �?深度理解动态网页内容�?
+- 📊 **数据提取API** �?强大的结构化数据轻松提取工具�?
 
 ---
 
-通过简单文本实现大规模浏览器自动化和数据提取。
+通过简单文本实现大规模浏览器自动化和数据提取�?
 
 ```text
 访问 https://www.amazon.com/dp/B08PP5MSVB
 
-浏览器启动后: 清除浏览器cookies。
-页面加载后: 滚动到页面中间。
+浏览器启动后: 清除浏览器cookies�?
+页面加载�? 滚动到页面中间�?
 
-总结产品信息。
-提取: 产品名称、价格、评分。
-查找所有包含 /dp/ 的链接。
+总结产品信息�?
+提取: 产品名称、价格、评分�?
+查找所有包�?/dp/ 的链接�?
 ```
 
 ---
@@ -47,43 +47,43 @@
 
 ---
 
-# 🚀 快速开始指南
+# 🚀 快速开始指�?
 
 ## ▶️ 运行 PulsarRPA
 
-### 📦 运行可执行JAR — 最佳体验
+### 📦 运行可执行JAR �?最佳体�?
 
 #### 🧩 下载
 
 ```shell
-curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.14/PulsarRPA.jar
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.17/PulsarRPA.jar
 ```
 
 #### 🚀 运行
 
 ```shell
-# 确保设置了LLM API密钥。支持VOLCENGINE_API_KEY/OPENAI_API_KEY等
+# 确保设置了LLM API密钥。支持VOLCENGINE_API_KEY/OPENAI_API_KEY�?
 echo $DEEPSEEK_API_KEY
 java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
 ```
 
-> 🔍 **提示:** 确保已在环境中设置`DEEPSEEK_API_KEY`或其他LLM API密钥，否则AI功能将不可用。
+> 🔍 **提示:** 确保已在环境中设置`DEEPSEEK_API_KEY`或其他LLM API密钥，否则AI功能将不可用�?
 
-> 🔍 **提示:** Windows PowerShell语法: `$env:DEEPSEEK_API_KEY`(环境变量) vs `$DEEPSEEK_API_KEY`(脚本变量)。
+> 🔍 **提示:** Windows PowerShell语法: `$env:DEEPSEEK_API_KEY`(环境变量) vs `$DEEPSEEK_API_KEY`(脚本变量)�?
 
 ---
 
 <details>
 <summary>📂 资源</summary>
 
-* 🟦 [GitHub Release 下载](https://github.com/platonai/PulsarRPA/releases/download/v3.0.14/PulsarRPA.jar)
+* 🟦 [GitHub Release 下载](https://github.com/platonai/PulsarRPA/releases/download/v3.0.17/PulsarRPA.jar)
 * 📁 [镜像/备份下载](https://static.platonai.cn/repo/ai/platon/pulsar/)
-* 🛠️ [LLM配置指南](docs/config/llm/llm-config.md)
-* 🛠️ [配置指南](docs/config.md)
+* 🛠�?[LLM配置指南](docs/config/llm/llm-config.md)
+* 🛠�?[配置指南](docs/config.md)
 
 </details>
 
-### ▶ 使用IDE运行
+### �?使用IDE运行
 
 <details>
 
@@ -97,7 +97,7 @@ java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
 <details>
 
 ```shell
-# 确保设置了LLM API密钥。支持VOLCENGINE_API_KEY/OPENAI_API_KEY等
+# 确保设置了LLM API密钥。支持VOLCENGINE_API_KEY/OPENAI_API_KEY�?
 echo $DEEPSEEK_API_KEY
 docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/pulsar-rpa:latest
 ```
@@ -105,9 +105,9 @@ docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/p
 
 ---
 
-## 🌟 面向初学者 – 只需文本，无需代码！
+## 🌟 面向初学�?�?只需文本，无需代码�?
 
-使用`commands` API执行浏览器操作、提取网页数据、分析网站等。
+使用`commands` API执行浏览器操作、提取网页数据、分析网站等�?
 
 ### 📥 示例请求(基于文本):
 
@@ -118,17 +118,17 @@ docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/p
 <details>
 <summary>REST API</summary>
 
-#### 📄 纯文本版本:
+#### 📄 纯文本版�?
 ```shell
 curl -X POST "http://localhost:8182/api/commands/plain" -H "Content-Type: text/plain" -d '
     访问 https://www.amazon.com/dp/B08PP5MSVB
 
-    浏览器启动后: 清除浏览器cookies。
-    页面加载后: 滚动到页面中间。
+    浏览器启动后: 清除浏览器cookies�?
+    页面加载�? 滚动到页面中间�?
 
-    总结产品信息。
-    提取: 产品名称、价格、评分。
-    查找所有包含 /dp/ 的链接。
+    总结产品信息�?
+    提取: 产品名称、价格、评分�?
+    查找所有包�?/dp/ 的链接�?
   '
 ```
 
@@ -138,25 +138,25 @@ curl -X POST "http://localhost:8182/api/commands/plain" -H "Content-Type: text/p
 curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/json" -d '{
     "url": "https://www.amazon.com/dp/B08PP5MSVB",
     "onBrowserLaunchedActions": ["清除浏览器cookies"],
-    "onPageReadyActions": ["滚动到页面中间"],
-    "pageSummaryPrompt": "简要介绍这个产品。",
+    "onPageReadyActions": ["滚动到页面中�?],
+    "pageSummaryPrompt": "简要介绍这个产品�?,
     "dataExtractionRules": "产品名称、价格和评分",
-    "uriExtractionRules": "页面上所有包含`/dp/`的链接"
+    "uriExtractionRules": "页面上所有包含`/dp/`的链�?
   }'
 ```
 
-💡 **提示:** 您不需要填写每个字段 — 只填写您需要的。
+💡 **提示:** 您不需要填写每个字�?�?只填写您需要的�?
 
 </details>
 
-## 🎓 面向高级用户 — LLM + X-SQL: 精准、灵活、强大
+## 🎓 面向高级用户 �?LLM + X-SQL: 精准、灵活、强�?
 
-利用`x/e` API进行高度精确、灵活和智能的数据提取。
+利用`x/e` API进行高度精确、灵活和智能的数据提取�?
 
   ```shell
   curl -X POST "http://localhost:8182/api/x/e" -H "Content-Type: text/plain" -d "
   select
-    llm_extract(dom, '产品名称、价格、评分') as llm_extracted_data,
+    llm_extract(dom, '产品名称、价格、评�?) as llm_extracted_data,
     dom_base_uri(dom) as url,
     dom_first_text(dom, '#productTitle') as title,
     dom_first_slim_html(dom, 'img:expr(width > 400)') as img
@@ -183,11 +183,11 @@ curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/
 
 ---
 
-## 👨‍💻 面向专家 - 原生API: 功能强大!
+## 👨‍�?面向专家 - 原生API: 功能强大!
 
-### 🚀 超快页面访问和数据提取:
+### 🚀 超快页面访问和数据提�?
 
-PulsarRPA通过基于协程的并发实现高速并行网页抓取，在最小化资源开销的同时提供高效的数据提取。
+PulsarRPA通过基于协程的并发实现高速并行网页抓取，在最小化资源开销的同时提供高效的数据提取�?
 
 <details>
 
@@ -208,18 +208,18 @@ session.submitAll(links)
 
 </details>
 
-### 🎮 浏览器控制:
+### 🎮 浏览器控�?
 
-PulsarRPA实现了协程安全的浏览器控制。
+PulsarRPA实现了协程安全的浏览器控制�?
 
 <details>
 
 ```kotlin
 val prompts = """
-将光标移到id为'title'的元素上并点击
-滚动到页面中间
-滚动到页面顶部
-获取id为'title'的元素的文本
+将光标移到id�?title'的元素上并点�?
+滚动到页面中�?
+滚动到页面顶�?
+获取id�?title'的元素的文本
 """
 
 val eventHandlers = DefaultPageEventHandlers()
@@ -236,7 +236,7 @@ session.open(url, eventHandlers)
 
 ### 🤖 机器人流程自动化能力:
 
-PulsarRPA提供灵活的机器人流程自动化能力。
+PulsarRPA提供灵活的机器人流程自动化能力�?
 
 <details>
 
@@ -264,13 +264,13 @@ session.load(url, options)
 
 ### 🔍 使用X-SQL进行复杂数据提取:
 
-PulsarRPA提供X-SQL用于复杂数据提取。
+PulsarRPA提供X-SQL用于复杂数据提取�?
 
 <details>
 
 ```sql
 select
-    llm_extract(dom, '产品名称、价格、评分、评分值') as llm_extracted_data,
+    llm_extract(dom, '产品名称、价格、评分、评分�?) as llm_extracted_data,
     dom_first_text(dom, '#productTitle') as title,
     dom_first_text(dom, '#bylineInfo') as brand,
     dom_first_text(dom, '#price tr td:matches(^Price) ~ td') as price,
@@ -280,7 +280,7 @@ from load_and_select('https://www.amazon.com/dp/B08PP5MSVB  -i 1s -njr 3', 'body
 ```
 
 📚 示例代码:
-* [亚马逊产品页面抓取(100+字段)](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
+* [亚马逊产品页面抓�?100+字段)](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 * [所有亚马逊页面类型抓取](https://github.com/platonai/exotic-amazon/tree/main/src/main/resources/sites/amazon/crawl/parse/sql/crawl)
 
 </details>
@@ -290,8 +290,8 @@ from load_and_select('https://www.amazon.com/dp/B08PP5MSVB  -i 1s -njr 3', 'body
 ## 📜 文档
 
 * 📖 [REST API示例](docs/rest-api-examples.md)
-* 🛠️ [LLM配置指南](docs/config/llm/llm-config.md)
-* 🛠️ [配置指南](docs/config.md)
+* 🛠�?[LLM配置指南](docs/config/llm/llm-config.md)
+* 🛠�?[配置指南](docs/config.md)
 * 📚 [从源码构建](docs/development/build.md)
 * 🧠 [专家指南](docs/advanced-guides.md)
 
@@ -307,18 +307,18 @@ from load_and_select('https://www.amazon.com/dp/B08PP5MSVB  -i 1s -njr 3', 'body
 export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 ```
 
-每次访问轮换URL时，它应返回包含一个或多个新代理IP的响应。
-请向您的代理提供商询问这样的URL。
+每次访问轮换URL时，它应返回包含一个或多个新代理IP的响应�?
+请向您的代理提供商询问这样的URL�?
 
 </details>
 
 ---
 
-## ✨ 特性
+## �?特�?
 
-🕷️ **网络爬虫**
-- 可扩展爬取
-- 浏览器渲染
+🕷�?**网络爬虫**
+- 可扩展爬�?
+- 浏览器渲�?
 - AJAX数据提取
 
 🤖 **AI驱动**
@@ -330,18 +330,18 @@ export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 - 自然语言网页内容分析
 - 直观内容描述
 
-🎯 **文本到动作**
+🎯 **文本到动�?*
 - 简单语言命令
-- 直观浏览器控制
+- 直观浏览器控�?
 
 🤖 **RPA能力**
-- 类人任务自动化
+- 类人任务自动�?
 - SPA爬取支持
 - 高级工作流自动化
 
-🛠️ **开发者友好**
-- 一行数据提取
-- SQL式查询接口
+🛠�?**开发者友�?*
+- 一行数据提�?
+- SQL式查询接�?
 - 简单API集成
 
 📊 **X-SQL强大功能**
@@ -349,30 +349,30 @@ export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 - 内容挖掘能力
 - Web商业智能
 
-🛡️ **机器人防护**
-- 高级隐身技术
+🛡�?**机器人防�?*
+- 高级隐身技�?
 - IP轮换
-- 隐私上下文管理
+- 隐私上下文管�?
 
-⚡ **性能**
+�?**性能**
 - 并行页面渲染
 - 高效处理
-- 抗封锁设计
+- 抗封锁设�?
 
 💰 **成本效益**
 - 每天100,000+页面
-- 最小硬件要求
+- 最小硬件要�?
 - 资源高效运行
 
-✅ **质量保证**
+�?**质量保证**
 - 智能重试机制
 - 精确调度
 - 完整生命周期管理
 
-🌐 **可扩展性**
-- 完全分布式架构
-- 大规模能力
-- 企业级就绪
+🌐 **可扩展�?*
+- 完全分布式架�?
+- 大规模能�?
+- 企业级就�?
 
 📦 **存储选项**
 - 本地文件系统
@@ -383,7 +383,7 @@ export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 📊 **监控**
 - 全面日志
 - 详细指标
-- 完全透明度
+- 完全透明�?
 
 ## 📞 联系我们
 
@@ -394,5 +394,5 @@ export PROXY_ROTATION_URL=https://your-proxy-provider.com/rotation-endpoint
 - 🌍 网站: [platon.ai](https://platon.ai)
 
 <div style="display: flex;">
-  <img src="docs/images/wechat-author.png" width="300" height="365" alt="微信二维码" />
+  <img src="docs/images/wechat-author.png" width="300" height="365" alt="微信二维�? />
 </div>

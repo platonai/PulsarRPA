@@ -32,5 +32,7 @@ public enum PrivateNetworkRequestPolicy {
   @JsonProperty("PreflightBlock")
   PREFLIGHT_BLOCK,
   @JsonProperty("PreflightWarn")
-  PREFLIGHT_WARN
+  PREFLIGHT_WARN,
+  @JsonProperty("PermissionBlock")
+  PERMISSION_BLOCK
 }
