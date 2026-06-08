@@ -12,12 +12,12 @@ English | [简体中文](README-CN.md) | [中国镜像](https://gitee.com/platon
 
 💖 **PulsarRPA: The AI-Powered, Lightning-Fast Browser Automation Solution!** 💖
 
-### ✨ Key Capabilities:
+### �?Key Capabilities:
 
-- 🤖 **AI Integration with LLMs** – Smarter automation powered by large language models.
-- ⚡ **Ultra-Fast Automation** – Coroutine-safe browser automation concurrency, spider-level crawling performance.
-- 🧠 **Web Understanding** – Deep comprehension of dynamic web content.
-- 📊 **Data Extraction APIs** – Powerful tools to extract structured data effortlessly.
+- 🤖 **AI Integration with LLMs** �?Smarter automation powered by large language models.
+- �?**Ultra-Fast Automation** �?Coroutine-safe browser automation concurrency, spider-level crawling performance.
+- 🧠 **Web Understanding** �?Deep comprehension of dynamic web content.
+- 📊 **Data Extraction APIs** �?Powerful tools to extract structured data effortlessly.
 
 ---
 
@@ -51,12 +51,12 @@ Find all links containing /dp/.
 
 ## ▶️ Run PulsarRPA
 
-### 📦 Run the Executable JAR — Best Experience
+### 📦 Run the Executable JAR �?Best Experience
 
 #### 🧩 Download
 
 ```shell
-curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.16/PulsarRPA.jar
+curl -L -o PulsarRPA.jar https://github.com/platonai/PulsarRPA/releases/download/v3.0.17/PulsarRPA.jar
 ```
 
 #### 🚀 Run
@@ -76,14 +76,14 @@ java -D"DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}" -jar PulsarRPA.jar
 <details>
 <summary>📂 Resources</summary>
 
-* 🟦 [GitHub Release Download](https://github.com/platonai/PulsarRPA/releases/download/v3.0.16/PulsarRPA.jar)
+* 🟦 [GitHub Release Download](https://github.com/platonai/PulsarRPA/releases/download/v3.0.17/PulsarRPA.jar)
 * 📁 [Mirror / Backup Download](https://static.platonai.cn/repo/ai/platon/pulsar/)
-* 🛠️ [LLM Configuration Guide](docs/config/llm/llm-config.md)
-* 🛠️ [Configuration Guide](docs/config.md)
+* 🛠�?[LLM Configuration Guide](docs/config/llm/llm-config.md)
+* 🛠�?[Configuration Guide](docs/config.md)
 
 </details>
 
-### ▶ Run with IDE
+### �?Run with IDE
 
 <details>
 
@@ -105,7 +105,7 @@ docker run -d -p 8182:8182 -e DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY} galaxyeye88/p
 
 ---
 
-## 🌟 For Beginners – Just Text, No Code!
+## 🌟 For Beginners �?Just Text, No Code!
 
 Use the `commands` API to perform browser operations, extract web data, analyze websites, and more.
 
@@ -145,11 +145,11 @@ curl -X POST "http://localhost:8182/api/commands" -H "Content-Type: application/
   }'
 ```
 
-💡 **Tip:** You don't need to fill in every field — just what you need.
+💡 **Tip:** You don't need to fill in every field �?just what you need.
 
 </details>
 
-## 🎓 For Advanced Users — LLM + X-SQL: Precise, Flexible, Powerful
+## 🎓 For Advanced Users �?LLM + X-SQL: Precise, Flexible, Powerful
 
 Harness the power of the `x/e` API for highly precise, flexible, and intelligent data extraction.
 
@@ -183,7 +183,7 @@ The extracted data example:
 
 ---
 
-## 👨‍💻 For Experts - Native API: Powerful!
+## 👨‍�?For Experts - Native API: Powerful!
 
 ### 🚀 Superfast Page Visiting and Data Extraction:
 
@@ -291,8 +291,8 @@ from load_and_select('https://www.amazon.com/dp/B08PP5MSVB  -i 1s -njr 3', 'body
 ## 📜 Documents
 
 * 📖 [REST API Examples](docs/rest-api-examples.md)
-* 🛠️ [LLM Configuration Guide](docs/config/llm/llm-config.md)
-* 🛠️ [Configuration Guide](docs/config.md)
+* 🛠�?[LLM Configuration Guide](docs/config/llm/llm-config.md)
+* 🛠�?[Configuration Guide](docs/config.md)
 * 📚 [Build from Source](docs/development/build.md)
 * 🧠 [Expert Guide](docs/advanced-guides.md)
 
@@ -315,9 +315,9 @@ Ask your proxy provider for such a URL.
 
 ---
 
-## ✨ Features
+## �?Features
 
-🕷️ **Web Spider**
+🕷�?**Web Spider**
 - Scalable crawling
 - Browser rendering
 - AJAX data extraction
@@ -340,7 +340,7 @@ Ask your proxy provider for such a URL.
 - SPA crawling support
 - Advanced workflow automation
 
-🛠️ **Developer-Friendly**
+🛠�?**Developer-Friendly**
 - One-line data extraction
 - SQL-like query interface
 - Simple API integration
@@ -350,12 +350,12 @@ Ask your proxy provider for such a URL.
 - Content mining capabilities
 - Web business intelligence
 
-🛡️ **Bot Protection**
+🛡�?**Bot Protection**
 - Advanced stealth techniques
 - IP rotation
 - Privacy context management
 
-⚡ **Performance**
+�?**Performance**
 - Parallel page rendering
 - High-efficiency processing
 - Block-resistant design
@@ -365,7 +365,7 @@ Ask your proxy provider for such a URL.
 - Minimal hardware requirements
 - Resource-efficient operation
 
-✅ **Quality Assurance**
+�?**Quality Assurance**
 - Smart retry mechanisms
 - Precise scheduling
 - Complete lifecycle management
