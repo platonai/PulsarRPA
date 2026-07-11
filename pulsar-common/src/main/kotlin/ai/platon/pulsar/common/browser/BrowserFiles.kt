@@ -245,8 +245,7 @@ object BrowserFiles {
         val channel = FileChannel.open(lockFile, StandardOpenOption.APPEND)
         channel.use {
             // Attempts to acquire a lock on the file.
-//            val lock = it.tryLock() ?: throw IllegalStateException("Failed to acquire file lock.")
-            val lock = it.lock()
+            val lock = it.tryLock() ?: throw IllegalStateException("Failed to acquire file lock.")
             try {
                 // Executes the supplier function while the file is locked and returns its result.
                 return supplier(it)

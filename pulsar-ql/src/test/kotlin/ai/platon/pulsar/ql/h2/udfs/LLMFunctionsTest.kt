@@ -5,10 +5,12 @@ import ai.platon.pulsar.ql.TestBase
 import ai.platon.pulsar.ql.h2.utils.ResultSetUtils
 import org.junit.jupiter.api.Assumptions
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Tag
 import kotlin.test.Ignore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
+@Tag("RequiresAI")
 class LLMFunctionsTest : TestBase() {
     val url = "https://www.amazon.com/dp/B08PP5MSVB"
     val sql = """

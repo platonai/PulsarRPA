@@ -5,12 +5,23 @@ import ai.platon.pulsar.common.serialize.json.prettyPulsarObjectMapper
 import ai.platon.pulsar.external.impl.CachedBrowserChatModel
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Assertions.assertNotNull
+import org.junit.jupiter.api.Assumptions
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
+import org.junit.jupiter.api.Tag
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertTrue
-import org.junit.jupiter.api.DisplayName
 
+@Tag("RequiresAI")
 class ChatModelFactoryTest {
+    val conf = ImmutableConfig()
+
+    @BeforeEach
+    fun setup() {
+        Assumptions.assumeTrue(ChatModelFactory.isModelConfigured(conf))
+    }
+
     /**
      *
      * ```shell
@@ -28,14 +39,13 @@ class ChatModelFactoryTest {
      *
      * */
     @org.junit.jupiter.api.Test
-        @DisplayName("doubao API should be compatible with OpenAI API")
+    @DisplayName("doubao API should be compatible with OpenAI API")
     fun doubaoApiShouldBeCompatibleWithOpenaiApi() {
         val provider = "volcengine"
         val baseURL = "https://ark.cn-beijing.volces.com/api/v3"
         val modelName = "doubao-1-5-pro-32k-250115"
         val apiKey = "9cc8e99889-4655-4e90-a54c1-12345abcdefg"
 
-        val conf = ImmutableConfig()
         val model = ChatModelFactory.getOrCreate(provider, modelName, apiKey, conf)
         assertNotNull(model)
         assertIs<CachedBrowserChatModel>(model)
@@ -47,8 +57,28 @@ class ChatModelFactoryTest {
                 response.content.contains("101")
             }
         } catch (e: Exception) {
-            assertTrue(e.message) { listOf("error", "invalid", "missing", "Unauthorized", "fail", "not found", "not exist", "not support", "not available", "not configured", "not supported", "not found", "not exist", "not support", "not available", "not configured", "not supported")
-                .any { e.toString().contains(it, ignoreCase = true) } }
+            assertTrue(e.message) {
+                listOf(
+                    "error",
+                    "invalid",
+                    "missing",
+                    "Unauthorized",
+                    "fail",
+                    "not found",
+                    "not exist",
+                    "not support",
+                    "not available",
+                    "not configured",
+                    "not supported",
+                    "not found",
+                    "not exist",
+                    "not support",
+                    "not available",
+                    "not configured",
+                    "not supported"
+                )
+                    .any { e.toString().contains(it, ignoreCase = true) }
+            }
         }
     }
 }
